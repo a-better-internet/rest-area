@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Rest Area · I-79 North</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --sign:#14563a;          /* guide-sign green */
+    --sign-d:#0c3a26;
+    --legend:#f1f1ea;        /* reflective white legend */
+    --amber:#f4c430;         /* keystone yellow */
+    --amber-d:#b8932a;
+    --ink:#07120c;
+    --blue:#2b4f9c;          /* the welcome-sign blue */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--ink);color:var(--legend);
+    font-family:"JetBrains Mono",ui-monospace,monospace;-webkit-font-smoothing:antialiased;
+    touch-action:none;user-select:none;-webkit-user-select:none}
+  #app{position:fixed;inset:0}
+  canvas{display:block}
+
+  /* a soft vignette, nothing more: this is a humid afternoon, not a CRT */
+  #vig{position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:radial-gradient(125% 125% at 50% 45%, transparent 58%, rgba(0,0,0,0.42) 100%)}
+
+  #dot{position:fixed;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;z-index:7;
+    border-radius:50%;background:rgba(241,241,234,.78);box-shadow:0 0 5px rgba(0,0,0,.6);pointer-events:none}
+
+  /* ---- masthead: a guide sign ---- */
+  #mast{position:fixed;left:22px;top:18px;z-index:10;pointer-events:none;
+    background:var(--sign);border:2px solid var(--legend);border-radius:7px;padding:8px 14px 9px;
+    box-shadow:0 0 0 3px var(--sign), 0 6px 18px rgba(0,0,0,.45)}
+  #mast .row{display:flex;align-items:center;gap:10px}
+  #mast .shield{width:30px;height:32px;flex:none}
+  #mast h1{font-family:"Oswald",sans-serif;font-weight:500;font-size:27px;letter-spacing:.05em;
+    color:var(--legend);line-height:1}
+  #mast .tag{font-family:"Oswald",sans-serif;font-size:11px;color:var(--legend);letter-spacing:.24em;
+    margin-top:4px;opacity:.86;text-transform:uppercase}
+
+  /* ---- controls card ---- */
+  #keys{position:fixed;right:22px;top:18px;z-index:10;border:1px solid rgba(241,241,234,.22);
+    background:rgba(7,18,12,.62);border-radius:4px;padding:12px 14px;max-width:252px;backdrop-filter:blur(3px)}
+  #keys h2{font-size:9px;letter-spacing:.32em;color:var(--amber-d);text-transform:uppercase;margin-bottom:8px}
+  #keys .row{display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:2px 0;color:var(--legend)}
+  #keys .row span:last-child{color:#b9c4bc;text-align:right}
+  kbd{font-family:"JetBrains Mono";font-size:10px;background:rgba(244,196,48,.12);
+    border:1px solid rgba(244,196,48,.32);border-bottom-width:2px;border-radius:3px;padding:1px 5px;color:var(--amber)}
+
+  /* ---- gauge cluster ---- */
+  #cluster{position:fixed;left:22px;bottom:20px;z-index:10;display:flex;align-items:flex-end;gap:14px;
+    filter:drop-shadow(0 4px 12px rgba(0,0,0,.4))}
+  .gauge{position:relative;width:158px;height:158px}
+  .gauge svg{position:absolute;inset:0;width:100%;height:100%}
+  #hdgNum{position:absolute;left:0;right:0;top:66px;text-align:center;
+    font-family:"Oswald",sans-serif;font-weight:700;font-size:32px;line-height:1;color:var(--legend)}
+  #hdgCard{position:absolute;left:0;right:0;top:101px;text-align:center;letter-spacing:.34em;
+    font-size:10px;color:var(--amber);text-transform:uppercase}
+  .stack{display:flex;flex-direction:column;gap:8px;padding-bottom:6px;min-width:196px}
+  .chip{border:2px solid rgba(241,241,234,.85);background:var(--sign);border-radius:5px;padding:6px 10px}
+  .chip .k{font-size:9px;letter-spacing:.28em;color:#cfe0d4;text-transform:uppercase}
+  .chip .v{font-family:"Oswald",sans-serif;font-weight:500;font-size:19px;color:var(--legend);line-height:1.12}
+  .chip.blue{background:var(--blue)}
+
+  /* ---- plan / minimap ---- */
+  #plan{position:fixed;right:22px;bottom:20px;z-index:10;width:214px;text-align:center;
+    border:1px solid rgba(241,241,234,.24);background:rgba(7,18,12,.66);border-radius:4px;padding:8px 8px 4px;
+    backdrop-filter:blur(3px)}
+  #plan canvas{width:198px;height:230px;display:block}
+  #plan .radarlabel{font-size:8px;letter-spacing:.34em;color:#9fb3a6;margin-top:3px}
+
+  #prompt{position:fixed;left:50%;top:58%;transform:translateX(-50%);z-index:11;
+    font-family:"Oswald",sans-serif;font-size:15px;letter-spacing:.2em;color:var(--legend);
+    text-transform:uppercase;opacity:0;transition:opacity .18s ease;pointer-events:none;
+    text-shadow:0 1px 3px #000, 0 0 10px rgba(0,0,0,.6)}
+  #prompt.show{opacity:1}
+
+  #toast{position:fixed;left:50%;top:19%;transform:translateX(-50%);z-index:12;
+    font-family:"Oswald",sans-serif;font-size:23px;font-weight:500;letter-spacing:.14em;
+    text-shadow:0 1px 3px #000,0 0 14px rgba(0,0,0,.5);opacity:0;transition:opacity .25s ease;
+    pointer-events:none;white-space:nowrap}
+  #toast.show{opacity:1}
+
+  /* ---- boot card: the sign on the shoulder a mile out ---- */
+  #boot{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:18px;transition:opacity .8s ease;cursor:pointer;
+    background:radial-gradient(120% 120% at 50% 40%, rgba(8,26,16,.55), rgba(4,10,7,.92))}
+  #boot .board{background:var(--sign);border:4px solid var(--legend);border-radius:14px;
+    box-shadow:0 0 0 7px var(--sign), 0 24px 60px rgba(0,0,0,.6);padding:26px 54px 28px;text-align:center}
+  #boot .big{font-family:"Oswald",sans-serif;font-size:76px;font-weight:500;letter-spacing:.04em;
+    color:var(--legend);line-height:.95}
+  #boot .mid{font-family:"Oswald",sans-serif;font-size:30px;letter-spacing:.12em;color:var(--legend);margin-top:8px}
+  #boot .sub{font-family:"Oswald",sans-serif;font-size:13px;letter-spacing:.34em;color:#cfe0d4;margin-top:12px;
+    text-transform:uppercase}
+  #boot .go{font-family:"JetBrains Mono";font-size:12px;letter-spacing:.3em;color:var(--amber);
+    border:1px solid rgba(244,196,48,.5);padding:10px 20px;border-radius:3px;background:rgba(0,0,0,.35)}
+  #boot .hint{font-size:10px;letter-spacing:.2em;color:#9fb3a6}
+  #boot.hidden{opacity:0;pointer-events:none}
+
+  #touch{position:fixed;left:18px;bottom:210px;z-index:11;display:none;grid-template-columns:repeat(3,54px);
+    grid-template-rows:repeat(2,54px);gap:6px}
+  #touch.on{display:grid}
+  #touch button{background:rgba(7,18,12,.6);border:1px solid rgba(241,241,234,.3);color:var(--legend);
+    font-family:"Oswald";font-size:19px;border-radius:4px}
+  #touch .sp{visibility:hidden}
+
+  @media (max-width:860px){
+    #keys{display:none}
+    #plan{width:150px}#plan canvas{width:134px;height:156px}
+    .gauge{width:118px;height:118px}
+    #hdgNum{top:46px;font-size:23px}#hdgCard{top:74px}
+    .stack{min-width:132px}
+    #mast h1{font-size:19px}
+    #boot .big{font-size:44px}#boot .mid{font-size:20px}#boot .board{padding:18px 26px}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="vig"></div>
+<div id="dot"></div>
+<div id="prompt"></div>
+<div id="toast"></div>
+
+<div id="mast">
+  <div class="row">
+    <svg class="shield" viewBox="0 0 30 32" aria-hidden="true">
+      <path d="M3 1h24l-2 6 4 4-5 20H6L1 11l4-4z" fill="#f1f1ea"/>
+      <path d="M5.2 3h19.6l-1.7 4.6 3.7 3.7-4.4 17.7H7.6L3.2 11.3l3.7-3.7z" fill="#14563a"/>
+      <text x="15" y="23" text-anchor="middle" font-family="Oswald, sans-serif" font-size="11" fill="#f1f1ea">79</text>
+    </svg>
+    <h1>REST&nbsp;AREA</h1>
+  </div>
+  <div class="tag">I-79 North · Pennsylvania</div>
+</div>
+
+<div id="keys">
+  <h2>Controls</h2>
+  <div class="row"><span>Walk</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></div>
+  <div class="row"><span>Look</span><span>drag · mouse</span></div>
+  <div class="row"><span>Run · sprint</span><span><kbd>Shift</kbd> · <kbd>Q</kbd></span></div>
+  <div class="row"><span>Door · drive · use</span><span><kbd>E</kbd></span></div>
+  <div class="row"><span>Handbrake</span><span><kbd>Space</kbd></span></div>
+  <div class="row"><span>Sit / stand</span><span><kbd>C</kbd></span></div>
+  <div class="row"><span>Drone</span><span><kbd>F</kbd></span></div>
+  <div class="row"><span>Fly · up / down</span><span><kbd>WASD</kbd> · <kbd>Space</kbd><kbd>Shift</kbd></span></div>
+  <div class="row"><span>Flashlight</span><span><kbd>L</kbd></span></div>
+  <div class="row"><span>Nightfall · midday</span><span><kbd>N</kbd> · <kbd>M</kbd></span></div>
+  <div class="row"><span>Scrub time</span><span><kbd>[</kbd><kbd>]</kbd></span></div>
+  <div class="row"><span>Summer / autumn</span><span><kbd>Y</kbd></span></div>
+  <div class="row"><span>Sound</span><span><kbd>U</kbd></span></div>
+  <div class="row"><span>Plan view · HUD</span><span><kbd>O</kbd> · <kbd>H</kbd></span></div>
+</div>
+
+<div id="cluster">
+  <div class="gauge">
+    <svg viewBox="0 0 200 200" id="gaugeSvg"></svg>
+    <div id="hdgNum">0</div>
+    <div id="hdgCard">heading</div>
+  </div>
+  <div class="stack">
+    <div class="chip"><div class="k">Location</div><div class="v" id="where" style="font-size:16px">PARKING</div></div>
+    <div class="chip"><div class="k">Local time</div><div class="v" id="clock">—</div></div>
+    <div class="chip blue"><div class="k">Season</div><div class="v" id="season" style="font-size:16px">SUMMER</div></div>
+  </div>
+</div>
+
+<div id="plan">
+  <canvas id="planCv" width="198" height="230"></canvas>
+  <div class="radarlabel">SITE PLAN</div>
+</div>
+
+<div id="touch">
+  <button class="sp"></button><button data-k="f">▲</button><button class="sp"></button>
+  <button data-k="l">◀</button><button data-k="b">▼</button><button data-k="r">▶</button>
+</div>
+
+<div id="boot">
+  <div class="board">
+    <div class="big">REST AREA</div>
+    <div class="mid">NEXT RIGHT</div>
+    <div class="sub">I-79 North · Crawford County · Pennsylvania</div>
+  </div>
+  <div class="go">CLICK TO PULL IN</div>
+  <div class="hint">the woods are building · give it a moment</div>
+</div>
+
+<!-- The world is built by these files, in this order, as classic scripts
+     sharing one global scope. Order is load-bearing: each one runs its
+     top-level code as it arrives, and the world is finished by the time the
+     last one returns. No build step, no bundler, no modules — ES modules
+     will not load from a file:// page, and this is meant to open by
+     double-clicking it. -->
+<script src="js/00-config.js"></script>
+<script src="js/01-helpers.js"></script>
+<script src="js/02-textures.js"></script>
+<script src="js/03-scene.js"></script>
+<script src="js/04-terrain.js"></script>
+<script src="js/05-sky.js"></script>
+<script src="js/06-collision.js"></script>
+<script src="js/07-forest.js"></script>
+<script src="js/08-site.js"></script>
+<script src="js/09-building.js"></script>
+<script src="js/10-cars.js"></script>
+<script src="js/11-driving.js"></script>
+<script src="js/12-substation.js"></script>
+<script src="js/13-grounds.js"></script>
+<script src="js/14-life.js"></script>
+<script src="js/15-bake.js"></script>
+<script src="js/16-lighting.js"></script>
+<script src="js/17-player.js"></script>
+<script src="js/18-hud.js"></script>
+<script src="js/19-loop.js"></script>
+<script src="js/20-audio.js"></script>
+</body>
+</html>
