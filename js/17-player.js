@@ -251,7 +251,7 @@ function updateDoors(dt){
 // the edge of the walkable woods: push against it and you are told so, once
 let _edgeToast=0;
 function nearEdge(x,z){
-  const Z=SITE.zone, m=1.4;
+  const I=SITE.walkInset, Z={x0:SITE.zone.x0+I, x1:SITE.zone.x1-I, z0:SITE.zone.z0+I, z1:SITE.zone.z1-I}, m=1.4;
   return x<Z.x0+m || x>Z.x1-m || z<Z.z0+m || z>Z.z1-m ||
          ((z<Z.z0 || z>Z.z1) && Math.min(Math.abs(Math.abs(x-HWY.nb)-19.5),Math.abs(Math.abs(x-HWY.sb)-19.5))<1.4);
 }

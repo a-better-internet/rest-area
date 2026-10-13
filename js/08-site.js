@@ -212,6 +212,7 @@ function guideSign(x, z, w, h, ry, lines, opts){
 })();
 
 /* ---- the lots ----------------------------------------------------------- */
+const ADA_SIGNS=[], ADA_TEX={};
 (function lots(){
   const Tk=SITE.truck, Cr=SITE.car, Is=SITE.island;
   paveRect("asphalt", Tk.x0, Tk.x1, Tk.z0, Tk.z1, "#a8a8a6");
@@ -227,22 +228,43 @@ function guideSign(x, z, w, h, ry, lines, opts){
     stripe(Cr.x0+0.3, z, C.aisle0, z, 0.11, WHITE_LINE);
     stripe(C.aisle1, z, Cr.x1-0.3, z, 0.11, WHITE_LINE);
   }
-  // accessible stalls by the walk: the blue field, the hatched aisle, the
-  // symbol, and the curb painted blue in front of them
-  const ADA=[[-6.875,-4.125],[-1.375,1.375],[4.125,6.875]];
-  for(const [za,zb] of ADA){
-    push("paint", planeGeo(5.6, zb-za-0.2, 0), (C.aisle1+Cr.x1)/2, PAVE_T+0.0015, (za+zb)/2, 0, "#2c56a8", -Math.PI/2, 0);
-  }
+  /* accessible stalls by the walk (CARLOT.ada), each inside its own pair of
+     lines: a blue field with the symbol on it, a hatched access aisle
+     between each pair with NO PARKING across it, a sign at the head of
+     every stall, and the curb painted blue the length of them */
+  const zLine=k=>C.stallZ0+k*C.stallW, xa=C.aisle1, xb=Cr.x1-0.3;
   const isa=signTex(256,256,(c,W,H)=>{ c.clearRect(0,0,W,H); drawISA(c,W/2,H/2+8,150,"#f2f0ea"); });
-  const isaMat=new T.MeshStandardMaterial({map:isa, transparent:true, roughness:0.7, depthWrite:false,
+  const noPark=signTex(512,128,(c,W,H)=>{ c.clearRect(0,0,W,H); c.fillStyle="#f2f0ea"; fitText(c,"NO PARKING",W*0.92,H*0.7,W/2,H/2,"700"); });
+  const deco=(tex)=>new T.MeshStandardMaterial({map:tex, transparent:true, roughness:0.7, depthWrite:false,
                      polygonOffset:true, polygonOffsetFactor:-6, polygonOffsetUnits:-12});
-  for(const [za,zb] of ADA){
-    const m=new T.Mesh(new T.PlaneGeometry(1.5,1.5), isaMat);
-    m.rotation.order="YXZ"; m.rotation.set(-Math.PI/2, -Math.PI/2, 0);
-    m.position.set(-28.6, PAVE_T+0.004, (za+zb)/2); scene.add(m);
+  const isaMat=deco(isa), npMat=deco(noPark);
+  const flat=(mat,w,h,x,z)=>{ const m=new T.Mesh(new T.PlaneGeometry(w,h), mat);
+    m.rotation.order="YXZ"; m.rotation.set(-Math.PI/2, -Math.PI/2, 0); m.position.set(x, PAVE_T+0.004, z); scene.add(m); };
+  const sign=signTex(240,360,(c,W,H)=>{ c.fillStyle="#f4f3ee"; c.fillRect(0,0,W,H); c.strokeStyle="#1f4fa0"; c.lineWidth=8; c.strokeRect(6,6,W-12,H-12);
+    c.fillStyle="#1f4fa0"; c.fillRect(W*0.22,H*0.07,W*0.56,W*0.56); drawISA(c,W/2,H*0.07+W*0.29,W*0.44,"#f4f3ee");
+    c.fillStyle="#1f4fa0"; fitText(c,"RESERVED",W*0.82,H*0.10,W/2,H*0.56,"700"); fitText(c,"PARKING",W*0.82,H*0.10,W/2,H*0.67,"700");
+    c.fillStyle="#b3151b"; fitText(c,"PENALTY $50 – $200",W*0.84,H*0.065,W/2,H*0.80,"600");
+    c.fillStyle="#222"; fitText(c,"Violators towed",W*0.7,H*0.05,W/2,H*0.89,"500"); });
+  const van=signTex(240,90,(c,W,H)=>{ c.fillStyle="#1f4fa0"; c.fillRect(0,0,W,H); c.fillStyle="#f4f3ee";
+    fitText(c,"VAN",W*0.6,H*0.38,W/2,H*0.30,"700"); fitText(c,"ACCESSIBLE",W*0.86,H*0.34,W/2,H*0.72,"700"); });
+  for(const key in C.ada){
+    const k=+key, kind=C.ada[k], za=zLine(k)+0.07, zb=zLine(k+1)-0.07, zc=(za+zb)/2;
+    if(kind==="aisle"){
+      // diagonal hatching clipped to the aisle, and the words across it
+      const h=zb-za;
+      for(let x0=xa-h; x0<xb; x0+=0.62){
+        const t0=Math.max(0, xa+0.15-x0), t1=Math.min(h, xb-0.15-x0);
+        if(t1-t0>0.15) stripe(x0+t0, za+t0, x0+t1, za+t1, 0.10, "#e6e4dc");
+      }
+      stripe(xb-0.06, za, xb-0.06, zb, 0.10, "#e6e4dc");
+      flat(npMat, 2.4, 0.6, -30.6, zc);
+      continue;
+    }
+    push("paint", planeGeo(xb-xa-0.05, zb-za, 0), (xa+xb)/2, PAVE_T+0.0015, zc, 0, "#2c56a8", -Math.PI/2, 0);
+    flat(isaMat, 1.5, 1.5, -28.6, zc);
+    ADA_SIGNS.push({z:zc, van:kind==="van"});
   }
-  // the hatched access aisle between the first two
-  for(let k=0;k<6;k++) stripe(C.aisle1+0.5+k*0.9, -4.1, C.aisle1+1.4+k*0.9, -1.4, 0.12, "#e6e4dc");
+  ADA_TEX.sign=sign; ADA_TEX.van=van;
   // crosswalks over the aisle to the walk, zebra
   for(const zc of [-14.5, 14.5]) for(let k=0;k<8;k++)
     push("paint", planeGeo(0.42, 2.8, 0), C.aisle0+0.6+k*1.05, PAVE_T+0.002, zc, 0, WHITE_LINE, -Math.PI/2, 0);
@@ -315,7 +337,16 @@ const PLAZA_Y=0.15;
   slab(P.x1, -5.0, P.z0, -5.5, "#c9c6be");
   slab(P.x1, -5.0, 5.5, P.z1, "#c9c6be");
   // blue curb in front of the accessible stalls (photo 2)
-  bx("paint", 0.04, 0.16, 13.6, W.x0-0.015, PLAZA_Y-0.08, 0, 0, 0, "#2b5fb8");
+  { const z0=CARLOT.stallZ0+35*CARLOT.stallW, z1=CARLOT.stallZ0+40*CARLOT.stallW;
+    bx("paint", 0.04, 0.16, z1-z0, W.x0-0.015, PLAZA_Y-0.08, (z0+z1)/2, 0, 0, "#2b5fb8"); }
+  // the sign at the head of each accessible stall, on a post at the walk's edge
+  for(const s of ADA_SIGNS){
+    const sx=W.x0+0.30;
+    bx("paintm", 0.06, 2.20, 0.06, sx, PLAZA_Y+1.10-0.15, s.z, 0, 0, "#8d9194");
+    signPanel(0.30, 0.45, ADA_TEX.sign, sx-0.04, PLAZA_Y+1.65, s.z, -Math.PI/2);
+    if(s.van) signPanel(0.30, 0.11, ADA_TEX.van, sx-0.04, PLAZA_Y+1.31, s.z, -Math.PI/2);
+    addCol(sx-0.05, sx+0.05, s.z-0.05, s.z+0.05, PLAZA_Y-0.3, PLAZA_Y+2.1);
+  }
   addZone(W.x0, W.x1, W.z0, W.z1, -1, 4, "THE WALK");
   addZone(P.x0, -5, P.z0, P.z1, -1, 5, "THE PLAZA");
   // paths across the lawn, flush with it: north to the picnic grove,

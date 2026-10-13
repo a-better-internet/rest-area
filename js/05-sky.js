@@ -486,165 +486,7 @@ const MOTHS=[];
   }
 })();
 
-/* ----------------------------------------------------------------------
-   5b · VEHICLES — one builder for everything with wheels
-   Modelled in the vehicle's own space: x right, y up from the ground, z
-   forward. A body is two profile extrusions — the lower body at full
-   width, the greenhouse narrower on top of it — because a modern car's
-   whole character is its side profile, and a box with a box on it is a
-   1950s car. The greenhouse is dark glass all the way round (that is what
-   tinted glass at forty metres looks like), with the roof and the pillars
-   laid over it in paint.
-   kinds: 0 sedan · 1 SUV · 2 pickup · 3 minivan · 4 box truck ·
-          5 tractor-trailer · 6 reefer · 7 car-hauler-less flatbed with load
-   ---------------------------------------------------------------------- */
-const VEH_SPEC={
-  0:{len:4.86, nose:2.44, tail:-2.42, hw:0.93, ht:1.45, wr:0.34, axles:[1.42,-1.42], track:0.80},
-  1:{len:4.76, nose:2.38, tail:-2.38, hw:0.97, ht:1.76, wr:0.37, axles:[1.45,-1.45], track:0.84},
-  2:{len:5.92, nose:2.94, tail:-2.98, hw:1.00, ht:1.90, wr:0.38, axles:[1.86,-1.80], track:0.86},
-  3:{len:5.02, nose:2.52, tail:-2.50, hw:0.99, ht:1.76, wr:0.35, axles:[1.52,-1.52], track:0.84},
-  4:{len:8.2,  nose:3.80, tail:-4.40, hw:1.24, ht:3.58, wr:0.48, axles:[2.70,-2.60], track:1.00},
-  5:{len:23.4, nose:10.9, tail:-12.6, hw:1.30, ht:4.08, wr:0.52, axles:[9.35,5.0,3.72,-10.3,-11.6], track:1.02},
-  6:{len:23.4, nose:10.9, tail:-12.6, hw:1.30, ht:4.08, wr:0.52, axles:[9.35,5.0,3.72,-10.3,-11.6], track:1.02},
-  7:{len:21.6, nose:10.9, tail:-10.8, hw:1.30, ht:3.30, wr:0.52, axles:[9.35,5.0,3.72,-8.6,-9.9], track:1.02},
-};
-// paint people actually buy, now: mostly greyscale, then blue and red
-const CAR_PAINTS=["#e9e9e6","#1c1d20","#9fa3a8","#5b5f64","#273a5c","#7c1c1c","#d6d6d2",
-                  "#3b3f44","#4d5b3e","#6b4a33","#2d4b6b","#a8a9aa"];
-const TRUCK_PAINTS=["#c9c9c4","#7a1e1a","#1d3b6e","#262626","#e7e5df","#356b3a","#d9a522","#5d6168"];
-function vehicleParts(kind, paintHex, trailerHex){
-  const S=VEH_SPEC[kind], OP=[], GL=[];
-  const P=new T.Color(paintHex), DK=new T.Color(0x17181a), TRIM=new T.Color(0x26272a),
-        CHR=new T.Color(0xb6b9bb), GLC=new T.Color(0x202b33), HL=new T.Color(0xdfe5e8),
-        TL=new T.Color(0x8e1410), AMB=new T.Color(0xd08a1c), PLATE=new T.Color(0xe6e2d4);
-  const _eu=new T.Euler(), _qq=new T.Quaternion(), _one=new T.Vector3(1,1,1);
-  const add=(L,geo,x,y,z,c,rx,ry,rz)=>{
-    _eu.set(rx||0,ry||0,rz||0,"YXZ"); _qq.setFromEuler(_eu);
-    L.push({geo:geo, matrix:new T.Matrix4().compose(new T.Vector3(x,y,z),_qq,_one), color:c});
-  };
-  const B=(L,w,h,d,x,y,z,c,rx)=>add(L, boxGeo(w,h,d,0.5), x,y,z,c,rx);
-  // a side profile [forward, up] extruded across the width
-  const prof=(L,pts,w,c,x)=>{ const g=prismGeo(pts,w,0.5); g.rotateY(-Math.PI/2); add(L,g,x||0,0,0,c); };
-  const cylX=(L,r,len,x,y,z,c,seg)=>add(L,new T.CylinderGeometry(r,r,len,seg||12),x,y,z,c,0,0,Math.PI/2);
-  const cylZ=(L,r,len,x,y,z,c,seg)=>add(L,new T.CylinderGeometry(r,r,len,seg||10),x,y,z,c,Math.PI/2,0,0);
-  const car=(lower, glass, roof, w, gw)=>{
-    prof(OP, lower, w, P);
-    prof(GL, glass, gw, GLC);
-    prof(OP, roof, gw+0.04, P);
-  };
-  if(kind===0){
-    car([[2.38,0.30],[2.44,0.58],[2.34,0.78],[1.05,0.95],[-1.85,1.00],[-2.32,0.96],[-2.42,0.64],[-2.36,0.30]],
-        [[1.02,0.94],[0.10,1.40],[-1.12,1.42],[-1.92,0.98]],
-        [[0.18,1.36],[0.10,1.41],[-1.12,1.43],[-1.22,1.37]], 1.84, 1.50);
-    B(OP,1.53,0.40,0.12, 0,1.17,-0.42, P);                        // B pillar
-  }else if(kind===1){
-    car([[2.30,0.36],[2.38,0.70],[2.26,0.96],[1.20,1.08],[-2.20,1.10],[-2.36,1.02],[-2.36,0.40]],
-        [[1.10,1.06],[0.32,1.68],[-2.05,1.70],[-2.28,1.08]],
-        [[0.40,1.64],[0.32,1.70],[-2.06,1.72],[-2.14,1.65]], 1.92, 1.62);
-    B(OP,1.64,0.56,0.12, 0,1.38,-0.38, P);
-    B(OP,1.64,0.56,0.12, 0,1.38,-1.42, P);
-    for(const s of [-1,1]) B(OP,0.05,0.05,2.0, s*0.70,1.76,-0.85, CHR);        // roof rails
-  }else if(kind===2){
-    prof(OP, [[2.85,0.40],[2.92,0.78],[2.82,0.92],[-2.98,0.92],[-2.98,0.42]], 1.98, P);
-    prof(OP, [[2.82,0.92],[2.78,1.10],[1.30,1.20],[-0.80,1.20],[-0.80,0.92]], 1.96, P);
-    prof(GL, [[1.30,1.18],[0.58,1.84],[-0.74,1.86],[-0.78,1.18]], 1.70, GLC);
-    prof(OP, [[0.64,1.80],[0.58,1.86],[-0.74,1.88],[-0.80,1.82]], 1.74, P);
-    for(const s of [-1,1]) B(OP,0.08,0.40,2.14, s*0.95,1.12,-1.91, P);         // bed sides
-    B(OP,1.98,0.40,0.08, 0,1.12,-2.94, P);                                       // tailgate
-    B(OP,1.82,0.05,2.08, 0,0.95,-1.90, TRIM);                                    // bed floor
-    B(OP,1.98,0.40,0.10, 0,1.12,-0.86, P);
-    B(OP,1.20,0.30,0.06, 0,0.66,2.93, DK);
-  }else if(kind===3){
-    car([[2.45,0.32],[2.52,0.66],[2.30,0.92],[1.30,1.04],[-2.40,1.06],[-2.50,0.98],[-2.48,0.34]],
-        [[1.35,1.02],[0.30,1.70],[-2.30,1.72],[-2.45,1.06]],
-        [[0.38,1.66],[0.30,1.72],[-2.30,1.74],[-2.36,1.68]], 1.96, 1.70);
-    B(OP,1.72,0.62,0.12, 0,1.38,0.05, P);
-    B(OP,1.72,0.62,0.10, 0,1.38,-1.30, P);
-    B(OP,0.04,0.03,1.4, 0.99,1.12,-0.90, CHR);                                   // slider track
-  }else if(kind===4){                                       // box truck
-    prof(OP, [[3.70,0.55],[3.80,1.05],[3.62,1.42],[2.72,1.58],[1.60,1.60],[1.60,0.55]], 2.24, P);
-    prof(GL, [[2.74,1.56],[2.28,2.42],[1.66,2.44],[1.66,1.56]], 2.02, GLC);
-    prof(OP, [[2.32,2.38],[2.28,2.44],[1.66,2.46],[1.62,2.40]], 2.06, P);
-    B(OP,2.46,2.56,5.80, 0,2.30,-1.50, new T.Color(trailerHex||0xe6e4de));      // the box
-    B(OP,2.48,0.10,5.82, 0,3.56,-1.50, new T.Color(0xc8c6c0));
-    B(OP,0.90,0.26,7.6, 0,0.80,-0.4, DK);                                        // frame
-    B(OP,2.40,0.30,0.20, 0,0.62,-4.42, DK);                                      // ICC bumper
-    B(OP,2.30,0.42,0.25, 0,0.68,3.82, TRIM);
-  }else{                                                    // the big rigs
-    const trailerC=new T.Color(trailerHex||0xe8e7e2);
-    // tractor
-    B(OP,1.00,0.30,8.6, 0,0.98,6.6, DK);                                         // frame rails
-    prof(OP, [[10.80,0.72],[10.88,1.46],[10.72,1.96],[8.30,2.16],[8.30,0.72]], 2.38, P);
-    prof(OP, [[8.30,1.14],[8.30,2.24],[7.94,3.24],[5.40,3.34],[5.40,1.14]], 2.46, P);
-    prof(OP, [[5.40,1.14],[5.40,3.34],[4.90,3.98],[3.86,4.04],[3.86,1.14]], 2.46, P);
-    B(GL,2.10,0.88,0.06, 0,2.74,8.14, GLC, -0.36);                                // windshield
-    for(const s of [-1,1]) B(GL,0.04,0.66,1.20, s*1.235,2.70,7.25, GLC);         // door glass
-    B(OP,1.18,1.02,0.08, 0,1.36,10.90, CHR);                                      // grille
-    B(OP,2.52,0.40,0.30, 0,0.76,10.92, CHR);                                      // bumper
-    for(const s of [-1,1]){
-      cylZ(OP,0.34,1.5, s*1.10,0.98,6.0, CHR, 14);                                 // fuel tanks
-      add(OP,new T.CylinderGeometry(0.08,0.08,2.6,10), s*1.12,3.0,5.45, CHR);      // stacks
-      B(OP,0.30,0.48,0.08, s*1.32,2.10,8.30, DK);                                  // mirrors
-      B(OP,0.10,0.70,0.10, s*1.26,2.10,8.24, DK);
-    }
-    if(kind===7){                                           // flatbed, lumber on it
-      B(OP,2.56,0.26,13.9, 0,1.42,-3.1, new T.Color(0x3a3c3e));
-      for(let k=0;k<3;k++) B(OP,2.30,0.96,3.9, 0,2.04,1.6-k*4.4, new T.Color(0xc4a676));
-      for(let k=0;k<6;k++) B(OP,2.34,1.00,0.05, 0,2.05,3.2-k*2.6, new T.Color(0x2a2a2a));
-    }else{
-      B(OP,2.59,2.76,16.2, 0,2.68,-4.5, trailerC);                                 // the van
-      B(OP,2.61,0.12,16.22, 0,4.02,-4.5, new T.Color(0xcfcdc6));
-      B(OP,2.61,0.12,16.22, 0,1.36,-4.5, new T.Color(0x9b9a95));
-      for(const s of [-1,1]) B(OP,0.04,0.80,9.0, s*1.28,0.90,-3.6, new T.Color(0x3a3c3f));   // side skirts
-      B(OP,2.60,2.70,0.05, 0,2.68,-12.62, new T.Color(0xd6d4cd));                 // rear doors
-      B(OP,0.04,2.66,0.06, 0,2.68,-12.66, DK);
-      for(const s of [-1,1]) for(const hy of [1.9,3.4]) B(OP,0.22,0.06,0.06, s*0.85,hy,-12.67, CHR);
-      for(const s of [-1,1]) B(OP,0.08,1.0,0.08, s*0.9,0.82,1.4, DK);            // landing gear
-      if(kind===6){                                          // the reefer unit
-        B(OP,2.10,1.40,0.50, 0,3.20,3.88, new T.Color(0xdcdcd6));
-        B(OP,1.60,0.90,0.04, 0,3.24,4.14, new T.Color(0x3c3f42));
-      }
-    }
-    B(OP,2.50,0.32,0.20, 0,0.64,-12.55, DK);
-  }
-  // shared detail: lamps, plate, the dark sill, the arches
-  const nz=S.nose, tz=S.tail, big=kind>=4;
-  const lampY=big?1.10:(kind===1||kind===3?0.88:kind===2?0.92:0.72);
-  for(const s of [-1,1]){
-    B(OP, big?0.34:0.40, big?0.24:0.10, 0.08, s*(S.hw-(big?0.32:0.30)), lampY, nz-0.03, HL);
-    B(OP, big?0.20:0.36, big?0.32:0.14, 0.08, s*(S.hw-(big?0.20:0.24)), big?1.20:(lampY+0.10), tz+0.03, TL);
-    if(!big) B(OP,0.05,0.42,0.86, s*(S.hw-0.005), S.wr+0.16, S.axles[0], DK);   // wheel arches
-    if(!big) B(OP,0.05,0.42,0.86, s*(S.hw-0.005), S.wr+0.16, S.axles[S.axles.length-1], DK);
-    if(!big) B(OP,0.09,0.09,0.18, s*(S.hw+0.05), (kind===0?1.00:1.16), S.axles[0]-0.62, P);   // mirrors
-  }
-  if(!big) B(OP,S.hw*2+0.02,0.14,S.len*0.62, 0,0.34,0, TRIM);                    // rocker
-  B(OP,0.32,0.16,0.03, 0,big?0.82:0.56, tz-0.005, PLATE);
-  if(big) for(const s of [-1,1]){                                                // marker lamps
-    B(OP,0.12,0.06,0.04, s*1.18, kind===4?3.52:4.00, kind===4?1.22:3.58, AMB);
-  }
-  return {OP:OP, GL:GL, spec:S};
-}
-// the wheel, axle along local x, so steering is a y turn and rolling an x one
-function wheelGeo(r, wide){
-  const L=[], w=wide||0.24;
-  const _eu=new T.Euler(0,0,Math.PI/2), _qq=new T.Quaternion().setFromEuler(_eu), one=new T.Vector3(1,1,1);
-  const at=(geo,c)=>L.push({geo:geo, matrix:new T.Matrix4().compose(new T.Vector3(),_qq,one), color:new T.Color(c)});
-  at(new T.CylinderGeometry(r,r,w,18), 0x141414);
-  at(new T.CylinderGeometry(r*0.66,r*0.66,w+0.012,16), 0xa9adb0);                  // alloy
-  at(new T.CylinderGeometry(r*0.20,r*0.20,w+0.03,8), 0x55585b);
-  for(let k=0;k<5;k++){                                                            // spokes, so it turns
-    const a=k/5*Math.PI*2;
-    L.push({geo:boxGeo(w+0.02, r*1.10, 0.05, 0), matrix:new T.Matrix4().makeRotationX(a), color:new T.Color(0x7e8285)});
-  }
-  return mergeEntries(L);
-}
-const VEH_MAT  =new T.MeshStandardMaterial({vertexColors:true, roughness:0.36, metalness:0.38});
-const VEH_GLASS=new T.MeshStandardMaterial({vertexColors:true, roughness:0.06, metalness:0.55});
-const _WHEEL_CACHE={};
-function wheelGeoCached(r, wide){
-  const k=r.toFixed(2)+":"+(wide||0.24);
-  return _WHEEL_CACHE[k] || (_WHEEL_CACHE[k]=wheelGeo(r, wide));
-}
+/* 5b · the vehicles themselves are built in 04b-vehicles.js */
 
 /* --- highway traffic -----------------------------------------------------
    Four lanes, two each way, and nothing on rails any more than it has to
@@ -665,43 +507,42 @@ function laneX(dir, lane){
   if(dir<0) return HWY.nb + (lane===0 ? 1 : -1)*HWY.lane/2;
   return HWY.sb + (lane===0 ? -1 : 1)*HWY.lane/2;
 }
-function buildVehicleMesh(kind, paint, trailer){
-  const parts=vehicleParts(kind, paint, trailer), S=parts.spec;
-  const g=new T.Group();
-  const ent=parts.OP.slice();
-  const wg=wheelGeoCached(S.wr, S.wr>0.45?0.56:0.24);
-  for(const az of S.axles) for(const s of [-1,1])
-    ent.push({geo:wg, matrix:new T.Matrix4().makeTranslation(s*S.track, S.wr, az), color:null});
-  const body=new T.Mesh(mergeEntries(ent), VEH_MAT); body.castShadow=true; body.receiveShadow=true;
-  g.add(body);
-  if(parts.GL.length) g.add(new T.Mesh(mergeEntries(parts.GL), VEH_GLASS));
-  return {g:g, spec:S};
+// a vehicle's group: its shell near, a coarse one far, the trailer's
+// painted box shared by both; wheels come from WHEEL_POOL
+function buildVehicleMesh(kind, paint, trailer, livery){
+  const parts=vehicleParts(kind, paint, trailer, livery), S=parts.spec;
+  const far=vehicleParts(kind, paint, trailer, livery, true);
+  const g=new T.Group(), near=new T.Group(), farG=new T.Group();
+  const body=new T.Mesh(mergeEntries(parts.OP), VEH_MAT); body.castShadow=true; body.receiveShadow=true;
+  near.add(body);
+  if(parts.GL.length) near.add(new T.Mesh(mergeEntries(parts.GL), VEH_GLASS));
+  const fb=new T.Mesh(mergeEntries(far.OP), VEH_MAT); fb.castShadow=true; farG.add(fb);
+  if(far.GL.length) farG.add(new T.Mesh(mergeEntries(far.GL), VEH_GLASS));
+  farG.visible=false;
+  g.add(near); g.add(farG);
+  if(parts.LV && parts.LV.length){ const lv=new T.Mesh(mergeEntries(parts.LV), TRAILER_MAT); lv.castShadow=true; lv.receiveShadow=true; g.add(lv); }
+  return {g:g, spec:S, lamps:parts.lamps, lod:{near:near, far:farG}};
 }
 (function buildTraffic(){
   const lensMat=(c)=>new T.MeshBasicMaterial({color:c, transparent:true, opacity:0, depthWrite:false,
     fog:false, toneMapped:false, side:T.DoubleSide});
-  function lamps(g, S, big){
+  // the lenses and their glows, at the anchors the builder left on the body
+  function lamps(g, A, big){
     const L=[];
-    const hy=big?1.10:0.74, ty=big?1.20:0.86;
-    for(const s of [-1,1]){
-      const hx=s*(S.hw-(big?0.32:0.30));
-      const hm=new T.Mesh(new T.PlaneGeometry(big?0.34:0.38,big?0.22:0.12), lensMat(0xfff0d0));
-      hm.position.set(hx, hy, S.nose+0.04); g.add(hm); L.push({s:hm, head:true});
-      const hs=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, transparent:true, depthWrite:false,
-        blending:T.AdditiveBlending, opacity:0}));
-      hs.scale.set(1.3,1.3,1); hs.position.set(hx, hy, S.nose+0.10); g.add(hs); L.push({s:hs, head:true, soft:true});
-      const tm=new T.Mesh(new T.PlaneGeometry(0.34,0.14), lensMat(0xff2a12));
-      tm.position.set(s*(S.hw-(big?0.20:0.24)), ty, S.tail-0.05); tm.rotation.y=Math.PI;
-      g.add(tm); L.push({s:tm, head:false});
-      const ts=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, transparent:true, depthWrite:false,
-        blending:T.AdditiveBlending, opacity:0, color:0xff3418}));
-      ts.scale.set(0.7,0.7,1); ts.position.set(s*(S.hw-0.22), ty, S.tail-0.10); g.add(ts);
-      L.push({s:ts, head:false, soft:true});
-      if(big){                                   // the amber clearance lamps up top
-        const am=new T.Mesh(new T.PlaneGeometry(0.12,0.07), lensMat(0xffa21c));
-        am.position.set(s*1.18, S.ht-0.06, (S.len>12?3.62:1.26)); g.add(am); L.push({s:am, head:false, amber:true});
-      }
-    }
+    const lens=(a, w, h, c, extra)=>{
+      const m=new T.Mesh(new T.PlaneGeometry(w,h), lensMat(c));
+      m.position.copy(a.p); m.lookAt(a.p.clone().add(a.n)); g.add(m);
+      L.push(Object.assign({s:m}, extra));
+    };
+    const glow=(a, sc, c, extra)=>{
+      const s=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, transparent:true, depthWrite:false,
+        blending:T.AdditiveBlending, opacity:0, color:c}));
+      s.scale.set(sc,sc,1); s.position.copy(a.p).addScaledVector(a.n,0.06); g.add(s);
+      L.push(Object.assign({s:s, soft:true}, extra));
+    };
+    for(const a of A.head){ lens(a, big?0.34:0.30, big?0.20:0.10, 0xfff0d0, {head:true}); glow(a, 1.3, 0xffffff, {head:true}); }
+    for(const a of A.tail){ lens(a, big?0.24:0.28, big?0.12:0.11, 0xff2a12, {head:false}); glow(a, 0.7, 0xff3418, {head:false}); }
+    for(const a of (A.amber||[])) lens(a, 0.10, 0.06, 0xffa21c, {head:false, amber:true});
     return L;
   }
   // forty-odd vehicles: two in five a truck, the way the interstate runs
@@ -711,13 +552,15 @@ function buildVehicleMesh(kind, paint, trailer){
     const big=kind>=4;
     const paint=big ? TRUCK_PAINTS[(i*5)%TRUCK_PAINTS.length] : CAR_PAINTS[(i*7+3)%CAR_PAINTS.length];
     const trailer=["#e8e7e2","#dcdad3","#c9c9c4","#e9e9e6","#b9bcbf"][(i*3)%5];
-    const m=buildVehicleMesh(kind, paint, trailer);
+    const m=buildVehicleMesh(kind, paint, trailer, (i>>1)%2);
     const v={g:m.g, kind:kind, spec:m.spec, nose:m.spec.nose, tail:m.spec.tail,
              hw:m.spec.hw+0.04, ht:m.spec.ht, big:big,
              dir:dir, lane:big ? 0 : (i%5===0 ? 1 : 0), laneT:0, fromLane:0,
              col:{x0:0,x1:0,z0:0,z1:0,y0:0,y1:0}};
     v.fromLane=v.lane; v.laneT=1;
-    v.lamps=lamps(m.g, m.spec, big);
+    v.lamps=lamps(m.g, m.lamps, big);
+    v.lod=m.lod;
+    WHEEL_POOL.register(v, m.spec);
     // spread round the loop, out of step with the other carriageway
     v.z=-HWY.wrap + ((i>>1)/22)*HWY.wrap*2 + (dir>0?67:0) + rnd()*40;
     v.want=big ? rr(25.5,28.5) : rr(29,34.5);          // 57-64 and 65-77 mph
@@ -734,7 +577,7 @@ function updateTraffic(dt, dark){
   // car following and lane changes, per carriageway
   for(const v of TRAFFIC){
     if(v.route) continue;                       // on the ramps: 14-life drives it
-    let lead=null, gap=1e9, leadO=null, gapO=1e9, behindO=1e9;
+    let lead=null, gap=1e9, leadO=null, gapO=1e9, behindO=1e9, behindV=0;
     const me=_trafProg(v), myLane=v.laneT<1 ? (v.laneT<0.5?v.fromLane:v.lane) : v.lane;
     for(const o of TRAFFIC){
       if(o===v || o.dir!==v.dir || o.route) continue;
@@ -747,24 +590,35 @@ function updateTraffic(dt, dark){
       }
       if(oLane!==myLane || (o.laneT<1)){
         if(d>0 && clear<gapO){ gapO=clear; leadO=o; }
-        if(d<=0 && -clear<behindO) behindO=-clear;
+        if(d<=0 && -clear<behindO){ behindO=-clear; behindV=o.speed; }
       }
     }
-    // the speed it can hold behind whatever is in front
-    let target=v.want*v.slow;
-    const safe=v.speed*1.5+9;
-    if(lead && gap<safe*2.2) target=Math.min(target, lead.speed*(0.6+0.4*clamp((gap-6)/safe,0,1.4)));
-    if(lead && gap<7) target=Math.min(target, lead.speed*0.5);
-    // ...and whether to go round it, or to go back right once past
-    if(v.laneT>=1 && !v.parking){
-      if(v.lane===0 && lead && gap<90 && lead.speed<v.want-1.5 && !v.exiting &&
-         gapO>70 && behindO>34 && !v.big){
-        v.fromLane=0; v.lane=1; v.laneT=0;
-      }else if(v.lane===1 && (!leadO || gapO>60) && behindO>22){
-        v.fromLane=1; v.lane=0; v.laneT=0;
+    /* THE INTELLIGENT DRIVER MODEL (Treiber): free-road acceleration toward
+       the speed it wants, less a braking term that grows as the gap closes
+       on the desired gap — a standstill margin plus a time headway plus
+       whatever it takes to shed the closing speed. Trucks hang back further
+       and pull away slower. */
+    const v0=Math.max(1, v.want*v.slow), Amax=v.big?0.7:1.3, Bc=2.2, Tg=v.big?1.9:1.5, s0=v.big?9:6;
+    let acc=Amax*(1-Math.pow(Math.min(2, v.speed/v0),4));
+    if(lead){
+      const dv=v.speed-lead.speed, ss=s0+Math.max(0, v.speed*Tg+v.speed*dv/(2*Math.sqrt(Amax*Bc)));
+      acc-=Amax*Math.pow(ss/Math.max(gap,0.5),2);
+    }
+    acc=clamp(acc,-9,Amax);
+    v.braking=acc<-1.2;
+    // round it, or back right once past; a lane change needs room both ways
+    v.hold=Math.max(0,(v.hold||0)-dt);
+    if(v.laneT>=1 && !v.parking && v.hold<=0){
+      const okAhead=gapO>Math.max(40, v.speed*1.9), okBehind=behindO>Math.max(18, 8+behindV*1.3);
+      if(v.lane===0 && !v.exiting && !v.big && okAhead && okBehind &&
+         ((lead && gap<120 && lead.speed<v.want-2) || v.yieldMerge)){
+        v.fromLane=0; v.lane=1; v.laneT=0; v.hold=7+rnd()*5;
+      }else if(v.lane===1 && (!leadO || gapO>Math.max(90, v.speed*3.0)) && behindO>Math.max(30, 10+behindV*1.5)){
+        v.fromLane=1; v.lane=0; v.laneT=0; v.hold=5+rnd()*6;
       }
     }
-    v.speed += clamp(target-v.speed, -6.5*dt, 2.2*dt);
+    v.yieldMerge=false;
+    v.speed=Math.max(0, v.speed+acc*dt);
     if(v.laneT<1) v.laneT=Math.min(1, v.laneT+dt/3.6);
   }
   for(const v of TRAFFIC){
@@ -778,6 +632,7 @@ function updateTraffic(dt, dark){
     }
     if(v.slow<1) v.slow=Math.min(1, v.slow+dt*0.42);
     v.z += v.speed*v.dir*dt;
+    v.spin=(v.spin+v.speed*dt/v.spec.wr)%(Math.PI*2);
     if(v.z> HWY.wrap && v.dir>0){ v.z-=HWY.wrap*2; v.sway=0; v.swayV=0; }
     if(v.z<-HWY.wrap && v.dir<0){ v.z+=HWY.wrap*2; v.sway=0; v.swayV=0; }
     const e=v.laneT*v.laneT*(3-2*v.laneT);

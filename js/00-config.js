@@ -52,9 +52,13 @@ const SITE = {
   // everything inside here is real, walkable, instanced woods; outside it
   // the forest is a canopy seen from the road and the air
   zone:  {x0:-240, x1:176, z0:-328, z1:248},
+  walkInset: 22,       // how far inside the zone's edge the walk stops: the curtain is always seen through trees
 };
 // the car-lot aisle, and the stall rows either side of it
-const CARLOT = { aisle0:-40.5, aisle1:-32.0, stallZ0:-104, stallZ1:60, stallW:2.75 };
+const CARLOT = { aisle0:-40.5, aisle1:-32.0, stallZ0:-104, stallZ1:60, stallW:2.75,
+  // east-row stalls by the walk, by index from stallZ0: three accessible
+  // stalls (the middle one van-accessible) with a hatched aisle between each
+  ada:{35:"ada", 36:"aisle", 37:"van", 38:"aisle", 39:"ada"} };
 // the truck lot: an aisle down the east side, stalls angled off it
 const TRUCKLOT = { aisle0:-70, aisle1:-60, stallZ0:-138, stallZ1:94, angle:0.52, pitch:8.4 };
 

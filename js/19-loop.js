@@ -210,6 +210,13 @@ function frame(){
     c.s.material.color.copy(skyImg.low).lerp(WHITE_C, 0.74-dn.nightAmount*0.6);
   }
   updateTraffic(delta, dark);
+  WHEEL_POOL.update(camera.position);
+  updateParkedLOD(camera.position);
+  // paint, glass and chrome see the sky: it goes out with the light; so
+  // does the painted inside of the wood at the zone's edge, which is unlit
+  { const day=1-dark, k=0.05+0.95*day*Math.sqrt(day);
+    for(const e of ENV_OUT_MATS) e.m.envMapIntensity=e.k*k;
+    if(FOREST.canopy && FOREST.canopy.curtainLight) FOREST.canopy.curtainLight(0.035+0.965*Math.pow(day,1.4)); }
   for(const b of BIRDS){
     b.a += b.sp*delta;
     b.s.position.set(camera.position.x+b.cx+Math.cos(b.a)*b.r, b.y+Math.sin(b.a*2.3)*3.0,

@@ -22,14 +22,23 @@
    that is a smoothed path and a speed; the vehicle is placed on it by
    distance travelled, and points along it — or against it, reversing. */
 const VISIT={active:0, max:3, wait:6};
-function _legFwd(pts, speed, opts){ return Object.assign({P:smoothPath(pts,1.0), speed:speed, rev:false}, opts||{}); }
+function _legFwd(pts, speed, opts){ return Object.assign({P:smoothPath(pts,1.0,true), speed:speed, rev:false}, opts||{}); }
+// the on-ramp from s0 on, as a path of its own: the lot's exit leg ends on
+// the ramp itself, already pointing down it, so there is no corner between
+const _ON_S=16;
+function _rampFrom(P, s0){
+  const a=pathAt(P, s0), out=[{x:a.x, z:a.z, y:a.y, s:0}];
+  for(const p of P) if(p.s>s0+0.05) out.push({x:p.x, z:p.z, y:p.y, s:p.s-s0});
+  return out;
+}
+const _ON_PT=pathAt(RAMP_ENTRY, _ON_S), _ON_PATH=_rampFrom(RAMP_ENTRY, _ON_S);
 function _carRoute(v){
   // a free stall, likelier near the door
   const C=CARLOT, n=Math.floor((C.stallZ1-C.stallZ0)/C.stallW), opts=[];
   for(let k=0;k<n;k++) for(const sd of ["E","W"]){
     if(LOT_TAKEN.has(sd+k)) continue;
     const zc=C.stallZ0+(k+0.5)*C.stallW;
-    if(sd==="E" && zc>-7 && zc<7) continue;                  // the accessible stalls
+    if(sd==="E" && CARLOT.ada[k]) continue;                  // the accessible stalls and their aisles
     opts.push({k:k, sd:sd, zc:zc, w:Math.exp(-Math.abs(zc)/30)+0.05});
   }
   if(!opts.length) return null;
@@ -40,15 +49,16 @@ function _carRoute(v){
   const ax=(C.aisle0+C.aisle1)/2, zs=st.zc, E=st.sd==="E";
   const px=E?-29.2:-43.15, s1=E?1:-1;
   const legs=[
-    _legFwd(RAMP_EXIT.map(p=>({x:p.x,z:p.z})), 13, {ramp:true}),
-    _legFwd([{x:-75,z:104},{x:-71,z:97},{x:-61,z:93},{x:-50,z:91},{x:-41,z:87},{x:ax,z:78},
+    {P:RAMP_EXIT, speed:13, rev:false, ramp:true},
+    _legFwd([{x:-75,z:104},{x:-74.7,z:100},{x:-72.6,z:96},{x:-66,z:93.6},{x:-58,z:92.4},{x:-50,z:91},{x:-41,z:87},{x:ax,z:78},
              {x:ax,z:Math.min(70,zs+16)},{x:ax,z:zs+7},{x:ax+s1*1.9,z:zs+3.2},{x:px-s1*2.4,z:zs+0.6},{x:px,z:zs}],
             5.5, {stop:true, dwell:35+Math.random()*80}),
-    {P:smoothPath([{x:px,z:zs},{x:px-s1*2.8,z:zs+0.3},{x:ax+s1*1.6,z:zs+1.8},{x:ax,z:zs+4.2}],0.5), speed:1.4, rev:true, stop:true, dwell:0.6},
-    _legFwd([{x:ax,z:zs+4.2},{x:ax,z:zs-2},{x:ax,z:-126},{x:ax-1,z:-138},{x:-46,z:-144},{x:-60,z:-146.5},{x:-70,z:-147},{x:-75,z:-146}], 6),
-    _legFwd(RAMP_ENTRY.map(p=>({x:p.x,z:p.z})), 27, {ramp:true, merge:true}),
+    {P:smoothPath([{x:px,z:zs},{x:px-s1*2.8,z:zs+0.3},{x:ax+s1*1.5,z:zs+2.0},{x:ax+s1*0.3,z:zs+4.0},{x:ax,z:zs+5.4}],0.5,true), speed:1.4, rev:true, stop:true, dwell:0.6},
+    _legFwd([{x:ax,z:zs+5.4},{x:ax,z:zs-2},{x:ax,z:-126},{x:ax-1.5,z:-136},{x:-44,z:-143.5},{x:-58,z:-146.2},{x:-68,z:-147.4},
+             {x:-73.2,z:-150.5},{x:-75.1,z:-156},{x:_ON_PT.x,z:_ON_PT.z}], 6),
+    {P:_ON_PATH, speed:27, rev:false, ramp:true, merge:true},
   ];
-  return {legs:legs, li:0, s:0, release:()=>LOT_TAKEN.delete(st.sd+st.k)};
+  return {legs:legs, li:0, s:0, stall:{px:px, zs:zs, E:E}, release:()=>LOT_TAKEN.delete(st.sd+st.k)};
 }
 function _truckRoute(v){
   const free=TRUCK_STALLS.filter(s=>!s.taken);
@@ -57,13 +67,13 @@ function _truckRoute(v){
   const S=v.spec, back=1.2-S.tail, ax=-65;
   const cx=st.x0+st.dx*back, cz=st.z0+st.dz*back;
   const legs=[
-    _legFwd(RAMP_EXIT.map(p=>({x:p.x,z:p.z})), 11, {ramp:true}),
-    _legFwd([{x:-75,z:104},{x:-71,z:97},{x:-66.5,z:89},{x:ax,z:Math.min(80,st.z0+26)},{x:ax,z:st.z0+14},
+    {P:RAMP_EXIT, speed:11, rev:false, ramp:true},
+    _legFwd([{x:-75,z:104},{x:-74.6,z:99},{x:-72,z:94.5},{x:-68.2,z:91.2},{x:-65.8,z:87.2},{x:ax,z:Math.min(80,st.z0+26)},{x:ax,z:st.z0+14},
              {x:-66.6,z:st.z0+6},{x:st.x0+st.dx*2,z:st.z0+st.dz*2},{x:cx,z:cz}], 4.5, {stop:true, dwell:80+Math.random()*160}),
-    {P:smoothPath([{x:cx,z:cz},{x:st.x0+st.dx*3,z:st.z0+st.dz*3},{x:-66.4,z:st.z0+6},{x:ax,z:st.z0+16}],0.5),
+    {P:smoothPath([{x:cx,z:cz},{x:st.x0+st.dx*3,z:st.z0+st.dz*3},{x:-66.4,z:st.z0+6},{x:ax-0.3,z:st.z0+12},{x:ax,z:st.z0+17}],0.5,true),
      speed:1.3, rev:true, stop:true, dwell:1.0},
-    _legFwd([{x:ax,z:st.z0+16},{x:ax,z:st.z0},{x:ax,z:-128},{x:-67,z:-140},{x:-72,z:-145},{x:-75,z:-146}], 5),
-    _legFwd(RAMP_ENTRY.map(p=>({x:p.x,z:p.z})), 24, {ramp:true, merge:true}),
+    _legFwd([{x:ax,z:st.z0+17},{x:ax,z:st.z0},{x:ax,z:-128},{x:-66.5,z:-138},{x:-70.5,z:-145.5},{x:-74.2,z:-152.5},{x:_ON_PT.x,z:_ON_PT.z}], 5),
+    {P:_ON_PATH, speed:24, rev:false, ramp:true, merge:true},
   ];
   return {legs:legs, li:0, s:0, release:()=>{ st.taken=false; }};
 }
@@ -112,6 +122,7 @@ function stepVisitor(v, dt, dark){
   const R=v.route, L=R.legs[R.li], P=L.P, len=P[P.length-1].s;
   if(R.dwell>0){                                           // parked, or paused between legs
     R.dwell-=dt; v.speed=0; v.braking=false;
+    if(R.parked && R.ped && !R.ped.done) R.dwell=Math.max(R.dwell, 0.5);   // they are not back yet
     const at=pathAt(P, len), h=Math.atan2(at.hx, at.hz)+(L.rev?Math.PI:0);
     placeVehicle(v, at.x, at.z, h, dark, PAVE_T);
     R.blk=null;
@@ -128,28 +139,60 @@ function stepVisitor(v, dt, dark){
   if(L.stop) target=Math.min(target, Math.sqrt(2*1.8*Math.max(0,len-R.s))+0.2);
   const here=pathAt(P, R.s);
   const fx=here.hx*(L.rev?-1:1), fz=here.hz*(L.rev?-1:1);
-  const ahead=(px,pz,reach,wide)=>{ const dx=px-here.x, dz=pz-here.z, a=dx*fx+dz*fz, l=Math.abs(dx*fz-dz*fx);
-    return a>0 && a<reach && l<wide; };
-  const noseReach=(L.rev?-v.tail:v.nose)+6;
-  let blockedBy=null;
-  if(!driving && ahead(player.pos.x, player.pos.z, noseReach, v.hw+1.2) && Math.abs(player.feetY-here.y)<3) blockedBy="you";
-  if(driving){ const p=driving.g.position; if(ahead(p.x,p.z,noseReach+2,v.hw+1.8)) blockedBy="car"; }
-  let blk=null;
+  // the merge: time the end of the ramp against whoever is coming in lane 0,
+  // and drop in behind or get ahead of them, the way people do
+  if(L.merge){
+    const rem=len-R.s, end=P[P.length-1], tMe=rem/Math.max(5,v.speed);
+    if(rem<240) for(const o of TRAFFIC){
+      if(o.route || o.dir!==v.dir || o.lane!==0) continue;
+      const dO=(end.z-o.z)*o.dir;
+      if(dO<-45 || dO>420) continue;
+      const tO=dO/Math.max(5,o.speed);
+      if(Math.abs(tO-tMe)<2.4){
+        if(tO<tMe || rem<60) target=Math.min(target, o.speed*0.85);
+        else target=Math.max(target, Math.min(o.speed+4, 33));
+        if(rem<160) o.yieldMerge=true;                    // and they move over if they can
+      }
+    }
+  }
+  // following: whatever is ahead along the way it is going, kept a speed's
+  // length off, bumper to bumper; it eases down to the speed of the thing in
+  // front instead of stopping dead at a fixed distance
+  const myFront=L.rev?-v.tail:v.nose, reachF=myFront+10+v.speed*2.4;
+  let lim=1e9, blk=null, limBy=null;
+  const consider=(px,pz,ospeed,olen,wide)=>{
+    const dx=px-here.x, dz=pz-here.z, a=dx*fx+dz*fz, l=Math.abs(dx*fz-dz*fx);
+    if(a<=0 || a>reachF || l>wide) return false;
+    const gap=a-myFront-olen, want=3.2+v.speed*1.3;
+    if(gap>=want+6) return false;
+    const cap=Math.max(0, ospeed+(gap-want)*0.6);
+    if(cap<lim){ lim=cap; return true; }
+    return false;
+  };
+  if(!driving && Math.abs(player.feetY-here.y)<3 && consider(player.pos.x, player.pos.z, 0, 0.4, v.hw+1.0)) limBy="you";
+  if(driving){ const p=driving.g.position; if(consider(p.x, p.z, 0, 2.4, v.hw+1.6)) limBy="car"; }
+  if(typeof PEOPLE!=="undefined") for(const q of PEOPLE)        // and anyone on foot in the lot
+    if(q.kind==="driver" && q.P.g.visible && consider(q.x, q.z, 0, 0.3, v.hw+0.9)) limBy="you";
   for(const o of TRAFFIC){
     if(o===v || !o.route || o.route.dwell>0) continue;      // parked ones are in their stalls, not the aisle
-    if(!ahead(o.g.position.x, o.g.position.z, noseReach+4, v.hw+1.5)) continue;
     if(o.route.blk===v && !_yieldsTo(v, o)) continue;       // it is waiting on us: go
     if(R.waited>25 && (o.route.waited||0)>25 && R.seq<o.route.seq) continue;   // a knot: the first one in is waved through
-    blk=o; blockedBy="traffic";
+    const OL=o.route.legs[o.route.li], h=o.g.rotation.y, sg=OL.rev?-1:1;
+    const os=Math.max(0, o.speed*sg*(Math.sin(h)*fx+Math.cos(h)*fz));
+    if(consider(o.g.position.x, o.g.position.z, os, Math.max(o.nose,-o.tail), v.hw+1.4)){ blk=o; limBy="traffic"; }
   }
-  R.blk=blk;
-  if(blockedBy){ target=0; R.waited=(R.waited||0)+dt;
+  if(limBy!=="traffic") blk=null;
+  target=Math.min(target, lim);
+  const blockedBy = lim<0.3 ? limBy : null;
+  R.blk = blockedBy==="traffic" ? blk : null;
+  if(blockedBy){ R.waited=(R.waited||0)+dt;
     if(blockedBy==="you" && R.waited>3.5 && !R.honked){ R.honked=true;
       if(typeof AUDIO!=="undefined") AUDIO.blip(v.big?"airhorn":"horn", here.x, here.z); } }
   else R.waited=0;
   v.braking = target < v.speed-0.2;
   v.speed += clamp(target-v.speed, -4.5*dt, (L.ramp?2.6:1.6)*dt);
   R.s=Math.min(len, R.s+v.speed*dt);
+  v.spin=(v.spin+v.speed*(L.rev?-1:1)*dt/v.spec.wr)%(Math.PI*2);
   const at=pathAt(P, R.s);
   let x=at.x, z=at.z;
   if(R.li===0 && R.x0){ x+=R.x0*(1-smoothstep(0,60,R.s)); }      // ease off the lane onto the ramp
@@ -166,7 +209,8 @@ function stepVisitor(v, dt, dark){
     }
     if(L.stop){
       R.dwell=L.dwell||0.5;
-      if(R.li===1){ R.parked=true; COL_DYN.push(v.col); }
+      if(R.li===1){ R.parked=true; COL_DYN.push(v.col);
+        if(!v.big && typeof PEOPLE_API!=="undefined") PEOPLE_API.arrive(v); }
     }else{ R.li++; R.s=0; }
   }
 }
@@ -179,53 +223,113 @@ function stepVisitor(v, dt, dark){
    you have been away from them a while. */
 const DEER=[];
 (function deer(){
-  const coat=new T.Color(0x8a6646), belly=new T.Color(0xcbbba0), dark=new T.Color(0x3a2c22), white=new T.Color(0xf0ece2);
-  function build(scale, spotted){
-    const parts={}, g=new T.Group();
-    const mat2=new T.MeshStandardMaterial({vertexColors:true, roughness:0.92});
-    const mk=(list)=>{ const m=new T.Mesh(mergeEntries(list), mat2); m.castShadow=true; return m; };
-    const E=(geo,x,y,z,c,rx,ry,rz,sx,sy,sz)=>({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
+  /* A whitetail doe, a metre at the shoulder, lofted like the cars: a torso of
+     elliptical rings (deep in the chest, tucked at the flank, broad over the
+     haunches), a neck and a long head on their own pivots, ears that turn,
+     four legs each in two pieces with a knee or a hock between, and the tail
+     that goes up white when she runs. Reddish-brown on top, white beneath,
+     white at the throat, round the eyes and under the tail. */
+  const C=h=>new T.Color(h);
+  const BACK=C(0x4a3524), COAT=C(0x6e5036), FLANK=C(0x7c5d40), BELLY=C(0xe6e0d2), DARK=C(0x2a2018),
+        NOSE=C(0x161210), WHITE=C(0xf2eee4), EARIN=C(0xc9b6a2), HOOF=C(0x2b241e);
+  const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.88});
+  const E=(geo,x,y,z,c,rx,ry,rz,sx,sy,sz)=>({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
       new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0)), V3(sx||1,sy||1,sz||1)), color:c});
-    const body=[E(new T.SphereGeometry(0.5,14,10),0,1.0,0,coat,0,0,0,0.42,0.48,1.0),
-                E(new T.SphereGeometry(0.5,12,8),0,0.86,0.05,belly,0,0,0,0.36,0.30,0.82),
-                E(new T.SphereGeometry(0.12,8,6),0,1.12,-0.50,white,0,0,0,1,0.9,0.6)];
-    if(spotted) for(let k=0;k<10;k++) body.push(E(new T.SphereGeometry(0.035,6,4),(k%2?1:-1)*0.19,1.08+((k*7)%3)*0.04,-0.3+k*0.07,white));
-    g.add(mk(body));
-    // neck and head on a pivot at the shoulders, so it can graze
-    const neck=new T.Group(); neck.position.set(0,1.15,0.38); g.add(neck);
-    neck.add(mk([E(new T.CylinderGeometry(0.09,0.13,0.6,8),0,0.24,0.10,coat,0.55),
-                 E(new T.SphereGeometry(0.13,10,8),0,0.50,0.25,coat,0,0,0,0.8,0.8,1.3),
-                 E(new T.ConeGeometry(0.07,0.22,8),0,0.47,0.44,coat,Math.PI/2),
-                 E(new T.SphereGeometry(0.035,6,4),0,0.47,0.55,dark),
-                 E(new T.ConeGeometry(0.05,0.16,6),-0.09,0.64,0.18,coat,0,0,0.5),
-                 E(new T.ConeGeometry(0.05,0.16,6), 0.09,0.64,0.18,coat,0,0,-0.5)]));
-    // tail on its own pivot: down while grazing, up like a flag when it runs
-    const tail=new T.Group(); tail.position.set(0,1.14,-0.52); g.add(tail);
-    tail.add(mk([E(new T.SphereGeometry(0.07,8,6),0,-0.07,-0.02,coat,0,0,0,0.9,1.4,0.6),
-                 E(new T.SphereGeometry(0.06,8,6),0,-0.07,-0.06,white,0,0,0,0.8,1.3,0.5)]));
+  const mk=(list)=>{ const m=new T.Mesh(mergeEntries(list), mat); m.castShadow=true; return m; };
+  // a loft of ellipses along +z, coloured by where on the ring a vertex is
+  const loft=(zs, sec, colr, M)=>{
+    const rings=zs.map(z=>{ const s=sec(z), r=[];
+      for(let j=0;j<M;j++){ const a=j/M*Math.PI*2; r.push([s.w*Math.cos(a), s.y+s.h*Math.sin(a)]); } return r; });
+    return skin(zs, rings, true, (i,j)=>colr(zs[i], Math.sin(j/M*Math.PI*2)), 0);
+  };
+  const span=(a,b,n)=>{ const o=[]; for(let k=0;k<=n;k++) o.push(lerp(a,b,k/n)); return o; };
+  const torsoGeo=(function(){
+    const top=crv([[-0.60,0.80],[-0.54,0.90],[-0.40,0.95],[-0.15,0.925],[0.15,0.95],[0.32,0.985],[0.46,0.93],[0.56,0.82]]);
+    const bot=crv([[-0.60,0.74],[-0.52,0.62],[-0.38,0.58],[-0.15,0.565],[0.10,0.52],[0.32,0.50],[0.46,0.55],[0.56,0.70]]);
+    const wid=crv([[-0.60,0.03],[-0.52,0.14],[-0.38,0.185],[-0.12,0.19],[0.15,0.18],[0.34,0.165],[0.48,0.12],[0.56,0.04]]);
+    const zs=span(-0.60,0.56,22);
+    return loft(zs, z=>({w:wid(z), y:(top(z)+bot(z))/2, h:(top(z)-bot(z))/2}), (z,s)=>{
+      if(s<-0.45) return BELLY;
+      if(z<-0.50 && s>-0.3) return WHITE;                  // the rump patch round the tail
+      if(s>0.72) return BACK;
+      return s<-0.15 ? FLANK : COAT;
+    }, 16);
+  })();
+  const neckGeo=(function(){
+    const g=loft(span(0,0.52,8), z=>({w:lerp(0.095,0.055,z/0.52), y:0, h:lerp(0.15,0.075,z/0.52)}),
+                 (z,s)=>(s<-0.55 && z>0.34 ? WHITE : s>0.6 ? BACK : COAT), 12);
+    g.rotateX(-0.95);
+    return g;
+  })();
+  const headGeo=(function(){
+    const g=loft(span(-0.05,0.26,9), z=>({w:lerp(0.072,0.030,Math.max(0,z)/0.26), y:lerp(0.02,-0.035,Math.max(0,z)/0.26),
+                 h:lerp(0.085,0.034,Math.max(0,z)/0.26)}), (z,s)=>(z>0.21 ? NOSE : s<-0.5 && z<0.05 ? WHITE : s>0.5 ? BACK : COAT), 12);
+    return g;
+  })();
+  const earGeo=(function(){ const g=new T.ConeGeometry(0.055,0.17,8,1); g.scale(1,1,0.35); return g; })();
+  function build(scale){
+    const g=new T.Group();
+    g.add(mk([{geo:torsoGeo, matrix:new T.Matrix4(), color:null}]));
+    // neck from the withers, the head at its end
+    const neck=new T.Group(); neck.position.set(0,0.84,0.40); g.add(neck);
+    neck.add(mk([{geo:neckGeo, matrix:new T.Matrix4(), color:null}]));
+    const head=new T.Group(); head.position.set(0, 0.52*Math.sin(0.95), 0.52*Math.cos(0.95)); neck.add(head);
+    head.add(mk([{geo:headGeo, matrix:new T.Matrix4(), color:null},
+                 E(new T.SphereGeometry(0.019,8,6), 0.058,0.035,0.055, DARK),
+                 E(new T.SphereGeometry(0.019,8,6),-0.058,0.035,0.055, DARK),
+                 E(new T.TorusGeometry(0.024,0.006,4,10), 0.054,0.035,0.055, WHITE, 0, Math.PI/2, 0),
+                 E(new T.TorusGeometry(0.024,0.006,4,10),-0.054,0.035,0.055, WHITE, 0, Math.PI/2, 0),
+                 E(new T.SphereGeometry(0.03,8,6), 0,-0.07,0.17, WHITE, 0,0,0, 1,0.6,1.2)]));
+    const ears=[];
+    for(const s of [-1,1]){
+      const ear=new T.Group(); ear.position.set(s*0.055,0.085,-0.02); head.add(ear);
+      ear.add(mk([E(earGeo, 0,0.075,0, COAT), E(earGeo, 0,0.07,0.012, EARIN, 0,0,0, 0.75,0.8,0.6)]));
+      ear.rotation.set(-0.25, s*0.35, -s*0.55); ears.push(ear);
+    }
+    // the tail: broad, brown on top and white under
+    const tail=new T.Group(); tail.position.set(0,0.86,-0.57); g.add(tail);
+    tail.add(mk([E(new T.SphereGeometry(0.06,10,6),0,-0.09,-0.022,COAT,0,0,0,0.9,1.7,0.45),
+                 E(new T.SphereGeometry(0.058,10,6),0,-0.09,0.002,WHITE,0,0,0,0.85,1.6,0.35)]));
+    // legs: hip or shoulder, then knee or hock; hind legs carry a thigh
     const legs=[];
-    for(const [lx,lz] of [[-0.13,0.36],[0.13,0.36],[-0.13,-0.36],[0.13,-0.36]]){
-      const L=new T.Group(); L.position.set(lx,0.92,lz); g.add(L);
-      L.add(mk([E(new T.CylinderGeometry(0.045,0.035,0.5,6),0,-0.25,0,coat),
-                E(new T.CylinderGeometry(0.03,0.022,0.44,6),0,-0.68,0,coat),
-                E(new T.SphereGeometry(0.03,6,4),0,-0.9,0.01,dark)]));
-      legs.push(L);
+    for(const [lx,ly,lz,front] of [[-0.10,0.66,0.36,true],[0.10,0.66,0.36,true],[-0.11,0.76,-0.40,false],[0.11,0.76,-0.40,false]]){
+      const up=new T.Group(); up.position.set(lx,ly,lz); g.add(up);
+      const L1=front?0.33:0.36, L2=front?0.30:0.34;
+      const ul=[E(new T.CylinderGeometry(front?0.045:0.05, 0.028, L1, 8), 0,-L1/2,0, COAT)];
+      if(!front) ul.push(E(new T.SphereGeometry(0.5,10,8), -Math.sign(lx)*0.02,-0.04,0.03, COAT, 0.25,0,0, 0.10,0.34,0.20));
+      else ul.push(E(new T.SphereGeometry(0.5,10,8), -Math.sign(lx)*0.015,0.02,0.0, COAT, 0,0,0, 0.085,0.24,0.13));
+      up.add(mk(ul));
+      const low=new T.Group(); low.position.set(0,-L1,0); up.add(low);
+      low.add(mk([E(new T.SphereGeometry(0.03,8,6), 0,0,0, COAT),
+                  E(new T.CylinderGeometry(0.021, 0.017, L2, 7), 0,-L2/2,0, front?COAT:FLANK),
+                  E(new T.CylinderGeometry(0.022, 0.026, 0.05, 7), 0,-L2-0.01,0.008, HOOF)]));
+      legs.push({up:up, low:low, front:front, side:lx<0?-1:1, rest:front?0.0:0.30, restLow:front?0.0:-0.32});
     }
     g.scale.setScalar(scale);
-    return {g:g, neck:neck, tail:tail, legs:legs};
+    return {g:g, neck:neck, head:head, ears:ears, tail:tail, legs:legs};
   }
   const SPOTS=[[29,-56],[31,-82],[30,-28],[32,46],[27,92],[-99,-150],[24,-124],[-96,92]];
   for(let i=0;i<3;i++){
-    const b=build(i===0?1.0:0.82, false);
+    const b=build(i===0?1.0:0.84);
     const sp=SPOTS[i*2];
     const d={...b, x:sp[0], z:sp[1], yaw:Math.random()*6.28, mode:"graze", t:Math.random()*5, run:0,
-             vx:0, vz:0, ph:Math.random()*6, home:i*2, gone:0};
+             vx:0, vz:0, ph:Math.random()*6, home:i*2, gone:0, gait:0, flick:0};
     d.g.position.set(d.x, Terrain.groundAt(d.x,d.z), d.z);
     scene.add(d.g);
     DEER.push(d);
   }
   DEER.spots=SPOTS;
 })();
+// pose the legs for a gait phase: walk is four-beat, the run a bound
+function _deerLegs(d, cyc, amp, bound){
+  const P=[0.0,0.5,0.75,0.25];                     // LF RF LH RH, for the walk
+  d.legs.forEach((L,k)=>{
+    const ph=bound ? (L.front?0:0.45)+(L.side>0?0.06:0) : P[k];
+    const a=(cyc+ph)*Math.PI*2, swing=Math.sin(a), lift=Math.max(0, Math.cos(a));
+    L.up.rotation.x = L.rest - swing*amp*(L.front?1:0.85);
+    L.low.rotation.x = L.restLow + (L.front ? lift*amp*1.4 : -lift*amp*1.1);
+  });
+}
 function updateDeer(dt, now){
   for(const d of DEER){
     const dx=d.x-player.pos.x, dz=d.z-player.pos.z, dist=Math.hypot(dx,dz);
@@ -257,8 +361,8 @@ function updateDeer(dt, now){
       const hop=Math.abs(Math.sin(d.run*5.2))*0.55;
       d.g.position.set(d.x, Terrain.groundAt(d.x,d.z)+hop, d.z);
       d.g.rotation.set(-Math.cos(d.run*5.2)*0.12, d.yaw, 0, "YXZ");
-      d.neck.rotation.x=-0.4; d.tail.rotation.x=2.2;           // the flag
-      for(let k=0;k<4;k++) d.legs[k].rotation.x=Math.sin(d.run*10.4+(k<2?0:Math.PI))*0.9;
+      d.neck.rotation.x=-0.25; d.head.rotation.x=0.15; d.tail.rotation.x=2.3;    // the flag
+      _deerLegs(d, d.run*2.6, 0.95, true);
       if(d.run>4.5 || Terrain.clearDist(d.x,d.z)>45){ d.mode="gone"; d.gone=50+Math.random()*60; d.g.visible=false; }
       continue;
     }
@@ -269,12 +373,18 @@ function updateDeer(dt, now){
       d.walk-=dt; const sp=0.7;
       const nx=d.x+Math.sin(d.yaw)*sp*dt, nz=d.z+Math.cos(d.yaw)*sp*dt;
       if(Terrain.clearDist(nx,nz)>-6 && Terrain.clearDist(nx,nz)<14){ d.x=nx; d.z=nz; } else d.yaw+=Math.PI*0.7;
-      for(let k=0;k<4;k++) d.legs[k].rotation.x=Math.sin(now*6+(k%3)*1.5)*0.25;
-    }else for(let k=0;k<4;k++) d.legs[k].rotation.x*=0.9;
+      d.gait+=dt*1.6; _deerLegs(d, d.gait, 0.32, false);
+    }else{ for(const L of d.legs){ L.up.rotation.x+=(L.rest-L.up.rotation.x)*Math.min(1,dt*6); L.low.rotation.x+=(L.restLow-L.low.rotation.x)*Math.min(1,dt*6); } }
     const alert=dist<38;
-    const want=alert ? -0.2 : (Math.sin(now*0.4+d.ph)>-0.3 ? 1.25 : 0.0);
+    const want=alert ? -0.2 : (Math.sin(now*0.4+d.ph)>-0.3 ? 1.9 : 0.0);
     d.neck.rotation.x += (want-d.neck.rotation.x)*Math.min(1,dt*3);
-    d.tail.rotation.x += ((alert?0.6:-0.1)-d.tail.rotation.x)*Math.min(1,dt*4);
+    d.head.rotation.x += ((want>0.6?0.85:alert?-0.1:0.15)-d.head.rotation.x)*Math.min(1,dt*3);
+    // the tail flicks, and the ears turn toward whatever is out there
+    d.flick-=dt; if(d.flick<=0) d.flick=1.5+Math.random()*4;
+    d.tail.rotation.x += ((alert?0.9:(d.flick<0.25?0.7:-0.05))-d.tail.rotation.x)*Math.min(1,dt*8);
+    for(const [i,ear] of d.ears.entries()){ const s=i?1:-1;
+      const ey=alert ? s*0.1 : s*(0.35+Math.sin(now*0.7+d.ph+i*2)*0.25);
+      ear.rotation.y += (ey-ear.rotation.y)*Math.min(1,dt*5); }
     d.g.position.set(d.x, Terrain.groundAt(d.x,d.z), d.z);
     d.g.rotation.set(0, alert ? Math.atan2(-dx,-dz)*0.0+d.yaw : d.yaw, 0);
   }
@@ -371,6 +481,8 @@ function updateSmoke(dt){
 
 function updateLife(dt, now, dark, dn){
   updateDeer(dt, now);
+  if(typeof updatePeople==="function") updatePeople(dt, now, dark);
+  if(typeof updateCritters==="function") updateCritters(dt, now, dark);
   updateFireflies(dt, now, dark);
   updateLeaves(dt, now);
   updateSmoke(dt);

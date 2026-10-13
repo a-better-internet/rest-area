@@ -161,6 +161,56 @@ const GEN_POS=[];                                   // where the hum comes from 
   LAMPS.push({x:82, y:FY+2.7, z:-179, color:0xeef4f0, intensity:0.75, dist:8, decay:1.4, indoor:true,
               vol:[H.x0, H.x1, H.z0, H.z1, FY-1, FY+4]});
   addUse(80.9, -178.2, FY, "READ THE LOGBOOK", ()=>toast("WEEKLY GEN TEST — RAN 30 MIN — OK — NO ISSUES","#cfe0d4"), 1.2);
+  /* what else lives in here: a ladder tray along the back carrying the feeders
+     down into the gear, the battery rack, a workbench with its pegboard and a
+     vise, drums on a spill pallet, the arc-flash labels and the yellow line
+     you stay behind, the remote annunciator by the door, a hard hat on a hook */
+  {
+    const ty=FY+2.70, tz=H.z0+T2+0.45;
+    for(const dz of [-0.22,0.22]) bx("paintm", 8.6, 0.08, 0.03, 81.9, ty, tz+dz, 0, 0, "#8d9194");
+    for(let x=77.8;x<86.2;x+=0.30) bx("paintm", 0.03, 0.02, 0.44, x, ty-0.03, tz, 0, 0, "#8d9194");
+    for(let k=0;k<5;k++) cyl("paintm", 0.025,0.025, 8.5, 8, 81.9, ty+0.01, tz-0.16+k*0.08, "#161616", 0, 0, Math.PI/2);
+    for(let k=0;k<6;k++) cyl("paintm", 0.035,0.035, ty-(FY+2.20), 8, 78.0+k*0.92, (ty+FY+2.20)/2, tz-0.1, "#7d8386");
+    for(const y of [ty+0.35]) for(const x of [78.5,81.9,85.3]) bx("paintm", 0.03, 0.40, 0.03, x, ty+0.2, tz, 0, 0, "#7d8386");
+    // arc-flash labels on the gear, and the yellow line in front of it
+    for(let k=0;k<6;k++) bx("paintm", 0.20, 0.13, 0.01, 78.0+k*0.92, FY+1.35, H.z0+T2+0.83, 0, 0, k%2?"#f28a1f":"#f2f0e8");
+    for(const [x0,x1,z] of [[77.5,83.9,-180.15]]) bx("paint", x1-x0, 0.006, 0.08, (x0+x1)/2, FY+0.006, z, 0, 0, "#e2b31c");
+  }
+  // the battery rack under the louvre: two steel tiers, twelve black cells
+  bx("paintm", 0.55, 0.05, 1.70, 86.40, FY+0.30, -180.65, 0, 0, "#5d6266");
+  bx("paintm", 0.55, 0.05, 1.70, 86.40, FY+0.82, -180.65, 0, 0, "#5d6266");
+  for(const [x,z] of [[86.15,-181.48],[86.65,-181.48],[86.15,-179.82],[86.65,-179.82]]) bx("paintm", 0.04, 1.10, 0.04, x, FY+0.55, z, 0, 0, "#5d6266");
+  for(let t2=0;t2<2;t2++) for(let k=0;k<6;k++){
+    bx("paintm", 0.34, 0.24, 0.24, 86.40, FY+0.45+t2*0.52, -181.30+k*0.28, 0, 0, "#1c1d1f");
+    for(const dx of [-0.08,0.08]) cyl("paintm", 0.02,0.02,0.04,6, 86.40+dx, FY+0.59+t2*0.52, -181.30+k*0.28, dx<0?"#b3151b":"#2a2a2a");
+  }
+  addCol(86.1, 86.75, -181.55, -179.75, FY-0.5, FY+1.15);
+  // the workbench on the west wall, its pegboard, a vise, a red toolbox
+  bx("beam", 0.66, 0.05, 2.30, 77.62, FY+0.90, -178.6, 0.6, 0, "#8a6a48");
+  for(const z of [-179.7,-177.5]) for(const x of [77.35,77.88]) bx("paintm", 0.05, 0.88, 0.05, x, FY+0.44, z, 0, 0, "#3a3b3d");
+  bx("paintm", 0.62, 0.04, 2.20, 77.62, FY+0.25, -178.6, 0, 0, "#3a3b3d");
+  bx("paintm", 0.02, 0.80, 2.10, 77.27, FY+1.55, -178.6, 0, 0, "#a88d62");
+  for(let k=0;k<9;k++){ const z=-179.5+k*0.22, kind=k%3;
+    if(kind===0) bx("paintm", 0.03, 0.26, 0.04, 77.30, FY+1.62, z, 0, 0, "#c42a1a");
+    else if(kind===1) bx("paintm", 0.03, 0.20, 0.08, 77.30, FY+1.40, z, 0, 0, "#2a2a2c");
+    else push("paintm", new T.TorusGeometry(0.06,0.012,6,12), 77.30, FY+1.75, z, Math.PI/2, "#9a9da0"); }
+  bx("paintm", 0.14, 0.12, 0.20, 77.80, FY+0.99, -179.4, 0, 0, "#2c4a6e");
+  bx("paintm", 0.40, 0.22, 0.24, 77.62, FY+1.04, -177.9, 0, 0, "#b3151b");
+  bx("paintm", 0.42, 0.03, 0.26, 77.62, FY+1.16, -177.9, 0, 0, "#8a1010");
+  addCol(77.25, 77.98, -179.78, -177.42, FY-0.5, FY+0.95);
+  // two drums on a spill pallet
+  bx("paintm", 1.30, 0.15, 1.30, 85.05, FY+0.075, -180.95, 0, 0, "#e2b31c");
+  for(const [x,c] of [[84.75,"#1f4f8a"],[85.35,"#202224"]]){ cyl("paintm", 0.29,0.29,0.88,18, x, FY+0.59, -180.95, c);
+    for(const y of [0.40,0.78]) cyl("paintm", 0.295,0.295,0.03,18, x, FY+y, -180.95, c==="#202224"?"#3a3c3e":"#2b5f9e"); }
+  addCol(84.4, 85.7, -181.6, -180.3, FY-0.5, FY+1.05);
+  // by the door: the annunciator, an extinguisher, the hard hat and vest, an eyewash
+  bx("paintm", 0.36, 0.26, 0.06, 81.55, FY+1.55, H.z1-T2-0.03, 0, 0, "#d9d6cd");
+  for(let k=0;k<6;k++) push(k===2?"ledamber":"ledgreen", new T.SphereGeometry(0.012,6,5), 81.43+(k%3)*0.12, FY+1.50+((k/3)|0)*0.08, H.z1-T2-0.065, 0, "#ffffff");
+  cyl("paintm", 0.075,0.075, 0.46, 14, 81.05, FY+0.95, H.z1-T2-0.10, "#b3151b");
+  bx("paintm", 0.04, 0.10, 0.04, 78.55, FY+1.60, H.z1-T2-0.03, 0, 0, "#3a3b3d");
+  push("paintm", new T.SphereGeometry(0.15,12,8,0,Math.PI*2,0,Math.PI/2), 78.55, FY+1.66, H.z1-T2-0.14, 0, "#f2c418");
+  bx("paintm", 0.40, 0.50, 0.04, 78.95, FY+1.25, H.z1-T2-0.05, 0, 0, "#e8f23a");
+  bx("paintm", 0.30, 0.36, 0.14, 77.40, FY+1.30, -176.70, 0, 0, "#3d9a4a");
 
   /* ---- the standby sets ------------------------------------------------ */
   const gen=(cx,cz,running)=>{

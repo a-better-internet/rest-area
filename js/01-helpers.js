@@ -172,17 +172,22 @@ function discGeo(r, seg, uvScale){
    curves is a centre line, smoothed, and a ribbon laid along it.        */
 // Catmull-Rom through the control points, resampled every `step` metres;
 // carries y if the points have it
-function smoothPath(pts, step){
+/* chord: tangents scaled by the neighbouring chords, so a short leg next to
+   a long one does not overshoot and double back (uniform Catmull-Rom does:
+   six metres then a hundred and ten, and the curve starts out backwards) */
+function smoothPath(pts, step, chord){
   const out=[], P=pts;
   const at=(i)=>P[Math.max(0, Math.min(P.length-1, i))];
+  const len=(a,b)=>Math.hypot(b.x-a.x, b.z-a.z);
   for(let i=0;i<P.length-1;i++){
     const p0=at(i-1), p1=at(i), p2=at(i+1), p3=at(i+2);
     const L=Math.hypot(p2.x-p1.x, p2.z-p1.z), n=Math.max(1, Math.ceil(L/(step||2)));
+    const k1=chord ? L/Math.max(1e-6, len(p0,p1)+L) : 0.5, k2=chord ? L/Math.max(1e-6, L+len(p2,p3)) : 0.5;
     for(let k=0;k<n;k++){
       const t=k/n, t2=t*t, t3=t2*t;
-      const cr=(a,b,c,d)=>0.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3);
-      out.push({x:cr(p0.x,p1.x,p2.x,p3.x), z:cr(p0.z,p1.z,p2.z,p3.z),
-                y:cr(p0.y||0,p1.y||0,p2.y||0,p3.y||0)});
+      const he=(a,b,c,d,f)=>(2*t3-3*t2+1)*b+(t3-2*t2+t)*(c-a)*k1+(-2*t3+3*t2)*c+(t3-t2)*(d-b)*k2;
+      out.push({x:he(p0.x,p1.x,p2.x,p3.x), z:he(p0.z,p1.z,p2.z,p3.z),
+                y:he(p0.y||0,p1.y||0,p2.y||0,p3.y||0)});
     }
   }
   const e=P[P.length-1]; out.push({x:e.x, z:e.z, y:e.y||0});
@@ -332,7 +337,7 @@ function mergeEntries(entries){
   let vo=0, io=0;
   for(const e of entries){
     const g=e.geo, pos=g.attributes.position, nor=g.attributes.normal, uv=g.attributes.uv;
-    const col=e.color||white;
+    const col=e.color||white, vc=g.attributes.color;
     nm.getNormalMatrix(e.matrix);
     for(let i=0;i<pos.count;i++){
       v.set(pos.getX(i),pos.getY(i),pos.getZ(i)).applyMatrix4(e.matrix);
@@ -341,7 +346,8 @@ function mergeEntries(entries){
       else n.set(0,1,0);
       N[(vo+i)*3]=n.x; N[(vo+i)*3+1]=n.y; N[(vo+i)*3+2]=n.z;
       if(uv){ U[(vo+i)*2]=uv.getX(i); U[(vo+i)*2+1]=uv.getY(i); }
-      C[(vo+i)*3]=col.r; C[(vo+i)*3+1]=col.g; C[(vo+i)*3+2]=col.b;
+      if(vc){ C[(vo+i)*3]=vc.getX(i)*col.r; C[(vo+i)*3+1]=vc.getY(i)*col.g; C[(vo+i)*3+2]=vc.getZ(i)*col.b; }
+      else  { C[(vo+i)*3]=col.r; C[(vo+i)*3+1]=col.g; C[(vo+i)*3+2]=col.b; }
     }
     if(g.index){ for(let k=0;k<g.index.count;k++) IDX[io++]=vo+g.index.getX(k); }
     else       { for(let k=0;k<pos.count;k++)    IDX[io++]=vo+k; }
@@ -566,13 +572,24 @@ function makeDoor(xf, lx, ly, lz, label, opensIn, ajar, style, tint){
     ent.push({geo:boxGeo(0.10,0.17,0.05,0.5), matrix:m4(leafW-0.02, leafH*0.52+0.10, 0.045), color:d3});
     ent.push({geo:new T.TorusGeometry(0.038,0.011,5,10), matrix:rot(leafW-0.02, leafH*0.52+0.21, 0.045, 0, 0, 0), color:chrome});
   }else if(style==="stall"||style==="stallw"){
-    const bg=C(tint||0xb9ab8c), d4=C(0x8a8a86);
+    const bg=C(tint||0xb9ab8c), d4=C(0x8a8a86), edge=C(0x9a8e72), chr=C(0xc9cbcc);
     ent.push({geo:boxGeo(leafW,leafH,leafT,0.5), matrix:m4(leafW/2, leafH/2, 0), color:bg});
+    // the laminate's edge banding, a shade darker all round
+    ent.push({geo:boxGeo(leafW,0.012,leafT+0.002,0), matrix:m4(leafW/2, 0.006, 0), color:edge});
+    ent.push({geo:boxGeo(leafW,0.012,leafT+0.002,0), matrix:m4(leafW/2, leafH-0.006, 0), color:edge});
+    ent.push({geo:boxGeo(0.012,leafH,leafT+0.002,0), matrix:m4(leafW-0.006, leafH/2, 0), color:edge});
+    // wrap-around hinges on the hinge edge, top and bottom
+    for(const y of [0.16, leafH-0.16]) ent.push({geo:boxGeo(0.045,0.13,leafT+0.012,0), matrix:m4(0.012, y, 0), color:chr});
     for(const sd of [1,-1]){
-      ent.push({geo:boxGeo(0.07,0.035,0.02,0), matrix:m4(leafW-0.07, 0.95, sd*(leafT/2+0.010)), color:d4});
-      ent.push({geo:boxGeo(0.10,0.05,0.012,0), matrix:m4(leafW-0.09, 1.10, sd*(leafT/2+0.006)), color:C(0x6b6b66)});
+      // the slide latch inside, the indicator and the pull outside
+      ent.push({geo:boxGeo(0.09,0.045,0.016,0), matrix:m4(leafW-0.07, 0.95, sd*(leafT/2+0.008)), color:chr});
+      ent.push({geo:boxGeo(0.11,0.05,0.010,0), matrix:m4(leafW-0.10, 1.10, sd*(leafT/2+0.005)), color:chr});
+      ent.push({geo:boxGeo(0.07,0.022,0.006,0), matrix:m4(leafW-0.10, 1.10, sd*(leafT/2+0.012)), color:C(0x2f8a3c)});
     }
-    ent.push({geo:boxGeo(0.06,0.10,0.04,0), matrix:m4(leafW/2, 1.30, leafT/2+0.02), color:d4});   // coat hook
+    ent.push({geo:boxGeo(0.03,0.13,0.03,0), matrix:m4(leafW-0.13, 0.95, -(leafT/2+0.025)), color:chr});   // pull
+    ent.push({geo:boxGeo(0.05,0.05,0.04,0), matrix:m4(leafW/2, 1.32, leafT/2+0.02), color:chr});         // coat hook
+    ent.push({geo:boxGeo(0.02,0.07,0.06,0), matrix:m4(leafW/2, 1.36, leafT/2+0.045), color:chr});
+    ent.push({geo:new T.CylinderGeometry(0.022,0.022,0.04,10), matrix:new T.Matrix4().makeRotationX(Math.PI/2).setPosition(leafW/2, 1.20, leafT/2+0.02), color:C(0x2a2a2a)});  // bumper
   }else{                                         // closet: painted flush
     const pc=C(tint||0x7f7466), ln=C(0x6c6256);
     ent.push({geo:boxGeo(leafW,leafH,leafT,0.5), matrix:m4(leafW/2, leafH/2, 0), color:pc});

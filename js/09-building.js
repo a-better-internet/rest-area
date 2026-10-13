@@ -41,9 +41,9 @@ bucketOf("ytile",    ()=>new T.MeshStandardMaterial({map:TEX.ytile,   roughness:
 bucketOf("mosaic",   ()=>new T.MeshStandardMaterial({map:TEX.mosaic,  roughness:0.55}));
 bucketOf("quarry",   ()=>new T.MeshStandardMaterial({map:TEX.quarry,  roughness:0.50}));
 bucketOf("plaster",  ()=>new T.MeshStandardMaterial({map:TEX.drywall, roughness:0.88}));
-bucketOf("porcelain",()=>new T.MeshStandardMaterial({color:0xffffff,  roughness:0.20, metalness:0.02}));
-bucketOf("steel",    ()=>new T.MeshStandardMaterial({map:TEX.brushed, roughness:0.34, metalness:0.60}));
-bucketOf("chrome",   ()=>new T.MeshStandardMaterial({color:0xffffff,  roughness:0.16, metalness:0.86}));
+bucketOf("porcelain",()=>envIn(new T.MeshStandardMaterial({color:0xffffff,  roughness:0.16, metalness:0.02}), 0.8));
+bucketOf("steel",    ()=>envIn(new T.MeshStandardMaterial({map:TEX.brushed, roughness:0.30, metalness:0.75}), 1.0));
+bucketOf("chrome",   ()=>envIn(new T.MeshStandardMaterial({color:0xffffff,  roughness:0.12, metalness:0.92}), 1.0));
 bucketOf("beam",     ()=>new T.MeshStandardMaterial({map:TEX.wood,    roughness:0.80}));
 bucketOf("cork",     ()=>new T.MeshStandardMaterial({map:TEX.cork,    roughness:0.95}));
 bucketOf("mat",      ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.rubber, roughness:1.0},
@@ -125,6 +125,96 @@ function wallSign(w,h,draw,x,y,z,ry){
   return signPanel(w,h, signTex(Math.round(w*300),Math.round(h*300),draw), x,y,z, ry);
 }
 
+/* a grey swing-top can: a square bin, a hood on it with a peaked lid, and the
+   swinging door in the front of the hood, facing ry (local +z out) */
+function swingCan(x, z, ry, y0){
+  const f=XF(x, z, ry), Y=(y0===undefined?FL:y0), G="#9aa0a3";
+  lbx(f, "paintm", 0.44, 0.76, 0.44, 0, Y+0.38, 0, 0, G);
+  lbx(f, "paintm", 0.47, 0.035, 0.47, 0, Y+0.775, 0, 0, "#868c8f");
+  lbx(f, "paintm", 0.45, 0.20, 0.45, 0, Y+0.89, 0, 0, G);
+  for(const s of [-1,1]) push("paintm", boxGeo(0.47, 0.03, 0.27, 0), f.x(0,s*0.11), Y+1.035, f.z(0,s*0.11), ry, "#8e9497", -s*0.42, 0);
+  lbx(f, "paintm", 0.47, 0.025, 0.04, 0, Y+1.085, 0, 0, "#7f8588");
+  // the door: a dark slot, the flap hanging in it, a push plate
+  lbx(f, "paintm", 0.34, 0.15, 0.012, 0, Y+0.895, 0.226, 0, "#161616");
+  push("paintm", boxGeo(0.32, 0.135, 0.014, 0), f.x(0,0.231), Y+0.90, f.z(0,0.231), ry, "#7a8084", -0.10, 0);
+  lbx(f, "paintm", 0.12, 0.03, 0.01, 0, Y+0.85, 0.24, 0, "#5d6266");
+  bx("rubber", 0.52, 0.02, 0.52, x, Y+0.01, z, 0, ry, "#2a2a2a");
+  lcol(f, 0.48, 0.48, 0, 0, Y-0.5, Y+1.05);
+}
+/* ---- porcelain --------------------------------------------------------------
+   A floor-mounted elongated bowl turned on a lathe and stretched front to
+   back, an open-front seat, the chrome flushometer out of the wall behind
+   it; a wall-hung urinal extruded from its side profile with its edges
+   rounded off, the inside of it painted on, its own flush valve. Each takes
+   a frame on the wall: (x, z) there, ry turning local +z out into the room. */
+const _bowlGeo=(function(){
+  const pts=[[0.125,0.0],[0.118,0.04],[0.100,0.13],[0.108,0.21],[0.145,0.29],[0.178,0.345],[0.190,0.375],[0.186,0.392],
+             [0.168,0.398],[0.150,0.388],[0.128,0.345],[0.090,0.300],[0.040,0.284],[0.001,0.282]];
+  const g=new T.LatheGeometry(pts.map(p=>new T.Vector2(p[0],p[1])), 28);
+  g.scale(1, 1, 1.32);
+  return g;
+})();
+const _seatGeo=(function(){
+  const arc=Math.PI*2*0.86, g=new T.TorusGeometry(0.150, 0.021, 6, 24, arc);
+  g.rotateZ(Math.PI*1.5-(arc+(Math.PI*2-arc)/2));
+  g.rotateX(-Math.PI/2); g.scale(1, 0.6, 1.32);
+  return g;
+})();
+const _waterGeo=(function(){ const g=new T.CircleGeometry(0.085, 20); g.rotateX(-Math.PI/2); g.scale(1,1,1.32); return g; })();
+function toiletFix(x, z, ry, seatC){
+  const f=XF(x, z, ry), P=(lx,ly,lz)=>[f.x(lx,lz), FL+ly, f.z(lx,lz)];
+  const at=(bk,geo,lx,ly,lz,c,rx,rz)=>{ const p=P(lx,ly,lz); push(bk, geo, p[0],p[1],p[2], ry, c, rx||0, rz||0); };
+  at("porcelain", _bowlGeo, 0, 0, 0.44, PORC);
+  at("paintm", _waterGeo, 0, 0.300, 0.46, "#8ea4ad");
+  at("porcelain", boxGeo(0.25, 0.15, 0.17, 0), 0, 0.33, 0.11, PORC);                   // the neck, to the wall
+  at("paintm", _seatGeo, 0, 0.405, 0.45, seatC||"#f4f3ef");
+  for(const s of [-1,1]) at("chrome", new T.CylinderGeometry(0.012,0.012,0.04,8), s*0.09, 0.40, 0.21, "#c9cbcc");
+  // the flushometer: stop valve off the wall, the body, the handle, the tube to the spud
+  at("chrome", new T.CylinderGeometry(0.03,0.03,0.012,12), 0.14, 0.80, 0.006, "#c9cbcc", Math.PI/2);
+  at("chrome", new T.CylinderGeometry(0.014,0.014,0.10,8), 0.14, 0.80, 0.05, "#c9cbcc", Math.PI/2);
+  at("chrome", new T.CylinderGeometry(0.016,0.016,0.14,8), 0.07, 0.80, 0.10, "#c9cbcc", 0, Math.PI/2);
+  at("chrome", new T.CylinderGeometry(0.036,0.036,0.13,14), 0, 0.77, 0.10, "#d0d3d4");
+  at("chrome", new T.SphereGeometry(0.036,12,8,0,Math.PI*2,0,Math.PI/2), 0, 0.835, 0.10, "#d0d3d4");
+  at("chrome", boxGeo(0.13, 0.018, 0.018, 0), 0.075, 0.725, 0.10, "#c9cbcc", 0, -0.35);
+  at("chrome", new T.CylinderGeometry(0.016,0.016,0.30,8), 0, 0.56, 0.10, "#c9cbcc");
+  at("chrome", new T.CylinderGeometry(0.03,0.03,0.03,12), 0, 0.41, 0.10, "#c9cbcc");
+  // the seat-cover dispenser on the wall over it
+  at("steel", boxGeo(0.42, 0.28, 0.035, 0.8), 0, 1.18, 0.018, "#cfd2d3");
+  at("paintm", boxGeo(0.30, 0.10, 0.006, 0), 0, 1.20, 0.037, "#3a3c3e");
+}
+const _urinalGeo=(function(){
+  const sh=new T.Shape();
+  sh.moveTo(0.02,0.44); sh.lineTo(0.0,1.10); sh.quadraticCurveTo(0.0,1.14, 0.06,1.14); sh.lineTo(0.24,1.12);
+  sh.quadraticCurveTo(0.30,1.11, 0.30,1.04); sh.lineTo(0.32,0.80); sh.quadraticCurveTo(0.34,0.66, 0.37,0.62);
+  sh.quadraticCurveTo(0.38,0.56, 0.33,0.52); sh.quadraticCurveTo(0.22,0.43, 0.10,0.42); sh.lineTo(0.02,0.44);
+  const g=new T.ExtrudeGeometry(sh, {depth:0.26, bevelEnabled:true, bevelThickness:0.05, bevelSize:0.04, bevelSegments:4, curveSegments:8});
+  g.rotateY(-Math.PI/2); g.translate(0.13, 0, 0);
+  g.deleteAttribute("uv");
+  return g;
+})();
+bucketOf("urinal_in", ()=>envIn(new T.MeshStandardMaterial({roughness:0.18, metalness:0.02,
+  map:setSRGB(new T.CanvasTexture((function(){ const c=cvs(128,256), x=c.getContext("2d");
+    x.fillStyle="#f3f2ed"; x.fillRect(0,0,128,256);
+    x.save(); x.translate(64,150); x.scale(1,2.1);
+    const g=x.createRadialGradient(0,0,4,0,0,56); g.addColorStop(0,"rgba(120,122,118,0.85)"); g.addColorStop(0.7,"rgba(170,170,165,0.55)"); g.addColorStop(1,"rgba(243,242,237,0)");
+    x.fillStyle=g; x.beginPath(); x.arc(0,0,56,0,7); x.fill(); x.restore();
+    x.fillStyle="#d8d7d1"; for(let i=0;i<5;i++) for(let j=0;j<3;j++){ x.beginPath(); x.arc(48+i*8,214+j*7,2.2,0,7); x.fill(); }
+    x.fillStyle="rgba(90,90,86,0.5)"; x.fillRect(10,6,108,5);
+    return c; })()))}), 0.6));
+function urinalFix(x, z, ry, drop){
+  const f=XF(x, z, ry), dy=-(drop||0), P=(lx,ly,lz)=>[f.x(lx,lz), FL+ly+dy, f.z(lx,lz)];
+  const at=(bk,geo,lx,ly,lz,c,rx,rz)=>{ const p=P(lx,ly,lz); push(bk, geo, p[0],p[1],p[2], ry, c, rx||0, rz||0); };
+  at("porcelain", _urinalGeo, 0, 0, 0, PORC);
+  at("urinal_in", planeGeo(0.25, 0.46, 0), 0, 0.83, 0.392, "#ffffff", 0.165);
+  // the flush valve over it
+  at("chrome", new T.CylinderGeometry(0.03,0.03,0.012,12), 0.11, 1.36, 0.006, "#c9cbcc", Math.PI/2);
+  at("chrome", new T.CylinderGeometry(0.014,0.014,0.10,8), 0.11, 1.36, 0.05, "#c9cbcc", Math.PI/2);
+  at("chrome", new T.CylinderGeometry(0.016,0.016,0.11,8), 0.055, 1.36, 0.10, "#c9cbcc", 0, Math.PI/2);
+  at("chrome", new T.CylinderGeometry(0.034,0.034,0.12,14), 0, 1.33, 0.10, "#d0d3d4");
+  at("chrome", new T.SphereGeometry(0.034,12,8,0,Math.PI*2,0,Math.PI/2), 0, 1.39, 0.10, "#d0d3d4");
+  at("chrome", boxGeo(0.12, 0.016, 0.016, 0), 0.07, 1.29, 0.10, "#c9cbcc", 0, -0.35);
+  at("chrome", new T.CylinderGeometry(0.014,0.014,0.13,8), 0, 1.21, 0.10, "#c9cbcc");
+}
 // a yellow A-frame CAUTION WET FLOOR sign
 const _wetTex=signTex(160,256,(c,W,H)=>{
   c.fillStyle="#f2c418"; c.fillRect(0,0,W,H); c.fillStyle="#1a1a1a";
@@ -327,8 +417,8 @@ function wetFloor(x,z,ry){
 /* ---- lit windows: after dark the glass glows from the room behind it ----
    A plane just inside each pane, facing out and only out, so from inside
    it is culled and you look through the glass at the night. */
-bucketOf("winwarm", ()=>glowMat({color:0x1a1612, emissive:0xffd7a0, emissiveIntensity:0.20}, "warm"));
-bucketOf("wincool", ()=>glowMat({color:0x14181a, emissive:0xe6f0ff, emissiveIntensity:0.16}, "warm"));
+bucketOf("winwarm", ()=>{ const m=basicGlowMat(0xffd7a0, "warm", T.AdditiveBlending); GLOW[GLOW.length-1].max=0.42; return m; });
+bucketOf("wincool", ()=>glowMat({color:0xb9c3c3, emissive:0xe6f0ff, emissiveIntensity:0.16, roughness:0.45}, "warm"));
 (function litWindows(){
   const gw=2.30, top=(z)=>roofLY(z)-0.06-0.32;
   const pane=new T.Shape(); pane.moveTo(-gw,3.18); pane.lineTo(gw,3.18); pane.lineTo(gw,top(gw)); pane.lineTo(0,top(0)); pane.lineTo(-gw,top(gw));
@@ -464,13 +554,13 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
   const mapMat=new T.MeshStandardMaterial({map:mapTex, roughness:0.5});
   const mm=new T.Mesh(new T.PlaneGeometry(1.95,1.30), mapMat);
   mm.position.set(-3.3, FL+1.62, R.z0+0.025); scene.add(mm);
-  bx("paintm", 2.07, 1.42, 0.03, -3.3, FL+1.62, R.z0+0.012, 0, 0, "#d9d6cd");      // the frame
+  bx("paintm", 2.07, 1.42, 0.02, -3.3, FL+1.62, R.z0+0.008, 0, 0, "#8a6a48");      // the frame, behind the map
   wallSign(0.86,0.34,(c,W,H)=>{ c.fillStyle="#7a5432"; c.fillRect(0,0,W,H); c.fillStyle="#f2f0ea";
     c.fillRect(W*0.07,H*0.14,W*0.86,H*0.72); c.fillStyle="#24408e"; fitText(c,"MEN",W*0.6,H*0.6,W/2,H/2,"700"); },
-    -0.4, FL+2.48, R.z0+0.012, 0);
+    -0.4, FL+2.68, R.z0+0.012, 0);
   wallSign(0.86,0.34,(c,W,H)=>{ c.fillStyle="#7a5432"; c.fillRect(0,0,W,H); c.fillStyle="#f2f0ea";
     c.fillRect(W*0.07,H*0.14,W*0.86,H*0.72); c.fillStyle="#24408e"; fitText(c,"WOMEN",W*0.7,H*0.6,W/2,H/2,"700"); },
-    -0.4, FL+2.48, R.z1-0.012, Math.PI);
+    -0.4, FL+2.68, R.z1-0.012, Math.PI);
   for(const sg of [-1,1]) wallSign(0.20,0.28,(c,W,H)=>{ c.fillStyle="#6a6c6e"; c.fillRect(0,0,W,H);
       c.fillStyle="#f2f0ea"; c.font="bold "+(H*0.12|0)+"px Arial"; c.textAlign="center";
       c.fillText(sg<0?"MEN":"WOMEN", W/2, H*0.88);
@@ -478,7 +568,7 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
     0.55, FL+1.5, sg*(R.z1-0.012), sg<0?0:Math.PI);
   // the family room's door, and its sign
   wallSign(0.62,0.22,(c,W,H)=>{ c.fillStyle="#24408e"; c.fillRect(0,0,W,H); c.fillStyle="#f2f0ea";
-    fitText(c,"FAMILY RESTROOM",W*0.85,H*0.5,W/2,H/2,"600"); }, 4.68, FL+2.42, R.z0+0.012, 0);
+    fitText(c,"FAMILY RESTROOM",W*0.85,H*0.5,W/2,H/2,"600"); }, 4.68, FL+2.62, R.z0+0.012, 0);
   // a payphone that still has a dial tone, under a little hood
   bx("steel", 0.62, 0.70, 0.30, 2.5, FL+1.55, R.z0+0.16, 0.8, 0, "#c8cacb");
   bx("steel", 0.30, 0.52, 0.12, 2.5, FL+1.45, R.z0+0.36, 0.8, 0, "#9fa3a5");
@@ -533,11 +623,19 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
     push("glass", boxGeo(x1-x0, y1-y0, 0.01, 0), (x0+x1)/2, (y0+y1)/2, z-0.03, 0, "#e8f0f0");
   }
   // the fountain: stainless, bi-level (photograph 5)
-  for(const [x,h] of [[2.15,FL+0.88],[2.85,FL+0.74]]){
-    bx("steel", 0.48, 0.30, 0.46, x, h, R.z1-0.24, 0.8, 0, "#d5d7d8");
-    bx("steel", 0.40, 0.42, 0.30, x, h-0.36, R.z1-0.16, 0.8, 0, "#b9bcbe");
-    push("chrome", boxGeo(0.30,0.02,0.24,0), x, h+0.16, R.z1-0.26, 0, "#8f9496");
+  for(const [x,h] of [[2.15,FL+0.98],[2.85,FL+0.80]]){
+    const zw=R.z1;
+    bx("steel", 0.46, 0.14, 0.30, x, h-0.07, zw-0.15, 0.8, 0, "#dadcdd");                     // the basin, square at the wall
+    push("steel", new T.CylinderGeometry(0.23,0.23,0.14,20,1,false,Math.PI/2,Math.PI), x, h-0.07, zw-0.30, 0, "#dadcdd");   // rounded front
+    push("paintm", new T.CylinderGeometry(0.19,0.19,0.01,20,1,false,Math.PI/2,Math.PI), x, h+0.002, zw-0.30, 0, "#5f6467");
+    bx("paintm", 0.38, 0.01, 0.20, x, h+0.002, zw-0.17, 0, 0, "#5f6467");                    // the bowl, dark
+    cyl("chrome", 0.012,0.016, 0.07, 10, x+0.06, h+0.03, zw-0.26, "#d0d3d4");               // bubbler
+    push("chrome", new T.SphereGeometry(0.018,8,6), x+0.06, h+0.065, zw-0.26, 0, "#d0d3d4");
+    bx("steel", 0.30, 0.04, 0.03, x, h-0.06, zw-0.54, 0.8, 0, "#c8cbcc");                     // push bar
+    bx("steel", 0.40, h-FL-0.30, 0.10, x, (h-0.14+FL+0.16)/2, zw-0.05, 0.8, 0, "#bfc2c4");   // the wall box under it
   }
+  bx("steel", 0.36, 0.42, 0.22, 2.15, FL+0.21, R.z1-0.11, 0.8, 0, "#b4b7b9");                // the chiller cabinet
+  for(let k=0;k<6;k++) bx("paintm", 0.30, 0.012, 0.01, 2.15, FL+0.08+k*0.05, R.z1-0.225, 0, 0, "#6b7073");
   addCol(1.88, 3.12, R.z1-0.5, R.z1, FL-0.5, FL+1.1);
   addUse(2.5, R.z1-0.9, FL, "TAKE A DRINK", ()=>toast("COLD, AND IT TASTES LIKE THE PIPE","#cfe0d4"), 1.2);
 
@@ -589,14 +687,7 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
            ["#ffffff","#f0e6d8","#e6eef6","#f6eadf"][(t*6+k)%4]);
   }
   // trash cans by the entries: grey, swing-top (photograph 4)
-  const swingCan=(x,z)=>{
-    bx("paintm", 0.42, 0.78, 0.42, x, FL+0.40, z, 0, 0, "#9aa0a3");
-    push("paintm", new FaceGeo().slab([V3(x-0.22,FL+0.80,z-0.22),V3(x+0.22,FL+0.80,z-0.22),V3(x+0.22,FL+1.02,z+0.22),V3(x-0.22,FL+1.02,z+0.22)],0.04).geo(),
-         0,0,0, 0, "#8b9194");
-    bx("rubber", 0.52, 0.03, 0.52, x, FL+0.015, z, 0, 0, "#2a2a2a");
-    addCol(x-0.24, x+0.24, z-0.24, z+0.24, FL-0.5, FL+1.0);
-  };
-  swingCan(-1.7, -4.9); swingCan(0.9, 4.85); swingCan(3.62, 4.88);
+  swingCan(-1.7, -4.9, 0); swingCan(0.9, 4.85, Math.PI); swingCan(3.62, 4.88, Math.PI);
   // the floor sign that is always out
   wetFloor(-0.1, -4.6, 0.5);
 })();
@@ -713,21 +804,28 @@ function drawPAMap(x,W,H){
       // the door, opening in, resting a little open the way they do
       makeDoor(sg<0 ? XF(da+dw, Z(zfrt), Math.PI) : XF(da, Z(zfrt), 0), 0, PY0, 0, "STALL", true,
                0.12+((i*7)%5)*0.06, wide?"stallw":"stall", 0xbcae90);
-      // what is in it: a wall-hung bowl, a flush valve, the paper
-      const tx=(a+b)/2+(wide?0.25:0), tz=Z(ZF-0.30);
-      push("porcelain", new T.CylinderGeometry(0.18,0.14,0.36,16), tx, FL+0.22, Z(ZF-0.42), 0, PORC);
-      push("porcelain", new T.TorusGeometry(0.17,0.035,8,18), tx, FL+0.41, Z(ZF-0.46), 0, "#f4f3ef", Math.PI/2, 0);
-      push("paintm", new T.TorusGeometry(0.16,0.03,6,18), tx, FL+0.44, Z(ZF-0.46), 0, "#1e1e1e", Math.PI/2, 0);
-      push("porcelain", boxGeo(0.36,0.22,0.24,0), tx, FL+0.32, Z(ZF-0.14), 0, PORC);
-      cyl("chrome", 0.025,0.025, 0.55, 8, tx+0.08, FL+0.80, Z(ZF-0.08), "#cfd1d2");
-      push("chrome", new T.CylinderGeometry(0.05,0.05,0.12,10), tx+0.08, FL+1.10, Z(ZF-0.10), 0, "#cfd1d2", Math.PI/2, 0);
-      push("paintm", new T.CylinderGeometry(0.17,0.17,0.12,18), a+0.14, FL+0.72, Z(ZF-0.62), 0, "#a7acaf", 0, 0, Math.PI/2);
+      // what is in it: the bowl and its flushometer, the paper, and in the
+      // women's a little steel bin on the partition
+      const tx=(a+b)/2+(wide?0.25:0);
+      toiletFix(tx, Z(ZF), sg<0?0:Math.PI, men?"#1d1d1e":"#f4f3ef");
+      push("paintm", new T.CylinderGeometry(0.17,0.17,0.12,20), a+0.09, FL+0.70, Z(ZF-0.66), 0, "#b9bdc0", 0, 0, Math.PI/2);
+      push("paintm", new T.CylinderGeometry(0.11,0.11,0.01,16), a+0.155, FL+0.70, Z(ZF-0.66), 0, "#3a3d40", 0, 0, Math.PI/2);
+      push("paintm", boxGeo(0.06,0.10,0.24,0), a+0.10, FL+0.55, Z(ZF-0.66), 0, "#e9e8e3");
+      if(!men){ bx("steel", 0.10, 0.28, 0.26, b-0.07, FL+0.62, Z(ZF-0.40), 0.8, 0, "#cfd2d3");
+                bx("paintm", 0.012, 0.04, 0.22, b-0.124, FL+0.74, Z(ZF-0.40), 0, 0, "#8a8d90"); }
       if(wide){ // grab bars, and a sign on the door that says so
         push("steel", new T.CylinderGeometry(0.02,0.02,0.9,8), X1-0.05, FL+0.86, Z(ZF-0.75), 0, "#c8cacb", Math.PI/2, 0);
-        push("steel", new T.CylinderGeometry(0.02,0.02,0.9,8), tx, FL+0.86, Z(ZF-0.05), 0, "#c8cacb", 0, 0, Math.PI/2);
+        push("steel", new T.CylinderGeometry(0.02,0.02,0.9,8), tx, FL+0.86, Z(ZF-0.05), 0, "#c8cacb", 0, Math.PI/2);
+        for(const dx of [-0.42,0.42]) push("steel", new T.CylinderGeometry(0.035,0.035,0.05,10), tx+dx, FL+0.86, Z(ZF-0.025), 0, "#c8cacb", Math.PI/2, 0);
       }
-      addCol(tx-0.2, tx+0.2, Math.min(Z(ZF),Z(ZF-0.64)), Math.max(Z(ZF),Z(ZF-0.64)), FL-0.5, FL+0.45);
-      if(wide) addSeat(tx, Z(ZF-0.42), FL+0.45, sg<0?Math.PI:0, "THE ACCESSIBLE STALL");
+      addCol(tx-0.2, tx+0.2, Math.min(Z(ZF),Z(ZF-0.68)), Math.max(Z(ZF),Z(ZF-0.68)), FL-0.5, FL+0.45);
+      if(wide) addSeat(tx, Z(ZF-0.44), FL+0.45, sg<0?Math.PI:0, "THE ACCESSIBLE STALL");
+      // the partitions' hardware: chrome shoes on the pilasters, brackets at the wall
+      for(const x of [a+0.06, da-0.03, b-0.04]) if(x<X1-0.05) bx("chrome", 0.09, 0.10, 0.07, x, FL+0.05, Z(zfrt), 0, 0, "#c9cbcc");
+      for(const x of (i===0?[a]:[]).concat(b<X1-0.01?[b]:[])) for(const y of [PY0+0.18, PY1-0.18]){
+        bx("chrome", 0.06, 0.05, 0.05, x, y, Z(ZF-0.03), 0, 0, "#c9cbcc");
+        bx("chrome", 0.06, 0.05, 0.05, x, y, Z(zfrt+0.04), 0, 0, "#c9cbcc");
+      }
       // the partitions are solid; the doors are leaves and are not
       addCol(a-0.02, a+0.02, ...zr(zfrt, ZF), PY0, PY1);
     });
@@ -741,10 +839,13 @@ function drawPAMap(x,W,H){
     if(men){
       for(let k=0;k<3;k++){
         const z=Z(10.9+k*1.05);
-        push("porcelain", boxGeo(0.34,0.62,0.40,0), X0+0.18, FL+0.86, z, 0, PORC);
-        push("porcelain", new T.CylinderGeometry(0.20,0.18,0.62,16,1,false,0,Math.PI), X0+0.36, FL+0.86, z, Math.PI/2, PORC);
-        cyl("chrome", 0.022,0.022, 0.45, 8, X0+0.10, FL+1.42, z, "#cfd1d2");
-        if(k<2) push("paintm", boxGeo(0.46, 1.10, 0.026, 0), X0+0.26, FL+0.95, Z(11.42+k*1.05), 0, PART);
+        urinalFix(X0+0.008, z, Math.PI/2, k===0?0.17:0);                     // the near one low, for a child or a chair
+        if(k<2){
+          const zs=Z(11.42+k*1.05);
+          push("paintm", boxGeo(0.48, 1.10, 0.03, 0), X0+0.25, FL+0.97, zs, 0, PART);
+          push("paintm", boxGeo(0.012, 1.10, 0.034, 0), X0+0.49, FL+0.97, zs, 0, "#a99c7e");
+          for(const y of [FL+0.62, FL+1.32]) bx("chrome", 0.05, 0.06, 0.07, X0+0.03, y, zs, 0, 0, "#c9cbcc");
+        }
         addCol(X0, X0+0.42, z-0.22, z+0.22, FL+0.2, FL+1.25);
       }
       wetFloor(-3.2, Z(8.6), 1.2);
@@ -780,8 +881,7 @@ function drawPAMap(x,W,H){
       bx("paintm", 0.30, 0.50, 0.30, x-0.30, FL+0.25, Z(10.25), 0, 0, "#efeee9");
       bx("rubber", 0.40, 0.02, 0.40, x-0.30, FL+0.01, Z(10.25), 0, 0, "#262626");
       addCol(x-0.48, x-0.12, Z(10.25)-0.18, Z(10.25)+0.18, FL-0.5, FL+0.52);
-      bx("paintm", 0.40, 0.80, 0.40, x-0.36, FL+0.40, Z(8.3), 0, 0, "#9aa0a3");
-      addCol(x-0.58, x-0.14, Z(8.3)-0.22, Z(8.3)+0.22, FL-0.5, FL+0.82);
+      swingCan(x-0.30, Z(8.3), -Math.PI/2);
     }
     // the convector cabinet low on the west wall, by the way in (photograph 18)
     bx("paintm", 0.22, 0.62, 1.10, X0+0.11, FL+0.40, Z(8.4), 0, 0, "#e8e6df");
@@ -830,11 +930,63 @@ function drawPAMap(x,W,H){
       // lockers, a calendar nobody has turned since spring
       bx("beam", 1.40, 0.04, 0.70, 5.9, FL+0.76, Z(7.8), 0.6, 0, "#8a6a48");
       for(const [x,z] of [[5.25,7.5],[6.55,7.5],[5.25,8.1],[6.55,8.1]]) bx("paintm",0.04,0.74,0.04,x,FL+0.37,Z(z),0,0,"#3a3a3a");
-      bx("paintm", 0.50, 0.32, 0.04, 5.9, FL+1.00, Z(8.05), 0, 0, "#1a1a1a");
-      push("vendglow", planeGeo(0.44,0.26,0), 5.9, FL+1.00, Z(8.05)-sg*0.022, sg<0?0:Math.PI, "#7fa0b4");
+      bx("paintm", 0.52, 0.34, 0.04, 5.9, FL+1.02, Z(8.06), 0, 0, "#1a1a1a");
+      push("cctv", planeGeo(0.47,0.29,0), 5.9, FL+1.02, Z(8.06)-sg*0.022, sg<0?0:Math.PI, "#ffffff");
+      bx("paintm", 0.06, 0.16, 0.06, 5.9, FL+0.85, Z(8.10), 0, 0, "#1a1a1a");
+      bx("paintm", 0.22, 0.015, 0.16, 5.9, FL+0.785, Z(8.10), 0, 0, "#1a1a1a");
       addCol(5.15, 6.65, ...zr(7.4,8.2), FL-0.5, FL+0.8);
-      bx("paintm", 0.46, 0.06, 0.46, 5.9, FL+0.48, Z(7.1), 0, 0, "#2a2a2c");
+      // what is on the desk: keyboard, mouse, a phone, a mug, the papers, the radios charging
+      bx("paintm", 0.44, 0.02, 0.15, 5.9, FL+0.79, Z(7.66), 0, 0, "#2a2a2a");
+      bx("paintm", 0.06, 0.025, 0.10, 6.25, FL+0.79, Z(7.66), 0, 0, "#2a2a2a");
+      bx("paintm", 0.19, 0.06, 0.21, 5.38, FL+0.81, Z(7.80), 0, 0, "#2b2b2b");
+      bx("paintm", 0.05, 0.04, 0.20, 5.32, FL+0.86, Z(7.80), 0, 0, "#1f1f1f");
+      cyl("porcelain", 0.04,0.035,0.10,12, 6.42, FL+0.83, Z(7.62), "#f2f0ea");
+      push("paintm", new T.CircleGeometry(0.034,12), 6.42, FL+0.875, Z(7.62), 0, "#3a2414", -Math.PI/2, 0);
+      for(let k=0;k<5;k++) bx("paintm", 0.22, 0.006, 0.30, 5.50+(k%2)*0.02, FL+0.785+k*0.007, Z(8.0)+(k%3)*0.01*sg, 0, 0.05*k, k===4?"#f6e8a8":"#f4f3ee");
+      bx("paintm", 0.30, 0.06, 0.12, 6.40, FL+0.81, Z(8.17), 0, 0, "#2a2b2d");
+      for(const dx of [-0.08,0.0,0.08]) bx("paintm", 0.05, 0.20, 0.04, 6.40+dx, FL+0.92, Z(8.17), 0, 0, "#181818");
+      // the drawers under it
+      bx("paintm", 0.40, 0.70, 0.60, 6.38, FL+0.36, Z(7.85), 0, 0, "#5d6266");
+      for(let k=0;k<3;k++) bx("paintm", 0.14, 0.02, 0.02, 6.38, FL+0.20+k*0.22, Z(7.54), 0, 0, "#b9bcbe");
+      // a proper office chair on its mat: five legs, a cylinder, the seat and its back
+      bx("paintm", 1.0, 0.006, 1.0, 5.9, FL+0.006, Z(7.05), 0, 0, "#4a4c4e");
+      for(let k=0;k<5;k++){ const a=k/5*Math.PI*2;
+        push("paintm", boxGeo(0.30,0.03,0.04,0), 5.9+Math.cos(a)*0.15, FL+0.06, Z(7.1)+Math.sin(a)*0.15, -a, "#1d1d1f");
+        push("paintm", new T.SphereGeometry(0.028,8,6), 5.9+Math.cos(a)*0.29, FL+0.03, Z(7.1)+Math.sin(a)*0.29, 0, "#1d1d1f"); }
+      cyl("chrome", 0.025,0.025, 0.36, 10, 5.9, FL+0.25, Z(7.1), "#9a9a96");
+      bx("paintm", 0.48, 0.08, 0.46, 5.9, FL+0.48, Z(7.1), 0, 0, "#2a2a2c");
+      bx("paintm", 0.44, 0.50, 0.06, 5.9, FL+0.86, Z(7.1)-sg*0.25, 0, 0, "#2a2a2c");
+      bx("paintm", 0.04, 0.30, 0.04, 5.9, FL+0.58, Z(7.1)-sg*0.24, 0, 0, "#1d1d1f");
+      for(const s of [-1,1]) bx("paintm", 0.04, 0.04, 0.26, 5.9+s*0.25, FL+0.66, Z(7.1), 0, 0, "#1d1d1f");
       addSeat(5.9, Z(7.1), FL+0.52, sg>0?Math.PI:0, "THE ATTENDANT'S OTHER CHAIR");
+      // a four-drawer file in the corner, a fridge and a microwave on the west wall
+      bx("paintm", 0.62, 1.32, 0.38, 6.38, FL+0.66, Z(5.94), 0, 0, "#8c9396");
+      for(let k=0;k<4;k++){ bx("paintm", 0.01, 0.005, 0.36, 6.065, FL+0.33+k*0.33, Z(5.94), 0, 0, "#5f6568");
+        bx("chrome", 0.03, 0.03, 0.12, 6.055, FL+0.20+k*0.33, Z(5.94), 0, 0, "#c9cbcc"); }
+      addCol(6.06, 6.7, ...zr(5.74,6.14), FL-0.5, FL+1.35);
+      bx("paintm", 0.48, 0.84, 0.50, 3.75, FL+0.42, Z(8.06), 0, 0, "#e9e8e2");
+      bx("paintm", 0.02, 0.40, 0.03, 3.995, FL+0.55, Z(7.88), 0, 0, "#9fa3a5");
+      bx("paintm", 0.44, 0.27, 0.36, 3.75, FL+0.98, Z(8.06), 0, 0, "#2b2c2e");
+      bx("paintm", 0.01, 0.18, 0.24, 3.97, FL+0.98, Z(8.10), 0, 0, "#0e0f10");
+      addCol(3.5, 4.0, ...zr(7.80,8.32), FL-0.5, FL+1.1);
+      // on the walls: the whiteboard by the door, a safety poster, a clock, first aid, the keys, an extinguisher
+      wallSign(1.20,0.80,(c,W,H)=>{ c.fillStyle="#fbfbf8"; c.fillRect(0,0,W,H); c.strokeStyle="#9a9c9e"; c.lineWidth=10; c.strokeRect(0,0,W,H);
+        c.fillStyle="#1d3b8a"; c.font="600 "+(H*0.085|0)+"px Arial"; c.textAlign="left";
+        ["ROUNDS: 6A · 10A · 2P · 6P · 10P","MEN'S #2 — FLUSH VALVE, CALLED IN","MOW THE GROVE — FRI","DUMPSTER PICKUP TUES / SAT"].forEach((s,i)=>c.fillText(s,W*0.06,H*(0.18+i*0.16)));
+        c.fillStyle="#b3151b"; c.fillText("PENNDOT D-1 MAINT: 814-555-0142",W*0.06,H*0.86); },
+        5.95, FL+1.55, Z(5.65)+sg*0.012, sg>0?0:Math.PI);
+      wallSign(0.60,0.80,(c,W,H)=>{ c.fillStyle="#f2b418"; c.fillRect(0,0,W,H); c.fillStyle="#1a1a1a";
+        fitHwy(c,"WORK ZONE",W*0.86,H*0.12,W/2,H*0.14); fitHwy(c,"SAFETY",W*0.7,H*0.12,W/2,H*0.28);
+        c.beginPath(); c.moveTo(W/2,H*0.40); c.lineTo(W*0.82,H*0.80); c.lineTo(W*0.18,H*0.80); c.closePath(); c.fill();
+        c.fillStyle="#f2b418"; c.fillRect(W*0.47,H*0.52,W*0.06,H*0.16); c.fillRect(W*0.47,H*0.71,W*0.06,H*0.05);
+        c.fillStyle="#1a1a1a"; fitText(c,"Slow down. Our workers' lives depend on it.",W*0.9,H*0.04,W/2,H*0.92,"600"); },
+        5.0, FL+1.65, Z(8.4)-sg*0.012, sg>0?Math.PI:0);
+      bx("paintm", 0.30, 0.36, 0.10, 6.64, FL+1.45, Z(6.45), 0, 0, "#f4f3ee");
+      bx("paintm", 0.012, 0.16, 0.05, 6.585, FL+1.47, Z(6.45), 0, 0, "#c41a1a");
+      bx("paintm", 0.012, 0.05, 0.16, 6.585, FL+1.47, Z(6.45), 0, 0, "#c41a1a");
+      bx("steel", 0.08, 0.40, 0.30, 6.66, FL+1.55, Z(7.95), 0.8, 0, "#cfd2d3");
+      cyl("paintm", 0.075,0.075, 0.46, 14, 3.62, FL+0.95, Z(5.98), "#b3151b");
+      cyl("paintm", 0.03,0.03, 0.08, 8, 3.62, FL+1.22, Z(5.98), "#1a1a1a");
       for(let k=0;k<3;k++) bx("paintm", 0.45, 1.80, 0.40, 3.75, FL+0.90, Z(6.5+k*0.42), 0, 0, "#6f7c84");
       addCol(3.5, 4.0, ...zr(6.28,7.56), FL-0.5, FL+1.85);
       wallSign(0.42,0.56,(c,W,H)=>{ c.fillStyle="#f6f4ec"; c.fillRect(0,0,W,H); c.fillStyle="#3f6f3a";
@@ -846,7 +998,7 @@ function drawPAMap(x,W,H){
     makeDoor(sg<0 ? XF(5.12, Z(BLD.lz), Math.PI) : XF(4.24, Z(BLD.lz), 0), 0, FL+0.02, 0,
              fam?"FAMILY RESTROOM":"STAFF ONLY", true, fam?0:0.28, "closet", fam?0x8a7a68:0x7a6a5a);
     if(!fam) wallSign(0.56,0.20,(c,W,H)=>{ c.fillStyle="#6a5a48"; c.fillRect(0,0,W,H); c.fillStyle="#f2f0ea";
-      fitText(c,"STAFF ONLY",W*0.85,H*0.5,W/2,H/2,"600"); }, 4.68, FL+2.42, LOBBY.z1-0.012, Math.PI);
+      fitText(c,"STAFF ONLY",W*0.85,H*0.5,W/2,H/2,"600"); }, 4.68, FL+2.62, LOBBY.z1-0.012, Math.PI);
     // back room: x 3.5..6.7, |z| 8.7..14.2
     const [b0,b1]=zr(8.7,14.2);
     addZone(3.5, 6.7, b0, b1, FL-0.5, CEIL+0.3, fam?"JANITOR'S CLOSET":"MECHANICAL ROOM", true);
@@ -861,13 +1013,53 @@ function drawPAMap(x,W,H){
     LAMPS.push({x:4.6, y:CEIL-0.25, z:bxz, color:0xeef4f0, intensity:0.55, dist:6, decay:1.4, indoor:true,
                 vol:[3.4, 6.8, b0-0.1, b1+0.1, FL-1, CEIL+0.5]});
     if(fam){
-      // a mop sink, a bucket on wheels, shelves of paper, the water heater
-      bx("paintm", 0.70, 0.30, 0.70, 3.95, FL+0.15, Z(13.7), 0, 0, "#c9c6bd");
-      bx("paintm", 0.42, 0.38, 0.32, 4.9, FL+0.25, Z(13.6), 0, 0, "#e3b81e");
-      cyl("paintm", 0.30,0.30,1.6,16, 6.25, FL+0.8, Z(9.2), "#d9d6cd");
+      /* the janitor's closet: the mop sink in the corner with its faucet and
+         hose, the rack of mops and brooms, the wringer bucket, shelves of
+         paper and soap and chemicals, the cart, a ladder, the water heater */
+      bx("paintm", 0.72, 0.28, 0.72, 3.95, FL+0.14, Z(13.75), 0, 0, "#d2cfc6");
+      bx("paintm", 0.60, 0.012, 0.60, 3.95, FL+0.285, Z(13.75), 0, 0, "#5b5953");
+      cyl("chrome", 0.016,0.016, 0.22, 8, 3.95, FL+1.00, Z(14.13), "#c9cbcc", Math.PI/2);
+      cyl("chrome", 0.025,0.025, 0.16, 10, 3.95, FL+0.92, Z(14.03), "#c9cbcc");
+      for(const dx of [-0.10,0.10]) push("paintm", new T.CylinderGeometry(0.025,0.025,0.03,8), 3.95+dx, FL+1.0, Z(14.13), 0, dx<0?"#b3151b":"#24408e", Math.PI/2, 0);
+      push("paintm", new T.TorusGeometry(0.16,0.018,6,16), 4.42, FL+1.05, Z(14.17), 0, "#2a5a3a");
+      bx("paintm", 1.20, 0.05, 0.05, 5.10, FL+1.52, Z(14.15), 0, 0, "#8a8c8e");
+      [["mop",4.65],["broom",4.95],["mop",5.25],["push",5.55]].forEach(([k,x])=>{
+        cyl("beam", 0.014,0.014, 1.40, 6, x, FL+0.80, Z(14.10), "#c8a676");
+        if(k==="mop") bx("paintm", 0.20, 0.22, 0.10, x, FL+0.12, Z(14.08), 0, 0, "#e9e4d4");
+        else if(k==="broom") bx("paintm", 0.30, 0.16, 0.06, x, FL+0.10, Z(14.10), 0, 0, "#c06a2a");
+        else bx("paintm", 0.46, 0.06, 0.08, x, FL+0.06, Z(14.08), 0, 0, "#2a2a2a");
+      });
+      bx("paintm", 0.42, 0.36, 0.34, 4.95, FL+0.27, Z(13.30), 0, 0, "#e3b81e");
+      bx("paintm", 0.30, 0.18, 0.20, 4.95, FL+0.52, Z(13.22), 0, 0, "#6a6e70");
+      cyl("beam", 0.014,0.014, 1.10, 6, 5.05, FL+0.95, Z(13.36), "#c8c8c4", 0.15);
+      for(const [dx,dz] of [[-0.16,-0.12],[0.16,-0.12],[-0.16,0.12],[0.16,0.12]]) push("paintm", new T.SphereGeometry(0.03,6,5), 4.95+dx, FL+0.03, Z(13.30)+dz, 0, "#1d1d1f");
+      addCol(4.7, 5.2, ...zr(13.08,13.52), FL-0.5, FL+0.7);
       for(let k=0;k<4;k++) bx("paintm", 0.40, 0.03, 1.6, 3.75, FL+0.4+k*0.45, Z(11.6), 0, 0, "#8a8c8e");
       for(const [x,z] of [[3.57,10.82],[3.93,10.82],[3.57,12.38],[3.93,12.38]]) bx("paintm", 0.03, 1.80, 0.03, x, FL+0.90, Z(z), 0, 0, "#7c7e80");
-      for(let k=0;k<12;k++) bx("paintm", 0.28, 0.22, 0.24, 3.75, FL+0.53+((k/4)|0)*0.45, Z(11.0+(k%4)*0.38), 0, 0, "#efede6");
+      // stock: jumbo rolls, towel rolls, soap cases, jugs and spray bottles, cardboard
+      for(let s=0;s<4;s++) for(let k=0;k<4;k++){
+        const y=FL+0.415+s*0.45, z=Z(10.98+k*0.40), kind=(s*4+k)%5;
+        if(kind===0){ for(const dz of [-0.09,0.09]) push("paintm", new T.CylinderGeometry(0.11,0.11,0.09,14), 3.75, y+0.055, z+dz, 0, "#f6f5f0", Math.PI/2, 0); }
+        else if(kind===1){ for(const dz of [-0.08,0.08]) cyl("paintm", 0.08,0.08,0.22,12, 3.75, y+0.11, z+dz, "#f1ede2"); }
+        else if(kind===2){ bx("paintm", 0.30, 0.24, 0.34, 3.75, y+0.12, z, 0, 0, "#b48d5c"); bx("paintm", 0.31, 0.06, 0.20, 3.75, y+0.16, z, 0, 0, "#e9e4d4"); }
+        else if(kind===3){ for(const [dz,c] of [[-0.11,"#e07a1f"],[0.0,"#2d7fc2"],[0.11,"#3d9a4a"]]){ bx("paintm", 0.12, 0.24, 0.09, 3.75, y+0.12, z+dz, 0, 0, c); cyl("paintm",0.02,0.02,0.03,6, 3.75, y+0.255, z+dz, "#f2f0ea"); } }
+        else { for(const [dz,c] of [[-0.10,"#d23a3a"],[0.0,"#2f9a8a"],[0.10,"#e8c22a"]]){ cyl("paintm", 0.04,0.045,0.20,10, 3.75, y+0.10, z+dz, c); bx("paintm", 0.03, 0.06, 0.05, 3.77, y+0.23, z+dz, 0, 0, "#f2f0ea"); } }
+      }
+      // the cart by the end wall: a grey body, its yellow bag hoop, bottles on it
+      bx("paintm", 0.95, 0.70, 0.45, 6.15, FL+0.45, Z(13.85), 0, 0, "#6f7376");
+      push("paintm", new T.CylinderGeometry(0.22,0.22,0.62,16,1,true), 5.55, FL+0.42, Z(13.85), 0, "#e3c21e");
+      for(const [dx,c] of [[-0.2,"#2d7fc2"],[0.0,"#e07a1f"],[0.2,"#d23a3a"]]) cyl("paintm", 0.04,0.045,0.20,10, 6.15+dx, FL+0.90, Z(13.85), c);
+      addCol(5.30, 6.65, ...zr(13.6,14.1), FL-0.5, FL+0.85);
+      // the ladder, leaning, and the wet-floor signs folded by the shelves
+      for(const dx of [-0.20,0.20]) push("paintm", boxGeo(0.04, 2.10, 0.06, 0), 5.40+dx, FL+1.03, Z(8.90), 0, "#c9a227", -sg*0.20, 0);
+      for(let k=0;k<7;k++){ const y=0.20+k*0.27; push("paintm", boxGeo(0.40, 0.025, 0.03, 0), 5.40, FL+y, Z(8.90)+(y-1.03)*Math.sin(-sg*0.20), 0, "#b8911f", -sg*0.20, 0); }
+      addCol(5.15, 5.65, ...zr(8.72,9.15), FL-0.5, FL+2.0);
+      for(const dz of [0.0,0.05]) push("paintm", boxGeo(0.02, 0.62, 0.30, 0), 3.58+dz, FL+0.31, Z(10.30), 0, "#f2c418", 0, 0.12);
+      push("paintm", new T.CircleGeometry(0.09,16), 4.6, FL+0.006, Z(12.6), 0, "#6a6c6e", -Math.PI/2, 0);
+      wallSign(0.30,0.40,(c,W,H)=>{ c.fillStyle="#c41a1a"; c.fillRect(0,0,W,H); c.fillStyle="#f2f0ea"; fitText(c,"SDS",W*0.7,H*0.24,W/2,H*0.30,"700");
+        fitText(c,"SAFETY DATA",W*0.86,H*0.10,W/2,H*0.62,"600"); fitText(c,"SHEETS",W*0.7,H*0.10,W/2,H*0.76,"600"); }, 3.51, FL+1.55, Z(9.6), Math.PI/2);
+      cyl("paintm", 0.30,0.30,1.6,16, 6.25, FL+0.8, Z(9.2), "#d9d6cd");
+      for(const dx of [-0.12,0.12]) cyl("paintm", 0.02,0.02,1.0,8, 6.25+dx, FL+2.1, Z(9.2), dx<0?"#b5763a":"#b5763a");
       addCol(3.6, 4.3, ...zr(13.35,14.2), FL-0.5, FL+0.4);
       addCol(5.95, 6.7, ...zr(8.9,9.5), FL-0.5, FL+1.7);
       addCol(3.5, 4.0, ...zr(10.7,12.5), FL-0.5, FL+2.0);

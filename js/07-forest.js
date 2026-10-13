@@ -769,19 +769,28 @@ const FOREST=(function(){
        zone's boundary hangs a dark wall from the canopy down to the ground:
        the inside of a wood, seen from inside a wood. */
     const cv=(function(){
-      const c=cvs(256,128), x=c.getContext("2d"), r=_trng(4242);
-      const g=x.createLinearGradient(0,0,0,128);
-      g.addColorStop(0,"#56664a"); g.addColorStop(0.35,"#3a4433"); g.addColorStop(1,"#2c2c22");
-      x.fillStyle=g; x.fillRect(0,0,256,128);
-      for(let i=0;i<46;i++){                  // trunks, receding
-        const px=r()*256, w=1.5+r()*5, l=0.25+r()*0.35;
-        x.fillStyle="rgba("+(l*120|0)+","+(l*112|0)+","+(l*96|0)+",0.8)";
-        x.fillRect(px, 20+r()*30, w, 128);
+      const W=512, H=256, c=cvs(W,H), x=c.getContext("2d"), r=_trng(4242);
+      const g=x.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"#405038"); g.addColorStop(0.30,"#2e3828"); g.addColorStop(0.75,"#262a20"); g.addColorStop(1,"#22241c");
+      x.fillStyle=g; x.fillRect(0,0,W,H);
+      // three depths of trunks: far ones pale with haze and thin, near ones dark
+      for(const [n,lo,hi,w0,w1,a] of [[140,0.42,0.55,1,2.5,0.55],[90,0.26,0.36,2,4,0.75],[40,0.14,0.22,3,7,0.9]]){
+        for(let i=0;i<n;i++){
+          const px=r()*W, w=w0+r()*(w1-w0), l=lo+r()*(hi-lo);
+          x.fillStyle="rgba("+(l*150|0)+","+(l*142|0)+","+(l*120|0)+","+a+")";
+          x.fillRect(px, 10+r()*60, w, H);
+          x.fillStyle="rgba(255,255,240,"+(a*0.06).toFixed(3)+")"; x.fillRect(px, 10, Math.max(1,w*0.25), H);
+        }
       }
-      for(let i=0;i<300;i++){                 // and the understory, lit here and there
-        x.fillStyle="rgba("+(60+r()*50|0)+","+(80+r()*60|0)+","+(40+r()*30|0)+","+(0.25+r()*0.4).toFixed(2)+")";
-        x.beginPath(); x.arc(r()*256, 60+r()*68, 2+r()*6, 0, 7); x.fill();
+      // understory: small, dark, many — leaves in shade, not lit discs
+      for(let i=0;i<2600;i++){
+        const y=110+r()*146, d=(y-110)/146;
+        x.fillStyle="rgba("+(34+r()*30|0)+","+(46+r()*34|0)+","+(26+r()*20|0)+","+(0.35+r()*0.35).toFixed(2)+")";
+        x.fillRect(r()*W, y, 1+r()*(2+d*3), 1+r()*2);
       }
+      // the haze that sits low in a wood
+      const hz=x.createLinearGradient(0,H*0.45,0,H); hz.addColorStop(0,"rgba(120,128,112,0)"); hz.addColorStop(1,"rgba(120,128,112,0.18)");
+      x.fillStyle=hz; x.fillRect(0,H*0.45,W,H*0.55);
       return _tex(c);
     })();
     const P=[], U=[], C=[], IDX=[];
@@ -793,7 +802,7 @@ const FOREST=(function(){
         const top=canopyY(x+nx2*0.5, z+nz2*0.5, true), bot=Terrain.heightAt(x,z)-1;
         const h=Math.max(0, top-bot);
         P.push(x, bot+Math.max(h,0.01), z,  x, bot, z);
-        U.push(t*L/14, 1, t*L/14, 0);
+        U.push(t*L/18, 1, t*L/18, 0);
         const on=h>2 ? 1 : 0;
         C.push(on,on,on, on,on,on);
       }
@@ -812,6 +821,8 @@ const FOREST=(function(){
       transparent:false, fog:true}));
     curtain.name="curtain"; scene.add(curtain);
     CAN.curtain=curtain;
+    // unlit, so it is told how much light there is: 19-loop sets it each frame
+    CAN.curtainLight=(k)=>curtain.material.color.setScalar(k);
   })();
 
   /* ---- the zone's edge: as far as the woods let you walk ----------------
@@ -819,7 +830,8 @@ const FOREST=(function(){
      verges cross it, and the treelines down both sides of the road beyond
      it. The drone goes where it likes. */
   (function bounds(){
-    const Z=SITE.zone, gaps=[[HWY.sb-19,HWY.sb+19],[HWY.nb-19,HWY.nb+19]];
+    const Z0=SITE.zone, I=SITE.walkInset, gaps=[[HWY.sb-19,HWY.sb+19],[HWY.nb-19,HWY.nb+19]];
+    const Z={x0:Z0.x0+I, x1:Z0.x1-I, z0:Z0.z0+I, z1:Z0.z1-I};
     for(const zz of [Z.z0, Z.z1]){
       let x=Z.x0;
       for(const g of gaps){ addCol(x, g[0], zz-0.5, zz+0.5, -40, 300); x=g[1]; }

@@ -21,7 +21,7 @@
 const AUDIO=(function(){
   let ctx=null, master=null, outBus=null, outLP=null, enabled=true, started=false;
   let road={}, wind={}, night={}, hum={}, gen={};
-  let birdT=1.5;
+  let birdT=1.5, clankT=3, flushT=12, jakeT=40, barkT=15, reefer={};
   function noise(sec, color){
     const n=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(1,n,ctx.sampleRate), d=b.getChannelData(0);
     let l=0, b0=0,b1=0,b2=0;
@@ -71,6 +71,12 @@ const AUDIO=(function(){
     // the hum indoors, and the transformer's out at the substation
     hum.g=ctx.createGain(); hum.g.gain.value=0; hum.g.connect(master);
     gen.g=ctx.createGain(); gen.g.gain.value=0; gen.g.connect(outLP);
+    // a reefer unit: a small diesel and its fans, a drone with a beat in it
+    reefer.g=ctx.createGain(); reefer.g.gain.value=0; reefer.g.connect(outLP);
+    { const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=900; lp.connect(reefer.g);
+      for(const [f,a2] of [[37,0.5],[74,0.35],[111,0.2]]){ const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=f;
+        const g=ctx.createGain(); g.gain.value=a2*0.4; o.connect(g); g.connect(lp); o.start(); }
+      loop(noise(4,"pink")).connect(lp); }
     for(const [f,a,dst] of [[120,0.5,hum.g],[240,0.18,hum.g],[60,0.6,gen.g],[120,0.35,gen.g],[180,0.15,gen.g]]){
       const o=ctx.createOscillator(); o.type="sine"; o.frequency.value=f*(1+Math.random()*0.002);
       const g=ctx.createGain(); g.gain.value=a; o.connect(g); g.connect(dst); o.start();
@@ -110,6 +116,29 @@ const AUDIO=(function(){
     hum.g.gain.setTargetAtTime(inside?0.010:0, t, 0.2);
     let gd=1e9; for(const p of GEN_POS) gd=Math.min(gd, Math.hypot(cam.x-p.x, cam.z-p.z));
     gen.g.gain.setTargetAtTime(0.03/(1+gd*gd/300), t, 0.3);
+    // the halyard slapping the flagpole when the wind gets up
+    const fd=Math.hypot(cam.x+17.4, cam.z-23.2);
+    clankT-=dt*(0.3+Wind.gust*2.0);
+    if(clankT<=0){ clankT=1.2+Math.random()*3.5;
+      if(fd<70 && Wind.gust>0.25){ const v=0.05/(1+fd*fd/120), tt=ctx.currentTime+0.01;
+        tone("sine", 1240, 1235, 0.5, v, tt, 0); tone("sine", 2930, 2925, 0.35, v*0.5, tt, 0);
+        if(Math.random()<0.5){ tone("sine", 1240, 1235, 0.4, v*0.6, tt+0.14, 0); } } }
+    // in the restrooms: somebody flushing, a dryer going
+    const zn=zoneAt(cam.x, cam.z, cam.y);
+    flushT-=dt;
+    if(flushT<=0){ flushT=14+Math.random()*30;
+      if(zn && /ROOM/.test(zn)) { if(Math.random()<0.6) flush(); else blip("dryer"); } }
+    // out on the road, now and then, a truck on its engine brake for the exit
+    jakeT-=dt;
+    if(jakeT<=0){ jakeT=50+Math.random()*120; if(!inside) jake(); }
+    // a dog in the pet area
+    barkT-=dt;
+    if(barkT<=0){ barkT=12+Math.random()*30;
+      const w=(typeof PEOPLE!=="undefined") && PEOPLE.find(p=>p.dog && p.dog.g.visible);
+      if(w){ const d=Math.hypot(cam.x-w.dx, cam.z-w.dz); if(d<90) bark(0.06/(1+d*d/200)); } }
+    // the reefer units in the truck lot
+    let rd=1e9; if(typeof REEFERS!=="undefined") for(const p of REEFERS) rd=Math.min(rd, Math.hypot(cam.x-p.x, cam.z-p.z));
+    reefer.g.gain.setTargetAtTime(0.05/(1+rd*rd/90), t, 0.4);
     // birds: a call every second or two by day, more at the edge of the woods
     birdT-=dt;
     if(birdT<=0){
@@ -146,6 +175,31 @@ const AUDIO=(function(){
       for(let k=0;k<2+((Math.random()*2)|0);k++) tone("sawtooth", 520, 380, 0.22, v*0.35, t+k*0.36, pan);
     }
   }
+  function flush(){
+    const tt=ctx.currentTime+0.05, s=ctx.createBufferSource(); s.buffer=noise(4,"pink");
+    const f=ctx.createBiquadFilter(); f.type="bandpass"; f.Q.value=0.8;
+    f.frequency.setValueAtTime(600,tt); f.frequency.linearRampToValueAtTime(1600,tt+0.6); f.frequency.exponentialRampToValueAtTime(380,tt+3.6);
+    const g=ctx.createGain(); env(g,tt,0.08,0.22,1.6,1.8); s.connect(f); f.connect(g); g.connect(master); s.start(tt);
+    tone("sine", 70, 50, 0.3, 0.05, tt, 0, master);
+  }
+  function jake(){
+    const tt=ctx.currentTime+0.05, dur=1.6+Math.random()*1.4;
+    const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.setValueAtTime(48,tt); o.frequency.linearRampToValueAtTime(34,tt+dur);
+    const am=ctx.createGain(); am.gain.value=0.5; const lfo=ctx.createOscillator(); lfo.type="square"; lfo.frequency.value=22;
+    const lg=ctx.createGain(); lg.gain.value=0.5; lfo.connect(lg); lg.connect(am.gain);
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=420;
+    const g=ctx.createGain(); env(g,tt,0.25,0.05,dur-0.5,0.6);
+    let n=g; if(ctx.createStereoPanner){ const p=ctx.createStereoPanner(); p.pan.value=-0.6; g.connect(p); n=p; }
+    o.connect(am); am.connect(lp); lp.connect(g); n.connect(outLP);
+    o.start(tt); lfo.start(tt); o.stop(tt+dur+0.8); lfo.stop(tt+dur+0.8);
+  }
+  function bark(v){
+    const tt=ctx.currentTime+0.02, n=1+((Math.random()*3)|0);
+    for(let k=0;k<n;k++){ const at=tt+k*0.32;
+      tone("sawtooth", 520, 360, 0.12, v*0.6, at, 0.3);
+      const s=ctx.createBufferSource(); s.buffer=noise(0.15,"white"); const f=ctx.createBiquadFilter(); f.type="bandpass"; f.frequency.value=900; f.Q.value=2;
+      const g=ctx.createGain(); env(g,at,0.005,v,0.04,0.08); s.connect(f); f.connect(g); g.connect(outLP); s.start(at); }
+  }
   // one-shots, from the things you press E at; x,z set where it comes from
   function blip(kind, x, z){
     if(!ctx || !enabled) return;
@@ -166,6 +220,11 @@ const AUDIO=(function(){
       tone("sine", 350, null, 2.2, 0.06*vol, t, 0, master); tone("sine", 440, null, 2.2, 0.06*vol, t, 0, master);
     }else if(kind==="horn"){
       tone("square", 410, null, 0.45, 0.05*vol, t); tone("square", 515, null, 0.45, 0.05*vol, t);
+    }else if(kind==="door"){
+      tone("sine", 95, 55, 0.18, 0.22*vol, t, 0);
+      const s=ctx.createBufferSource(); s.buffer=noise(0.2,"white"); const f=ctx.createBiquadFilter();
+      f.type="bandpass"; f.frequency.value=1800; f.Q.value=1.2; const g=ctx.createGain(); env(g,t,0.002,0.10*vol,0.01,0.08);
+      s.connect(f); f.connect(g); g.connect(outLP); s.start(t);
     }else if(kind==="airhorn"){
       tone("sawtooth", 262, null, 1.1, 0.06*vol, t); tone("sawtooth", 330, null, 1.1, 0.05*vol, t);
     }
