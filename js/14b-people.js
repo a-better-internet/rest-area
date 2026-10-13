@@ -192,14 +192,14 @@ function updateCigarette(p, dt, now, dark){
   C.wisp-=dt;
   if(C.wisp<=0){ C.wisp=0.09+Math.random()*0.06;
     PUFFS.emit(_tipW.x, _tipW.y+0.01, _tipW.z, (Math.random()-0.5)*0.03, 0.16+Math.random()*0.06, (Math.random()-0.5)*0.03,
-               0.014, 0.15+Math.random()*0.06, 2.4+Math.random()*0.8, 0.30, 0.88, 0); }
+               0.02, 0.26+Math.random()*0.08, 2.6+Math.random()*0.8, 0.62, 0.92, 0); }
   if(cyc>0.31 && cyc<0.43){
     C.puff-=dt;
     if(C.puff<=0){ C.puff=0.045;
       const hb=P.B[P.j.head]; _mouthW.set(0, 0.08*P.h, 0.11*P.h).applyMatrix4(hb.matrixWorld);
       const fx=Math.sin(p.yaw), fz=Math.cos(p.yaw), k=1-(cyc-0.31)/0.12;
       PUFFS.emit(_mouthW.x, _mouthW.y, _mouthW.z, fx*(0.55*k+0.15)+(Math.random()-0.5)*0.08, 0.05+Math.random()*0.08,
-                 fz*(0.55*k+0.15)+(Math.random()-0.5)*0.08, 0.05, 0.42+Math.random()*0.15, 2.8+Math.random()*0.8, 0.38*k+0.08, 0.90, 0);
+                 fz*(0.55*k+0.15)+(Math.random()-0.5)*0.08, 0.06, 0.55+Math.random()*0.18, 3.0+Math.random()*0.8, 0.55*k+0.10, 0.92, 0);
     }
   }
 }
