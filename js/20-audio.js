@@ -22,6 +22,8 @@ const AUDIO=(function(){
   let ctx=null, master=null, outBus=null, outLP=null, enabled=true, started=false;
   let road={}, wind={}, night={}, hum={}, gen={};
   let birdT=1.5, clankT=3, flushT=12, jakeT=40, barkT=15, reefer={};
+  // the camp out back: the fire, a phone speaker, four kids talking
+  let camp={}, crackT=0, voiceT=3, song=0, beat=null;
   function noise(sec, color){
     const n=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(1,n,ctx.sampleRate), d=b.getChannelData(0);
     let l=0, b0=0,b1=0,b2=0;
@@ -77,6 +79,19 @@ const AUDIO=(function(){
       for(const [f,a2] of [[37,0.5],[74,0.35],[111,0.2]]){ const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=f;
         const g=ctx.createGain(); g.gain.value=a2*0.4; o.connect(g); g.connect(lp); o.start(); }
       loop(noise(4,"pink")).connect(lp); }
+    // the camp: one bus, panned toward the fire; under it the fire's own
+    // roar and hiss, and the phone speaker's thin band for the music
+    camp.pan=ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain(); camp.pan.connect(outLP);
+    camp.g=ctx.createGain(); camp.g.gain.value=0; camp.g.connect(camp.pan);
+    { const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=320;
+      const g=ctx.createGain(); g.gain.value=0.55; loop(brown).connect(lp); lp.connect(g); g.connect(camp.g);
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2800; bp.Q.value=0.6;
+      const g2=ctx.createGain(); g2.gain.value=0.10; loop(pink).connect(bp); bp.connect(g2); g2.connect(camp.g); }
+    camp.mus=ctx.createGain(); camp.mus.gain.value=0;
+    { const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=320;
+      const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=4800;
+      camp.musIn=ctx.createGain(); camp.musIn.gain.value=1; camp.musIn.connect(hp); hp.connect(lp); lp.connect(camp.mus); camp.mus.connect(camp.pan); }
+    camp.vox=ctx.createGain(); camp.vox.gain.value=0; camp.vox.connect(camp.pan);
     for(const [f,a,dst] of [[120,0.5,hum.g],[240,0.18,hum.g],[60,0.6,gen.g],[120,0.35,gen.g],[180,0.15,gen.g]]){
       const o=ctx.createOscillator(); o.type="sine"; o.frequency.value=f*(1+Math.random()*0.002);
       const g=ctx.createGain(); g.gain.value=a; o.connect(g); g.connect(dst); o.start();
@@ -108,7 +123,7 @@ const AUDIO=(function(){
     road.lp.frequency.setTargetAtTime(260+lv*1100, t, 0.15);
     if(road.pan.pan) road.pan.pan.setTargetAtTime(clamp(px/Math.max(L,1e-3),-0.85,0.85), t, 0.15);
     // wind follows the gust, and is louder in the trees
-    const inWoods=smoothstep(-4, 12, Terrain.clearDist(cam.x, cam.z));
+    const inWoods=smoothstep(-4, 12, Terrain.siteDist(cam.x, cam.z));
     wind.g.gain.setTargetAtTime((0.015+Wind.gust*0.10)*(0.5+inWoods*0.8), t, 0.3);
     wind.bp.frequency.setTargetAtTime(500+Wind.gust*600, t, 0.4);
     // the insects come in at dusk; fewer in October
@@ -139,6 +154,8 @@ const AUDIO=(function(){
     // the reefer units in the truck lot
     let rd=1e9; if(typeof REEFERS!=="undefined") for(const p of REEFERS) rd=Math.min(rd, Math.hypot(cam.x-p.x, cam.z-p.z));
     reefer.g.gain.setTargetAtTime(0.05/(1+rd*rd/90), t, 0.4);
+    // the camp: louder as you come in, from where it is
+    if(typeof CAMP!=="undefined") campSound(dt, cam, rx, rz);
     // birds: a call every second or two by day, more at the edge of the woods
     birdT-=dt;
     if(birdT<=0){
@@ -146,6 +163,80 @@ const AUDIO=(function(){
       birdT=(0.8+Math.random()*2.6)/Math.max(0.15, day*(0.6+inWoods));
       if(day>0.3 && !inside) bird(Math.random());
     }
+  }
+  /* ---- the camp ----------------------------------------------------------
+     The fire is its roar and hiss, crackles (a few milliseconds of noise at
+     a random pitch, a dozen a second) and now and then a pop. The music is
+     a little four-chord loop on a phone speaker, scheduled a beat ahead.
+     The voices are syllables: a buzz at a speaking pitch through two vowel
+     formants, strung into phrases, never words; and when something is
+     funny, everyone at once. */
+  const SONGS=[{bpm:84, roots:[57,53,48,55], third:[60,57,52,59]},     // A minor, F, C, G
+               {bpm:96, roots:[50,55,47,52], third:[53,59,50,55]}];    // D minor, G, B dim, E minor
+  const hz=m=>440*Math.pow(2,(m-69)/12);
+  function burst(at, dur, f, q, peak, dest){
+    const s=ctx.createBufferSource(); s.buffer=_nb || (_nb=noise(0.5,"white"));
+    const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=f; bp.Q.value=q;
+    const g=ctx.createGain(); env(g, at, 0.001, peak, dur*0.3, dur);
+    s.connect(bp); bp.connect(g); g.connect(dest||camp.g); s.start(at, Math.random()*0.4); s.stop(at+dur*2+0.05);
+  }
+  let _nb=null;
+  function syllable(at, f0, dur, peak, vowel){
+    const o=ctx.createOscillator(); o.type="sawtooth";
+    o.frequency.setValueAtTime(f0, at); o.frequency.linearRampToValueAtTime(f0*(0.9+Math.random()*0.25), at+dur);
+    const g=ctx.createGain(); env(g, at, 0.015, peak, dur*0.5, dur*0.6);
+    const F=vowel||[[730,1090],[530,1840],[300,2290],[570,840],[440,1020],[660,1720]][(Math.random()*6)|0];
+    for(const [fc,q,a] of [[F[0],5,1],[F[1],8,0.6]]){
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=fc; bp.Q.value=q;
+      const ga=ctx.createGain(); ga.gain.value=a; o.connect(bp); bp.connect(ga); ga.connect(g);
+    }
+    g.connect(camp.vox); o.start(at); o.stop(at+dur*1.4+0.05);
+  }
+  const VOICES=[118, 205, 132, 222];
+  function phrase(at){
+    const v=VOICES[(Math.random()*VOICES.length)|0], n=3+((Math.random()*7)|0);
+    let tt=at;
+    for(let k=0;k<n;k++){ const d=0.08+Math.random()*0.13; syllable(tt, v*(1+(Math.random()-0.4)*0.18)*(k===n-1?0.88:1), d, 0.5); tt+=d+0.03+Math.random()*0.06; }
+  }
+  function campLaugh(){
+    if(!ctx || !enabled || !camp.vox) return;
+    const t0=ctx.currentTime+0.05;
+    for(let w=0; w<3; w++){ const v=VOICES[(w+((Math.random()*2)|0))%4]*1.15; let tt=t0+w*0.11+Math.random()*0.1;
+      for(let k=0;k<4+((Math.random()*3)|0);k++){ syllable(tt, v*(1.15-k*0.05), 0.085, 0.65, [760,1250]); burst(tt, 0.06, 1800, 0.8, 0.10, camp.vox); tt+=0.15+Math.random()*0.03; } }
+  }
+  function campPop(){
+    if(!ctx || !enabled || !camp.g) return;
+    const t0=ctx.currentTime+0.01;
+    burst(t0, 0.025, 1400, 0.7, 1.6); burst(t0+0.03, 0.012, 3200, 1.5, 0.8); burst(t0+0.07, 0.01, 2500, 1.2, 0.6);
+  }
+  function campSound(dt, cam, rx, rz){
+    const t=ctx.currentTime, dx=CAMP.x-cam.x, dz=CAMP.z-cam.z, d=Math.hypot(dx,dz);
+    const near=1/(1+d*d/36);
+    camp.g.gain.setTargetAtTime(0.16*near, t, 0.3);
+    if(camp.pan.pan) camp.pan.pan.setTargetAtTime(clamp((dx*rx+dz*rz)/Math.max(d,1), -0.8, 0.8)*smoothstep(1,4,d), t, 0.2);
+    camp.mus.gain.setTargetAtTime(0.05/(1+d*d/110), t, 0.4);
+    camp.vox.gain.setTargetAtTime(0.045/(1+d*d/60), t, 0.4);
+    if(d>110){ beat=null; return; }
+    // crackle
+    crackT-=dt;
+    while(crackT<=0){ crackT+=0.02+Math.random()*0.12;
+      burst(t+Math.random()*0.05, 0.004+Math.random()*0.016, 1200+Math.random()*5200, 1+Math.random()*3, 0.25+Math.random()*0.55); }
+    // the music, scheduled ahead a sixteenth at a time
+    const S=SONGS[song], st=60/S.bpm/4;
+    if(!beat || beat.next<t) beat={next:t+0.05, i:0};
+    while(beat.next<t+0.25){
+      const at=beat.next, i=beat.i%64, bar=Math.floor(i/16), s=i%16, root=S.roots[bar], third=S.third[bar];
+      if(s===0 || s===8 || s===11) { tone("sine", 110, 48, 0.16, 0.9, at, undefined, camp.musIn); }              // kick
+      if(s===4 || s===12) burst(at, 0.09, 1900, 0.9, 0.8, camp.musIn);                                         // snare
+      if(s%2===0) burst(at, 0.025, 7500, 2, 0.18, camp.musIn);                                                 // hat
+      if(s===0 || s===6 || s===10) tone("triangle", hz(root-12), null, st*3, 0.55, at, undefined, camp.musIn);   // bass
+      if(s===2 || s===10) for(const m of [root, third, root+7]) tone("square", hz(m+12), null, st*2.5, 0.07, at, undefined, camp.musIn);
+      if(s%4===3) tone("sine", hz([root,third,root+7,third+12][(i>>2)%4]+12), null, st*1.5, 0.12, at, undefined, camp.musIn);
+      beat.next+=st; beat.i++;
+    }
+    // talk
+    voiceT-=dt;
+    if(voiceT<=0){ voiceT=1.2+Math.random()*4.5; if(d<70) phrase(t+0.05); }
   }
   function env(g, t, a, peak, hold, rel){
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t+a);
@@ -230,6 +321,7 @@ const AUDIO=(function(){
     }
   }
   return { start:start, update:update, blip:blip, on:()=>enabled,
+           campLaugh:campLaugh, campPop:campPop, campSong:()=>{ song=(song+1)%SONGS.length; beat=null; },
            toggle:()=>{ enabled=!enabled; if(!started && enabled) start();
                         if(master) master.gain.value=enabled?0.75:0; } };
 })();

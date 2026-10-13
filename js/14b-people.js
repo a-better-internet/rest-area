@@ -85,6 +85,17 @@ function buildPerson(o){
   if(o.female) add(new T.BoxGeometry(0.20*h,0.26*h,0.06*h), _pm(0,Y(0.64),-0.075*h), o.hair, head);
   if(o.cap){ add(new T.SphereGeometry(0.118*h,14,8,0,Math.PI*2,0,Math.PI*0.42), _pm(0,Y(0.758),-0.004*h), o.cap, head);
              add(new T.BoxGeometry(0.17*h,0.012*h,0.10*h), _pm(0,Y(0.785),0.10*h), o.cap, head); }
+  if(o.beanie){ add(new T.SphereGeometry(0.119*h,14,8,0,Math.PI*2,0,Math.PI*0.46), _pm(0,Y(0.752),-0.006*h, 1,1.12,1), o.beanie, head);
+                add(new T.CylinderGeometry(0.121*h,0.121*h,0.04*h,14,1,true), _pm(0,Y(0.785),-0.006*h), o.beanie, head); }
+  // a hoodie: the hood up over the head (open at the face) or down on the
+  // shoulders, the drawstrings, the pocket across the front
+  if(o.hoodie){
+    if(o.hoodUp) add(new T.SphereGeometry(0.132*h,16,10, Math.PI/2+0.95, Math.PI*2-1.9, 0, Math.PI*0.66),
+                     _pm(0,Y(0.738),-0.02*h, 0.98,1.06,1.10), o.shirt, head);
+    else add(new T.SphereGeometry(0.12*h,12,8, Math.PI, Math.PI, Math.PI*0.25, Math.PI*0.55), _pm(0,Y(0.575),-0.05*h, 1.25,0.70,0.95), o.shirt, spine);
+    for(const s of [-1,1]) add(new T.CylinderGeometry(0.004*h,0.004*h,0.13*h,4), _pm(s*0.035*h,Y(0.47),0.10*h), "#e8e6df", spine);
+    add(new T.BoxGeometry(0.21*h,0.10*h,0.02*h), _pm(0,Y(0.15),0.092*h), o.pocket||o.shirt, spine);
+  }
   // arms: a sleeve, the forearm, the hand
   for(const [s,sh,el] of [[-1,shL,elL],[1,shR,elR]]){
     add(cyl(0.050*h,0.045*h,0.16*h,8), _pm(s*sw,Y(0.43),0), o.shirt, sh);
@@ -108,6 +119,10 @@ function randomPerson(r){
                       shirt:pick(SHIRTS), pants:pick(PANTS), shoes:pick(["#f2f0ea","#1d1d1f","#6b4a2b","#8d9196"]),
                       shorts:r()<0.3, long:r()<0.25, cap:r()<0.22?pick(["#b3151b","#1f3b6e","#2f5a35","#1d1d1f"]):null});
 }
+// the smoker's cycle: the hand comes up (0..0.15), holds at the mouth for
+// the drag (to 0.25), and goes down again by 0.4; once every 8 s or so
+const _smokeCyc=(t,seed)=>(t*0.12+seed)%1;
+const _smokeUp=c=>smoothstep(0,0.15,c)*(1-smoothstep(0.25,0.4,c));
 // poses: everything is a bone rotation off the rest pose
 function poseP(p, mode, ph, t){
   const B=p.B, J=p.j, s=Math.sin(ph*Math.PI*2), c=Math.cos(ph*Math.PI*2);
@@ -135,10 +150,60 @@ function poseP(p, mode, ph, t){
     B[J.head].rotation.y=Math.sin(t*0.25+p.seed*2)*0.45;
     if(mode==="phone"){ B[J.shR].rotation.x=-0.35; B[J.shR].rotation.z=0.35; B[J.elR].rotation.x=-2.35; B[J.head].rotation.y*=0.4; B[J.head].rotation.z=-0.12; }
     if(mode==="read"){ B[J.head].rotation.x=0.30; B[J.head].rotation.y*=0.2; B[J.shL].rotation.x=B[J.shR].rotation.x=-0.45; B[J.elL].rotation.x=B[J.elR].rotation.x=-1.1; }
-    if(mode==="smoke"){ const up=smoothstep(0,0.15,(t*0.12+p.seed)%1)*(1-smoothstep(0.25,0.4,(t*0.12+p.seed)%1));
+    if(mode==="smoke"){ const up=_smokeUp(_smokeCyc(t,p.seed));
       B[J.shR].rotation.x=-0.25-up*0.55; B[J.shR].rotation.z=0.18+up*0.25; B[J.elR].rotation.x=-0.9-up*1.35; }
   }
 }
+/* ---- a lit cigarette, held in the right hand ------------------------------
+   Filter, paper, and a coal at the end that brightens on the drag. It is
+   parented to the forearm's bone, so it goes up to the mouth with the hand;
+   held at rest it points forward and out and a little down. */
+const CIG_MAT={paper:new T.MeshStandardMaterial({color:0xf2f0ea, roughness:0.7}),
+               filter:new T.MeshStandardMaterial({color:0xc98f52, roughness:0.75}),
+               ash:new T.MeshStandardMaterial({color:0x6b6763, roughness:0.95})};
+function giveCigarette(P){
+  const g=new T.Group(), h=P.h;
+  const part=(r0,r1,len,z,mat)=>{ const m=new T.Mesh(new T.CylinderGeometry(r1,r0,len,8), mat); m.rotation.x=Math.PI/2; m.position.z=z; g.add(m); return m; };
+  part(0.0044,0.0044,0.024, 0.012, CIG_MAT.filter);
+  part(0.0042,0.0042,0.054, 0.051, CIG_MAT.paper);
+  part(0.0042,0.0040,0.004, 0.080, CIG_MAT.ash);
+  const coal=part(0.0040,0.0034,0.004, 0.084, new T.MeshBasicMaterial({color:0xff5a1a, toneMapped:false}));
+  const glow=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, color:0xff6420, transparent:true, depthWrite:false,
+                                                blending:T.AdditiveBlending, opacity:0.5, toneMapped:false}));
+  glow.scale.set(0.05,0.05,1); glow.position.z=0.085; g.add(glow);
+  const tip=new T.Object3D(); tip.position.z=0.088; g.add(tip);
+  g.position.set(0.014, -0.29*h, 0.022);
+  g.quaternion.setFromUnitVectors(V3(0,0,1), V3(0.55,-0.32,0.77).normalize());
+  P.B[P.j.elR].add(g);
+  return {g:g, coal:coal, glow:glow, tip:tip, wisp:0, puff:0};
+}
+const _tipW=new T.Vector3(), _mouthW=new T.Vector3();
+function updateCigarette(p, dt, now, dark){
+  const C=p.cig, P=p.P, cyc=_smokeCyc(now,P.seed), up=_smokeUp(cyc);
+  // the coal: dull red, and bright while it is drawn on
+  const drag=up>0.85 && cyc>0.15 && cyc<0.27 ? 1 : 0;
+  C.heat=(C.heat||0.3)+((drag?1:0.3)-(C.heat||0.3))*Math.min(1,dt*(drag?5:1.5));
+  C.coal.material.color.setRGB(0.55+0.45*C.heat, 0.12+0.30*C.heat*C.heat, 0.03+0.06*C.heat);
+  C.glow.material.opacity=(0.18+0.55*dark)*(0.35+0.65*C.heat);
+  const s=0.035+0.035*C.heat; C.glow.scale.set(s,s,1);
+  if(Math.hypot(p.x-camera.position.x, p.z-camera.position.z)>60) return;
+  // a thread of smoke off the end, and the breath out after each drag
+  C.tip.getWorldPosition(_tipW);
+  C.wisp-=dt;
+  if(C.wisp<=0){ C.wisp=0.09+Math.random()*0.06;
+    PUFFS.emit(_tipW.x, _tipW.y+0.01, _tipW.z, (Math.random()-0.5)*0.03, 0.16+Math.random()*0.06, (Math.random()-0.5)*0.03,
+               0.014, 0.15+Math.random()*0.06, 2.4+Math.random()*0.8, 0.30, 0.88, 0); }
+  if(cyc>0.31 && cyc<0.43){
+    C.puff-=dt;
+    if(C.puff<=0){ C.puff=0.045;
+      const hb=P.B[P.j.head]; _mouthW.set(0, 0.08*P.h, 0.11*P.h).applyMatrix4(hb.matrixWorld);
+      const fx=Math.sin(p.yaw), fz=Math.cos(p.yaw), k=1-(cyc-0.31)/0.12;
+      PUFFS.emit(_mouthW.x, _mouthW.y, _mouthW.z, fx*(0.55*k+0.15)+(Math.random()-0.5)*0.08, 0.05+Math.random()*0.08,
+                 fz*(0.55*k+0.15)+(Math.random()-0.5)*0.08, 0.05, 0.42+Math.random()*0.15, 2.8+Math.random()*0.8, 0.38*k+0.08, 0.90, 0);
+    }
+  }
+}
+
 /* ---- a dog: a yellow lab, on the same plan with seven bones ------------- */
 function buildDog(coat){
   const B=[], parts=[];
@@ -169,8 +234,12 @@ const _WALK_X=-23.6, _DOOR={x:-7.0, z:0}, _INSIDE={x:-4.4, z:0.3};
 // from a stall to the front door, the way a person would go
 function _doorPath(st){
   const pts=[];
-  const toPlaza=z=>{ pts.push({x:_WALK_X, z:z}); const zz=clamp(z,-12,12); pts.push({x:_WALK_X, z:zz});
-    pts.push({x:-19.5, z:zz*0.5}); pts.push({x:-12, z:zz*0.15}); pts.push(_DOOR); pts.push(_INSIDE); };
+  // along the walk to the gap between the flower beds (|z| < 4.5), clear of
+  // the bin in the middle of it, then straight across the plaza to the door
+  const toPlaza=z=>{ pts.push({x:_WALK_X, z:z});
+    let zz=clamp(z,-3.3,3.3); if(Math.abs(zz)<1.25) zz=(z<0?-1.25:1.25);
+    pts.push({x:_WALK_X, z:zz}); pts.push({x:-19.5, z:zz*0.85}); pts.push({x:-12, z:zz*0.3});
+    pts.push(_DOOR); pts.push(_INSIDE); };
   if(st.E){
     const zl=st.zs-1.375;
     pts.push({x:st.px-0.4, z:st.zs-1.05}); pts.push({x:-27.6, z:zl}); pts.push({x:-25.3, z:zl});
@@ -183,7 +252,41 @@ function _doorPath(st){
   }
   return pts;
 }
-// a walker: follows its points at its pace, turns smoothly, stands on whatever is there
+/* ---- keeping clear ---------------------------------------------------------
+   A person is a disc BODY_R across. They do not stand in a collider (a
+   planter, a post, a bin, a parked car) or on a flower bed, and nobody walks
+   into another person. _hitAt answers whether a disc there would touch any
+   of it; a walker probes ahead with it and bends its line round whatever
+   is in the way, the side it first chose, until the way is clear. */
+const BODY_R=0.28;
+function _hitAt(x, z, y, r, self){
+  const own=self && self.v ? self.v.col : null;                         // a driver's own car is not in the way
+  const hit=c=>{ if(c===own || c.y1<y+0.30 || c.y0>y+1.75) return false;  // a curb is stepped over
+    const qx=clamp(x,c.x0,c.x1), qz=clamp(z,c.z0,c.z1), dx=x-qx, dz=z-qz;
+    return dx*dx+dz*dz<r*r; };
+  const near=colsNear(x,z);
+  for(let i=0;i<near.length;i++) if(hit(near[i])) return true;
+  for(let i=0;i<COL_BIG.length;i++) if(hit(COL_BIG[i])) return true;
+  for(let i=0;i<COL_DYN.length;i++) if(hit(COL_DYN[i])) return true;
+  for(const k of KEEP_OFF) if(x>k.x0-r && x<k.x1+r && z>k.z0-r && z<k.z1+r) return true;
+  for(const q of PEOPLE){
+    if(q===self || !q.P || !q.P.g.visible || q.kind==="driver" && q.state!=="out" && q.state!=="back") continue;
+    if(Math.abs(q.y-y)<1.2 && (q.x-x)*(q.x-x)+(q.z-z)*(q.z-z)<(r+BODY_R)*(r+BODY_R)) return true;
+  }
+  return false;
+}
+// the nearest place to (x,z) at the same level where a person stands clear
+function _clearSpot(x, z, y, self){
+  const r=BODY_R+0.10;
+  if(!_hitAt(x,z,y,r,self)) return {x:x, z:z};
+  for(let d=0.1; d<=2.5; d+=0.1) for(let k=0;k<24;k++){
+    const a=k/24*Math.PI*2, cx=x+Math.sin(a)*d, cz=z+Math.cos(a)*d;
+    if(Math.abs(surfaceY(cx,cz,y+0.3)-y)<0.08 && !_hitAt(cx,cz,y,r,self)) return {x:cx, z:cz};
+  }
+  return {x:x, z:z};
+}
+// a walker: follows its points at its pace, turns smoothly, steps round
+// what is in its way, stands on whatever is there
 function _stepWalker(p, dt, speed){
   const tgt=p.path[p.pi];
   if(!tgt) return true;
@@ -193,15 +296,42 @@ function _stepWalker(p, dt, speed){
   const pd=Math.hypot(px,pz);
   let sp=speed;
   if(!driving && pd<1.3 && ahead>0) sp=0;
-  if(d<0.25){ p.pi++; return p.pi>=p.path.length; }
-  const want=Math.atan2(dx,dz);
+  if(d<0.25 || (d<0.9 && p.stuck>0.6)){ p.pi++; p.stuck=0; return p.pi>=p.path.length; }
+  let want=Math.atan2(dx,dz);
+  // look a stride ahead; if that is blocked, bend the line a little at a
+  // time toward the side already chosen, then the other, until it is not.
+  // Someone already in a tight spot (or held up for long) just goes on out.
+  const y=(p.y===undefined?0:p.y), look=Math.min(0.75, d);
+  const free=a=>!_hitAt(p.x+Math.sin(a)*look, p.z+Math.cos(a)*look, y, BODY_R, p) &&
+                !_hitAt(p.x+Math.sin(a)*look*0.5, p.z+Math.cos(a)*look*0.5, y, BODY_R, p);
+  const loose=(p.stuck||0)>1.5 || _hitAt(p.x, p.z, y, BODY_R*0.8, p);
+  if(!loose && !free(want)){
+    const side=p.side||1; let found=false;
+    bend: for(const k of [1,2,3,4,5,6]) for(const s of [side,-side]){
+      const a=want+s*k*0.28;
+      if(free(a)){ want=a; p.side=s; found=true; break bend; }
+    }
+    if(!found){ sp=0; p.stuck=(p.stuck||0)+dt; }
+  }else if(p.side && Math.random()<dt*0.5) p.side=0;
   let dy=want-p.yaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
-  p.yaw+=dy*Math.min(1,dt*6);
-  const step=Math.min(d, sp*dt);
-  p.x+=Math.sin(p.yaw)*step; p.z+=Math.cos(p.yaw)*step;
-  p.y=surfaceY(p.x, p.z, (p.y===undefined?0:p.y)+0.45);
+  p.yaw+=dy*Math.min(1,dt*7);
+  const step=Math.min(d, sp*dt), nx=p.x+Math.sin(p.yaw)*step, nz=p.z+Math.cos(p.yaw)*step;
+  // never into anything: hold where you are instead, and after a moment
+  // give the point up and make for the next one
+  if(step>0 && !loose && _hitAt(nx, nz, y, BODY_R*0.9, p)){ p.stuck=(p.stuck||0)+dt; p.moving=false; return false; }
+  if(step>0) p.stuck=Math.max(0,(p.stuck||0)-dt*0.5);
+  p.x=nx; p.z=nz;
+  p.y=surfaceY(p.x, p.z, y+0.45);
   p.ph=(p.ph+step/1.45)%1;
-  p.moving=sp>0.05;
+  p.moving=sp>0.05 && step>0;
+  return false;
+}
+// someone coming or going is at this door: it opens for them (17-player)
+function npcNearDoor(d){
+  for(const p of PEOPLE){
+    if(p.kind!=="driver" || (p.state!=="out" && p.state!=="back")) continue;
+    if(Math.abs(p.y-d.y)<1.8 && Math.hypot(p.x-d.x, p.z-d.z)<2.4) return true;
+  }
   return false;
 }
 const PEOPLE_API=(function(){
@@ -228,8 +358,11 @@ const PEOPLE_API=(function(){
       PEOPLE.push({kind:"sit", P:P, x:x, z:z, y:Terrain.groundAt(tb.x,tb.z)+0.02, yaw:Math.atan2(tb.x-x, tb.z-z), seed:r()*10, dayOnly:true});
     }
   }
-  // a smoker by the post outside the door, and a trucker on the phone by his rig
-  PEOPLE.push({kind:"stand", mode:"smoke", P:randomPerson(r), x:-7.25, z:-2.75, y:PLAZA_Y, yaw:-Math.PI/2-0.4, seed:r()*10});
+  // a smoker by the post outside the door, on the paving between the
+  // planter and the doors' swing, facing the lot, a cigarette going
+  const sm={kind:"stand", mode:"smoke", P:randomPerson(r), x:-7.35, z:-1.95, y:PLAZA_Y, yaw:-Math.PI/2-0.25, seed:r()*10};
+  sm.cig=giveCigarette(sm.P); PEOPLE.push(sm);
+  // and a trucker on the phone by his rig
   const ts=TRUCK_STALLS.filter(s=>s.taken)[1];
   if(ts){ const x=ts.x0+ts.dx*9.0+ts.dz*1.9, z=ts.z0+ts.dz*9.0-ts.dx*1.9;
     PEOPLE.push({kind:"stand", mode:"phone", P:buildPerson({h:1.04, skin:SKINS[2], hair:HAIRS[0], shirt:"#5d6a73", pants:"#3b4a66", shoes:"#3a2a1a", long:true, cap:"#1d1d1f"}),
@@ -237,12 +370,16 @@ const PEOPLE_API=(function(){
   // somebody in the lobby reading the state map
   PEOPLE.push({kind:"stand", mode:"read", P:randomPerson(r), x:-3.2, z:-4.55, y:FL, yaw:Math.PI, seed:r()*10, dayOnly:false});
   // and a dog being walked round the pet area
-  const loopPts=[{x:12,z:66},{x:19,z:68},{x:25,z:75},{x:26,z:86},{x:20,z:93},{x:13,z:88},{x:10,z:77}];
+  // (south of the bag dispenser at 15.4, 67.2, not through it)
+  const loopPts=[{x:12,z:65.4},{x:19,z:65.8},{x:25,z:73},{x:26,z:86},{x:20,z:93},{x:13,z:88},{x:10,z:77}];
   const w={kind:"dogwalk", P:randomPerson(r), path:loopPts, pi:0, x:12, z:66, y:0, yaw:0, ph:0, seed:r()*10, dayOnly:true,
            dog:buildDog(r()<0.5?"#c9a066":"#2a2420"), pause:0, dx:12, dz:64.5, dyaw:0, dph:0, sniff:0};
   const lm=new T.LineBasicMaterial({color:0x8a1a1a});
   w.leash=new T.Line(new T.BufferGeometry().setFromPoints([V3(),V3()]), lm); w.leash.frustumCulled=false; scene.add(w.leash);
   PEOPLE.push(w);
+  // nobody is placed standing in anything: each one standing is moved, if
+  // need be, to the nearest spot at the same level that is clear
+  for(const p of PEOPLE) if(p.kind==="stand"){ const c=_clearSpot(p.x, p.z, p.y, p); p.x=c.x; p.z=c.z; }
 })();
 const _hand=new T.Vector3(), _col=new T.Vector3();
 function updatePeople(dt, now, dark){
@@ -252,7 +389,10 @@ function updatePeople(dt, now, dark){
     if(p.dayOnly){ const on=dark<0.55; P.g.visible=on; if(p.dog){ p.dog.g.visible=on; p.leash.visible=on; } if(!on) continue; }
     const cd=Math.hypot(p.x-camera.position.x, p.z-camera.position.z);
     if(p.kind==="sit"){ if(cd<90) poseP(P,"sit",0,now); P.g.position.set(p.x,p.y,p.z); P.g.rotation.y=p.yaw; continue; }
-    if(p.kind==="stand"){ if(cd<90) poseP(P,p.mode,0,now); P.g.position.set(p.x,p.y,p.z); P.g.rotation.y=p.yaw; continue; }
+    if(p.kind==="teen"){ p.upd(p, dt, now, dark, cd); continue; }
+    if(p.kind==="stand"){ if(cd<90) poseP(P,p.mode,0,now); P.g.position.set(p.x,p.y,p.z); P.g.rotation.y=p.yaw;
+      if(p.cig) updateCigarette(p, dt, now, dark);
+      continue; }
     if(p.kind==="dogwalk"){
       if(p.pause>0){ p.pause-=dt; p.moving=false; }
       else if(_stepWalker(p, dt, 0.95)){ p.pi=0; }
@@ -264,7 +404,12 @@ function updatePeople(dt, now, dark){
       const D=p.dog, lx=p.x+Math.sin(p.yaw-0.9)*1.6, lz=p.z+Math.cos(p.yaw-0.9)*1.6;
       const ddx=lx-p.dx, ddz=lz-p.dz, dd=Math.hypot(ddx,ddz);
       let sp=dd>0.5 ? Math.min(2.2, dd*1.6) : 0;
-      if(sp>0){ const want=Math.atan2(ddx,ddz); let dy=want-p.dyaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
+      if(sp>0){ let want=Math.atan2(ddx,ddz);
+        // round a post or a bin, not through it
+        const gy=Terrain.groundAt(p.dx,p.dz), clear=a=>!_hitAt(p.dx+Math.sin(a)*0.55, p.dz+Math.cos(a)*0.55, gy, 0.26, p);
+        if(!clear(want)){ let ok=false; for(const k of [1,2,3,4,5]){ for(const s of [1,-1]) if(clear(want+s*k*0.35)){ want+=s*k*0.35; ok=true; break; } if(ok) break; }
+          if(!ok) sp=0; }
+        let dy=want-p.dyaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
         p.dyaw+=dy*Math.min(1,dt*5); p.dx+=Math.sin(p.dyaw)*sp*dt; p.dz+=Math.cos(p.dyaw)*sp*dt; p.dph=(p.dph+sp*dt/0.9)%1; }
       for(let k=0;k<4;k++) D.B[D.legs[k]].rotation.x=sp>0 ? Math.sin((p.dph+(k===0||k===3?0:0.5))*Math.PI*2)*0.55 : 0;
       D.B[D.tail].rotation.y=Math.sin(now*11)*0.45;

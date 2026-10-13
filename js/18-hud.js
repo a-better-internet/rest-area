@@ -47,7 +47,9 @@ function placeName(x,z){
   if(distToPath(RAMP_EXIT,x,z).d<6) return "EXIT RAMP";
   if(distToPath(RAMP_ENTRY,x,z).d<6) return "ON-RAMP · I-79 N";
   if(distToPath(DRIVE,x,z).d<4) return "SERVICE DRIVE";
-  if(Terrain.clearDist(x,z)>4) return "THE WOODS";
+  if(Math.hypot(x-CAMP.x, z-CAMP.z)<CAMP.r+4) return "THE FIRE RING";
+  if(x>20 && distToPath(TRAIL,x,z).d<3) return "A PATH IN THE WOODS";
+  if(Terrain.siteDist(x,z)>4) return x>150 ? "THE BACK WOODS" : "THE WOODS";
   return "REST AREA";
 }
 function updateHUD(){
@@ -69,37 +71,28 @@ function updateHUD(){
   hud.where.textContent = driving ? name+" · "+Math.round(driving.veh.speed*2.237)+" MPH" : name;
 }
 
-/* --- the site plan ---------------------------------------------------- */
+/* --- the site plan ----------------------------------------------------
+   Painted once over everything from the interstate to the back of the woods
+   at one scale, and shown through a window the size of the canvas that
+   follows you, so the path and the camp are on it when you are out there. */
 const planCv=document.getElementById("planCv"), planX=planCv.getContext("2d");
-const PLAN={x0:-190, x1:110, z0:-220, z1:128};
-function px(x){ return (x-PLAN.x0)/(PLAN.x1-PLAN.x0)*planCv.width; }
-function pz(z){ return (z-PLAN.z0)/(PLAN.z1-PLAN.z0)*planCv.height; }
-function rectP(x0,x1,z0,z1,fill,stroke){
-  planX.beginPath(); planX.rect(px(x0),pz(z0),px(x1)-px(x0),pz(z1)-pz(z0));
-  if(fill){ planX.fillStyle=fill; planX.fill(); }
-  if(stroke){ planX.strokeStyle=stroke; planX.lineWidth=1; planX.stroke(); }
-}
-function lineP(P, w, col){
-  planX.beginPath(); planX.moveTo(px(P[0].x), pz(P[0].z));
-  for(const p of P) planX.lineTo(px(p.x), pz(p.z));
-  planX.strokeStyle=col; planX.lineWidth=w; planX.stroke();
-}
-// the static part, painted once
+const PLAN_ALL={x0:-190, x1:420, z0:-240, z1:250}, PLAN_W=300, PLAN_H=348;
+const PLAN_S=planCv.width/PLAN_W;                            // pixels to the metre
 const planBase=(function(){
-  const c=cvs(planCv.width, planCv.height), x=c.getContext("2d");
-  const save=planX;
-  const W=c.width, H=c.height;
+  const W=Math.round((PLAN_ALL.x1-PLAN_ALL.x0)*PLAN_S), H=Math.round((PLAN_ALL.z1-PLAN_ALL.z0)*PLAN_S);
+  const c=cvs(W, H), x=c.getContext("2d");
+  const px=wx=>(wx-PLAN_ALL.x0)*PLAN_S, pz=wz=>(wz-PLAN_ALL.z0)*PLAN_S;
   x.fillStyle="#1d3a24"; x.fillRect(0,0,W,H);
   // the clearings, lighter
   for(let j=0;j<H;j+=2) for(let i=0;i<W;i+=2){
-    const wx=PLAN.x0+(i/W)*(PLAN.x1-PLAN.x0), wz=PLAN.z0+(j/H)*(PLAN.z1-PLAN.z0);
-    if(Terrain.clearDist(wx,wz)<0){ x.fillStyle="#46663a"; x.fillRect(i,j,2,2); }
+    const wx=PLAN_ALL.x0+i/PLAN_S, wz=PLAN_ALL.z0+j/PLAN_S;
+    if(Terrain.siteDist(wx,wz)<0){ x.fillStyle="#46663a"; x.fillRect(i,j,2,2); }
   }
   const R=(x0,x1,z0,z1,f)=>{ x.fillStyle=f; x.fillRect(px(x0),pz(z0),px(x1)-px(x0),pz(z1)-pz(z0)); };
-  const L=(P,w,col)=>{ x.beginPath(); x.moveTo(px(P[0].x),pz(P[0].z)); for(const p of P) x.lineTo(px(p.x),pz(p.z));
-    x.strokeStyle=col; x.lineWidth=w; x.lineCap="round"; x.stroke(); };
-  R(NB_X0, NB_X1, PLAN.z0, PLAN.z1, "#77787a");
-  R(SB_X0, SB_X1, PLAN.z0, PLAN.z1, "#77787a");
+  const L=(P,w,col,dash)=>{ x.beginPath(); x.moveTo(px(P[0].x),pz(P[0].z)); for(const p of P) x.lineTo(px(p.x),pz(p.z));
+    x.strokeStyle=col; x.lineWidth=w; x.lineCap="round"; x.setLineDash(dash||[]); x.stroke(); x.setLineDash([]); };
+  R(NB_X0, NB_X1, PLAN_ALL.z0, PLAN_ALL.z1, "#77787a");
+  R(SB_X0, SB_X1, PLAN_ALL.z0, PLAN_ALL.z1, "#77787a");
   L(RAMP_EXIT, 2.6, "#77787a"); L(RAMP_ENTRY, 2.6, "#77787a"); L(DRIVE, 1.6, "#6d6e70");
   R(SITE.truck.x0,SITE.truck.x1,SITE.truck.z0,SITE.truck.z1,"#8a8b8d");
   R(SITE.car.x0,SITE.car.x1,SITE.car.z0,SITE.car.z1,"#8a8b8d");
@@ -112,18 +105,25 @@ const planBase=(function(){
   R(SITE.sub.x0,SITE.sub.x1,SITE.sub.z0,SITE.sub.z1,"#6c6a64");
   x.strokeStyle="#c9ccce"; x.lineWidth=1; x.strokeRect(px(SITE.sub.x0),pz(SITE.sub.z0),
     px(SITE.sub.x1)-px(SITE.sub.x0), pz(SITE.sub.z1)-pz(SITE.sub.z0));
+  // the path out back, dashed, and the clearing at the end of it
+  L(TRAIL, 1.2, "#b39a72", [3,2]);
+  x.fillStyle="#46663a"; x.beginPath(); x.arc(px(CAMP.x),pz(CAMP.z),CAMP.r*PLAN_S,0,7); x.fill();
+  x.fillStyle="#e07a2a"; x.beginPath(); x.arc(px(CAMP.x),pz(CAMP.z),1.8,0,7); x.fill();
   // picnic tables, as dots
   x.fillStyle="#d8c49a";
   for(const t of (typeof PICNIC!=="undefined"?PICNIC:[])){ x.beginPath(); x.arc(px(t.x),pz(t.z),1.6,0,7); x.fill(); }
   x.fillStyle="#f1f1ea"; x.font="8px 'JetBrains Mono', monospace";
-  x.fillText("I-79", px(HWY.nb)-8, 12);
+  x.fillText("I-79", px(HWY.nb)-8, pz(-220)+12);
   return c;
 })();
 function drawPlan(){
-  planX.clearRect(0,0,planCv.width,planCv.height);
-  planX.drawImage(planBase,0,0);
   const sx=droneMode?dronePos.x:player.pos.x, sz=droneMode?dronePos.z:player.pos.z;
-  const X=clamp(px(sx),5,planCv.width-5), Z=clamp(pz(sz),5,planCv.height-5);
+  // the window: the site as it always was while you are on it, following you once you leave
+  const keep=(d0,s,W,lo,hi)=>clamp(clamp(d0, s-(W-40), s-40), lo, hi-W);
+  const wx0=keep(-190, sx, PLAN_W, PLAN_ALL.x0, PLAN_ALL.x1), wz0=keep(-220, sz, PLAN_H, PLAN_ALL.z0, PLAN_ALL.z1);
+  planX.clearRect(0,0,planCv.width,planCv.height);
+  planX.drawImage(planBase, -(wx0-PLAN_ALL.x0)*PLAN_S, -(wz0-PLAN_ALL.z0)*PLAN_S);
+  const X=clamp((sx-wx0)*PLAN_S,5,planCv.width-5), Z=clamp((sz-wz0)*PLAN_S,5,planCv.height-5);
   planX.save(); planX.translate(X,Z);
   let yaw=player.yaw; if(droneMode) yaw=droneYaw+Math.PI; else if(driving) yaw=carYaw(driving.veh.body.quaternion)+Math.PI;
   planX.rotate(-yaw);

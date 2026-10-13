@@ -369,7 +369,7 @@ function wetFloor(x,z,ry){
     push("shingle", g, 0,0,0, 0, "#cfc6bd");
     // fascia along the eave, and the rake boards up both gables
     bx("paintm", 12.0+OH*2+0.1, 0.26, 0.06, 0, eaveY-0.13, sg*(eaveZ+0.03), 0, 0, FASCIA);
-    for(const xe of [-6.0-OH, 6.0+OH]){
+    for(const xe of [-6.0-oh, 6.0+oh]){                // (each pair meets the other at the ridge a centimetre off)
       const L3=Math.hypot(eaveZ, L.ridge-eaveY);
       push("paintm", boxGeo(0.07, 0.34, L3, 0), xe+(xe<0?-0.035:0.035), (L.ridge+eaveY)/2-0.12, sg*eaveZ/2, 0, FASCIA,
            sg*PITCH, 0);
@@ -648,7 +648,7 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
     bx("steel", 0.30, 0.04, 0.03, x, h-0.06, zw-0.54, 0.8, 0, "#c8cbcc");                     // push bar
     bx("steel", 0.40, h-FL-0.30, 0.096, x, (h-0.14+FL+0.16)/2, zw-0.052, 0.8, 0, "#bfc2c4");   // the wall box under it
   }
-  bx("steel", 0.36, 0.42, 0.22, 2.15, FL+0.21, R.z1-0.11, 0.8, 0, "#b4b7b9");                // the chiller cabinet
+  bx("steel", 0.36, 0.42, 0.212, 2.15, FL+0.21, R.z1-0.112, 0.8, 0, "#b4b7b9");              // the chiller cabinet
   for(let k=0;k<6;k++) bx("paintm", 0.30, 0.012, 0.01, 2.15, FL+0.08+k*0.05, R.z1-0.225, 0, 0, "#6b7073");
   addCol(1.88, 3.12, R.z1-0.5, R.z1, FL-0.5, FL+1.1);
   addUse(2.5, R.z1-0.9, FL, "TAKE A DRINK", ()=>toast("COLD, AND IT TASTES LIKE THE PIPE","#cfe0d4"), 1.2);
@@ -1000,8 +1000,8 @@ function drawPAMap(x,W,H){
         c.fillStyle="#1a1a1a"; fitText(c,"Slow down. Our workers' lives depend on it.",W*0.9,H*0.04,W/2,H*0.92,"600"); },
         5.0, FL+1.65, Z(8.4)-sg*0.012, sg>0?Math.PI:0);
       bx("paintm", 0.30, 0.36, 0.10, 6.64, FL+1.45, Z(6.45), 0, 0, "#f4f3ee");
-      bx("paintm", 0.012, 0.16, 0.05, 6.585, FL+1.47, Z(6.45), 0, 0, "#c41a1a");
-      bx("paintm", 0.016, 0.05, 0.16, 6.583, FL+1.47, Z(6.45), 0, 0, "#c41a1a");
+      bx("paintm", 0.010, 0.16, 0.05, 6.584, FL+1.47, Z(6.45), 0, 0, "#c41a1a");     // the cross: the bar across stands
+      bx("paintm", 0.018, 0.05, 0.16, 6.583, FL+1.47, Z(6.45), 0, 0, "#c41a1a");     // proud of the one up and down
       bx("steel", 0.08, 0.40, 0.30, 6.66, FL+1.55, Z(7.95), 0.8, 0, "#cfd2d3");
       cyl("paintm", 0.075,0.075, 0.46, 14, 3.62, FL+0.95, Z(5.98), "#b3151b");
       cyl("paintm", 0.03,0.03, 0.08, 8, 3.62, FL+1.22, Z(5.98), "#1a1a1a");

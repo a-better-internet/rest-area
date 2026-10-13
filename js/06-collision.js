@@ -13,6 +13,9 @@
 const COL=[];    // static, indexed into a grid below
 const COL_DYN=[];// colliders that move: parked cars, and only those
 const COL_BIG=[], CG=12, CPAD=1.4;
+// ground you may cross and people do not: the flower beds. Only the people
+// (14b) read it; a bed has no collider, and you can walk through one.
+const KEEP_OFF=[];
 // The traffic is solid to a car and not to a pedestrian: a truck doing
 // sixty sweeps its box over you in a third of a second, and blocked()
 // would simply hold you inside it, which reads as stuck rather than hit.

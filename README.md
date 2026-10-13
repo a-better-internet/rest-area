@@ -109,11 +109,41 @@ built from code. The only download is three.js r128, from cdnjs.
 - **Life.**
   - Three whitetail deer graze at the edge of the woods. They walk with a
     four-beat gait and bound away with their tails up when you get close.
-  - Someone reads the map in the lobby, a smoker stands by the post outside,
-    two people share a picnic table, a trucker talks on the phone by his rig,
-    and a dog is walked round the pet area.
+  - Someone reads the map in the lobby, two people share a picnic table, a
+    trucker talks on the phone by his rig, and a dog is walked round the pet
+    area.
+  - A smoker stands by the post outside the doors, clear of the planter and
+    the doors' swing. The cigarette is lit: the coal brightens on each drag,
+    a thread of smoke comes off the end, and they breathe it out after.
+  - Nobody stands or walks in anything. People and the dog steer round
+    posts, bins, parked cars, each other and the flower beds. The doors open
+    for anyone coming or going.
   - Butterflies work the flower beds on summer days, and grey squirrels hop
     between the grove's trees.
+- **The back woods.** Behind the building a path the kids have worn runs
+  east off the loop walk, a quarter of a kilometre through the trees, to a
+  clearing with a fire ring in it.
+  - The fire has flames, coals, sparks and smoke, and a light that flickers
+    on the trees around it.
+  - Four teenagers in hoodies sit round it on logs and a cooler. One is
+    toasting a marshmallow, which goes gold, then black, then gets eaten. One
+    is on her phone, one has a can, and one stands with her hands to the
+    fire. They look round when you walk in, and they have a few things to
+    say (`E`).
+  - At the camp are a dome tent, a cooler, a camp chair, firewood, a
+    chopping block with a hatchet in it, cans, and a phone speaker playing
+    something. A log by the fire is free to sit on.
+  - Out in the woods there is more:
+    - an old fieldstone wall from when this was a field, broken where the
+      path goes through;
+    - a hunter's ladder stand strapped to an oak;
+    - a rusted-out car sunk to its sills, with a sapling growing past it;
+    - a trail camera;
+    - flagging tape along the path.
+  - Past the camp the property line is POSTED, and the trees between the
+    signs are banded in purple paint, as Pennsylvania law allows.
+  - You can hear the fire crackle, a little music, and the kids talking and
+    laughing, louder as you get closer.
 - **Sound** is synthesized, with no audio files: road noise that pans with
   the highway, wind, cardinals, chickadees, a wood thrush and crows by day,
   insects at night, the hum of the building and the generators, the hand
@@ -154,11 +184,15 @@ centred on the origin.
 | Plaza and building | x −21.5 … +7 |
 | Picnic grove | x −20 … +30, z −35 … −95 |
 | Substation | x 60 … 90, z −184 … −154 (2.6 m up the drive) |
-| Forest zone | x −240 … 176, z −328 … 248 |
+| The path out back | from the loop walk at x 17, z 1 east to x 278, z 50 |
+| The camp | x 286, z 52 |
+| Forest zone | x −240 … 416, z −328 … 248 |
 
-You can walk to 22 m inside the forest zone's edge. The painted backdrop at
-the edge is only ever seen through trees, and everything beyond it is
-scenery.
+You can walk to 22 m inside the forest zone's edge, or on the east side to
+the posted line, 58 m inside it. The painted backdrop at the edge is only
+ever seen through trees, and everything beyond it is scenery. From the
+site at eye height the back woods past x 176 are not drawn at all, because
+there are more than a hundred metres of trees in front of them.
 
 ## Files
 
@@ -181,7 +215,9 @@ js/12-substation.js the drive, the fenced compound, generators, pole line
 js/13-grounds.js    picnic grove, shelter, grills, flags, memorial, pet area
 js/14-life.js       visitors, deer, fireflies, falling leaves, grill smoke
 js/14b-people.js    people and a dog: skinned figures, poses, the drivers' walks
+js/14a-smoke.js     smoke and sparks: two point clouds shared by every fire and cigarette
 js/14c-critters.js  butterflies, squirrels, ground mist
+js/14d-backwoods.js the path, the camp and its fire, the teenagers, the wall, the stand, the car, the line
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
 js/17-player.js     movement, interaction, gates, drone
@@ -200,8 +236,9 @@ The engine comes from the Low Desert Motel and keeps its conventions:
 - a fixed 1/60 s simulation step.
 
 Several systems were added for this world:
-- **Instanced forest.** About 11,700 trees in chunks, each with near and far
-  levels of detail. Wind and leaf colour are patched into the shaders.
+- **Instanced forest.** About 15,700 trees, saplings, shrubs and ferns in
+  chunks, each with near and far levels of detail. Wind and leaf colour are
+  patched into the shaders.
 - **Paving.** Polygon-offset skins over the terrain, with a 1 m raster so the
   player and cars ride on the pavement rather than the ground under it.
 - **Traffic.** Highway vehicles follow (IDM) and pass on the interstate,
@@ -211,16 +248,25 @@ Several systems were added for this world:
   per vehicle holds a finish per part (paint, trim, rubber, chrome), looked
   up by uv. Prefiltered sky reflections fade with the light.
 - **People.** Each person is one rigidly skinned mesh with eleven bones, so
-  each costs one draw call.
+  each costs one draw call. Walkers look a stride ahead and bend their line
+  round anything solid, a flower bed or another person.
+- **Smoke and sparks.** Two point clouds, one blended and one added, each a
+  single draw. Every cigarette and fire in the world emits into them.
+- **No two faces in one plane.** Walls and slabs butt where they meet
+  instead of overlapping. Every thinner box (trim, frames, glass, fittings)
+  is grown by 1 to 3.5 mm when it is baked, so it sits proud of any wall it
+  lies against. Wall boxes take their UVs from world position, so brick
+  courses run on past a door head.
 
 ## Tools
 
-Both tools use Playwright with SwiftShader. Before running them, copy
+All three tools use Playwright with SwiftShader. Before running them, copy
 `three.min.js` (r128) into `tools/`; it is git-ignored.
 
 ```
 NODE_PATH=$(npm root -g) node tools/shot.js shots.json outDir 960 540
 NODE_PATH=$(npm root -g) node tools/walk.js
+NODE_PATH=$(npm root -g) node tools/zfight.js '{"x0":-10,"x1":17,"z0":-21,"z1":21,"y0":-0.6,"y1":10,"near":0.0011}'
 ```
 
 **`shot.js`** renders a list of views. Each entry in `shots.json` looks like
@@ -232,8 +278,15 @@ checks that every seat can be sat in and stood up from. The routes are:
 - through the lobby into both restrooms and their accessible stalls;
 - into the family restroom and the office;
 - out the back and through both service doors;
+- out the path to the camp, and into the camp past the fire;
 - across the lot and the grove;
 - up the drive and through the substation gate.
+
+**`zfight.js`** lists faces in a box of the world that lie in one plane and
+overlap, which the depth buffer cannot sort and draws as flicker. It loads
+the page with `?zdebug`, which keeps every baked piece's final matrix. Pairs
+closer than `near` metres are reported by bucket, with the normal and where
+they are. Faces turned into a wall still show up, so read the normals.
 
 The `window.REST` handle exposes the world for scripting. For example:
 - `REST.go(x,z,yaw)` and `REST.hour(h)`;

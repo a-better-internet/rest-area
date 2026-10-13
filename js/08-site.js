@@ -421,6 +421,7 @@ function lampPost(x, z, h, y0){
 (function beds(){
   const bed=(x0,x1,z0,z1,y)=>{
     push("bed", planeGeo(x1-x0, z1-z0, 0.95), (x0+x1)/2, y+0.012, (z0+z1)/2, 0, "#a89f92", -Math.PI/2, 0);
+    KEEP_OFF.push({x0:x0, x1:x1, z0:z0, z1:z1});
     // a steel edging strip round it
     // the long runs past the corners, the short ones between them
     for(const [a,b,c2,d] of [[x0-0.022,x1+0.022,z0,z0],[x0-0.022,x1+0.022,z1,z1],[x0,x0,z0+0.015,z1-0.015],[x1,x1,z0+0.015,z1-0.015]])

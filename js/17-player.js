@@ -215,7 +215,7 @@ function updateDoors(dt){
     const sameFloor=Math.abs(py-d.y)<1.8;
     if(sameFloor && dist<3.4 && dist<bestD){ bestD=dist; best=d; }
     // a gate opens when you open it and stays as you leave it
-    let want = (!d.manualOnly && sameFloor && dist<(d.reach||2.5)) ? 1 : 0;
+    let want = (!d.manualOnly && ((sameFloor && dist<(d.reach||2.5)) || npcNearDoor(d))) ? 1 : 0;
     if(d.manual!==0){
       if(!d.sticky && (dist>4.6 || !sameFloor)) d.manual=0; else want=(d.manual>0?1:0);
     }
@@ -251,7 +251,7 @@ function updateDoors(dt){
 // the edge of the walkable woods: push against it and you are told so, once
 let _edgeToast=0;
 function nearEdge(x,z){
-  const I=SITE.walkInset, Z={x0:SITE.zone.x0+I, x1:SITE.zone.x1-I, z0:SITE.zone.z0+I, z1:SITE.zone.z1-I}, m=1.4;
+  const I=SITE.walkInset, Z={x0:SITE.zone.x0+I, x1:SITE.zone.x1-(SITE.walkInsetE||I), z0:SITE.zone.z0+I, z1:SITE.zone.z1-I}, m=1.4;
   return x<Z.x0+m || x>Z.x1-m || z<Z.z0+m || z>Z.z1-m ||
          ((z<Z.z0 || z>Z.z1) && Math.min(Math.abs(Math.abs(x-HWY.nb)-19.5),Math.abs(Math.abs(x-HWY.sb)-19.5))<1.4);
 }
@@ -314,7 +314,8 @@ function fixedUpdate(dt){
     if(!bz1) player.pos.z=nz;                                        // …then on Z
     if((bx1||bz1) && nearEdge(nx,nz) && performance.now()-_edgeToast>6000){
       _edgeToast=performance.now();
-      toast("THE WOODS ARE TOO THICK TO GO ON","#cfe0d4");
+      // out back, the edge is somebody's line, and they have said so
+      toast(nx>SITE.zone.x1-(SITE.walkInsetE||0)-6 ? "POSTED. THIS IS AS FAR AS YOU GO" : "THE WOODS ARE TOO THICK TO GO ON","#cfe0d4");
     }
     player.step += sp*dt;
     player.bob   = Math.sin(player.step*3.1)*0.025;

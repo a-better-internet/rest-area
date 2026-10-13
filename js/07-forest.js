@@ -593,14 +593,17 @@ const FOREST=(function(){
     const Z=SITE.zone, SP=6.4;
     for(let gz=Z.z0+SP/2; gz<Z.z1; gz+=SP) for(let gx=Z.x0+SP/2; gx<Z.x1; gx+=SP){
       const x=gx+(hash2(gx,gz)-0.5)*SP*0.9, z=gz+(hash2(gz*1.3,gx*0.7)-0.5)*SP*0.9;
-      const cd=Terrain.clearDist(x,z);
-      if(cd<0.5) continue;
+      // nothing on the path or in the camp; the thinning and the edge trees
+      // belong to the site's own clearings, not to a footpath in the woods
+      if(Terrain.clearDist(x,z)<0.5) continue;
+      const cd=Terrain.siteDist(x,z);
       const m=smoothstep(0.5,6,cd);
       if(hash2(x*3.3,z*1.9)>m*0.96) continue;
       const hem=Terrain.fbm(x*0.010+40, z*0.010+12, 3), pin=Terrain.fbm(x*0.016+3, z*0.016+71, 3);
       const q=hash2(x*0.77,z*1.13);
       let sp;
       if(cd<9) sp = q<0.12 ? "hemlock" : "edge";
+      else if(Terrain.pathDist(x,z)<3.2) sp = q<0.2 ? "beech" : "hard";   // high crowns over the path, not hemlock sprays across it
       else if(hem>0.60 && q<0.85) sp="hemlock";
       else if(pin>0.64 && q<0.75) sp="pine";
       else if(q<0.16) sp="beech";
@@ -610,10 +613,12 @@ const FOREST=(function(){
     }
     // understory: saplings everywhere, ferns where it is open and damp,
     // and a hedge of shrubs along every edge the sun reaches
-    for(let i=0;i<16000;i++){
+    // (as many to the square metre however big the zone is)
+    const NU=Math.round(16000*(Z.x1-Z.x0)*(Z.z1-Z.z0)/(416*576));
+    for(let i=0;i<NU;i++){
       const x=Z.x0+hash2(i*1.7,3.1)*(Z.x1-Z.x0), z=Z.z0+hash2(i*2.3,7.7)*(Z.z1-Z.z0);
-      const cd=Terrain.clearDist(x,z);
-      if(cd<-0.5) continue;
+      const cd=Terrain.siteDist(x,z);
+      if(cd<-0.5 || Terrain.pathDist(x,z)<0.4) continue;
       const q=hash2(x*1.9,z*2.1);
       if(cd<7){ if(q<0.80) plant(q<0.62?"shrub":"sapling", x, z, {scale:0.75+q*0.7, solid:false}); }
       else if(cd<70){
@@ -633,8 +638,8 @@ const FOREST=(function(){
     uv.needsUpdate=true; return g;
   }
   (function floor(){
-    const Z=SITE.zone;
-    for(let i=0;i<2600;i++){
+    const Z=SITE.zone, NF=Math.round(2600*(Z.x1-Z.x0)*(Z.z1-Z.z0)/(416*576));
+    for(let i=0;i<NF;i++){
       const x=Z.x0+hash2(i*3.7,1.3)*(Z.x1-Z.x0), z=Z.z0+hash2(i*5.1,9.7)*(Z.z1-Z.z0);
       const cd=Terrain.clearDist(x,z);
       if(cd<3) continue;
@@ -831,7 +836,7 @@ const FOREST=(function(){
      it. The drone goes where it likes. */
   (function bounds(){
     const Z0=SITE.zone, I=SITE.walkInset, gaps=[[HWY.sb-19,HWY.sb+19],[HWY.nb-19,HWY.nb+19]];
-    const Z={x0:Z0.x0+I, x1:Z0.x1-I, z0:Z0.z0+I, z1:Z0.z1-I};
+    const Z={x0:Z0.x0+I, x1:Z0.x1-(SITE.walkInsetE||I), z0:Z0.z0+I, z1:Z0.z1-I};
     for(const zz of [Z.z0, Z.z1]){
       let x=Z.x0;
       for(const g of gaps){ addCol(x, g[0], zz-0.5, zz+0.5, -40, 300); x=g[1]; }
@@ -907,13 +912,16 @@ const FOREST=(function(){
   }
   /* Which set each chunk shows. Near within 58 m of the chunk's footprint
      (more from the air, where a chunk's crowns are all you see), far
-     beyond; the small stuff only within 40 m of the camera's chunk edge. */
+     beyond; the small stuff only within 40 m of the camera's chunk edge.
+     The back woods (east of DEEP_X) are not drawn at all from the site at
+     eye height: a hundred metres and more of trees stand in front of them. */
+  const DEEP_X=176;
   function update(cam){
-    const alt=Math.max(0, cam.y-30);
+    const alt=Math.max(0, cam.y-30), hideDeep=cam.x<60 && cam.y<25;
     for(const c of CHUNKS){
       const dx=Math.max(c.x0-cam.x, 0, cam.x-c.x1), dz=Math.max(c.z0-cam.z, 0, cam.z-c.z1);
       const d=Math.hypot(dx,dz,alt*0.6);
-      const mode = d<84 ? 1 : 0;
+      const mode = (hideDeep && c.x0>=DEEP_X && c.key[0]==="z") ? 2 : d<84 ? 1 : 0;
       const small = d<40;
       if(mode!==c.mode || small!==c.small){
         c.mode=mode; c.small=small;
@@ -936,6 +944,6 @@ const FOREST=(function(){
   }
   function canopyAt(x,z){ return inZone(x,z) ? -1e9 : canopyY(x,z,true); }
   return {plant:plant, finish:finish, update:update, setSeason:setSeason, isAutumn:()=>autumn,
-          inst:INST, chunks:CHUNKS, variants:VARIANTS, atlas:ATLAS, canopyAt:canopyAt, canopy:CAN,
+          inst:INST, chunks:CHUNKS, variants:VARIANTS, atlas:ATLAS, canopyAt:canopyAt, canopy:CAN, barkCyl:barkCyl,
           nearMat:NEAR_MAT, farMat:FAR_MAT};
 })();

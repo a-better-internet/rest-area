@@ -20,6 +20,8 @@ const ROUTES={
   "to the shelter":      [[10,-58],[17.5,-56.2]],
   "drive to gate":       [[-25,-142],[0,-150],[40,-158],[57,-169]],
   "through the gate":    [[57,-169],[64,-169],[70,-170.5],[80,-174.2],[80,-178.5]],
+  "the path out back":   "TRAIL",
+  "into the camp":       [[278,49.6],[281,47.6],[285.5,47.6],[289.5,48.6]],
 };
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
@@ -40,7 +42,8 @@ const ROUTES={
       // the gate stands open for its own route, the way you would leave it
       for(const d of REST.doors) if(d.manualOnly){ d.manual = name==="through the gate" ? 1 : 0; d.open = name==="through the gate" ? 1 : 0;
         if(d.blockCol) d.blockCol.y1 = name==="through the gate" ? d.blockCol.y0-1 : d.blockTop; }
-      const P=ROUTES[name]; let f=REST.surf(P[0][0],P[0][1],0.2), msg="ok", minY=1e9, maxY=-1e9;
+      const P=ROUTES[name]==="TRAIL" ? TRAIL.map(q=>[q.x,q.z]) : ROUTES[name];
+      let f=REST.surf(P[0][0],P[0][1],0.2), msg="ok", minY=1e9, maxY=-1e9;
       outer: for(let i=1;i<P.length;i++){
         const [x0,z0]=P[i-1], [x1,z1]=P[i], L=Math.hypot(x1-x0,z1-z0), n=Math.ceil(L/0.08);
         for(let k=0;k<=n;k++){

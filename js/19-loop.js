@@ -183,6 +183,7 @@ function frame(){
   tickFlicker(delta);
   updateLights(dark, camera.position);
   FOREST.update(camera.position);
+  if(typeof updateDeep==="function") updateDeep(camera.position);
 
   // clouds drift downwind and are tinted by whatever the sky is doing
   for(let i=0;i<CLOUDS.length;i++){
@@ -216,7 +217,7 @@ function frame(){
   // does the painted inside of the wood at the zone's edge, which is unlit
   { const day=1-dark, k=0.05+0.95*day*Math.sqrt(day);
     for(const e of ENV_OUT_MATS) e.m.envMapIntensity=e.k*k;
-    if(FOREST.canopy && FOREST.canopy.curtainLight) FOREST.canopy.curtainLight(0.035+0.965*Math.pow(day,1.4)); }
+    if(FOREST.canopy && FOREST.canopy.curtainLight) FOREST.canopy.curtainLight(0.035+0.715*Math.pow(day,1.4)); }   // the inside of a wood is never lit as the open is
   for(const b of BIRDS){
     b.a += b.sp*delta;
     b.s.position.set(camera.position.x+b.cx+Math.cos(b.a)*b.r, b.y+Math.sin(b.a*2.3)*3.0,

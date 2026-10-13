@@ -34,7 +34,8 @@ function updateLights(dark, camPos){
   for(let i=0;i<LIGHT_POOL.length;i++){
     const L=LIGHT_POOL[i], e=_lampSort[i];
     // indoors the tubes are on all day; the lot lights only after dusk
-    const mult=e ? (e.l.indoor ? Math.max(dark,0.80) : dark) : 0;
+    // and a fire is a fire by day too, if a weak one
+    const mult=e ? (e.l.indoor ? Math.max(dark,0.80) : e.l.fire ? Math.max(dark,0.30) : dark) : 0;
     if(!e || mult<0.02){ L.intensity=0; continue; }
     L.position.set(e.l.x, e.l.y, e.l.z);
     L.color.setHex(e.l.color);

@@ -51,8 +51,11 @@ const SITE = {
   sub:   {x0:60,  x1:90,   z0:-184, z1:-154, y:2.6},   // the substation compound
   // everything inside here is real, walkable, instanced woods; outside it
   // the forest is a canopy seen from the road and the air
-  zone:  {x0:-240, x1:176, z0:-328, z1:248},
+  // (east, behind the building, it runs a long way back: there is a path
+  // out there, and a camp at the end of it — 04-terrain, 14d)
+  zone:  {x0:-240, x1:416, z0:-328, z1:248},
   walkInset: 22,       // how far inside the zone's edge the walk stops: the curtain is always seen through trees
+  walkInsetE: 58,      // and on the east, a little past the posted line, where the woods are open and you can see further
 };
 // the car-lot aisle, and the stall rows either side of it
 const CARLOT = { aisle0:-40.5, aisle1:-32.0, stallZ0:-104, stallZ1:60, stallW:2.75,

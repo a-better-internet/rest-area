@@ -348,9 +348,9 @@ function updateDeer(dt, now){
       d.mode="flee"; d.run=0;
       // away from you, and into the trees: bias toward the deeper woods
       let ax=dx/dist, az=dz/dist;
-      const g1=Terrain.clearDist(d.x+ax*10,d.z+az*10);
+      const g1=Terrain.siteDist(d.x+ax*10,d.z+az*10);
       for(let k=0;k<8;k++){ const a=Math.atan2(az,ax)+(k-4)*0.25, tx=Math.cos(a), tz=Math.sin(a);
-        if(Terrain.clearDist(d.x+tx*10,d.z+tz*10)>g1+2){ ax=tx; az=tz; break; } }
+        if(Terrain.siteDist(d.x+tx*10,d.z+tz*10)>g1+2){ ax=tx; az=tz; break; } }
       d.vx=ax; d.vz=az;
     }
     if(d.mode==="flee"){
@@ -363,7 +363,7 @@ function updateDeer(dt, now){
       d.g.rotation.set(-Math.cos(d.run*5.2)*0.12, d.yaw, 0, "YXZ");
       d.neck.rotation.x=-0.25; d.head.rotation.x=0.15; d.tail.rotation.x=2.3;    // the flag
       _deerLegs(d, d.run*2.6, 0.95, true);
-      if(d.run>4.5 || Terrain.clearDist(d.x,d.z)>45){ d.mode="gone"; d.gone=50+Math.random()*60; d.g.visible=false; }
+      if(d.run>4.5 || Terrain.siteDist(d.x,d.z)>45){ d.mode="gone"; d.gone=50+Math.random()*60; d.g.visible=false; }
       continue;
     }
     // grazing: step a little now and then, head down, look up, an ear flick
@@ -372,7 +372,7 @@ function updateDeer(dt, now){
     if(d.walk>0){
       d.walk-=dt; const sp=0.7;
       const nx=d.x+Math.sin(d.yaw)*sp*dt, nz=d.z+Math.cos(d.yaw)*sp*dt;
-      if(Terrain.clearDist(nx,nz)>-6 && Terrain.clearDist(nx,nz)<14){ d.x=nx; d.z=nz; } else d.yaw+=Math.PI*0.7;
+      if(Terrain.siteDist(nx,nz)>-6 && Terrain.siteDist(nx,nz)<14){ d.x=nx; d.z=nz; } else d.yaw+=Math.PI*0.7;
       d.gait+=dt*1.6; _deerLegs(d, d.gait, 0.32, false);
     }else{ for(const L of d.legs){ L.up.rotation.x+=(L.rest-L.up.rotation.x)*Math.min(1,dt*6); L.low.rotation.x+=(L.restLow-L.low.rotation.x)*Math.min(1,dt*6); } }
     const alert=dist<38;
@@ -486,4 +486,6 @@ function updateLife(dt, now, dark, dn){
   updateFireflies(dt, now, dark);
   updateLeaves(dt, now);
   updateSmoke(dt);
+  if(typeof updateBackwoods==="function") updateBackwoods(dt, now, dark);
+  if(typeof updatePuffs==="function") updatePuffs(dt, now, dark);
 }

@@ -42,6 +42,17 @@ const DRIVE=smoothPath([
   {x:38,z:-159,y:1.85},{x:52,z:-166,y:2.45},{x:60.5,z:-169,y:SITE.sub.y}], 2.0);
 // a cleared right-of-way north from the compound, poles every ninety metres
 const POWER={x0:84, z0:-184, x1:136, z1:-1500};
+/* ---- the back woods: a path, and a camp at the end of it ---------------
+   Behind the building a path the kids have worn runs east off the loop walk,
+   a quarter of a kilometre through the trees to a clearing where somebody
+   keeps a fire ring. Nobody graded either: the path rides the ground as it
+   lies, and only the clearing is a little levelled, the way feet and fires
+   level a place. 14d puts the camp in it. */
+const CAMP={x:286, z:52, r:9.5, y:0};
+const TRAIL=smoothPath([
+  {x:17.4,z:1.2},{x:24,z:3.5},{x:34,z:5.2},{x:48,z:8.5},{x:62,z:7.2},{x:78,z:4.6},{x:94,z:7.2},
+  {x:110,z:12.4},{x:126,z:13.2},{x:142,z:10.2},{x:158,z:12.2},{x:174,z:18.2},{x:190,z:24},
+  {x:206,z:27.2},{x:222,z:31.4},{x:238,z:36.2},{x:254,z:41.2},{x:267,z:46},{x:278,z:49.6}], 2.0, true);
 
 const Terrain=(function(){
   const fract=x=>x-Math.floor(x);
@@ -68,6 +79,7 @@ const Terrain=(function(){
   }
   const NAT0=natural0(-30,-20);
   const natural=(x,z)=>natural0(x,z)-NAT0*(1-smoothstep(200,700,Math.hypot(x+30,z+20)));
+  CAMP.y=natural(CAMP.x, CAMP.z);
 
   function boxDist(B,x,z){
     return Math.hypot(Math.max(B.x0-x, 0, x-B.x1), Math.max(B.z0-z, 0, z-B.z1));
@@ -82,7 +94,7 @@ const Terrain=(function(){
     for(const p of P){ x0=Math.min(x0,p.x); x1=Math.max(x1,p.x); z0=Math.min(z0,p.z); z1=Math.max(z1,p.z); }
     return {x0:x0-pad, x1:x1+pad, z0:z0-pad, z1:z1+pad};
   };
-  const EXIT_B=pathBox(RAMP_EXIT,60), ENTRY_B=pathBox(RAMP_ENTRY,60), DRIVE_B=pathBox(DRIVE,40);
+  const EXIT_B=pathBox(RAMP_EXIT,60), ENTRY_B=pathBox(RAMP_ENTRY,60), DRIVE_B=pathBox(DRIVE,40), TRAIL_B=pathBox(TRAIL,16);
   const SUBPAD={x0:SITE.sub.x0-8, x1:SITE.sub.x1+8, z0:SITE.sub.z0-8, z1:SITE.sub.z1+8};
 
   // pull h towards level y with full weight inside `half` and none past half+blend
@@ -110,6 +122,8 @@ const Terrain=(function(){
     }
     // the compound: a level shelf of fill with the woods running up to it
     h=toward(h, SITE.sub.y, boxDist(SUBPAD,x,z), 0, 16);
+    // the camp's clearing, trodden level round the fire
+    h=toward(h, CAMP.y, Math.hypot(x-CAMP.x, z-CAMP.z), 6.5, 9);
     return h;
   }
 
@@ -119,7 +133,19 @@ const Terrain=(function(){
      which trees grow where, the canopy seen from the road — asks this one
      function, so the edge of the woods is the same edge for all of them. */
   const CLEAR_SITE={x0:-101, x1:28, z0:-166, z1:120};
-  function clearDist(x,z){
+  // siteDist: the clearings the state made (the site, the road, the ramps,
+  // the drive, the compound, the power line). pathDist: the path and the
+  // camp, which are narrow and must stay open, so their edge is not left
+  // to wander the way a mown edge does. clearDist is the nearer of the two.
+  function clearDist(x,z){ return Math.min(siteDist(x,z), pathDist(x,z)); }
+  function pathDist(x,z){
+    let d=1e9;
+    if(x>TRAIL_B.x0 && x<TRAIL_B.x1 && z>TRAIL_B.z0 && z<TRAIL_B.z1) d=distToPath(TRAIL,x,z).d-1.3;
+    const dc=Math.hypot(x-CAMP.x, z-CAMP.z);
+    if(dc<CAMP.r+40) d=Math.min(d, dc-CAMP.r+(fbm(x*0.09+2, z*0.09+8, 2)-0.5)*3);
+    return d;
+  }
+  function siteDist(x,z){
     let d=boxSD(CLEAR_SITE,x,z);
     d=Math.min(d, Math.abs(x-HWY.nb)-18.5, Math.abs(x-HWY.sb)-18.5);
     if(x>EXIT_B.x0 && x<EXIT_B.x1 && z>EXIT_B.z0 && z<EXIT_B.z1) d=Math.min(d, distToPath(RAMP_EXIT,x,z).d-13);
@@ -136,8 +162,8 @@ const Terrain=(function(){
     return d + (fbm(x*0.045+7, z*0.045+3, 3)-0.5)*9;
   }
   function mask(x,z){ return smoothstep(0, 5, clearDist(x,z)); }
-  return {heightAt:heightAt, natural:natural, fbm:fbm, clearDist:clearDist, mask:mask,
-          boxDist:boxDist, boxSD:boxSD};
+  return {heightAt:heightAt, natural:natural, fbm:fbm, clearDist:clearDist, siteDist:siteDist, pathDist:pathDist,
+          mask:mask, boxDist:boxDist, boxSD:boxSD};
 })();
 
 /* ---- the rings ------------------------------------------------------
@@ -145,13 +171,14 @@ const Terrain=(function(){
    lands on the outer ring's lattice at all four edges, so every coarse cell
    is wholly in a hole or wholly out, and the border nodes are shared.
      far    32 m   ±2400                        the haze and the far ridges
-     mid     8 m   x -512..384, z ±1600         the corridor and its cuts
-     near    2 m   x -256..192, z -336..256     the site and its woods      */
-const RING_MID ={x0:-512, x1:384, z0:-1600, z1:1600};
-const RING_NEAR={x0:-256, x1:192, z0:-336,  z1:256};
+     mid     8 m   x -512..640, z ±1600         the corridor and its cuts
+     near    2 m   x -256..448, z -336..256     the site and its woods      */
+const RING_MID ={x0:-512, x1:640, z0:-1600, z1:1600};
+const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:256};
 const TERRAIN_RINGS=[];
 let TERRAIN_MAT=null;
 (function buildTerrain(){
+  const campC=new T.Color(0x5a4a38);
   const lawnC=new T.Color(0x5b8034), mowC=new T.Color(0x67853a), vergeC=new T.Color(0x76883f),
         litterC=new T.Color(0x5f4d35), mossC=new T.Color(0x4d5a30), deepC=new T.Color(0x3d3729),
         gravelC=new T.Color(0x8e8a7e), rockC=new T.Color(0x6f6a5c);
@@ -159,7 +186,7 @@ let TERRAIN_MAT=null;
   // the colour of the ground at (x,z): mown lawn, verge, or the forest floor
   function tint(x,z,y,slope,out){
     // the lawn runs a few metres into the trees before the litter wins
-    const m=smoothstep(1.5, 10, Terrain.clearDist(x,z));
+    const sd=Terrain.siteDist(x,z), m=smoothstep(1.5, 10, sd);
     const hd=Math.min(Math.abs(x-HWY.nb), Math.abs(x-HWY.sb));
     // lawn in the pad, verge grass along the road, litter under the trees
     out.copy(lawnC);
@@ -170,8 +197,11 @@ let TERRAIN_MAT=null;
     // the floor of the woods: litter, moss in the damp, darker further in
     const patch=Terrain.fbm(x*0.07+5,z*0.07+1,3);
     _c2.copy(litterC).lerp(mossC, smoothstep(0.42,0.62,patch));
-    _c2.lerp(deepC, smoothstep(8,40,Terrain.clearDist(x,z))*0.7);
+    _c2.lerp(deepC, smoothstep(8,40,sd)*0.7);
     out.lerp(_c2, m);
+    // the camp: bare trodden dirt round the fire, going to litter at the edge
+    const dc=Math.hypot(x-CAMP.x, z-CAMP.z);
+    if(dc<CAMP.r+3) out.lerp(campC, (1-smoothstep(3.0, CAMP.r+1.5, dc))*0.8);
     out.lerp(rockC, smoothstep(0.35,0.8,slope)*0.6);
   }
   function grid(R,cell,holes,name,skirt){
