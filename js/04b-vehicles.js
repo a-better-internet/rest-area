@@ -297,11 +297,13 @@ function greenhouse(G, OP, GL, paint){
   if(G.coarse) return {roofY:roofY, ring:ring};
   // the roof panel
   {
+    // ring points 7..17, symmetric; the pillars below stop at 7 and 17, so
+    // the two never lie one on the other
     const C=new T.Color(P), zz=span(G.zRR+0.04, G.zRF-0.04, 16);
     OP.push({geo:skin(zz, zz.map(z=>ring(z,0.014).slice(7,18)), false, ()=>C, FIN.paint), matrix:new T.Matrix4(), color:null});
   }
-  strip(4, 8, G.zRF-0.06, G.zA, G.aPillar||P, FIN.paint, 0.016, 10);            // A pillars
-  for(const [z0,z1,c] of (G.pillars||[])) strip(0, 8, z0, z1, c==="paint"?P:c, c==="paint"?FIN.paint:FIN.trim, 0.016, 3);
+  strip(4, 7, G.zRF-0.06, G.zA, G.aPillar||P, FIN.paint, 0.016, 10);            // A pillars
+  for(const [z0,z1,c] of (G.pillars||[])) strip(0, 7, z0, z1, c==="paint"?P:c, c==="paint"?FIN.paint:FIN.trim, 0.016, 3);
   return {roofY:roofY, ring:ring};
 }
 
@@ -673,9 +675,10 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
     const row = kind===6 ? TRAILER_LIV.reefer : (livery===undefined ? 0 : livery);
     liveryBox(LV, -hw,hw, y0,y1, z0,z1, row);
     for(const sd of [-1,1]){
-      vBox(OP, 0.03, 0.14, z1-z0, sd*(hw+0.01), y0+0.07, (z0+z1)/2, 0xb9bcbd, FIN.alloy);
-      vBox(OP, 0.025, 0.08, z1-z0, sd*(hw+0.008), y1-0.04, (z0+z1)/2, 0xc9cbcc, FIN.alloy);
-      for(const zz of [z0+0.03, z1-0.03]) vBox(OP, 0.05, y1-y0, 0.06, sd*(hw-0.01), (y0+y1)/2, zz, 0xb9bcbd, FIN.alloy);
+      // rails and corner posts held a few millimetres off the box's top and underside
+      vBox(OP, 0.03, 0.14, z1-z0, sd*(hw+0.01), y0+0.075, (z0+z1)/2, 0xb9bcbd, FIN.alloy);
+      vBox(OP, 0.025, 0.08, z1-z0, sd*(hw+0.008), y1-0.045, (z0+z1)/2, 0xc9cbcc, FIN.alloy);
+      for(const zz of [z0+0.03, z1-0.03]) vBox(OP, 0.05, y1-y0-0.012, 0.072, sd*(hw-0.01), (y0+y1)/2, zz, 0xb9bcbd, FIN.alloy);   // proud of both ends
       vBox(OP, 0.10, 0.92, 0.12, sd*0.86, 0.80, 1.40, 0x2b2c2e, FIN.metal);                 // landing gear legs
       vBox(OP, 0.24, 0.05, 0.30, sd*0.86, 0.36, 1.40, 0x2b2c2e, FIN.metal);
       if(row!==2) vBox(OP, 0.03, 0.78, 7.4, sd*(hw-0.06), 0.88, -3.9, 0x4a4d50, FIN.panel);  // side skirts

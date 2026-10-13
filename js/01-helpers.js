@@ -419,10 +419,31 @@ function domeGeo(r, drop, seg){
   return g;
 }
 const BAKE_TILE=96;
+/* NO TWO FACES IN ONE PLANE. Boxes that overlap and share a face plane —
+   a wall's end and the next wall's face at a corner, a door post against the
+   end of the wall it lines, a mullion on its sill, trim on trim — z-fight,
+   worst along edges. Walls and slabs are butted where they meet (09); every
+   thinner box — trim, frames, glass, mullions, fittings — is grown by 1 to
+   3.5 mm before it is merged, so it always sits proud of any wall face it
+   shares a plane with, and a step of an eighth of a millimetre by entry
+   keeps two equal pieces from tying. */
+function _inflateBox(e, i){
+  const P=e.geo.parameters;
+  if(!P || P.width===undefined || P.depth===undefined) return;
+  const m=e.matrix.elements, sx=Math.hypot(m[0],m[1],m[2]), sy=Math.hypot(m[4],m[5],m[6]), sz=Math.hypot(m[8],m[9],m[10]);
+  const w=P.width*sx, h=P.height*sy, d=P.depth*sz, lo=Math.min(w,h,d);
+  if(lo<=0) return;
+  if(lo>=0.195) return;                    // walls and slabs: their joints are butted, not grown
+  let eps=0.0012+0.0022*(1-smoothstep(0.02,0.20,lo));
+  eps=Math.min(eps, lo*0.15)+((i*2654435761>>>0)%16)*0.00012;
+  e.matrix=e.matrix.clone().multiply(new T.Matrix4().makeScale((w+2*eps)/w, (h+2*eps)/h, (d+2*eps)/d));
+}
 function bakeBuckets(scene){
   const out=[], _c=new T.Vector3();
+  let _ei=0;
   for(const [name,b] of BUCKETS){
     if(!b.entries.length) continue;
+    for(const e of b.entries) _inflateBox(e, _ei++);
     const m=b.makeMat ? b.makeMat() : mat(0xffffff);
     m.vertexColors=true; b.mat=m;
     // tile by where each entry sits, so a bucket that spans the site is
@@ -445,6 +466,9 @@ function bakeBuckets(scene){
         scene.add(mesh); out.push(mesh);
       }
     }
+    // ?zdebug keeps the entries, named, for tools that hunt coplanar faces
+    if(typeof location!=="undefined" && /zdebug/.test(location.search))
+      (window.ZDBG=window.ZDBG||[]).push(...b.entries.map(e=>({bucket:name, geo:e.geo, matrix:e.matrix})));
     b.entries.length=0;
   }
   return out;
@@ -477,9 +501,21 @@ function lwall(xf, name, w,h,d, lx,ly,lz, uv, color){
    call. A wall that starts on the floor gets a collider sunk half a metre
    under it, so there is no seam to slip under; a wall that starts higher up
    is a lintel, and its collider starts exactly where it does — sunk, a
-   2.14 m lintel is a bar across the doorway at head height. */
+   2.14 m lintel is a bar across the doorway at head height. Its UVs come
+   from world position, face by face, so the courses of brick or block run
+   straight on from one piece of a wall to the next, past a door head and
+   round a window, instead of starting over at each box. */
 function wallBox(bk, x0,x1, z0,z1, y0,y1, color, uv, floorY){
-  bx(bk, x1-x0, y1-y0, z1-z0, (x0+x1)/2, (y0+y1)/2, (z0+z1)/2, uv===undefined?0.35:uv, 0, color);
+  const s=uv===undefined?0.35:uv, cx=(x0+x1)/2, cy=(y0+y1)/2, cz=(z0+z1)/2;
+  const g=new T.BoxGeometry(x1-x0, y1-y0, z1-z0), P=g.attributes.position, N=g.attributes.normal, U=g.attributes.uv;
+  for(let i=0;i<P.count;i++){
+    const x=P.getX(i)+cx, y=P.getY(i)+cy, z=P.getZ(i)+cz, nx=N.getX(i), nz=N.getZ(i);
+    if(Math.abs(nx)>0.5)      U.setXY(i, (nx>0?-z:z)*s, y*s);
+    else if(Math.abs(nz)>0.5) U.setXY(i, (nz>0?x:-x)*s, y*s);
+    else                      U.setXY(i, x*s, z*s);
+  }
+  U.needsUpdate=true;
+  push(bk, g, cx, cy, cz, 0, color);
   const f=floorY===undefined?0:floorY;
   addCol(x0,x1, z0,z1, (y0<=f+0.02 ? y0-0.5 : y0), y1);
 }

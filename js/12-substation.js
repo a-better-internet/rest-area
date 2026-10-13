@@ -34,8 +34,8 @@ const GEN_POS=[];                                   // where the hum comes from 
   layRibbon("asphalt", DRIVE, -2.6, 2.6, PAVE_T, 0.40, "#8c8c88");
   addPaveRibbon(DRIVE, -2.6, 2.6);
   // patched where the plough caught it, and the edges gone to gravel
-  layRibbon("gravelbed", DRIVE, -3.4, -2.5, PAVE_T-0.002, 0.6, "#9a968c");
-  layRibbon("gravelbed", DRIVE, 2.5, 3.4, PAVE_T-0.002, 0.6, "#9a968c");
+  layRibbon("gravelbed", DRIVE, -3.4, -2.5, PAVE_T-0.006, 0.6, "#9a968c");
+  layRibbon("gravelbed", DRIVE, 2.5, 3.4, PAVE_T-0.006, 0.6, "#9a968c");
   addZone(-28, 60, -175, -132, -2, 8, "SERVICE DRIVE");
   // the yellow pipe gate at the bottom of it, swung open and chained back
   const gx=-16, gz=-148.6;
@@ -55,7 +55,8 @@ const GEN_POS=[];                                   // where the hum comes from 
 /* ---- the compound -------------------------------------------------------- */
 (function compound(){
   const S=SITE.sub, Y=SUB_Y;
-  push("gravelbed", planeGeo(S.x1-S.x0+3, S.z1-S.z0+3, 0.5), (S.x0+S.x1)/2, Y+PAVE_T, (S.z0+S.z1)/2, 0,
+  // a centimetre over the drive's end, so the stone, not the asphalt, runs in at the gate
+  push("gravelbed", planeGeo(S.x1-S.x0+3, S.z1-S.z0+3, 0.5), (S.x0+S.x1)/2, Y+PAVE_T+0.01, (S.z0+S.z1)/2, 0,
        "#b2aea4", -Math.PI/2, 0);
   addPaveRect(S.x0-1.5, S.x1+1.5, S.z0-1.5, S.z1+1.5, Y);
   addZone(S.x0, S.x1, S.z0, S.z1, Y-2, Y+8, "THE SUBSTATION");
@@ -63,10 +64,10 @@ const GEN_POS=[];                                   // where the hum comes from 
   /* the fence: 2.1 m of chain-link on galvanised posts every three metres,
      a top rail, and three strands of barbed wire canted out on arms. */
   const FH=2.1;
-  const fenceRun=(x0,z0,x1,z1)=>{
+  const fenceRun=(x0,z0,x1,z1,shared)=>{          // shared: the end post is the next run's first
     const L=Math.hypot(x1-x0,z1-z0), n=Math.max(1,Math.round(L/3)), ry=Math.atan2(x1-x0, z1-z0);
     const dx=(x1-x0)/L, dz=(z1-z0)/L, ox=dz, oz=-dx;              // outward is to the left of travel
-    for(let k=0;k<=n;k++){
+    for(let k=0;k<=(shared?n-1:n);k++){
       const px=x0+(x1-x0)*k/n, pz=z0+(z1-z0)*k/n, corner=(k===0||k===n);
       cyl("metal", corner?0.05:0.035, corner?0.05:0.035, FH+0.4, 8, px, Y+FH/2-0.15, pz, "#a7adb0");
       push("metal", boxGeo(0.04,0.04,0.55,0), px+ox*0.18, Y+FH+0.18, pz+oz*0.18, ry+Math.PI/2, "#a7adb0", 0.78, 0);
@@ -83,10 +84,10 @@ const GEN_POS=[];                                   // where the hum comes from 
   };
   // corners run clockwise seen from above (x east, z south), so "left" is out
   fenceRun(S.x0, S.z1, S.x0, GATE.z1);                    // west, south of the gate
-  fenceRun(S.x0, GATE.z0, S.x0, S.z0);                    // west, north of it
-  fenceRun(S.x0, S.z0, S.x1, S.z0);                       // north
-  fenceRun(S.x1, S.z0, S.x1, S.z1);                       // east
-  fenceRun(S.x1, S.z1, S.x0, S.z1);                       // south
+  fenceRun(S.x0, GATE.z0, S.x0, S.z0, true);              // west, north of it
+  fenceRun(S.x0, S.z0, S.x1, S.z0, true);                 // north
+  fenceRun(S.x1, S.z0, S.x1, S.z1, true);                 // east
+  fenceRun(S.x1, S.z1, S.x0, S.z1, true);                 // south
   // gate posts, heavier, and the two leaves
   for(const z of [GATE.z0, GATE.z1]) cyl("metal", 0.06,0.06, FH+0.5, 10, GATE.x, Y+FH/2, z, "#a7adb0");
   const gA=makeDoor(XF(GATE.x, GATE.z0+0.02, -Math.PI/2), 0, SUB_G+0.05, 0, "THE GATE", false, 0, "gate");
@@ -115,9 +116,9 @@ const GEN_POS=[];                                   // where the hum comes from 
   const blockC="#cbbfa6";
   runX("block", H.z1-T2/2, T2, H.x0, H.x1, FY-0.6, FY+H.h, [DR], blockC, 0.6);
   runX("block", H.z0+T2/2, T2, H.x0, H.x1, FY-0.6, FY+H.h, [], blockC, 0.6);
-  runZ("block", H.x0+T2/2, T2, H.z0, H.z1, FY-0.6, FY+H.h, [], blockC, 0.6);
+  runZ("block", H.x0+T2/2, T2, H.z0+T2, H.z1-T2, FY-0.6, FY+H.h, [], blockC, 0.6);     // the end walls butt the long ones
   const LV={a:-180.2, b:-178.0, sill:FY+1.2, head:FY+2.4};
-  runZ("block", H.x1-T2/2, T2, H.z0, H.z1, FY-0.6, FY+H.h, [LV], blockC, 0.6);
+  runZ("block", H.x1-T2/2, T2, H.z0+T2, H.z1-T2, FY-0.6, FY+H.h, [LV], blockC, 0.6);
   // the louvre in the east wall, and the hood over it
   for(let k=0;k<8;k++) push("paintm", boxGeo(0.06,0.04,2.2,0), H.x1-0.12, LV.sill+0.08+k*0.15, (LV.a+LV.b)/2, 0, "#8a8576", 0, 0.6);
   bx("paintm", 0.30, 0.05, 2.4, H.x1+0.12, LV.head+0.05, (LV.a+LV.b)/2, 0, 0, "#8a8576");
@@ -168,7 +169,7 @@ const GEN_POS=[];                                   // where the hum comes from 
   {
     const ty=FY+2.70, tz=H.z0+T2+0.45;
     for(const dz of [-0.22,0.22]) bx("paintm", 8.6, 0.08, 0.03, 81.9, ty, tz+dz, 0, 0, "#8d9194");
-    for(let x=77.8;x<86.2;x+=0.30) bx("paintm", 0.03, 0.02, 0.44, x, ty-0.03, tz, 0, 0, "#8d9194");
+    for(let x=77.8;x<86.2;x+=0.30) bx("paintm", 0.03, 0.02, 0.44, x, ty-0.025, tz, 0, 0, "#8d9194");
     for(let k=0;k<5;k++) cyl("paintm", 0.025,0.025, 8.5, 8, 81.9, ty+0.01, tz-0.16+k*0.08, "#161616", 0, 0, Math.PI/2);
     for(let k=0;k<6;k++) cyl("paintm", 0.035,0.035, ty-(FY+2.20), 8, 78.0+k*0.92, (ty+FY+2.20)/2, tz-0.1, "#7d8386");
     for(const y of [ty+0.35]) for(const x of [78.5,81.9,85.3]) bx("paintm", 0.03, 0.40, 0.03, x, ty+0.2, tz, 0, 0, "#7d8386");
@@ -179,7 +180,7 @@ const GEN_POS=[];                                   // where the hum comes from 
   // the battery rack under the louvre: two steel tiers, twelve black cells
   bx("paintm", 0.55, 0.05, 1.70, 86.40, FY+0.30, -180.65, 0, 0, "#5d6266");
   bx("paintm", 0.55, 0.05, 1.70, 86.40, FY+0.82, -180.65, 0, 0, "#5d6266");
-  for(const [x,z] of [[86.15,-181.48],[86.65,-181.48],[86.15,-179.82],[86.65,-179.82]]) bx("paintm", 0.04, 1.10, 0.04, x, FY+0.55, z, 0, 0, "#5d6266");
+  for(const [x,z] of [[86.15,-181.495],[86.65,-181.495],[86.15,-179.805],[86.65,-179.805]]) bx("paintm", 0.04, 1.10, 0.04, x, FY+0.55, z, 0, 0, "#5d6266");
   for(let t2=0;t2<2;t2++) for(let k=0;k<6;k++){
     bx("paintm", 0.34, 0.24, 0.24, 86.40, FY+0.45+t2*0.52, -181.30+k*0.28, 0, 0, "#1c1d1f");
     for(const dx of [-0.08,0.08]) cyl("paintm", 0.02,0.02,0.04,6, 86.40+dx, FY+0.59+t2*0.52, -181.30+k*0.28, dx<0?"#b3151b":"#2a2a2a");

@@ -14,6 +14,8 @@
 const _po=(f)=>({polygonOffset:true, polygonOffsetFactor:f, polygonOffsetUnits:f*2});
 bucketOf("road",     ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.road, roughness:0.96}, _po(-1))));
 bucketOf("asphalt",  ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.asphalt, roughness:0.97}, _po(-2))));
+// the lots: a step over the ramps they run into, so the overlap shows the lot
+bucketOf("lotpave",  ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.asphalt, roughness:0.97}, _po(-3))));
 bucketOf("paint",    ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.enamel,  roughness:0.68}, _po(-4))));
 bucketOf("walkflat", ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.concrete,roughness:0.95}, _po(-2))));
 bucketOf("bed",      ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.riverRock,roughness:1.0}, _po(-3))));
@@ -25,8 +27,8 @@ bucketOf("paintm",   ()=>new T.MeshStandardMaterial({map:TEX.enamel,   roughness
 bucketOf("rock",     ()=>new T.MeshStandardMaterial({map:TEX.rock, roughness:0.96, flatShading:true}));
 bucketOf("wood",     ()=>new T.MeshStandardMaterial({map:TEX.wood, roughness:0.86}));
 bucketOf("rubber",   ()=>new T.MeshStandardMaterial({map:TEX.rubber, roughness:0.95}));
-bucketOf("soot",     ()=>new T.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.18,
-                          map:TEX.soot, depthWrite:false}));
+bucketOf("soot",     ()=>new T.MeshBasicMaterial(Object.assign({color:0xffffff, transparent:true, opacity:0.18,
+                          map:TEX.soot, depthWrite:false}, _po(-5))));
 
 const WHITE_LINE="#e6e4dc", YELLOW_LINE="#d9a925", HWY_GREEN="#0f6a43";
 
@@ -82,10 +84,12 @@ function stripe(x0,z0,x1,z1,w,color,y){
 /* ---- the interstate ---------------------------------------------------- */
 (function interstate(){
   for(const [cx, x0, x1, dir] of [[HWY.nb, NB_X0, NB_X1, -1], [HWY.sb, SB_X0, SB_X1, 1]]){
-    roadRun("road", cx, -HWY.len/2, HWY.len/2, x0-cx, x1-cx, PAVE_T, 0.40, "#9c9c9a");
-    // the travel lanes a shade darker than the shoulders: that is where the
-    // binder is still on the stone
-    roadRun("road", cx, -HWY.len/2, HWY.len/2, -HWY.lane+0.2, HWY.lane-0.2, PAVE_T+0.001, 0.40, "#8a8a88");
+    // the shoulders, and between them the travel lanes a shade darker: that
+    // is where the binder is still on the stone. Side by side, not stacked:
+    // a millimetre between layers is nothing to the depth buffer at 200 m
+    roadRun("road", cx, -HWY.len/2, HWY.len/2, x0-cx, -HWY.lane+0.2, PAVE_T, 0.40, "#9c9c9a");
+    roadRun("road", cx, -HWY.len/2, HWY.len/2, HWY.lane-0.2, x1-cx, PAVE_T, 0.40, "#9c9c9a");
+    roadRun("road", cx, -HWY.len/2, HWY.len/2, -HWY.lane+0.2, HWY.lane-0.2, PAVE_T, 0.40, "#8a8a88");
     // edge lines: white on the outside, yellow along the median
     const outer = dir<0 ? cx+HWY.lane : cx-HWY.lane, inner = dir<0 ? cx-HWY.lane : cx+HWY.lane;
     roadRun("paint", outer, -HWY.len/2, HWY.len/2, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
@@ -116,7 +120,7 @@ function stripe(x0,z0,x1,z1,w,color,y){
       fitHwy(c,"."+String(Math.round((mile%1)*10)%10),W*0.7,30,W/2,156);
     });
     const y=roadY(z);
-    bx("metal", 0.06,1.4,0.06, x, y+0.55, z, 0.5, 0, "#9aa0a2");
+    bx("metal", 0.06,1.4,0.06, x, y+0.55, z+(ry===0?-0.06:0.06), 0.5, 0, "#9aa0a2");   // behind the plate
     bx("metal", 0.28,0.84,0.02, x, y+1.22, z+(ry===0?-0.02:0.02), 0.5, 0, "#7e8486");
     signPanel(0.26,0.80,tex, x, y+1.22, z+(ry===0?0.002:-0.002), ry);
   };
@@ -157,7 +161,7 @@ function guideSign(x, z, w, h, ry, lines, opts){
   const posts=opts.posts===undefined ? (w>2.4?2:1) : opts.posts;
   for(let k=0;k<posts;k++){
     const px= posts===1 ? x : x+(k?1:-1)*w*0.32;
-    bx("metal", 0.12, top-y0, 0.12, px, (y0+top)/2, cz-f*0.06, 0.6, 0, "#a3a8aa");
+    bx("metal", 0.12, top-y0-0.03, 0.12, px, (y0+top-0.03)/2, cz-f*0.115, 0.6, 0, "#a3a8aa");   // behind the plate, not through its face
     bx("concrete", 0.36, 0.20, 0.36, px, y0+0.06, cz-f*0.06, 0.4, 0, "#9a978f");
     addCol(px-0.1, px+0.1, cz-f*0.06-0.1, cz-f*0.06+0.1, y0-1, top);
   }
@@ -215,10 +219,10 @@ function guideSign(x, z, w, h, ry, lines, opts){
 const ADA_SIGNS=[], ADA_TEX={};
 (function lots(){
   const Tk=SITE.truck, Cr=SITE.car, Is=SITE.island;
-  paveRect("asphalt", Tk.x0, Tk.x1, Tk.z0, Tk.z1, "#a8a8a6");
-  paveRect("asphalt", Cr.x0, Cr.x1, Cr.z0, Cr.z1, "#b2b2b0");
-  paveRect("asphalt", Is.x0, Is.x1, Is.z1, Tk.z1, "#acacaa");      // south link
-  paveRect("asphalt", Is.x0, Is.x1, Tk.z0, Is.z0, "#acacaa");      // north link
+  paveRect("lotpave", Tk.x0, Tk.x1, Tk.z0, Tk.z1, "#a8a8a6");
+  paveRect("lotpave", Cr.x0, Cr.x1, Cr.z0, Cr.z1, "#b2b2b0");
+  paveRect("lotpave", Is.x0, Is.x1, Is.z1, Tk.z1, "#acacaa");      // south link
+  paveRect("lotpave", Is.x0, Is.x1, Tk.z0, Is.z0, "#acacaa");      // north link
   addZone(Tk.x0, Tk.x1, Tk.z0, Tk.z1, -1, 6, "TRUCK PARKING");
   addZone(Cr.x0, Cr.x1, Cr.z0, Cr.z1, -1, 4, "CAR PARKING");
 
@@ -251,10 +255,12 @@ const ADA_SIGNS=[], ADA_TEX={};
     const k=+key, kind=C.ada[k], za=zLine(k)+0.07, zb=zLine(k+1)-0.07, zc=(za+zb)/2;
     if(kind==="aisle"){
       // diagonal hatching clipped to the aisle, and the words across it
-      const h=zb-za;
+      // (held 4 cm inside the stall lines and the end bar, so the 45-degree
+      // ends of the stripes never lie over another line)
+      const za2=za+0.04, h=zb-za-0.08;
       for(let x0=xa-h; x0<xb; x0+=0.62){
-        const t0=Math.max(0, xa+0.15-x0), t1=Math.min(h, xb-0.15-x0);
-        if(t1-t0>0.15) stripe(x0+t0, za+t0, x0+t1, za+t1, 0.10, "#e6e4dc");
+        const t0=Math.max(0, xa+0.15-x0), t1=Math.min(h, xb-0.20-x0);
+        if(t1-t0>0.15) stripe(x0+t0, za2+t0, x0+t1, za2+t1, 0.10, "#e6e4dc");
       }
       stripe(xb-0.06, za, xb-0.06, zb, 0.10, "#e6e4dc");
       flat(npMat, 2.4, 0.6, -30.6, zc);
@@ -280,7 +286,8 @@ const ADA_SIGNS=[], ADA_TEX={};
   // ---- truck stalls, angled off the aisle to the north-west
   const TL=TRUCKLOT, sa=Math.sin(TL.angle), ca=Math.cos(TL.angle);
   for(let z=TL.stallZ1; z>=TL.stallZ0; z-=TL.pitch){
-    const L=(TL.aisle0-Tk.x0-0.6)/sa;
+    // to the lot's west edge, or its north curb, whichever it reaches first
+    const L=Math.min((TL.aisle0-Tk.x0-0.6)/sa, (z-Tk.z0-0.6)/ca);
     stripe(TL.aisle0, z, TL.aisle0-sa*L, z-ca*L, 0.14, "#e2e0d8");
   }
   stripe(TL.aisle0, Tk.z0+6, TL.aisle0, Tk.z1-6, 0.14, "#e2e0d8");
@@ -296,7 +303,7 @@ const ADA_SIGNS=[], ADA_TEX={};
   }
   // ---- the island: curbed, grassed, planted
   const curb=(x0,x1,z0,z1)=>{ bx("concrete", x1-x0, 0.30, z1-z0, (x0+x1)/2, 0.0, (z0+z1)/2, 0.6, 0, "#a9a69e"); };
-  curb(Is.x0, Is.x0+0.18, Is.z0, Is.z1); curb(Is.x1-0.18, Is.x1, Is.z0, Is.z1);
+  curb(Is.x0, Is.x0+0.18, Is.z0+0.18, Is.z1-0.18); curb(Is.x1-0.18, Is.x1, Is.z0+0.18, Is.z1-0.18);   // between the ends
   curb(Is.x0, Is.x1, Is.z0, Is.z0+0.18); curb(Is.x0, Is.x1, Is.z1-0.18, Is.z1);
   addZone(Is.x0, Is.x1, Is.z0, Is.z1, -1, 4, "THE ISLAND");
   for(let z=Is.z0+8; z<Is.z1-6; z+=14.5){
@@ -334,8 +341,8 @@ const PLAZA_Y=0.15;
   }
   slab(W.x0, W.x1, -13, 13);
   slab(P.x0, P.x1, P.z0, P.z1, "#c9c6be");
-  slab(P.x1, -5.0, P.z0, -5.5, "#c9c6be");
-  slab(P.x1, -5.0, 5.5, P.z1, "#c9c6be");
+  slab(P.x1, -5.0, P.z0, -5.65, "#c9c6be");            // to the lobby's side walls, not into them
+  slab(P.x1, -5.0, 5.65, P.z1, "#c9c6be");
   // blue curb in front of the accessible stalls (photo 2)
   { const z0=CARLOT.stallZ0+35*CARLOT.stallW, z1=CARLOT.stallZ0+40*CARLOT.stallW;
     bx("paint", 0.04, 0.16, z1-z0, W.x0-0.015, PLAZA_Y-0.08, (z0+z1)/2, 0, 0, "#2b5fb8"); }
@@ -415,8 +422,9 @@ function lampPost(x, z, h, y0){
   const bed=(x0,x1,z0,z1,y)=>{
     push("bed", planeGeo(x1-x0, z1-z0, 0.95), (x0+x1)/2, y+0.012, (z0+z1)/2, 0, "#a89f92", -Math.PI/2, 0);
     // a steel edging strip round it
-    for(const [a,b,c2,d] of [[x0,x1,z0,z0],[x0,x1,z1,z1],[x0,x0,z0,z1],[x1,x1,z0,z1]])
-      bx("paintm", Math.max(0.03,b-a), 0.06, Math.max(0.03,d-c2), (a+b)/2, y+0.03, (c2+d)/2, 0, 0, "#3a3a36");
+    // the long runs past the corners, the short ones between them
+    for(const [a,b,c2,d] of [[x0-0.022,x1+0.022,z0,z0],[x0-0.022,x1+0.022,z1,z1],[x0,x0,z0+0.015,z1-0.015],[x1,x1,z0+0.015,z1-0.015]])
+      bx("paintm", Math.max(0.03,b-a), a===b?0.054:0.06, Math.max(0.03,d-c2), (a+b)/2, y+(a===b?0.027:0.03), (c2+d)/2, 0, 0, "#3a3a36");
   };
   const boulder=(x,z,s,y,seed)=>{
     push("rock", rockGeo(s, seed), x, y+s*0.32, z, seed, "#aaa498");

@@ -112,13 +112,15 @@ function ceilAt(bk, x0,x1,z0,z1, y, color, uv){
   push(bk, planeGeo(x1-x0, z1-z0, uv||0.5), (x0+x1)/2, y, (z0+z1)/2, 0, color, Math.PI/2, 0);
 }
 // a door frame: two posts and a head, proud of both faces of a wall t thick
+// The posts stop under the head, and the head is half a centimetre longer
+// and deeper than they span, so no face of one lies in a face of the other.
 function frameX(c, t, a, b, head, color){
-  for(const x of [a-0.035, b+0.035]) bx("paintm", 0.07, head-FL+0.07, t+0.12, x, FL+(head-FL+0.07)/2, c, 0, 0, color||BRONZE);
-  bx("paintm", b-a+0.14, 0.07, t+0.12, (a+b)/2, head+0.035, c, 0, 0, color||BRONZE);
+  for(const x of [a-0.035, b+0.035]) bx("paintm", 0.07, head-FL, t+0.12, x, FL+(head-FL)/2, c, 0, 0, color||BRONZE);
+  bx("paintm", b-a+0.15, 0.07, t+0.13, (a+b)/2, head+0.035, c, 0, 0, color||BRONZE);
 }
 function frameZ(c, t, a, b, head, color){
-  for(const z of [a-0.035, b+0.035]) bx("paintm", t+0.12, head-FL+0.07, 0.07, c, FL+(head-FL+0.07)/2, z, 0, 0, color||BRONZE);
-  bx("paintm", t+0.12, 0.07, b-a+0.14, c, head+0.035, (a+b)/2, 0, 0, color||BRONZE);
+  for(const z of [a-0.035, b+0.035]) bx("paintm", t+0.12, head-FL, 0.07, c, FL+(head-FL)/2, z, 0, 0, color||BRONZE);
+  bx("paintm", t+0.13, 0.07, b-a+0.15, c, head+0.035, (a+b)/2, 0, 0, color||BRONZE);
 }
 // a small printed sign on a wall face: lit=false, a centimetre proud
 function wallSign(w,h,draw,x,y,z,ry){
@@ -132,8 +134,8 @@ function swingCan(x, z, ry, y0){
   lbx(f, "paintm", 0.44, 0.76, 0.44, 0, Y+0.38, 0, 0, G);
   lbx(f, "paintm", 0.47, 0.035, 0.47, 0, Y+0.775, 0, 0, "#868c8f");
   lbx(f, "paintm", 0.45, 0.20, 0.45, 0, Y+0.89, 0, 0, G);
-  for(const s of [-1,1]) push("paintm", boxGeo(0.47, 0.03, 0.27, 0), f.x(0,s*0.11), Y+1.035, f.z(0,s*0.11), ry, "#8e9497", -s*0.42, 0);
-  lbx(f, "paintm", 0.47, 0.025, 0.04, 0, Y+1.085, 0, 0, "#7f8588");
+  for(const s of [-1,1]) push("paintm", boxGeo(s<0?0.47:0.462, 0.03, 0.27, 0), f.x(0,s*0.11), Y+1.035, f.z(0,s*0.11), ry, "#8e9497", -s*0.42, 0);
+  lbx(f, "paintm", 0.478, 0.025, 0.04, 0, Y+1.085, 0, 0, "#7f8588");
   // the door: a dark slot, the flap hanging in it, a push plate
   lbx(f, "paintm", 0.34, 0.15, 0.012, 0, Y+0.895, 0.226, 0, "#161616");
   push("paintm", boxGeo(0.32, 0.135, 0.014, 0), f.x(0,0.231), Y+0.90, f.z(0,0.231), ry, "#7a8084", -0.10, 0);
@@ -171,7 +173,7 @@ function toiletFix(x, z, ry, seatC){
   for(const s of [-1,1]) at("chrome", new T.CylinderGeometry(0.012,0.012,0.04,8), s*0.09, 0.40, 0.21, "#c9cbcc");
   // the flushometer: stop valve off the wall, the body, the handle, the tube to the spud
   at("chrome", new T.CylinderGeometry(0.03,0.03,0.012,12), 0.14, 0.80, 0.006, "#c9cbcc", Math.PI/2);
-  at("chrome", new T.CylinderGeometry(0.014,0.014,0.10,8), 0.14, 0.80, 0.05, "#c9cbcc", Math.PI/2);
+  at("chrome", new T.CylinderGeometry(0.014,0.014,0.10,8), 0.14, 0.80, 0.056, "#c9cbcc", Math.PI/2);
   at("chrome", new T.CylinderGeometry(0.016,0.016,0.14,8), 0.07, 0.80, 0.10, "#c9cbcc", 0, Math.PI/2);
   at("chrome", new T.CylinderGeometry(0.036,0.036,0.13,14), 0, 0.77, 0.10, "#d0d3d4");
   at("chrome", new T.SphereGeometry(0.036,12,8,0,Math.PI*2,0,Math.PI/2), 0, 0.835, 0.10, "#d0d3d4");
@@ -180,7 +182,7 @@ function toiletFix(x, z, ry, seatC){
   at("chrome", new T.CylinderGeometry(0.03,0.03,0.03,12), 0, 0.41, 0.10, "#c9cbcc");
   // the seat-cover dispenser on the wall over it
   at("steel", boxGeo(0.42, 0.28, 0.035, 0.8), 0, 1.18, 0.018, "#cfd2d3");
-  at("paintm", boxGeo(0.30, 0.10, 0.006, 0), 0, 1.20, 0.037, "#3a3c3e");
+  at("paintm", boxGeo(0.30, 0.10, 0.006, 0), 0, 1.20, 0.042, "#3a3c3e");
 }
 const _urinalGeo=(function(){
   const sh=new T.Shape();
@@ -208,7 +210,7 @@ function urinalFix(x, z, ry, drop){
   at("urinal_in", planeGeo(0.25, 0.46, 0), 0, 0.83, 0.392, "#ffffff", 0.165);
   // the flush valve over it
   at("chrome", new T.CylinderGeometry(0.03,0.03,0.012,12), 0.11, 1.36, 0.006, "#c9cbcc", Math.PI/2);
-  at("chrome", new T.CylinderGeometry(0.014,0.014,0.10,8), 0.11, 1.36, 0.05, "#c9cbcc", Math.PI/2);
+  at("chrome", new T.CylinderGeometry(0.014,0.014,0.10,8), 0.11, 1.36, 0.056, "#c9cbcc", Math.PI/2);
   at("chrome", new T.CylinderGeometry(0.016,0.016,0.11,8), 0.055, 1.36, 0.10, "#c9cbcc", 0, Math.PI/2);
   at("chrome", new T.CylinderGeometry(0.034,0.034,0.12,14), 0, 1.33, 0.10, "#d0d3d4");
   at("chrome", new T.SphereGeometry(0.034,12,8,0,Math.PI*2,0,Math.PI/2), 0, 1.39, 0.10, "#d0d3d4");
@@ -240,7 +242,7 @@ function wetFloor(x,z,ry){
 (function shell(){
   const L=BLD;
   // the slab, and the one floor every room stands on
-  bx("concrete", 13.0, 0.40, 29.0, 0.5, FL-0.20-0.002, 0, 0.5, 0, "#a9a59c");
+  bx("concrete", 12.98, 0.40, 28.98, 0.5, FL-0.20-0.002, 0, 0.5, 0, "#a9a59c");   // a centimetre inside the walls' faces
   addFlat(-6.1, 7.1, -14.6, 14.6, FL);
 
   /* --- the lobby ------------------------------------------------------- */
@@ -256,15 +258,17 @@ function wetFloor(x,z,ry){
   const SMD={a:4.20, b:5.16, sill:Y0, head:FL+2.14};
   for(const sg of [-1,1]){
     const zc=sg*L.lz;
-    runX("block", zc, WT, -6.0, 6.0, Y0, CL0, [ENT, SMD], BLOCKC, 0.6);
+    // below 3.0 they butt the storefront wall; above it, the gables' siding
+    runX("block", zc, WT, -5.7, 6.0, Y0, 3.0, [ENT, SMD], BLOCKC, 0.6);
+    runX("block", zc, WT, -5.85, 5.85, 3.0, CL0, [], BLOCKC, 0.6);
     runX("block", zc, WT, 6.0, 7.0, Y0, L.eaveW, [], BLOCKC, 0.6);
     // above the wing roof: brick piers at the ends, glass between, a beam on top
     wallBox("brick", -6.0, -4.9, zc-WT/2, zc+WT/2, CL0, L.eaveL, BRICK, 0.83);
     wallBox("brick", 5.5, 6.0, zc-WT/2, zc+WT/2, CL0, L.eaveL, BRICK, 0.83);
     wallBox("brick", -4.9, 5.5, zc-WT/2, zc+WT/2, CL1, L.eaveL, BRICK, 0.83);
     wallBox("paintm", -4.9, 5.5, zc-0.05, zc+0.05, CL0, CL0+0.04, BRONZE, 0.3);
-    push("tint", boxGeo(10.4, CL1-CL0-0.04, 0.02, 0), 0.3, (CL0+CL1)/2, zc, 0, "#5d6e74");
-    for(let x=-4.9+1.04; x<5.5; x+=1.04) bx("paintm", 0.05, CL1-CL0, 0.12, x, (CL0+CL1)/2, zc, 0, 0, BRONZE);
+    push("tint", boxGeo(10.42, CL1-CL0-0.04, 0.02, 0), 0.3, (CL0+CL1)/2, zc, 0, "#5d6e74");
+    for(let x=-4.9+1.04; x<5.5; x+=1.04) bx("paintm", 0.05, CL1-CL0-0.04, 0.12, x, (CL0+0.04+CL1)/2, zc, 0, 0, BRONZE);
     // the faces of the party wall that are outdoors: brick them
     lineX("brick", zc+sg*WT/2, sg, -6.0, -5.0, Y0, CL0, [], BRICK, 0.83);
     lineX("brick", zc-sg*WT/2, -sg, 6.0, 7.0, Y0, L.eaveW, [], BRICK, 0.83);
@@ -272,17 +276,20 @@ function wetFloor(x,z,ry){
 
   /* --- the wings ------------------------------------------------------- */
   for(const sg of [-1,1]){
-    const zIn=sg*5.65, zEnd=sg*14.35, zOut=sg*14.5;
+    const zIn=sg*5.65, zEnd=sg*14.35, zOut=sg*14.2;    // the side walls stop at the end wall's inner face
     const lo=Math.min(zIn, zOut), hi=Math.max(zIn, zOut);
     // west: a band of high obscure glass under the eave, over the urinals
     const HW={a:Math.min(sg*6.6, sg*13.6), b:Math.max(sg*6.6, sg*13.6), sill:FL+2.25, head:FL+2.78};
     runZ("brick", -4.85, WT, lo, hi, Y0, L.eaveW, [HW], BRICK, 0.83);
-    push("glass", boxGeo(0.04, 0.53, HW.b-HW.a, 0), -4.85, FL+2.515, (HW.a+HW.b)/2, 0, "#dfe6e4");
-    // the reveal, lined inside so the window reads as a window and not a slot
-    bx("paintm", 0.17, 0.03, HW.b-HW.a, -4.79, HW.sill+0.015, (HW.a+HW.b)/2, 0, 0, "#d9d6cc");
-    bx("paintm", 0.17, 0.03, HW.b-HW.a, -4.79, HW.head-0.015, (HW.a+HW.b)/2, 0, 0, "#d9d6cc");
-    for(const ze of [HW.a, HW.b]) bx("paintm", 0.17, HW.head-HW.sill, 0.03, -4.79, (HW.sill+HW.head)/2, ze+(ze===HW.a?0.015:-0.015), 0, 0, "#d9d6cc");
-    for(let z=HW.a+1.0; z<HW.b; z+=1.0) bx("paintm", 0.14, 0.53, 0.05, -4.85, FL+2.515, z, 0, 0, BRONZE);
+    // the glass, its edges caught in the lining
+    push("glass", boxGeo(0.02, 0.50, HW.b-HW.a-0.03, 0), -4.85, FL+2.515, (HW.a+HW.b)/2, 0, "#dfe6e4");
+    // the reveal, lined inside so the window reads as a window and not a slot;
+    // a centimetre back from the wall's face, the jambs a few millimetres
+    // further, so none of them shares a plane with the wall or each other
+    bx("paintm", 0.16, 0.03, HW.b-HW.a-0.016, -4.792, HW.sill+0.015, (HW.a+HW.b)/2, 0, 0, "#d9d6cc");
+    bx("paintm", 0.16, 0.03, HW.b-HW.a-0.016, -4.792, HW.head-0.015, (HW.a+HW.b)/2, 0, 0, "#d9d6cc");
+    for(const ze of [HW.a, HW.b]) bx("paintm", 0.144, HW.head-HW.sill-0.06, 0.03, -4.794, (HW.sill+HW.head)/2, ze+(ze===HW.a?0.015:-0.015), 0, 0, "#d9d6cc");
+    for(let z=HW.a+1.0; z<HW.b; z+=1.0) bx("paintm", 0.14, 0.52, 0.05, -4.85, FL+2.515, z, 0, 0, BRONZE);
     // east: the service room's own door
     const SV={a:Math.min(sg*11.0, sg*11.96), b:Math.max(sg*11.0, sg*11.96), sill:Y0, head:FL+2.14};
     runZ("brick", 6.85, WT, lo, hi, Y0, L.eaveW, [SV], BRICK, 0.83);
@@ -306,7 +313,8 @@ function wetFloor(x,z,ry){
   const gy=(z)=>roofLY(z)-0.06;
   function gable(xFace, dir, glass){
     const sh=new T.Shape();
-    sh.moveTo(-5.65, 3.0); sh.lineTo(5.65, 3.0); sh.lineTo(5.65, gy(5.65)); sh.lineTo(0, gy(0)); sh.lineTo(-5.65, gy(5.65));
+    const E=5.64;                                // a centimetre inside the side walls' faces
+    sh.moveTo(-E, 3.0); sh.lineTo(E, 3.0); sh.lineTo(E, gy(E)); sh.lineTo(0, gy(0)); sh.lineTo(-E, gy(E));
     if(glass){
       const h=new T.Path(), gw=2.30, top=(z)=>gy(z)-0.32;
       h.moveTo(-gw, 3.18); h.lineTo(-gw, top(gw)); h.lineTo(0, top(0)); h.lineTo(gw, top(gw)); h.lineTo(gw, 3.18);
@@ -330,9 +338,10 @@ function wetFloor(x,z,ry){
     const pg=new T.ShapeGeometry(pane); pg.rotateY(Math.PI/2);
     push("tint", pg, xFace-dir*0.10, 0, 0, 0, "#3c4a50");
     // mullions, dark bronze, both faces
+    let mk=0;
     const mul=(z0,y0,z1,y1,w)=>{
-      const L2=Math.hypot(z1-z0,y1-y0);
-      push("paintm", boxGeo(0.22, L2, w||0.09, 0), xFace-dir*0.10, (y0+y1)/2, (z0+z1)/2, 0, BRONZE,
+      const L2=Math.hypot(z1-z0,y1-y0), dep=0.22-0.012*(mk++);
+      push("paintm", boxGeo(dep, L2, w||0.09, 0), xFace-dir*0.10, (y0+y1)/2, (z0+z1)/2, 0, BRONZE,
            Math.atan2(z1-z0, y1-y0), 0);
     };
     mul(-gw,3.18, gw,3.18, 0.12); mul(-gw,3.18,-gw,top(gw)); mul(gw,3.18,gw,top(gw));
@@ -354,8 +363,9 @@ function wetFloor(x,z,ry){
   const tz=Math.tan(PITCH);
   const eaveZ=L.lz+0.90, eaveY=L.ridge-eaveZ*tz;
   for(const sg of [-1,1]){
-    const g=new FaceGeo().slab([V3(-6.0-OH, L.ridge+0.02, 0), V3(6.0+OH, L.ridge+0.02, 0),
-                                V3(6.0+OH, eaveY, sg*eaveZ), V3(-6.0-OH, eaveY, sg*eaveZ)], RT, 0.5).geo();
+    const oh=OH-(sg>0?0.012:0);                  // the two planes' ends never share a plane
+    const g=new FaceGeo().slab([V3(-6.0-oh, L.ridge+0.02, 0), V3(6.0+oh, L.ridge+0.02, 0),
+                                V3(6.0+oh, eaveY, sg*eaveZ), V3(-6.0-oh, eaveY, sg*eaveZ)], RT, 0.5).geo();
     push("shingle", g, 0,0,0, 0, "#cfc6bd");
     // fascia along the eave, and the rake boards up both gables
     bx("paintm", 12.0+OH*2+0.1, 0.26, 0.06, 0, eaveY-0.13, sg*(eaveZ+0.03), 0, 0, FASCIA);
@@ -372,7 +382,8 @@ function wetFloor(x,z,ry){
     const zA=sg*5.42, zB=sg*(L.wz+0.75);
     const xW=-6.25, xE=7.85, yW=L.ridgeW-(1-xW)*wsl, yE=L.ridgeW-(xE-1)*wsl;
     for(const [xa,ya] of [[xW,yW],[xE,yE]]){
-      const g=new FaceGeo().slab([V3(1, L.ridgeW+0.02, zA), V3(1, L.ridgeW+0.02, zB), V3(xa, ya, zB), V3(xa, ya, zA)], 0.20, 0.5).geo();
+      const zb=zB-(xa>0?sg*0.012:0), za2=zA+(xa>0?sg*0.012:0);
+      const g=new FaceGeo().slab([V3(1, L.ridgeW+0.02, za2), V3(1, L.ridgeW+0.02, zb), V3(xa, ya, zb), V3(xa, ya, za2)], 0.20, 0.5).geo();
       push("shingle", g, 0,0,0, 0, "#cfc6bd");
       bx("paintm", 0.06, 0.24, Math.abs(zB-zA)+0.1, xa+(xa<0?-0.03:0.03), ya-0.12, (zA+zB)/2, 0, 0, FASCIA);
     }
@@ -393,7 +404,7 @@ function wetFloor(x,z,ry){
       wallBox("brick", -6.05, -5.55, z-0.25, z+0.25, Y0, L.eaveW-0.02, BRICK, 0.83);
     }
     // gutters and a downspout at each end
-    bx("paintm", 0.12, 0.12, Math.abs(zB-zA), xW-0.08, yW-0.18, (zA+zB)/2, 0, 0, FASCIA);
+    bx("paintm", 0.12, 0.12, Math.abs(zB-zA), xW-0.08, yW-0.17, (zA+zB)/2, 0, 0, FASCIA);
     cyl("paintm", 0.045,0.045, yW-0.1, 8, xW-0.08, yW/2, zB-sg*0.12, FASCIA);
   }
   // soffit under the lobby's rake, front and back, and the porch out back
@@ -408,7 +419,7 @@ function wetFloor(x,z,ry){
   // a light on the gable's brick each side of the glass, and one out back
   for(const z of [-3.2, 3.2]){
     bx("paintm", 0.16, 0.12, 0.22, -6.08, 2.88, z, 0, 0, "#2c2c2a");
-    push("lamplens", boxGeo(0.02,0.08,0.16,0), -6.17, 2.86, z, 0, "#ffffff");
+    push("lamplens", boxGeo(0.02,0.08,0.16,0), -6.17, 2.866, z, 0, "#ffffff");
     LAMPS.push({x:-6.4, y:2.7, z:z, color:0xfff0d8, intensity:0.85, dist:12, decay:1.5, mothy:true});
   }
   LAMPS.push({x:6.5, y:3.3, z:0, color:0xffe2b8, intensity:0.6, dist:8, decay:1.6, mothy:true});
@@ -462,20 +473,21 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
     const f=sg*R.z1;
     lineX("brick", f, -sg, R.x0, R.x1, FL, BR, [ENT,SMD], BRICK_IN, 0.83);
     lineX("plaster", f, -sg, R.x0, R.x1, BR, top, [ENT,SMD], CREAM, 0.5);
-    bx("beam", R.x1-R.x0, 0.08, 0.05, 0, BR+0.02, f-sg*0.03, 0.6, 0, "#6a4a32");
+    bx("beam", R.x1-R.x0, 0.08, 0.05, 0, BR+0.02, f-sg*0.033, 0.6, 0, "#6a4a32");
     frameX(sg*BLD.lz, WT, ENT.a, ENT.b, ENT.head, "#6a4a32");
     frameX(sg*BLD.lz, WT, SMD.a, SMD.b, SMD.head);
   }
-  for(const x of [R.x0, R.x1]) bx("beam", 0.05, 0.08, R.z1-R.z0, x+(x<0?0.03:-0.03), BR+0.02, 0, 0.6, 0, "#6a4a32");
+  for(const x of [R.x0, R.x1]) bx("beam", 0.05, 0.072, R.z1-R.z0-0.11, x+(x<0?0.03:-0.03), BR+0.02, 0, 0.6, 0, "#6a4a32");
   // the gable walls inside, above the brick: plaster, up to the ceiling
   // the storefront: dark bronze frame, glass, a pair of doors
   {
     const x=-5.85;
-    for(const z of [-1.90,-0.98,0.98,1.90]) bx("paintm", 0.20, 2.47, 0.10, x, FL+1.235, z+(z<0?0.05:-0.05)*(Math.abs(z)>1.5?1:0), 0, 0, BRONZE);
-    bx("paintm", 0.20, 0.14, 3.80, x, FL+2.55, 0, 0, 0, BRONZE);
+    // posts to the head; the head a centimetre deeper than them, the bottom rails a centimetre shallower
+    for(const z of [-1.90,-0.98,0.98,1.90]) bx("paintm", 0.20, 2.48, 0.10, x, FL+1.24, z+(z<0?0.05:-0.05)*(Math.abs(z)>1.5?1:0), 0, 0, BRONZE);
+    bx("paintm", 0.21, 0.14, 3.79, x, FL+2.55, 0, 0, 0, BRONZE);
     for(const [za,zb] of [[-1.85,-1.03],[1.03,1.85]]){
-      push("glass", boxGeo(0.02, 2.30, zb-za, 0), x, FL+1.30, (za+zb)/2, 0, "#cfd9da");
-      bx("paintm", 0.20, 0.10, zb-za, x, FL+0.10, (za+zb)/2, 0, 0, BRONZE);
+      push("glass", boxGeo(0.02, 2.30, zb-za-0.012, 0), x, FL+1.30, (za+zb)/2, 0, "#cfd9da");
+      bx("paintm", 0.18, 0.10, zb-za, x, FL+0.10, (za+zb)/2, 0, 0, BRONZE);
     }
     // a pair of doors, swinging out
     makeDoor(XF(x+0.0, -0.98, -Math.PI/2), 0, FL+0.02, 0, "FRONT DOORS", true, 0, "store");
@@ -505,10 +517,12 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
   }
   // trusses: a tie beam across at 4.9 and rafters up both slopes
   for(const x of [-3.4, 0, 3.4]){
-    bx("beam", 0.16, 0.22, 10.7, x, 4.9, 0, 0.6, 0, "#5a3e2a");
+    // the tie a doubled chord, the rafters a centimetre apart in width:
+    // where members cross, their sides are never in one plane
+    bx("beam", 0.19, 0.22, 10.7, x, 4.9, 0, 0.6, 0, "#5a3e2a");
     for(const sg of [-1,1]){
       const L2=Math.hypot(5.35, cy(0)-cy(5.35));
-      push("beam", boxGeo(0.16, 0.24, L2, 0.6), x, (cy(0)+cy(5.35))/2-0.12, sg*5.35/2, 0, "#5a3e2a", sg*PITCH, 0);
+      push("beam", boxGeo(sg<0?0.16:0.15, 0.24, L2, 0.6), x, (cy(0)+cy(5.35))/2-0.12, sg*5.35/2, 0, "#5a3e2a", sg*PITCH, 0);
     }
     bx("beam", 0.12, cy(0)-4.9-0.1, 0.12, x, (cy(0)+4.9)/2, 0, 0.6, 0, "#5a3e2a");
   }
@@ -546,7 +560,7 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
   // exit signs over both doors
   for(const [x,z,ry] of [[R.x0+0.02,0,Math.PI/2],[R.x1-0.02,1.69,-Math.PI/2]]){
     bx("paintm", 0.10, 0.20, 0.36, x+(ry>0?0.05:-0.05), FL+2.85, z, 0, 0, "#e9e6dc");
-    push("exitsign", planeGeo(0.30,0.14,0), x+(ry>0?0.105:-0.105), FL+2.85, z, ry, "#ffffff");
+    push("exitsign", planeGeo(0.30,0.14,0), x+(ry>0?0.112:-0.112), FL+2.85, z, ry, "#ffffff");
   }
 
   /* --- the north wall: the men's room, the map, the payphone, the clock --- */
@@ -594,7 +608,7 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
   }});
   const ck=new T.Mesh(new T.CircleGeometry(0.19, 28), new T.MeshStandardMaterial({map:clockTex, roughness:0.4}));
   ck.position.set(1.0, FL+2.95, R.z0+0.03); scene.add(ck);
-  cyl("paintm", 0.20,0.20,0.04,28, 1.0, FL+2.95, R.z0+0.02, "#1b1b1b", Math.PI/2);
+  cyl("paintm", 0.20,0.20,0.024,28, 1.0, FL+2.95, R.z0+0.012, "#1b1b1b", Math.PI/2);   // the case, behind the face
   // a camera dome in the corner, because there always is one
   push("paintm", domeGeo(0.09,0.07,12), -5.3, 3.5, -4.9, 0, "#f0efe9");
 
@@ -602,7 +616,7 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
   // the board under its glass: notices, the state map, the travel line
   {
     const z=R.z1-0.05, x0=1.2, x1=3.9, y0=FL+1.0, y1=FL+2.25;
-    bx("paintm", x1-x0+0.12, y1-y0+0.12, 0.06, (x0+x1)/2, (y0+y1)/2, z+0.02, 0, 0, "#d2d0c8");
+    bx("paintm", x1-x0+0.12, y1-y0+0.12, 0.05, (x0+x1)/2, (y0+y1)/2, z+0.021, 0, 0, "#d2d0c8");   // behind the cork
     push("cork", planeGeo(x1-x0, y1-y0, 1.2), (x0+x1)/2, (y0+y1)/2, z-0.012, Math.PI, "#ffffff");
     const notices=[["KNOW BEFORE YOU GO","#1f4fa0","Dial 511 for road conditions"],
                    ["STAY HEALTHY","#2f7a3c","Wash your hands"],["SEASONAL HIRING","#b3151b","Highway maintenance"],
@@ -629,10 +643,10 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
     push("steel", new T.CylinderGeometry(0.23,0.23,0.14,20,1,false,Math.PI/2,Math.PI), x, h-0.07, zw-0.30, 0, "#dadcdd");   // rounded front
     push("paintm", new T.CylinderGeometry(0.19,0.19,0.01,20,1,false,Math.PI/2,Math.PI), x, h+0.002, zw-0.30, 0, "#5f6467");
     bx("paintm", 0.38, 0.01, 0.20, x, h+0.002, zw-0.17, 0, 0, "#5f6467");                    // the bowl, dark
-    cyl("chrome", 0.012,0.016, 0.07, 10, x+0.06, h+0.03, zw-0.26, "#d0d3d4");               // bubbler
-    push("chrome", new T.SphereGeometry(0.018,8,6), x+0.06, h+0.065, zw-0.26, 0, "#d0d3d4");
+    cyl("chrome", 0.012,0.016, 0.07, 10, x+0.06, h+0.04, zw-0.26, "#d0d3d4");               // bubbler
+    push("chrome", new T.SphereGeometry(0.018,8,6), x+0.06, h+0.075, zw-0.26, 0, "#d0d3d4");
     bx("steel", 0.30, 0.04, 0.03, x, h-0.06, zw-0.54, 0.8, 0, "#c8cbcc");                     // push bar
-    bx("steel", 0.40, h-FL-0.30, 0.10, x, (h-0.14+FL+0.16)/2, zw-0.05, 0.8, 0, "#bfc2c4");   // the wall box under it
+    bx("steel", 0.40, h-FL-0.30, 0.096, x, (h-0.14+FL+0.16)/2, zw-0.052, 0.8, 0, "#bfc2c4");   // the wall box under it
   }
   bx("steel", 0.36, 0.42, 0.22, 2.15, FL+0.21, R.z1-0.11, 0.8, 0, "#b4b7b9");                // the chiller cabinet
   for(let k=0;k<6;k++) bx("paintm", 0.30, 0.012, 0.01, 2.15, FL+0.08+k*0.05, R.z1-0.225, 0, 0, "#6b7073");
@@ -665,10 +679,12 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
     cyl("paintm", 0.04,0.04,1.85,8, x, FL+0.98, z, "#2b4fa0");
     for(let k=0;k<4;k++){
       const a=k*Math.PI/2;
-      push("paintm", boxGeo(0.02, 1.70, 0.46, 0), x+Math.cos(a)*0.12, FL+1.0, z+Math.sin(a)*0.12, -a, "#2b4fa0");
-      for(let s=0;s<5;s++) for(let j=0;j<2;j++)
-        push("pic:brochure", boxGeo(0.02, 0.28, 0.13, 0), x+Math.cos(a)*0.24+Math.sin(a)*(j?0.09:-0.09)*0.0,
-             FL+0.42+s*0.32, z+Math.sin(a)*0.24+(j?0.08:-0.08)*Math.cos(a), -a, ["#ffffff","#f0e6d8","#e6eef6"][(s+j+k)%3]);
+      push("paintm", boxGeo(0.02, 1.70-(k%2)*0.012, 0.46, 0), x+Math.cos(a)*0.12, FL+1.0, z+Math.sin(a)*0.12, -a, "#2b4fa0");
+      for(let s=0;s<5;s++) for(let j=0;j<2;j++){
+        const o=j?0.08:-0.08;                     // along the face: (-sin a, cos a)
+        push("pic:brochure", boxGeo(0.02, 0.28, 0.13, 0), x+Math.cos(a)*0.24-Math.sin(a)*o,
+             FL+0.42+s*0.32, z+Math.sin(a)*0.24+Math.cos(a)*o, -a, ["#ffffff","#f0e6d8","#e6eef6"][(s+j+k)%3]);
+      }
     }
     push("paintm", boxGeo(0.62,0.28,0.62,0), x, FL+1.98, z, 0.3, "#2b4fa0");
     addCol(x-0.34, x+0.34, z-0.34, z+0.34, FL-0.5, FL+2.1);
@@ -773,7 +789,7 @@ function drawPAMap(x,W,H){
     {
       const zf=Z(SCR0), d=sg*-0.56, cz=zf+d/2;
       bx("paintm", 2.40, 0.05, 0.58, 1.80, FL+0.86, cz, 0, 0, "#d9cfba");               // the top
-      bx("paintm", 2.40, 0.16, 0.04, 1.80, FL+0.79, zf+d, 0, 0, "#cbbf9f");             // apron
+      bx("paintm", 2.38, 0.16, 0.04, 1.80, FL+0.79, zf+d, 0, 0, "#cbbf9f");             // apron
       for(const x of [0.95, 1.80, 2.65]){
         push("porcelain", new T.CylinderGeometry(0.19,0.15,0.10,18,1,true), x, FL+0.83, cz-sg*0.02, 0, PORC);
         push("porcelain", new T.CircleGeometry(0.16,18), x, FL+0.79, cz-sg*0.02, 0, "#d8d6d0", -Math.PI/2, 0);
@@ -799,8 +815,7 @@ function drawPAMap(x,W,H){
       const wide=(b-a)>1.2, dw=wide?0.90:0.64, da=b-0.04-dw-0.03;
       for(const x of [a+0.06, da-0.03, b-0.04])
         if(x<X1-0.05) bx("paintm", 0.06, 1.85, 0.04, x, FL+0.925, Z(zfrt), 0, 0, PART);
-      bx("paintm", Math.max(0.05,da-0.06-a), PY1-PY0, 0.026, (a+0.03+da-0.03)/2, (PY0+PY1)/2, Z(zfrt), 0, 0, PART);
-      bx("steel", b-a, 0.04, 0.05, (a+b)/2, FL+1.87, Z(zfrt), 0.8, 0, "#c4c7c8");
+      bx("paintm", Math.max(0.05,da-a-0.09), PY1-PY0, 0.026, (a+da)/2, (PY0+PY1)/2, Z(zfrt), 0, 0, PART);   // its ends inside the pilasters
       // the door, opening in, resting a little open the way they do
       makeDoor(sg<0 ? XF(da+dw, Z(zfrt), Math.PI) : XF(da, Z(zfrt), 0), 0, PY0, 0, "STALL", true,
                0.12+((i*7)%5)*0.06, wide?"stallw":"stall", 0xbcae90);
@@ -812,7 +827,7 @@ function drawPAMap(x,W,H){
       push("paintm", new T.CylinderGeometry(0.11,0.11,0.01,16), a+0.155, FL+0.70, Z(ZF-0.66), 0, "#3a3d40", 0, 0, Math.PI/2);
       push("paintm", boxGeo(0.06,0.10,0.24,0), a+0.10, FL+0.55, Z(ZF-0.66), 0, "#e9e8e3");
       if(!men){ bx("steel", 0.10, 0.28, 0.26, b-0.07, FL+0.62, Z(ZF-0.40), 0.8, 0, "#cfd2d3");
-                bx("paintm", 0.012, 0.04, 0.22, b-0.124, FL+0.74, Z(ZF-0.40), 0, 0, "#8a8d90"); }
+                bx("paintm", 0.012, 0.04, 0.22, b-0.124, FL+0.735, Z(ZF-0.40), 0, 0, "#8a8d90"); }
       if(wide){ // grab bars, and a sign on the door that says so
         push("steel", new T.CylinderGeometry(0.02,0.02,0.9,8), X1-0.05, FL+0.86, Z(ZF-0.75), 0, "#c8cacb", Math.PI/2, 0);
         push("steel", new T.CylinderGeometry(0.02,0.02,0.9,8), tx, FL+0.86, Z(ZF-0.05), 0, "#c8cacb", 0, Math.PI/2);
@@ -830,6 +845,8 @@ function drawPAMap(x,W,H){
       addCol(a-0.02, a+0.02, ...zr(zfrt, ZF), PY0, PY1);
     });
     addCol(X1-0.05, X1, ...zr(zfrt,ZF), PY0, PY1);
+    { const ha=stalls[0][0], hb=stalls[stalls.length-1][1];              // the headrail, one length
+      bx("steel", hb-ha, 0.04, 0.05, (ha+hb)/2, FL+1.87, Z(zfrt), 0.8, 0, "#c4c7c8"); }
     for(const [a,b] of stalls){
       const dw=((b-a)>1.2?0.90:0.64), da=b-0.04-dw-0.03;
       addCol(a, da-0.03, ...zr(zfrt-0.03, zfrt+0.03), FL-0.5, PY1);
@@ -842,9 +859,9 @@ function drawPAMap(x,W,H){
         urinalFix(X0+0.008, z, Math.PI/2, k===0?0.17:0);                     // the near one low, for a child or a chair
         if(k<2){
           const zs=Z(11.42+k*1.05);
-          push("paintm", boxGeo(0.48, 1.10, 0.03, 0), X0+0.25, FL+0.97, zs, 0, PART);
-          push("paintm", boxGeo(0.012, 1.10, 0.034, 0), X0+0.49, FL+0.97, zs, 0, "#a99c7e");
-          for(const y of [FL+0.62, FL+1.32]) bx("chrome", 0.05, 0.06, 0.07, X0+0.03, y, zs, 0, 0, "#c9cbcc");
+          push("paintm", boxGeo(0.48, 1.10, 0.03, 0), X0+0.256, FL+0.97, zs, 0, PART);
+          push("paintm", boxGeo(0.012, 1.10, 0.040, 0), X0+0.496, FL+0.97, zs, 0, "#a99c7e");
+          for(const y of [FL+0.62, FL+1.32]) bx("chrome", 0.05, 0.06, 0.07, X0+0.034, y, zs, 0, 0, "#c9cbcc");
         }
         addCol(X0, X0+0.42, z-0.22, z+0.22, FL+0.2, FL+1.25);
       }
@@ -921,7 +938,7 @@ function drawPAMap(x,W,H){
       addCol(6.1, 6.7, Z(7.4)-0.22, Z(7.4)+0.22, FL-0.5, FL+0.5);
       addSeat(6.26, Z(7.4), FL+0.45, Math.PI/2, "THE FAMILY ROOM'S TOILET");
       push("porcelain", boxGeo(0.50,0.18,0.42,0), 3.78, FL+0.84, Z(7.6), 0, PORC);
-      push("mirror", planeGeo(0.6,0.9,0), 3.507, FL+1.55, Z(7.6), Math.PI/2, "#ffffff");
+      push("mirror", planeGeo(0.6,0.9,0), 3.514, FL+1.55, Z(7.6), Math.PI/2, "#ffffff");
       addCol(3.5, 4.0, Z(7.6)-0.27, Z(7.6)+0.27, FL+0.5, FL+0.95);
       bx("steel", 0.04,0.04,0.9, 6.66, FL+0.86, Z(6.6), 0.8, 0, "#c8cacb");
       bx("paintm", 0.12, 0.92, 0.56, 4.4, FL+1.10, Z(8.33), 0, 0, "#e9e6dc");
@@ -950,13 +967,14 @@ function drawPAMap(x,W,H){
       for(let k=0;k<3;k++) bx("paintm", 0.14, 0.02, 0.02, 6.38, FL+0.20+k*0.22, Z(7.54), 0, 0, "#b9bcbe");
       // a proper office chair on its mat: five legs, a cylinder, the seat and its back
       bx("paintm", 1.0, 0.006, 1.0, 5.9, FL+0.006, Z(7.05), 0, 0, "#4a4c4e");
+      cyl("paintm", 0.06,0.06,0.05,12, 5.9, FL+0.075, Z(7.1), "#1d1d1f");                  // the hub the legs come out of
       for(let k=0;k<5;k++){ const a=k/5*Math.PI*2;
-        push("paintm", boxGeo(0.30,0.03,0.04,0), 5.9+Math.cos(a)*0.15, FL+0.06, Z(7.1)+Math.sin(a)*0.15, -a, "#1d1d1f");
+        push("paintm", boxGeo(0.25,0.03,0.04,0), 5.9+Math.cos(a)*0.175, FL+0.06, Z(7.1)+Math.sin(a)*0.175, -a, "#1d1d1f");
         push("paintm", new T.SphereGeometry(0.028,8,6), 5.9+Math.cos(a)*0.29, FL+0.03, Z(7.1)+Math.sin(a)*0.29, 0, "#1d1d1f"); }
       cyl("chrome", 0.025,0.025, 0.36, 10, 5.9, FL+0.25, Z(7.1), "#9a9a96");
       bx("paintm", 0.48, 0.08, 0.46, 5.9, FL+0.48, Z(7.1), 0, 0, "#2a2a2c");
       bx("paintm", 0.44, 0.50, 0.06, 5.9, FL+0.86, Z(7.1)-sg*0.25, 0, 0, "#2a2a2c");
-      bx("paintm", 0.04, 0.30, 0.04, 5.9, FL+0.58, Z(7.1)-sg*0.24, 0, 0, "#1d1d1f");
+      bx("paintm", 0.04, 0.30, 0.04, 5.9, FL+0.58, Z(7.1)-sg*0.25, 0, 0, "#1d1d1f");
       for(const s of [-1,1]) bx("paintm", 0.04, 0.04, 0.26, 5.9+s*0.25, FL+0.66, Z(7.1), 0, 0, "#1d1d1f");
       addSeat(5.9, Z(7.1), FL+0.52, sg>0?Math.PI:0, "THE ATTENDANT'S OTHER CHAIR");
       // a four-drawer file in the corner, a fridge and a microwave on the west wall
@@ -983,7 +1001,7 @@ function drawPAMap(x,W,H){
         5.0, FL+1.65, Z(8.4)-sg*0.012, sg>0?Math.PI:0);
       bx("paintm", 0.30, 0.36, 0.10, 6.64, FL+1.45, Z(6.45), 0, 0, "#f4f3ee");
       bx("paintm", 0.012, 0.16, 0.05, 6.585, FL+1.47, Z(6.45), 0, 0, "#c41a1a");
-      bx("paintm", 0.012, 0.05, 0.16, 6.585, FL+1.47, Z(6.45), 0, 0, "#c41a1a");
+      bx("paintm", 0.016, 0.05, 0.16, 6.583, FL+1.47, Z(6.45), 0, 0, "#c41a1a");
       bx("steel", 0.08, 0.40, 0.30, 6.66, FL+1.55, Z(7.95), 0.8, 0, "#cfd2d3");
       cyl("paintm", 0.075,0.075, 0.46, 14, 3.62, FL+0.95, Z(5.98), "#b3151b");
       cyl("paintm", 0.03,0.03, 0.08, 8, 3.62, FL+1.22, Z(5.98), "#1a1a1a");
@@ -1085,18 +1103,18 @@ function drawPAMap(x,W,H){
     const H=FL+0.62;
     wallBox("brick", x0, x1, za, za+0.24, FL-0.1, H, BRICK, 0.83);
     wallBox("brick", x0, x1, zb-0.24, zb, FL-0.1, H, BRICK, 0.83);
-    wallBox("brick", x0, x0+0.24, za, zb, FL-0.1, H, BRICK, 0.83);
+    wallBox("brick", x0, x0+0.24, za+0.24, zb-0.24, FL-0.1, H, BRICK, 0.83);
     bx("concrete", x1-x0+0.06, 0.06, 0.32, (x0+x1)/2, H+0.03, za+0.12, 0.6, 0, "#b9b5ab");
     bx("concrete", x1-x0+0.06, 0.06, 0.32, (x0+x1)/2, H+0.03, zb-0.12, 0.6, 0, "#b9b5ab");
-    bx("concrete", 0.32, 0.06, zb-za, x0+0.12, H+0.03, (za+zb)/2, 0.6, 0, "#b9b5ab");
+    bx("concrete", 0.32, 0.049, zb-za-0.56, x0+0.12, H+0.0305, (za+zb)/2, 0.6, 0, "#b9b5ab");
     push("mulchbed", planeGeo(x1-x0-0.24, zb-za-0.48, 0.5), (x0+x1)/2+0.12, H-0.06, (za+zb)/2, 0, "#ffffff", -Math.PI/2, 0);
     addCol(x0, x1, za, zb, FL-0.5, H+0.05);
     FOREST.plant("bush", -7.9, sg*3.4, {y:H-0.06, scale:0.8, solid:false, lean:false});
     FOREST.plant("bush", -7.4, sg*4.6, {y:H-0.06, scale:0.7, solid:false, lean:false});
     // impatiens: red, white, pink, in a band along the front
     for(let k=0;k<26;k++){
-      const fx=x0+0.35+hash2(k,sg)*0.5, fz=za+0.35+((k*0.11)%(zb-za-0.7));
-      push("paintm", new T.SphereGeometry(0.07,6,4), fx, H+0.02, fz, 0, ["#d8203a","#f3f0ea","#e86a9a","#c8102e"][k%4]);
+      const fx=x0+0.35+hash2(k,sg)*0.5, fz=za+0.35+((k*0.0853+hash2(sg,k)*0.04)%(zb-za-0.7));
+      push("paintm", new T.SphereGeometry(0.07,6,4), fx, H+0.012+hash2(k+7,sg)*0.02, fz, k*0.7, ["#d8203a","#f3f0ea","#e86a9a","#c8102e"][k%4]);
     }
   }
   // the notices by the door, on the brick
@@ -1113,7 +1131,7 @@ function drawPAMap(x,W,H){
     const c=Math.cos(ry), s=Math.sin(ry);
     push("paintm", boxGeo(1.8, 0.05, 0.42, 0), x, FL+0.46, z, ry, "#4b3b2f");
     push("paintm", boxGeo(1.8, 0.40, 0.04, 0), x-s*0.20, FL+0.70, z-c*0.20, ry, "#4b3b2f");
-    for(const d of [-0.8,0.8]) push("paintm", boxGeo(0.05, 0.46, 0.42, 0), x+c*d, FL+0.23, z-s*d, ry, "#2c2622");
+    for(const d of [-0.8,0.8]) push("paintm", boxGeo(0.05, 0.44, 0.40, 0), x+c*d, FL+0.22, z-s*d, ry, "#2c2622");
     const hx=Math.abs(c)*0.9+Math.abs(s)*0.25, hz=Math.abs(s)*0.9+Math.abs(c)*0.25;
     addCol(x-hx, x+hx, z-hz, z+hz, FL-0.5, FL+0.5);
     addSeat(x, z, FL+0.50, ry+Math.PI, "THE BENCH BY THE DOOR");

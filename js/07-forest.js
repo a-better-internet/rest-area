@@ -647,7 +647,7 @@ const FOREST=(function(){
       }else if(q<0.060){
         const r=0.22+hash2(x,z)*0.25, h=0.3+hash2(z,x)*0.6;
         push("logbark", barkCyl(r*1.15, r, h, 9), x, y+h/2-0.05, z, q*99, "#8c8272");
-        push("logbark", new T.CircleGeometry(r*0.96,9), x, y+h-0.049, z, 0, "#b49a72", -Math.PI/2, 0);
+        push("logbark", new T.CircleGeometry(r*0.96,9), x, y+h-0.045, z, 0, "#b49a72", -Math.PI/2, 0);   // the rings, a hair over the cap
         addCol(x-r, x+r, z-r, z+r, y, y+h);
       }else if(q<0.095){
         const s=0.35+hash2(x*7,z)*1.3;

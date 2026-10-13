@@ -21,8 +21,8 @@ function picnicTable(x, z, ry, color, y0){
   const y=y0||0, c=Math.cos(ry), s=Math.sin(ry);
   const P=(lx,lz)=>[x+lx*c+lz*s, z-lx*s+lz*c];
   const col=color||"#94573a";
-  for(const pz of [-0.24,0,0.24]){                                  // the top, three planks
-    const [px,qz]=P(0,pz); push("wood", boxGeo(1.86, 0.045, 0.235, 1.2), px, y+0.76, qz, ry, col);
+  for(const pz of [-0.24,0,0.24]){                                  // the top, three planks, a finger's gap between
+    const [px,qz]=P(0,pz); push("wood", boxGeo(1.86, 0.045, 0.222, 1.2), px, y+0.76, qz, ry, col);
   }
   for(const bz of [-0.62,0.62]){                                    // the benches
     const [px,qz]=P(0,bz); push("wood", boxGeo(1.86, 0.045, 0.26, 1.2), px, y+0.45, qz, ry, col);
@@ -32,8 +32,10 @@ function picnicTable(x, z, ry, color, y0){
       const [px,qz]=P(lx, sd*0.47);
       push("wood", boxGeo(0.06, 0.86, 0.09, 1.2), px, y+0.37, qz, ry, col, -sd*0.58, 0);
     }
-    const [bxp,bzp]=P(lx,0); push("wood", boxGeo(0.06, 0.09, 1.50, 1.2), bxp, y+0.39, bzp, ry, col);
-    const [tx2,tz2]=P(lx,0); push("wood", boxGeo(0.07, 0.06, 0.70, 1.2), tx2, y+0.71, tz2, ry, col);
+    // the bench brace thinner than the legs and short of the benches' edges, the
+    // top cleat short of the planks': no two faces in one plane
+    const [bxp,bzp]=P(lx,0); push("wood", boxGeo(0.05, 0.09, 1.44, 1.2), bxp, y+0.39, bzp, ry, col);
+    const [tx2,tz2]=P(lx,0); push("wood", boxGeo(0.07, 0.06, 0.64, 1.2), tx2, y+0.71, tz2, ry, col);
   }
   const hx=Math.abs(c)*0.95+Math.abs(s)*0.78, hz=Math.abs(s)*0.95+Math.abs(c)*0.78;
   addCol(x-hx, x+hx, z-hz, z+hz, y-0.5, y+0.80);
@@ -51,7 +53,7 @@ function grill(x, z, ry, lit){
   push("char", boxGeo(0.62, 0.20, 0.44, 0.8), x, y+0.92, z, ry, "#2c241f");
   push("char", boxGeo(0.66, 0.03, 0.48, 0.8), x, y+1.03, z, ry, "#4a3b30");
   for(let k=0;k<6;k++) push("metal", boxGeo(0.01,0.012,0.42,0), x+Math.cos(ry)*(-0.25+k*0.1), y+1.05, z-Math.sin(ry)*(-0.25+k*0.1), ry, "#5a5550");
-  push("char", boxGeo(0.66, 0.30, 0.03, 0.8), x-Math.sin(ry)*0.23, y+1.12, z-Math.cos(ry)*0.23, ry, "#2c241f");
+  push("char", boxGeo(0.64, 0.30, 0.03, 0.8), x-Math.sin(ry)*0.23, y+1.12, z-Math.cos(ry)*0.23, ry, "#2c241f");
   addCol(x-0.33, x+0.33, z-0.33, z+0.33, y-0.5, y+1.1);
   if(lit){ EMBERS.push({x:x, y:y+1.04, z:z}); }
   addUse(x+0.8, z, y, lit?"WARM YOUR HANDS":"LOOK IN THE GRILL",
@@ -96,8 +98,9 @@ const EMBERS=[];
   for(const pz of [-D/2+0.2, D/2-0.2]) bx("beam", W+0.2, 0.28, 0.20, SX, y+0.15+H+0.14, SZ+pz, 0.6, 0, "#6e5038");
   const RY=y+0.15+H+0.28, RH=1.9, ov=0.6;
   for(const sg of [-1,1]){
-    const g=new FaceGeo().slab([V3(SX-W/2-ov, RY+RH, SZ), V3(SX+W/2+ov, RY+RH, SZ),
-                                V3(SX+W/2+ov, RY-0.3, SZ+sg*(D/2+ov)), V3(SX-W/2-ov, RY-0.3, SZ+sg*(D/2+ov))], 0.14, 0.5).geo();
+    const o2=ov-(sg>0?0.012:0);                         // the two planes end a centimetre apart at the gables
+    const g=new FaceGeo().slab([V3(SX-W/2-o2, RY+RH, SZ), V3(SX+W/2+o2, RY+RH, SZ),
+                                V3(SX+W/2+o2, RY-0.3, SZ+sg*(D/2+ov)), V3(SX-W/2-o2, RY-0.3, SZ+sg*(D/2+ov))], 0.14, 0.5).geo();
     push("shingle", g, 0,0,0, 0, "#c9c2b9");
     push("beam", planeGeo(W+2*ov, Math.hypot(D/2+ov, RH+0.3), 0.8), SX, RY+RH/2-0.25, SZ+sg*(D/2+ov)/2, 0, "#8a6a4a",
          Math.PI/2+sg*Math.atan2(RH+0.3, D/2+ov), 0);
