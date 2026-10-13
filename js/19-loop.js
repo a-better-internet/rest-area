@@ -93,6 +93,9 @@ function frame(){
     camera.lookAt(player.pos.x - Math.sin(player.yaw)*cp,
                   eyeY + Math.sin(player.pitch),
                   player.pos.z - Math.cos(player.yaw)*cp);
+    // shoving a vending machine shakes you as much as it
+    if(VEND.shake>0){ const k=VEND.shake*VEND.shake;
+      camera.position.x+=(Math.random()-0.5)*0.05*k; camera.position.y+=(Math.random()-0.5)*0.03*k; camera.position.z+=(Math.random()-0.5)*0.05*k; }
   }
 
   /* ---- the flashlight follows the eye ---- */
@@ -113,6 +116,7 @@ function frame(){
   /* ---- day / night ---- */
   const dn=DayNight.tick(started?delta:delta*0.25);
   const dark=dn.dark;
+  updateWeather(delta, now, dn);
   DayNight.paint();
   skyDome.position.copy(camera.position);
   starPivot.position.copy(camera.position);
@@ -123,22 +127,35 @@ function frame(){
   _sunDir.set(Math.cos(ang)*R, Math.max(14, Math.sin(ang)*R+6)-kty, 70).normalize();
   key.position.set(kx+_sunDir.x*KEY_D, kty+_sunDir.y*KEY_D, kz+_sunDir.z*KEY_D);
   key.target.position.set(kx, kty, kz);
-  key.intensity=dn.sunIntensity;
+  // at night the light is the moon's, as much of it as there is
+  key.intensity=dn.sunIntensity-dn.nightAmount*0.30*(1-(0.25+0.75*MOON.bright));
   key.castShadow = dn.sunHeight > 0.04;
   key.color.copy(DayNight.P.dayLight)
     .lerp(DayNight.P.setLight, Math.min(1,dn.sunsetAmount*1.2))
     .lerp(DayNight.P.nightLight, dn.nightAmount);
   const discY=placeCelestial(sunDisc, ang, 1, 70/R);
-  placeCelestial(moonDisc, ang, -1, 70/R);
+  _sunCel.copy(_celDir);
   const lowW=1-clamp((dn.sunHeight+0.06)/0.45,0,1);
   sunDisc.material.color.copy(SUN_HIGH).lerp(SUN_LOW, lowW);
-  sunDisc.material.opacity=clamp((discY+0.10)/0.10,0,1);
+  const clear=1-WEATHER.cover*0.96, see=clear*(1-WEATHER.fog*0.9);
+  sunDisc.material.opacity=clamp((discY+0.10)/0.10,0,1)*(0.15+0.85*see);
   const ss=320+lowW*260; sunDisc.scale.set(ss,ss,1);
-  moonDisc.material.opacity=0.9*dn.nightAmount;
-  starPivot.visible=dn.nightAmount>0.01;
+  // the moon: behind the sun by its phase, lit on the side toward it
+  MOON.phase=MOON.phaseAt(DayNight.state.day+dn.t);
+  MOON.frac=(1-Math.cos(MOON.phase*Math.PI*2))/2;
+  const moonY=placeCelestial(moonDisc, ang-MOON.phase*Math.PI*2, 1, 70/R);
+  _camX.setFromMatrixColumn(camera.matrixWorld,0); _camY.setFromMatrixColumn(camera.matrixWorld,1);
+  _sunCel.addScaledVector(_celDir, -_sunCel.dot(_celDir));
+  if(MOON.draw(MOON.frac, Math.atan2(_sunCel.dot(_camY), _sunCel.dot(_camX)))) moonDisc.material.map.needsUpdate=true;
+  MOON.up=smoothstep(-0.03,0.05,moonY);
+  MOON.bright=MOON.frac*MOON.up*clear;
+  moonDisc.material.opacity=MOON.up*(0.22+0.78*dn.nightAmount)*Math.min(1,0.15+MOON.frac*3)*Math.pow(see,1.5);
+  starPivot.visible=dn.nightAmount>0.01 && see>0.02;
   starSky.rotation.y=DayNight.state.hour*(Math.PI/12);
+  const starSee=Math.pow(see,1.6)*(1-0.30*MOON.bright);
   for(const L of STAR_LAYERS)
-    L.p.material.opacity=dn.nightAmount*L.base*(0.88+0.12*Math.sin(now*L.sp+L.ph));
+    L.p.material.opacity=dn.nightAmount*L.base*(0.88+0.12*Math.sin(now*L.sp+L.ph))*starSee;
+  if(MILKY) MILKY.material.opacity=Math.pow(dn.nightAmount,2.2)*Math.pow(see,2)*(1-0.7*MOON.bright)*0.75;
   hemi.intensity=dn.hemiIntensity;
   hemi.color.copy(DayNight.P.dayHemi).lerp(DayNight.P.nightHemi, dn.nightAmount);
   hemi.groundColor.copy(DayNight.P.dayGround).lerp(DayNight.P.nightGround, dn.nightAmount);
@@ -157,11 +174,13 @@ function frame(){
   scene.fog.near=150+dn.nightAmount*50;
   scene.fog.far =1250+dn.nightAmount*300;
   scene.background=skyImg.hz;
+  applyWeather(delta, now, dn, dark);
 
   /* ---- artificial light: emissives ramp, real lights follow the player -- */
   for(const g of GLOW){
+    const pw=g.circ ? GRID[g.circ] : 1;          // on the rest area's supply: off in a power cut
     if(g.basic){
-      let a=(g.always?1:(g.day?(1-dark):dark))*(g.max===undefined?1:g.max);
+      let a=(g.always?1:(g.day?(1-dark):dark))*(g.max===undefined?1:g.max)*pw;
       if(g.blink){
         const u=(now/g.blink)%1, d2=g.duty===undefined?0.16:g.duty;
         a *= u<d2 ? Math.sin(Math.PI*(u/d2)) : 0;
@@ -174,12 +193,14 @@ function frame(){
           : 0.10+dark*3.0;
     if(g.base) g.m.emissive.copy(g.base);
     // NOTHING CLIPS TO WHITE: the intensity goes through a soft knee
-    const want=g.baseInt*k;
+    const want=g.baseInt*k*pw;
     const pk=Math.max(g.base?g.base.r:1, g.base?g.base.g:1, g.base?g.base.b:1)*want;
     const cap=pk<=0.55 ? pk : 0.55+0.37*(1-Math.exp(-(pk-0.55)/0.42));
     g.m.emissiveIntensity = pk>1e-5 ? want*(cap/pk) : want;
   }
-  for(const n of NEON) n.material.color.setScalar(0.42+0.58*dark);
+  for(const n of NEON) n.material.color.setScalar(0.42+0.58*dark*GRID.site);
+  for(const h of EMERG_HALO) h.material.opacity=GRID.emerg*0.8;
+  EMERG_LENS.color.setScalar(0.16+0.84*GRID.emerg);
   tickFlicker(delta);
   updateLights(dark, camera.position);
   FOREST.update(camera.position);
@@ -192,22 +213,22 @@ function frame(){
     if(c.ox>2100) c.ox=-2100;
     c.s.position.set(camera.position.x+c.ox, c.s.position.y, camera.position.z+c.oz);
     const far=clamp((Math.abs(c.oz)-380)/1700, 0, 1);
-    c.s.material.opacity = (0.22+0.74*(1-dn.nightAmount))*(0.80+0.20*Math.sin(i*1.7))*(1-far*0.30);
-    c.s.material.color.copy(skyImg.mid).lerp(WHITE_C, 0.74-dn.nightAmount*0.62)
+    c.s.material.opacity = (0.22+0.74*(1-dn.nightAmount))*(0.80+0.20*Math.sin(i*1.7))*(1-far*0.30)*(1-WEATHER.cover*0.45)*(1-WEATHER.fog*0.8);
+    c.s.material.color.copy(skyImg.mid).lerp(WHITE_C, (0.74-dn.nightAmount*0.62)*(1-WEATHER.cover*0.7))
        .lerp(scene.fog.color, far*0.46*(1-dn.nightAmount*0.7));
   }
   for(let i=0;i<ALTO.length;i++){
     const c=ALTO[i];
     c.ox += c.sp*delta; if(c.ox>2200) c.ox=-2200;
     c.s.position.set(camera.position.x+c.ox, c.s.position.y, camera.position.z+c.oz);
-    c.s.material.opacity = 0.40*(1-dn.nightAmount*0.88)*(0.62+0.38*Math.sin(i*1.9));
+    c.s.material.opacity = 0.40*(1-dn.nightAmount*0.88)*(0.62+0.38*Math.sin(i*1.9))*Math.max(0,1-WEATHER.cover*1.4);
     c.s.material.color.copy(skyImg.mid).lerp(WHITE_C, 0.80-dn.nightAmount*0.6);
   }
   for(let i=0;i<CIRRUS.length;i++){
     const c=CIRRUS[i];
     c.ox += c.sp*delta; if(c.ox>2200) c.ox=-2200;
     c.s.position.set(camera.position.x+c.ox, c.s.position.y, camera.position.z+c.oz);
-    c.s.material.opacity = 0.26*(1-dn.nightAmount*0.85)*(0.6+0.4*Math.sin(i*2.3));
+    c.s.material.opacity = 0.26*(1-dn.nightAmount*0.85)*(0.6+0.4*Math.sin(i*2.3))*Math.max(0,1-WEATHER.cover*1.6);
     c.s.material.color.copy(skyImg.low).lerp(WHITE_C, 0.74-dn.nightAmount*0.6);
   }
   updateTraffic(delta, dark);
@@ -270,6 +291,8 @@ function frame(){
   }
   if(typeof updateGrounds==="function") updateGrounds(delta, now, dark);
   if(typeof updateLife==="function") updateLife(delta, now, dark, dn);
+  updateVending(delta);
+  updateScreens(delta, now);
   if(typeof AUDIO!=="undefined") AUDIO.update(delta, dark);
   if(ANIM.length) tickAnim(now);
 
@@ -290,6 +313,7 @@ function frame(){
   }
 }
 let _indoorMix=0;
+const _sunCel=new T.Vector3(), _camX=new T.Vector3(), _camY=new T.Vector3();
 const _INDOOR_BOUNCE=new THREE.Color(0x9c9a94);
 requestAnimationFrame(frame);
 

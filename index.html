@@ -86,6 +86,40 @@
     pointer-events:none;white-space:nowrap}
   #toast.show{opacity:1}
 
+  /* ---- a vending machine's keypad ---- */
+  #vend{position:fixed;right:30px;top:50%;transform:translateY(-50%);z-index:14;width:min(560px,92vw);display:none;
+    background:linear-gradient(#1b1d22,#121317);border:2px solid #4a4d55;border-radius:6px;padding:12px 14px 10px;
+    box-shadow:0 18px 50px rgba(0,0,0,.6);font-family:"JetBrains Mono",monospace;color:#d9dde4}
+  #vend.show{display:block}
+  #vend .hd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+  #vend .t{font-family:"Oswald",sans-serif;font-size:20px;letter-spacing:.14em;color:#f2efe4}
+  #vend .led{font-size:12px;color:#ff5a3a;background:#0a0606;border:1px solid #3a1a14;padding:5px 9px;border-radius:3px;
+    letter-spacing:.08em;text-shadow:0 0 6px rgba(255,80,40,.7);min-width:230px;text-align:right;white-space:nowrap}
+  #vend .grid{display:grid;gap:4px}
+  #vend .cell{background:#22252b;border:1px solid #33363e;border-radius:3px;padding:4px 5px;display:flex;flex-direction:column;
+    font-size:9px;line-height:1.25;min-height:46px}
+  #vend .cell .c{color:#f4c430;font-weight:700}
+  #vend .cell .n{color:#e8e8e2;flex:1}
+  #vend .cell .p{color:#9fd36a}
+  #vend .cell.on{background:#3b3420;border-color:#f4c430;box-shadow:0 0 0 1px #f4c430 inset}
+  #vend .cell.out{opacity:.4}
+  #vend .msg{margin-top:9px;font-size:11px;color:#f2efe4;min-height:30px;letter-spacing:.04em}
+  #vend .keys{margin-top:6px;font-size:9px;color:#9aa1ab;letter-spacing:.04em}
+  #vend .keys b{color:#f4c430;font-weight:500}
+  #vend.dark .grid,#vend.dark .led{filter:brightness(.25)}
+
+  /* ---- a power cut: a black frame, then the words, blinking ---- */
+  #outage{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0)}
+  #outage .w{font-family:"Oswald",sans-serif;font-size:64px;font-weight:700;letter-spacing:.16em;color:#ff3a26;
+    text-shadow:0 0 18px rgba(255,40,20,.7),0 2px 4px #000}
+  #outage .s{font-family:"JetBrains Mono";font-size:12px;letter-spacing:.28em;color:#ffb39e;text-shadow:0 1px 3px #000}
+  #outage.go{animation:outbg 4.6s ease-out forwards}
+  #outage.go .w,#outage.go .s{animation:outblink 4.6s steps(1) forwards}
+  @keyframes outbg{0%{opacity:1;background:rgba(0,0,0,1)}6%{background:rgba(0,0,0,.92)}25%{background:rgba(0,0,0,.35)}
+    80%{opacity:1;background:rgba(0,0,0,0)}100%{opacity:0;background:rgba(0,0,0,0)}}
+  @keyframes outblink{0%{opacity:0}8%{opacity:1}22%{opacity:0}30%{opacity:1}44%{opacity:0}52%{opacity:1}100%{opacity:1}}
+
   /* ---- boot card: the sign on the shoulder a mile out ---- */
   #boot{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
     flex-direction:column;gap:18px;transition:opacity .8s ease;cursor:pointer;
@@ -153,6 +187,8 @@
   <div class="row"><span>Nightfall · midday</span><span><kbd>N</kbd> · <kbd>M</kbd></span></div>
   <div class="row"><span>Scrub time</span><span><kbd>[</kbd><kbd>]</kbd></span></div>
   <div class="row"><span>Summer / autumn</span><span><kbd>Y</kbd></span></div>
+  <div class="row"><span>Rain &amp; fog · storm</span><span><kbd>R</kbd> · <kbd>T</kbd></span></div>
+  <div class="row"><span>Storm power cut · wreck</span><span><kbd>P</kbd> · <kbd>X</kbd></span></div>
   <div class="row"><span>Sound</span><span><kbd>U</kbd></span></div>
   <div class="row"><span>Plan view · HUD</span><span><kbd>O</kbd> · <kbd>H</kbd></span></div>
 </div>
@@ -167,6 +203,7 @@
     <div class="chip"><div class="k">Location</div><div class="v" id="where" style="font-size:16px">PARKING</div></div>
     <div class="chip"><div class="k">Local time</div><div class="v" id="clock">—</div></div>
     <div class="chip blue"><div class="k">Season</div><div class="v" id="season" style="font-size:16px">SUMMER</div></div>
+    <div class="chip"><div class="k">Weather</div><div class="v" id="wx" style="font-size:16px">CLEAR</div></div>
   </div>
 </div>
 
@@ -216,10 +253,15 @@
 <script src="js/14b-people.js"></script>
 <script src="js/14c-critters.js"></script>
 <script src="js/14d-backwoods.js"></script>
+<script src="js/14e-incidents.js"></script>
+<script src="js/14f-homestead.js"></script>
 <script src="js/15-bake.js"></script>
 <script src="js/16-lighting.js"></script>
+<script src="js/16b-weather.js"></script>
+<script src="js/16c-screens.js"></script>
 <script src="js/17-player.js"></script>
 <script src="js/18-hud.js"></script>
+<script src="js/18b-vending.js"></script>
 <script src="js/19-loop.js"></script>
 <script src="js/20-audio.js"></script>
 </body>

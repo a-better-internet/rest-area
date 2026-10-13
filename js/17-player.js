@@ -17,6 +17,8 @@ let started=false, hudOn=true, leaving=false;
 const WALK=3.05, RUN=5.6, SPRINT=10.4;
 
 addEventListener("keydown",e=>{
+  // at a vending machine the keys are its keypad's (18b-vending)
+  if(VEND.open){ e.preventDefault(); VEND.key(e); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
   const held=keys[e.code];                  // keydown repeats while a key is down
   keys[e.code]=true;
@@ -33,6 +35,15 @@ addEventListener("keydown",e=>{
   if(e.code==="KeyC" && !droneMode && !driving) sitToggle();
   if(e.code==="KeyF" && !driving) setDrone(!droneMode);   // no driverless cars
   if(e.code==="KeyL"){ torchOn=!torchOn; toast(torchOn?"FLASHLIGHT ON":"FLASHLIGHT OFF","#ffe9a8"); }
+  // the weather, for testing: it comes on its own, now and then, otherwise
+  if(e.code==="KeyR" && !held){ const on=WEATHER.kind!=="rainfog"; WEATHER.set(on?"rainfog":"clear", true);
+    toast(on?"RAIN AND FOG":"CLEARING","#9fb8d8"); }
+  if(e.code==="KeyT" && !held){ const on=WEATHER.kind!=="storm"; WEATHER.set(on?"storm":"clear", true);
+    toast(on?"THUNDERSTORM":"CLEARING","#b9a8ff"); }
+  if(e.code==="KeyP" && !held){ if(GRID.phase==="normal"||GRID.phase==="cool"){ if(WEATHER.kind!=="storm") WEATHER.set("storm", true);
+      WEATHER.cover=Math.max(WEATHER.cover,0.9); WEATHER.storm=Math.max(WEATHER.storm,0.8); WEATHER.rain=Math.max(WEATHER.rain,0.6); strike(true, true); }
+    else toast("THE POWER IS ALREADY OUT","#ff8a6a"); }
+  if(e.code==="KeyX" && !held){ CRASH.toggle(); toast(CRASH.on?"I-79 NORTH · CLEARED":"WRECK ON I-79 NORTH","#ff9a5a"); }
   // Space is the handbrake once you are in a car, so it must not also be
   // the key that gets you out of it
   if((e.code==="KeyE" || (e.code==="Space" && !driving)) && !droneMode) interact();
@@ -202,6 +213,7 @@ function interact(){
 function nearestUse(){
   let best=null, bd=1e9;
   for(const u of USES){
+    if(u.when && !u.when()) continue;
     const d=Math.hypot(player.pos.x-u.x, player.pos.z-u.z);
     if(d<(u.r||1.6) && Math.abs(player.feetY-u.y)<1.2 && d<bd){ bd=d; best=u; }
   }

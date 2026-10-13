@@ -21,16 +21,31 @@ built from code. The only download is three.js r128, from cdnjs.
   - a quarry-tile floor, open timber trusses and pendant lights;
   - three vending machines, a payphone and a bi-level stainless fountain;
   - grey swing-top trash cans with their flaps facing the room;
-  - a PA highway map and a bulletin board under a WELCOME TO CRAWFORD COUNTY sign;
-  - an attendant's desk, brochure racks, and a clock that keeps game time.
+  - a PA highway map, and a bulletin board under a WELCOME TO CRAWFORD
+    COUNTY sign whose notices change: a couple come down and new ones go up
+    every day, and now and then one changes while you are there (lost dogs,
+    a chicken BBQ, the lanternfly, a ride to Erie, tear-off phone tabs);
+  - over the attendant's desk, a television on the state's travel channel,
+    cycling through I-79 traffic, local conditions, Doppler radar, the
+    forecast and alerts, with a crawl along the bottom. It shows what the
+    world is actually doing: the weather, a wreck on I-79, a power cut;
+  - brochure racks, and a clock that keeps game time.
+  - The vending machines work the way they do. `E` brings up the keypad:
+    the arrows pick a slot, `Q` drops in a quarter, `F` feeds a dollar bill
+    (it may spit it back), `E` vends. Sometimes the item hangs on the end of
+    the spiral, and `Space` shakes the machine until it falls. `R` is the
+    coin return; credit left in a machine stays for the next person.
 
   Doors open on `E`. The storefront doors swing out, as code requires.
 - **The restrooms** follow the colour reference: yellow wall tile to 2.1 m
   with grey block above, a speckled mosaic floor, beige toilet partitions,
   stainless hand dryers on white panels, and a fold-down baby changer.
   - The fixtures are modelled, not boxed:
-    - floor-mount toilets with open-front seats and chrome flushometers;
-    - wall-hung urinals with flush valves, one of them set low;
+    - floor-mount toilets lofted like the cars: a foot that flares onto the
+      floor, a rolled rim, a shroud back to the wall, bolt caps, a flat
+      open-front seat on chrome hinges, and a chrome flushometer;
+    - wall-hung urinals that are round in plan with the basin pressed into
+      the face, a strainer and a blue screen, and flush valves; one is set low;
     - stall doors with hinges, latches, occupancy indicators and coat hooks.
   - The men's room has three stalls, three urinals and a light that
     flickers.
@@ -42,7 +57,9 @@ built from code. The only download is three.js r128, from cdnjs.
   office. A janitor's closet and a mechanical room open off service doors at
   the back.
   - The office has a desk with a camera monitor, an office chair, a file
-    cabinet, a fridge and microwave, and a whiteboard of rounds.
+    cabinet, a fridge and microwave, and a whiteboard of rounds. The monitor
+    runs the four building cameras and CAM 5, the trail camera out in the
+    back woods (`E` at the desk steps through its pictures).
   - The janitor's closet has a mop sink and mop rack, a wringer bucket,
     stocked shelves, a cart and a ladder.
 - **The lots.**
@@ -53,6 +70,9 @@ built from code. The only download is three.js r128, from cdnjs.
     hatched access aisles between them, signs and blue curb.
   - Tractor-trailers park on the angled truck lot past the island. At night
     their marker lamps stay on, and the reefer units can be heard running.
+  - A state trooper's cruiser is backed into a stall by the walk: fleet grey,
+    a light bar, a push bumper and a laptop on its mount. The trooper sits
+    behind the wheel with a clipboard, writing, and looks up now and then.
 - **The vehicles** are lofted, not boxed.
   - Sedans, SUVs, pickups and minivans have rounded bodies with real wheel
     arches. Each has a greenhouse, door seams, mirrors and lamps.
@@ -69,7 +89,8 @@ built from code. The only download is three.js r128, from cdnjs.
   - The car then backs out, finishing pointed down the one-way aisle, drives
     to the entrance ramp and times its merge against lane-0 traffic.
   - Visitors keep a speed-dependent gap to whatever is in front: cars,
-    people and you. They honk if you stand in the way long enough.
+    people and you. If you stand in the aisle they honk, then edge round you
+    at a crawl, and pull back to the middle once past.
 - **The interstate** is two lanes each way with a wooded median. It has
   rumble strips, mile markers, the REST AREA 1/2 MILE and NEXT RIGHT signs,
   the gore sign and a DO NOT ENTER at the wrong end of the ramp. 44 vehicles
@@ -80,6 +101,12 @@ built from code. The only download is three.js r128, from cdnjs.
     when there is room both ways, and move over for merging visitors.
     Trucks keep right.
   - At night their headlights, tail lights and brake lights come on.
+  - Once in a long while there is a wreck on the northbound shoulder across
+    the verge from the truck lot: one car spun round in the grass, another
+    pulled over with its hazards going, and a cruiser behind them with its
+    bar flashing red and blue. Flares and cones close the right lane, and
+    traffic slows to look and squeezes by on the left. It is cleared after a
+    few minutes. `X` calls one up (or clears it).
 - **The picnic grove** spreads across the lawn south of the building. It has
   tables on concrete pads, charcoal grills (some lit, with smoke and embers),
   a picnic shelter and shade trees. Nearby are the flagpole with the US and
@@ -106,6 +133,42 @@ built from code. The only download is three.js r128, from cdnjs.
   - At night the lot lights and building lights come on and, in summer,
     fireflies rise over the lawn.
   - Mist lies on the lawns for an hour after sunrise and comes back at dusk.
+- **The night sky.** On a clear night there are stars in several magnitudes
+  and colours, and the Milky Way crosses the sky, clumped into star clouds
+  and split by the dark of the Great Rift. The moon has its phases. It
+  starts on tonight's real phase and moves on a day for every day of the
+  clock. It rides behind the sun by its phase (a first quarter is high in
+  the south at sunset, a full moon rises as the sun goes down), and its lit
+  side faces the sun. A bright moon washes out the Milky Way and lights the
+  ground; cloud puts all of it out.
+- **Weather.** Most of the time it is fair. Every few minutes it may change:
+  a grey overcast, a shower, fog lying in the woods, and now and then a
+  thunderstorm. The HUD shows the weather and the temperature.
+  - Cloud is a deck across the sky that thickens from broken to a lid. The
+    sun's light goes soft and flat under it.
+  - Rain is streaks round you that never fall under a roof, with splashes
+    at your feet. The paving darkens and shines as it gets wet and dries
+    out after.
+  - Fog pulls the haze in to a hundred metres or so, with banks of it
+    lying low among the trees and over the lawn.
+  - In a thunderstorm the wind gets up, the sky flashes, sometimes a bolt
+    comes down, and the thunder follows at the speed of sound.
+  - `R` toggles rain and fog and `T` a thunderstorm, for testing.
+- **Power cuts.** Very occasionally a close strike in a storm takes the power
+  out. `P` makes it happen.
+  - The screen goes black and flashes POWER OUTAGE. Every light on the rest
+    area's supply drops, and only the exit signs and the battery emergency
+    lights by the doors stay on.
+  - Out at the substation the standby set cranks, catches with a black
+    cough from its stack, and comes up to speed, followed by the second set.
+    Its hum carries across the site.
+  - The transfer switch's lamps go from NORMAL to EMERGENCY, and ten seconds
+    after the cut it throws: the building comes back on the generator.
+  - The lot and walk lights stay dark until the utility returns. Then the
+    switch transfers back with a blink, the pole lamps restrike and warm up
+    over half a minute, and the set runs on to cool down before it stops.
+  - The TV comes back to NO SIGNAL first, and the vending machines and the
+    office monitor are dark until the generator picks the building up.
 - **Life.**
   - Three whitetail deer graze at the edge of the woods. They walk with a
     four-beat gait and bound away with their tails up when you get close.
@@ -130,6 +193,13 @@ built from code. The only download is three.js r128, from cdnjs.
     is on her phone, one has a can, and one stands with her hands to the
     fire. They look round when you walk in, and they have a few things to
     say (`E`).
+  - They are out there from about noon until three in the morning, and come
+    and go when you are not right there to see. In the morning the fire is
+    left to burn down, and what they left behind changes from day to day:
+    a hoodie over the log, a phone on the cooler still getting messages, a
+    guitar, a skateboard, a sketchbook, one shoe, a lantern left on, a jar of
+    fireflies (or in October a jack-o'-lantern), and a note under a stone on
+    the chopping block for whoever comes by.
   - At the camp are a dome tent, a cooler, a camp chair, firewood, a
     chopping block with a hatchet in it, cans, and a phone speaker playing
     something. A log by the fire is free to sit on.
@@ -142,6 +212,21 @@ built from code. The only download is three.js r128, from cdnjs.
     - flagging tape along the path.
   - Past the camp the property line is POSTED, and the trees between the
     signs are banded in purple paint, as Pennsylvania law allows.
+  - The kids' orange tape leads north-east from the fire to an old
+    farmhouse in what is left of its yard, a slight clearing the woods are
+    taking back.
+    - Outside: grey clapboard where the paint has let go, a fieldstone
+      foundation, a hole in the back of the roof, a brick chimney with its
+      top fallen in, broken and boarded windows, ivy, and a porch whose
+      corner post lies in the grass, so the porch roof sags to meet it.
+    - The front door stands open, and the ground floor can be walked.
+      The parlour has a stove, a calendar stopped in October 1987, a picture
+      on the wall, and a corner where the ceiling has come down. The kitchen
+      has the table on its side, the sink, and an old fridge with its door
+      open. The stairs are rotted through half way up. It creaks.
+    - In the yard: a fieldstone well, a hand pump, a shed down on its face,
+      a rusted swing set, lilacs, an apple tree gone wild, and a mailbox
+      at the end of the old drive.
   - You can hear the fire crackle, a little music, and the kids talking and
     laughing, louder as you get closer.
 - **Sound** is synthesized, with no audio files: road noise that pans with
@@ -149,7 +234,10 @@ built from code. The only download is three.js r128, from cdnjs.
   insects at night, the hum of the building and the generators, the hand
   dryers, and horns. There are also car doors, flushes in the restrooms, the
   flag halyard ringing on its pole in the wind, a distant jake brake, and a
-  dog. It starts on your first click; `U` toggles it.
+  dog. Rain hisses outside and drums on the roof inside; thunder cracks and
+  rolls; the standby diesel cranks, catches and runs; the transfer switch
+  bangs; the vending machine takes coins, whirs and thumps; the old house
+  creaks. It starts on your first click; `U` toggles it.
 
 ## Controls
 
@@ -165,8 +253,14 @@ built from code. The only download is three.js r128, from cdnjs.
 | Nightfall · midday | `N` · `M` |
 | Scrub time | `[` `]` |
 | Summer / autumn | `Y` |
+| Rain & fog · thunderstorm (testing) | `R` · `T` |
+| Storm power cut · wreck on I-79 (testing) | `P` · `X` |
 | Sound | `U` |
 | Plan view · hide HUD | `O` · `H` |
+
+At a vending machine the keys are its keypad's: arrows (or `WASD`) to pick,
+`Q` a quarter, `F` a dollar bill, `E` or `Enter` to vend, `Space` to shake
+it, `R` coin return, `Esc` to walk away.
 
 ## Layout
 
@@ -186,6 +280,7 @@ centred on the origin.
 | Substation | x 60 … 90, z −184 … −154 (2.6 m up the drive) |
 | The path out back | from the loop walk at x 17, z 1 east to x 278, z 50 |
 | The camp | x 286, z 52 |
+| The old house | x 312, z 160 (front door on the south side) |
 | Forest zone | x −240 … 416, z −328 … 248 |
 
 You can walk to 22 m inside the forest zone's edge, or on the east side to
@@ -217,11 +312,16 @@ js/14-life.js       visitors, deer, fireflies, falling leaves, grill smoke
 js/14b-people.js    people and a dog: skinned figures, poses, the drivers' walks
 js/14a-smoke.js     smoke and sparks: two point clouds shared by every fire and cigarette
 js/14c-critters.js  butterflies, squirrels, ground mist
-js/14d-backwoods.js the path, the camp and its fire, the teenagers, the wall, the stand, the car, the line
+js/14d-backwoods.js the path, the camp and its fire, the teenagers and what they leave, the wall, the stand, the car, the line
+js/14e-incidents.js the trooper in the lot, and the occasional wreck on I-79
+js/14f-homestead.js the old house in the woods, inside and out, and its yard
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
+js/16b-weather.js   weather (cloud deck, rain, fog banks, lightning) and the power: circuits, outage, generator, transfer switch
+js/16c-screens.js   the lobby TV, the office monitor and CAM 5's trail-camera pictures, the bulletin board's notices
 js/17-player.js     movement, interaction, gates, drone
-js/18-hud.js        compass, clock, location, plan view
+js/18-hud.js        compass, clock, location, weather, plan view
+js/18b-vending.js   the vending machines' keypad, coins, coil and shaking
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
 tools/shot.js       headless screenshots
@@ -279,6 +379,7 @@ checks that every seat can be sat in and stood up from. The routes are:
 - into the family restroom and the office;
 - out the back and through both service doors;
 - out the path to the camp, and into the camp past the fire;
+- along the tape to the old house, through its door and into the kitchen;
 - across the lot and the grove;
 - up the drive and through the substation gate.
 
@@ -293,3 +394,6 @@ The `window.REST` handle exposes the world for scripting. For example:
 - `REST.season(true)` for autumn;
 - `REST.stepTraffic(dt,n)`, along with the traffic, cars, doors, colliders
   and forest.
+
+The new systems are globals too: `WEATHER.set("storm")`, `GRID.trip()`,
+`CRASH.start()`, `MOON.phaseAt`, `TRAILCAM.photos`, `VEND.openAt(...)`.

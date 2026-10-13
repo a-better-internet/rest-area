@@ -35,9 +35,12 @@ const _ON_PT=pathAt(RAMP_ENTRY, _ON_S), _ON_PATH=_rampFrom(RAMP_ENTRY, _ON_S);
 function _carRoute(v){
   // a free stall, likelier near the door
   const C=CARLOT, n=Math.floor((C.stallZ1-C.stallZ0)/C.stallW), opts=[];
+  // (and not the one you are standing in front of)
+  const youX=player.pos.x, youZ=player.pos.z, youIn=!driving && youX>C.aisle0-6 && youX<C.aisle1+6;
   for(let k=0;k<n;k++) for(const sd of ["E","W"]){
     if(LOT_TAKEN.has(sd+k)) continue;
     const zc=C.stallZ0+(k+0.5)*C.stallW;
+    if(youIn && Math.abs(zc-youZ)<8) continue;
     if(sd==="E" && CARLOT.ada[k]) continue;                  // the accessible stalls and their aisles
     opts.push({k:k, sd:sd, zc:zc, w:Math.exp(-Math.abs(zc)/30)+0.05});
   }
@@ -118,6 +121,7 @@ function updateVisitors(dt, dark){
   }
 }
 const _vp={x:0,z:0};
+const _inAisle=x=>(x>CARLOT.aisle0+1.2 && x<CARLOT.aisle1-1.2) || (x>TRUCKLOT.aisle0+1.5 && x<TRUCKLOT.aisle1-1.5);
 function stepVisitor(v, dt, dark){
   const R=v.route, L=R.legs[R.li], P=L.P, len=P[P.length-1].s;
   if(R.dwell>0){                                           // parked, or paused between legs
@@ -160,19 +164,37 @@ function stepVisitor(v, dt, dark){
   // front instead of stopping dead at a fixed distance
   const myFront=L.rev?-v.tail:v.nose, reachF=myFront+10+v.speed*2.4;
   let lim=1e9, blk=null, limBy=null;
-  const consider=(px,pz,ospeed,olen,wide)=>{
-    const dx=px-here.x, dz=pz-here.z, a=dx*fx+dz*fz, l=Math.abs(dx*fz-dz*fx);
+  const consider=(px,pz,ospeed,olen,wide,off,close)=>{
+    const dx=px-here.x, dz=pz-here.z, a=dx*fx+dz*fz, l=Math.abs(dx*fz-dz*fx-(off||0));
     if(a<=0 || a>reachF || l>wide) return false;
-    const gap=a-myFront-olen, want=3.2+v.speed*1.3;
+    const gap=a-myFront-olen, want=close ? 1.0+v.speed*0.5 : 3.2+v.speed*1.3;
     if(gap>=want+6) return false;
     const cap=Math.max(0, ospeed+(gap-want)*0.6);
     if(cap<lim){ lim=cap; return true; }
     return false;
   };
-  if(!driving && Math.abs(player.feetY-here.y)<3 && consider(player.pos.x, player.pos.z, 0, 0.4, v.hw+1.0)) limBy="you";
+  // somebody standing in the aisle: after the horn the driver gives up on
+  // them moving and edges round, at a crawl, on the far side of them as the
+  // aisle allows, and back to the middle once past
+  const onFoot=!driving && Math.abs(player.feetY-here.y)<3;
+  let dWant=0;
+  if(onFoot && !L.ramp && !L.rev){
+    const pdx=player.pos.x-here.x, pdz=player.pos.z-here.z, pa=pdx*fx+pdz*fz, pl=pdx*fz-pdz*fx, need=v.hw+1.3;
+    const ahead=pathAt(P, Math.min(len, R.s+8));
+    if(Math.abs(here.hx)<0.25 && Math.abs(ahead.hx)<0.35 && _inAisle(here.x)){
+      if(pa>v.tail-1.5 && pa<v.nose+16 && (R.waited>4 || R.dodge)){
+        if(!R.dside) R.dside=pl>=0 ? -1 : 1;                    // pick a side once, and keep to it
+        dWant=R.dside<0 ? Math.min(0, pl-need) : Math.max(0, pl+need);
+        dWant=clamp(dWant, -2.4, 2.4);
+      }
+    }else if(R.dodge && pa>v.tail-1.5 && pa<v.nose+3) dWant=R.dodge;   // still alongside: hold the line
+  }
+  const dodging=Math.abs(dWant)>0.05 || Math.abs(R.dodge||0)>0.05;
+  if(onFoot && consider(player.pos.x, player.pos.z, 0, 0.4, v.hw+1.0, R.dodge||0, dodging)) limBy="you";
   if(driving){ const p=driving.g.position; if(consider(p.x, p.z, 0, 2.4, v.hw+1.6)) limBy="car"; }
   if(typeof PEOPLE!=="undefined") for(const q of PEOPLE)        // and anyone on foot in the lot
     if(q.kind==="driver" && q.P.g.visible && consider(q.x, q.z, 0, 0.3, v.hw+0.9)) limBy="you";
+  if(dodging) target=Math.min(target, 1.6);
   for(const o of TRAFFIC){
     if(o===v || !o.route || o.route.dwell>0) continue;      // parked ones are in their stalls, not the aisle
     if(o.route.blk===v && !_yieldsTo(v, o)) continue;       // it is waiting on us: go
@@ -196,10 +218,18 @@ function stepVisitor(v, dt, dark){
   const at=pathAt(P, R.s);
   let x=at.x, z=at.z;
   if(R.li===0 && R.x0){ x+=R.x0*(1-smoothstep(0,60,R.s)); }      // ease off the lane onto the ramp
-  const head=Math.atan2(at.hx, at.hz)+(L.rev?Math.PI:0);
+  let head=Math.atan2(at.hx, at.hz)+(L.rev?Math.PI:0);
+  if(dodging){                                             // steering over as it rolls
+    const d0=R.dodge||0, step=(0.25+v.speed*0.7)*dt;
+    R.dodge=d0+clamp(dWant-d0, -step, step);
+    if(Math.abs(R.dodge)<0.06 && !dWant){ R.dodge=0; R.dside=0; }
+    x+=R.dodge*at.hz; z-=R.dodge*at.hx;
+    head+=Math.atan2((R.dodge-d0)/Math.max(dt,1e-3), Math.max(1.2, v.speed))*0.8;
+  }
   v.x=x; v.z=z;
   placeVehicle(v, x, z, head, dark, PAVE_T);
   if(R.s>=len-0.02){
+    R.dodge=0; R.dside=0;
     if(L.merge){                                           // back into the right lane, as traffic
       R.release && R.release();
       v.route=null; v.exiting=false; VISIT.active--;
@@ -487,5 +517,6 @@ function updateLife(dt, now, dark, dn){
   updateLeaves(dt, now);
   updateSmoke(dt);
   if(typeof updateBackwoods==="function") updateBackwoods(dt, now, dark);
+  if(typeof updateIncidents==="function") updateIncidents(dt, now, dark);
   if(typeof updatePuffs==="function") updatePuffs(dt, now, dark);
 }

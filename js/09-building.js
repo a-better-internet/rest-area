@@ -149,28 +149,78 @@ function swingCan(x, z, ry, y0){
    it; a wall-hung urinal extruded from its side profile with its edges
    rounded off, the inside of it painted on, its own flush valve. Each takes
    a frame on the wall: (x, z) there, ry turning local +z out into the room. */
-const _bowlGeo=(function(){
-  const pts=[[0.125,0.0],[0.118,0.04],[0.100,0.13],[0.108,0.21],[0.145,0.29],[0.178,0.345],[0.190,0.375],[0.186,0.392],
-             [0.168,0.398],[0.150,0.388],[0.128,0.345],[0.090,0.300],[0.040,0.284],[0.001,0.282]];
-  const g=new T.LatheGeometry(pts.map(p=>new T.Vector2(p[0],p[1])), 28);
-  g.scale(1, 1, 1.32);
+/* A fixture is lofted, the way the cars are: a run of rounded sections
+   (superellipses) one above another, or one behind another, joined into a
+   smooth skin. The toilet: a foot that flares onto the floor, a waist, the
+   bowl swelling out to a rolled rim and turning in over it and down to the
+   water; a rounded shroud back to the wall where the supply comes in; a
+   flat open-front seat on chrome hinges; the caps over the floor bolts.
+   The urinal: a shell that is round in plan, deepest at the lip, curving
+   back to the wall underneath, with the basin pressed into its face. */
+function _loft(rings, K, map, capA, capB, flip){
+  // rings: [a, c1, c2, r1, r2, n] -> map(a, x, y) gives the vertex; a ring is
+  // a superellipse of radii r1, r2 round (c1, c2), exponent n
+  const pos=[], idx=[], R=rings.length;
+  for(const [a,c1,c2,r1,r2,n] of rings) for(let k=0;k<K;k++){
+    const t=k/K*Math.PI*2, c=Math.cos(t), s=Math.sin(t), e=2/n;
+    pos.push(...map(a, c1+Math.sign(c)*Math.pow(Math.abs(c),e)*r1, c2+Math.sign(s)*Math.pow(Math.abs(s),e)*r2));
+  }
+  for(let i=0;i<R-1;i++) for(let k=0;k<K;k++){
+    const A=i*K+k, B=i*K+(k+1)%K, C=(i+1)*K+k, D=(i+1)*K+(k+1)%K; idx.push(A,C,B, B,C,D); }
+  const cap=(i,up)=>{ const [a,c1,c2]=rings[i], ci=pos.length/3; pos.push(...map(a,c1,c2));
+    for(let k=0;k<K;k++){ const A=i*K+k, B=i*K+(k+1)%K; if(up) idx.push(A,ci,B); else idx.push(A,B,ci); } };
+  if(capA!==undefined) cap(0, capA);
+  if(capB!==undefined) cap(R-1, capB);
+  if(flip) for(let i=0;i<idx.length;i+=3){ const t=idx[i+1]; idx[i+1]=idx[i+2]; idx[i+2]=t; }   // a mapping that mirrors the handedness
+  const g=new T.BufferGeometry();
+  g.setAttribute("position", new T.Float32BufferAttribute(pos,3)); g.setIndex(idx); g.computeVertexNormals();
   return g;
-})();
+}
+const _toY=(y,x,z)=>[x,y,z], _toZ=(z,x,y)=>[x,y,z];
+const _bowlGeo=_loft([
+  // y    cx  cz     rx     rz     n
+  [0.000, 0, 0.335, 0.132, 0.188, 2.4], [0.018, 0, 0.335, 0.128, 0.182, 2.4], [0.055, 0, 0.338, 0.112, 0.162, 2.3],
+  [0.125, 0, 0.348, 0.097, 0.142, 2.2], [0.195, 0, 0.372, 0.108, 0.160, 2.2], [0.255, 0, 0.402, 0.140, 0.205, 2.1],
+  [0.315, 0, 0.428, 0.172, 0.248, 2.05],[0.355, 0, 0.440, 0.186, 0.262, 2.0], [0.382, 0, 0.440, 0.185, 0.259, 2.0],
+  [0.397, 0, 0.440, 0.173, 0.245, 2.0], [0.396, 0, 0.446, 0.152, 0.216, 2.0], [0.381, 0, 0.452, 0.139, 0.196, 2.0],
+  [0.342, 0, 0.462, 0.118, 0.160, 2.0], [0.303, 0, 0.472, 0.086, 0.113, 2.0], [0.284, 0, 0.480, 0.040, 0.050, 2.0]],
+  40, _toY, undefined, true);
+// the shroud back to the wall, sections in x-y going out along z
+const _neckGeo=_loft([
+  // z      cx    cy     rx     ry     n
+  [0.004, 0.0, 0.330, 0.118, 0.072, 3.2], [0.120, 0.0, 0.334, 0.124, 0.070, 3.0], [0.230, 0.0, 0.338, 0.140, 0.064, 2.8],
+  [0.300, 0.0, 0.340, 0.150, 0.058, 2.6]], 28, _toZ, undefined, true, true);
+const _waterGeo=(function(){ const g=new T.CircleGeometry(0.084, 24); g.rotateX(-Math.PI/2); g.scale(1,1,1.31); return g; })();
+const _drainGeo=(function(){ const g=new T.CircleGeometry(0.030, 14); g.rotateX(-Math.PI/2); g.scale(1,1,1.4); return g; })();
 const _seatGeo=(function(){
-  const arc=Math.PI*2*0.86, g=new T.TorusGeometry(0.150, 0.021, 6, 24, arc);
-  g.rotateZ(Math.PI*1.5-(arc+(Math.PI*2-arc)/2));
-  g.rotateX(-Math.PI/2); g.scale(1, 0.6, 1.32);
+  // an open-front seat: outer and inner ovals, the front cut away, extruded
+  // flat and its edges rounded (drawn in x-y with the front at -y)
+  const S=new T.Shape(), oa=0.184, ob=0.238, ia=0.113, ib=0.150, ic=-0.022, fo=0.20, fi=0.33;
+  const O=t=>[oa*Math.cos(t), ob*Math.sin(t)], I=t=>[ia*Math.cos(t), ic+ib*Math.sin(t)];
+  const t0=-Math.PI/2+fo, t1=Math.PI*1.5-fo, u0=-Math.PI/2+fi, u1=Math.PI*1.5-fi;
+  S.moveTo(...O(t0));
+  for(let k=1;k<=40;k++) S.lineTo(...O(t0+(t1-t0)*k/40));
+  S.lineTo(...I(u1));
+  for(let k=1;k<=32;k++) S.lineTo(...I(u1-(u1-u0)*k/32));
+  S.lineTo(...O(t0));
+  const g=new T.ExtrudeGeometry(S, {depth:0.014, bevelEnabled:true, bevelThickness:0.006, bevelSize:0.007, bevelSegments:3, curveSegments:6});
+  g.rotateX(-Math.PI/2); g.deleteAttribute("uv");
   return g;
 })();
-const _waterGeo=(function(){ const g=new T.CircleGeometry(0.085, 20); g.rotateX(-Math.PI/2); g.scale(1,1,1.32); return g; })();
 function toiletFix(x, z, ry, seatC){
   const f=XF(x, z, ry), P=(lx,ly,lz)=>[f.x(lx,lz), FL+ly, f.z(lx,lz)];
   const at=(bk,geo,lx,ly,lz,c,rx,rz)=>{ const p=P(lx,ly,lz); push(bk, geo, p[0],p[1],p[2], ry, c, rx||0, rz||0); };
-  at("porcelain", _bowlGeo, 0, 0, 0.44, PORC);
-  at("paintm", _waterGeo, 0, 0.300, 0.46, "#8ea4ad");
-  at("porcelain", boxGeo(0.25, 0.15, 0.17, 0), 0, 0.33, 0.11, PORC);                   // the neck, to the wall
-  at("paintm", _seatGeo, 0, 0.405, 0.45, seatC||"#f4f3ef");
-  for(const s of [-1,1]) at("chrome", new T.CylinderGeometry(0.012,0.012,0.04,8), s*0.09, 0.40, 0.21, "#c9cbcc");
+  at("porcelain", _bowlGeo, 0, 0, 0, PORC);
+  at("porcelain", _neckGeo, 0, 0, 0, PORC);
+  at("paintm", _waterGeo, 0, 0.301, 0.472, "#9cb4bd");
+  at("paintm", _drainGeo, 0, 0.305, 0.43, "#3c4a50");
+  for(const s of [-1,1]){                                    // caps over the floor bolts
+    at("porcelain", new T.SphereGeometry(0.026,10,6,0,Math.PI*2,0,Math.PI/2), s*0.142, 0.0, 0.31, PORC);
+  }
+  // the seat on its hinge bar
+  at("paintm", _seatGeo, 0, 0.404, 0.445, seatC||"#f4f3ef");
+  at("chrome", new T.CylinderGeometry(0.013,0.013,0.26,10), 0, 0.420, 0.222, "#c9cbcc", 0, Math.PI/2);
+  for(const s of [-1,1]) at("chrome", new T.CylinderGeometry(0.016,0.016,0.026,10), s*0.085, 0.416, 0.222, "#c9cbcc");
   // the flushometer: stop valve off the wall, the body, the handle, the tube to the spud
   at("chrome", new T.CylinderGeometry(0.03,0.03,0.012,12), 0.14, 0.80, 0.006, "#c9cbcc", Math.PI/2);
   at("chrome", new T.CylinderGeometry(0.014,0.014,0.10,8), 0.14, 0.80, 0.056, "#c9cbcc", Math.PI/2);
@@ -178,44 +228,87 @@ function toiletFix(x, z, ry, seatC){
   at("chrome", new T.CylinderGeometry(0.036,0.036,0.13,14), 0, 0.77, 0.10, "#d0d3d4");
   at("chrome", new T.SphereGeometry(0.036,12,8,0,Math.PI*2,0,Math.PI/2), 0, 0.835, 0.10, "#d0d3d4");
   at("chrome", boxGeo(0.13, 0.018, 0.018, 0), 0.075, 0.725, 0.10, "#c9cbcc", 0, -0.35);
-  at("chrome", new T.CylinderGeometry(0.016,0.016,0.30,8), 0, 0.56, 0.10, "#c9cbcc");
-  at("chrome", new T.CylinderGeometry(0.03,0.03,0.03,12), 0, 0.41, 0.10, "#c9cbcc");
+  at("chrome", new T.CylinderGeometry(0.016,0.016,0.30,8), 0, 0.555, 0.10, "#c9cbcc");
+  at("chrome", new T.CylinderGeometry(0.028,0.028,0.035,12), 0, 0.395, 0.10, "#c9cbcc");      // the spud nut, on the shroud
   // the seat-cover dispenser on the wall over it
   at("steel", boxGeo(0.42, 0.28, 0.035, 0.8), 0, 1.18, 0.018, "#cfd2d3");
   at("paintm", boxGeo(0.30, 0.10, 0.006, 0), 0, 1.20, 0.042, "#3a3c3e");
 }
-const _urinalGeo=(function(){
-  const sh=new T.Shape();
-  sh.moveTo(0.02,0.44); sh.lineTo(0.0,1.10); sh.quadraticCurveTo(0.0,1.14, 0.06,1.14); sh.lineTo(0.24,1.12);
-  sh.quadraticCurveTo(0.30,1.11, 0.30,1.04); sh.lineTo(0.32,0.80); sh.quadraticCurveTo(0.34,0.66, 0.37,0.62);
-  sh.quadraticCurveTo(0.38,0.56, 0.33,0.52); sh.quadraticCurveTo(0.22,0.43, 0.10,0.42); sh.lineTo(0.02,0.44);
-  const g=new T.ExtrudeGeometry(sh, {depth:0.26, bevelEnabled:true, bevelThickness:0.05, bevelSize:0.04, bevelSegments:4, curveSegments:8});
-  g.rotateY(-Math.PI/2); g.translate(0.13, 0, 0);
-  g.deleteAttribute("uv");
-  return g;
+// the urinal: a grid over (height, angle round the front); the cells in the
+// basin are pressed in and drawn with the basin's own material
+const _URINAL=(function(){
+  const NY=28, NT=30, Y0=0.40, Y1=1.14, nP=2.6;
+  const dK=[[0.40,0.10],[0.46,0.235],[0.54,0.325],[0.62,0.352],[0.80,0.312],[0.95,0.282],[1.08,0.250],[1.14,0.212]];
+  const dAt=y=>{ for(let i=0;i<dK.length-1;i++){ const a=dK[i], b=dK[i+1]; if(y<=b[0]){ const t=(y-a[0])/(b[0]-a[0]), u=t*t*(3-2*t); return a[1]+(b[1]-a[1])*u; } } return dK[dK.length-1][1]; };
+  const wAt=y=>0.128+0.058*smoothstep(0.40,0.64,y)-0.014*smoothstep(0.98,1.14,y);
+  const BY0=0.60, BY1=1.03, BT0=0.58, BT1=Math.PI-0.58, BD=0.175;
+  const inB=(y,t)=>y>=BY0-1e-6 && y<=BY1+1e-6 && t>=BT0-1e-6 && t<=BT1+1e-6;
+  const pt=(y,t)=>{
+    const c=Math.cos(t), s=Math.sin(t), w=wAt(y), d=dAt(y), e=2/nP;
+    let x=Math.sign(c)*Math.pow(Math.abs(c),e)*w, z=Math.pow(Math.abs(s),e)*d;
+    if(inB(y,t)){ const u=clamp((y-BY0)/(BY1-BY0),0,1), v=clamp((t-BT0)/(BT1-BT0),0,1);
+      const k=BD*Math.pow(Math.max(0,Math.sin(Math.PI*Math.min(1,u*1.18))),0.62)*Math.pow(Math.max(0,Math.sin(Math.PI*v)),0.75);
+      z-=k; x*=1-k*0.9; }
+    return [x,y,z];
+  };
+  const ys=[], ts=[];
+  for(let i=0;i<=NY;i++){ let y=Y0+(Y1-Y0)*i/NY; ys.push(y); }
+  // put rows and columns exactly on the basin's edges
+  ys.push(BY0, BY1); ys.sort((a,b)=>a-b);
+  for(let j=0;j<=NT;j++) ts.push(Math.PI*j/NT);
+  ts.push(BT0, BT1); ts.sort((a,b)=>a-b);
+  const mk=(want)=>{
+    const pos=[], uv=[], idx=[], id={};
+    const vtx=(i,j)=>{ const k=i+":"+j; if(id[k]!==undefined) return id[k];
+      const p=pt(ys[i], ts[j]); id[k]=pos.length/3; pos.push(...p);
+      uv.push((ts[j]-BT0)/(BT1-BT0), (ys[i]-BY0)/(BY1-BY0)); return id[k]; };
+    for(let i=0;i<ys.length-1;i++) for(let j=0;j<ts.length-1;j++){
+      const yc=(ys[i]+ys[i+1])/2, tc=(ts[j]+ts[j+1])/2;
+      if(inB(yc,tc)!==want) continue;
+      const A=vtx(i,j), B=vtx(i,j+1), C=vtx(i+1,j), D=vtx(i+1,j+1);
+      idx.push(A,C,B, B,C,D);
+    }
+    if(!want){                                            // the top, closed back to the wall; the underside the same
+      for(const [yy,up] of [[ys.length-1,true],[0,false]]){
+        const ci=pos.length/3; pos.push(0, ys[yy], 0); uv.push(0,0);
+        for(let j=0;j<ts.length-1;j++){ const A=vtx(yy,j), B=vtx(yy,j+1); if(up) idx.push(A,ci,B); else idx.push(A,B,ci); }
+      }
+    }
+    const g=new T.BufferGeometry();
+    g.setAttribute("position", new T.Float32BufferAttribute(pos,3)); g.setAttribute("uv", new T.Float32BufferAttribute(uv,2));
+    g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  };
+  // where the strainer sits: the low point of the basin
+  const sp=pt(BY0+0.06, Math.PI/2);
+  return {shell:mk(false), basin:mk(true), strainer:sp};
 })();
-bucketOf("urinal_in", ()=>envIn(new T.MeshStandardMaterial({roughness:0.18, metalness:0.02,
+bucketOf("urinal_in", ()=>envIn(new T.MeshStandardMaterial({roughness:0.14, metalness:0.02,
   map:setSRGB(new T.CanvasTexture((function(){ const c=cvs(128,256), x=c.getContext("2d");
-    x.fillStyle="#f3f2ed"; x.fillRect(0,0,128,256);
-    x.save(); x.translate(64,150); x.scale(1,2.1);
-    const g=x.createRadialGradient(0,0,4,0,0,56); g.addColorStop(0,"rgba(120,122,118,0.85)"); g.addColorStop(0.7,"rgba(170,170,165,0.55)"); g.addColorStop(1,"rgba(243,242,237,0)");
-    x.fillStyle=g; x.beginPath(); x.arc(0,0,56,0,7); x.fill(); x.restore();
-    x.fillStyle="#d8d7d1"; for(let i=0;i<5;i++) for(let j=0;j<3;j++){ x.beginPath(); x.arc(48+i*8,214+j*7,2.2,0,7); x.fill(); }
-    x.fillStyle="rgba(90,90,86,0.5)"; x.fillRect(10,6,108,5);
+    // the basin's own face: porcelain, a shade greyer down where the water runs
+    x.fillStyle="#efeee9"; x.fillRect(0,0,128,256);
+    const g=x.createLinearGradient(0,256,0,0); g.addColorStop(0,"rgba(150,152,146,0.55)"); g.addColorStop(0.35,"rgba(200,200,194,0.25)"); g.addColorStop(1,"rgba(239,238,233,0)");
+    x.fillStyle=g; x.fillRect(0,0,128,256);
+    x.fillStyle="rgba(170,175,170,0.35)"; for(let i=0;i<9;i++) x.fillRect(10+i*13, 0, 3, 40+((i*37)%30));   // the wash lines from the spreader
     return c; })()))}), 0.6));
 function urinalFix(x, z, ry, drop){
   const f=XF(x, z, ry), dy=-(drop||0), P=(lx,ly,lz)=>[f.x(lx,lz), FL+ly+dy, f.z(lx,lz)];
   const at=(bk,geo,lx,ly,lz,c,rx,rz)=>{ const p=P(lx,ly,lz); push(bk, geo, p[0],p[1],p[2], ry, c, rx||0, rz||0); };
-  at("porcelain", _urinalGeo, 0, 0, 0, PORC);
-  at("urinal_in", planeGeo(0.25, 0.46, 0), 0, 0.83, 0.392, "#ffffff", 0.165);
-  // the flush valve over it
+  at("porcelain", _URINAL.shell, 0, 0, 0, PORC);
+  at("urinal_in", _URINAL.basin, 0, 0, 0, "#ffffff");
+  // the strainer at the bottom of it, and a screen over that (blue, scented)
+  const S=_URINAL.strainer;
+  at("chrome", new T.CylinderGeometry(0.035,0.035,0.006,14), 0, S[1]-0.005, S[2]+0.012, "#c9cbcc", -0.55);
+  at("paintm", new T.CylinderGeometry(0.075,0.075,0.008,10), 0, S[1]+0.002, S[2]+0.03, "#3fa6d4", -0.55);
+  // the flush valve over it, its tube down into the top spreader
   at("chrome", new T.CylinderGeometry(0.03,0.03,0.012,12), 0.11, 1.36, 0.006, "#c9cbcc", Math.PI/2);
   at("chrome", new T.CylinderGeometry(0.014,0.014,0.10,8), 0.11, 1.36, 0.056, "#c9cbcc", Math.PI/2);
   at("chrome", new T.CylinderGeometry(0.016,0.016,0.11,8), 0.055, 1.36, 0.10, "#c9cbcc", 0, Math.PI/2);
   at("chrome", new T.CylinderGeometry(0.034,0.034,0.12,14), 0, 1.33, 0.10, "#d0d3d4");
   at("chrome", new T.SphereGeometry(0.034,12,8,0,Math.PI*2,0,Math.PI/2), 0, 1.39, 0.10, "#d0d3d4");
   at("chrome", boxGeo(0.12, 0.016, 0.016, 0), 0.07, 1.29, 0.10, "#c9cbcc", 0, -0.35);
-  at("chrome", new T.CylinderGeometry(0.014,0.014,0.13,8), 0, 1.21, 0.10, "#c9cbcc");
+  at("chrome", new T.CylinderGeometry(0.014,0.014,0.15,8), 0, 1.20, 0.10, "#c9cbcc");
+  at("chrome", new T.CylinderGeometry(0.024,0.024,0.02,12), 0, 1.145, 0.10, "#c9cbcc");
 }
 // a yellow A-frame CAUTION WET FLOOR sign
 const _wetTex=signTex(160,256,(c,W,H)=>{
@@ -397,7 +490,7 @@ function wetFloor(x,z,ry){
     bx("paintm", 14.2, 0.24, 0.06, 0.8, L.eaveW-0.12+0.02, zB, 0, 0, FASCIA);
     for(let z=sg*7.5; Math.abs(z)<13.8; z+=sg*3.0){
       push("lamplens", new T.CylinderGeometry(0.09,0.09,0.03,12), -5.62, yW-0.23, z, 0, "#ffffff");
-      LAMPS.push({x:-5.62, y:yW-0.35, z:z, color:0xffe2b8, intensity:0.55, dist:7.5, decay:1.6, mothy:true});
+      LAMPS.push({x:-5.62, y:yW-0.35, z:z, color:0xffe2b8, intensity:0.55, dist:7.5, decay:1.6, mothy:true, circ:"site"});
     }
     // brick piers holding the corners of the front eave
     for(const z of [sg*14.2, sg*9.8]){
@@ -420,9 +513,9 @@ function wetFloor(x,z,ry){
   for(const z of [-3.2, 3.2]){
     bx("paintm", 0.16, 0.12, 0.22, -6.08, 2.88, z, 0, 0, "#2c2c2a");
     push("lamplens", boxGeo(0.02,0.08,0.16,0), -6.17, 2.866, z, 0, "#ffffff");
-    LAMPS.push({x:-6.4, y:2.7, z:z, color:0xfff0d8, intensity:0.85, dist:12, decay:1.5, mothy:true});
+    LAMPS.push({x:-6.4, y:2.7, z:z, color:0xfff0d8, intensity:0.85, dist:12, decay:1.5, mothy:true, circ:"site"});
   }
-  LAMPS.push({x:6.5, y:3.3, z:0, color:0xffe2b8, intensity:0.6, dist:8, decay:1.6, mothy:true});
+  LAMPS.push({x:6.5, y:3.3, z:0, color:0xffe2b8, intensity:0.6, dist:8, decay:1.6, mothy:true, circ:"site"});
 })();
 
 /* ---- lit windows: after dark the glass glows from the room behind it ----
@@ -449,6 +542,7 @@ bucketOf("wincool", ()=>glowMat({color:0xb9c3c3, emissive:0xe6f0ff, emissiveInte
    door and to both restroom entries: nothing stands in it.
    ======================================================================= */
 const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
+const BOARD={};                       // where the bulletin board's cork is (16c pins things to it)
 (function lobby(){
   const R=LOBBY, top=CL0;
   const LANE=[-5.7, 5.7, -1.2, 2.4];              // front door to back door
@@ -531,7 +625,7 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
     cyl("chrome", 0.012,0.012, 4.9-3.35, 6, x, (4.9+3.35)/2, z, "#9a9a96");
     push("paintm", domeGeo(0.34, 0.22, 20), x, 3.38, z, 0, "#efeee8");
     push("ceilfix", new T.SphereGeometry(0.12, 12, 8), x, 3.22, z, 0, "#ffffff");
-    LAMPS.push({x:x, y:3.1, z:z, color:0xfff1dc, intensity:0.75, dist:9, decay:1.4, indoor:true,
+    LAMPS.push({x:x, y:3.1, z:z, color:0xfff1dc, intensity:0.75, dist:9, decay:1.4, indoor:true, circ:"bldg",
                 vol:[R.x0-0.4, R.x1+0.4, R.z0-0.4, R.z1+0.4, FL-1, 9]});
   }
 
@@ -544,13 +638,9 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
     bx("paintm", 0.06, 0.20, 0.30, x-0.44, FL+1.10, z+0.33, 0, 0, "#3a3b3e");       // coin panel
     bx("paintm", 0.04, 0.14, 0.62, x-0.44, FL+0.18, z-0.06, 0, 0, "#0e0e10");       // the flap
     addCol(x-0.48, x+0.48, z-0.50, z+0.50, FL-0.5, FL+1.9);
-    addUse(x-0.9, z, FL, kind==="snack"?"BUY A SNACK":"BUY A DRINK", ()=>{
-      const items=kind==="snack" ? ["PRETZELS","PEANUT BUTTER CRACKERS","CHIPS","A CANDY BAR","TRAIL MIX"]
-                                 : ["BOTTLED WATER","A COLA","ICED TEA","A LEMON-LIME","AN ENERGY DRINK"];
-      toast("CLUNK — "+items[(Math.random()*items.length)|0], "#cfe0d4");
-      if(typeof AUDIO!=="undefined") AUDIO.blip("clunk");
-    }, 1.4);
-    LAMPS.push({x:x-0.7, y:FL+1.2, z:z, color:0xdfe9ff, intensity:0.25, dist:3.5, decay:1.6, indoor:true,
+    // the keypad, the coins, the shaking: 18b-vending
+    addUse(x-0.9, z, FL, kind==="snack"?"BUY A SNACK":"BUY A DRINK", ()=>VEND.openAt("vend"+z, kind), 1.4);
+    LAMPS.push({x:x-0.7, y:FL+1.2, z:z, color:0xdfe9ff, intensity:0.25, dist:3.5, decay:1.6, indoor:true, circ:"bldg",
                 vol:[R.x0-0.4, R.x1+0.4, R.z0-0.4, R.z1+0.4, FL-1, 9]});
   };
   vend(-3.35,"soda"); vend(-2.25,"snack"); vend(-1.15,"soda");
@@ -613,23 +703,14 @@ const LOBBY={x0:-5.70, x1:5.70, z0:-5.35, z1:5.35};
   push("paintm", domeGeo(0.09,0.07,12), -5.3, 3.5, -4.9, 0, "#f0efe9");
 
   /* --- the south wall: the women's room, the bulletin board, the fountain -- */
+  // (and over the information desk, the television: 16c-screens)
   // the board under its glass: notices, the state map, the travel line
   {
     const z=R.z1-0.05, x0=1.2, x1=3.9, y0=FL+1.0, y1=FL+2.25;
-    bx("paintm", x1-x0+0.12, y1-y0+0.12, 0.05, (x0+x1)/2, (y0+y1)/2, z+0.021, 0, 0, "#d2d0c8");   // behind the cork
+    bx("paintm", x1-x0+0.12, y1-y0+0.12, 0.046, (x0+x1)/2, (y0+y1)/2, z+0.019, 0, 0, "#d2d0c8");   // behind the cork, its back just off the wall
     push("cork", planeGeo(x1-x0, y1-y0, 1.2), (x0+x1)/2, (y0+y1)/2, z-0.012, Math.PI, "#ffffff");
-    const notices=[["KNOW BEFORE YOU GO","#1f4fa0","Dial 511 for road conditions"],
-                   ["STAY HEALTHY","#2f7a3c","Wash your hands"],["SEASONAL HIRING","#b3151b","Highway maintenance"],
-                   ["TICKS","#6a4a2a","Check yourself after the woods"],["DRIVE SAFE","#24408e","Rest when tired"],
-                   ["LITTER","#2f7a3c","Fine up to $300"]];
-    notices.forEach((n,i)=>{
-      const nx=x0+0.28+(i%3)*0.62, ny=y0+0.36+Math.floor(i/3)*0.56;
-      wallSign(0.46,0.40,(c,W,H)=>{ c.fillStyle="#f4f2ea"; c.fillRect(0,0,W,H); c.fillStyle=n[1]; c.fillRect(0,0,W,H*0.32);
-        c.fillStyle="#f4f2ea"; fitText(c,n[0],W*0.86,H*0.16,W/2,H*0.16,"700");
-        c.fillStyle="#333"; fitText(c,n[2],W*0.86,H*0.10,W/2,H*0.55,"400");
-        c.fillStyle="#999"; for(let k=0;k<4;k++) c.fillRect(W*0.12,H*(0.68+k*0.07),W*0.76*(0.6+0.4*Math.random()),H*0.025); },
-        nx, ny, z-0.018, Math.PI);
-    });
+    // the notices pinned up on it change: 16c-screens
+    BOARD.x0=x0; BOARD.x1=x1; BOARD.y0=y0; BOARD.y1=y1; BOARD.z=z;
     wallSign(1.30,0.40,(c,W,H)=>{ c.fillStyle="#24408e"; c.fillRect(0,0,W,H); c.strokeStyle="#7a5432"; c.lineWidth=H*0.08;
       c.strokeRect(0,0,W,H); c.fillStyle="#f2f0ea"; fitText(c,"WELCOME TO",W*0.6,H*0.22,W/2,H*0.30,"500");
       fitText(c,"CRAWFORD",W*0.8,H*0.40,W/2,H*0.62,"600"); fitText(c,"COUNTY",W*0.5,H*0.16,W/2,H*0.86,"500"); },
@@ -780,7 +861,7 @@ function drawPAMap(x,W,H){
     const fix=(x,z,flick)=>{
       bx("paintm", 0.34, 0.08, 1.24, x, CEIL-0.04, z, 0, 0, "#e6e6e2");
       push("tube", boxGeo(0.28, 0.02, 1.16, 0), x, CEIL-0.085, z, 0, "#ffffff");
-      LAMPS.push({x:x, y:CEIL-0.25, z:z, color:0xf2f6f2, intensity:0.82, dist:7.5, decay:1.4, indoor:true,
+      LAMPS.push({x:x, y:CEIL-0.25, z:z, color:0xf2f6f2, intensity:0.82, dist:7.5, decay:1.4, indoor:true, circ:"bldg",
                   flicker:!!flick, vol:[X0-0.2, X1+0.2, za-0.2, zb+0.2, FL-1, CEIL+0.5]});
     };
     fix(1.6, Z(6.6)); fix(-3.3, Z(9.6), men); fix(-0.4, Z(11.2)); fix(1.6, Z(13.3));
@@ -892,7 +973,7 @@ function drawPAMap(x,W,H){
         c.fillStyle="#f4f2ea"; c.beginPath(); c.arc(W*0.36,H*0.32,W*0.08,0,7); c.fill();
         c.fillRect(W*0.30,H*0.42,W*0.12,H*0.30); c.fillRect(W*0.40,H*0.55,W*0.34,H*0.06);
         c.beginPath(); c.arc(W*0.70,H*0.48,W*0.06,0,7); c.fill(); });
-      signPanel(0.18,0.18,pic, x-0.135, FL+1.30, cz, -Math.PI/2);
+      signPanel(0.18,0.18,pic, x-0.146, FL+1.30, cz, -Math.PI/2);   // clear of the cabinet's face however much the bake grows it
       addCol(x-0.15, x, cz-0.3, cz+0.3, FL+0.6, FL+1.6);
       // the bins: a white step can and the grey swing-top (photograph 18)
       bx("paintm", 0.30, 0.50, 0.30, x-0.30, FL+0.25, Z(10.25), 0, 0, "#efeee9");
@@ -928,7 +1009,7 @@ function drawPAMap(x,W,H){
     const fx=5.1, fz=Z(7.0);
     bx("paintm", 0.34, 0.08, 1.24, fx, CEIL-0.04, fz, 0, 0, "#e6e6e2");
     push("tube", boxGeo(0.28, 0.02, 1.16, 0), fx, CEIL-0.085, fz, 0, "#ffffff");
-    LAMPS.push({x:fx, y:CEIL-0.25, z:fz, color:0xf2f6f2, intensity:0.7, dist:5.5, decay:1.4, indoor:true,
+    LAMPS.push({x:fx, y:CEIL-0.25, z:fz, color:0xf2f6f2, intensity:0.7, dist:5.5, decay:1.4, indoor:true, circ:"bldg",
                 vol:[3.4, 6.8, a0-0.1, a1+0.1, FL-1, CEIL+0.5]});
     if(fam){
       // a toilet, a sink, a changing table that folds down, grab bars
@@ -948,7 +1029,7 @@ function drawPAMap(x,W,H){
       bx("beam", 1.40, 0.04, 0.70, 5.9, FL+0.76, Z(7.8), 0.6, 0, "#8a6a48");
       for(const [x,z] of [[5.25,7.5],[6.55,7.5],[5.25,8.1],[6.55,8.1]]) bx("paintm",0.04,0.74,0.04,x,FL+0.37,Z(z),0,0,"#3a3a3a");
       bx("paintm", 0.52, 0.34, 0.04, 5.9, FL+1.02, Z(8.06), 0, 0, "#1a1a1a");
-      push("cctv", planeGeo(0.47,0.29,0), 5.9, FL+1.02, Z(8.06)-sg*0.022, sg<0?0:Math.PI, "#ffffff");
+      push("cctv", planeGeo(0.47,0.29,0), 5.9, FL+1.02, Z(8.06)-sg*0.029, sg<0?0:Math.PI, "#ffffff");
       bx("paintm", 0.06, 0.16, 0.06, 5.9, FL+0.85, Z(8.10), 0, 0, "#1a1a1a");
       bx("paintm", 0.22, 0.015, 0.16, 5.9, FL+0.785, Z(8.10), 0, 0, "#1a1a1a");
       addCol(5.15, 6.65, ...zr(7.4,8.2), FL-0.5, FL+0.8);
@@ -1028,7 +1109,7 @@ function drawPAMap(x,W,H){
     const bxz=Z(11.4);
     bx("paintm", 0.34, 0.08, 1.24, 4.6, CEIL-0.04, bxz, 0, 0, "#e6e6e2");
     push("tube", boxGeo(0.28, 0.02, 1.16, 0), 4.6, CEIL-0.085, bxz, 0, "#ffffff");
-    LAMPS.push({x:4.6, y:CEIL-0.25, z:bxz, color:0xeef4f0, intensity:0.55, dist:6, decay:1.4, indoor:true,
+    LAMPS.push({x:4.6, y:CEIL-0.25, z:bxz, color:0xeef4f0, intensity:0.55, dist:6, decay:1.4, indoor:true, circ:"bldg",
                 vol:[3.4, 6.8, b0-0.1, b1+0.1, FL-1, CEIL+0.5]});
     if(fam){
       /* the janitor's closet: the mop sink in the corner with its faucet and
@@ -1180,7 +1261,7 @@ const picGlowMat=(key,long,draw,kind)=>{
   const tex=artTex(key,long,draw);
   const m=new T.MeshStandardMaterial({color:0xffffff, roughness:0.35, map:tex,
     emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0});
-  GLOW.push({m:m, base:new T.Color(0xffffff), kind:kind||"indoor", baseInt:0.30});
+  GLOW.push({m:m, base:new T.Color(0xffffff), kind:kind||"indoor", baseInt:0.30, circ:"bldg"});
   return m;
 };
 bucketOf("pic:vend:soda",  ()=>picGlowMat("vend:soda", 512, vendArt("COLD DRINKS","#7a2fb0",4,false)));

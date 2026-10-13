@@ -7,22 +7,25 @@
 /* ----------------------------------------------------------------------
    15 · GLOW, THEN BAKE
    ---------------------------------------------------------------------- */
-function glowMat(opts, kind){
+// circ: which of the rest area's circuits it is on ("bldg" or "site"), so a
+// power cut can put it out (16b-weather); battery-backed ("always") are on none
+function glowMat(opts, kind, circ){
   const m=new T.MeshStandardMaterial(Object.assign({roughness:0.5, metalness:0.0}, opts));
-  GLOW.push({m:m, base:m.emissive?m.emissive.clone():new T.Color(0), kind:kind, baseInt:m.emissiveIntensity||1});
+  GLOW.push({m:m, base:m.emissive?m.emissive.clone():new T.Color(0), kind:kind, baseInt:m.emissiveIntensity||1,
+             circ:circ!==undefined ? circ : (kind==="always" ? null : "bldg")});
   return m;
 }
 /* A SURFACE THAT IS A LAMP: near-black diffuse, so the point light a few
    centimetres away cannot add its own light on top of the emissive and
    push the face past white. */
-function emitMat(emissive, intensity, kind){
+function emitMat(emissive, intensity, kind, circ){
   return glowMat({color:0x241f1a, emissive:emissive, emissiveIntensity:intensity,
-                  roughness:0.9, metalness:0.0}, kind);
+                  roughness:0.9, metalness:0.0}, kind, circ);
 }
 function basicGlowMat(color, kind, blend){
   const m=new T.MeshBasicMaterial({color:color, transparent:true, opacity:0.0, toneMapped:false,
     depthWrite:false, blending:blend||T.NormalBlending});
-  GLOW.push({m:m, kind:kind, basic:true});
+  GLOW.push({m:m, kind:kind, basic:true, circ:kind==="always"?null:"bldg"});
   return m;
 }
 bucketOf("glass",  ()=>envOut(new T.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:0.30,

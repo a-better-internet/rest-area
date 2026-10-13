@@ -150,14 +150,21 @@ function poseP(p, mode, ph, t){
     B[J.head].rotation.y=Math.sin(t*0.25+p.seed*2)*0.45;
     if(mode==="phone"){ B[J.shR].rotation.x=-0.35; B[J.shR].rotation.z=0.35; B[J.elR].rotation.x=-2.35; B[J.head].rotation.y*=0.4; B[J.head].rotation.z=-0.12; }
     if(mode==="read"){ B[J.head].rotation.x=0.30; B[J.head].rotation.y*=0.2; B[J.shL].rotation.x=B[J.shR].rotation.x=-0.45; B[J.elL].rotation.x=B[J.elR].rotation.x=-1.1; }
+    // the drag: the arm comes forward and in, the elbow folds right up and
+    // the forearm turns over, so the fingers end at the lips; the head
+    // stops looking about and meets the hand
     if(mode==="smoke"){ const up=_smokeUp(_smokeCyc(t,p.seed));
-      B[J.shR].rotation.x=-0.25-up*0.55; B[J.shR].rotation.z=0.18+up*0.25; B[J.elR].rotation.x=-0.9-up*1.35; }
+      B[J.shR].rotation.set(-0.25-up*1.008, -up*0.817, 0.18-up*0.165);
+      B[J.elR].rotation.set(-0.9-up*1.30, up*0.875, 0);
+      B[J.head].rotation.y*=1-up; B[J.head].rotation.x=-0.04*up; }
   }
 }
 /* ---- a lit cigarette, held in the right hand ------------------------------
-   Filter, paper, and a coal at the end that brightens on the drag. It is
-   parented to the forearm's bone, so it goes up to the mouth with the hand;
-   held at rest it points forward and out and a little down. */
+   Filter, paper, and a coal at the end that brightens on the drag. It
+   rides on the forearm's bone, so it goes up to the mouth with the hand,
+   and the fingers turn it as a wrist would (see updateCigarette): held low
+   it points forward, out and down; at the mouth the filter is between the
+   lips and the lit end points out and away from the face. */
 const CIG_MAT={paper:new T.MeshStandardMaterial({color:0xf2f0ea, roughness:0.7}),
                filter:new T.MeshStandardMaterial({color:0xc98f52, roughness:0.75}),
                ash:new T.MeshStandardMaterial({color:0x6b6763, roughness:0.95})};
@@ -173,13 +180,26 @@ function giveCigarette(P){
   glow.scale.set(0.05,0.05,1); glow.position.z=0.085; g.add(glow);
   const tip=new T.Object3D(); tip.position.z=0.088; g.add(tip);
   g.position.set(0.014, -0.29*h, 0.022);
-  g.quaternion.setFromUnitVectors(V3(0,0,1), V3(0.55,-0.32,0.77).normalize());
   P.B[P.j.elR].add(g);
   return {g:g, coal:coal, glow:glow, tip:tip, wisp:0, puff:0};
+}
+// where the filter sits on the forearm (in bone space, per metre of height)
+// and which way the lit end points (in the body's frame: x out to the
+// right, y up, z forward), hand down and hand at the mouth
+const CIG_POS0=V3(0.014,-0.290,0.022), CIG_POS1=V3(-0.013,-0.346,0.009);
+const CIG_DIR0=V3(0.35,-0.40,0.85).normalize(), CIG_DIR1=V3(0.42,-0.12,0.90).normalize();
+const _cq=new T.Quaternion(), _cqB=new T.Quaternion(), _cd=new T.Vector3(), _cZ=V3(0,0,1);
+function holdCigarette(C, P, up){
+  C.g.position.lerpVectors(CIG_POS0, CIG_POS1, up).multiplyScalar(P.h);
+  _cd.lerpVectors(CIG_DIR0, CIG_DIR1, up).normalize();
+  P.B[P.j.spine].getWorldQuaternion(_cqB); _cd.applyQuaternion(_cqB);
+  P.B[P.j.elR].getWorldQuaternion(_cq); _cd.applyQuaternion(_cq.invert());
+  C.g.quaternion.setFromUnitVectors(_cZ, _cd);
 }
 const _tipW=new T.Vector3(), _mouthW=new T.Vector3();
 function updateCigarette(p, dt, now, dark){
   const C=p.cig, P=p.P, cyc=_smokeCyc(now,P.seed), up=_smokeUp(cyc);
+  holdCigarette(C, P, up);
   // the coal: dull red, and bright while it is drawn on
   const drag=up>0.85 && cyc>0.15 && cyc<0.27 ? 1 : 0;
   C.heat=(C.heat||0.3)+((drag?1:0.3)-(C.heat||0.3))*Math.min(1,dt*(drag?5:1.5));
@@ -389,7 +409,7 @@ function updatePeople(dt, now, dark){
     if(p.dayOnly){ const on=dark<0.55; P.g.visible=on; if(p.dog){ p.dog.g.visible=on; p.leash.visible=on; } if(!on) continue; }
     const cd=Math.hypot(p.x-camera.position.x, p.z-camera.position.z);
     if(p.kind==="sit"){ if(cd<90) poseP(P,"sit",0,now); P.g.position.set(p.x,p.y,p.z); P.g.rotation.y=p.yaw; continue; }
-    if(p.kind==="teen"){ p.upd(p, dt, now, dark, cd); continue; }
+    if(p.kind==="teen" || p.kind==="custom"){ p.upd(p, dt, now, dark, cd); continue; }
     if(p.kind==="stand"){ if(cd<90) poseP(P,p.mode,0,now); P.g.position.set(p.x,p.y,p.z); P.g.rotation.y=p.yaw;
       if(p.cig) updateCigarette(p, dt, now, dark);
       continue; }

@@ -22,6 +22,9 @@ const ROUTES={
   "through the gate":    [[57,-169],[64,-169],[70,-170.5],[80,-174.2],[80,-178.5]],
   "the path out back":   "TRAIL",
   "into the camp":       [[278,49.6],[281,47.6],[285.5,47.6],[289.5,48.6]],
+  "the tape to the house":{seek:[[293,61],[312,151.5]], then:[[312,153.7],[312,155.3]]},
+  "into the old house":   [[312,155.3],[311.9,157.4],[311.9,158.6],[309.5,159.6],[308.3,158.6]],
+  "parlour to kitchen":   [[311.9,158.6],[311.6,160.15],[313.4,160.15],[314.85,161.2],[314.85,162.8],[314.85,163.9],[314.85,164.8]],
 };
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
@@ -42,10 +45,29 @@ const ROUTES={
       // the gate stands open for its own route, the way you would leave it
       for(const d of REST.doors) if(d.manualOnly){ d.manual = name==="through the gate" ? 1 : 0; d.open = name==="through the gate" ? 1 : 0;
         if(d.blockCol) d.blockCol.y1 = name==="through the gate" ? d.blockCol.y0-1 : d.blockTop; }
-      const P=ROUTES[name]==="TRAIL" ? TRAIL.map(q=>[q.x,q.z]) : ROUTES[name];
+      let P=ROUTES[name]==="TRAIL" ? TRAIL.map(q=>[q.x,q.z]) : ROUTES[name];
+      // off the paths there is no fixed line: find one through the trunks on
+      // a quarter-metre grid (breadth first, eight ways), then walk it
+      if(P.seek){ const [A,G]=P.seek, S=0.25, pad=12;
+        const gx0=Math.min(A[0],G[0])-pad, gz0=Math.min(A[1],G[1])-pad;
+        const NX=Math.ceil((Math.abs(G[0]-A[0])+2*pad)/S), NZ=Math.ceil((Math.abs(G[1]-A[1])+2*pad)/S);
+        const idx=(i,j)=>j*NX+i, prev=new Int32Array(NX*NZ).fill(-1), seen=new Uint8Array(NX*NZ), fl=new Float32Array(NX*NZ);
+        const cell=p=>[Math.round((p[0]-gx0)/S), Math.round((p[1]-gz0)/S)];
+        const [si,sj]=cell(A), [ti,tj]=cell(G); const q=[idx(si,sj)]; seen[q[0]]=1; fl[q[0]]=REST.surf(A[0],A[1],5);
+        let found=false;
+        for(let h=0; h<q.length && !found; h++){ const c=q[h], ci=c%NX, cj=(c/NX)|0;
+          for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+            const ni=ci+di, nj=cj+dj; if(ni<0||nj<0||ni>=NX||nj>=NZ) continue; const n=idx(ni,nj); if(seen[n]) continue; seen[n]=1;
+            const x=gx0+ni*S, z=gz0+nj*S, f=REST.surf(x,z,fl[c]);
+            if(f-fl[c]>0.5 || REST.probe(x,z,f)) continue;
+            fl[n]=f; prev[n]=c; q.push(n); if(ni===ti && nj===tj){ found=true; break; } } }
+        if(!found){ res[name]="NO WAY THROUGH"; continue; }
+        const out=[]; for(let c=idx(ti,tj); c>=0; c=prev[c]) out.push([gx0+(c%NX)*S, gz0+((c/NX)|0)*S]);
+        out.reverse(); out[0]=A.slice();
+        P=out.concat([G], P.then||[]); }
       let f=REST.surf(P[0][0],P[0][1],0.2), msg="ok", minY=1e9, maxY=-1e9;
       outer: for(let i=1;i<P.length;i++){
-        const [x0,z0]=P[i-1], [x1,z1]=P[i], L=Math.hypot(x1-x0,z1-z0), n=Math.ceil(L/0.08);
+        const [x0,z0]=P[i-1], [x1,z1]=P[i], L=Math.hypot(x1-x0,z1-z0), n=Math.max(1,Math.ceil(L/0.08));
         for(let k=0;k<=n;k++){
           const x=x0+(x1-x0)*k/n, z=z0+(z1-z0)*k/n;
           const t=REST.surf(x,z,f);

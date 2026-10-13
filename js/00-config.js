@@ -17,9 +17,9 @@
    compass calls north). I-79 runs north-south along z, west of the site.
    ---------------------------------------------------------------------- */
 const NEXT_SCENE_URL = null;
-// in the car lot, a few stalls south of the walk, looking across the lot
-// at the pavilion with the woods behind it — the view in the photographs
-const SPAWN   = { x: -36.2, z: 24.0, yaw: -0.98 };
+// on the walk by the car lot, out of the cars' way, the lot on your left
+// and the pavilion ahead with the woods behind it
+const SPAWN   = { x: -25.2, z: 36.0, yaw: -0.55 };
 const EYE     = 1.66;
 const PLAYER_R= 0.34;
 

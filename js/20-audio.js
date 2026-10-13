@@ -20,8 +20,8 @@
    ---------------------------------------------------------------------- */
 const AUDIO=(function(){
   let ctx=null, master=null, outBus=null, outLP=null, enabled=true, started=false;
-  let road={}, wind={}, night={}, hum={}, gen={};
-  let birdT=1.5, clankT=3, flushT=12, jakeT=40, barkT=15, reefer={};
+  let road={}, wind={}, night={}, hum={}, gen={}, rain={}, dsl={};
+  let birdT=1.5, clankT=3, flushT=12, jakeT=40, barkT=15, reefer={}, creakT=3;
   // the camp out back: the fire, a phone speaker, four kids talking
   let camp={}, crackT=0, voiceT=3, song=0, beat=null;
   function noise(sec, color){
@@ -73,6 +73,23 @@ const AUDIO=(function(){
     // the hum indoors, and the transformer's out at the substation
     hum.g=ctx.createGain(); hum.g.gain.value=0; hum.g.connect(master);
     gen.g=ctx.createGain(); gen.g.gain.value=0; gen.g.connect(outLP);
+    // rain: a hiss outdoors, and on the roof a duller drumming you hear inside
+    rain.g=ctx.createGain(); rain.g.gain.value=0; rain.g.connect(outLP);
+    { const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=700;
+      const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=7500;
+      loop(pink).connect(hp); hp.connect(lp); lp.connect(rain.g); }
+    rain.roof=ctx.createGain(); rain.roof.gain.value=0; rain.roof.connect(master);
+    { const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=420; bp.Q.value=0.5;
+      loop(noise(4,"pink")).connect(bp); bp.connect(rain.roof); }
+    // the standby diesel: a firing beat at its speed, its fan, its exhaust
+    dsl.g=ctx.createGain(); dsl.g.gain.value=0; dsl.g.connect(outLP);
+    { dsl.lp=ctx.createBiquadFilter(); dsl.lp.type="lowpass"; dsl.lp.frequency.value=380; dsl.lp.connect(dsl.g);
+      dsl.osc=[];
+      for(const [f,a2,ty] of [[30,0.55,"sawtooth"],[60,0.40,"sawtooth"],[90,0.18,"square"],[15,0.25,"sine"]]){
+        const o=ctx.createOscillator(); o.type=ty; o.frequency.value=f*0.2; const g=ctx.createGain(); g.gain.value=a2*0.4;
+        o.connect(g); g.connect(dsl.lp); o.start(); dsl.osc.push({o:o, f:f}); }
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=900; bp.Q.value=0.4;
+      const g=ctx.createGain(); g.gain.value=0.22; loop(noise(4,"pink")).connect(bp); bp.connect(g); g.connect(dsl.g); }
     // a reefer unit: a small diesel and its fans, a drone with a beat in it
     reefer.g=ctx.createGain(); reefer.g.gain.value=0; reefer.g.connect(outLP);
     { const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=900; lp.connect(reefer.g);
@@ -128,9 +145,19 @@ const AUDIO=(function(){
     wind.bp.frequency.setTargetAtTime(500+Wind.gust*600, t, 0.4);
     // the insects come in at dusk; fewer in October
     night.g.gain.setTargetAtTime(smoothstep(0.35,0.8,dark)*(FOREST.isAutumn()?0.006:0.016), t, 0.8);
-    hum.g.gain.setTargetAtTime(inside?0.010:0, t, 0.2);
+    hum.g.gain.setTargetAtTime(inside?0.010*GRID.bldg:0, t, 0.2);
     let gd=1e9; for(const p of GEN_POS) gd=Math.min(gd, Math.hypot(cam.x-p.x, cam.z-p.z));
-    gen.g.gain.setTargetAtTime(0.03/(1+gd*gd/300), t, 0.3);
+    // the transformer's hum, and when the set is running, the set: loud close
+    // to, and carrying across the site on a still night
+    const rpm=Math.max(GRID.rpm, GRID.rpm2*0.8);
+    gen.g.gain.setTargetAtTime(0.03*(1+rpm*2.5)/(1+gd*gd/300), t, 0.3);
+    dsl.g.gain.setTargetAtTime(rpm*(GRID.rpm2>0.5?1.35:1)*0.30/(1+gd*gd/1600), t, 0.25);
+    for(const q of dsl.osc) q.o.frequency.setTargetAtTime(q.f*(0.2+0.8*rpm), t, 0.4);
+    dsl.lp.frequency.setTargetAtTime(220+rpm*260, t, 0.4);
+    // the rain
+    const rn=WEATHER.rain;
+    rain.g.gain.setTargetAtTime(rn*(0.10+0.05*WEATHER.storm), t, 0.5);
+    rain.roof.gain.setTargetAtTime(inside?rn*0.06:0, t, 0.4);
     // the halyard slapping the flagpole when the wind gets up
     const fd=Math.hypot(cam.x+17.4, cam.z-23.2);
     clankT-=dt*(0.3+Wind.gust*2.0);
@@ -151,6 +178,10 @@ const AUDIO=(function(){
     if(barkT<=0){ barkT=12+Math.random()*30;
       const w=(typeof PEOPLE!=="undefined") && PEOPLE.find(p=>p.dog && p.dog.g.visible);
       if(w){ const d=Math.hypot(cam.x-w.dx, cam.z-w.dz); if(d<90) bark(0.06/(1+d*d/200)); } }
+    // the old house: it creaks, settling, when you are inside it
+    if(typeof HOUSE!=="undefined" && HOUSE.zone){ const Z=HOUSE.zone;
+      if(cam.x>Z.x0 && cam.x<Z.x1 && cam.z>Z.z0 && cam.z<Z.z1 && cam.y>Z.y0 && cam.y<Z.y1){
+        creakT-=dt; if(creakT<=0){ creakT=4+Math.random()*9; creak(); } } }
     // the reefer units in the truck lot
     let rd=1e9; if(typeof REEFERS!=="undefined") for(const p of REEFERS) rd=Math.min(rd, Math.hypot(cam.x-p.x, cam.z-p.z));
     reefer.g.gain.setTargetAtTime(0.05/(1+rd*rd/90), t, 0.4);
@@ -212,10 +243,11 @@ const AUDIO=(function(){
   function campSound(dt, cam, rx, rz){
     const t=ctx.currentTime, dx=CAMP.x-cam.x, dz=CAMP.z-cam.z, d=Math.hypot(dx,dz);
     const near=1/(1+d*d/36);
-    camp.g.gain.setTargetAtTime(0.16*near, t, 0.3);
     if(camp.pan.pan) camp.pan.pan.setTargetAtTime(clamp((dx*rx+dz*rz)/Math.max(d,1), -0.8, 0.8)*smoothstep(1,4,d), t, 0.2);
-    camp.mus.gain.setTargetAtTime(0.05/(1+d*d/110), t, 0.4);
-    camp.vox.gain.setTargetAtTime(0.045/(1+d*d/60), t, 0.4);
+    const here=BACKWOODS.present?1:0, burn=BACKWOODS.burn===undefined?1:BACKWOODS.burn;   // nobody there: no music, no talk, a low fire
+    camp.g.gain.setTargetAtTime(0.16*near*(0.35+0.65*burn), t, 0.3);
+    camp.mus.gain.setTargetAtTime(here*0.05/(1+d*d/110), t, 0.4);
+    camp.vox.gain.setTargetAtTime(here*0.045/(1+d*d/60), t, 0.4);
     if(d>110){ beat=null; return; }
     // crackle
     crackT-=dt;
@@ -236,7 +268,7 @@ const AUDIO=(function(){
     }
     // talk
     voiceT-=dt;
-    if(voiceT<=0){ voiceT=1.2+Math.random()*4.5; if(d<70) phrase(t+0.05); }
+    if(voiceT<=0){ voiceT=1.2+Math.random()*4.5; if(d<70 && BACKWOODS.present) phrase(t+0.05); }
   }
   function env(g, t, a, peak, hold, rel){
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t+a);
@@ -272,6 +304,18 @@ const AUDIO=(function(){
     f.frequency.setValueAtTime(600,tt); f.frequency.linearRampToValueAtTime(1600,tt+0.6); f.frequency.exponentialRampToValueAtTime(380,tt+3.6);
     const g=ctx.createGain(); env(g,tt,0.08,0.22,1.6,1.8); s.connect(f); f.connect(g); g.connect(master); s.start(tt);
     tone("sine", 70, 50, 0.3, 0.05, tt, 0, master);
+  }
+  // a board taking weight somewhere: a slow, rough, falling squeal
+  function creak(){
+    const tt=ctx.currentTime+0.05, dur=0.4+Math.random()*0.7, f=180+Math.random()*220;
+    const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.setValueAtTime(f,tt); o.frequency.linearRampToValueAtTime(f*(0.7+Math.random()*0.2),tt+dur);
+    const am=ctx.createGain(); am.gain.value=0.5; const lfo=ctx.createOscillator(); lfo.type="square"; lfo.frequency.value=18+Math.random()*30;
+    const lg=ctx.createGain(); lg.gain.value=0.5; lfo.connect(lg); lg.connect(am.gain);
+    const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=f*2.2; bp.Q.value=3;
+    const g=ctx.createGain(); env(g,tt,0.05,0.025,dur*0.6,dur*0.4);
+    let n=g; if(ctx.createStereoPanner){ const p=ctx.createStereoPanner(); p.pan.value=Math.random()*1.6-0.8; g.connect(p); n=p; }
+    o.connect(am); am.connect(bp); bp.connect(g); n.connect(master);
+    o.start(tt); lfo.start(tt); o.stop(tt+dur+0.1); lfo.stop(tt+dur+0.1);
   }
   function jake(){
     const tt=ctx.currentTime+0.05, dur=1.6+Math.random()*1.4;
@@ -316,11 +360,98 @@ const AUDIO=(function(){
       const s=ctx.createBufferSource(); s.buffer=noise(0.2,"white"); const f=ctx.createBiquadFilter();
       f.type="bandpass"; f.frequency.value=1800; f.Q.value=1.2; const g=ctx.createGain(); env(g,t,0.002,0.10*vol,0.01,0.08);
       s.connect(f); f.connect(g); g.connect(outLP); s.start(t);
+    }else if(kind==="coin"){                       // a quarter going down the chute
+      tone("sine", 2200, 2150, 0.12, 0.05*vol, t, 0, master); tone("sine", 3300, 3260, 0.10, 0.03*vol, t+0.05, 0, master);
+      tone("sine", 1600, 1580, 0.08, 0.03*vol, t+0.16, 0, master);
+    }else if(kind==="coins"){                      // change into the cup
+      for(let k=0;k<4;k++) tone("sine", 2400+Math.random()*900, null, 0.09, 0.035*vol, t+k*0.07+Math.random()*0.03, 0, master);
+    }else if(kind==="bill"||kind==="whirr"){       // a little motor: the bill acceptor, the coil
+      const d2=kind==="bill"?0.8:1.2;
+      tone("sawtooth", kind==="bill"?180:95, kind==="bill"?160:90, d2, 0.035*vol, t, 0, master);
+      tone("square", kind==="bill"?360:190, null, d2, 0.010*vol, t, 0, master);
+    }else if(kind==="thump"){                      // a shoulder into the cabinet
+      tone("sine", 70, 40, 0.30, 0.28*vol, t, 0, master); tone("triangle", 180, 90, 0.18, 0.08*vol, t, 0, master);
+      const s=ctx.createBufferSource(); s.buffer=noise(0.3,"white"); const f=ctx.createBiquadFilter();
+      f.type="lowpass"; f.frequency.value=500; const g=ctx.createGain(); env(g,t,0.004,0.12*vol,0.04,0.2);
+      s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="tick"){
+      tone("square", 900, null, 0.03, 0.02*vol, t, 0, master);
     }else if(kind==="airhorn"){
       tone("sawtooth", 262, null, 1.1, 0.06*vol, t); tone("sawtooth", 330, null, 1.1, 0.05*vol, t);
     }
   }
+  /* ---- weather and power ------------------------------------------------
+     Thunder is a crack (close strikes only: a few ms of bright noise and
+     a ripping tail) and then the rumble, brown noise through a low-pass
+     that closes as it rolls, longer and lower the farther off it was. */
+  function thunder(d, pan){
+    if(!ctx || !enabled) return;
+    const t0=ctx.currentTime+0.02, near=1/(1+d/900), inside=indoorsAt(camera.position.x, camera.position.z, camera.position.y);
+    const pn=(g)=>{ if(ctx.createStereoPanner){ const p=ctx.createStereoPanner(); p.pan.value=pan*0.7; g.connect(p); return p; } return g; };
+    if(d<900){
+      const s=ctx.createBufferSource(); s.buffer=_nb || (_nb=noise(0.5,"white"));
+      const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=900;
+      const g=ctx.createGain(); env(g, t0, 0.003, 0.55*near, 0.05, 0.6);
+      s.connect(hp); hp.connect(g); pn(g).connect(inside?outLP:master); s.start(t0); s.stop(t0+1.2);
+    }
+    const dur=2.5+Math.min(6, d/600)+Math.random()*2;
+    const s=ctx.createBufferSource(); s.buffer=noise(Math.min(9, dur+1), "brown");
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass";
+    lp.frequency.setValueAtTime(d<900?900:420, t0); lp.frequency.exponentialRampToValueAtTime(90, t0+dur);
+    const g=ctx.createGain(); g.gain.setValueAtTime(0, t0);
+    const pk=0.75*near+0.06;
+    // the roll: two or three swells as the sound comes in from along the stroke
+    g.gain.linearRampToValueAtTime(pk, t0+0.15+Math.random()*0.3);
+    g.gain.linearRampToValueAtTime(pk*0.45, t0+dur*0.35);
+    g.gain.linearRampToValueAtTime(pk*(0.6+Math.random()*0.3), t0+dur*0.5);
+    g.gain.exponentialRampToValueAtTime(0.0005, t0+dur);
+    s.connect(lp); lp.connect(g); pn(g).connect(outLP); s.start(t0); s.stop(t0+dur+0.2);
+  }
+  // the moment it goes: a heavy clunk somewhere in the walls, the hum gone
+  function outage(){
+    if(!ctx || !enabled) return;
+    const t0=ctx.currentTime+0.05;
+    tone("sine", 95, 38, 0.5, 0.22, t0, 0, master);
+    tone("square", 120, 60, 0.08, 0.05, t0, 0, master);
+  }
+  function _genVol(){ let gd=1e9; for(const p of GEN_POS) gd=Math.min(gd, Math.hypot(camera.position.x-p.x, camera.position.z-p.z)); return 1/(1+gd*gd/1600); }
+  // the starter: a grinding whine that rises, three goes of it
+  function genCrank(){
+    if(!ctx || !enabled) return;
+    const v=_genVol()*0.35;
+    for(let k=0;k<3;k++){ const at=ctx.currentTime+0.05+k*0.75;
+      const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.setValueAtTime(14,at); o.frequency.linearRampToValueAtTime(19,at+0.6);
+      const am=ctx.createGain(); am.gain.value=0.6; const lfo=ctx.createOscillator(); lfo.frequency.value=9; const lg=ctx.createGain(); lg.gain.value=0.4;
+      lfo.connect(lg); lg.connect(am.gain);
+      const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=700;
+      const g=ctx.createGain(); env(g, at, 0.05, v, 0.45, 0.15);
+      o.connect(am); am.connect(lp); lp.connect(g); g.connect(outLP);
+      o.start(at); lfo.start(at); o.stop(at+0.75); lfo.stop(at+0.75);
+      tone("square", 820, 760, 0.6, v*0.08, at, 0); }
+  }
+  function genCatch(){
+    if(!ctx || !enabled) return;
+    const v=_genVol(), at=ctx.currentTime+0.02;
+    tone("sawtooth", 22, 55, 1.2, 0.30*v, at); tone("sine", 45, 90, 1.0, 0.25*v, at);
+    burst(at, 0.25, 300, 0.6, 0.4*v, outLP);
+  }
+  function genStop(){
+    if(!ctx || !enabled) return;
+    const v=_genVol(), at=ctx.currentTime+0.02;
+    tone("sawtooth", 30, 9, 3.0, 0.18*v, at);
+  }
+  // the transfer switch throwing: a bang and a ring in the gear
+  function ats(){
+    if(!ctx || !enabled) return;
+    let d=Math.hypot(camera.position.x-80.8, camera.position.z+181);
+    const v=1/(1+d*d/60), at=ctx.currentTime+0.02;
+    tone("square", 140, 70, 0.10, 0.25*v, at); tone("sine", 2400, 2380, 0.4, 0.04*v, at+0.01);
+    burst(at, 0.05, 1600, 0.8, 0.6*v, outLP);
+    // and in the building, the tubes coming back with a tick and a buzz
+    if(indoorsAt(camera.position.x, camera.position.z, camera.position.y)) tone("sawtooth", 120, 120, 0.4, 0.02, at+0.1, 0, master);
+  }
   return { start:start, update:update, blip:blip, on:()=>enabled,
+           thunder:thunder, outage:outage, genCrank:genCrank, genCatch:genCatch, genStop:genStop, ats:ats,
            campLaugh:campLaugh, campPop:campPop, campSong:()=>{ song=(song+1)%SONGS.length; beat=null; },
            toggle:()=>{ enabled=!enabled; if(!started && enabled) start();
                         if(master) master.gain.value=enabled?0.75:0; } };

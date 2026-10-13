@@ -46,7 +46,8 @@ function addSeat(x,z,y,yaw,label,lie){
 }
 // things you can press E at that are neither a door nor a car
 const USES=[];
-function addUse(x,z,y,label,fn,r){ USES.push({x:x, z:z, y:y, label:label, fn:fn, r:r}); }
+// when: optional test, for things that are only sometimes there
+function addUse(x,z,y,label,fn,r,when){ const u={x:x, z:z, y:y, label:label, fn:fn, r:r, when:when}; USES.push(u); return u; }
 const SURF=[];   // flat {x0,x1,z0,z1,y} | ramp {axis,a0,a1,y0,y1}
 const ZONES=[];  // {x0,x1,z0,z1,y0,y1,name,indoor}
 

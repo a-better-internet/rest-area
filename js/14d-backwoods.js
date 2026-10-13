@@ -21,7 +21,7 @@
      and at the back of it all the property line, POSTED and painted purple
      the way Pennsylvania lets a landowner say no trespassing.
    ---------------------------------------------------------------------- */
-const BACKWOODS={teens:[], flames:[], deep:[]};
+const BACKWOODS={teens:[], flames:[], deep:[], left:new Set(), leftItems:[], present:true, leftSeed:1};
 (function backwoods(){
   const n0=scene.children.length;                  // what this file adds, for updateDeep
   const F={x:CAMP.x, z:CAMP.z, y:CAMP.y};
@@ -291,7 +291,8 @@ void main(){
     BACKWOODS.speaker={x:x, z:z};
     addUse(x, z, logNE.y-0.4, "CHANGE THE SONG", ()=>{
       if(AUDIO.campSong) AUDIO.campSong();
-      toast(["'HEY, I WAS LISTENING TO THAT'","'PUT THE OTHER ONE BACK ON'","'OKAY THIS ONE'S GOOD'"][(Math.random()*3)|0], "#cfe0d4"); }, 1.0);
+      toast(["'HEY, I WAS LISTENING TO THAT'","'PUT THE OTHER ONE BACK ON'","'OKAY THIS ONE'S GOOD'"][(Math.random()*3)|0], "#cfe0d4"); }, 1.0,
+      ()=>BACKWOODS.present);
   }
 
   /* ---- the four of them ---------------------------------------------------
@@ -303,8 +304,9 @@ void main(){
   const teen=(P, x, z, sit, act, lines)=>{
     const y=gy(x,z), t={kind:"teen", P:P, x:x, z:z, y:y, yaw:faceF(x,z), sit:sit, act:act, seed:rng()*10, look:0, lines:lines, upd:updTeen};
     P.seed=t.seed; PEOPLE.push(t); BACKWOODS.teens.push(t);
-    addCol(x-0.25, x+0.25, z-0.25, z+0.25, y-0.5, y+(sit?1.2:1.75));
-    addUse(x, z, y, "SAY HEY", ()=>{ t.look=3; toast(lines[(Math.random()*lines.length)|0], "#cfe0d4"); }, 1.7);
+    // solid only while they are here (see _campPresence)
+    t.col={x0:x-0.25, x1:x+0.25, z0:z-0.25, z1:z+0.25, y0:y-0.5, y1:y+(sit?1.2:1.75)}; COL_DYN.push(t.col);
+    addUse(x, z, y, "SAY HEY", ()=>{ t.look=3; toast(lines[(Math.random()*lines.length)|0], "#cfe0d4"); }, 1.7, ()=>BACKWOODS.present);
     return t;
   };
   const wA={x:logW.x-logW.tx*0.55, z:logW.z-logW.tz*0.55}, wB={x:logW.x+logW.tx*0.55, z:logW.z+logW.tz*0.55};
@@ -318,7 +320,8 @@ void main(){
     ["'YOU'RE SITTING ON THE ROOT BEERS — OH, THAT'S ME'","'WE COME OUT HERE EVERY FRIDAY'","'THERE'S A CAR BACK THERE IN THE WOODS. LIKE A WHOLE CAR'"]);
   const dP=at(28, 1.75);
   const D=teen(mk({female:true, h:0.97, shirt:hoodies[3], hoodUp:true}), dP.x, dP.z, false, "warm",
-    ["'IT GETS COLD OUT HERE FAST'","'MIND THE SPARKS'","'THE TRUCKS SOUND LIKE THE OCEAN FROM HERE'"]);
+    ["'IT GETS COLD OUT HERE FAST'","'MIND THE SPARKS'","'THE TRUCKS SOUND LIKE THE OCEAN FROM HERE'",
+     "'THERE'S A HOUSE OUT PAST THE ORANGE TAPE. NOBODY'S LIVED THERE SINCE LIKE THE EIGHTIES'","'WE DON'T GO IN THE OLD HOUSE AFTER DARK. TY DID ONCE'"]);
   // what they hold
   { const h=A.P.h, g=new T.Group();
     const stick=new T.Mesh(new T.CylinderGeometry(0.005,0.007,1.15,5), new T.MeshStandardMaterial({color:0x7a5c3c, roughness:0.9}));
@@ -341,6 +344,7 @@ void main(){
 
   function updTeen(p, dt, now, dark, cd){
     const P=p.P, B=P.B, J=P.j;
+    P.g.visible=BACKWOODS.present; if(!BACKWOODS.present) return;
     P.g.position.set(p.x,p.y,p.z); P.g.rotation.y=p.yaw;
     if(cd>150) return;
     poseP(P, p.sit?"sit":"stand", 0, now);
@@ -552,6 +556,122 @@ void main(){
   }
   // everything put in the scene here but the path, which starts on the lawn
   BACKWOODS.deep=scene.children.slice(n0).filter(o=>o.name!=="trail");
+
+  /* ---- what they leave behind -----------------------------------------------
+     A different handful of their things every day: a hoodie over the log,
+     a phone on the cooler still getting messages, a guitar, a skateboard,
+     a sketchbook, one shoe... chosen when they go home in the small hours,
+     and lying there until the next night. And a note, held down with a
+     stone on the chopping block, for whoever comes by. (Not baked: these
+     come and go. Out of updateDeep's list: their own visibility rules.) */
+  { const L=BACKWOODS.leftItems, mat=c=>new T.MeshStandardMaterial({color:c, roughness:0.8});
+    const item=(deg, r, build, line, season)=>{
+      const p=at(deg, r), y=gy(p.x,p.z), g=new T.Group(); g.position.set(p.x, y, p.z); g.rotation.y=faceF(p.x,p.z)+rng()*0.6-0.3;
+      build(g); g.visible=false; scene.add(g);
+      const it={g:g, i:L.length, season:season, x:p.x, z:p.z};
+      addUse(p.x, p.z, y, line[0], ()=>toast(line[1], "#cfe0d4"), 1.0, ()=>BACKWOODS.left.has(it.i));
+      L.push(it); return it;
+    };
+    const onLog=(lg, e, build, line)=>{ const x=lg.x+lg.tx*e, z=lg.z+lg.tz*e, g=new T.Group();
+      g.position.set(x, lg.y, z); g.rotation.y=Math.atan2(lg.tx, lg.tz); build(g); g.visible=false; scene.add(g);
+      const it={g:g, i:L.length, x:x, z:z}; addUse(x, z, lg.y-0.4, line[0], ()=>toast(line[1], "#cfe0d4"), 1.0, ()=>BACKWOODS.left.has(it.i));
+      L.push(it); return it; };
+    // a hoodie thrown over the west log
+    onLog(logW, 0.95, g=>{ const m=mat(["#7a2a3a","#3b3f45","#2b4a6a"][(rng()*3)|0]);
+      const b=new T.Mesh(new T.BoxGeometry(0.46,0.05,0.40), m); b.position.y=0.03; g.add(b);
+      for(const sd of [-1,1]){ const sl=new T.Mesh(new T.CylinderGeometry(0.055,0.05,0.42,8), m); sl.position.set(sd*0.2,-0.12,0.16); sl.rotation.x=0.9; g.add(sl); }
+      const hd=new T.Mesh(new T.SphereGeometry(0.13,10,6,0,Math.PI*2,0,Math.PI/2), m); hd.position.set(0,0.0,-0.24); hd.scale.y=0.4; g.add(hd); },
+      ["PICK UP THE HOODIE","A HOODIE. IT SMELLS LIKE THE FIRE. 'EDINBORO XC' ON THE BACK"]);
+    // a phone face up on the cooler lid, still getting messages
+    { const g=new T.Group(), x=coolP.x, z=coolP.z; g.position.set(x, coolY+0.415, z); g.rotation.y=coolR+0.5;
+      g.add(new T.Mesh(new T.BoxGeometry(0.075,0.008,0.155), mat("#151515")));
+      const scr=new T.Mesh(new T.PlaneGeometry(0.068,0.146), new T.MeshBasicMaterial({color:0x101418, toneMapped:false}));
+      scr.rotation.x=-Math.PI/2; scr.position.y=0.0045; g.add(scr); g.visible=false; scene.add(g);
+      const it={g:g, i:L.length, x:x, z:z, scr:scr}; BACKWOODS.phone=it;
+      addUse(x, z, coolY, "LOOK AT THE PHONE", ()=>toast(["14 MESSAGES. 'WHERE IS MY PHONE' · 'IS IT AT THE FIRE' · 'PLEASE BE AT THE FIRE'","LOCKED. THE WALLPAPER IS A DOG IN SUNGLASSES","3% BATTERY. 'MOM' IS CALLING"][(Math.random()*3)|0],"#cfe0d4"), 1.0, ()=>BACKWOODS.left.has(it.i));
+      L.push(it); }
+    // a guitar leaned on the chopping block
+    item(18, 4.4, g=>{ const w=mat("#b57a3a"), dk=mat("#3a2a1a");
+      const b1=new T.Mesh(new T.SphereGeometry(0.17,14,10), w); b1.scale.set(1,1,0.32); b1.position.set(0,0.22,0); g.add(b1);
+      const b2=new T.Mesh(new T.SphereGeometry(0.13,14,10), w); b2.scale.set(1,1,0.32); b2.position.set(0,0.44,0); g.add(b2);
+      const hole=new T.Mesh(new T.CircleGeometry(0.045,12), dk); hole.position.set(0,0.36,0.045); g.add(hole);
+      const nk=new T.Mesh(new T.BoxGeometry(0.05,0.46,0.03), dk); nk.position.set(0,0.78,0); g.add(nk);
+      const hd=new T.Mesh(new T.BoxGeometry(0.07,0.13,0.03), dk); hd.position.set(0,1.06,0); g.add(hd);
+      g.rotation.x=-0.28; }, ["LOOK AT THE GUITAR","AN OLD ACOUSTIC. THE LOW E IS MISSING. SOMEBODY CARVED 'J+T' IN THE BACK"]);
+    // a skateboard upside down in the leaves
+    item(250, 3.4, g=>{ const d=new T.Mesh(new T.BoxGeometry(0.21,0.018,0.80), mat("#1d1d1f")); d.position.y=0.10; g.add(d);
+      for(const [x,z] of [[-0.07,0.26],[0.07,0.26],[-0.07,-0.26],[0.07,-0.26]]){ const w=new T.Mesh(new T.CylinderGeometry(0.027,0.027,0.035,10), mat("#e8e2c8"));
+        w.rotation.z=Math.PI/2; w.position.set(x,0.135,z); g.add(w); }
+      const gfx=new T.Mesh(new T.PlaneGeometry(0.17,0.5), mat("#c8202a")); gfx.rotation.x=-Math.PI/2; gfx.position.y=0.11; g.add(gfx); },
+      ["LOOK AT THE SKATEBOARD","A SKATEBOARD. NOWHERE TO RIDE IT FOR MILES"]);
+    // a sketchbook open on the north log
+    onLog(logNE, -0.95, g=>{ for(const sd of [-1,1]){ const pg=new T.Mesh(new T.BoxGeometry(0.15,0.008,0.21), mat("#f2efe6"));
+        pg.position.set(sd*0.077,0.006,0); pg.rotation.z=sd*0.06; g.add(pg); }
+      const sk=new T.Mesh(new T.PlaneGeometry(0.11,0.15), mat("#6a6a6a")); sk.rotation.x=-Math.PI/2; sk.position.set(0.08,0.012,0); g.add(sk); },
+      ["LOOK AT THE SKETCHBOOK","A SKETCHBOOK. TRUCKS, MOSTLY. ONE OF THE REST STOP AT NIGHT, AND IT'S GOOD"]);
+    // one shoe
+    item(150, 3.1, g=>{ const m=mat("#e8e6de"); const b=new T.Mesh(new T.BoxGeometry(0.10,0.07,0.27), m); b.position.y=0.035; g.add(b);
+      const t=new T.Mesh(new T.BoxGeometry(0.10,0.05,0.12), m); t.position.set(0,0.08,-0.07); g.add(t); g.rotation.z=0.5; },
+      ["LOOK AT THE SHOE","ONE SNEAKER. JUST THE ONE. HOW DO YOU GO HOME IN ONE SHOE"]);
+    // a pizza box
+    item(70, 3.3, g=>{ const b=new T.Mesh(new T.BoxGeometry(0.42,0.05,0.42), mat("#c8b28a")); b.position.y=0.025; g.add(b);
+      const t=new T.Mesh(new T.PlaneGeometry(0.30,0.20), mat("#b3151b")); t.rotation.x=-Math.PI/2; t.position.y=0.052; g.add(t); },
+      ["OPEN THE PIZZA BOX","ONE SLICE LEFT, AND IT'S THE ONE WITH THE OLIVES"]);
+    // a frisbee
+    item(300, 4.1, g=>{ const f=new T.Mesh(new T.CylinderGeometry(0.13,0.12,0.025,18), mat("#f28a1a")); f.position.y=0.013; g.add(f); },
+      ["PICK UP THE FRISBEE","A FRISBEE WITH TEETH MARKS. SOMEBODY HAS A DOG"]);
+    // a plaid blanket folded on the cooler's end
+    item(130, 2.9, g=>{ const b=new T.Mesh(new T.BoxGeometry(0.50,0.10,0.38), mat("#8a2a24")); b.position.y=0.05; g.add(b);
+      for(let k=0;k<3;k++){ const st=new T.Mesh(new T.BoxGeometry(0.505,0.104,0.03), mat("#2a2a2a")); st.position.set(0,0.05,-0.12+k*0.12); g.add(st); } },
+      ["LOOK AT THE BLANKET","A FLANNEL BLANKET, FOLDED. SOMEBODY'S MOM IS GOING TO ASK"]);
+    // a lantern, left on
+    { const it=item(338, 3.2, g=>{ const b=new T.Mesh(new T.CylinderGeometry(0.07,0.08,0.05,12), mat("#2b4a2a")); b.position.y=0.025; g.add(b);
+        const gl=new T.Mesh(new T.CylinderGeometry(0.06,0.06,0.14,12), new T.MeshBasicMaterial({color:0xfff0c8, toneMapped:false})); gl.position.y=0.12; g.add(gl);
+        const tp=new T.Mesh(new T.CylinderGeometry(0.05,0.07,0.04,12), mat("#2b4a2a")); tp.position.y=0.21; g.add(tp);
+        const h=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, color:0xffe2a0, transparent:true, opacity:0.6, depthWrite:false, blending:T.AdditiveBlending, toneMapped:false}));
+        h.scale.set(0.9,0.9,1); h.position.y=0.12; g.add(h); },
+      ["LOOK AT THE LANTERN","A CAMP LANTERN, STILL ON. THE BATTERY'S NEARLY GONE"]); BACKWOODS.lantern=it; }
+    // a ball
+    item(230, 4.6, g=>{ const b=new T.Mesh(new T.SphereGeometry(0.11,14,10), mat("#f2f0ea")); b.position.y=0.11; g.add(b);
+      for(let k=0;k<5;k++){ const pt=new T.Mesh(new T.CircleGeometry(0.035,5), mat("#1a1a1a")); const a=k*1.256;
+        pt.position.set(Math.cos(a)*0.104, 0.11+Math.sin(a)*0.05, Math.sin(a)*0.06); pt.lookAt(pt.position.clone().multiplyScalar(2).setY(pt.position.y*2-0.11)); g.add(pt); } },
+      ["KICK THE BALL","YOU KICK IT INTO THE WOODS. THEY'LL FIND IT"]);
+    // a thermos
+    item(95, 2.7, g=>{ const t=new T.Mesh(new T.CylinderGeometry(0.04,0.04,0.26,12), mat("#3a6a3a")); t.position.y=0.13; g.add(t);
+      const c=new T.Mesh(new T.CylinderGeometry(0.043,0.043,0.06,12), mat("#9a9a9a")); c.position.y=0.29; g.add(c); },
+      ["OPEN THE THERMOS","HOT CHOCOLATE, STONE COLD. A LITTLE SOMETHING ELSE IN IT TOO"]);
+    // summer: a jar of fireflies with holes in the lid; October: a jack-o'-lantern
+    { const it=item(205, 3.3, g=>{ const j=new T.Mesh(new T.CylinderGeometry(0.06,0.06,0.15,12), new T.MeshStandardMaterial({color:0xdfeee8, transparent:true, opacity:0.35, roughness:0.1}));
+        j.position.y=0.075; g.add(j);
+        const lid=new T.Mesh(new T.CylinderGeometry(0.062,0.062,0.02,12), mat("#b8b8b8")); lid.position.y=0.16; g.add(lid);
+        const h=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, color:0xc8ff60, transparent:true, opacity:0, depthWrite:false, blending:T.AdditiveBlending, toneMapped:false}));
+        h.scale.set(0.25,0.25,1); h.position.y=0.08; g.add(h); g.userData.glow=h; },
+      ["LOOK AT THE JAR","A JAR OF FIREFLIES, HOLES PUNCHED IN THE LID. YOU LET THEM GO"], "summer"); BACKWOODS.jar=it; }
+    { const it=item(205, 3.3, g=>{ const p=new T.Mesh(new T.SphereGeometry(0.17,14,10), mat("#e0701a")); p.scale.y=0.82; p.position.y=0.14; g.add(p);
+        const st=new T.Mesh(new T.CylinderGeometry(0.018,0.022,0.06,6), mat("#4a5a2a")); st.position.y=0.29; g.add(st);
+        const face=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, color:0xffa030, transparent:true, opacity:0, depthWrite:false, blending:T.AdditiveBlending, toneMapped:false}));
+        face.scale.set(0.5,0.5,1); face.position.y=0.15; g.add(face); g.userData.glow=face; },
+      ["LOOK AT THE PUMPKIN","A JACK-O'-LANTERN WITH THE CANDLE STILL GOING. IT'S GOT TEETH"], "autumn"); BACKWOODS.pumpkin=it; }
+    // and the note, under a stone on the chopping block
+    { const b=at(14, 4.9), by=gy(b.x,b.z)+0.455, c=cvs(256,192), x2=c.getContext("2d"), tex=setSRGB(new T.CanvasTexture(c));
+      const g=new T.Group(); g.position.set(b.x-0.05, by, b.z+0.04); g.rotation.y=faceF(b.x,b.z)+Math.PI;
+      const pg=new T.Mesh(new T.PlaneGeometry(0.20,0.15), new T.MeshStandardMaterial({map:tex, roughness:0.9})); pg.rotation.x=-Math.PI/2; pg.rotation.z=0.2; g.add(pg);
+      const st=new T.Mesh(new T.SphereGeometry(0.035,8,6), mat("#7a776e")); st.scale.y=0.55; st.position.set(0.06,0.012,-0.04); g.add(st);
+      g.visible=false; scene.add(g);
+      const it={g:g, i:L.length, x:b.x, z:b.z, c:c, tex:tex, note:true}; L.push(it); BACKWOODS.note=it;
+      addUse(b.x, b.z+0.5, by-0.45, "READ THE NOTE", ()=>toast("A NOTE: '"+BACKWOODS.noteText+"'", "#f2efe6"), 1.1, ()=>BACKWOODS.left.has(it.i)); }
+  }
+  /* ---- their tape, out to the old house -------------------------------------
+     The kids' own trail: orange flagging tied round a trunk every twenty
+     metres or so from the fire to the house, the way a surveyor marks one. */
+  { const A={x:F.x+7, z:F.z+9}, B={x:HOMESTEAD.x-5, z:HOMESTEAD.z-15}, L=Math.hypot(B.x-A.x, B.z-A.z);
+    for(let s2=0; s2<=L; s2+=19){
+      const t0=s2/L, px=A.x+(B.x-A.x)*t0+Math.sin(s2*0.13)*3, pz=A.z+(B.z-A.z)*t0;
+      const tr=treeNear(px, pz, 6, 0.08, true); if(!tr) continue;
+      const g2=trunkRing(tr, 1.75), y=tr.y+1.75, a=Math.atan2(px-tr.x, pz-tr.z);
+      push("paintm", new T.CylinderGeometry(g2.r+0.008,g2.r+0.008,0.035,10,1,true), g2.x, y, g2.z, 0, "#ff5a14");
+      push("paintm", boxGeo(0.03, 0.40, 0.004, 0), g2.x+Math.sin(a)*(g2.r+0.012), y-0.2, g2.z+Math.cos(a)*(g2.r+0.012), a, "#ff5a14", 0, 0.18);
+    } }
   /* Flagging tape on the branches along the path, the kind surveyors use,
      tied there by whoever found the way the first time. */
   for(let s=34; s<TRAIL.length*2-10; s+=31){
@@ -579,7 +699,46 @@ function updateDeep(cam){
     const p=m.name.split(":"), ix=+p[p.length-(p[p.length-1]==="flat"?3:2)]; return ix>=2; });
   for(const m of BACKWOODS.tiles) m.visible=show;
   for(const o of BACKWOODS.deep) o.visible=show;
+  _leftShow();
 }
+
+/* ---- the kids come and go ------------------------------------------------
+   They are out at the fire from about noon until three in the morning.
+   They come and go when you are not right there to see them do it, and
+   when they go they leave a few things behind: a fresh handful every day. */
+const _NOTES_KIDS=["DONT PUT OUT THE FIRE — BACK TONIGHT","WHO TOOK THE MARSHMALLOWS. NOT FUNNY.","IF U FIND A RED HOODIE ITS MINE — K",
+  "THE CAR BACK THERE IS HAUNTED. WE CHECKED.","PARTY FRIDAY 9. BRING ICE","TY WAS HERE. JESS TOO.","DEAR REST STOP GUY: SORRY ABOUT THE CANS",
+  "DONT TELL ANYONE ABOUT THIS PLACE","WE SAW A BEAR ON THE TRAIL CAM!!!","OUT OF ROOT BEER. AGAIN.","CLASS OF 27 FOREVER",
+  "LEAVE THE CHAIR. ITS THE GOOD ONE"];
+function _pickLeftovers(seed){
+  const BW=BACKWOODS, r=_trng(seed*7919+3), aut=FOREST.isAutumn();
+  BW.left.clear();
+  const pool=BW.leftItems.filter(it=>!it.note && (!it.season || (it.season==="autumn")===aut));
+  for(let i=pool.length-1;i>0;i--){ const j=(r()*(i+1))|0; [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  const n=4+((r()*3)|0);
+  for(let k=0;k<n && k<pool.length;k++) BW.left.add(pool[k].i);
+  if(BW.note){ BW.left.add(BW.note.i);
+    BW.noteText=_NOTES_KIDS[(seed*5+((r()*_NOTES_KIDS.length)|0))%_NOTES_KIDS.length];
+    const c=BW.note.c, x=c.getContext("2d"); x.fillStyle="#f6f3e8"; x.fillRect(0,0,256,192);
+    x.strokeStyle="#a8c0dc"; for(let k=0;k<7;k++){ x.beginPath(); x.moveTo(0,40+k*22); x.lineTo(256,40+k*22); x.stroke(); }
+    x.fillStyle="#2a2a6a"; const words=BW.noteText.split(" "); let line="", y=56;
+    x.font="600 22px 'Comic Sans MS','Segoe Print',cursive"; x.textAlign="left"; x.textBaseline="alphabetic";
+    for(const w of words){ const t=line?line+" "+w:w; if(x.measureText(t).width>230){ x.fillText(line,12,y); y+=24; line=w; } else line=t; }
+    x.fillText(line,12,y); BW.note.tex.needsUpdate=true; }
+  _leftShow();
+}
+function _leftShow(){
+  const BW=BACKWOODS;
+  for(const it of BW.leftItems) it.g.visible=_deepShown && BW.left.has(it.i);
+}
+function _campPresence(d){
+  const BW=BACKWOODS, h=DayNight.state.hour, want=h>=12 || h<3;
+  if(want===BW.present || d<45) return;
+  BW.present=want;
+  for(const t of BW.teens){ const i=COL_DYN.indexOf(t.col); if(want && i<0) COL_DYN.push(t.col); if(!want && i>=0) COL_DYN.splice(i,1); }
+  if(!want) _pickLeftovers(++BW.leftSeed+DayNight.state.day*31);
+}
+_pickLeftovers(1);
 
 /* ---- every frame --------------------------------------------------------- */
 const _cp=new T.Vector3();
@@ -589,8 +748,13 @@ function updateBackwoods(dt, now, dark){
   // the light breathes and jumps; the halo and the coals with it
   const n=0.5+0.5*Math.sin(now*7.3)*Math.sin(now*3.1+1.3)+0.25*Math.sin(now*17.9);
   const fl=0.78+0.22*clamp(n,0,1);
-  BW.light.intensity=1.7*fl;
-  BW.halo.material.opacity=(0.18+0.42*dark)*fl;
+  // the kids come and go (and leave things behind when they go)
+  _campPresence(d);
+  const lo=BW.present ? 1 : 0.32;                   // left to burn down: embers and a little flame
+  BW.burn=(BW.burn===undefined?lo:BW.burn)+(lo-(BW.burn===undefined?lo:BW.burn))*Math.min(1,dt*0.3);
+  BW.light.intensity=1.7*fl*BW.burn;
+  BW.halo.material.opacity=(0.18+0.42*dark)*fl*(0.4+0.6*BW.burn);
+  for(const m of BW.flames) m.scale.set(0.55+0.45*BW.burn, 0.35+0.65*BW.burn, 1);
   BW.coals.material.opacity=0.65+0.35*Math.sin(now*2.1)*Math.sin(now*0.7);
   if(d>220) return;
   // the flames face you
@@ -602,16 +766,16 @@ function updateBackwoods(dt, now, dark){
   }
   // sparks: a steady few, and now and then a log pops and throws a handful
   BW.sparkT-=dt; BW.pop-=dt;
-  if(BW.sparkT<=0){ BW.sparkT=0.06+Math.random()*0.12;
+  if(BW.sparkT<=0){ BW.sparkT=(0.06+Math.random()*0.12)/BW.burn;
     SPARKS.emit(F.x+(Math.random()-0.5)*0.4, F.y+0.35, F.z+(Math.random()-0.5)*0.4,
       (Math.random()-0.5)*0.5, 1.4+Math.random()*1.6, (Math.random()-0.5)*0.5, 0.035+Math.random()*0.025, 0.9+Math.random()*1.4); }
-  if(BW.pop<=0){ BW.pop=2+Math.random()*7;
+  if(BW.pop<=0){ BW.pop=(2+Math.random()*7)/BW.burn;
     for(let k=0;k<6+Math.random()*8;k++) SPARKS.emit(F.x+(Math.random()-0.5)*0.3, F.y+0.3, F.z+(Math.random()-0.5)*0.3,
       (Math.random()-0.5)*1.4, 2.0+Math.random()*2.4, (Math.random()-0.5)*1.4, 0.04+Math.random()*0.03, 1.0+Math.random()*1.2);
     if(typeof AUDIO!=="undefined" && AUDIO.campPop) AUDIO.campPop(); }
   // smoke off the top of it, lit from under by the fire for a while
   BW.smokeT-=dt;
-  if(BW.smokeT<=0 && d<160){ BW.smokeT=0.10+Math.random()*0.06;
+  if(BW.smokeT<=0 && d<160){ BW.smokeT=(0.10+Math.random()*0.06)/(0.5+0.5*BW.burn);
     PUFFS.emit(F.x+(Math.random()-0.5)*0.3, F.y+1.05, F.z+(Math.random()-0.5)*0.3, (Math.random()-0.5)*0.12, 0.7+Math.random()*0.3,
       (Math.random()-0.5)*0.12, 0.22, 1.5+Math.random()*0.8, 5.5+Math.random()*2.5, 0.20, 0.62, 0.9*dark+0.2); }
   // the speaker's light pulses with the beat
@@ -620,7 +784,12 @@ function updateBackwoods(dt, now, dark){
   BW.laugh=Math.max(0,(BW.laugh||0)-dt);
   BW.laughT=(BW.laughT===undefined?8:BW.laughT)-dt;
   if(BW.laughT<=0){ BW.laughT=9+Math.random()*22;
-    if(d<90){ BW.laugh=1.6; if(typeof AUDIO!=="undefined" && AUDIO.campLaugh) AUDIO.campLaugh(); } }
+    if(d<90 && BW.present){ BW.laugh=1.6; if(typeof AUDIO!=="undefined" && AUDIO.campLaugh) AUDIO.campLaugh(); } }
+  // the phone on the cooler lights up with another message now and then;
+  // the lantern, the jar and the pumpkin glow after dark
+  if(BW.phone && BW.left.has(BW.phone.i)){ const lit=((now*0.13)%1)<0.08; BW.phone.scr.material.color.setHex(lit?0x9fc8ff:0x101418); }
+  for(const it of [BW.jar, BW.pumpkin]) if(it && it.g.visible) it.g.userData.glow.material.opacity=(0.15+0.75*dark)*(it===BW.jar?0.5+0.5*Math.sin(now*3.1)*Math.sin(now*1.7):0.85+0.15*Math.sin(now*9));
+  if(BW.lantern && BW.lantern.g.visible) BW.lantern.g.children[3].material.opacity=0.2+0.6*dark;
   // the trail camera's light, when somebody walks past it in the dark
   if(BW.cam){ const C=BW.cam, pd=Math.hypot(player.pos.x-C.x, player.pos.z-C.z);
     if(pd<9 && dark>0.4) C.t=4;

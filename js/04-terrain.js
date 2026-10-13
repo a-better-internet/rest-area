@@ -49,6 +49,12 @@ const POWER={x0:84, z0:-184, x1:136, z1:-1500};
    lies, and only the clearing is a little levelled, the way feet and fires
    level a place. 14d puts the camp in it. */
 const CAMP={x:286, z:52, r:9.5, y:0};
+/* and further in, north-east of the fire and past where anybody goes, a
+   house nobody has lived in for thirty-odd years, in what is left of its
+   yard: a slight clearing the woods are taking back. 14f builds it. The
+   house box is its footprint and porch; its floor is levelled, the yard
+   is not. The old two-track to it comes in from the north. */
+const HOMESTEAD={x:312, z:160, r:15, y:0, box:{x0:312-5.6, x1:312+5.6, z0:160-6.4, z1:160+4.3}};
 const TRAIL=smoothPath([
   {x:17.4,z:1.2},{x:24,z:3.5},{x:34,z:5.2},{x:48,z:8.5},{x:62,z:7.2},{x:78,z:4.6},{x:94,z:7.2},
   {x:110,z:12.4},{x:126,z:13.2},{x:142,z:10.2},{x:158,z:12.2},{x:174,z:18.2},{x:190,z:24},
@@ -80,6 +86,7 @@ const Terrain=(function(){
   const NAT0=natural0(-30,-20);
   const natural=(x,z)=>natural0(x,z)-NAT0*(1-smoothstep(200,700,Math.hypot(x+30,z+20)));
   CAMP.y=natural(CAMP.x, CAMP.z);
+  HOMESTEAD.y=natural(HOMESTEAD.x, HOMESTEAD.z);
 
   function boxDist(B,x,z){
     return Math.hypot(Math.max(B.x0-x, 0, x-B.x1), Math.max(B.z0-z, 0, z-B.z1));
@@ -124,6 +131,8 @@ const Terrain=(function(){
     h=toward(h, SITE.sub.y, boxDist(SUBPAD,x,z), 0, 16);
     // the camp's clearing, trodden level round the fire
     h=toward(h, CAMP.y, Math.hypot(x-CAMP.x, z-CAMP.z), 6.5, 9);
+    // the house's ground, graded once and long since settled
+    if(Math.abs(x-HOMESTEAD.x)<40 && Math.abs(z-HOMESTEAD.z)<40) h=toward(h, HOMESTEAD.y, boxDist(HOMESTEAD.box,x,z), 0.5, 8);
     return h;
   }
 
@@ -143,6 +152,8 @@ const Terrain=(function(){
     if(x>TRAIL_B.x0 && x<TRAIL_B.x1 && z>TRAIL_B.z0 && z<TRAIL_B.z1) d=distToPath(TRAIL,x,z).d-1.3;
     const dc=Math.hypot(x-CAMP.x, z-CAMP.z);
     if(dc<CAMP.r+40) d=Math.min(d, dc-CAMP.r+(fbm(x*0.09+2, z*0.09+8, 2)-0.5)*3);
+    const dh=Math.hypot(x-HOMESTEAD.x, (z-HOMESTEAD.z)*0.85);
+    if(dh<HOMESTEAD.r+40) d=Math.min(d, dh-HOMESTEAD.r+(fbm(x*0.07+5, z*0.07+1, 2)-0.5)*7);
     return d;
   }
   function siteDist(x,z){
@@ -178,7 +189,7 @@ const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:256};
 const TERRAIN_RINGS=[];
 let TERRAIN_MAT=null;
 (function buildTerrain(){
-  const campC=new T.Color(0x5a4a38);
+  const campC=new T.Color(0x5a4a38), yardC=new T.Color(0x6e7440), rutC=new T.Color(0x5e5240);
   const lawnC=new T.Color(0x5b8034), mowC=new T.Color(0x67853a), vergeC=new T.Color(0x76883f),
         litterC=new T.Color(0x5f4d35), mossC=new T.Color(0x4d5a30), deepC=new T.Color(0x3d3729),
         gravelC=new T.Color(0x8e8a7e), rockC=new T.Color(0x6f6a5c);
@@ -202,6 +213,11 @@ let TERRAIN_MAT=null;
     // the camp: bare trodden dirt round the fire, going to litter at the edge
     const dc=Math.hypot(x-CAMP.x, z-CAMP.z);
     if(dc<CAMP.r+3) out.lerp(campC, (1-smoothstep(3.0, CAMP.r+1.5, dc))*0.8);
+    // the yard: rank grass and goldenrod gone to seed, and the two ruts of the old drive
+    const dh=Math.hypot(x-HOMESTEAD.x, (z-HOMESTEAD.z)*0.85);
+    if(dh<HOMESTEAD.r+8){ out.lerp(yardC, (1-smoothstep(HOMESTEAD.r-5, HOMESTEAD.r+6, dh))*(0.55+0.3*Terrain.fbm(x*0.3,z*0.3,2)));
+      if(z>HOMESTEAD.z+4) for(const rx of [-0.8,0.8]){ const q=Math.abs(x-(HOMESTEAD.x+2.6+rx+Math.sin(z*0.05)*1.2)); if(q<0.45) out.lerp(rutC, (1-q/0.45)*0.55); } }
+    else if(z>HOMESTEAD.z+4 && Math.abs(x-HOMESTEAD.x-2.6)<5) for(const rx of [-0.8,0.8]){ const q=Math.abs(x-(HOMESTEAD.x+2.6+rx+Math.sin(z*0.05)*1.2)); if(q<0.45) out.lerp(rutC, (1-q/0.45)*0.35); }
     out.lerp(rockC, smoothstep(0.35,0.8,slope)*0.6);
   }
   function grid(R,cell,holes,name,skirt){

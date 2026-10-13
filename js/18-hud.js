@@ -29,7 +29,7 @@
   });
   mk("polygon",{id:"needle",points:"100,52 94,70 106,70",fill:"#f4c430"});
 })();
-const hud={ hdg:document.getElementById("hdgNum"), card:document.getElementById("hdgCard"),
+const hud={ hdg:document.getElementById("hdgNum"), card:document.getElementById("hdgCard"), wx:document.getElementById("wx"),
             where:document.getElementById("where"), clock:document.getElementById("clock"),
             season:document.getElementById("season"), rose:document.getElementById("rose") };
 const CARD=["N","NE","E","SE","S","SW","W","NW"];
@@ -48,6 +48,7 @@ function placeName(x,z){
   if(distToPath(RAMP_ENTRY,x,z).d<6) return "ON-RAMP · I-79 N";
   if(distToPath(DRIVE,x,z).d<4) return "SERVICE DRIVE";
   if(Math.hypot(x-CAMP.x, z-CAMP.z)<CAMP.r+4) return "THE FIRE RING";
+  if(Math.hypot(x-HOMESTEAD.x, z-HOMESTEAD.z)<HOMESTEAD.r+4) return "AN OLD HOMESTEAD";
   if(x>20 && distToPath(TRAIL,x,z).d<3) return "A PATH IN THE WOODS";
   if(Terrain.siteDist(x,z)>4) return x>150 ? "THE BACK WOODS" : "THE WOODS";
   return "REST AREA";
@@ -64,6 +65,8 @@ function updateHUD(){
   const h12=((hi+11)%12)+1;
   hud.clock.textContent=h12+":"+(mi<10?"0":"")+mi+(hi<12?" AM":" PM");
   hud.season.textContent=FOREST.isAutumn() ? "AUTUMN · PEAK COLOR" : "SUMMER";
+  const wx=WEATHER.label()+" · "+WEATHER.temp()+"°F", out=GRID.phase!=="normal" && GRID.phase!=="cool";
+  if(hud.wx._s!==wx+out){ hud.wx._s=wx+out; hud.wx.textContent=out ? "POWER OUT · "+WEATHER.temp()+"°F" : wx; hud.wx.style.color=out?"#ff8a6a":""; }
   const hx=droneMode?dronePos.x:player.pos.x, hz=droneMode?dronePos.z:player.pos.z;
   if(droneMode){ hud.where.textContent="DRONE · "+Math.round(dronePos.y-surfaceY(hx,hz,dronePos.y))+" M"; return; }
   const z=zoneAt(hx, hz, player.feetY+0.5);
@@ -109,6 +112,8 @@ const planBase=(function(){
   L(TRAIL, 1.2, "#b39a72", [3,2]);
   x.fillStyle="#46663a"; x.beginPath(); x.arc(px(CAMP.x),pz(CAMP.z),CAMP.r*PLAN_S,0,7); x.fill();
   x.fillStyle="#e07a2a"; x.beginPath(); x.arc(px(CAMP.x),pz(CAMP.z),1.8,0,7); x.fill();
+  x.fillStyle="#4f6a3a"; x.beginPath(); x.arc(px(HOMESTEAD.x),pz(HOMESTEAD.z),HOMESTEAD.r*PLAN_S,0,7); x.fill();
+  { const B=HOMESTEAD.box; x.fillStyle="#8a8478"; x.fillRect(px(B.x0+1),pz(B.z0+2.3),(B.x1-B.x0-2)*PLAN_S,(B.z1-B.z0-3.3)*PLAN_S); }
   // picnic tables, as dots
   x.fillStyle="#d8c49a";
   for(const t of (typeof PICNIC!=="undefined"?PICNIC:[])){ x.beginPath(); x.arc(px(t.x),pz(t.z),1.6,0,7); x.fill(); }

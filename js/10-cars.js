@@ -92,8 +92,6 @@ function updateParkedLOD(cam){
       i++;
     }
   }
-  // somebody parked across the end of the walk to run in, as somebody does
-  parkCar(-35.4, -20.0, 0.10, 0, "#7c1c1c");
 })();
 
 /* ---- the truck lot ------------------------------------------------------- */

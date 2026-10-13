@@ -371,11 +371,11 @@ const PLAZA_Y=0.15;
    A grey pole, a flat round hat, a lit drum under it. The lens glows from
    the clock; the light itself is a pool lamp when it is near enough to
    matter, and a faint disc on the ground when it is not. */
-bucketOf("lamplens", ()=>emitMat(0xffd7a0, 0.9, "warm"));
+bucketOf("lamplens", ()=>emitMat(0xffd7a0, 0.9, "warm", "site"));
 bucketOf("lightpool",()=>{ const m=new T.MeshBasicMaterial({color:0xffd9a8, map:TEX.soot, transparent:true,
                           opacity:0, depthWrite:false, blending:T.AdditiveBlending,
                           polygonOffset:true, polygonOffsetFactor:-6, polygonOffsetUnits:-12});
-                          GLOW.push({m:m, basic:true, max:0.30}); return m; });
+                          GLOW.push({m:m, basic:true, max:0.30, circ:"site"}); return m; });
 function lampPost(x, z, h, y0){
   const y=y0===undefined ? 0 : y0;
   const big=h>6;
@@ -387,7 +387,7 @@ function lampPost(x, z, h, y0){
   cyl("paintm", 0.10,0.22,0.06,14, x, y+h+0.42, z, "#868b8d");
   addCol(x-0.12, x+0.12, z-0.12, z+0.12, y-0.5, y+h);
   LAMPS.push({x:x, y:y+h+0.1, z:z, color: big?0xffc98a:0xffdcb0, intensity: big?1.25:0.95,
-              dist: big?26:18, decay:1.5, mothy:true});
+              dist: big?26:18, decay:1.5, mothy:true, circ:"site"});
   push("lightpool", discGeo(big?8.5:5.5, 24, 0), x, y+0.045, z, 0, big?"#ffc98a":"#ffe2b8");
 }
 (function lights(){

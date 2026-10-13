@@ -110,7 +110,7 @@ const EMBERS=[];
   }
   picnicTable(SX-2.3, SZ, 0, "#94573a", y+0.15);
   picnicTable(SX+2.3, SZ, 0, "#94573a", y+0.15);
-  LAMPS.push({x:SX, y:RY-0.2, z:SZ, color:0xffdcb0, intensity:0.6, dist:9, decay:1.5, mothy:true});
+  LAMPS.push({x:SX, y:RY-0.2, z:SZ, color:0xffdcb0, intensity:0.6, dist:9, decay:1.5, mothy:true, circ:"site"});
   push("lamplens", new T.SphereGeometry(0.10,10,8), SX, RY-0.05, SZ, 0, "#ffffff");
 })();
 

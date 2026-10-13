@@ -28,6 +28,19 @@ bucketOf("pole",      ()=>new T.MeshStandardMaterial({map:TEX.wood, roughness:0.
 const SUB_Y=SITE.sub.y, SUB_G=SUB_Y+PAVE_T;   // the stone's surface
 const GATE={x:60, z0:-170.47, z1:-167.53};
 const GEN_POS=[];                                   // where the hum comes from (20-audio)
+/* The transfer switch's four lamps and the generator sets' run lamps, live
+   rather than baked, so a power cut can be read off them (16b-weather):
+   NORMAL AVAILABLE, EMERGENCY AVAILABLE, LOAD ON NORMAL, LOAD ON EMERGENCY. */
+const ATS={leds:{}, gens:[], stacks:[]};
+function _liveLed(x,y,z,on,off,r){
+  const m=new T.Mesh(new T.SphereGeometry(r||0.022,10,8), new T.MeshBasicMaterial({color:off, toneMapped:false}));
+  m.position.set(x,y,z); scene.add(m);
+  const halo=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, color:on, transparent:true, opacity:0, depthWrite:false,
+                                               blending:T.AdditiveBlending, toneMapped:false}));
+  halo.scale.set(0.16,0.16,1); halo.position.set(x,y,z+0.01); scene.add(halo);
+  return {m:m, halo:halo, on:new T.Color(on), off:new T.Color(off), lit:-1,
+          set(v){ if(v===this.lit) return; this.lit=v; this.m.material.color.copy(v?this.on:this.off); this.halo.material.opacity=v?0.55:0; }};
+}
 
 /* ---- the drive ----------------------------------------------------------- */
 (function drive(){
@@ -132,7 +145,7 @@ const GEN_POS=[];                                   // where the hum comes from 
   makeDoor(XF(DR.a+0.0, H.z1-T2/2, 0), 0, FY+0.02, 0, "GENERATOR HOUSE", true, 0, "steel");
   bx("paintm", 0.30, 0.18, 0.18, (DR.a+DR.b)/2, DR.head+0.45, H.z1+0.09, 0, 0, "#2c2c2a");
   push("lamplens", boxGeo(0.22,0.02,0.10,0), (DR.a+DR.b)/2, DR.head+0.355, H.z1+0.12, 0, "#ffffff");
-  LAMPS.push({x:(DR.a+DR.b)/2, y:DR.head+0.2, z:H.z1+0.5, color:0xffd29a, intensity:0.7, dist:9, decay:1.6, mothy:true});
+  LAMPS.push({x:(DR.a+DR.b)/2, y:DR.head+0.2, z:H.z1+0.5, color:0xffd29a, intensity:0.7, dist:9, decay:1.6, mothy:true, circ:"site"});
   const auth=signTex(300,200,(c,W,H2)=>{ c.fillStyle="#f2f0e8"; c.fillRect(0,0,W,H2); c.fillStyle="#f2b418";
     c.fillRect(0,0,W,H2*0.34); c.fillStyle="#1a1a1a"; fitHwy(c,"NOTICE",W*0.6,H2*0.24,W/2,H2*0.17);
     fitText(c,"AUTHORIZED",W*0.8,H2*0.18,W/2,H2*0.52,"700"); fitText(c,"PERSONNEL ONLY",W*0.8,H2*0.18,W/2,H2*0.78,"700"); });
@@ -150,7 +163,21 @@ const GEN_POS=[];                                   // where the hum comes from 
     const x=78.0+k*0.92;
     bx("paintm", 0.88, 2.20, 0.80, x, FY+1.10, H.z0+T2+0.42, 0, 0, k===3?"#8c9a8a":"#9aa0a2");
     bx("paintm", 0.60, 0.36, 0.02, x, FY+1.70, H.z0+T2+0.83, 0, 0, "#7e8486");
-    if(k===3) for(let j=0;j<3;j++) push(j===1?"ledamber":"ledgreen", new T.SphereGeometry(0.022,8,6), x-0.2+j*0.2, FY+1.95, H.z0+T2+0.84, 0, "#ffffff");
+    if(k===3){
+      // the automatic transfer switch: four lamps in a row over their labels
+      const lz=H.z0+T2+0.845, ly=FY+1.96;
+      ATS.leds.nAvail=_liveLed(x-0.27, ly, lz, 0x3cff6a, 0x123a1c);
+      ATS.leds.eAvail=_liveLed(x-0.09, ly, lz, 0xffaa22, 0x3e2a0c);
+      ATS.leds.onN   =_liveLed(x+0.09, ly, lz, 0x3cff6a, 0x123a1c);
+      ATS.leds.onE   =_liveLed(x+0.27, ly, lz, 0xff3020, 0x3e100c);
+      // its name over the lamps and theirs under them, clear of the meter panel
+      const head=signTex(420,42,(c,W,H2)=>{ c.fillStyle="#1d2124"; c.fillRect(0,0,W,H2);
+        c.fillStyle="#e8e6de"; fitText(c,"AUTOMATIC TRANSFER SWITCH",W*0.94,H2*0.62,W/2,H2*0.52,"700"); });
+      signPanel(0.62,0.062,head, x, ly+0.075, lz-0.004, 0);
+      const names=signTex(480,40,(c,W,H2)=>{ c.fillStyle="#1d2124"; c.fillRect(0,0,W,H2); c.fillStyle="#e8e6de";
+        ["NORM AVAIL","EMERG AVAIL","ON NORMAL","ON EMERG"].forEach((t,i)=>fitText(c,t,W*0.23,H2*0.58,W*(0.125+i*0.25),H2*0.52,"600")); });
+      signPanel(0.72,0.06,names, x, ly-0.055, lz-0.004, 0);
+    }
     bx("paintm", 0.06, 0.20, 0.03, x+0.32, FY+1.1, H.z0+T2+0.83, 0, 0, "#3a3a3a");
   }
   addCol(77.5, 83.9, H.z0, H.z0+T2+0.85, FY-0.5, FY+2.2);
@@ -159,7 +186,7 @@ const GEN_POS=[];                                   // where the hum comes from 
   bx("beam", 0.8, 0.04, 0.35, 85.9, FY+1.1, H.z1-T2-0.2, 0.6, 0, "#7a5a3a");
   bx("paintm", 0.3, 0.04, 0.22, 85.9, FY+1.14, H.z1-T2-0.2, 0, 0, "#2b4fa0");
   bx("tube", 0.26, 0.04, 1.2, 82, FY+2.96, -179, 0, 0, "#ffffff");
-  LAMPS.push({x:82, y:FY+2.7, z:-179, color:0xeef4f0, intensity:0.75, dist:8, decay:1.4, indoor:true,
+  LAMPS.push({x:82, y:FY+2.7, z:-179, color:0xeef4f0, intensity:0.75, dist:8, decay:1.4, indoor:true, circ:"bldg",
               vol:[H.x0, H.x1, H.z0, H.z1, FY-1, FY+4]});
   addUse(80.9, -178.2, FY, "READ THE LOGBOOK", ()=>toast("WEEKLY GEN TEST — RAN 30 MIN — OK — NO ISSUES","#cfe0d4"), 1.2);
   /* what else lives in here: a ladder tray along the back carrying the feeders
@@ -228,13 +255,18 @@ const GEN_POS=[];                                   // where the hum comes from 
     }
     cyl("metal", 0.10,0.10,0.9,10, cx-1.9, SUB_G+3.05, cz, "#8a8f91");               // exhaust stack
     push("metal", boxGeo(0.24,0.02,0.24,0), cx-1.9, SUB_G+3.52, cz+0.06, 0, "#8a8f91", 0.5, 0);
-    push(running?"ledgreen":"ledamber", new T.SphereGeometry(0.025,8,6), cx+2.4, SUB_G+2.2, cz-W/2-0.01, 0, "#ffffff");
+    ATS.gens.push(_liveLed(cx+2.4, SUB_G+2.2, cz-W/2-0.03, 0x3cff6a, 0x123a1c, 0.025));   // RUN, green when it is
+    ATS.stacks.push({x:cx-1.9, y:SUB_G+3.55, z:cz});
     addCol(cx-L/2, cx+L/2, cz-W/2, cz+W/2, SUB_G-0.5, SUB_G+2.7);
     for(const [bxp,bzp] of [[cx-L/2-0.6,cz-W/2-0.5],[cx-L/2-0.6,cz+W/2+0.5]]){         // bollards
       cyl("paintm", 0.08,0.08,1.1,10, bxp, SUB_G+0.55, bzp, "#e3b81e");
       addCol(bxp-0.09,bxp+0.09,bzp-0.09,bzp+0.09,SUB_G-0.5,SUB_G+1.1);
     }
-    addUse(cx-L/2-0.8, cz, SUB_G, "CHECK THE GENERATOR", ()=>toast(running?"READY · AUTO · 87% FUEL":"READY · AUTO · 92% FUEL","#9fd36a"), 1.6);
+    const fuel=running?87:92;
+    addUse(cx-L/2-0.8, cz, SUB_G, "CHECK THE GENERATOR", ()=>{
+      const on=typeof GRID!=="undefined" && GRID.rpm>0.5;
+      toast(on ? (GRID.ats==="E" ? "RUNNING · 1800 RPM · ON LOAD · "+fuel+"% FUEL" : "RUNNING · COOLDOWN · "+fuel+"% FUEL")
+               : "READY · AUTO · "+fuel+"% FUEL", on?"#ffd48a":"#9fd36a"); }, 1.6);
   };
   gen(72.0, -160.5, true); gen(72.0, -166.0, false);
   GEN_POS.push({x:72, z:-163.2});
@@ -263,7 +295,7 @@ const GEN_POS=[];                                   // where the hum comes from 
   cyl("metal", 0.08,0.10,6.0,10, 62.0, SUB_G+3.0, -182.0, "#9aa0a2");
   push("paintm", boxGeo(0.5,0.3,0.4,0), 62.3, SUB_G+5.9, -181.7, -0.8, "#3a3a38", 0.4, 0);
   push("lamplens", boxGeo(0.4,0.02,0.3,0), 62.4, SUB_G+5.74, -181.6, -0.8, "#ffffff", 0.4, 0);
-  LAMPS.push({x:63.5, y:SUB_G+5.6, z:-180.5, color:0xffb466, intensity:1.25, dist:30, decay:1.4, mothy:true});
+  LAMPS.push({x:63.5, y:SUB_G+5.6, z:-180.5, color:0xffb466, intensity:1.25, dist:30, decay:1.4, mothy:true, circ:"site"});
   push("lightpool", discGeo(11, 24, 0), 70, SUB_G+0.06, -172, 0, "#ffb466");
   addCol(61.9,62.1,-182.1,-181.9,SUB_G-0.5,SUB_G+6);
 })();

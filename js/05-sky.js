@@ -44,6 +44,69 @@ function starSprite(cross){
   x.fillStyle=g; x.fillRect(0,0,64,64);
   return setSRGB(new T.CanvasTexture(c));
 }
+/* --- the Milky Way ---------------------------------------------------------
+   On a clear night out here, away from the towns, it is the thing you look
+   up at: a pale river across the sky, brighter and broken toward Sagittarius
+   low in the south, split down its length by the dark of the Great Rift.
+   It is a band of geometry along the galactic plane (the same great circle
+   the star layers crowd toward), painted with mottled star-cloud and dust
+   lanes, added onto the sky; the moon and any cloud wash it out. */
+let MILKY=null;
+function milkyWay(GU, GV, GA, R){
+  const W=1024, H=128, c=cvs(W,H), x=c.getContext("2d"), img=x.createImageData(W,H), d=img.data;
+  const hsh=(i,j)=>{ const k=Math.sin(i*127.1+j*311.7)*43758.5453; return k-Math.floor(k); };
+  const vn=(u,v,f,fv)=>{                              // value noise, wrapping round the band
+    const uu=u*f, vv=v*fv, i0=Math.floor(uu), j0=Math.floor(vv), fu=uu-i0, fq=vv-j0;
+    const su=fu*fu*(3-2*fu), sv=fq*fq*(3-2*fq), w=a=>((a%f)+f)%f;
+    const a=hsh(w(i0),j0), b=hsh(w(i0+1),j0), cc=hsh(w(i0),j0+1), dd=hsh(w(i0+1),j0+1);
+    return (a+(b-a)*su)+((cc+(dd-cc)*su)-(a+(b-a)*su))*sv;
+  };
+  for(let j=0;j<H;j++) for(let i=0;i<W;i++){
+    const u=i/W, v=j/H-0.5;
+    // brighter toward the core (u ~ 0.25) and in Cygnus (u ~ 0.62), faint opposite
+    const core=Math.exp(-Math.pow((((u-0.25)%1+1.5)%1-0.5)/0.10,2)), cyg=Math.exp(-Math.pow((u-0.62)/0.07,2));
+    const wide=0.15+0.10*core+0.03*cyg, lane=v-0.03*Math.sin(u*25)-0.02*(vn(u,v,9,4)-0.5);
+    let b=Math.exp(-lane*lane/(2*wide*wide))*(0.30+0.85*core+0.40*cyg);
+    // star clouds and the dust between them: clumped, not a smooth beam
+    const n=vn(u,v,18,5)*0.40+vn(u,v,48,12)*0.32+vn(u,v,130,26)*0.18+vn(u,v,300,50)*0.10;
+    b*=0.22+1.30*Math.pow(n,1.5);
+    const dust=vn(u+0.37,v,34,9)*0.6+vn(u+0.11,v,90,20)*0.4;
+    b*=1-0.75*smoothstep(0.52,0.80,dust);
+    // the Great Rift: a ragged dark lane down the middle from Cygnus to the core
+    const rift=(u>0.18 && u<0.68) ? Math.exp(-Math.pow((lane+0.012)/0.035,2))*(0.55+0.4*vn(u,v,40,10))*smoothstep(0.18,0.28,u)*(1-smoothstep(0.58,0.68,u)) : 0;
+    b*=1-rift*0.85;
+    b*=smoothstep(0.5,0.30,Math.abs(v));                // nothing at the band's edges
+    const o=(j*W+i)*4, warm=core*0.5;
+    d[o]=Math.min(255,b*(205+40*warm)); d[o+1]=Math.min(255,b*(212+20*warm)); d[o+2]=Math.min(255,b*(238-30*warm)); d[o+3]=255;
+  }
+  x.putImageData(img,0,0);
+  // and the star clouds: grains too small to be stars of their own
+  for(let k=0;k<16000;k++){
+    const u=Math.random(), v=(Math.random()+Math.random()+Math.random()-1.5)*0.26;
+    const core=Math.exp(-Math.pow((((u-0.25)%1+1.5)%1-0.5)/0.12,2));
+    if(Math.random()>0.30+0.6*core) continue;
+    x.fillStyle="rgba(255,248,236,"+(0.05+Math.random()*0.17).toFixed(3)+")";
+    x.fillRect(u*W, (0.5+v)*H, 1, 1);
+  }
+  const tex=setSRGB(new T.CanvasTexture(c)); tex.wrapS=T.RepeatWrapping;
+  const N=160, HALF=0.24, pos=[], uv=[], idx=[];
+  for(let k=0;k<=N;k++){
+    const a=k/N*Math.PI*2;
+    for(const sv of [-1,1]){
+      const dir=GU.clone().multiplyScalar(Math.cos(a)).addScaledVector(GV,Math.sin(a)).addScaledVector(GA,sv*HALF).normalize();
+      pos.push(dir.x*R, dir.y*R, dir.z*R); uv.push(k/N, sv<0?0:1);
+    }
+    if(k<N){ const b=k*2; idx.push(b,b+1,b+2, b+1,b+3,b+2); }
+  }
+  const g=new T.BufferGeometry();
+  g.setAttribute("position", new T.Float32BufferAttribute(pos,3));
+  g.setAttribute("uv", new T.Float32BufferAttribute(uv,2)); g.setIndex(idx);
+  const m=new T.Mesh(g, new T.MeshBasicMaterial({map:tex, transparent:true, opacity:0, depthWrite:false, fog:false,
+    blending:T.AdditiveBlending, toneMapped:false, side:T.DoubleSide}));
+  m.frustumCulled=false; m.renderOrder=-2;
+  MILKY=m;
+  return m;
+}
 (function buildStars(){
   const R=2250;
   // the galactic plane: a great circle tilted off the celestial equator
@@ -81,7 +144,7 @@ function starSprite(cross){
     const pts=new T.Points(g, new T.PointsMaterial({map:sprite, vertexColors:true,
       size:size, sizeAttenuation:false, transparent:true, opacity:0, depthWrite:false,
       fog:false, blending:T.AdditiveBlending, toneMapped:false}));
-    pts.frustumCulled=false;
+    pts.frustumCulled=false; pts.renderOrder=-2;
     STAR_LAYERS.push({p:pts, base:opacity, ph:rnd()*9, sp:0.6+rnd()*1.5});
     return pts;
   }
@@ -92,9 +155,68 @@ function starSprite(cross){
   starSky.add(layer(  52,10.0, 1.0, 0.68, 1.00, texX, 0,     1.00));  // the named ones
   // the galactic haze only just shows — a suggestion of the band, not a stripe
   starSky.add(layer( 420,22.0, 1.4, 0.10, 0.075, tex, 0.22,  0.30));
+  starSky.add(milkyWay(GU, GV, GA, R-30));
   starPivot=new T.Group();
   starPivot.rotation.x=0.96;                     // the pole, ~35 deg above the horizon
   starPivot.add(starSky); scene.add(starPivot);
+})();
+/* --- the moon, and where it is in the month --------------------------------
+   The phase starts from the real one tonight (days since a known new moon,
+   over the synodic month) and moves on a day for every day of the clock
+   here. It rides behind the sun by the phase: new, it is up with the sun and
+   lost in it; at first quarter it is high in the south at sunset; full, it
+   rises as the sun goes down. Its face is drawn on a canvas: the grey seas,
+   the bright highlands, and the lit part cut by the terminator, an ellipse
+   whose width goes with the phase, turned so the lit limb faces the sun
+   wherever the sun is. The dark part keeps a little earthshine. */
+const MOON=(function(){
+  const S=256, c=cvs(S,S), face=cvs(S,S), fx=face.getContext("2d"), R=37;
+  // the face, once: highlands, maria, a few rayed craters
+  const cx=S/2, cy=S/2;
+  const g=fx.createRadialGradient(cx-8,cy-10,4,cx,cy,R);
+  g.addColorStop(0,"#fbfaf4"); g.addColorStop(0.8,"#e4e2d8"); g.addColorStop(1,"#c9c7be");
+  fx.fillStyle=g; fx.beginPath(); fx.arc(cx,cy,R,0,7); fx.fill();
+  fx.save(); fx.beginPath(); fx.arc(cx,cy,R,0,7); fx.clip();
+  for(const [mx,my,mr,a] of [[-10,-12,11,0.30],[-17,0,9,0.26],[2,-14,8,0.28],[8,-2,9,0.24],[13,8,6,0.22],[-6,10,7,0.20],
+                             [-22,-12,6,0.22],[18,-10,5,0.20],[-2,2,5,0.16],[6,20,4,0.14]]){
+    const mg=fx.createRadialGradient(cx+mx,cy+my,0,cx+mx,cy+my,mr);
+    mg.addColorStop(0,"rgba(110,112,118,"+a+")"); mg.addColorStop(1,"rgba(110,112,118,0)");
+    fx.fillStyle=mg; fx.beginPath(); fx.arc(cx+mx,cy+my,mr,0,7); fx.fill();
+  }
+  for(const [mx,my,mr] of [[-4,27,2.6],[20,14,1.6],[-26,6,1.4]]){        // Tycho and friends, bright and rayed
+    fx.fillStyle="rgba(255,255,250,0.55)"; fx.beginPath(); fx.arc(cx+mx,cy+my,mr,0,7); fx.fill();
+    fx.strokeStyle="rgba(255,255,250,0.10)"; fx.lineWidth=0.8;
+    for(let k=0;k<8;k++){ const a=k*0.785+mr; fx.beginPath(); fx.moveTo(cx+mx,cy+my); fx.lineTo(cx+mx+Math.cos(a)*14, cy+my+Math.sin(a)*14); fx.stroke(); }
+  }
+  fx.restore();
+  const x=c.getContext("2d");
+  const M={c:c, phase:0, frac:1, theta:0, up:0, _f:-1, _t:9, bright:0};
+  // the phase tonight: days since the new moon of 6 January 2000, 18:14 UT
+  const base=((Date.now()/86400000+2440587.5-2451550.26)/29.530588853)%1;
+  M.phaseAt=day=>((base+day/29.530588853)%1+1)%1;
+  M.draw=function(f, theta, haze){
+    if(Math.abs(f-this._f)<0.004 && Math.abs(theta-this._t)<0.02) return false;
+    this._f=f; this._t=theta;
+    x.clearRect(0,0,S,S);
+    // the glow round it, as much as there is moon to make it
+    const hg=x.createRadialGradient(cx,cy,R*0.9,cx,cy,S/2);
+    hg.addColorStop(0,"rgba(190,205,240,"+(0.30*f+0.02).toFixed(3)+")"); hg.addColorStop(0.35,"rgba(150,170,220,"+(0.08*f).toFixed(3)+")");
+    hg.addColorStop(1,"rgba(120,150,210,0)");
+    x.fillStyle=hg; x.fillRect(0,0,S,S);
+    // earthshine: the whole disc, very faint, cut out of the sky behind it
+    x.globalAlpha=0.10; x.drawImage(face,0,0); x.globalAlpha=1;
+    // the lit part: the half toward the sun, and the terminator's ellipse
+    x.save(); x.translate(cx,cy); x.rotate(-theta);
+    const a=R*Math.abs(1-2*f);
+    x.beginPath(); x.arc(0,0,R+0.5,-Math.PI/2,Math.PI/2,false);
+    if(f>=0.5) x.ellipse(0,0,a,R+0.5,0,Math.PI/2,Math.PI*1.5,false);
+    else       x.ellipse(0,0,Math.max(0.01,a),R+0.5,0,Math.PI/2,-Math.PI/2,true);
+    x.closePath(); x.rotate(theta); x.translate(-cx,-cy); x.clip();
+    x.drawImage(face,0,0);
+    x.restore();
+    return true;
+  };
+  return M;
 })();
 let sunDisc, moonDisc;
 const SUN_HIGH=new T.Color(0xfff4d6), SUN_LOW=new T.Color(0xff6f28);
@@ -113,9 +235,12 @@ const SUN_HIGH=new T.Color(0xfff4d6), SUN_LOW=new T.Color(0xff6f28);
   };
   sunDisc=mk(disc([[0,"rgba(255,255,255,1)"],[0.16,"rgba(255,246,220,0.96)"],
     [0.30,"rgba(255,198,124,0.42)"],[0.60,"rgba(255,150,80,0.12)"],[1,"rgba(255,140,70,0)"]]), 320);
-  moonDisc=mk(disc([[0,"rgba(255,255,255,1)"],[0.30,"rgba(226,236,255,0.9)"],
-    [0.42,"rgba(160,185,230,0.22)"],[1,"rgba(120,150,210,0)"]]), 150);
+  sunDisc.renderOrder=-2;
+  const mt=setSRGB(new T.CanvasTexture(MOON.c));
+  moonDisc=new T.Sprite(new T.SpriteMaterial({map:mt, transparent:true, depthWrite:false, fog:false}));
+  moonDisc.scale.set(250,250,1); moonDisc.renderOrder=-2; scene.add(moonDisc);
 })();
+
 const _celDir=new T.Vector3();
 function placeCelestial(sp, ang, sign, zBias){
   _celDir.set(Math.cos(ang)*sign, Math.sin(ang)*sign, zBias*sign).normalize();
@@ -422,13 +547,13 @@ const DayNight=(function(){
     return d<day ? 0.5*d/day : 0.5+0.5*(d-day)/(24-day); }
   // early afternoon: the lot half full, the shadows just starting east
   const s={t:hourToT(13.4), sunHeight:0, hemiIntensity:1, sunIntensity:1,
-           nightAmount:0, sunsetAmount:0, dark:0, hour:0, paused:false};
+           nightAmount:0, sunsetAmount:0, dark:0, hour:0, paused:false, day:0};
   return {
     DUR:DUR, P:P, state:s,
     setHour(h){ s.t=hourToT(h); s.hour=h; }, sunTimes:sunTimes,
     nudge(d){ s.t=(s.t+d+1)%1; },
     tick(dt){
-      if(!s.paused) s.t=(s.t+dt/DUR)%1;
+      if(!s.paused){ const t0=s.t; s.t=(s.t+dt/DUR)%1; if(s.t<t0) s.day++; }   // a new day at sunrise
       const ang=s.t*Math.PI*2;
       s.sunHeight=Math.sin(ang);
       const day=smoothstep(0.12,0.35,s.sunHeight);
@@ -454,6 +579,7 @@ const DayNight=(function(){
       mix(skyImg.mid,P.daySkyMid,P.setSkyMid,P.nightMid);
       mix(skyImg.low,P.daySkyLow,P.setSkyLow,P.nightLow);
       mix(skyImg.hz ,P.daySkyHz ,P.setSkyHz ,P.nightHz );
+      if(typeof skyWeather==="function") skyWeather(skyImg, day, set, night);   // overcast, fog, lightning
       const g=skyCtx.createLinearGradient(0,0,0,256);
       g.addColorStop(0,   "#"+skyImg.top.getHexString());
       g.addColorStop(0.19,"#"+_skyMix.copy(skyImg.top).lerp(skyImg.mid,0.20).getHexString());
@@ -571,6 +697,10 @@ function buildVehicleMesh(kind, paint, trailer, livery){
     TRAFFIC.push(v);
   }
 })();
+/* An incident on the northbound shoulder, now and then (14e-incidents):
+   while it is on, the right lane is coned off from zt down to zEnd, and
+   everybody slows to look as they go by. */
+const CRASH={on:false, dir:-1, lane:0, zt:64, zEnd:-60, virt:{speed:0, tail:0, nose:0}};
 // where a vehicle is along its own direction of travel
 const _trafProg=v=>v.z*v.dir;                 // distance travelled: z grows northbound-down, so sign by direction
 function updateTraffic(dt, dark){
@@ -598,7 +728,16 @@ function updateTraffic(dt, dark){
        on the desired gap — a standstill margin plus a time headway plus
        whatever it takes to shed the closing speed. Trucks hang back further
        and pull away slower. */
-    const v0=Math.max(1, v.want*v.slow), Amax=v.big?0.7:1.3, Bc=2.2, Tg=v.big?1.9:1.5, s0=v.big?9:6;
+    // the incident: the cones are a standing obstacle in the closed lane, and
+    // from a couple of hundred metres out until past it everyone rubbernecks
+    let coned=false, inZone=false;
+    if(CRASH.on && v.dir===CRASH.dir){
+      const dT=(v.z-CRASH.zt)*(-v.dir), dE=(v.z-CRASH.zEnd)*(-v.dir);   // ahead of the taper / of the end
+      inZone=dT<260 && dE>-25;
+      if(myLane===CRASH.lane && dT>0 && dT-v.nose<gap){ gap=Math.max(0.5, dT-v.nose); lead=CRASH.virt; coned=true; }
+    }
+    let v0=Math.max(1, v.want*v.slow), Amax=v.big?0.7:1.3, Bc=2.2, Tg=v.big?1.9:1.5, s0=v.big?9:6;
+    if(inZone) v0=Math.min(v0, v.big?17:19);
     let acc=Amax*(1-Math.pow(Math.min(2, v.speed/v0),4));
     if(lead){
       const dv=v.speed-lead.speed, ss=s0+Math.max(0, v.speed*Tg+v.speed*dv/(2*Math.sqrt(Amax*Bc)));
@@ -610,10 +749,10 @@ function updateTraffic(dt, dark){
     v.hold=Math.max(0,(v.hold||0)-dt);
     if(v.laneT>=1 && !v.parking && v.hold<=0){
       const okAhead=gapO>Math.max(40, v.speed*1.9), okBehind=behindO>Math.max(18, 8+behindV*1.3);
-      if(v.lane===0 && !v.exiting && !v.big && okAhead && okBehind &&
+      if(v.lane===0 && !v.exiting && (!v.big || coned) && (okAhead || coned) && okBehind &&
          ((lead && gap<120 && lead.speed<v.want-2) || v.yieldMerge)){
         v.fromLane=0; v.lane=1; v.laneT=0; v.hold=7+rnd()*5;
-      }else if(v.lane===1 && (!leadO || gapO>Math.max(90, v.speed*3.0)) && behindO>Math.max(30, 10+behindV*1.5)){
+      }else if(v.lane===1 && !inZone && (!leadO || gapO>Math.max(90, v.speed*3.0)) && behindO>Math.max(30, 10+behindV*1.5)){
         v.fromLane=1; v.lane=0; v.laneT=0; v.hold=5+rnd()*6;
       }
     }
