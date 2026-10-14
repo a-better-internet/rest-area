@@ -108,6 +108,34 @@
   #vend .keys b{color:#f4c430;font-weight:500}
   #vend.dark .grid,#vend.dark .led{filter:brightness(.25)}
 
+  /* ---- graphics settings (G) ---- */
+  #gfx{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:21;width:min(600px,94vw);display:none;
+    background:rgba(7,18,12,.94);border:2px solid var(--legend);border-radius:7px;padding:0 0 10px;
+    box-shadow:0 0 0 3px var(--sign),0 22px 60px rgba(0,0,0,.65);font-family:"JetBrains Mono",monospace;color:var(--legend)}
+  #gfx.show{display:block}
+  #gfx .hd{display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:var(--sign);
+    padding:9px 16px 8px;border-radius:5px 5px 0 0;border-bottom:2px solid var(--legend)}
+  #gfx .t{font-family:"Oswald",sans-serif;font-size:22px;font-weight:500;letter-spacing:.14em}
+  #gfx .now{font-size:10px;color:#cfe0d4;letter-spacing:.04em;text-align:right}
+  #gfx .rows{padding:8px 10px 2px}
+  #gfx .row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:3px;
+    font-size:12px;cursor:pointer;border:1px solid transparent}
+  #gfx .row .k{letter-spacing:.18em;color:#b9c4bc}
+  #gfx .row .v{display:flex;align-items:center;gap:10px}
+  #gfx .row .c{min-width:150px;text-align:center;font-family:"Oswald",sans-serif;font-size:16px;letter-spacing:.08em}
+  #gfx .row .l,#gfx .row .r{color:var(--amber-d);padding:0 6px;user-select:none}
+  #gfx .row.on{background:rgba(244,196,48,.10);border-color:rgba(244,196,48,.45)}
+  #gfx .row.on .k{color:var(--amber)}
+  #gfx .row.on .l,#gfx .row.on .r{color:var(--amber)}
+  #gfx .note{margin:6px 18px 0;font-size:11px;line-height:1.5;color:#cfe0d4;min-height:34px}
+  #gfx .ft{display:flex;justify-content:space-between;align-items:center;margin:8px 18px 0;font-size:10px;color:#9fb3a6}
+  #gfx .ft b{color:var(--amber);font-weight:500}
+  #gfx .done{font-family:"JetBrains Mono";font-size:11px;letter-spacing:.2em;color:var(--amber);background:rgba(0,0,0,.35);
+    border:1px solid rgba(244,196,48,.5);border-radius:3px;padding:6px 12px;cursor:pointer}
+  #fps{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:12;display:none;pointer-events:none;
+    font-size:11px;letter-spacing:.08em;color:#cfe0d4;background:rgba(7,18,12,.6);border:1px solid rgba(241,241,234,.2);
+    border-radius:3px;padding:3px 9px}
+
   /* ---- a power cut: a black frame, then the words, blinking ---- */
   #outage{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0)}
@@ -191,6 +219,7 @@
   <div class="row"><span>Storm power cut · wreck</span><span><kbd>P</kbd> · <kbd>X</kbd></span></div>
   <div class="row"><span>Sound</span><span><kbd>U</kbd></span></div>
   <div class="row"><span>Plan view · HUD</span><span><kbd>O</kbd> · <kbd>H</kbd></span></div>
+  <div class="row"><span>Graphics settings</span><span><kbd>G</kbd></span></div>
 </div>
 
 <div id="cluster">
@@ -225,6 +254,7 @@
   </div>
   <div class="go">CLICK TO PULL IN</div>
   <div class="hint">the woods are building · give it a moment</div>
+  <div class="hint">press G for graphics settings</div>
 </div>
 
 <!-- The world is built by these files, in this order, as classic scripts
@@ -262,6 +292,7 @@
 <script src="js/17-player.js"></script>
 <script src="js/18-hud.js"></script>
 <script src="js/18b-vending.js"></script>
+<script src="js/18c-settings.js"></script>
 <script src="js/19-loop.js"></script>
 <script src="js/20-audio.js"></script>
 </body>

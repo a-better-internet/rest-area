@@ -203,6 +203,9 @@ function stepVisitor(v, dt, dark){
     const os=Math.max(0, o.speed*sg*(Math.sin(h)*fx+Math.cos(h)*fz));
     if(consider(o.g.position.x, o.g.position.z, os, Math.max(o.nose,-o.tail), v.hw+1.4)){ blk=o; limBy="traffic"; }
   }
+  // the trooper's cruiser, coming or going (14e)
+  if(typeof TROOPER!=="undefined" && TROOPER && TROOPER.moving && TROOPER.V.g.visible){
+    const c=TROOPER.V.g.position; if(consider(c.x, c.z, 0, 2.5, v.hw+1.4)) limBy="cruiser"; }
   if(limBy!=="traffic") blk=null;
   target=Math.min(target, lim);
   const blockedBy = lim<0.3 ? limBy : null;
@@ -517,6 +520,7 @@ function updateLife(dt, now, dark, dn){
   updateLeaves(dt, now);
   updateSmoke(dt);
   if(typeof updateBackwoods==="function") updateBackwoods(dt, now, dark);
+  if(typeof updateHouse==="function") updateHouse(dt);
   if(typeof updateIncidents==="function") updateIncidents(dt, now, dark);
   if(typeof updatePuffs==="function") updatePuffs(dt, now, dark);
 }

@@ -916,13 +916,16 @@ const FOREST=(function(){
      The back woods (east of DEEP_X) are not drawn at all from the site at
      eye height: a hundred metres and more of trees stand in front of them. */
   const DEEP_X=176;
+  /* The two radii, and how far anything is drawn at all, come from the
+     draw-distance setting (03-scene); FAR is what they always were. */
   function update(cam){
     const alt=Math.max(0, cam.y-30), hideDeep=cam.x<60 && cam.y<25;
+    const D=DRAW_LEVELS[GFX.draw];
     for(const c of CHUNKS){
       const dx=Math.max(c.x0-cam.x, 0, cam.x-c.x1), dz=Math.max(c.z0-cam.z, 0, cam.z-c.z1);
       const d=Math.hypot(dx,dz,alt*0.6);
-      const mode = (hideDeep && c.x0>=DEEP_X && c.key[0]==="z") ? 2 : d<84 ? 1 : 0;
-      const small = d<40;
+      const mode = (hideDeep && c.x0>=DEEP_X && c.key[0]==="z") ? 2 : d<D.tree ? 1 : d>D.cull ? 2 : 0;
+      const small = d<D.small;
       if(mode!==c.mode || small!==c.small){
         c.mode=mode; c.small=small;
         for(const m of c.near) m.visible = mode===1 && (!m.userData.small || small);

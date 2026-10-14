@@ -14,7 +14,7 @@ function begin(){
   setTimeout(()=>toast("Y FOR OCTOBER  ·  N FOR NIGHTFALL","#cfe0d4"), 2400);
 }
 bootEl.addEventListener("click", begin);
-addEventListener("keydown",e=>{ if(!started && (e.code==="Space"||e.code==="Enter")) begin(); });
+addEventListener("keydown",e=>{ if(!started && !e.defaultPrevented && (e.code==="Space"||e.code==="Enter")) begin(); });
 
 /* --- the wind ------------------------------------------------------------
    Three slow beats multiplied together: mostly a breeze, and every couple of
@@ -28,10 +28,17 @@ function updateWind(t, dt){
   Wind.gust += (Math.pow(raw,0.8)-Wind.gust)*Math.min(1, dt*0.55);
 }
 
-let acc=0, last=performance.now()/1000;
+let acc=0, last=performance.now()/1000, _lastDraw=0;
 const _sunDir=new T.Vector3();
 function frame(){
   requestAnimationFrame(frame);
+  /* THE CAP. A 120 Hz screen asks for a frame every 8 ms; with a cap of 60
+     every other request is let go before anything is simulated or drawn.
+     A little slack so a 60 Hz screen's jitter never drops a frame it meant
+     to draw. */
+  { const tms=performance.now();
+    if(GFX.fps>0 && tms-_lastDraw < 1000/GFX.fps-1.6) return;
+    _lastDraw=tms; }
   const now=performance.now()/1000;
   let delta=now-last; last=now;
   if(delta>0.1) delta=0.1;
@@ -129,7 +136,7 @@ function frame(){
   key.target.position.set(kx, kty, kz);
   // at night the light is the moon's, as much of it as there is
   key.intensity=dn.sunIntensity-dn.nightAmount*0.30*(1-(0.25+0.75*MOON.bright));
-  key.castShadow = dn.sunHeight > 0.04;
+  key.castShadow = GFX.shadows>0 && dn.sunHeight > 0.04;
   key.color.copy(DayNight.P.dayLight)
     .lerp(DayNight.P.setLight, Math.min(1,dn.sunsetAmount*1.2))
     .lerp(DayNight.P.nightLight, dn.nightAmount);
@@ -175,6 +182,9 @@ function frame(){
   scene.fog.far =1250+dn.nightAmount*300;
   scene.background=skyImg.hz;
   applyWeather(delta, now, dn, dark);
+  // a short draw distance brings the haze in to meet it
+  { const D=DRAW_LEVELS[GFX.draw];
+    if(scene.fog.far>D.fog){ scene.fog.far=D.fog; scene.fog.near=Math.min(scene.fog.near, D.fog*0.25); } }
 
   /* ---- artificial light: emissives ramp, real lights follow the player -- */
   for(const g of GLOW){
@@ -205,6 +215,7 @@ function frame(){
   updateLights(dark, camera.position);
   FOREST.update(camera.position);
   if(typeof updateDeep==="function") updateDeep(camera.position);
+  cullBaked(camera.position, delta);
 
   // clouds drift downwind and are tinted by whatever the sky is doing
   for(let i=0;i<CLOUDS.length;i++){
@@ -300,6 +311,7 @@ function frame(){
   updateCarLights(dark, delta);
   updateHUD();
   drawPlan();
+  updateSettings(delta);
 
   if(view==="plan"){
     const half=70, aspect=innerWidth/innerHeight;

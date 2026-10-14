@@ -14,21 +14,57 @@
    sags to meet it. The windows are broken or boarded; the front door is
    standing open. Inside, the ground floor: the parlour with a stove and
    a calendar that stopped in October 1987, the ceiling come down in one
-   corner, the kitchen with the table on its side and the stairs rotted
-   through halfway up. Out in the yard: the well, the pump, a shed lying
-   on its face, the swing set, the lilacs, the mailbox at the end of the
-   drive. The kids' flagging tape leads here from the fire.
+   corner, the kitchen with the table on its side, and a boxed stair up the
+   east wall, one tread cracked. Upstairs, off a hall with a runner down
+   it: the big bedroom with the iron bed and a hole through the floor to
+   the parlour, a sewing room, a child's room with the pencil marks still
+   on the wall, a box room, and the bathroom with the clawfoot tub, open to
+   the sky where the roof has gone. Out in the yard: the well, the pump, a
+   shed lying on its face, the swing set, the lilacs, the mailbox at the
+   end of the drive. The kids' flagging tape leads here from the fire.
    ---------------------------------------------------------------------- */
 const HOUSE={};
+// faded paper: a stripe and a sprig, gone brown at the seams; the room tints it
+bucketOf("wallpaper", ()=>{
+  const c=cvs(256,256), x=c.getContext("2d"), q=_trng(1951);
+  x.fillStyle="#e8dfc8"; x.fillRect(0,0,256,256);
+  for(let i=0;i<4;i++){ x.fillStyle="rgba(170,150,110,0.35)"; x.fillRect(i*64+26,0,12,256); x.fillStyle="rgba(140,120,90,0.18)"; x.fillRect(i*64+2,0,3,256); }
+  for(let j=0;j<4;j++) for(let i=0;i<4;i++){ const px=i*64+(j%2?32:0)+8, py=j*64+20;
+    x.fillStyle="rgba(150,90,90,0.55)"; x.beginPath(); x.arc(px,py,5,0,7); x.fill(); x.arc(px+6,py+3,4,0,7); x.fill();
+    x.strokeStyle="rgba(90,110,70,0.6)"; x.lineWidth=2; x.beginPath(); x.moveTo(px,py+4); x.quadraticCurveTo(px-6,py+14,px-2,py+22); x.stroke();
+    x.fillStyle="rgba(90,110,70,0.5)"; x.beginPath(); x.ellipse(px-6,py+14,4,2,0.6,0,7); x.fill(); }
+  for(let k=0;k<26;k++){ const g=x.createRadialGradient(0,0,0,0,0,1); const px=q()*256, py=q()*256, rr=10+q()*40;
+    x.fillStyle="rgba(120,100,70,"+(0.04+q()*0.08).toFixed(2)+")"; x.beginPath(); x.arc(px,py,rr,0,7); x.fill(); }
+  const t=setSRGB(new T.CanvasTexture(c)); t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=4;
+  return new T.MeshStandardMaterial({map:t, roughness:0.92});
+});
 (function homestead(){
   const n0=scene.children.length;
   const HX=HOMESTEAD.x, HZ=HOMESTEAD.z, HY=HOMESTEAD.y;
   const FF=HY+0.72;                                     // the ground floor
   const W2=4.6, D2=3.3, x0=HX-W2, x1=HX+W2, z0=HZ-D2, z1=HZ+D2, T2=0.20;
   const EAVE=FF+5.45, RIDGE=FF+8.35;
+  const CL=FF+2.6, UF=FF+2.86;                          // the ground floor's ceiling; the upstairs floor
+  // the stair: up the east wall from the front, thirteen risers to the hall
+  const SX0=x1-T2-1.0, SX1=x1-T2, SZB=z0+T2+0.15, NRIS=13, RISE=(UF-FF)/NRIS, RUN=0.25,
+        SZT=SZB+RUN*(NRIS-1), SZO=SZB+RUN*2;            // top of the flight; where the opening over it starts
   const SID="#8c877c", SID2="#7a756b", TRIM="#55524c", BARE="#635d54";
   const r=_trng(1987);
-  Object.assign(HOUSE, {x0:x0, x1:x1, z0:z0, z1:z1, FF:FF, HY:HY});
+  Object.assign(HOUSE, {x0:x0, x1:x1, z0:z0, z1:z1, FF:FF, HY:HY, UF:UF, stair:{x0:SX0, x1:SX1, zb:SZB, zt:SZT, run:RUN}});
+  // a rectangle less some holes in it, as a few rectangles
+  const minus=(R, holes)=>{
+    const xs=[R.x0,R.x1], zs=[R.z0,R.z1];
+    for(const h of holes){ for(const v of [h.x0,h.x1]) if(v>R.x0 && v<R.x1) xs.push(v); for(const v of [h.z0,h.z1]) if(v>R.z0 && v<R.z1) zs.push(v); }
+    xs.sort((a,b)=>a-b); zs.sort((a,b)=>a-b);
+    const out=[];
+    for(let j=0;j<zs.length-1;j++){ let cur=null;
+      for(let i=0;i<xs.length-1;i++){
+        const cx=(xs[i]+xs[i+1])/2, cz=(zs[j]+zs[j+1])/2;
+        if(holes.some(h=>cx>h.x0 && cx<h.x1 && cz>h.z0 && cz<h.z1)){ cur=null; continue; }
+        if(cur && cur.x1===xs[i]) cur.x1=xs[i+1]; else { cur={x0:xs[i], x1:xs[i+1], z0:zs[j], z1:zs[j+1]}; out.push(cur); }
+      } }
+    return out;
+  };
   // the stone it stands on
   for(const [a,b,c,d] of [[x0,x1,z0,z0+0.3],[x0,x1,z1-0.3,z1],[x0,x0+0.3,z0,z1],[x1-0.3,x1,z0,z1]])
     wallBox("rock", a, b, c, d, HY-0.6, FF, "#8d877b", 0.5, HY-0.6);
@@ -44,7 +80,7 @@ const HOUSE={};
   const BDOOR={a:HX+2.4, b:HX+3.3, sill:FF-0.6, head:FF+2.08};
   const BACK=[BDOOR, win(HX-2.8,HX-1.8,1), win(HX-2.7,HX-1.9,0), win(HX+1.6,HX+2.4,0)];
   const WEST=[win(HZ-1.0,HZ+0.0,1), win(HZ-1.0,HZ+0.0,0)];
-  const EAST=[win(HZ-1.9,HZ-0.9,1), win(HZ-1.0,HZ-0.2,0), win(HZ+0.9,HZ+1.7,0)];
+  const EAST=[win(HZ+0.5,HZ+1.3,1), win(HZ-1.0,HZ-0.2,0), win(HZ+1.6,HZ+2.4,0)];
   // each wall in two runs, a storey each, so a window over a door is its own opening
   const lo=L=>L.filter(o=>o.head<FF+2.6), hi=L=>L.filter(o=>o.sill>FF+2.6), MID=FF+2.6;
   for(const [L,y0,y1] of [[lo,FF,MID],[hi,MID,EAVE]]){
@@ -58,9 +94,9 @@ const HOUSE={};
     const g=new FaceGeo().slab([V3(x+(sd<0?T2:0), EAVE, z0-0.002), V3(x+(sd<0?T2:0), EAVE, z1+0.002), V3(x+(sd<0?T2:0), RIDGE-0.08, HZ)], T2, 0.5).geo();
     push("siding", g, 0,0,0, 0, SID);
   }
-  // inside: plaster on the ground floor (lath showing where it is off), dark above
-  const lin=(axis,f,dir,a,b,open)=>{ (axis==="x"?lineX:lineZ)("plaster", f, dir, a, b, FF, FF+2.6, lo(open), "#9e927a", 0.5);
-                                     (axis==="x"?lineX:lineZ)("beam", f, dir, a, b, FF+2.62, EAVE, hi(open), "#3e362c", 0.6); };
+  // inside: plaster on the ground floor (lath showing where it is off), paper upstairs
+  const lin=(axis,f,dir,a,b,open)=>{ (axis==="x"?lineX:lineZ)("plaster", f, dir, a, b, FF, CL, lo(open), "#9e927a", 0.5);
+                                     (axis==="x"?lineX:lineZ)("wallpaper", f, dir, a, b, UF, EAVE-0.02, hi(open), "#b8ab92", 1.6); };
   lin("x", z0+T2, 1, x0+T2, x1-T2, FRONT); lin("x", z1-T2, -1, x0+T2, x1-T2, BACK);
   lin("z", x0+T2, 1, z0+T2, z1-T2, WEST); lin("z", x1-T2, -1, z0+T2, z1-T2, EAST);
   // the weather on the outside: bare grey boards where the paint has gone, mildew low down
@@ -179,15 +215,26 @@ const HOUSE={};
   ivy(x0-0.014, FF-0.6, HZ+0.6, -Math.PI/2, 1.0, 5.2);
   ivy(x0+0.5, FF-0.6, z0-0.014, Math.PI, 1.1, 2.6);
   ivy(x1-0.6, FF-0.6, z1+0.014, 0, 1.4, 2.2);
-  // the attic floor under the roof, so the upstairs is dark and not open to the sky
-  ceilAt("beam", x0+T2, x1-T2, z0+T2, z1-T2, EAVE-0.02, "#2e2822", 0.6);
+  // the upstairs ceiling, and over the bathroom a hole in it under the hole in the roof
+  const HB={x0:HX+2.3, x1:HX+3.3, z0:HZ+1.7, z1:HZ+2.6};
+  for(const q of minus({x0:x0+T2, x1:x1-T2, z0:z0+T2, z1:z1-T2}, [HB])) ceilAt("plaster", q.x0, q.x1, q.z0, q.z1, EAVE-0.02, "#a39886", 0.5);
+  // the attic over it: joists, the boards from above, lath hanging at the hole's edges
+  for(const q of minus({x0:x0+T2, x1:x1-T2, z0:z0+T2, z1:z1-T2}, [HB])) floorAt("beam", q.x0, q.x1, q.z0, q.z1, EAVE+0.05, "#4a4032", 0.6);
+  for(const z of [HB.z0-0.03, HB.z1+0.03]) bx("beam", HB.x1-HB.x0+0.5, 0.12, 0.05, (HB.x0+HB.x1)/2, EAVE+0.005, z, 0.6, 0, "#4a3e30");
+  for(const x of [HB.x0-0.03, HB.x1+0.03]) bx("beam", 0.05, 0.10, HB.z1-HB.z0, x, EAVE+0.0, (HB.z0+HB.z1)/2, 0.6, 0, "#4a3e30");
+  for(let k=0;k<6;k++){ const x=HB.x0+0.1+r()*(HB.x1-HB.x0-0.2), z=r()<0.5?HB.z0+0.02:HB.z1-0.02;
+    push("beam", boxGeo(0.03, 0.26+r()*0.3, 0.008, 0.6), x, EAVE-0.15-r()*0.1, z, r()*0.4, "#8a7a62", (r()-0.5)*0.5, (r()-0.5)*0.4); }
+  // rafters under the back slope, either side of the hole, seen from below
+  { const under=z=>eY+(RIDGE-eY)*(z1+OHZ-z)/(z1+OHZ-HZ)-RT-0.07;
+    for(let x=HB.x0-0.9; x<HB.x1+1.0; x+=0.6){ if(x>hb0-0.05 && x<hb1+0.05) continue;
+      tube("beam", V3(x, under(z1-T2-0.02), z1-T2-0.02), V3(x, under(HZ+0.1), HZ+0.1), 0.045, 4, "#5a4a38"); } }
 
   /* ---- the chimney up the west gable, its top fallen in ------------------ */
   { const cx=x0-0.34, cz=HZ+1.55;
     wallBox("brick", cx-0.33, cx+0.33, cz-0.45, cz+0.45, HY-0.3, RIDGE+0.4, "#6a3c30", 0.8, HY-0.3);
     bx("brick", 0.55, 0.36, 0.40, cx+0.05, RIDGE+0.58, cz-0.18, 0.8, 0, "#6a3c30");
     // soot down the face of it, and white bloom where the water comes through
-    for(let k=0;k<5;k++) push("paintm", planeGeo(0.3+r()*0.3, 0.6+r()*1.4, 0), cx-0.334, FF+1+r()*6, cz-0.3+r()*0.6, -Math.PI/2, r()<0.6?"#3a2a24":"#9a8a80");
+    for(let k=0;k<5;k++) push("paintm", planeGeo(0.3+r()*0.3, 0.6+r()*1.4, 0), cx-0.334-k*0.0018, FF+1+r()*6, cz-0.3+r()*0.6, -Math.PI/2, r()<0.6?"#3a2a24":"#9a8a80");
     for(let k=0;k<7;k++){ const bxp=cx-1.2+r()*2.4, bzp=cz-1.3+r()*2.6;
       bx("brick", 0.22, 0.07, 0.10, bxp, Terrain.groundAt(bxp,bzp)+0.035, bzp, 0.8, r()*3, "#7d4434"); } }
 
@@ -239,9 +286,9 @@ const HOUSE={};
   lineZ("plaster", PX-0.10, -1, z0+T2, z1-T2, FF, FF+2.6, [PD], "#9a8c72", 0.5);
   lineZ("plaster", PX+0.10, 1, z0+T2, z1-T2, FF, FF+2.6, [PD], "#958a74", 0.5);
   // wallpaper coming away in strips, lath showing behind the plaster
-  for(let k=0;k<12;k++){ const onW=k%2, z=z0+0.5+r()*(z1-z0-1), y=FF+0.6+r()*1.7, h=0.3+r()*0.6;
-    if(onW) push("paintm", planeGeo(0.18+r()*0.3, h, 0), x0+T2+0.012, y, z, Math.PI/2, "#6a5c48");
-    else push("paintm", planeGeo(0.12, h, 0), PX-0.112, y, z, -Math.PI/2, "#7a6a52", 0, (r()-0.5)*0.12); }
+  for(let k=0;k<12;k++){ const onW=k%2, z=z0+0.5+r()*(z1-z0-1), y=FF+0.6+r()*1.7, h=0.3+r()*0.6, o=k*0.0015;
+    if(onW) push("paintm", planeGeo(0.18+r()*0.3, h, 0), x0+T2+0.012+o, y, z, Math.PI/2, "#6a5c48");
+    else push("paintm", planeGeo(0.12, h, 0), PX-0.112-o, y, z, -Math.PI/2, "#7a6a52", 0, (r()-0.5)*0.12); }
   // water stains down from the ceiling, and damp coming up the walls
   const stain=(x,z,ry,y,w,h,c)=>push("paintm", new T.CircleGeometry(0.5,10).scale(w,h,1), x, y, z, ry, c);
   for(let k=0;k<16;k++){ const side=(r()*4)|0, w=0.4+r()*0.9, h=0.5+r()*1.2, c=r()<0.6?"#6e604a":"#5a5444";
@@ -255,12 +302,17 @@ const HOUSE={};
     push("paintm", new T.CircleGeometry(0.08+r()*0.35, 7), x, FF+0.006+r()*0.002, z, 0, ["#4a3a28","#6a4a2a","#3e3428","#7a5a30"][(r()*4)|0], -Math.PI/2, 0); }
   // the ceiling, down in one corner of the parlour: joists showing, the rest on the floor
   const ch={x0:HX-2.5, x1:HX-1.1, z0:HZ-0.7, z1:HZ+0.8};
-  ceilAt("plaster", x0+T2, x1-T2, z0+T2, ch.z0, FF+2.6, "#b8b0a0", 0.5);
-  ceilAt("plaster", x0+T2, x1-T2, ch.z1, z1-T2, FF+2.6, "#b8b0a0", 0.5);
-  ceilAt("plaster", x0+T2, ch.x0, ch.z0, ch.z1, FF+2.6, "#b8b0a0", 0.5);
-  ceilAt("plaster", ch.x1, x1-T2, ch.z0, ch.z1, FF+2.6, "#b8b0a0", 0.5);
+  const STW={x0:SX0, x1:SX1, z0:SZO, z1:SZT+0.03};           // the stairwell, open to the hall above
+  // and through the upstairs floor too, a smaller hole, over the pile of it
+  const FHU={x0:HX-2.4, x1:HX-1.4, z0:HZ-0.65, z1:HZ-0.08};
+  for(const q of minus({x0:x0+T2, x1:x1-T2, z0:z0+T2, z1:z1-T2}, [ch, STW])) ceilAt("plaster", q.x0, q.x1, q.z0, q.z1, CL, "#b8b0a0", 0.5);
   for(let x=ch.x0+0.15; x<ch.x1; x+=0.4) bx("beam", 0.06, 0.20, ch.z1-ch.z0+0.3, x, FF+2.72, (ch.z0+ch.z1)/2, 0.6, 0, "#5a4a38");
-  ceilAt("beam", ch.x0, ch.x1, ch.z0, ch.z1, FF+2.86, "#2a2420", 0.6);
+  for(const q of minus(ch, [FHU])) ceilAt("beam", q.x0, q.x1, q.z0, q.z1, UF-0.03, "#2a2420", 0.6);
+  // the ends of the boards round the hole up there, snapped off and hanging
+  for(let k=0;k<9;k++){ const sd=k%3, along=r();
+    const x=sd===0 ? FHU.x0+along*(FHU.x1-FHU.x0) : sd===1 ? FHU.x0+0.02 : FHU.x1-0.02,
+          z=sd===0 ? (k%2?FHU.z0+0.03:FHU.z1-0.03) : FHU.z0+along*(FHU.z1-FHU.z0);
+    push("beam", boxGeo(sd?0.24:0.12, 0.022, sd?0.12:0.22, 0.6), x, UF-0.06-r()*0.06, z, 0, "#6a5a44", (r()-0.5)*0.9, (r()-0.5)*0.9); }
   for(let k=0;k<16;k++){ const x=ch.x0+r()*(ch.x1-ch.x0), z=ch.z0+r()*(ch.z1-ch.z0);
     push("paintm", boxGeo(0.12+r()*0.3, 0.03, 0.10+r()*0.25, 0), x, FF+0.03+r()*0.04, z, r()*3, r()<0.5?"#cfc7b6":"#9a8a70", (r()-0.5)*0.3, (r()-0.5)*0.3); }
   for(let k=0;k<6;k++) tube("beam", V3(ch.x0+r()*1.4, FF+0.03, ch.z0+r()*1.5), V3(ch.x0+r()*1.4, FF+0.05+r()*0.4, ch.z0+r()*1.5), 0.012, 3, "#7a6a54");
@@ -269,15 +321,270 @@ const HOUSE={};
   push("paintm", planeGeo(fh.x1-fh.x0, fh.z1-fh.z0, 0), (fh.x0+fh.x1)/2, FF+0.008, (fh.z0+fh.z1)/2, 0, "#0c0a08", -Math.PI/2, 0);
   for(const z of [fh.z0, fh.z1]) push("beam", boxGeo(fh.x1-fh.x0+0.1, 0.03, 0.06, 0.6), (fh.x0+fh.x1)/2, FF+0.012, z, 0, "#5a4a38", 0, z===fh.z0?0.1:-0.08);
   addCol(fh.x0, fh.x1, fh.z0, fh.z1, FF-0.6, FF+0.25);
-  // the stairs up the east wall: rotted through half way, and you are not going up them
-  { const sx0=x1-T2-0.95, sx1=x1-T2, zb=z0+T2+0.25, run=0.29, rise=0.215;
-    for(let k=0;k<12;k++){ if(k===6||k===7) continue;
-      bx("beam", sx1-sx0-0.08, 0.04, 0.27, (sx0+sx1)/2, FF+rise*(k+1), zb+run*k+0.14, 0.6, 0, "#7a6a54");
-      bx("beam", sx1-sx0-0.11, rise-0.012, 0.02, (sx0+sx1)/2, FF+rise*k+rise/2-0.006, zb+run*k+0.01, 0.6, 0, "#6a5a44"); }
-    tube("beam", V3(sx0+0.03, FF, zb), V3(sx0+0.03, FF+rise*12, zb+run*12), 0.05, 4, "#5a4a38");
-    tube("beam", V3(sx0+0.03, FF+rise*7, zb+run*6.5), V3(sx0+0.35, FF+0.05, zb+run*6.5+0.4), 0.025, 4, "#6a5a44");
-    addCol(sx0-0.05, sx1, zb-0.05, zb+run*12+0.1, FF-0.5, FF+3.0);
-    addUse(sx0-0.5, zb+0.7, FF, "LOOK UP THE STAIRS", ()=>toast("THEY ARE ROTTED THROUGH HALF WAY UP. SOMETHING UP THERE SHIFTS, AND IS STILL","#cfe0d4"), 1.2); }
+  /* the stair: boxed in against the east wall, open for its first four steps
+     on the kitchen side, a newel there, a rail on the wall the rest of the
+     way. Thirteen risers; the eighth tread is split down its length and
+     sags, and you keep to the wall side of it. A ramp under it all for
+     your feet (06-collision), the treads for your eyes. */
+  { const W=SX1-SX0, cx=(SX0+SX1)/2;
+    for(let k=0;k<NRIS-1;k++){
+      const ty=FF+RISE*(k+1), za=SZB+RUN*k, col=k%3?"#7a6a54":"#73634e";
+      if(k===7){                                       // the cracked one
+        push("beam", boxGeo(W/2-0.05, 0.035, RUN+0.03, 0.6), SX0+0.03+(W/2-0.05)/2, ty-0.03, za+RUN/2-0.015, 0, "#6e5e48", 0, -0.07);
+        push("beam", boxGeo(W/2-0.05, 0.035, RUN+0.03, 0.6), SX1-0.03-(W/2-0.05)/2, ty-0.026, za+RUN/2-0.015, 0, "#6a5a44", 0, 0.05);
+      }else bx("beam", W-0.06, 0.035, RUN+0.03, cx, ty-0.0175, za+RUN/2-0.015, 0.6, 0, col);
+      bx("beam", W-0.07, RISE-0.036, 0.02, cx, FF+RISE*k+(RISE-0.036)/2, za+0.012, 0.6, 0, "#5e5040");
+    }
+    bx("beam", W-0.07, RISE-0.012, 0.02, cx, FF+RISE*(NRIS-1)+(RISE-0.012)/2-0.004, SZT+0.012, 0.6, 0, "#5e5040");
+    // stringers both sides, along the line of the nosings
+    const ang=Math.atan2(UF-FF, SZT-SZB+RUN), L=Math.hypot(SZT-SZB+RUN+0.3, UF-FF+0.25);
+    for(const x of [SX0+0.025, SX1-0.025])
+      push("beam", boxGeo(0.04, 0.26, L, 0.6), x, (FF+UF)/2+RISE-0.11, (SZB+SZT)/2-0.02, 0, "#5a4a38", -ang, 0);
+    // the newel at the foot, its cap; the short rail to the wall; two balusters
+    bx("beam", 0.10, 1.12, 0.10, SX0+0.05, FF+0.56, SZB+0.03, 0.6, 0, "#5a4836");
+    push("beam", new T.SphereGeometry(0.065,10,8), SX0+0.05, FF+1.17, SZB+0.03, 0, "#5a4836");
+    tube("beam", V3(SX0+0.05, FF+1.02, SZB+0.03), V3(SX0+0.05, FF+RISE*4+0.86, SZB+0.98), 0.028, 6, "#5a4836");
+    for(const k of [1,2,3]){ const z=SZB+RUN*k-0.03; tube("beam", V3(SX0+0.05, FF+RISE*(k+1), z), V3(SX0+0.05, FF+RISE*(k+1)+0.84, z), 0.016, 5, "#6a5642"); }
+    addCol(SX0, SX0+0.10, SZB-0.02, SZB+0.08, FF-0.5, FF+1.2);
+    // the rail up the wall of the stairwell, on brackets
+    tube("beam", V3(SX0+0.065, FF+RISE*4+0.88, SZB+0.98), V3(SX0+0.065, UF+0.88, SZT+0.05), 0.026, 6, "#5a4836");
+    for(let k=4;k<NRIS;k+=3){ const z=SZB+RUN*k, y=FF+RISE*(k+1)+0.84; bx("metal", 0.07, 0.03, 0.03, SX0+0.035, y, z, 0.5, 0, "#3a3430"); }
+    // the wall that boxes it in, kitchen side (open for the first two steps), then all the way up
+    runZ("plaster", SX0-0.05, 0.10, SZB+0.95, SZT, FF, UF, [], "#958a74", 0.5);
+    runZ("wallpaper", SX0-0.05, 0.112, z0+T2, SZT+0.025, UF, EAVE-0.02, [], "#a89c84", 1.6);
+    bx("plaster", 0.094, UF-CL, SZB+0.95-(z0+T2)-0.006, SX0-0.05, (CL+UF)/2, (z0+T2+SZB+0.95)/2+0.003, 0.5, 0, "#958a74");
+    addCol(SX0-0.10, SX0, z0+T2, SZB+0.95, CL-0.02, UF);      // over your head as you step on: solid only where it is
+    bx("paintm", 0.13, CL-FF, 0.04, SX0-0.05, (FF+CL)/2, SZB+0.945, 0, 0, TRIM);
+    // under the landing, the end of the closet under the stair: boards, a little door
+    for(let x=SX0+0.06; x<SX1-0.02; x+=0.13) bx("beam", 0.12, UF-0.30-FF, 0.025, x, (FF+UF-0.30)/2, SZT+0.035, 0.6, 0, x%0.26<0.13?"#6a5a46":"#625240");
+    bx("paintm", 0.62, 1.30, 0.035, SX0+0.50, FF+0.67, SZT+0.06, 0, 0, "#5a5048");
+    push("chrome", new T.SphereGeometry(0.025,8,6), SX0+0.25, FF+0.75, SZT+0.085, 0, "#8a7a5a");
+    addCol(SX0, SX1, SZT, SZT+0.07, FF-0.5, FF+2.45);
+    addUse(SX0+0.5, SZT+0.75, FF, "OPEN THE CLOSET UNDER THE STAIRS", ()=>toast("A BROOM, A BOX OF MASON JARS, GALOSHES. A CHILD'S HANDPRINT IN PAINT ON THE INSIDE OF THE DOOR","#cfe0d4"), 0.9);
+    // the edge of the hall floor over the stair, at the top
+    bx("beam", W, UF-CL, 0.05, cx, (CL+UF)/2, SZO-0.025, 0.6, 0, "#4e4234");
+    // for your feet: one ramp from the floor to the hall
+    addRamp(SX0+0.01, SX1-0.01, SZB-0.04, SZT+0.002, "z", SZB, SZT, FF+0.02, UF);
+  }
+  /* ---- upstairs ------------------------------------------------------------
+     A hall across the middle from the stairhead; the two big rooms in
+     front, the child's room, the box room and the bathroom behind. */
+  { const IN={x0:x0+T2, x1:x1-T2, z0:z0+T2, z1:z1-T2};
+    // the floor: boards, and under the bit over the stair's foot nothing you can reach
+    for(const q of minus(IN, [{x0:SX0-0.10, x1:SX1, z0:z0+T2, z1:SZT}, FHU])){ floorAt("beam", q.x0, q.x1, q.z0, q.z1, UF+0.004, "#6e5e48", 0.9); addFlat(q.x0, q.x1, q.z0, q.z1, UF); }
+    // a ring you cannot step through round the hole in the bedroom floor
+    addCol(FHU.x0-0.03, FHU.x1+0.03, FHU.z0-0.03, FHU.z1+0.03, UF-0.2, UF+0.45);
+    addZone(x0, x1, z0, z1, UF-0.4, EAVE, "THE OLD HOUSE · UPSTAIRS", true);
+    const HS=HZ+0.065, HN=HZ+1.15, PW=HX-0.58, PE=HX+1.4, t=0.10, DH=UF+2.02;
+    const dr=(a,b)=>({a:a, b:b, sill:UF-0.6, head:DH});
+    const D_BED=dr(HX-3.65,HX-2.75), D_SEW=dr(HX+0.55,HX+1.45), D_KID=dr(HX-3.25,HX-2.35), D_BOX=dr(HX-0.2,HX+0.7), D_BATH=dr(HX+1.95,HX+2.85);
+    // the walls: the hall's two sides, the cross walls front and back
+    runX("wallpaper", HS+t/2, t, x0+T2, SX0-0.10, UF, EAVE-0.02, [D_BED, D_SEW], "#b4a68a", 1.6);
+    runX("wallpaper", HN+t/2, t, x0+T2, x1-T2, UF, EAVE-0.02, [D_KID, D_BOX, D_BATH], "#b4a68a", 1.6);
+    runZ("wallpaper", PW, t, z0+T2, HS, UF, EAVE-0.02, [], "#bba98c", 1.6);
+    runZ("wallpaper", PW, t, HN+t, z1-T2, UF, EAVE-0.02, [], "#9fb2c4", 1.6);
+    runZ("plaster", PE, t, HN+t, z1-T2, UF, EAVE-0.02, [], "#a9b8a2", 0.5);
+    // the bathroom is painted, not papered: its own face on the walls it has
+    lineX("plaster", HN+t, 1, PE+t/2, x1-T2, UF, EAVE-0.02, [D_BATH], "#a9b8a2", 0.5, 0.006);
+    lineZ("plaster", x1-T2, -1, HN+t, z1-T2, UF, EAVE-0.02, [EAST[2]], "#a9b8a2", 0.5, 0.010);
+    lineX("plaster", z1-T2, -1, PE+t/2, x1-T2, UF, EAVE-0.02, hi(BACK).filter(o=>o.b>PE), "#a9b8a2", 0.5, 0.010);
+    // door trim and the leaves: standing open, one off its hinges
+    const trimX=(c,o)=>{ bx("paintm", 0.07, DH-UF-0.002, t+0.04, o.a-0.031, (UF+DH)/2-0.001, c, 0, 0, TRIM); bx("paintm", 0.07, DH-UF-0.002, t+0.04, o.b+0.031, (UF+DH)/2-0.001, c, 0, 0, TRIM);
+      bx("paintm", o.b-o.a+0.16, 0.08, t+0.046, (o.a+o.b)/2, DH+0.04, c, 0, 0, TRIM); };
+    for(const o of [D_BED,D_SEW]) trimX(HS+t/2, o);
+    for(const o of [D_KID,D_BOX,D_BATH]) trimX(HN+t/2, o);
+    const leaf=(hx,hz,ang,c)=>push("paintm", boxGeo(0.78, 1.98, 0.04, 0), hx+Math.cos(ang)*0.39, UF+1.0, hz-Math.sin(ang)*0.39, ang, c);
+    // swung back nearly to the wall, the way a door is left in an empty house
+    leaf(D_BED.a+0.03, HS-0.03, Math.PI-0.30, "#6a5a48"); leaf(D_SEW.b-0.03, HS-0.03, 0.30, "#6a5a48");
+    leaf(D_KID.a+0.03, HN+t+0.03, -(Math.PI-0.30), "#7a8a96"); leaf(D_BOX.b-0.03, HN+t+0.03, -0.66, "#6a5a48");
+    push("paintm", boxGeo(0.76, 1.96, 0.04, 0), HX+3.25, UF+0.98, HN+t+0.25, 0.04, "#6a5a48", 0.22, 0);    // the bathroom's, off its hinges and leant on the wall
+    addCol(HX+2.86, HX+3.64, HN+t, HN+t+0.48, UF-0.3, UF+1.9);
+    // wallpaper coming away, water down it, the damp
+    for(let k=0;k<18;k++){ const w=0.15+r()*0.35, h=0.4+r()*1.2, y=UF+0.3+r()*1.6, o=0.016+k*0.0016;
+      const side=(r()*4)|0;
+      if(side===0) push("paintm", planeGeo(w,h,0), x0+T2+o, y, z0+0.5+r()*(z1-z0-1), Math.PI/2, r()<0.5?"#8a7a62":"#6a5c48", 0, (r()-0.5)*0.15);
+      else if(side===1) push("paintm", planeGeo(w,h,0), HX-3.9+r()*3, y, HS+t+o-0.008, 0, r()<0.5?"#8a7a62":"#6a5c48", 0, (r()-0.5)*0.15);
+      else if(side===2) push("paintm", planeGeo(w,h,0), HX-3.9+r()*3, y, HN-o+0.008, Math.PI, "#7a6a52", 0, (r()-0.5)*0.15);
+      else push("paintm", planeGeo(w,h,0), HX-4.2+r()*3.4, y, z0+T2+o, 0, "#6e604a", 0, (r()-0.5)*0.15); }
+    // the hall: a runner down it, a little table, a picture down on the floor, the hatch to the attic
+    push("paintm", planeGeo(6.6, 0.62, 0), HX-0.4, UF+0.008, (HS+HN+t)/2, 0, "#6a3a32", -Math.PI/2, 0);
+    push("paintm", planeGeo(6.4, 0.46, 0), HX-0.4, UF+0.010, (HS+HN+t)/2, 0, "#7e4a3c", -Math.PI/2, 0);
+    { const tx=x0+T2+0.30, tz=(HS+HN+t)/2;
+      bx("beam", 0.40, 0.03, 0.55, tx, UF+0.74, tz, 0.6, 0, "#6a4a32");
+      for(const [dx,dz] of [[-0.16,-0.22],[0.16,-0.22],[-0.16,0.22],[0.16,0.22]]) bx("beam", 0.03, 0.73, 0.03, tx+dx, UF+0.365, tz+dz, 0.6, 0, "#5a3e2a");
+      push("glass", new T.CylinderGeometry(0.05,0.07,0.16,10,1,true), tx, UF+0.86, tz, 0, "#dfe6e2");
+      push("paintm", new T.CylinderGeometry(0.08,0.09,0.07,12), tx, UF+0.79, tz, 0, "#7a6a3a");
+      addCol(tx-0.24, tx+0.24, tz-0.3, tz+0.3, UF-0.3, UF+0.9); }
+    push("paintm", boxGeo(0.46, 0.36, 0.03, 0), HX-1.0, UF+0.04, HN-0.30, 0.4, "#3a2a1a", -Math.PI/2+0.08, 0);
+    const AH={x0:HX+0.4, x1:HX+1.2, z0:HS+0.22, z1:HN-0.12};
+    bx("paintm", AH.x1-AH.x0, 0.03, AH.z1-AH.z0, (AH.x0+AH.x1)/2, EAVE-0.05, (AH.z0+AH.z1)/2, 0, 0, "#7a7060");
+    tube("paintm", V3((AH.x0+AH.x1)/2, EAVE-0.06, AH.z1-0.08), V3((AH.x0+AH.x1)/2, UF+1.85, AH.z1-0.08), 0.004, 3, "#d8d0c0");
+    push("paintm", new T.SphereGeometry(0.02,6,5), (AH.x0+AH.x1)/2, UF+1.84, AH.z1-0.08, 0, "#c8b890");
+    addUse((AH.x0+AH.x1)/2, (AH.z0+AH.z1)/2, UF, "PULL THE ATTIC CORD", ()=>{ toast("IT DOESN'T COME DOWN. OVER YOUR HEAD SOMETHING ROLLS ACROSS THE BOARDS AND STOPS","#cfe0d4");
+      if(typeof AUDIO!=="undefined") AUDIO.creak(); }, 0.9);
+    { const tg=signTex(420,140,(c,W,H)=>{ c.clearRect(0,0,W,H); c.fillStyle="rgba(30,30,30,0.85)"; c.font="bold 54px Arial"; c.textAlign="center"; c.textBaseline="middle";
+        c.fillText("DONT GO IN",W/2,H*0.30); c.fillText("THE ATTIC",W/2,H*0.74); });
+      const m=new T.Mesh(new T.PlaneGeometry(0.84,0.28), new T.MeshStandardMaterial({map:tg, transparent:true, roughness:0.9, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
+      m.position.set(HX+0.8, UF+1.55, HN-0.004); m.rotation.y=Math.PI; scene.add(m); }
+
+    /* the big bedroom: the iron bed, the dresser and its glass, a rocker, a suitcase */
+    { const bx0=x0+T2, bx1=HX-2.45, bz0=HZ-2.95, bz1=HZ-1.55, my=UF+0.50;
+      for(const [x,h] of [[bx0+0.06,1.25],[bx1-0.04,0.85]]){
+        for(const z of [bz0+0.03,bz1-0.03]) tube("metal", V3(x,UF,z), V3(x,UF+h,z), 0.022, 6, "#2e2a28");
+        for(const y of [h-0.04, h*0.55, 0.30]) tube("metal", V3(x,UF+y,bz0+0.03), V3(x,UF+y,bz1-0.03), 0.014, 5, "#2e2a28");
+        for(let k=1;k<6;k++){ const z=bz0+(bz1-bz0)*k/6; tube("metal", V3(x,UF+0.30,z), V3(x,UF+h-0.04,z), 0.008, 4, "#3a3430"); } }
+      for(const z of [bz0+0.05,bz1-0.05]) tube("metal", V3(bx0+0.06,UF+0.32,z), V3(bx1-0.04,UF+0.32,z), 0.018, 5, "#2e2a28");
+      bx("paintm", bx1-bx0-0.18, 0.20, bz1-bz0-0.10, (bx0+bx1)/2, my-0.08, (bz0+bz1)/2, 0, 0, "#b4a688");
+      push("paintm", new T.CircleGeometry(0.32,10), (bx0+bx1)/2+0.2, my+0.022, (bz0+bz1)/2-0.1, 0, "#8a7656", -Math.PI/2, 0);
+      // a quilt half off it onto the floor
+      push("paintm", boxGeo(1.2, 0.03, 0.9, 0), (bx0+bx1)/2+0.15, my+0.04, bz1-0.40, 0, "#8a4a42", 0.0, 0);
+      push("paintm", boxGeo(1.2, 0.03, 0.55, 0), (bx0+bx1)/2+0.15, UF+0.26, bz1+0.06, 0, "#7a4038", -1.3, 0);
+      push("paintm", boxGeo(1.25, 0.03, 0.45, 0), (bx0+bx1)/2+0.18, UF+0.02, bz1+0.38, 0, "#8a4a42", 0.06, 0);
+      addCol(bx0, bx1, bz0, bz1, UF-0.3, UF+0.8);
+      // the dresser against the cross wall, a mirror over it, cracked
+      const dx=PW-t/2-0.25, dz=HZ-2.0;
+      bx("beam", 0.48, 0.86, 1.10, dx, UF+0.43, dz, 0.6, 0, "#5e4430");
+      for(let k=0;k<3;k++){ bx("beam", 0.02, 0.22, 1.00, dx-0.245, UF+0.17+k*0.26, dz, 0.6, 0, "#6a4e36");
+        for(const s2 of [-0.25,0.25]) bx("chrome", 0.03, 0.03, 0.08, dx-0.265, UF+0.17+k*0.26, dz+s2, 0.4, 0, "#8a7a5a"); }
+      push("beam", boxGeo(0.04, 0.03, 0.9, 0.6), dx-0.33, UF+0.38, dz, 0, "#6a4e36", 0, 0.5);                  // a drawer pulled and left
+      bx("beam", 0.05, 0.85, 0.80, dx+0.10, UF+1.32, dz, 0.6, 0, "#5e4430");
+      push("mirror", planeGeo(0.66, 0.70, 0), dx+0.062, UF+1.32, dz, -Math.PI/2, "#ffffff");
+      for(let k=0;k<5;k++){ const a=r()*Math.PI, L=0.15+r()*0.25; push("paintm", boxGeo(0.002, 0.006, L, 0), dx+0.059, UF+1.32+Math.cos(a)*L/2-0.1, dz+Math.sin(a)*0.1, 0, "#1a1a1a", a, 0); }
+      addCol(dx-0.26, dx+0.25, dz-0.56, dz+0.56, UF-0.3, UF+1.8);
+      addUse(dx-0.75, dz, UF, "OPEN THE DRESSER", ()=>toast("MOTHBALLS. A MAN'S SUNDAY SHIRT, FOLDED. A WEDDING PICTURE, 1951, THE GLASS CRACKED ACROSS THE BRIDE","#cfe0d4"), 1.0);
+      // the rocker by the window, the suitcase open on the floor, clothes
+      { const cx=HX-1.7, cz=HZ-2.55, a=0.6;
+        for(const sd of [-1,1]){ const ox=Math.cos(a)*sd*0.22, oz=-Math.sin(a)*sd*0.22;
+          tube("beam", V3(cx+ox-Math.sin(a)*0.35, UF+0.03, cz+oz-Math.cos(a)*0.35), V3(cx+ox+Math.sin(a)*0.35, UF+0.08, cz+oz+Math.cos(a)*0.35), 0.02, 5, "#5a3e2a");
+          tube("beam", V3(cx+ox, UF+0.05, cz+oz), V3(cx+ox+Math.sin(a)*0.05, UF+0.95, cz+oz+Math.cos(a)*0.28), 0.018, 5, "#5a3e2a"); }
+        push("beam", boxGeo(0.46, 0.04, 0.44, 0.6), cx, UF+0.42, cz, a, "#6a4a32");
+        push("beam", boxGeo(0.44, 0.50, 0.03, 0.6), cx+Math.sin(a)*0.22, UF+0.72, cz+Math.cos(a)*0.22, a, "#6a4a32", -0.2, 0);
+        addCol(cx-0.35, cx+0.35, cz-0.35, cz+0.35, UF-0.3, UF+1.0); }
+      { const sx=HX-2.0, sz=HZ-1.2;
+        bx("paintm", 0.62, 0.16, 0.42, sx, UF+0.08, sz, 0, 0.3, "#5a4a3a");
+        push("paintm", boxGeo(0.62, 0.42, 0.04, 0), sx+0.06, UF+0.20, sz+0.27, 0.3, "#5a4a3a", -1.9, 0);
+        for(let k=0;k<4;k++) push("paintm", boxGeo(0.3+r()*0.3, 0.02, 0.2+r()*0.3, 0), sx-0.6+r()*1.2, UF+0.02+k*0.004, sz-0.2+r()*0.6, r()*3, ["#6a6a7a","#9a8a6a","#5a3a3a","#c8c0b0"][k]);
+        addCol(sx-0.36, sx+0.36, sz-0.32, sz+0.32, UF-0.3, UF+0.3); }
+    }
+    /* the sewing room: the treadle machine under the window, a dress form, the trunk of letters */
+    { const mx=HX+2.4, mz=z0+T2+0.30;
+      bx("beam", 0.92, 0.04, 0.46, mx, UF+0.76, mz, 0.6, 0, "#5a3e2a");
+      bx("beam", 0.30, 0.40, 0.42, mx+0.28, UF+0.54, mz, 0.6, 0, "#5a3e2a");
+      for(const sd of [-1,1]){ push("metal", boxGeo(0.04, 0.70, 0.40, 0.5), mx+sd*0.40, UF+0.38, mz, 0, "#1e1c1a");
+        push("metal", new T.TorusGeometry(0.16,0.015,5,16), mx+sd*0.40, UF+0.30, mz, 0, "#1e1c1a", 0, Math.PI/2); }
+      bx("metal", 0.80, 0.03, 0.30, mx, UF+0.10, mz, 0.5, 0, "#1e1c1a");
+      // the head of it: black, the gold gone dull
+      bx("paintm", 0.42, 0.13, 0.16, mx-0.05, UF+0.85, mz, 0, 0, "#141414");
+      bx("paintm", 0.10, 0.28, 0.14, mx+0.16, UF+0.98, mz, 0, 0, "#141414");
+      bx("paintm", 0.34, 0.09, 0.12, mx, UF+1.08, mz, 0, 0, "#141414");
+      push("chrome", new T.CylinderGeometry(0.05,0.05,0.03,14), mx+0.24, UF+1.02, mz, 0, "#8a8070", 0, Math.PI/2);
+      addCol(mx-0.48, mx+0.48, mz-0.26, mz+0.26, UF-0.3, UF+1.1);
+      // the dress form, in the middle of the room, facing the door
+      const fx=HX+1.0, fz=HZ-1.25;
+      // a torso on a turned post: the bust, a waist, the hips, a cap where the neck would be
+      const sc=(sx,sy,sz)=>bucketOf("paintm").entries[bucketOf("paintm").entries.length-1].matrix.scale(V3(sx,sy,sz));
+      push("paintm", new T.SphereGeometry(0.5,16,12), fx, UF+1.36, fz, 0.4, "#c8b89a"); sc(0.36,0.30,0.24);
+      push("paintm", new T.CylinderGeometry(0.135,0.115,0.26,16), fx, UF+1.17, fz, 0.4, "#c8b89a"); sc(1,1,0.78);
+      push("paintm", new T.CylinderGeometry(0.115,0.165,0.20,16), fx, UF+0.97, fz, 0.4, "#c8b89a"); sc(1,1,0.80);
+      push("paintm", new T.SphereGeometry(0.5,16,8,0,Math.PI*2,Math.PI/2,Math.PI/2), fx, UF+0.875, fz, 0.4, "#b8a88a"); sc(0.33,0.10,0.27);
+      push("paintm", new T.CylinderGeometry(0.045,0.06,0.07,12), fx, UF+1.53, fz, 0, "#b8a88a");
+      push("paintm", new T.CylinderGeometry(0.02,0.02,0.012,8), fx, UF+1.572, fz, 0, "#5a4a3a");
+      tube("metal", V3(fx,UF+0.10,fz), V3(fx,UF+0.88,fz), 0.015, 6, "#2a2826");
+      for(let k=0;k<3;k++){ const a=k*2.094; tube("metal", V3(fx,UF+0.12,fz), V3(fx+Math.cos(a)*0.28,UF+0.01,fz+Math.sin(a)*0.28), 0.012, 5, "#2a2826"); }
+      addCol(fx-0.22, fx+0.22, fz-0.22, fz+0.22, UF-0.3, UF+1.6);
+      // the trunk, lid up, letters in it and out of it
+      const kx=HX+0.15, kz=z0+T2+0.40;
+      bx("beam", 0.95, 0.52, 0.55, kx, UF+0.26, kz, 0.6, 0, "#4a3426");
+      for(const y of [0.10,0.42]) bx("metal", 0.97, 0.04, 0.57, kx, UF+y, kz, 0.5, 0, "#6a5a3a");
+      push("beam", boxGeo(0.95, 0.06, 0.55, 0.6), kx, UF+0.70, kz-0.30, 0, "#4a3426", 1.25, 0);
+      for(let k=0;k<7;k++) push("paintm", boxGeo(0.16, 0.003, 0.11, 0), kx-0.6+r()*1.4, UF+0.006+k*0.0015, kz+0.3+r()*0.8, r()*3, r()<0.5?"#e6dcc4":"#d8ccb0");
+      push("paintm", boxGeo(0.80, 0.05, 0.42, 0), kx, UF+0.50, kz, 0, "#d8ccb0");
+      addCol(kx-0.5, kx+0.5, kz-0.3, kz+0.3, UF-0.3, UF+0.6);
+      addUse(kx, kz+0.75, UF, "READ THE LETTERS", ()=>toast("FROM A SON IN THE ARMY, 1969 TO 1971. THE LAST ONE SAYS HE'LL BE HOME FOR THE HAYING","#cfe0d4"), 1.0);
+      // boxes against the stairwell wall
+      for(const [z,y,s2] of [[HZ-2.6,0.2,0.4],[HZ-2.0,0.2,0.4],[HZ-2.3,0.6,0.36]]){ bx("paintm", s2, s2, s2+0.1, SX0-0.10-s2/2-0.03, UF+y, z, 0, 0, "#8a7a5a"); }
+      addCol(SX0-0.58, SX0-0.10, HZ-2.85, HZ-1.75, UF-0.3, UF+0.8);
+    }
+    /* the child's room: a small bed and the bear on it, the rocking horse, the toy box, the marks by the door */
+    { const bx0=x0+T2+0.03, bx1=HX-2.9, bz0=HZ+2.2, bz1=z1-T2-0.03;
+      bx("beam", bx1-bx0, 0.30, bz1-bz0, (bx0+bx1)/2, UF+0.15, (bz0+bz1)/2, 0.6, 0, "#7a6a54");
+      bx("paintm", bx1-bx0-0.06, 0.12, bz1-bz0-0.06, (bx0+bx1)/2, UF+0.36, (bz0+bz1)/2, 0, 0, "#c0b8a0");
+      bx("beam", 0.05, 0.75, bz1-bz0, bx0+0.012, UF+0.375, (bz0+bz1)/2, 0.6, 0, "#7a6a54");
+      push("paintm", boxGeo(0.7, 0.03, 0.8, 0), bx0+0.95, UF+0.44, (bz0+bz1)/2, 0, "#7a96b0");
+      // the bear, slumped against the headboard
+      { const tx=bx0+0.22, ty=UF+0.52, tz=(bz0+bz1)/2;
+        push("paintm", new T.SphereGeometry(0.11,10,8), tx, ty, tz, 0, "#8a6a44");
+        push("paintm", new T.SphereGeometry(0.08,10,8), tx+0.02, ty+0.15, tz, 0, "#8a6a44");
+        for(const sd of [-1,1]){ push("paintm", new T.SphereGeometry(0.03,6,5), tx, ty+0.22, tz+sd*0.06, 0, "#7a5a3a");
+          push("paintm", new T.SphereGeometry(0.04,6,5), tx+0.08, ty-0.07, tz+sd*0.08, 0, "#8a6a44"); }
+        push("paintm", new T.SphereGeometry(0.012,5,4), tx+0.095, ty+0.16, tz, 0, "#1a1a1a"); }
+      addCol(bx0, bx1, bz0, bz1, UF-0.3, UF+0.6);
+      // the rocking horse
+      { const hx=HX-2.0, hz=HZ+2.55;
+        for(const sd of [-1,1]){ const g=new T.TorusGeometry(0.55,0.02,4,24,1.4); push("beam", g, hx, UF+0.56, hz+sd*0.16, 0, "#8a2a22", 0, -Math.PI/2-0.7); }
+        bx("paintm", 0.52, 0.20, 0.18, hx, UF+0.52, hz, 0, 0, "#d8cfc0");
+        push("paintm", boxGeo(0.12, 0.30, 0.12, 0), hx+0.30, UF+0.70, hz, 0, "#d8cfc0", 0, -0.5);
+        bx("paintm", 0.22, 0.10, 0.10, hx+0.40, UF+0.84, hz, 0, 0, "#d8cfc0");
+        for(const [dx,dz] of [[-0.2,-0.07],[0.2,-0.07],[-0.2,0.07],[0.2,0.07]]) tube("beam", V3(hx+dx,UF+0.44,hz+dz), V3(hx+dx*1.3,UF+0.13,hz+dz*2), 0.02, 4, "#d8cfc0");
+        push("paintm", boxGeo(0.06, 0.14, 0.03, 0), hx-0.30, UF+0.60, hz, 0, "#3a2a1a", 0, 0.5);
+        addCol(hx-0.5, hx+0.55, hz-0.25, hz+0.25, UF-0.3, UF+0.9); }
+      bx("beam", 0.70, 0.42, 0.40, PW-t/2-0.40, UF+0.21, z1-T2-0.25, 0.6, 0, "#6a7a5a");
+      push("beam", boxGeo(0.70, 0.03, 0.40, 0.6), PW-t/2-0.40, UF+0.60, z1-T2-0.42, 0, "#6a7a5a", -1.1, 0);
+      push("paintm", new T.SphereGeometry(0.06,8,6), PW-t/2-0.85, UF+0.06, z1-T2-0.6, 0, "#c03a2a");
+      addCol(PW-t/2-0.76, PW-t/2-0.04, z1-T2-0.47, z1-T2, UF-0.3, UF+0.5);
+      const marks=signTex(120,420,(c,W,H)=>{ c.clearRect(0,0,W,H); c.strokeStyle="rgba(40,40,40,0.85)"; c.fillStyle="rgba(40,40,40,0.9)"; c.lineWidth=3; c.font="bold 17px Arial";
+        const L=[["DANNY 4",0.70],["MARIE 3",0.62],["DANNY 5",0.55],["MARIE 4",0.49],["DANNY 6",0.41],["MARIE 5",0.36],["DANNY 7",0.28]];
+        for(const [s2,f] of L){ c.beginPath(); c.moveTo(6,H*f); c.lineTo(40,H*f); c.stroke(); c.fillText(s2,44,H*f+6); } });
+      const mm=new T.Mesh(new T.PlaneGeometry(0.32,1.10), new T.MeshStandardMaterial({map:marks, transparent:true, roughness:0.9, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
+      mm.position.set(D_KID.b+0.27, UF+0.95, HN+t+0.004); scene.add(mm);
+      addUse(D_KID.b+0.27, HN+t+0.6, UF, "LOOK AT THE PENCIL MARKS", ()=>toast("PENCIL LINES UP THE WALL BY THE DOOR. DANNY 4, 5, 6, 7. MARIE 3, 4, 5. THEN NOTHING","#cfe0d4"), 0.9);
+    }
+    /* the box room: what nobody threw out */
+    { const cx=(PW+PE)/2;
+      for(const [dx,dz,y,s2] of [[-0.5,1.5,0.2,0.4],[-0.05,1.55,0.2,0.4],[-0.3,1.55,0.6,0.36],[0.45,1.5,0.16,0.32],[0.5,1.0,0.16,0.32]])
+        bx("paintm", s2+0.08, s2, s2, cx+dx, UF+y, HN+t+dz, 0, 0, ["#8a7a5a","#7e6e50","#958560"][((dx+dz)*10|0)%3]);
+      addCol(cx-0.78, cx+0.72, HN+t+0.75, z1-T2, UF-0.3, UF+0.8);
+      push("beam", boxGeo(0.70, 1.10, 0.04, 0.6), PE-t/2-0.06, UF+0.56, HN+t+0.70, Math.PI/2, "#7a6a54", 0, 0.12);
+      push("glass", planeGeo(0.56, 0.94, 0), PE-t/2-0.098, UF+0.56, HN+t+0.70, -Math.PI/2, "#dfe6e2");
+      push("paintm", new T.CylinderGeometry(0.11,0.11,1.25,10), cx-0.2, UF+0.12, HN+t+0.45, 0, "#7a5a4a", 0, Math.PI/2);
+    }
+    /* the bathroom: the clawfoot tub under the window, the toilet with its high tank, a pedestal sink,
+       and the hole over it all, with what has come in through it */
+    { const tx=x1-T2-0.37, tz=HZ+2.2, prof=[[0.0,0.17],[0.25,0.17],[0.31,0.24],[0.345,0.45],[0.36,0.58],[0.345,0.605],[0.325,0.585],[0.30,0.47],[0.25,0.23],[0.0,0.22]];
+      const lg=new T.LatheGeometry(prof.map(([a,b])=>new T.Vector2(a,b)), 28); lg.scale(1,1,2.05);
+      push("porcelain", lg, tx, UF, tz, 0, "#e2ddd2");
+      push("paintm", (()=>{ const g=new T.CircleGeometry(0.29,20); g.rotateX(-Math.PI/2); g.scale(1,1,2.0); return g; })(), tx, UF+0.30, tz, 0, "#3e3626");
+      for(let k=0;k<9;k++) push("paintm", new T.CircleGeometry(0.04+r()*0.03,5), tx+(r()-0.5)*0.35, UF+0.305+k*0.001, tz+(r()-0.5)*0.9, 0, ["#8a5a2a","#a06a2a","#6a4a28"][k%3], -Math.PI/2, 0);
+      for(const [dx,dz] of [[-0.24,-0.55],[0.24,-0.55],[-0.24,0.55],[0.24,0.55]]){
+        push("metal", new T.SphereGeometry(0.045,8,6), tx+dx, UF+0.10, tz+dz, 0, "#3a3430");
+        push("metal", boxGeo(0.06,0.10,0.08,0.5), tx+dx, UF+0.04, tz+dz+(dz>0?0.02:-0.02), 0, "#3a3430"); }
+      addCol(tx-0.37, tx+0.37, tz-0.75, tz+0.75, UF-0.3, UF+0.62);
+      // the toilet: an old one, the tank up on the wall with its chain
+      const wx=HX+3.05, wz=z1-T2;
+      push("porcelain", _bowlGeo, wx, UF, wz, Math.PI, "#e2ddd2");
+      push("porcelain", _neckGeo, wx, UF, wz, Math.PI, "#e2ddd2");
+      push("paintm", _waterGeo, wx, UF+0.301, wz-0.472, Math.PI, "#5a5a40");
+      bx("beam", 0.52, 0.30, 0.22, wx, UF+1.95, wz-0.12, 0.6, 0, "#4a3426");
+      tube("metal", V3(wx-0.1, UF+1.80, wz-0.10), V3(wx-0.04, UF+0.45, wz-0.10), 0.02, 6, "#6a6050");
+      tube("metal", V3(wx+0.15, UF+1.80, wz-0.18), V3(wx+0.15, UF+1.30, wz-0.18), 0.003, 3, "#5a5040");
+      push("paintm", new T.CylinderGeometry(0.018,0.018,0.10,8), wx+0.15, UF+1.25, wz-0.18, 0, "#d8d0bc");
+      addCol(wx-0.22, wx+0.22, wz-0.72, wz, UF-0.3, UF+0.42);
+      // the sink, on its pedestal, against the box room's wall; the cabinet over it, its mirror gone black
+      const sx=PE+t/2, sz=HZ+2.05;
+      push("porcelain", new T.CylinderGeometry(0.07,0.11,0.74,12), sx+0.24, UF+0.37, sz, 0, "#e2ddd2");
+      push("porcelain", new T.CylinderGeometry(0.27,0.20,0.14,18), sx+0.26, UF+0.80, sz, 0, "#e2ddd2");
+      bx("paintm", 0.12, 0.56, 0.44, sx+0.07, UF+1.45, sz, 0, 0, "#c8c0b0");
+      push("paintm", planeGeo(0.36, 0.46, 0), sx+0.131, UF+1.45, sz, Math.PI/2, "#2a2a28");
+      addCol(sx, sx+0.52, sz-0.28, sz+0.28, UF-0.3, UF+0.9);
+      addUse(sx+0.85, sz, UF, "OPEN THE MEDICINE CABINET", ()=>toast("AN EMPTY BROWN BOTTLE, A RAZOR RUSTED SHUT, A LIPSTICK WORN DOWN TO THE TUBE","#cfe0d4"), 0.9);
+      // under the hole: the floor gone dark, moss, bits of shingle and lath, leaves
+      push("paintm", new T.CircleGeometry(0.75, 14), (HB.x0+HB.x1)/2, UF+0.009, (HB.z0+HB.z1)/2, 0, "#3a3426", -Math.PI/2, 0);
+      bucketOf("paintm").entries[bucketOf("paintm").entries.length-1].matrix.multiply(new T.Matrix4().makeScale(1.0,1.35,1.0));
+      push("paintm", new T.CircleGeometry(0.38, 11), (HB.x0+HB.x1)/2-0.15, UF+0.011, (HB.z0+HB.z1)/2+0.1, 0, "#4f5a34", -Math.PI/2, 0);
+      for(let k=0;k<10;k++) push(k%2?"shingle":"beam", boxGeo(0.12+r()*0.25, 0.012, 0.06+r()*0.2, 0.6), HB.x0+r()*(HB.x1-HB.x0), UF+0.015+k*0.002, HB.z0+r()*(HB.z1-HB.z0), r()*3, k%2?"#5b544b":"#7a6a54");
+      for(let k=0;k<20;k++) push("paintm", new T.CircleGeometry(0.03+r()*0.03,5), HB.x0-0.4+r()*(HB.x1-HB.x0+0.8), UF+0.012+r()*0.003, HB.z0-0.4+r()*(HB.z1-HB.z0+0.8), 0, ["#8a5a2a","#a06a2a","#6a4a28","#7a7a3a"][k%4], -Math.PI/2, 0);
+    }
+  }
   // the parlour: the stove and its pipe, an armchair gone through, a mattress, the calendar, a picture
   { const sx=x0+T2+0.55, sz=HZ+1.55;
     push("paintm", new T.CylinderGeometry(0.28,0.30,0.62,14), sx, FF+0.47, sz, 0, "#1d1c1b");
@@ -313,7 +620,7 @@ const HOUSE={};
       c.fillStyle="rgba(200,40,40,0.8)"; c.font="bold 36px Arial"; c.fillText("GET OUT",W*0.7,H*0.85); });
     const m=new T.Mesh(new T.PlaneGeometry(1.4,0.56), new T.MeshStandardMaterial({map:tagTex, transparent:true, roughness:0.8, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
     m.position.set(PX+0.116, FF+1.45, HZ-1.8); m.rotation.y=Math.PI/2; scene.add(m); HOUSE.tag=m;
-    for(let k=0;k<5;k++){ const x=HX+1.4+r()*2.2, z=z0+0.6+r()*1.5; push("paintm", new T.CylinderGeometry(0.033,0.033,0.04,10), x, FF+0.022, z, r()*3, ["#c8202a","#b8bcc0","#2b5aa8"][k%3], Math.PI/2, 0.4); } }
+    for(let k=0;k<5;k++){ const x=HX+1.4+r()*1.7, z=z0+0.6+r()*1.5; push("paintm", new T.CylinderGeometry(0.033,0.033,0.04,10), x, FF+0.022, z, r()*3, ["#c8202a","#b8bcc0","#2b5aa8"][k%3], Math.PI/2, 0.4); } }
   // the kitchen: the table on its side, a chair, the sink, a cabinet door hanging, the old fridge
   { const tx=HX+2.4, tz=HZ-0.95;
     push("beam", boxGeo(1.2, 0.05, 0.85, 0.6), tx, FF+0.43, tz, 0.2, "#8a6a48", 0, Math.PI/2);
@@ -331,12 +638,12 @@ const HOUSE={};
     addCol(HX-3.1, HX-1.5, z1-T2-0.6, z1-T2, FF-0.5, FF+0.95);
     bx("paintm", 1.4, 0.7, 0.32, HX-2.3, FF+1.95, z1-T2-0.17, 0, 0, "#8a8270");
     push("paintm", boxGeo(0.45, 0.62, 0.02, 0), HX-2.95, FF+1.85, z1-T2-0.55, 0.9, "#8a8270", 0, 0.25);
-    // the fridge: a rounded fifties one, the door open
-    const fx=HX+3.75, fz=z1-T2-1.0;
+    // the fridge: a rounded fifties one against the back wall, the door hanging open
+    const fx=HX+3.95, fz=z1-T2-0.36;
     bx("paintm", 0.70, 1.55, 0.66, fx, FF+0.78, fz, 0, 0, "#d6d0bc");
     push("paintm", domeGeo(0.36, 0.12, 16), fx, FF+1.55, fz, 0, "#d6d0bc");
-    push("paintm", boxGeo(0.70, 1.2, 0.06, 0), fx-0.62, FF+0.9, fz-0.55, 1.2, "#d6d0bc");
-    push("paintm", planeGeo(0.6,1.1,0), fx-0.36, FF+0.85, fz, -Math.PI/2, "#3a3630");
+    push("paintm", boxGeo(0.70, 1.2, 0.06, 0), fx+0.22, FF+0.9, fz-0.69, 1.94, "#d6d0bc");
+    push("paintm", planeGeo(0.6,1.1,0), fx, FF+0.85, fz-0.336, Math.PI, "#3a3630");
     addCol(fx-0.36, fx+0.36, fz-0.34, fz+0.34, FF-0.5, FF+1.6);
     addUse(HX+2.6, HZ+0.9, FF, "OPEN THE DRAWER", ()=>toast("RECEIPTS FROM THE FEED STORE, A ROSARY, SEED PACKETS FOR 1988 THAT NOBODY PLANTED","#cfe0d4"), 1.2); }
   // inside the door, the hall: a coat still on its hook
@@ -401,3 +708,18 @@ const HOUSE={};
   HOUSE.zone={x0:x0, x1:x1, z0:z0, z1:z1, y0:FF-0.6, y1:FF+6};
   for(const o of scene.children.slice(n0)) BACKWOODS.deep.push(o);
 })();
+/* the eighth step gives a little and says so, now and then; and the first
+   time you come up into the hall, the cold of it */
+const _HOUSE_T={step:0, up:false};
+function updateHouse(dt){
+  if(!HOUSE.stair || droneMode || driving) return;
+  const S=HOUSE.stair, p=player.pos, k=7;
+  _HOUSE_T.step=Math.max(0,_HOUSE_T.step-dt);
+  if(p.x>S.x0 && p.x<S.x1 && p.z>S.zb+S.run*k && p.z<S.zb+S.run*(k+1) && _HOUSE_T.step<=0){
+    _HOUSE_T.step=45;
+    if(typeof AUDIO!=="undefined") AUDIO.creak();
+    toast("THE EIGHTH STEP GIVES UNDER YOU. KEEP TO THE WALL SIDE","#cfe0d4");
+  }
+  if(!_HOUSE_T.up && player.feetY>HOUSE.UF-0.2 && p.x>HOUSE.x0 && p.x<HOUSE.x1 && p.z>HOUSE.z0 && p.z<HOUSE.z1){
+    _HOUSE_T.up=true; toast("UPSTAIRS. IT IS COLDER UP HERE, AND IT SMELLS OF RAIN","#cfe0d4"); }
+}

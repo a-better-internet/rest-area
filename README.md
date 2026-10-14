@@ -11,6 +11,9 @@ Open `index.html` in a browser. There is no build step and there are no asset
 files. Every texture is painted on a canvas at load time and every model is
 built from code. The only download is three.js r128, from cdnjs.
 
+`G` opens the graphics settings, before you pull in or at any time after.
+If the scene runs hot on your machine, start there (see below).
+
 ## What is in it
 
 - **The building.** A brick lobby under a steep shingled gable with a big
@@ -49,6 +52,12 @@ built from code. The only download is three.js r128, from cdnjs.
     - stall doors with hinges, latches, occupancy indicators and coat hooks.
   - The men's room has three stalls, three urinals and a light that
     flickers.
+  - People use them (see Visitors). Now and then whoever was in a stall
+    leaves it in a state: murky water, paper over the rim and across the
+    floor. The next person picks another stall if they can. Stand in it and
+    `E` cleans it up; the toast keeps count.
+  - An occupied stall's door is shut and latched, with their feet showing
+    under it. `E` on it gets you "OCCUPIED".
   - The women's room has six stalls and a bench.
   - Each room has an accessible stall wide enough to stand in, with grab
     bars. The vanity sits in an alcove behind a privacy screen.
@@ -70,9 +79,13 @@ built from code. The only download is three.js r128, from cdnjs.
     hatched access aisles between them, signs and blue curb.
   - Tractor-trailers park on the angled truck lot past the island. At night
     their marker lamps stay on, and the reefer units can be heard running.
-  - A state trooper's cruiser is backed into a stall by the walk: fleet grey,
-    a light bar, a push bumper and a laptop on its mount. The trooper sits
-    behind the wheel with a clipboard, writing, and looks up now and then.
+  - A state trooper's cruiser parks in a stall by the walk: fleet grey, a
+    light bar, a push bumper and a laptop on its mount. The trooper sits
+    behind the wheel the way a driver sits, with a clipboard, writing, and
+    looks up now and then. The cruiser comes and goes: it sits a few
+    minutes, backs out, leaves by the on-ramp, and some minutes later comes
+    back down the exit ramp and pulls in again, giving way to you and to
+    visitors in the aisle as they give way to it.
 - **The vehicles** are lofted, not boxed.
   - Sedans, SUVs, pickups and minivans have rounded bodies with real wheel
     arches. Each has a greenhouse, door seams, mirrors and lamps.
@@ -84,8 +97,16 @@ built from code. The only download is three.js r128, from cdnjs.
 - **Visitors.** Now and then a car or truck in the right lane signals off at
   the exit ramp and parks in a free stall.
   - The driver gets out and walks to the door, between the cars and over the
-    crosswalk. They go in, come back out a while later, and the car waits for
-    them.
+    crosswalk. Inside, they go about what they came for, and the car waits:
+    - most use the restroom: a urinal or a stall (the door shuts behind them,
+      a flush when they come out), then a sink, and sometimes the hand dryer;
+    - some buy something: a coin, the keypad, the clunk, and a stoop to the
+      flap for it;
+    - some turn the brochure rack a while;
+    - and some do a bit of each, then walk back out to the car.
+    Their way between things is found on a grid over the building's floor,
+    round everything solid in it, and they wait their turn if the urinals or
+    stalls are taken.
   - The car then backs out, finishing pointed down the one-way aisle, drives
     to the entrance ramp and times its merge against lane-0 traffic.
   - Visitors keep a speed-dependent gap to whatever is in front: cars,
@@ -132,7 +153,13 @@ built from code. The only download is three.js r128, from cdnjs.
     a few, and keeps the clock where it was, so the sun moves instead.
   - At night the lot lights and building lights come on and, in summer,
     fireflies rise over the lawn.
-  - Mist lies on the lawns for an hour after sunrise and comes back at dusk.
+  - Mist lies on the ground for an hour after sunrise and comes back at
+    dusk. It is a height fog worked into every surface's own shader: thick
+    at the ground and gone a couple of metres up, integrated along each line
+    of sight and patchy in a slow drift, so it has no edges. The grass at
+    your feet is clear, the far side of the lawn goes milky, posts and
+    trunks fade into it at the bottom, and from up in the woods the site
+    lies in it.
 - **The night sky.** On a clear night there are stars in several magnitudes
   and colours, and the Milky Way crosses the sky, clumped into star clouds
   and split by the dark of the Great Rift. The moon has its phases. It
@@ -219,11 +246,30 @@ built from code. The only download is three.js r128, from cdnjs.
       foundation, a hole in the back of the roof, a brick chimney with its
       top fallen in, broken and boarded windows, ivy, and a porch whose
       corner post lies in the grass, so the porch roof sags to meet it.
-    - The front door stands open, and the ground floor can be walked.
+    - The front door stands open, and both floors can be walked.
       The parlour has a stove, a calendar stopped in October 1987, a picture
       on the wall, and a corner where the ceiling has come down. The kitchen
       has the table on its side, the sink, and an old fridge with its door
-      open. The stairs are rotted through half way up. It creaks.
+      open, and a closet under the stairs.
+    - The stair is boxed in up the east wall: thirteen risers with nosed
+      treads, stringers, a newel and balusters at the foot, and a rail on
+      brackets the rest of the way. The eighth tread is split and sags.
+    - Upstairs, off a hall with a runner down it, a little table and the
+      attic hatch (its cord does not bring it down, and the kids have
+      written DONT GO IN THE ATTIC beside it):
+      - the big bedroom, with an iron bed, a quilt half on the floor, a
+        dresser with a cracked mirror, a rocker by the window, a suitcase
+        open, and a hole through the floor to the parlour below;
+      - a sewing room, with a treadle machine under the window, a dress form
+        facing the door, and a trunk of letters;
+      - a child's room, with a small bed and a bear, a rocking horse, a toy
+        box, and pencil marks up the wall by the door;
+      - a box room;
+      - the bathroom, with a clawfoot tub under the window, a high-tank
+        toilet with its chain, a pedestal sink and medicine cabinet, and a
+        hole in the ceiling under the hole in the roof, with the sky through
+        both and leaves and shingle on the floor beneath.
+      Faded floral paper is peeling off the walls. It creaks.
     - In the yard: a fieldstone well, a hand pump, a shed down on its face,
       a rusted swing set, lilacs, an apple tree gone wild, and a mailbox
       at the end of the old drive.
@@ -257,10 +303,31 @@ built from code. The only download is three.js r128, from cdnjs.
 | Storm power cut · wreck on I-79 (testing) | `P` · `X` |
 | Sound | `U` |
 | Plan view · hide HUD | `O` · `H` |
+| Graphics settings | `G` |
 
 At a vending machine the keys are its keypad's: arrows (or `WASD`) to pick,
 `Q` a quarter, `F` a dollar bill, `E` or `Enter` to vend, `Space` to shake
 it, `R` coin return, `Esc` to walk away.
+
+## Graphics settings
+
+`G` opens the menu. Use the arrows (or `WASD`) or the mouse to change a
+setting; it takes effect at once, and is kept in the browser for next
+time. While the menu is up, its header shows the frame rate, the resolution
+being drawn and the draw calls.
+
+| Setting | Choices | What it does |
+| --- | --- | --- |
+| Preset | Low · Medium · High · Ultra | Sets everything below except the frame cap. High is how the scene has always looked. |
+| Resolution | 0.5× · 0.75× · 1× · 1.5× · 2× · native | Pixels drawn per screen point. Native is the screen's own density, up to 2×. On a Retina Mac, 1× draws a quarter of the pixels that native does, and is the biggest single saving. |
+| Frame-rate cap | 30 · 60 · off | 60 by default. A 120 Hz ProMotion screen draws twice as many frames with the cap off. |
+| Shadows | Off · Low · Medium · High · Ultra | The sun's shadow map: 1024 to 4096 texels, over 76 to 116 m. Low uses hard-edged filtering. Off skips the shadow pass entirely: everything near you is no longer drawn a second time, into the map. |
+| Draw distance | Near · Medium · Far · Max | How far full trees reach (54 to 120 m) and, on Near and Medium, a limit past which nothing is drawn (620 m and 1150 m). The haze closes in to meet the limit, so nothing is seen to vanish. Far is the original. |
+| Lights | 4 · 6 · 8 · 12 · 16 · 24 | How many real point lights follow you round the lamps. Every lit pixel pays for each one, lit or not. The rest of the lamps only glow. |
+| Frame meter | off · on | Frames per second, frame time and draw calls in the top corner. |
+
+Changing shadows on or off, or between hard and soft, rebuilds every shader
+once, so there is a short hitch.
 
 ## Layout
 
@@ -309,11 +376,11 @@ js/11-driving.js    driving a parked car
 js/12-substation.js the drive, the fenced compound, generators, pole line
 js/13-grounds.js    picnic grove, shelter, grills, flags, memorial, pet area
 js/14-life.js       visitors, deer, fireflies, falling leaves, grill smoke
-js/14b-people.js    people and a dog: skinned figures, poses, the drivers' walks
+js/14b-people.js    people and a dog: skinned figures, poses, the drivers' walks, what they do inside
 js/14a-smoke.js     smoke and sparks: two point clouds shared by every fire and cigarette
-js/14c-critters.js  butterflies, squirrels, ground mist
+js/14c-critters.js  butterflies, squirrels, how much ground mist there is
 js/14d-backwoods.js the path, the camp and its fire, the teenagers and what they leave, the wall, the stand, the car, the line
-js/14e-incidents.js the trooper in the lot, and the occasional wreck on I-79
+js/14e-incidents.js the trooper's cruiser coming and going, and the occasional wreck on I-79
 js/14f-homestead.js the old house in the woods, inside and out, and its yard
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -322,6 +389,7 @@ js/16c-screens.js   the lobby TV, the office monitor and CAM 5's trail-camera pi
 js/17-player.js     movement, interaction, gates, drone
 js/18-hud.js        compass, clock, location, weather, plan view
 js/18b-vending.js   the vending machines' keypad, coins, coil and shaking
+js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
 tools/shot.js       headless screenshots
@@ -332,7 +400,8 @@ The engine comes from the Low Desert Motel and keeps its conventions:
 - classic scripts loaded in order into one global scope;
 - static geometry merged into material buckets and baked into 96 m tiles;
 - axis-aligned box colliders on a grid;
-- a pool of twelve point lights handed to the nearest lamps;
+- a pool of point lights handed to the nearest lamps (twelve by default; the
+  graphics menu sets anywhere from four to twenty-four);
 - a fixed 1/60 s simulation step.
 
 Several systems were added for this world:
@@ -380,6 +449,7 @@ checks that every seat can be sat in and stood up from. The routes are:
 - out the back and through both service doors;
 - out the path to the camp, and into the camp past the fire;
 - along the tape to the old house, through its door and into the kitchen;
+- up the old house's stair and into every room upstairs, and back down;
 - across the lot and the grove;
 - up the drive and through the substation gate.
 
@@ -388,6 +458,8 @@ overlap, which the depth buffer cannot sort and draws as flicker. It loads
 the page with `?zdebug`, which keeps every baked piece's final matrix. Pairs
 closer than `near` metres are reported by bucket, with the normal and where
 they are. Faces turned into a wall still show up, so read the normals.
+A merged mesh (a vehicle, say) counts as one piece, so faces fighting inside
+one are not seen by it; check those part by part, from `vehicleParts()`.
 
 The `window.REST` handle exposes the world for scripting. For example:
 - `REST.go(x,z,yaw)` and `REST.hour(h)`;
@@ -396,4 +468,5 @@ The `window.REST` handle exposes the world for scripting. For example:
   and forest.
 
 The new systems are globals too: `WEATHER.set("storm")`, `GRID.trip()`,
-`CRASH.start()`, `MOON.phaseAt`, `TRAILCAM.photos`, `VEND.openAt(...)`.
+`CRASH.start()`, `MOON.phaseAt`, `TRAILCAM.photos`, `VEND.openAt(...)`,
+`GFX` and `applyGraphics()`, `TROOPER`, `RESTROOMS` (each stall's `mess`).

@@ -64,3 +64,4 @@ bucketOf("ledamber",()=>emitMat(0xffaa22, 0.9, "always"));
 FOREST.finish();
 const BAKED=bakeBuckets(scene);
 buildColGrid();                     // everything solid is in place by now
+if(typeof _igBuild==="function") _igBuild();   // the building's floor grid for the people inside (14b), now, not at the first visitor

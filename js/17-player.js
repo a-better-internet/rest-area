@@ -19,7 +19,10 @@ const WALK=3.05, RUN=5.6, SPRINT=10.4;
 addEventListener("keydown",e=>{
   // at a vending machine the keys are its keypad's (18b-vending)
   if(VEND.open){ e.preventDefault(); VEND.key(e); return; }
+  // and in the graphics menu, the menu's (18c-settings)
+  if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
+  if(e.code==="KeyG" && !e.repeat && window.GFXMENU){ GFXMENU.show(); return; }
   const held=keys[e.code];                  // keydown repeats while a key is down
   keys[e.code]=true;
   if(e.code==="KeyQ" && !held) toast("SPRINT","#ffd48a");
@@ -194,6 +197,9 @@ function interact(){
   if(!started) return;
   if(driving){ exitCar(); return; }
   { const c=nearestCar(); if(c){ enterCar(c); return; } }
+  { const u=nearestUse(); if(u && u.pri){ u.fn(); return; } }
+  if(nearestDoor && nearestDoor.occ){
+    toast(["OCCUPIED","SOMEBODY CLEARS THEIR THROAT","\u201cSOMEONE'S IN HERE\u201d"][(Math.random()*3)|0],"#cfe0d4"); return; }
   if(nearestDoor){
     nearestDoor.manual = (nearestDoor.target>0.5) ? -1 : 1;
     if(nearestDoor.partner) nearestDoor.partner.manual=nearestDoor.manual;
@@ -232,6 +238,12 @@ function updateDoors(dt){
       if(!d.sticky && (dist>4.6 || !sameFloor)) d.manual=0; else want=(d.manual>0?1:0);
     }
     d.target=Math.max(want, d.ajar);
+    // a stall somebody is in: shut, and latched, until they come out
+    if(d.occ){ d.manual=0; d.target=npcNearDoor(d) ? 1 : 0; }
+    if(d.stall){
+      const gc=d.stall.gap, i=COL_DYN.indexOf(gc), shut=d.occ && d.open<0.3;
+      if(shut && i<0) COL_DYN.push(gc); else if(!shut && i>=0) COL_DYN.splice(i,1);
+    }
     d.open += (d.target-d.open)*Math.min(1, dt*(d.manualOnly?1.6:5.2));
     d.g.rotation.y = d.base + d.swing*d.open;
     // and while it is shut it is solid, which a leaf on its own never is
@@ -252,8 +264,10 @@ function updateDoors(dt){
     const nc=nearestCar();
     if(nc) bits.push("E  ·  DRIVE");
     if(nearestSeat) bits.push("C  ·  "+(nearestSeat.lie?"LIE DOWN":"SIT")+"  ·  "+nearestSeat.label);
-    if(best && !nc) bits.push("E  ·  "+(best.manualOnly ? (best.target>0.5?"CLOSE ":"OPEN ")+best.label : best.label));
-    else if(!nc){ const u=nearestUse(); if(u) bits.push("E  ·  "+u.label); }
+    const u=nc ? null : nearestUse();
+    if(u && u.pri) bits.push("E  ·  "+u.label);                      // cleaning up beats the stall door
+    else if(best && !nc) bits.push(best.occ ? "OCCUPIED" : "E  ·  "+(best.manualOnly ? (best.target>0.5?"CLOSE ":"OPEN ")+best.label : best.label));
+    else if(u) bits.push("E  ·  "+u.label);
   }
   if(bits.length){ el.textContent=bits.join("      "); el.classList.add("show"); }
   else el.classList.remove("show");

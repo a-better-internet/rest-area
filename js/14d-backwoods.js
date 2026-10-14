@@ -697,7 +697,8 @@ function updateDeep(cam){
   _deepShown=show;
   if(!BACKWOODS.tiles) BACKWOODS.tiles=BAKED.filter(m=>{          // "bucket:<name>:<ix>:<iz>[:flat]"
     const p=m.name.split(":"), ix=+p[p.length-(p[p.length-1]==="flat"?3:2)]; return ix>=2; });
-  for(const m of BACKWOODS.tiles) m.visible=show;
+  for(const m of BACKWOODS.tiles) m.userData.deep=true;
+  cullBaked(cam, 0, true);                          // draw distance has its say too (18c)
   for(const o of BACKWOODS.deep) o.visible=show;
   _leftShow();
 }

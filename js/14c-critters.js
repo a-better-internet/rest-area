@@ -11,9 +11,10 @@
    on the body's line and flapped by rewriting their matrices; they wander
    round a flower bed or the edge of the lawn at knee to head height and go
    to ground when the light does. Squirrels hop from tree to tree in short
-   bounds, stop, sit up, flick the tail, and go on. The mist is a few broad
-   sheets laid just over the grass, their alpha a field of soft blots that
-   drifts; dense an hour after sunrise and again as the light goes.
+   bounds, stop, sit up, flick the tail, and go on. The mist is a height fog
+   in every surface's shader (03-scene), thick on the ground and gone a
+   couple of metres up; dense an hour after sunrise and again as the light
+   goes.
    ---------------------------------------------------------------------- */
 const CRITTERS={bflies:[], squirrels:[], mist:[]};
 (function butterflies(){
@@ -65,26 +66,12 @@ const CRITTERS={bflies:[], squirrels:[], mist:[]};
     CRITTERS.squirrels.push({g:g, tail:tail, body:body, x:t0[0]+0.6, z:t0[1]+0.6, from:t0, to:null, hop:0, wait:1+Math.random()*3, yaw:0, trees:trees, sit:0});
   }
 })();
-(function mist(){
-  const c=cvs(256,256), x=c.getContext("2d"), r=_trng(771);
-  x.clearRect(0,0,256,256);
-  for(let i=0;i<70;i++){
-    const px=r()*256, py=r()*256, rad=20+r()*46;
-    for(const [ox,oy] of [[0,0],[256,0],[-256,0],[0,256],[0,-256]]){
-      const g=x.createRadialGradient(px+ox,py+oy,0,px+ox,py+oy,rad);
-      g.addColorStop(0,"rgba(255,255,255,"+(0.10+r()*0.12).toFixed(2)+")"); g.addColorStop(1,"rgba(255,255,255,0)");
-      x.fillStyle=g; x.fillRect(px+ox-rad,py+oy-rad,rad*2,rad*2);
-    }
-  }
-  const tex=new T.CanvasTexture(c); tex.wrapS=tex.wrapT=T.RepeatWrapping; tex.repeat.set(2,2);
-  const sheets=[[-2,-60,70,60],[18,75,40,50],[-8,40,40,40],[-128,0,60,600],[-182,0,40,600],[60,-110,60,80],[-95,-20,40,240]];
-  for(const [cx,cz,w,d] of sheets) for(const hy of [0.35,1.1]){
-    const m=new T.Mesh(new T.PlaneGeometry(w,d), new T.MeshBasicMaterial({map:tex, transparent:true, opacity:0, depthWrite:false, color:0xe8ecee, fog:true}));
-    m.rotation.x=-Math.PI/2; m.position.set(cx, Terrain.groundAt(cx,cz)+hy, cz); m.renderOrder=2;
-    m.material.map=tex.clone(); m.material.map.needsUpdate=true; m.material.map.repeat.set(w/60, d/60);
-    scene.add(m); CRITTERS.mist.push({m:m, hy:hy, sx:(Math.random()-0.5)*0.004, sz:(Math.random()-0.5)*0.004});
-  }
-})();
+/* THE MIST is not a sheet: it is in the fog of every surface (03-scene),
+   a layer thickest on the ground that thins out a metre or two up, so it
+   has no edges at all. Here is only how much of it there is, its colour,
+   and where the ground is: it settles on the ground under you, slowly, so
+   from up in the woods the site below lies in it. */
+let MIST_K=0;
 const _bm=new T.Matrix4(), _bq=new T.Quaternion(), _be=new T.Euler(), _bs=new T.Vector3(1,1,1), _bp=new T.Vector3();
 function updateCritters(dt, now, dark){
   // butterflies: summer days only
@@ -142,11 +129,14 @@ function updateCritters(dt, now, dark){
   const morning=smoothstep(4.8,6.4,h)*(1-smoothstep(7.4,9.6,h));
   const evening=smoothstep(18.5,21.0,h)+ (h<4.8 ? 1 : 0);
   const k=Math.max(morning*1.0, Math.min(1,evening)*0.55)*(FOREST.isAutumn()?1.3:1.0);
-  for(const M of CRITTERS.mist){
-    M.m.visible=k>0.01;
-    if(!M.m.visible) continue;
-    M.m.material.opacity=k*(M.hy<0.5?0.55:0.32);
-    M.m.material.color.setScalar(0.12+0.85*day);
-    M.m.material.map.offset.x+=M.sx*dt; M.m.material.map.offset.y+=M.sz*dt;
-  }
+  MIST_K=k;
+  const cam=camera.position, gnd=Terrain.groundAt(cam.x, cam.z);
+  MIST_U.z += (gnd-0.3-MIST_U.z)*Math.min(1, dt*0.4);
+  MIST_U.x = 0.030*Math.min(1.3,k);
+  MIST_U.w = now;
+  // lit by the sky it lies under: the haze's own colour, paler, and dark at night
+  const f=scene.fog.color, lit=0.10+0.86*day;
+  MIST_C.x=(f.r*0.45+0.55*0.90)*lit; MIST_C.y=(f.g*0.45+0.55*0.91)*lit; MIST_C.z=(f.b*0.45+0.55*0.93)*lit;
+  // not indoors: through the glass it is out there, not in here
+  MIST_C.w = k>0.01 ? 1-_indoorMix : 0;
 }

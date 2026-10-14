@@ -111,7 +111,7 @@ function buildPerson(o){
   }
   const mesh=skinned(parts, B);
   const g=new T.Group(); g.add(mesh); scene.add(g);
-  return {g:g, mesh:mesh, B:B, j:{root:root,spine:spine,head:head,shL:shL,elL:elL,shR:shR,elR:elR,hpL:hpL,knL:knL,hpR:hpR,knR:knR}, HIP:HIP, h:h};
+  return {g:g, mesh:mesh, B:B, j:{root:root,spine:spine,head:head,shL:shL,elL:elL,shR:shR,elR:elR,hpL:hpL,knL:knL,hpR:hpR,knR:knR}, HIP:HIP, h:h, female:!!o.female};
 }
 function randomPerson(r){
   const pick=a=>a[(r()*a.length)|0], female=r()<0.45;
@@ -290,7 +290,8 @@ function _hitAt(x, z, y, r, self){
   for(let i=0;i<COL_DYN.length;i++) if(hit(COL_DYN[i])) return true;
   for(const k of KEEP_OFF) if(x>k.x0-r && x<k.x1+r && z>k.z0-r && z<k.z1+r) return true;
   for(const q of PEOPLE){
-    if(q===self || !q.P || !q.P.g.visible || q.kind==="driver" && q.state!=="out" && q.state!=="back") continue;
+    if(q===self || !q.P || !q.P.g.visible || q.kind==="driver" && q.state!=="out" && q.state!=="back" && q.state!=="inside") continue;
+    if(q.sat) continue;                                                  // sat in a stall, behind its door
     if(Math.abs(q.y-y)<1.2 && (q.x-x)*(q.x-x)+(q.z-z)*(q.z-z)<(r+BODY_R)*(r+BODY_R)) return true;
   }
   return false;
@@ -316,7 +317,9 @@ function _stepWalker(p, dt, speed){
   const pd=Math.hypot(px,pz);
   let sp=speed;
   if(!driving && pd<1.3 && ahead>0) sp=0;
-  if(d<0.25 || (d<0.9 && p.stuck>0.6)){ p.pi++; p.stuck=0; return p.pi>=p.path.length; }
+  // there, or as near as it can be got (held up, or a long while circling it)
+  p.wpT=(p.wpT||0)+dt;
+  if(d<0.25 || (d<0.9 && p.stuck>0.6) || (d<2.5 && p.wpT>9)){ p.pi++; p.stuck=0; p.wpT=0; return p.pi>=p.path.length; }
   let want=Math.atan2(dx,dz);
   // look a stride ahead; if that is blocked, bend the line a little at a
   // time toward the side already chosen, then the other, until it is not.
@@ -346,13 +349,235 @@ function _stepWalker(p, dt, speed){
   p.moving=sp>0.05 && step>0;
   return false;
 }
-// someone coming or going is at this door: it opens for them (17-player)
+// someone coming or going is at this door: it opens for them (17-player).
+// A stall's door opens only for whoever is going in or coming out of it,
+// and only as they reach it; with them sat inside it stays shut.
 function npcNearDoor(d){
+  const reach=d.stall ? 0.95 : 2.4;
   for(const p of PEOPLE){
-    if(p.kind!=="driver" || (p.state!=="out" && p.state!=="back")) continue;
-    if(Math.abs(p.y-d.y)<1.8 && Math.hypot(p.x-d.x, p.z-d.z)<2.4) return true;
+    if(p.kind!=="driver") continue;
+    if(p.state!=="out" && p.state!=="back" && !(p.state==="inside" && p.walking)) continue;
+    if(d.occ && d.occBy!==p) continue;
+    if(Math.abs(p.y-d.y)<1.8 && Math.hypot(p.x-d.x, p.z-d.z)<reach) return true;
   }
   return false;
+}
+
+/* ---- inside: what people come in for -------------------------------------
+   Nobody pulls off I-79 to stand in the lobby. They use the restroom (a
+   urinal or a stall, then a sink, sometimes the dryer), or buy something
+   from the machines, or turn the brochure rack a while, or a bit of each;
+   then back out to the car. The way between is found on a grid over the
+   building's floor round everything solid in it, and pulled straight
+   wherever a line is clear. Now and then whoever was in a stall leaves it
+   in a state (09-building's MESS): somebody has to clean that up. */
+const _IG={x0:-5.65, z0:-14.1, x1:5.65, z1:14.1, cs:0.2, nx:0, nz:0, ok:null};
+function _staticHit(x, z, y, r){
+  const hit=c=>{ if(c.y1<y+0.30 || c.y0>y+1.75) return false;
+    const qx=clamp(x,c.x0,c.x1), qz=clamp(z,c.z0,c.z1), dx=x-qx, dz=z-qz;
+    return dx*dx+dz*dz<r*r; };
+  const near=colsNear(x,z);
+  for(let i=0;i<near.length;i++) if(hit(near[i])) return true;
+  for(let i=0;i<COL_BIG.length;i++) if(hit(COL_BIG[i])) return true;
+  return false;
+}
+function _igBuild(){
+  const G=_IG; G.nx=Math.round((G.x1-G.x0)/G.cs)+1; G.nz=Math.round((G.z1-G.z0)/G.cs)+1;
+  G.ok=new Uint8Array(G.nx*G.nz);
+  for(let j=0;j<G.nz;j++) for(let i=0;i<G.nx;i++){
+    const x=G.x0+i*G.cs, z=G.z0+j*G.cs;
+    G.ok[j*G.nx+i]=(!_staticHit(x,z,FL,BODY_R+0.04) && Math.abs(surfaceY(x,z,FL+0.4)-FL)<0.06) ? 1 : 0;
+  }
+}
+function _igCell(x,z){ const G=_IG, i=Math.round((x-G.x0)/G.cs), j=Math.round((z-G.z0)/G.cs);
+  return (i<0||j<0||i>=G.nx||j>=G.nz) ? -1 : j*G.nx+i; }
+function _igNear(x,z){
+  const G=_IG, c=_igCell(x,z); if(c>=0 && G.ok[c]) return c;
+  let best=-1, bd=1e9;
+  const i0=Math.round((x-G.x0)/G.cs), j0=Math.round((z-G.z0)/G.cs);
+  for(let dj=-5;dj<=5;dj++) for(let di=-5;di<=5;di++){
+    const i=i0+di, j=j0+dj; if(i<0||j<0||i>=G.nx||j>=G.nz || !G.ok[j*G.nx+i]) continue;
+    const d=di*di+dj*dj; if(d<bd){ bd=d; best=j*G.nx+i; }
+  }
+  return best;
+}
+function _igLOS(ax,az,bx,bz){
+  const d=Math.hypot(bx-ax,bz-az), n=Math.max(1,Math.ceil(d/0.07));
+  for(let k=0;k<=n;k++){ const t=k/n, c=_igCell(ax+(bx-ax)*t, az+(bz-az)*t); if(c<0 || !_IG.ok[c]) return false; }
+  return true;
+}
+// A* over the grid, 8 ways, no cutting corners; the cells pulled into a few straight legs
+function _igPath(ax, az, bx, bz){
+  if(!_IG.ok) _igBuild();
+  const G=_IG, s=_igNear(ax,az), g=_igNear(bx,bz);
+  if(s<0 || g<0) return [{x:bx, z:bz}];
+  const N=G.nx*G.nz, gs=new Float32Array(N).fill(1e9), from=new Int32Array(N).fill(-1), shut=new Uint8Array(N);
+  const gi=g%G.nx, gj=(g/G.nx)|0, h=c=>{ const i=c%G.nx, j=(c/G.nx)|0, di=Math.abs(i-gi), dj=Math.abs(j-gj); return Math.max(di,dj)+0.414*Math.min(di,dj); };
+  // the open set: a binary heap on f
+  const hc=[], hf=[];
+  const hpush=(c,f)=>{ let i=hc.length; hc.push(c); hf.push(f);
+    while(i>0){ const p=(i-1)>>1; if(hf[p]<=hf[i]) break; [hc[p],hc[i]]=[hc[i],hc[p]]; [hf[p],hf[i]]=[hf[i],hf[p]]; i=p; } };
+  const hpop=()=>{ const c=hc[0], lc=hc.pop(), lf=hf.pop();
+    if(hc.length){ hc[0]=lc; hf[0]=lf; let i=0;
+      for(;;){ const l=i*2+1, r=l+1; let m=i;
+        if(l<hc.length && hf[l]<hf[m]) m=l; if(r<hc.length && hf[r]<hf[m]) m=r;
+        if(m===i) break; [hc[m],hc[i]]=[hc[i],hc[m]]; [hf[m],hf[i]]=[hf[i],hf[m]]; i=m; } }
+    return c; };
+  gs[s]=0; hpush(s, h(s));
+  while(hc.length){
+    const c=hpop();
+    if(c===g) break;
+    if(shut[c]) continue; shut[c]=1;
+    const ci=c%G.nx, cj=(c/G.nx)|0;
+    for(let dj=-1;dj<=1;dj++) for(let di=-1;di<=1;di++){
+      if(!di && !dj) continue;
+      const i=ci+di, j=cj+dj; if(i<0||j<0||i>=G.nx||j>=G.nz) continue;
+      const n=j*G.nx+i; if(!G.ok[n] || shut[n]) continue;
+      if(di && dj && (!G.ok[cj*G.nx+i] || !G.ok[j*G.nx+ci])) continue;
+      const ng=gs[c]+(di&&dj?1.414:1);
+      if(ng<gs[n]){ gs[n]=ng; from[n]=c; hpush(n, ng+h(n)); }
+    }
+  }
+  if(from[g]<0 && g!==s) return [{x:bx, z:bz}];
+  const cells=[]; for(let c=g; c>=0; c=from[c]){ cells.push(c); if(c===s) break; }
+  cells.reverse();
+  const pt=c=>({x:G.x0+(c%G.nx)*G.cs, z:G.z0+((c/G.nx)|0)*G.cs});
+  const out=[]; let cur={x:ax, z:az}, k=0;
+  while(k<cells.length-1){
+    let far=k+1;
+    for(let m=k+2;m<cells.length;m++){ const q=pt(cells[m]); if(_igLOS(cur.x,cur.z,q.x,q.z)) far=m; else break; }
+    cur=pt(cells[far]); out.push(cur); k=far;
+  }
+  if(out.length) out.pop();
+  out.push({x:bx, z:bz});
+  return out;
+}
+const _VEND_SPOTS=[-3.35,-2.25,-1.15].map(z=>({x:LOBBY.x1-1.36, z:z, yaw:Math.PI/2, busy:null}));
+const _RACK_SPOT={x:-3.92, z:-3.6, yaw:-Math.PI/2, busy:null};
+// is the player standing on it (or about to)? then it is not free
+const _youAt=(x,z,r)=>!driving && !droneMode && Math.abs(player.feetY-FL)<1 && Math.hypot(player.pos.x-x, player.pos.z-z)<r;
+function _planInside(p){
+  const room=p.P.female ? RESTROOMS.women : RESTROOMS.men, plan=[], r=Math.random();
+  if(r<0.66){
+    plan.push({kind:(!p.P.female && Math.random()<0.62) ? "urinal" : "stall", room:room});
+    if(Math.random()<0.85) plan.push({kind:"sink", room:room});
+    if(Math.random()<0.45) plan.push({kind:"dryer", room:room});
+    if(Math.random()<0.22) plan.push({kind:"vend"});
+    else if(Math.random()<0.12) plan.push({kind:"rack"});
+  }else if(r<0.86){
+    if(Math.random()<0.3) plan.push({kind:"rack"});
+    plan.push({kind:"vend"});
+  }else plan.push({kind:"rack"});
+  return plan;
+}
+// a free one of the kind wanted (a clean stall over a dirty one)
+function _pickSpot(step){
+  let list;
+  if(step.kind==="urinal") list=step.room.urinals.filter(u=>!u.low || Math.random()<0.2);
+  else if(step.kind==="stall"){ list=step.room.stalls; const clean=list.filter(s=>!s.mess && !s.busy); if(clean.length) list=clean; }
+  else if(step.kind==="sink") list=step.room.sinks;
+  else if(step.kind==="dryer") list=step.room.dryers;
+  else if(step.kind==="vend") list=_VEND_SPOTS;
+  else list=[_RACK_SPOT];
+  const free=list.filter(o=>!o.busy && !_youAt(o.sit?o.sit.x:o.x, o.sit?o.sit.z:o.z, 0.8));
+  return free.length ? free[(Math.random()*free.length)|0] : null;
+}
+const _DUR={urinal:[16,32], stall:[40,110], sink:[5,9], dryer:[7,11], vend:[9,13], rack:[9,24]};
+// begin the next thing on the list: find a free one, and the way to it
+function _nextStep(p){
+  const step=p.plan[p.si];
+  if(!step){                                              // done: to the door, then the way back to the car
+    p.path=_igPath(p.x, p.z, _INSIDE.x, _INSIDE.z); p.pi=0; p.walking=true; p.leaving=true; p.spot=null; return; }
+  if(step.kind==="vend" && GRID.bldg<0.5){ p.si++; _nextStep(p); return; }      // the machines are dark
+  const o=_pickSpot(step);
+  if(!o){ p.waitT=(p.waitT||0)+1; if(p.waitT>14){ p.waitT=0; p.si++; } p.hold=1; return; }   // all taken: wait, or give it up
+  p.waitT=0; o.busy=p; p.spot=o; p.act=step.kind;
+  const D=_DUR[step.kind]; p.dur=D[0]+Math.random()*(D[1]-D[0]);
+  if(step.kind==="stall") p.path=_igPath(p.x, p.z, o.front.x, o.front.z).concat([o.mouth, o.inside]);
+  else p.path=_igPath(p.x, p.z, o.x, o.z);
+  p.pi=0; p.wpT=0; p.walking=true; p.doing=0;
+}
+// let go of whatever they were at
+function _freeSpot(p){
+  const o=p.spot; if(!o) return;
+  if(o.busy===p) o.busy=null;
+  if(o.door && o.door.occBy===p){ o.door.occ=false; o.door.occBy=null; }
+  if(o.col){ const i=COL_DYN.indexOf(o.col); if(i>=0) COL_DYN.splice(i,1); }
+  p.spot=null;
+}
+function _stepInside(p, dt, now){
+  if(p.hold>0){ p.hold-=dt; if(p.hold<=0) _nextStep(p); return; }
+  if(p.walking){
+    if(_stepWalker(p, dt, 1.1)){
+      p.walking=false;
+      if(p.leaving){ p.state="back"; p.path=p.out.slice().reverse(); p.pi=1; p.leaving=false; return; }
+      if(p.act==="stall-out"){ _freeSpot(p); p.si++; _nextStep(p); return; }
+      // there: face the thing, and get on with it
+      p.doing=0; p.x0=p.x; p.z0=p.z;
+      if(p.act==="stall"){ const o=p.spot; o.door.occ=true; o.door.occBy=p; }
+    }
+    return;
+  }
+  const o=p.spot; if(!o){ _nextStep(p); return; }
+  p.doing+=dt;
+  // the last step or two up to it, square on
+  if(!p.sat){ const at=p.act==="stall" ? o.inside : o, k=Math.min(1, dt*3);
+    p.x+=(at.x-p.x)*k; p.z+=(at.z-p.z)*k; }
+  let dy=o.yaw-p.yaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
+  p.yaw+=dy*Math.min(1,dt*5);
+  if(p.act==="stall"){
+    // the door shuts behind them, then they sit; when they get up, a
+    // flush, and once in a while they leave it for somebody else
+    if(p.doing>0.8 && !p.sat){ p.sat=true; p.x=o.sit.x; p.z=o.sit.z; }
+    if(p.doing>p.dur){
+      p.sat=false; p.x=o.inside.x; p.z=o.inside.z;
+      if(Math.random()<0.24){ o.mess=true; o.messMesh.visible=true; }
+      else if(typeof AUDIO!=="undefined" && AUDIO.flush) AUDIO.flush(o.tx, o.dz);
+      if(o.mess && Math.random()<0.5 && typeof AUDIO!=="undefined" && AUDIO.flush) AUDIO.flush(o.tx, o.dz);   // flushed, and it did not go
+      p.act="stall-out"; p.walking=true; p.path=[o.mouth, o.front]; p.pi=0;
+    }
+    return;
+  }
+  if(p.act==="urinal" && p.doing>p.dur && !p.flushed){ p.flushed=true; if(typeof AUDIO!=="undefined" && AUDIO.flush && Math.random()<0.8) AUDIO.flush(o.x, o.z); }
+  if(p.act==="dryer" && !p.dried && p.doing>0.6){ p.dried=true; if(typeof AUDIO!=="undefined") AUDIO.blip("dryer", o.x, o.z); }
+  if(p.act==="vend"){
+    if(!p.paid && p.doing>2.5){ p.paid=true; if(typeof AUDIO!=="undefined") AUDIO.blip("coin", o.x, o.z); }
+    if(!p.got && p.doing>p.dur*0.62){ p.got=true; if(typeof AUDIO!=="undefined") AUDIO.blip("clunk", o.x, o.z); }
+  }
+  if(p.doing>p.dur){ p.flushed=p.dried=p.paid=p.got=false; _freeSpot(p); p.si++; _nextStep(p); }
+}
+// how each of those looks, over the standing (or sitting) pose
+function _poseInside(p, now){
+  const P=p.P, B=P.B, J=P.j, u=p.doing||0, a=p.act;
+  if(p.walking || !p.spot){ poseP(P, p.moving?"walk":"stand", p.ph, now); return; }
+  if(a==="stall"){
+    if(p.sat){ poseP(P, "sit", 0, now);
+      B[J.head].rotation.set(0.38, 0, 0);                              // on the phone, like everyone
+      B[J.shR].rotation.set(-0.62, 0, 0.18); B[J.elR].rotation.x=-1.55; B[J.shL].rotation.x=-0.25; B[J.elL].rotation.x=-0.5; }
+    else poseP(P, "stand", 0, now);
+    return;
+  }
+  if(a==="rack"){ poseP(P, "read", 0, now); B[J.head].rotation.y=Math.sin(now*0.4+p.seed)*0.25; return; }
+  poseP(P, "stand", 0, now);
+  B[J.head].rotation.y*=0.2;
+  if(a==="urinal"){
+    B[J.shL].rotation.set(-0.38, 0, 0.22); B[J.shR].rotation.set(-0.38, 0, -0.22);
+    B[J.elL].rotation.x=B[J.elR].rotation.x=-0.45;
+    B[J.head].rotation.x=u<3 ? 0.35 : -0.05+Math.sin(now*0.3+p.seed)*0.05; B[J.head].rotation.y=u<3?0:Math.sin(now*0.2+p.seed)*0.3;
+  }else if(a==="sink"||a==="dryer"){
+    const rub=Math.sin(now*(a==="sink"?9:6))*0.08;
+    B[J.shL].rotation.set(a==="sink"?-0.72:-0.95, 0, 0.20); B[J.shR].rotation.set(a==="sink"?-0.72:-0.95, 0, -0.20);
+    B[J.elL].rotation.x=-0.55+rub; B[J.elR].rotation.x=-0.55-rub;
+    B[J.head].rotation.x=0.30; B[J.spine].rotation.x=a==="sink"?0.12:0.04;
+  }else if(a==="vend"){
+    const t=u/(p.dur||10);
+    if(t<0.55){ B[J.shR].rotation.set(-1.15, 0, -0.05); B[J.elR].rotation.x=-0.45+Math.sin(now*5)*0.04*(t>0.2?1:0); B[J.head].rotation.x=0.05; }
+    else if(t<0.62){ B[J.head].rotation.x=0.25; }
+    else if(t<0.82){ B[J.spine].rotation.x=0.75; B[J.head].rotation.x=0.15;
+      B[J.hpL].rotation.x=B[J.hpR].rotation.x=-0.55; B[J.knL].rotation.x=B[J.knR].rotation.x=0.95;
+      B[J.root].position.y=P.HIP-0.20; B[J.shR].rotation.set(-1.0, 0, 0); B[J.elR].rotation.x=-0.2; }
+    else { B[J.shR].rotation.set(-0.6, 0, 0); B[J.elR].rotation.x=-1.2; B[J.head].rotation.x=0.2; }   // reading the wrapper
+  }
 }
 const PEOPLE_API=(function(){
   let seedR=_trng ? _trng(9137) : Math.random;
@@ -445,13 +670,16 @@ function updatePeople(dt, now, dark){
     if(p.kind==="driver"){
       const R=p.v.route;
       if(p.state==="wait"){ p.t-=dt; if(p.t<=0){ p.state="out"; P.g.visible=true; if(typeof AUDIO!=="undefined") AUDIO.blip("door",p.x,p.z); } }
-      else if(p.state==="out"){ if(_stepWalker(p, dt, 1.3)){ p.state="in"; P.g.visible=false; p.t=25+Math.random()*55; } }
-      else if(p.state==="in"){ p.t-=dt; if(p.t<=0){ p.state="back"; p.path=p.path.slice().reverse(); p.pi=0; P.g.visible=true; } }
+      else if(p.state==="out"){ if(_stepWalker(p, dt, 1.3)){ p.state="inside"; p.out=p.path; p.plan=_planInside(p); p.si=0; _nextStep(p); } }
+      else if(p.state==="inside"){ _stepInside(p, dt, now); }
       else if(p.state==="back"){ if(_stepWalker(p, dt, 1.25)){ p.state="gone"; P.g.visible=false; p.t=2.5;
         if(typeof AUDIO!=="undefined") AUDIO.blip("door",p.x,p.z); } }
       else if(p.state==="gone"){ p.t-=dt; if(p.t<=0){ p.done=true; scene.remove(P.g); P.mesh.geometry.dispose(); PEOPLE.splice(i,1); continue; } }
-      if(P.g.visible){ poseP(P, p.moving?"walk":"stand", p.ph, now); P.g.position.set(p.x,p.y,p.z); P.g.rotation.y=p.yaw; }
-      if(!R) p.done=true;
+      if(P.g.visible){
+        if(p.state==="inside"){ if(cd<60) _poseInside(p, now); }
+        else poseP(P, p.moving?"walk":"stand", p.ph, now);
+        P.g.position.set(p.x,p.y,p.z); P.g.rotation.y=p.yaw; }
+      if(!R){ p.done=true; if(p.spot) _freeSpot(p); }
     }
   }
 }

@@ -249,11 +249,14 @@ function loftBody(D, S, paint, trim, coarse){
     for(let k=0;k<24;k++){ const m=(lo+hi)/2; if(pt(z,m).y<y) lo=m; else hi=m; } return (lo+hi)/2; };
   // a patch of the skin itself, pushed out: glass, panels, anything that
   // has to sit on the curve rather than across it
+  // (out along the normal in z too, a ring at a time: on a windshield the
+  // normal is mostly z, and pushed out in x and y alone the glass lay a
+  // millimetre off the paint, which is no distance at all at forty metres)
   const patch=(L, z0,z1,a0,a1,out,color,fin,nz,na)=>{
     const zz=[], rr=[], C=new T.Color(color);
-    for(let i=0;i<=nz;i++){ const z=lerp(z0,z1,i/nz); zz.push(z); const r=[];
-      for(let j=0;j<=na;j++){ const a=lerp(a0,a1,j/na), p=pt(z,a), n=nrm(z,a); r.push([p.x+n.x*out, p.y+n.y*out]); }
-      rr.push(r); }
+    for(let i=0;i<=nz;i++){ const z=lerp(z0,z1,i/nz); const r=[]; let nzs=0;
+      for(let j=0;j<=na;j++){ const a=lerp(a0,a1,j/na), p=pt(z,a), n=nrm(z,a); r.push([p.x+n.x*out, p.y+n.y*out]); nzs+=n.z; }
+      zz.push(z+nzs/(na+1)*out); rr.push(r); }
     L.push({geo:skin(zz, rr, false, ()=>C, fin), matrix:new T.Matrix4(), color:null});
   };
   return {OP:OP, sec:sec, pt:pt, nrm:nrm, angAt:angAt, patch:patch, zN:zs[zs.length-1], zT:zs[0]};
@@ -278,7 +281,7 @@ function greenhouse(G, OP, GL, paint){
     for(let k=0;k<=6;k++){ const t=k/6; pts.push([lerp(wt-rc,-(wt-rc),t), yr+(G.crown||0)*Math.sin(t*Math.PI)*Math.min(1,rise/0.3)]); }
     for(let k=1;k<=4;k++){ const a=Math.PI/2+k/4*Math.PI/2; pts.push([-(wt-rc)+rc*Math.cos(a), yr-rc+rc*Math.sin(a)]); }
     for(let k=1;k<=5;k++){ const t=k/5; pts.push([lerp(-wt,-wb,t), lerp(yr-rc,yb,t)]); }
-    if(out){ const cy=yb+h*0.4; for(const p of pts){ p[0]*=1+out; p[1]=cy+(p[1]-cy)*(1+out*0.6); } }
+    if(out){ const cy=yb+h*0.4; for(const p of pts){ p[0]*=1+out; p[1]=cy+(p[1]-cy)*(1+out*1.8); } }
     return pts;
   };
   const span=(z0,z1,n)=>{ const a=[]; for(let k=0;k<=n;k++) a.push(lerp(z0,z1,k/n)); return a; };
@@ -361,7 +364,7 @@ function carParts(kind, paintHex, coarse){
     const zH=B.zN-0.10, aH=B.angAt(zH, D.headY), pH=B.pt(zH,aH), nH=B.nrm(zH,aH);
     const p=sd>0?pH:mir(pH), n=sd>0?nH:mirN(nH);
     onSurf(OP, 0.34, 0.11, 0.035, p, n, 0xdfe4e6, FIN.lens, 0.002);
-    onSurf(OP, 0.26, 0.05, 0.04, p.clone().addScaledVector(_UP,-0.005), n, 0x9aa3a8, FIN.chrome, 0.004);
+    onSurf(OP, 0.26, 0.05, 0.036, p.clone().addScaledVector(_UP,-0.005), n, 0x9aa3a8, FIN.chrome, 0.009);
     LAMPS.head.push({p:p.clone().addScaledVector(n,0.045), n:n.clone()});
     const zT=B.zT+0.10, aT=B.angAt(zT, D.tailY), pT=B.pt(zT,aT), nT=B.nrm(zT,aT);
     const q=sd>0?pT:mir(pT), m=sd>0?nT:mirN(nT);
@@ -381,9 +384,9 @@ function carParts(kind, paintHex, coarse){
   {
     const zt=B.zT-0.004, y=D.plateY;
     vBox(OP, 0.32, 0.165, 0.012, 0, y, zt, 0xf2f0e6, FIN.lens);
-    vBox(OP, 0.32, 0.03, 0.014, 0, y+0.07, zt, 0x24408e, FIN.lens);
-    vBox(OP, 0.32, 0.025, 0.014, 0, y-0.07, zt, 0xe2b43a, FIN.lens);
-    for(let k=0;k<6;k++) vBox(OP, 0.028, 0.06, 0.016, -0.09+k*0.036, y, zt, 0x24408e, FIN.lens);
+    vBox(OP, 0.312, 0.03, 0.020, 0, y+0.064, zt, 0x24408e, FIN.lens);
+    vBox(OP, 0.312, 0.025, 0.020, 0, y-0.067, zt, 0xe2b43a, FIN.lens);
+    for(let k=0;k<6;k++) vBox(OP, 0.028, 0.06, 0.024, -0.09+k*0.036, y, zt, 0x24408e, FIN.lens);
   }
   // door seams and handles, both sides, following the skin
   for(const zSeam of D.seams){
@@ -601,12 +604,12 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
     rN:[0.10,0.08,0.03], rT:[0.16,0.14,0.04]};
   const CB=loftBody(C, {axles:[]}, paintHex, null, coarse); OP.push(...CB.OP);
   // two-piece windshield on the slope, door glass, a sleeper window, a visor
-  CB.patch(GL, 7.96, 8.30, Math.PI/2-0.66, Math.PI/2+0.66, 0.008, 0x1a2329, FIN.lens, 5, 12);
+  CB.patch(GL, 7.96, 8.30, Math.PI/2-0.66, Math.PI/2+0.66, 0.012, 0x1a2329, FIN.lens, 5, 12);
   bar(OP, CB.pt(7.96,Math.PI/2), CB.pt(8.30,Math.PI/2), 0.05, 0.03, CB.nrm(8.1,Math.PI/2), BLK, FIN.trim);
   {
     const a0=CB.angAt(7.4,2.42), a1=CB.angAt(7.4,3.22), s0=CB.angAt(4.85,2.80), s1=CB.angAt(4.85,3.10);
-    for(const [b0,b1] of [[a0,a1],[Math.PI-a1,Math.PI-a0]]) CB.patch(GL, 6.95, 7.86, b0, b1, 0.008, 0x1a2329, FIN.lens, 3, 4);
-    for(const [b0,b1] of [[s0,s1],[Math.PI-s1,Math.PI-s0]]) CB.patch(GL, 4.55, 5.15, b0, b1, 0.008, 0x1a2329, FIN.lens, 2, 2);
+    for(const [b0,b1] of [[a0,a1],[Math.PI-a1,Math.PI-a0]]) CB.patch(GL, 6.95, 7.86, b0, b1, 0.022, 0x1a2329, FIN.lens, 3, 4);
+    for(const [b0,b1] of [[s0,s1],[Math.PI-s1,Math.PI-s0]]) CB.patch(GL, 4.55, 5.15, b0, b1, 0.012, 0x1a2329, FIN.lens, 2, 2);
   }
   for(const sd of [-1,1]){
     // west-coast mirrors on their arms, and a hood mirror
@@ -632,8 +635,8 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
   for(let k=0;k<5;k++){ const x=-0.6+k*0.3; vBox(OP, 0.10, 0.05, 0.06, x, 3.43, 7.84, 0xd08a1c, FIN.lens);
     LAMPS.amber.push({p:new T.Vector3(x,3.45,7.88), n:new T.Vector3(0,0.3,1)}); }
   // the grille, the bumper, the headlamps in the corners of the hood
-  vBox(OP, 1.16, 1.06, 0.04, 0, 1.36, S.nose-0.02, CHR, FIN.chrome);
-  for(let k=0;k<11;k++) vBox(OP, 0.025, 0.96, 0.05, -0.50+k*0.10, 1.36, S.nose, 0x24262a, FIN.trim);
+  vBox(OP, 1.16, 1.06, 0.04, 0, 1.36, S.nose+0.006, CHR, FIN.chrome);
+  for(let k=0;k<11;k++) vBox(OP, 0.025, 0.96, 0.05, -0.50+k*0.10, 1.36, S.nose+0.014, 0x24262a, FIN.trim);
   vBox(OP, 2.54, 0.42, 0.32, 0, 0.74, S.nose+0.04, CHR, FIN.chrome);
   for(const sd of [-1,1]){
     const z=S.nose-0.22, a=HB.angAt(z, 1.62), p=HB.pt(z,a), n=HB.nrm(z,a);
@@ -661,7 +664,7 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
       vBox(OP, 2.32, 0.92, 3.10, 0, 2.02, zc, 0xc8ab78, FIN.panel);
       vBox(OP, 2.34, 0.70, 3.12, 0, 2.12, zc, 0xf0efe8, FIN.panel);       // the wrap
       vBox(OP, 2.36, 0.04, 3.14, 0, 2.48, zc, 0x2c5e9e, FIN.panel);
-      vBox(OP, 2.33, 0.20, 3.11, 0, 1.66, zc, 0xb89a68, FIN.panel);
+      vBox(OP, 2.33, 0.20, 3.11, 0, 1.645, zc, 0xb89a68, FIN.panel);
       for(const dz of [-1.0,0.0,1.0]){
         vBox(OP, 2.40, 0.012, 0.05, 0, 2.50, zc+dz, 0xe2b31c, FIN.trim);
         for(const sd of [-1,1]){ vBox(OP, 0.012, 0.98, 0.05, sd*1.19, 2.00, zc+dz, 0xe2b31c, FIN.trim);
@@ -676,9 +679,9 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
     liveryBox(LV, -hw,hw, y0,y1, z0,z1, row);
     for(const sd of [-1,1]){
       // rails and corner posts held a few millimetres off the box's top and underside
-      vBox(OP, 0.03, 0.14, z1-z0, sd*(hw+0.01), y0+0.075, (z0+z1)/2, 0xb9bcbd, FIN.alloy);
-      vBox(OP, 0.025, 0.08, z1-z0, sd*(hw+0.008), y1-0.045, (z0+z1)/2, 0xc9cbcc, FIN.alloy);
-      for(const zz of [z0+0.03, z1-0.03]) vBox(OP, 0.05, y1-y0-0.012, 0.072, sd*(hw-0.01), (y0+y1)/2, zz, 0xb9bcbd, FIN.alloy);   // proud of both ends
+      vBox(OP, 0.03, 0.14, z1-z0-0.012, sd*(hw+0.01), y0+0.075, (z0+z1)/2, 0xb9bcbd, FIN.alloy);
+      vBox(OP, 0.025, 0.08, z1-z0-0.012, sd*(hw+0.008), y1-0.045, (z0+z1)/2, 0xc9cbcc, FIN.alloy);
+      for(const zz of [z0+0.03, z1-0.03]) vBox(OP, 0.05, y1-y0-0.032, 0.072, sd*(hw-0.01), (y0+y1)/2, zz, 0xb9bcbd, FIN.alloy);   // proud of both ends
       vBox(OP, 0.10, 0.92, 0.12, sd*0.86, 0.80, 1.40, 0x2b2c2e, FIN.metal);                 // landing gear legs
       vBox(OP, 0.24, 0.05, 0.30, sd*0.86, 0.36, 1.40, 0x2b2c2e, FIN.metal);
       if(row!==2) vBox(OP, 0.03, 0.78, 7.4, sd*(hw-0.06), 0.88, -3.9, 0x4a4d50, FIN.panel);  // side skirts
@@ -698,7 +701,7 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
       vBox(OP, 1.70, 1.00, 0.03, 0, 3.26, z1+0.48, 0x2c2f32, FIN.trim);
       for(let k=0;k<8;k++) vBox(OP, 1.64, 0.02, 0.03, 0, 2.84+k*0.12, z1+0.50, 0x4a4e52, FIN.trim);
       vBox(OP, 0.80, 0.18, 0.02, 0, 3.86, z1+0.48, 0x1d4f91, FIN.panel);
-      vBox(OP, 0.60, 0.40, 0.50, 0.75, 0.95, z1-1.4, 0xd9d9d3, FIN.panel);                // its fuel tank
+      vBox(OP, 0.60, 0.40, 0.50, 0.75, 0.94, z1-1.4, 0xd9d9d3, FIN.panel);                // its fuel tank
     }
   }
   if(!LAMPS.tail.length) for(const sd of [-1,1]){
@@ -796,8 +799,9 @@ const WHEEL_POOL=(function(){
     for(const v of slots){
       const g=v.g;
       const dx=g.position.x-cam.x, dz=g.position.z-cam.z, d2=dx*dx+dz*dz;
-      if(v.lod){ const bodyNear=d2<130*130; v.lod.near.visible=bodyNear; v.lod.far.visible=!bodyNear; }
-      if(d2>900*900 || !g.visible) continue;
+      const cull=Math.min(900, DRAW_LEVELS[GFX.draw].cull);
+      if(v.lod){ const bodyNear=d2<130*130; v.lod.near.visible=bodyNear; v.lod.far.visible=!bodyNear && d2<cull*cull; }
+      if(d2>cull*cull || !g.visible) continue;
       const near=d2<110*110;
       g.updateMatrixWorld();
       _r.makeRotationX(v.spin||0);

@@ -298,12 +298,17 @@ const AUDIO=(function(){
       for(let k=0;k<2+((Math.random()*2)|0);k++) tone("sawtooth", 520, 380, 0.22, v*0.35, t+k*0.36, pan);
     }
   }
-  function flush(){
+  function flush(x, z){
+    if(!ctx || !enabled) return;
+    let vol=1;
+    if(x!==undefined){ const d=Math.hypot(camera.position.x-x, camera.position.z-z); vol=1/(1+d*d/40);
+      if(!indoorsAt(camera.position.x, camera.position.z, camera.position.y)) vol*=0.15; }
+    if(vol<0.01) return;
     const tt=ctx.currentTime+0.05, s=ctx.createBufferSource(); s.buffer=noise(4,"pink");
     const f=ctx.createBiquadFilter(); f.type="bandpass"; f.Q.value=0.8;
     f.frequency.setValueAtTime(600,tt); f.frequency.linearRampToValueAtTime(1600,tt+0.6); f.frequency.exponentialRampToValueAtTime(380,tt+3.6);
-    const g=ctx.createGain(); env(g,tt,0.08,0.22,1.6,1.8); s.connect(f); f.connect(g); g.connect(master); s.start(tt);
-    tone("sine", 70, 50, 0.3, 0.05, tt, 0, master);
+    const g=ctx.createGain(); env(g,tt,0.08,0.22*vol,1.6,1.8); s.connect(f); f.connect(g); g.connect(master); s.start(tt);
+    tone("sine", 70, 50, 0.3, 0.05*vol, tt, 0, master);
   }
   // a board taking weight somewhere: a slow, rough, falling squeal
   function creak(){
@@ -450,7 +455,7 @@ const AUDIO=(function(){
     // and in the building, the tubes coming back with a tick and a buzz
     if(indoorsAt(camera.position.x, camera.position.z, camera.position.y)) tone("sawtooth", 120, 120, 0.4, 0.02, at+0.1, 0, master);
   }
-  return { start:start, update:update, blip:blip, on:()=>enabled,
+  return { start:start, update:update, blip:blip, flush:flush, creak:()=>{ if(ctx && enabled) creak(); }, on:()=>enabled,
            thunder:thunder, outage:outage, genCrank:genCrank, genCatch:genCatch, genStop:genStop, ats:ats,
            campLaugh:campLaugh, campPop:campPop, campSong:()=>{ song=(song+1)%SONGS.length; beat=null; },
            toggle:()=>{ enabled=!enabled; if(!started && enabled) start();

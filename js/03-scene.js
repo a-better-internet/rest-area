@@ -7,11 +7,40 @@
    3 · RENDERER / SCENE / CAMERAS
    ---------------------------------------------------------------------- */
 const app=document.getElementById("app");
+/* --- graphics settings ----------------------------------------------------
+   Read here, before anything is built, so the renderer starts at the chosen
+   resolution and shadow size; the menu that changes them is 18c-settings.
+   res 0 is "native": the screen's own pixel density, up to 2x. */
+const GFX=(function(){
+  const D={res:0, fps:60, shadows:3, draw:2, lights:12, meter:false};
+  let s=null;
+  try{ s=JSON.parse(localStorage.getItem("restarea.gfx")||"null"); }catch(e){}
+  const o=Object.assign({}, D, (s && typeof s==="object") ? s : {});
+  for(const k in D) if(typeof o[k]!==typeof D[k]) o[k]=D[k];
+  return o;
+})();
+// shadow levels: 0 is none at all; the map covers a square the player stands
+// in the middle of, and a smaller map is spread over a smaller square
+const SHADOW_LEVELS=[null,
+  {name:"LOW",    map:1024, half:38, soft:false},
+  {name:"MEDIUM", map:2048, half:48, soft:true},
+  {name:"HIGH",   map:3072, half:54, soft:true},
+  {name:"ULTRA",  map:4096, half:58, soft:true}];
+// draw distance: how far the near trees reach, how far anything is drawn,
+// and where the haze closes in so nothing is seen to vanish
+const DRAW_LEVELS=[
+  {name:"NEAR",   tree:54,  small:26, cull:620,  fog:600},
+  {name:"MEDIUM", tree:70,  small:34, cull:1150, fog:1120},
+  {name:"FAR",    tree:84,  small:40, cull:1e9,  fog:1e9},
+  {name:"MAX",    tree:120, small:56, cull:1e9,  fog:1e9}];
+function gfxPixelRatio(){ return GFX.res>0 ? GFX.res : Math.min(devicePixelRatio||1, 2); }
+GFX.shadows=Math.max(0, Math.min(SHADOW_LEVELS.length-1, GFX.shadows|0));
+GFX.draw=Math.max(0, Math.min(DRAW_LEVELS.length-1, GFX.draw|0));
 const renderer=new T.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=T.PCFSoftShadowMap;
+renderer.setPixelRatio(gfxPixelRatio());
+renderer.shadowMap.enabled=GFX.shadows>0;
+renderer.shadowMap.type=(SHADOW_LEVELS[GFX.shadows]||SHADOW_LEVELS[3]).soft ? T.PCFSoftShadowMap : T.PCFShadowMap;
 try{ renderer.outputColorSpace=T.SRGBColorSpace; }catch(e){ renderer.outputEncoding=T.sRGBEncoding; }
 /* A SHOULDER, NOT A CURVE. Below 0.76 the output is the input to the last
    bit, so every painted hex arrives as painted; above it each channel rolls
@@ -28,6 +57,41 @@ T.ShaderChunk.tonemapping_pars_fragment =
       "  vec3 hi = max( color - vec3( K ), vec3( 0.0 ) );",
       "  return lo + ( 1.0 - K ) * ( vec3( 1.0 ) - exp( -hi / ( 1.0 - K ) ) );",
       "}" ].join("\n"));
+/* GROUND MIST, IN THE FOG ITSELF. Every lit surface already mixes in the
+   haze by its distance; it now also mixes in a mist whose density is
+   thickest at the ground and thins out over a metre or two above it,
+   integrated along the line of sight. So it has no edges anywhere: the
+   grass at your feet is clear, the far side of the lawn goes milky, posts
+   and trunks fade into it at the bottom, and the crowns stand up out of
+   it. Thinner and thicker in slow-drifting patches. 14c says how much
+   there is; the two shared vec4s are plain objects, so every material's
+   copy of the uniform is the same one.
+     MIST_U: density per metre at the ground, the thinning height, the
+             ground level, the drift clock
+     MIST_C: its colour, and 0 to switch it off                          */
+const MIST_U={x:0, y:1.7, z:0, w:0}, MIST_C={x:0.86, y:0.88, z:0.90, w:0};
+for(const k in T.ShaderLib){ const u=T.ShaderLib[k].uniforms; if(u && u.fogColor){ u.uMist={value:MIST_U}; u.uMistC={value:MIST_C}; } }
+T.UniformsLib.fog.uMist={value:MIST_U}; T.UniformsLib.fog.uMistC={value:MIST_C};
+T.ShaderChunk.fog_pars_vertex += "\n#ifdef USE_FOG\n\tvarying vec3 vFogWorld;\n#endif";
+T.ShaderChunk.fog_vertex += "\n#ifdef USE_FOG\n\t{ mat3 vr=mat3(viewMatrix); vec3 v=mvPosition.xyz;"+
+  " vFogWorld=cameraPosition+vec3(dot(vr[0],v),dot(vr[1],v),dot(vr[2],v)); }\n#endif";
+T.ShaderChunk.fog_pars_fragment += "\n#ifdef USE_FOG\n\tvarying vec3 vFogWorld;\n\tuniform vec4 uMist;\n\tuniform vec4 uMistC;\n#endif";
+T.ShaderChunk.fog_fragment = [
+  "#ifdef USE_FOG",
+  "if(uMistC.w>0.001){",
+  "  float mH=uMist.y, h0=max(cameraPosition.y-uMist.z,0.0), h1=max(vFogWorld.y-uMist.z,0.0);",
+  "  float ea=exp(-h0/mH), eb=exp(-h1/mH), dy=h1-h0;",
+  "  float avg=abs(dy)>0.02 ? mH*(ea-eb)/dy : ea;",
+  "  vec2 q=vFogWorld.xz*0.019+vec2(uMist.w*0.011, uMist.w*0.006);",
+  "  vec2 qi=floor(q), qf=fract(q); qf=qf*qf*(3.0-2.0*qf);",
+  "  float n00=fract(sin(dot(qi,vec2(127.1,311.7)))*43758.5453), n10=fract(sin(dot(qi+vec2(1.0,0.0),vec2(127.1,311.7)))*43758.5453);",
+  "  float n01=fract(sin(dot(qi+vec2(0.0,1.0),vec2(127.1,311.7)))*43758.5453), n11=fract(sin(dot(qi+vec2(1.0,1.0),vec2(127.1,311.7)))*43758.5453);",
+  "  float nn=mix(mix(n00,n10,qf.x),mix(n01,n11,qf.x),qf.y);",
+  "  float mf=1.0-exp(-uMist.x*avg*distance(vFogWorld,cameraPosition)*(0.45+1.1*nn));",
+  "  gl_FragColor.rgb=mix(gl_FragColor.rgb, uMistC.rgb, mf*uMistC.w);",
+  "}",
+  "#endif",
+  T.ShaderChunk.fog_fragment].join("\n");
 renderer.toneMapping=T.CustomToneMapping;
 renderer.toneMappingExposure=1.0;
 app.appendChild(renderer.domElement);
@@ -76,15 +140,24 @@ const _torchDir=new T.Vector3();
    motel's 92: a treeline thirty metres off has to throw its shade onto the
    lawn you are standing on, and 3072 texels still make it 3.5 cm each. */
 const key=new T.DirectionalLight(0xfff3df, 1.10);
-key.position.set(70,110,50); key.castShadow=true;
-key.shadow.mapSize.set(3072,3072);
+key.position.set(70,110,50); key.castShadow=GFX.shadows>0;
 const ksc=key.shadow.camera;
 const KEY_D=120;
-ksc.near=KEY_D-110; ksc.far=KEY_D+110; ksc.left=-54; ksc.right=54; ksc.top=54; ksc.bottom=-54;
+let SHADOW_SNAP=0.07;
+// the map's size and the square it covers, from the settings; the frustum
+// still follows the player in whole texels, so the step is recomputed too
+function setShadowLevel(lv){
+  const L=SHADOW_LEVELS[lv]||SHADOW_LEVELS[3];
+  key.shadow.mapSize.set(L.map, L.map);
+  if(key.shadow.map){ key.shadow.map.dispose(); key.shadow.map=null; }
+  ksc.left=-L.half; ksc.right=L.half; ksc.top=L.half; ksc.bottom=-L.half;
+  ksc.updateProjectionMatrix();
+  SHADOW_SNAP=(ksc.right-ksc.left)/L.map*2;
+}
+ksc.near=KEY_D-110; ksc.far=KEY_D+110;
+setShadowLevel(GFX.shadows);
 /* AND THEN TELL IT. An OrthographicCamera builds its projection once; change
    its bounds without this and the world is shadowed through the stock 10 m
-   box. */
-ksc.updateProjectionMatrix();
+   box (setShadowLevel does). */
 key.shadow.bias=-0.00005; key.shadow.normalBias=0.014;
-const SHADOW_SNAP=(ksc.right-ksc.left)/key.shadow.mapSize.x*2;
 scene.add(key); scene.add(key.target);

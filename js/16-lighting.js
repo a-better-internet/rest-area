@@ -8,10 +8,18 @@
    twelve registered lamps nearest the camera; everything else glows.
    ---------------------------------------------------------------------- */
 const LIGHT_POOL=[];
-for(let i=0;i<12;i++){
-  const L=new T.PointLight(0xffe9c4, 0, 10, 1.4); L.castShadow=false;
-  scene.add(L); LIGHT_POOL.push(L);
+/* How many there are is a graphics setting. Every pixel of every lit
+   surface pays for every light in the pool, lit or not, so fewer is
+   cheaper; changing the number rebuilds the shaders once. */
+function setLightCount(n){
+  n=Math.max(2, Math.min(32, n|0));
+  while(LIGHT_POOL.length<n){
+    const L=new T.PointLight(0xffe9c4, 0, 10, 1.4); L.castShadow=false;
+    scene.add(L); LIGHT_POOL.push(L);
+  }
+  while(LIGHT_POOL.length>n){ const L=LIGHT_POOL.pop(); scene.remove(L); if(L.dispose) L.dispose(); }
 }
+setLightCount(GFX.lights);
 const _lampSort=[];
 // one tube in the men's room has a bad ballast, as one always does
 const FLICKER={v:1, t:0};

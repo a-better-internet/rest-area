@@ -825,6 +825,46 @@ function drawPAMap(x,W,H){
               panels between them and the changing station (photograph 18)
    LANE: x -4.7..-1.9 from the alcove into the room, kept clear.
    ======================================================================= */
+/* What is in each room, for the people who come in to use it (14b): the
+   stalls (their doors, where to stand at them, where to sit), the urinals,
+   the sinks and the dryers, each a place to stand and the way to face. */
+const RESTROOMS={men:{stalls:[], urinals:[], sinks:[], dryers:[]}, women:{stalls:[], urinals:[], sinks:[], dryers:[]}};
+const MESS={cleaned:0};
+/* ---- what somebody leaves in a toilet now and then ---------------------
+   Murky water, something in it, a tail of paper over the rim and down the
+   front, a few bits on the floor; drawn in the toilet's own frame, hidden
+   until a visitor leaves it (14b), gone when you clean it up. */
+const _MESS_MAT=new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-2});
+function _messMesh(x, z, ry, seed){
+  const r=_trng(seed), E=[], f=XF(x, z, ry);
+  const put=(geo, lx, ly, lz, c, rx, ryy, rz, sx, sy, sz)=>{
+    const m=new T.Matrix4().compose(V3(f.x(lx,lz), FL+ly, f.z(lx,lz)),
+      new T.Quaternion().setFromEuler(new T.Euler(rx||0, ry+(ryy||0), rz||0, "YXZ")), V3(sx||1, sy||1, sz||1));
+    E.push({geo:geo, matrix:m, color:new T.Color(c)});
+  };
+  // the water gone murky, a shade over the clean water's surface
+  const w=new T.CircleGeometry(0.080, 24); w.rotateX(-Math.PI/2); w.scale(1,1,1.31);
+  put(w, 0, 0.3035, 0.472, "#4e3a1c");
+  // what is in it, and paper wadded on top of it
+  for(let k=0;k<3+((r()*2)|0);k++)
+    put(new T.SphereGeometry(0.5, 10, 7), (r()-0.5)*0.07, 0.306, 0.44+r()*0.07, k%2?"#3e2812":"#52361a",
+        0, r()*3, 0, 0.040+r()*0.014, 0.030, 0.085+r()*0.03);
+  put(new T.IcosahedronGeometry(0.5, 1), 0.02, 0.322, 0.50, "#ebe8de", 0.3, 0.5, 0.2, 0.11, 0.05, 0.09);
+  // splashed on the rim at the front, and the seat
+  put(boxGeo(0.10, 0.004, 0.035, 0), -0.03, 0.4115, 0.66, "#4a3216", 0, 0.4);
+  put(boxGeo(0.06, 0.004, 0.025, 0), 0.08, 0.4115, 0.58, "#5a3c1a", 0, -0.7);
+  // a tail of paper: soaked in the bowl, over the front of the rim, down the front
+  put(boxGeo(0.095, 0.004, 0.16, 0), 0.01, 0.312, 0.585, "#e9e6dc", -0.55);
+  put(boxGeo(0.095, 0.004, 0.06, 0), 0.01, 0.418, 0.705, "#f2f0ea", 0.15);
+  put(boxGeo(0.095, 0.004, 0.24, 0), 0.01, 0.30, 0.742, "#f2f0ea", -1.35);
+  // the roll run out across the floor, wads of it, a wet patch
+  for(let k=0;k<5;k++)
+    put(new T.IcosahedronGeometry(0.5, 0), (r()-0.5)*0.60, 0.016, 0.60+r()*0.55, "#eeece4", r()*3, r()*3, r()*3, 0.07, 0.035, 0.06);
+  put(boxGeo(0.10, 0.003, 0.70, 0), -0.30, 0.0085, 0.55, "#f2f0ea", 0, 0.35);
+  { const pd=new T.CircleGeometry(0.5, 14); pd.rotateX(-Math.PI/2); put(pd, 0.12, 0.0068, 0.86, "#8a8270", 0, 0.6, 0, 0.55, 1, 0.30); }
+  const m=new T.Mesh(mergeEntries(E), _MESS_MAT); m.visible=false; m.castShadow=false; scene.add(m);
+  return m;
+}
 (function restrooms(){
   for(const sg of [-1,1]){
     const Z=v=>sg*v;                                   // |z| to world z
@@ -877,6 +917,7 @@ function drawPAMap(x,W,H){
         cyl("chrome", 0.022,0.026, 0.16, 8, x, FL+0.95, zf-sg*0.08, "#c9cbcc");
         push("chrome", new T.CylinderGeometry(0.018,0.018,0.12,8), x, FL+1.02, zf-sg*0.13, 0, "#c9cbcc", Math.PI/2, 0);
         addUse(x, zf+sg*-1.1, FL, "WASH YOUR HANDS", ()=>toast("THE SENSOR TAKES A SECOND TO NOTICE YOU","#cfe0d4"), 0.7);
+        RESTROOMS[men?"men":"women"].sinks.push({x:x, z:Z(6.64), yaw:sg<0?Math.PI:0, busy:null});
       }
       push("mirror", planeGeo(2.30, 0.92, 0), 1.80, FL+1.52, zf-sg*0.012, sg<0?0:Math.PI, "#ffffff");
       bx("steel", 2.36, 0.98, 0.012, 1.80, FL+1.52, zf-sg*0.006, 0.8, 0, "#cfd2d3");
@@ -916,6 +957,14 @@ function drawPAMap(x,W,H){
       }
       addCol(tx-0.2, tx+0.2, Math.min(Z(ZF),Z(ZF-0.68)), Math.max(Z(ZF),Z(ZF-0.68)), FL-0.5, FL+0.45);
       if(wide) addSeat(tx, Z(ZF-0.44), FL+0.45, sg<0?Math.PI:0, "THE ACCESSIBLE STALL");
+      { const dc=da+dw/2, st={tx:tx, sg:sg, door:null, dx:dc, dz:Z(zfrt),
+          front:{x:dc, z:Z(zfrt-0.62)}, mouth:{x:dc, z:Z(zfrt+0.30)}, inside:{x:tx, z:Z(ZF-1.02)},
+          sit:{x:tx, z:Z(ZF-0.50)}, yaw:sg<0?0:Math.PI, busy:null, mess:false,
+          gap:{x0:da-0.03, x1:b-0.07, z0:Z(zfrt)-0.03, z1:Z(zfrt)+0.03, y0:FL-0.5, y1:FL+1.8}};
+        st.messMesh=_messMesh(tx, Z(ZF), sg<0?0:Math.PI, 811+i*37+(men?0:500));
+        st.use=addUse(tx, Z(ZF-1.00), FL, "CLEAN UP THE MESS", ()=>cleanToilet(st), 0.85, ()=>st.mess);
+        st.use.pri=true;
+        RESTROOMS[men?"men":"women"].stalls.push(st); }
       // the partitions' hardware: chrome shoes on the pilasters, brackets at the wall
       for(const x of [a+0.06, da-0.03, b-0.04]) if(x<X1-0.05) bx("chrome", 0.09, 0.10, 0.07, x, FL+0.05, Z(zfrt), 0, 0, "#c9cbcc");
       for(const x of (i===0?[a]:[]).concat(b<X1-0.01?[b]:[])) for(const y of [PY0+0.18, PY1-0.18]){
@@ -938,6 +987,7 @@ function drawPAMap(x,W,H){
       for(let k=0;k<3;k++){
         const z=Z(10.9+k*1.05);
         urinalFix(X0+0.008, z, Math.PI/2, k===0?0.17:0);                     // the near one low, for a child or a chair
+        RESTROOMS.men.urinals.push({x:X0+0.74, z:z, yaw:-Math.PI/2, busy:null, low:k===0});
         if(k<2){
           const zs=Z(11.42+k*1.05);
           push("paintm", boxGeo(0.48, 1.10, 0.03, 0), X0+0.256, FL+0.97, zs, 0, PART);
@@ -962,6 +1012,7 @@ function drawPAMap(x,W,H){
         push("steel", new FaceGeo().slab([V3(x-0.02,FL+1.48,Z(z)-0.15),V3(x-0.02,FL+1.48,Z(z)+0.15),V3(x-0.20,FL+1.40,Z(z)+0.15),V3(x-0.20,FL+1.40,Z(z)-0.15)],0.30).geo(),
              0,0,0, 0, "#d6d9da");
         bx("paintm", 0.10, 0.03, 0.18, x-0.10, FL+1.10, Z(z), 0, 0, "#3a3c3e");
+        RESTROOMS[men?"men":"women"].dryers.push({x:x-0.60, z:Z(z), yaw:Math.PI/2, busy:null});
         addUse(x-0.7, Z(z), FL, "DRY YOUR HANDS", ()=>{ toast("WHRRRRRRRRRR","#cfe0d4");
           if(typeof AUDIO!=="undefined") AUDIO.blip("dryer"); }, 0.9);
         addCol(x-0.22, x, Z(z)-0.18, Z(z)+0.18, FL+1.1, FL+1.55);
@@ -987,6 +1038,19 @@ function drawPAMap(x,W,H){
     addCol(X0, X0+0.24, Z(8.4)-0.56, Z(8.4)+0.56, FL-0.5, FL+0.72);
   }
 })();
+
+// each stall's door leaf (makeDoor put them in DOORS as "STALL")
+for(const k of ["men","women"]) for(const st of RESTROOMS[k].stalls){
+  let best=null, bd=1e9;
+  for(const d of DOORS){ if(d.label!=="STALL") continue; const dd=Math.hypot(d.x-st.dx, d.z-st.dz); if(dd<bd){ bd=dd; best=d; } }
+  st.door=best; if(best) best.stall=st;
+}
+function cleanToilet(st){
+  st.mess=false; st.messMesh.visible=false; MESS.cleaned++;
+  if(typeof AUDIO!=="undefined" && AUDIO.flush) AUDIO.flush(st.tx, st.dz);
+  toast(["YOU FLUSH IT TWICE AND GO AT IT WITH THE BRUSH","GLOVES ON. PAPER UP. FLUSH. DONE.","A SQUIRT OF THE BLUE STUFF AND IT'S LIKE NEW",
+         "WHO DOES THIS. IT'S CLEAN NOW, ANYWAY"][MESS.cleaned%4]+(MESS.cleaned>1?"  ·  "+MESS.cleaned+" TODAY":""), "#9fd3ff");
+}
 
 /* =======================================================================
    THE SMALL ROOMS: the family restroom (north) and the staff office (south),

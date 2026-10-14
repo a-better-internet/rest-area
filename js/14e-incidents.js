@@ -22,10 +22,10 @@ function standingVehicle(kind, paint, x, z, yaw, gy){
   const g=new T.Group();
   const body=new T.Mesh(mergeEntries(parts.OP), VEH_MAT); body.castShadow=true; body.receiveShadow=true; g.add(body);
   if(parts.GL.length) g.add(new T.Mesh(mergeEntries(parts.GL), VEH_GLASS));
-  const wg=wheelGeoCached(S.wr, S.tw, false);
-  for(const [wx,wz] of wheelSlots(S)){ const w=new T.Mesh(wg, VEH_MAT); w.position.set(wx, S.wr, wz); g.add(w); }
+  const wg=wheelGeoCached(S.wr, S.tw, false), wheels=[];
+  for(const [wx,wz] of wheelSlots(S)){ const w=new T.Mesh(wg, VEH_MAT); w.position.set(wx, S.wr, wz); g.add(w); wheels.push(w); }
   g.position.set(x, gy===undefined ? PAVE_T : gy, z); g.rotation.order="YXZ"; g.rotation.y=yaw; scene.add(g);
-  return {g:g, S:S, lamps:parts.lamps};
+  return {g:g, S:S, lamps:parts.lamps, wheels:wheels};
 }
 /* ---- the cruiser ----------------------------------------------------------
    The sedan in fleet grey with a navy stripe and gold lettering on the
@@ -96,9 +96,27 @@ function flashBar(kit, now, on, dark){
   return r?1:(b?-1:0);
 }
 
-/* ---- the trooper in the lot --------------------------------------------- */
+/* ---- the trooper in the lot ---------------------------------------------
+   Not always there. The cruiser comes down the exit ramp like anyone,
+   drives the lot to the stall by the walk it always takes, pulls in and
+   sits a while, the engine running and the laptop lit; then it backs out,
+   goes round to the on-ramp and is gone, and comes back an hour or so
+   later. The trooper sits as a driver sits: knees up, feet forward on the
+   floor, nothing below the sills. */
+const _crLens=(c)=>new T.MeshBasicMaterial({color:c, transparent:true, opacity:0, depthWrite:false, fog:false, toneMapped:false, side:T.DoubleSide});
+function _carLamps(g, A){
+  const L=[];
+  for(const [list, head] of [[A.head,true],[A.tail,false]]) for(const a of list){
+    const m=new T.Mesh(new T.PlaneGeometry(head?0.30:0.28, head?0.10:0.11), _crLens(head?0xfff0d0:0xff2a12));
+    m.position.copy(a.p); m.lookAt(a.p.clone().add(a.n)); g.add(m); L.push({s:m, head:head});
+    const sp=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, transparent:true, depthWrite:false, blending:T.AdditiveBlending,
+                                                opacity:0, color:head?0xffffff:0xff3418}));
+    sp.scale.set(head?1.3:0.7, head?1.3:0.7, 1); sp.position.copy(a.p).addScaledVector(a.n,0.06); g.add(sp); L.push({s:sp, head:head, soft:true});
+  }
+  return L;
+}
 const TROOPER=(function(){
-  // a stall by the walk, in sight of where you come in; backed in, as they do
+  // a stall by the walk, in sight of where you come in
   const C=CARLOT, n=Math.floor((C.stallZ1-C.stallZ0)/C.stallW);
   let k0=-1, best=1e9;
   for(let k=0;k<n;k++){
@@ -108,12 +126,13 @@ const TROOPER=(function(){
   }
   if(k0<0) for(let k=0;k<n;k++){ const zc=C.stallZ0+(k+0.5)*C.stallW; if(!LOT_TAKEN.has("E"+k) && !C.ada[k] && zc>-30 && zc<50){ k0=k; break; } }
   if(k0<0) return null;
-  LOT_TAKEN.add("E"+k0);
-  const zc=C.stallZ0+(k0+0.5)*C.stallW, x=-29.0, yaw=-Math.PI/2;
-  const V=standingVehicle(0, "#80858a", x, zc, yaw);
+  LOT_TAKEN.add("E"+k0);                         // kept for the cruiser, there or not
+  const zs=C.stallZ0+(k0+0.5)*C.stallW, px=-29.2, ax=(C.aisle0+C.aisle1)/2;
+  const V=standingVehicle(0, "#80858a", px, zs, Math.PI/2);
   const kit=cruiserKit(V);
   const S=V.S;
-  COL_DYN.push({x0:x-S.len/2, x1:x+S.len/2, z0:zc-S.hw-0.08, z1:zc+S.hw+0.08, y0:PAVE_T, y1:PAVE_T+S.ht});
+  V.lit=_carLamps(V.g, V.lamps);
+  const col={x0:0,x1:0,z0:0,z1:0,y0:PAVE_T,y1:PAVE_T+S.ht};
   // the trooper: fleet grey shirt, dark trousers, the hat off on the dash
   const P=buildPerson({h:1.04, skin:SKINS[1], hair:HAIRS[0], shirt:"#6d7277", pants:"#24272c", shoes:"#111111", long:true});
   // a clipboard in the left hand, a pen in the right
@@ -126,19 +145,37 @@ const TROOPER=(function(){
   const hat=new T.Mesh(new T.CylinderGeometry(0.17,0.17,0.02,16), new T.MeshStandardMaterial({color:0x5d6166, roughness:0.8}));
   const crown=new T.Mesh(new T.CylinderGeometry(0.075,0.095,0.11,12), hat.material); crown.position.y=0.06; hat.add(crown);
   hat.position.set(-0.40, 1.02, 0.55); hat.rotation.z=0.08; V.g.add(hat);
-  // where the seat is, in the world
-  const seat=new T.Vector3(0.38, 0, -0.30).applyAxisAngle(V3(0,1,0), yaw).add(V3(x, PAVE_T, zc));
   const lamp={x:0, y:0, z:0, color:0x9fc4ff, intensity:0.30, dist:1.8, decay:1.6};
-  { const lp=new T.Vector3(0.0, 1.1, -0.05).applyAxisAngle(V3(0,1,0), yaw).add(V3(x, PAVE_T, zc)); lamp.x=lp.x; lamp.y=lp.y; lamp.z=lp.z; }
-  LAMPS.push(lamp);
-  const T0={kind:"custom", P:P, x:seat.x, z:seat.z, y:seat.y, yaw:yaw, seed:3.7, V:V, kit:kit, look:0, lookT:9,
+  // the way in and the way out: the visitors' own (14-life), for this stall
+  const legs=[
+    {P:RAMP_EXIT, speed:13, ramp:true},
+    _legFwd([{x:-75,z:104},{x:-74.7,z:100},{x:-72.6,z:96},{x:-66,z:93.6},{x:-58,z:92.4},{x:-50,z:91},{x:-41,z:87},{x:ax,z:78},
+             {x:ax,z:Math.min(70,zs+16)},{x:ax,z:zs+7},{x:ax+1.9,z:zs+3.2},{x:px-2.4,z:zs+0.6},{x:px,z:zs}], 5.0, {stop:true, park:true}),
+    {P:smoothPath([{x:px,z:zs},{x:px-2.8,z:zs+0.3},{x:ax+1.5,z:zs+2.0},{x:ax+0.3,z:zs+4.0},{x:ax,z:zs+5.4}],0.5,true), speed:1.4, rev:true, stop:true, dwell:0.8},
+    _legFwd([{x:ax,z:zs+5.4},{x:ax,z:zs-2},{x:ax,z:-126},{x:ax-1.5,z:-136},{x:-44,z:-143.5},{x:-58,z:-146.2},{x:-68,z:-147.4},
+             {x:-73.2,z:-150.5},{x:-75.1,z:-156},{x:_ON_PT.x,z:_ON_PT.z}], 6),
+    {P:_ON_PATH, speed:27, ramp:true, gone:true}];
+  for(const L of legs) L.len=L.P[L.P.length-1].s;
+  const T0={kind:"custom", P:P, x:0, z:0, y:PAVE_T, yaw:0, seed:3.7, V:V, kit:kit, look:0, lookT:9, lamp:lamp, col:col,
+    // in the lot when you arrive, for a while yet
+    state:"parked", li:1, s:legs[1].len, speed:0, dwell:150+Math.random()*240, legs:legs, moving:false, wait:0,
     upd(p, dt, now, dark, cd){
       const P=p.P; P.seed=p.seed;
       P.g.position.set(p.x, p.y+0.02, p.z); P.g.rotation.y=p.yaw;
-      if(cd>70) return;
+      if(cd>70 || !P.g.visible) return;
       poseP(P, "sit", 0, now);
       const B=P.B, J=P.j;
-      // heads down over the form; every so often up at the lot, then back
+      // a driver's seat: the thighs up off the cushion, the shins forward
+      // to the pedals, the feet on the floor well above the sills
+      B[J.hpL].rotation.x=-1.74; B[J.hpR].rotation.x=-1.70;
+      B[J.knL].rotation.x=0.52;  B[J.knR].rotation.x=0.58;
+      B[J.hpL].rotation.z=-0.05; B[J.hpR].rotation.z=0.05;
+      if(p.moving){                                   // hands on the wheel, eyes on the road
+        B[J.head].rotation.set(0.04, 0, 0); B[J.spine].rotation.x=0;
+        for(const [sh,el,sd] of [[J.shL,J.elL,-1],[J.shR,J.elR,1]]){ B[sh].rotation.set(-1.05, 0, sd*0.18); B[el].rotation.x=-0.55; }
+        return;
+      }
+      // head down over the form; every so often up at the lot, then back
       p.lookT-=dt; if(p.lookT<=0){ p.look=p.look?0:1; p.lookT=p.look ? 2.5+Math.random()*2 : 8+Math.random()*10; }
       p.lk=(p.lk||0)+((p.look?1:0)-(p.lk||0))*Math.min(1,dt*3);
       B[J.head].rotation.x=0.42*(1-p.lk)-0.05*p.lk; B[J.head].rotation.y=p.lk*0.6;
@@ -150,6 +187,105 @@ const TROOPER=(function(){
   PEOPLE.push(T0);
   return T0;
 })();
+const _crSeat=new T.Vector3(), _crY=new T.Vector3(0,1,0);
+// put the cruiser, its trooper, its lamp and its footprint where it is
+function _crPlace(Tr, x, z, head, dark){
+  const V=Tr.V, S=V.S;
+  V.g.position.set(x, PAVE_T+0.02, z); V.g.rotation.y=head;
+  _crSeat.set(0.38, 0, -0.30).applyAxisAngle(_crY, head);
+  Tr.x=x+_crSeat.x; Tr.z=z+_crSeat.z; Tr.yaw=head;
+  _crSeat.set(0.0, 1.1, -0.05).applyAxisAngle(_crY, head);
+  Tr.lamp.x=x+_crSeat.x; Tr.lamp.y=PAVE_T+_crSeat.y; Tr.lamp.z=z+_crSeat.z;
+  const fx=Math.sin(head), fz=Math.cos(head), c=Tr.col;
+  const hx=Math.abs(fz)*(S.hw+0.08)+Math.abs(fx)*S.len/2, hz=Math.abs(fx)*(S.hw+0.08)+Math.abs(fz)*S.len/2;
+  c.x0=x-hx; c.x1=x+hx; c.z0=z-hz; c.z1=z+hz;
+  const lit=dark>0.04;
+  for(const L of V.lit){
+    L.s.visible=lit; if(!lit) continue;
+    const brake=(!L.head && Tr.braking) ? 1 : 0;
+    L.s.material.opacity = L.soft ? dark*(L.head?0.34:0.22+brake*0.25) : dark*(L.head?0.98:0.80+brake*0.2);
+  }
+}
+function _crShow(Tr, on){
+  Tr.V.g.visible=on; Tr.P.g.visible=on;
+  const li=LAMPS.indexOf(Tr.lamp);
+  if(on && li<0) LAMPS.push(Tr.lamp);
+  if(!on && li>=0) LAMPS.splice(li,1);
+}
+function _crParked(Tr, on){
+  const i=COL_DYN.indexOf(Tr.col);
+  if(on && i<0) COL_DYN.push(Tr.col);
+  if(!on && i>=0) COL_DYN.splice(i,1);
+}
+// how fast it may go: its leg's speed, braking into a stop, and never into
+// you, a car you are driving, a visitor on the move or someone on foot
+function _crLimit(Tr, L, here, fx, fz){
+  const V=Tr.V, S=V.S, front=L.rev ? -S.tail : S.nose, reach=front+9+Tr.speed*2.2;
+  let lim=1e9, who=null;
+  const look=(px,pz,olen,wide)=>{
+    const dx=px-here.x, dz=pz-here.z, a=dx*fx+dz*fz, l=Math.abs(dx*fz-dz*fx);
+    if(a<=0 || a>reach || l>wide) return false;
+    const gap=a-front-olen, want=2.6+Tr.speed*1.2;
+    const cap=Math.max(0,(gap-want)*0.6);
+    if(cap<lim){ lim=cap; return true; } return false;
+  };
+  if(!driving && !droneMode && Math.abs(player.feetY-PAVE_T)<3 && look(player.pos.x, player.pos.z, 0.4, S.hw+1.0)) who="you";
+  if(driving){ const p=driving.g.position; if(look(p.x, p.z, 2.4, S.hw+1.6)) who="car"; }
+  if(Tr.wait<14) for(const o of TRAFFIC){
+    if(!o.route || o.route.dwell>0) continue;
+    if(look(o.g.position.x, o.g.position.z, Math.max(o.nose,-o.tail), S.hw+1.4)) who="traffic";
+  }
+  for(const q of PEOPLE) if(q.kind==="driver" && q.P.g.visible && look(q.x, q.z, 0.3, S.hw+0.9)) who="you";
+  return {lim:lim, who:who};
+}
+function updateTrooper(dt, dark){
+  const Tr=TROOPER; if(!Tr) return;
+  Tr.moving=false; Tr.braking=false;
+  if(Tr.state==="away"){
+    Tr.dwell-=dt;
+    // back an hour or so later, if the stall's way in is clear
+    if(Tr.dwell<=0){ Tr.state="in"; Tr.li=0; Tr.s=0; Tr.speed=12; _crShow(Tr, true); }
+    else return;
+  }
+  const L=Tr.legs[Tr.li];
+  if(Tr.dwell>0){                                     // parked, or between legs
+    Tr.dwell-=dt; Tr.speed=0;
+    const at=pathAt(L.P, L.len);
+    _crPlace(Tr, at.x, at.z, Math.atan2(at.hx, at.hz)+(L.rev?Math.PI:0), dark);
+    if(Tr.dwell<=0){
+      const N=Tr.legs[Tr.li+1];
+      if(N && N.rev && _aisleBusy(Tr.V, N)){ Tr.dwell=0.8; return; }   // nobody coming down the aisle
+      if(L.park){ _crParked(Tr, false); Tr.state="out"; }
+      Tr.li++; Tr.s=0;
+    }
+    return;
+  }
+  const here=pathAt(L.P, Tr.s), sg=L.rev?-1:1, fx=here.hx*sg, fz=here.hz*sg;
+  let target=L.speed;
+  if(L.stop) target=Math.min(target, Math.sqrt(2*1.8*Math.max(0,L.len-Tr.s))+0.2);
+  if(!L.ramp || Tr.s>L.len-40 || Tr.li>0){
+    const r=_crLimit(Tr, L, here, fx, fz);
+    target=Math.min(target, r.lim);
+    if(r.lim<0.3){ Tr.wait+=dt; } else Tr.wait=0;
+  }
+  Tr.braking = target < Tr.speed-0.2;
+  Tr.speed += clamp(target-Tr.speed, -4.5*dt, (L.ramp?2.6:1.6)*dt);
+  Tr.s=Math.min(L.len, Tr.s+Tr.speed*dt);
+  Tr.moving=Tr.speed>0.05 || Tr.li!==1 || Tr.state!=="parked";
+  const at=pathAt(L.P, Tr.s);
+  _crPlace(Tr, at.x, at.z, Math.atan2(at.hx, at.hz)+(L.rev?Math.PI:0), dark);
+  for(const w of Tr.V.wheels) w.rotation.x+=Tr.speed*sg*dt/Tr.V.S.wr;
+  if(Tr.s>=L.len-0.02){
+    if(L.gone){                                       // down the on-ramp and away
+      _crShow(Tr, false); Tr.state="away"; Tr.dwell=240+Math.random()*420; Tr.speed=0; return; }
+    if(L.park){ Tr.state="parked"; Tr.dwell=240+Math.random()*420; Tr.speed=0; _crParked(Tr, true); }
+    else if(L.stop){ Tr.dwell=L.dwell||0.5; }
+    else { Tr.li++; Tr.s=0; }
+  }
+}
+// where it starts: in its stall
+if(TROOPER){ const L=TROOPER.legs[1], at=pathAt(L.P, L.len);
+  _crPlace(TROOPER, at.x, at.z, Math.atan2(at.hx, at.hz), 0); _crParked(TROOPER, true); _crShow(TROOPER, true); }
 
 /* ---- the wreck ------------------------------------------------------------ */
 const _hazTex=GLOW_TEX;
@@ -239,7 +375,7 @@ function _laneClear(){
 }
 function updateIncidents(dt, now, dark){
   // the trooper's bar is dark, his screen is lit
-  if(TROOPER){ flashBar(TROOPER.kit, now, false, dark); TROOPER.kit.screen.color.setScalar(0.55+0.45*dark); }
+  if(TROOPER){ updateTrooper(dt, dark); flashBar(TROOPER.kit, now, false, dark); TROOPER.kit.screen.color.setScalar(0.55+0.45*dark); }
   const I=INC;
   if(!CRASH.on){
     I.next-=dt;
