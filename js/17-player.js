@@ -198,6 +198,8 @@ function interact(){
   if(driving){ exitCar(); return; }
   { const c=nearestCar(); if(c){ enterCar(c); return; } }
   { const u=nearestUse(); if(u && u.pri){ u.fn(); return; } }
+  if(nearestDoor && nearestDoor.occ && nearestDoor.occBy && nearestDoor.occBy.cust){
+    toast(["\u201cGIVE ME A MINUTE ON THIS ONE.\u201d","\u201cYOU DON'T WANT THIS ONE. TRY THE NEXT.\u201d"][(Math.random()*2)|0],"#cfe0d4"); return; }
   if(nearestDoor && nearestDoor.occ){
     toast(["OCCUPIED","SOMEBODY CLEARS THEIR THROAT","\u201cSOMEONE'S IN HERE\u201d"][(Math.random()*3)|0],"#cfe0d4"); return; }
   if(nearestDoor){
@@ -353,6 +355,9 @@ function fixedUpdate(dt){
   const target=surfaceY(player.pos.x, player.pos.z, player.feetY);
   const rate = target>player.feetY ? 14 : 9;               // step up snappy, drop softly
   player.feetY += (target-player.feetY)*Math.min(1, dt*rate);
+  // running up a flight the eased feet fall behind the treads; past a step's
+  // reach the stair is lost and you drop through to the floor beneath it
+  if(target-player.feetY>0.3) player.feetY=target-0.3;
 }
 
 /* --- drone (F) -------------------------------------------------------- */

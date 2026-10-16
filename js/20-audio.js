@@ -24,6 +24,8 @@ const AUDIO=(function(){
   let birdT=1.5, clankT=3, flushT=12, jakeT=40, barkT=15, reefer={}, creakT=3;
   // the camp out back: the fire, a phone speaker, four kids talking
   let camp={}, crackT=0, voiceT=3, song=0, beat=null;
+  // the garage (14g): the radio on the bench, and the mower or the blower out on the grounds
+  let radio={}, eng={}, rBeat=null, rTalkT=1, rSwellT=8;
   function noise(sec, color){
     const n=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(1,n,ctx.sampleRate), d=b.getChannelData(0);
     let l=0, b0=0,b1=0,b2=0;
@@ -109,6 +111,36 @@ const AUDIO=(function(){
       const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=4800;
       camp.musIn=ctx.createGain(); camp.musIn.gain.value=1; camp.musIn.connect(hp); hp.connect(lp); lp.connect(camp.mus); camp.mus.connect(camp.pan); }
     camp.vox=ctx.createGain(); camp.vox.gain.value=0; camp.vox.connect(camp.pan);
+    // the radio: everything it plays goes in at radio.in, through a small
+    // speaker's band, a little hiss, and a low-pass the garage's walls close
+    radio.in=ctx.createGain(); radio.in.gain.value=1;
+    { const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=280;
+      const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=3400;
+      radio.wall=ctx.createBiquadFilter(); radio.wall.type="lowpass"; radio.wall.frequency.value=6000;
+      radio.pan=ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain();
+      radio.g=ctx.createGain(); radio.g.gain.value=0;
+      radio.in.connect(hp); hp.connect(lp); lp.connect(radio.wall); radio.wall.connect(radio.pan); radio.pan.connect(radio.g); radio.g.connect(master);
+      const st=ctx.createBiquadFilter(); st.type="bandpass"; st.frequency.value=2600; st.Q.value=0.6;
+      const sg=ctx.createGain(); sg.gain.value=0.035; loop(noise(3,"white")).connect(st); st.connect(sg); sg.connect(radio.in);
+      // the crowd at the ballgame, a wash that swells now and then
+      radio.crowdF=ctx.createBiquadFilter(); radio.crowdF.type="bandpass"; radio.crowdF.frequency.value=900; radio.crowdF.Q.value=0.5;
+      radio.crowd=ctx.createGain(); radio.crowd.gain.value=0;
+      loop(pink).connect(radio.crowdF); radio.crowdF.connect(radio.crowd); radio.crowd.connect(radio.in); }
+    // the mower: a big single at its idle or at work, and its deck's roar;
+    // the blower: a two-stroke's whine, and the air
+    eng.pan=ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain(); eng.pan.connect(outLP);
+    eng.m=ctx.createGain(); eng.m.gain.value=0; eng.m.connect(eng.pan);
+    { eng.mlp=ctx.createBiquadFilter(); eng.mlp.type="lowpass"; eng.mlp.frequency.value=520; eng.mlp.connect(eng.m); eng.mo=[];
+      for(const [f,a2] of [[26,0.6],[52,0.45],[78,0.2],[104,0.1]]){ const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=f;
+        const g=ctx.createGain(); g.gain.value=a2*0.35; o.connect(g); g.connect(eng.mlp); o.start(); eng.mo.push({o:o, f:f}); }
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=320; bp.Q.value=0.5;
+      const g=ctx.createGain(); g.gain.value=0.5; loop(noise(4,"pink")).connect(bp); bp.connect(g); g.connect(eng.m); }
+    eng.b=ctx.createGain(); eng.b.gain.value=0; eng.b.connect(eng.pan);
+    { const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1500; bp.Q.value=0.7; bp.connect(eng.b); eng.bo=[];
+      for(const [f,a2,ty] of [[118,0.5,"sawtooth"],[236,0.3,"square"],[354,0.15,"sawtooth"]]){ const o=ctx.createOscillator(); o.type=ty; o.frequency.value=f;
+        const g=ctx.createGain(); g.gain.value=a2*0.4; o.connect(g); g.connect(bp); o.start(); eng.bo.push({o:o, f:f}); }
+      const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1200;
+      const g=ctx.createGain(); g.gain.value=0.6; loop(noise(4,"pink")).connect(hp); hp.connect(g); g.connect(eng.b); }
     for(const [f,a,dst] of [[120,0.5,hum.g],[240,0.18,hum.g],[60,0.6,gen.g],[120,0.35,gen.g],[180,0.15,gen.g]]){
       const o=ctx.createOscillator(); o.type="sine"; o.frequency.value=f*(1+Math.random()*0.002);
       const g=ctx.createGain(); g.gain.value=a; o.connect(g); g.connect(dst); o.start();
@@ -187,6 +219,8 @@ const AUDIO=(function(){
     reefer.g.gain.setTargetAtTime(0.05/(1+rd*rd/90), t, 0.4);
     // the camp: louder as you come in, from where it is
     if(typeof CAMP!=="undefined") campSound(dt, cam, rx, rz);
+    // the garage's radio, and whatever engine is running on the grounds
+    if(typeof GARAGE_RT!=="undefined") garageSound(dt, cam, rx, rz);
     // birds: a call every second or two by day, more at the edge of the woods
     birdT-=dt;
     if(birdT<=0){
@@ -212,7 +246,7 @@ const AUDIO=(function(){
     s.connect(bp); bp.connect(g); g.connect(dest||camp.g); s.start(at, Math.random()*0.4); s.stop(at+dur*2+0.05);
   }
   let _nb=null;
-  function syllable(at, f0, dur, peak, vowel){
+  function syllable(at, f0, dur, peak, vowel, dest){
     const o=ctx.createOscillator(); o.type="sawtooth";
     o.frequency.setValueAtTime(f0, at); o.frequency.linearRampToValueAtTime(f0*(0.9+Math.random()*0.25), at+dur);
     const g=ctx.createGain(); env(g, at, 0.015, peak, dur*0.5, dur*0.6);
@@ -221,13 +255,73 @@ const AUDIO=(function(){
       const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=fc; bp.Q.value=q;
       const ga=ctx.createGain(); ga.gain.value=a; o.connect(bp); bp.connect(ga); ga.connect(g);
     }
-    g.connect(camp.vox); o.start(at); o.stop(at+dur*1.4+0.05);
+    g.connect(dest||camp.vox); o.start(at); o.stop(at+dur*1.4+0.05);
   }
   const VOICES=[118, 205, 132, 222];
-  function phrase(at){
-    const v=VOICES[(Math.random()*VOICES.length)|0], n=3+((Math.random()*7)|0);
+  function phrase(at, dest, voice, rate){
+    const v=voice||VOICES[(Math.random()*VOICES.length)|0], n=3+((Math.random()*7)|0), k0=rate||1;
     let tt=at;
-    for(let k=0;k<n;k++){ const d=0.08+Math.random()*0.13; syllable(tt, v*(1+(Math.random()-0.4)*0.18)*(k===n-1?0.88:1), d, 0.5); tt+=d+0.03+Math.random()*0.06; }
+    for(let k=0;k<n;k++){ const d=(0.08+Math.random()*0.13)/k0; syllable(tt, v*(1+(Math.random()-0.4)*0.18)*(k===n-1?0.88:1), d, 0.5, null, dest); tt+=d+(0.03+Math.random()*0.06)/k0; }
+    return tt;
+  }
+  /* ---- the garage ------------------------------------------------------
+     The radio plays one of three things: country (a boom-chick in G with a
+     steel guitar sliding over it, eight bars and then the DJ), AM talk (two
+     voices, back and forth), or the Pirates (a man talking fast over a
+     crowd that comes up now and then). It is heard properly in the garage,
+     duller through its open doors, barely through shut ones; at night Terry
+     has it turned down. The mower and the blower are where they are. */
+  const RCHORD=[[43,[55,59,62]],[48,[55,60,64]],[50,[57,62,66]],[43,[55,59,62]]];
+  function garageSound(dt, cam, rx, rz){
+    const t=ctx.currentTime, R=GARAGE_RT.radio;
+    if(R && radio.g){
+      const dx=R.x-cam.x, dz=R.z-cam.z, d=Math.hypot(dx, dz, R.y-cam.y);
+      const inG=cam.x>GARAGE.x0 && cam.x<GARAGE.x1 && cam.z>GARAGE.z0 && cam.z<GARAGE.z1 && cam.y<(GARAGE.EV||4)+1.5;
+      const open=!GARAGE_RT.doors.length || GARAGE_RT.doors[0].h<1.2;
+      const wall=inG ? 1 : (open ? 0.6 : 0.2);
+      radio.g.gain.setTargetAtTime((R.low?0.4:1)*0.075*wall/(1+d*d/22), t, 0.3);
+      radio.wall.frequency.setTargetAtTime(inG ? 6000 : (open ? 1900 : 650), t, 0.3);
+      if(radio.pan.pan) radio.pan.pan.setTargetAtTime(clamp((dx*rx+dz*rz)/Math.max(d,1), -0.7, 0.7)*smoothstep(1,4,d), t, 0.2);
+      radio.crowd.gain.setTargetAtTime(R.station===2 ? 0.10 : 0, t, 0.6);
+      if(d<45){
+        if(R.station===0){
+          // country, scheduled a sixteenth at a time; after eight bars, the DJ
+          const st=60/104/4;
+          if(!rBeat || rBeat.next<t || rBeat.st!==0) rBeat={next:t+0.05, i:0, st:0};
+          while(rBeat.next<t+0.25){
+            const at=rBeat.next, i=rBeat.i%160, s=i%16, bar=Math.floor(i/16);
+            if(bar<8){ const [root,ch]=RCHORD[bar%4];
+              if(s===0) tone("triangle", hz(root), null, st*3.2, 0.55, at, undefined, radio.in);
+              if(s===8) tone("triangle", hz(root+7), null, st*3.2, 0.5, at, undefined, radio.in);
+              if(s===4||s===12) for(const m of ch) tone("sawtooth", hz(m), null, st*1.2, 0.05, at+(m-ch[0])*0.004, undefined, radio.in);
+              if(s===4||s===12) burst(at, 0.05, 2600, 1.2, 0.25, radio.in);
+              if(s===2 && bar%2===0) tone("sine", hz(ch[2]+12)*0.96, hz(ch[2]+12), st*6, 0.10, at, undefined, radio.in);
+              if(s===10) tone("sine", hz(ch[1]+12), hz(ch[0]+12), st*5, 0.07, at, undefined, radio.in);
+            }else if(s===0 && (bar===8||bar===9)) phrase(at, radio.in, 108, 1.1);
+            rBeat.next+=st; rBeat.i++;
+          }
+        }else{
+          rBeat=null;
+          rTalkT-=dt;
+          if(rTalkT<=0){
+            if(R.station===1){ const end=phrase(t+0.05, radio.in, Math.random()<0.5?112:198, 1.0); rTalkT=(end-t)+0.25+Math.random()*0.9; }
+            else { const end=phrase(t+0.05, radio.in, 124, 1.45); rTalkT=(end-t)+0.1+Math.random()*0.4; }
+          }
+          if(R.station===2){ rSwellT-=dt;
+            if(rSwellT<=0){ rSwellT=10+Math.random()*25; radio.crowd.gain.setTargetAtTime(0.32, t, 0.4); radio.crowd.gain.setTargetAtTime(0.10, t+2.2, 1.2); } }
+        }
+      }
+    }
+    const E=GARAGE_RT.engine;
+    let mv=0, bv=0, ex=0, ez=0;
+    if(E && E.on!==false){ ex=E.x; ez=E.z; const d=Math.hypot(ex-cam.x, ez-cam.z);
+      if(E.kind==="mower") mv=(0.07+0.05*(E.load||0))/(1+d*d/160);
+      else if(E.kind==="blower" && E.on) bv=0.10/(1+d*d/110); }
+    eng.m.gain.setTargetAtTime(mv, t, 0.3); eng.b.gain.setTargetAtTime(bv, t, 0.25);
+    if(E){ const load=E.load||0; for(const q of eng.mo) q.o.frequency.setTargetAtTime(q.f*(0.85+load*0.25), t, 0.4);
+      for(const q of eng.bo) q.o.frequency.setTargetAtTime(q.f*(0.95+Math.sin(t*0.7)*0.04), t, 0.2);
+      const dx=ex-cam.x, dz=ez-cam.z, d=Math.hypot(dx,dz);
+      if(eng.pan.pan) eng.pan.pan.setTargetAtTime(clamp((dx*rx+dz*rz)/Math.max(d,1), -0.8, 0.8), t, 0.2); }
   }
   function campLaugh(){
     if(!ctx || !enabled || !camp.vox) return;

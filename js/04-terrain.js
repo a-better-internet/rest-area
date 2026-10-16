@@ -54,7 +54,18 @@ const CAMP={x:286, z:52, r:9.5, y:0};
    yard: a slight clearing the woods are taking back. 14f builds it. The
    house box is its footprint and porch; its floor is levelled, the yard
    is not. The old two-track to it comes in from the north. */
-const HOMESTEAD={x:312, z:160, r:15, y:0, box:{x0:312-5.6, x1:312+5.6, z0:160-6.4, z1:160+4.3}};
+const HOMESTEAD={x:312, z:160, r:17, y:0, box:{x0:312-7.2, x1:312+7.2, z0:160-8.0, z1:160+5.8}};
+/* east of the building, past the loop walk and the two spruces on the lawn,
+   the maintenance garage: a block building on a gravel yard, graded level
+   with the pad, and a gravel track out of the back corner of the yard,
+   through a pipe gate and away south-east through the woods to the township
+   road. Well clear of the pet area, which is south of it across the lawn.
+   14g builds it; 14h is the custodian who works out of it. The track rides
+   the ground as it lies, smoothed along its length and level across it. */
+const GARAGE={x0:32.5, x1:41.5, z0:24.0, z1:38.0, y:0, yard:{x0:23.5, x1:42.5, z0:18.5, z1:45.0}};
+const SERVICE=smoothPath([
+  {x:40.5,z:43.5},{x:48,z:47.5},{x:57,z:54},{x:65,z:64},{x:72,z:78},{x:79,z:97},{x:86,z:122},
+  {x:93,z:152},{x:99,z:184},{x:104,z:218},{x:108,z:252}], 2.0);
 const TRAIL=smoothPath([
   {x:17.4,z:1.2},{x:24,z:3.5},{x:34,z:5.2},{x:48,z:8.5},{x:62,z:7.2},{x:78,z:4.6},{x:94,z:7.2},
   {x:110,z:12.4},{x:126,z:13.2},{x:142,z:10.2},{x:158,z:12.2},{x:174,z:18.2},{x:190,z:24},
@@ -101,13 +112,14 @@ const Terrain=(function(){
     for(const p of P){ x0=Math.min(x0,p.x); x1=Math.max(x1,p.x); z0=Math.min(z0,p.z); z1=Math.max(z1,p.z); }
     return {x0:x0-pad, x1:x1+pad, z0:z0-pad, z1:z1+pad};
   };
-  const EXIT_B=pathBox(RAMP_EXIT,60), ENTRY_B=pathBox(RAMP_ENTRY,60), DRIVE_B=pathBox(DRIVE,40), TRAIL_B=pathBox(TRAIL,16);
+  const EXIT_B=pathBox(RAMP_EXIT,60), ENTRY_B=pathBox(RAMP_ENTRY,60), DRIVE_B=pathBox(DRIVE,40), TRAIL_B=pathBox(TRAIL,16),
+        SERV_B=pathBox(SERVICE,12);
   const SUBPAD={x0:SITE.sub.x0-8, x1:SITE.sub.x1+8, z0:SITE.sub.z0-8, z1:SITE.sub.z1+8};
 
   // pull h towards level y with full weight inside `half` and none past half+blend
   const toward=(h,y,d,half,blend)=>{ const t=smoothstep(half, half+blend, d); return y+(h-y)*t; };
 
-  function heightAt(x,z){
+  function baseHeight(x,z){
     let h=natural(x,z);
     // the interstate corridors, cut and filled to the road's own grade
     const ry=roadY(z);
@@ -133,8 +145,21 @@ const Terrain=(function(){
     h=toward(h, CAMP.y, Math.hypot(x-CAMP.x, z-CAMP.z), 6.5, 9);
     // the house's ground, graded once and long since settled
     if(Math.abs(x-HOMESTEAD.x)<40 && Math.abs(z-HOMESTEAD.z)<40) h=toward(h, HOMESTEAD.y, boxDist(HOMESTEAD.box,x,z), 0.5, 8);
+    // the garage yard, level with the pad
+    if(x>GARAGE.yard.x0-30 && x<GARAGE.yard.x1+30 && z>GARAGE.yard.z0-30 && z<GARAGE.yard.z1+30)
+      h=toward(h, GARAGE.y, boxDist(GARAGE.yard,x,z), 0, 14);
     return h;
   }
+  function heightAt(x,z){
+    let h=baseHeight(x,z);
+    // the service track: a level strip across, following its own smoothed grade
+    if(x>SERV_B.x0 && x<SERV_B.x1 && z>SERV_B.z0 && z<SERV_B.z1){
+      const q=distToPath(SERVICE,x,z); h=toward(h, q.y, q.d, 2.6, 5); }
+    return h;
+  }
+  { for(const p of SERVICE) p.y=baseHeight(p.x,p.z);
+    for(let pass=0;pass<8;pass++){ const y=SERVICE.map(p=>p.y);
+      for(let i=1;i<SERVICE.length-1;i++) SERVICE[i].y=y[i-1]*0.25+y[i]*0.5+y[i+1]*0.25; } }
 
   /* ---- where the woods are -------------------------------------------
      A signed distance to the nearest clearing: negative inside one,
@@ -154,6 +179,9 @@ const Terrain=(function(){
     if(dc<CAMP.r+40) d=Math.min(d, dc-CAMP.r+(fbm(x*0.09+2, z*0.09+8, 2)-0.5)*3);
     const dh=Math.hypot(x-HOMESTEAD.x, (z-HOMESTEAD.z)*0.85);
     if(dh<HOMESTEAD.r+40) d=Math.min(d, dh-HOMESTEAD.r+(fbm(x*0.07+5, z*0.07+1, 2)-0.5)*7);
+    // the garage yard and its track: no tree within a couple of metres of either
+    d=Math.min(d, boxSD(GARAGE.yard,x,z)-2.0);
+    if(x>SERV_B.x0 && x<SERV_B.x1 && z>SERV_B.z0 && z<SERV_B.z1) d=Math.min(d, distToPath(SERVICE,x,z).d-2.4);
     return d;
   }
   function siteDist(x,z){
@@ -163,6 +191,7 @@ const Terrain=(function(){
     if(x>ENTRY_B.x0 && x<ENTRY_B.x1 && z>ENTRY_B.z0 && z<ENTRY_B.z1) d=Math.min(d, distToPath(RAMP_ENTRY,x,z).d-13);
     if(x>DRIVE_B.x0 && x<DRIVE_B.x1 && z>DRIVE_B.z0 && z<DRIVE_B.z1) d=Math.min(d, distToPath(DRIVE,x,z).d-4.6);
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
+    d=Math.min(d, boxSD(GARAGE.yard,x,z)+2);
     // the power line's right of way, a straight cut north through everything
     {
       const ex=POWER.x1-POWER.x0, ez=POWER.z1-POWER.z0, L2=ex*ex+ez*ez;
@@ -173,7 +202,7 @@ const Terrain=(function(){
     return d + (fbm(x*0.045+7, z*0.045+3, 3)-0.5)*9;
   }
   function mask(x,z){ return smoothstep(0, 5, clearDist(x,z)); }
-  return {heightAt:heightAt, natural:natural, fbm:fbm, clearDist:clearDist, siteDist:siteDist, pathDist:pathDist,
+  return {heightAt:heightAt, natural:natural, SERV_B:SERV_B, fbm:fbm, clearDist:clearDist, siteDist:siteDist, pathDist:pathDist,
           mask:mask, boxDist:boxDist, boxSD:boxSD};
 })();
 
@@ -216,8 +245,14 @@ let TERRAIN_MAT=null;
     // the yard: rank grass and goldenrod gone to seed, and the two ruts of the old drive
     const dh=Math.hypot(x-HOMESTEAD.x, (z-HOMESTEAD.z)*0.85);
     if(dh<HOMESTEAD.r+8){ out.lerp(yardC, (1-smoothstep(HOMESTEAD.r-5, HOMESTEAD.r+6, dh))*(0.55+0.3*Terrain.fbm(x*0.3,z*0.3,2)));
-      if(z>HOMESTEAD.z+4) for(const rx of [-0.8,0.8]){ const q=Math.abs(x-(HOMESTEAD.x+2.6+rx+Math.sin(z*0.05)*1.2)); if(q<0.45) out.lerp(rutC, (1-q/0.45)*0.55); } }
-    else if(z>HOMESTEAD.z+4 && Math.abs(x-HOMESTEAD.x-2.6)<5) for(const rx of [-0.8,0.8]){ const q=Math.abs(x-(HOMESTEAD.x+2.6+rx+Math.sin(z*0.05)*1.2)); if(q<0.45) out.lerp(rutC, (1-q/0.45)*0.35); }
+      if(z>HOMESTEAD.z+6) for(const rx of [-0.8,0.8]){ const q=Math.abs(x-(HOMESTEAD.x+2.6+rx+Math.sin(z*0.05)*1.2)); if(q<0.45) out.lerp(rutC, (1-q/0.45)*0.55); } }
+    else if(z>HOMESTEAD.z+6 && Math.abs(x-HOMESTEAD.x-2.6)<5) for(const rx of [-0.8,0.8]){ const q=Math.abs(x-(HOMESTEAD.x+2.6+rx+Math.sin(z*0.05)*1.2)); if(q<0.45) out.lerp(rutC, (1-q/0.45)*0.35); }
+    // the garage yard's gravel, spilling a little past its edge; the track's verges
+    const ys=Terrain.boxSD(GARAGE.yard,x,z);
+    if(ys<2) out.lerp(gravelC, (1-smoothstep(-0.8,1.6,ys))*0.55);
+    const SB=Terrain.SERV_B;
+    if(x>SB.x0 && x<SB.x1 && z>SB.z0 && z<SB.z1){ const q=distToPath(SERVICE,x,z).d;
+      if(q<3.4) out.lerp(vergeC, (1-smoothstep(1.4,3.4,q))*0.55); }
     out.lerp(rockC, smoothstep(0.35,0.8,slope)*0.6);
   }
   function grid(R,cell,holes,name,skirt){

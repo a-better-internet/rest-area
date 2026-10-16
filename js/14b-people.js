@@ -355,6 +355,10 @@ function _stepWalker(p, dt, speed){
 function npcNearDoor(d){
   const reach=d.stall ? 0.95 : 2.4;
   for(const p of PEOPLE){
+    if(p.cust){ if(p.holdDoor===d) return true;
+      if(!p.walking || (d.occ && d.occBy!==p)) continue;
+      if(Math.abs(p.y-d.y)<1.8 && Math.hypot(p.x-d.x, p.z-d.z)<reach) return true;
+      continue; }
     if(p.kind!=="driver") continue;
     if(p.state!=="out" && p.state!=="back" && !(p.state==="inside" && p.walking)) continue;
     if(d.occ && d.occBy!==p) continue;

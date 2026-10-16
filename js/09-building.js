@@ -1135,7 +1135,7 @@ function cleanToilet(st){
       // on the walls: the whiteboard by the door, a safety poster, a clock, first aid, the keys, an extinguisher
       wallSign(1.20,0.80,(c,W,H)=>{ c.fillStyle="#fbfbf8"; c.fillRect(0,0,W,H); c.strokeStyle="#9a9c9e"; c.lineWidth=10; c.strokeRect(0,0,W,H);
         c.fillStyle="#1d3b8a"; c.font="600 "+(H*0.085|0)+"px Arial"; c.textAlign="left";
-        ["ROUNDS: 6A · 10A · 2P · 6P · 10P","MEN'S #2 — FLUSH VALVE, CALLED IN","MOW THE GROVE — FRI","DUMPSTER PICKUP TUES / SAT"].forEach((s,i)=>c.fillText(s,W*0.06,H*(0.18+i*0.16)));
+        ["ROUNDS: 6A · 12P · 6P  (TERRY)","MEN'S #2 — FLUSH VALVE, CALLED IN","2+ MESSES BETWEEN ROUNDS: RADIO TERRY","DUMPSTER PICKUP TUES / SAT"].forEach((s,i)=>c.fillText(s,W*0.06,H*(0.18+i*0.16)));
         c.fillStyle="#b3151b"; c.fillText("PENNDOT D-1 MAINT: 814-555-0142",W*0.06,H*0.86); },
         5.95, FL+1.55, Z(5.65)+sg*0.012, sg>0?0:Math.PI);
       wallSign(0.60,0.80,(c,W,H)=>{ c.fillStyle="#f2b418"; c.fillRect(0,0,W,H); c.fillStyle="#1a1a1a";

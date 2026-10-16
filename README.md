@@ -55,7 +55,8 @@ If the scene runs hot on your machine, start there (see below).
   - People use them (see Visitors). Now and then whoever was in a stall
     leaves it in a state: murky water, paper over the rim and across the
     floor. The next person picks another stall if they can. Stand in it and
-    `E` cleans it up; the toast keeps count.
+    `E` cleans it up; the toast keeps count. If you don't, the custodian
+    will (see below).
   - An occupied stall's door is shut and latched, with their feet showing
     under it. `E` on it gets you "OCCUPIED".
   - The women's room has six stalls and a bench.
@@ -66,11 +67,62 @@ If the scene runs hot on your machine, start there (see below).
   office. A janitor's closet and a mechanical room open off service doors at
   the back.
   - The office has a desk with a camera monitor, an office chair, a file
-    cabinet, a fridge and microwave, and a whiteboard of rounds. The monitor
+    cabinet, a fridge and microwave, and a whiteboard of the custodian's
+    rounds (6A, 12P and 6P). The monitor
     runs the four building cameras and CAM 5, the trail camera out in the
     back woods (`E` at the desk steps through its pictures).
   - The janitor's closet has a mop sink and mop rack, a wringer bucket,
     stocked shelves, a cart and a ladder.
+- **The maintenance garage** stands east of the building, past the loop walk
+  and the two spruces on the lawn. The pet area is south of it across the
+  lawn, untouched.
+  - It is a tan block building with a low brown steel roof, on a gravel
+    yard cut back into the woods. Facing the building are two roll-up doors
+    and a steel man door, with a light over each and the PennDOT and
+    contractor signs.
+  - In the first bay, nose out, is the contractor's pickup: a yellow plow
+    on the front, an amber light bar, a spreader on the hitch, and the
+    company's name on the doors. In the second bay are the zero-turn mower
+    and a walk-behind salt spreader.
+  - At the back are a workbench under a pegboard of tools, with a vise and
+    a yellow jobsite radio that is always on. There are also a parts washer,
+    steel shelving full of cases of roll towel and tissue, two cleaning
+    carts, a cot, a coffee maker that is never off, and a folding chair.
+    Rakes, shovels and a trimmer hang on the wall, and the blower hangs on
+    its hook.
+  - `E` at the radio changes the station: country, AM talk, or the
+    Pirates. You hear it properly inside, duller through the open doors, and
+    barely once they are shut.
+  - In the yard are a three-sided salt and sand bin with a crusted pile
+    under its roof, a pallet of ice melt, the gas tank, and the dumpster.
+    From the back corner a gravel track runs south-east through the woods,
+    behind a padlocked pipe gate.
+- **The custodian**, Terry, works for the contractor and all but lives in
+  the garage. `E` talks to Terry; what you get depends on what Terry is
+  doing.
+  - Three times a day (6A, 12P, 6P) Terry pushes the cart over and in at the
+    back door, and parks it in the lobby by each restroom in turn.
+    - Each stall somebody has left in a state gets cleaned. Terry holds the
+      door open, goes at it with the brush and flushes twice. `E` on that
+      door gets "GIVE ME A MINUTE ON THIS ONE."
+    - Then the cans: a bag out of each, a fresh liner, and the bags carried
+      back to the cart.
+    - A clipboard inside each restroom door gets the time and Terry's
+      initials.
+    - On the way back the bags go in the dumpster.
+    - Two messes waiting between rounds bring Terry over early.
+  - In summer, mornings and afternoons, Terry mows the lawn below the yard
+    on the zero-turn, lane by lane, pivoting at the ends, with clippings out
+    of the chute. The mower stops for anybody in front of it. In autumn
+    Terry takes the backpack blower up and down the loop walk behind the
+    building, and the leaves go up in front of it. Both are loud, and Terry
+    wears ear defenders for them.
+  - In between are the bench, the coffee, the folding chair and the radio.
+  - At night Terry sleeps on the cot with the radio turned low. The roll-up
+    doors come down and the lights go off, and both come back at a quarter
+    past five.
+  - Out of sight (more than 75 m away) Terry works three times as fast, so
+    the day's list gets done.
 - **The lots.**
   - Cars park in a two-aisle lot. There are about 34, thinning out with
     distance from the door, and any of them can be driven: `E`, then `WASD`,
@@ -241,7 +293,8 @@ If the scene runs hot on your machine, start there (see below).
     signs are banded in purple paint, as Pennsylvania law allows.
   - The kids' orange tape leads north-east from the fire to an old
     farmhouse in what is left of its yard, a slight clearing the woods are
-    taking back.
+    taking back. It is a big house, 12.4 by 9.2 m, with room to move about
+    in every room.
     - Outside: grey clapboard where the paint has let go, a fieldstone
       foundation, a hole in the back of the roof, a brick chimney with its
       top fallen in, broken and boarded windows, ivy, and a porch whose
@@ -250,10 +303,13 @@ If the scene runs hot on your machine, start there (see below).
       The parlour has a stove, a calendar stopped in October 1987, a picture
       on the wall, and a corner where the ceiling has come down. The kitchen
       has the table on its side, the sink, and an old fridge with its door
-      open, and a closet under the stairs.
+      open, and a closet under the stairs. The parlour also has a china
+      hutch and a dining table with one chair tipped over.
     - The stair is boxed in up the east wall: thirteen risers with nosed
       treads, stringers, a newel and balusters at the foot, and a rail on
       brackets the rest of the way. The eighth tread is split and sags.
+      You reach it from a landing inside the front door. It can be walked,
+      run or sprinted up.
     - Upstairs, off a hall with a runner down it, a little table and the
       attic hatch (its cord does not bring it down, and the kids have
       written DONT GO IN THE ATTIC beside it):
@@ -283,7 +339,9 @@ If the scene runs hot on your machine, start there (see below).
   dog. Rain hisses outside and drums on the roof inside; thunder cracks and
   rolls; the standby diesel cranks, catches and runs; the transfer switch
   bangs; the vending machine takes coins, whirs and thumps; the old house
-  creaks. It starts on your first click; `U` toggles it.
+  creaks. The garage radio plays its station, the roll-up doors whirr, the
+  zero-turn and the blower run where they are, and bags thump into the
+  dumpster. It starts on your first click; `U` toggles it.
 
 ## Controls
 
@@ -347,6 +405,9 @@ centred on the origin.
 | Substation | x 60 … 90, z −184 … −154 (2.6 m up the drive) |
 | The path out back | from the loop walk at x 17, z 1 east to x 278, z 50 |
 | The camp | x 286, z 52 |
+| Maintenance garage | x 32.5 … 41.5, z 24 … 38; yard x 23.5 … 42.5, z 18.5 … 45 |
+| Service track | from the yard's south-east corner to x 108, z 252 |
+| Pet area | x 8 … 30, z 60 … 100 |
 | The old house | x 312, z 160 (front door on the south side) |
 | Forest zone | x −240 … 416, z −328 … 248 |
 
@@ -382,6 +443,8 @@ js/14c-critters.js  butterflies, squirrels, how much ground mist there is
 js/14d-backwoods.js the path, the camp and its fire, the teenagers and what they leave, the wall, the stand, the car, the line
 js/14e-incidents.js the trooper's cruiser coming and going, and the occasional wreck on I-79
 js/14f-homestead.js the old house in the woods, inside and out, and its yard
+js/14g-garage.js    the maintenance garage, its yard, the track and gate, the truck, mower, carts and blower, the roll-up doors
+js/14h-custodian.js the custodian: rounds, stalls and cans, the restroom logs, mowing, leaf blowing, the cot; the outdoor path grid
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
 js/16b-weather.js   weather (cloud deck, rain, fog banks, lightning) and the power: circuits, outage, generator, transfer switch
@@ -443,13 +506,18 @@ NODE_PATH=$(npm root -g) node tools/zfight.js '{"x0":-10,"x1":17,"z0":-21,"z1":2
 It reports draw calls, triangles and any console errors.
 
 **`walk.js`** walks fixed routes and checks that nothing blocks them, then
-checks that every seat can be sat in and stood up from. The routes are:
+checks that every seat can be sat in and stood up from. Last, it climbs the
+old house's stair with the real player controller and the keys held down,
+at walk, run and sprint, and comes back down. The routes are:
 - through the lobby into both restrooms and their accessible stalls;
 - into the family restroom and the office;
 - out the back and through both service doors;
 - out the path to the camp, and into the camp past the fire;
 - along the tape to the old house, through its door and into the kitchen;
 - up the old house's stair and into every room upstairs, and back down;
+- across the lawn to the garage yard, in at the man door, round the shop and
+  out a bay door, round the salt bin and the dumpster, and up the track and
+  around the gate;
 - across the lot and the grove;
 - up the drive and through the substation gate.
 
@@ -469,4 +537,6 @@ The `window.REST` handle exposes the world for scripting. For example:
 
 The new systems are globals too: `WEATHER.set("storm")`, `GRID.trip()`,
 `CRASH.start()`, `MOON.phaseAt`, `TRAILCAM.photos`, `VEND.openAt(...)`,
-`GFX` and `applyGraphics()`, `TROOPER`, `RESTROOMS` (each stall's `mess`).
+`GFX` and `applyGraphics()`, `TROOPER`, `RESTROOMS` (each stall's `mess`),
+`CUST` (the custodian: `mode`, `step`, the queue `q`), `GARAGE_RT` (doors,
+lights, radio station, cart, mower, blower), `CUST_MOW` and `CUST_LOG`.

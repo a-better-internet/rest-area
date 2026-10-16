@@ -22,16 +22,24 @@ const ROUTES={
   "through the gate":    [[57,-169],[64,-169],[70,-170.5],[80,-174.2],[80,-178.5]],
   "the path out back":   "TRAIL",
   "into the camp":       [[278,49.6],[281,47.6],[285.5,47.6],[289.5,48.6]],
-  "the tape to the house":{seek:[[293,61],[312,151.5]], then:[[312,153.7],[312,155.3]]},
-  "into the old house":   [[312,155.3],[311.9,157.4],[311.9,158.6],[309.5,159.6],[308.3,158.6]],
-  "parlour to kitchen":   [[311.9,158.6],[311.6,160.15],[313.4,160.15],[314.85,161.2],[314.85,162.8],[314.85,163.9],[314.85,164.8]],
-  // the boxed stair, from the kitchen side at its foot, and every room off the hall
-  "up the old stairs":     [[314.4,157.55],[315.9,157.55],[315.9,160.65],[313.0,160.65],[308.8,160.65],[308.8,159.3],[309.0,158.9]],
-  "upstairs sewing room":  [[314.4,157.55],[315.9,157.55],[315.9,160.65],[313.0,160.65],[313.0,159.7],[312.0,159.5],[312.0,158.3]],
-  "upstairs child's room": [[314.4,157.55],[315.9,157.55],[315.9,160.65],[309.2,160.65],[309.2,161.75],[310.6,161.75]],
-  "upstairs box room":     [[314.4,157.55],[315.9,157.55],[315.9,160.65],[312.2,160.65],[312.2,161.6]],
-  "upstairs bathroom":     [[314.4,157.55],[315.9,157.55],[315.9,160.65],[314.4,160.65],[314.4,161.7],[314.4,162.02]],
-  "back down the stairs":  [[314.4,157.55],[315.9,157.55],[315.9,160.65],[315.9,157.55],[314.4,157.55],[313.4,157.8]],
+  "the tape to the house":{seek:[[293,61],[312,150.8]], then:[[312,152.3],[312,153.9],[312,155.2]]},
+  "into the old house":   [[312,155.2],[311.9,156.6],[311.0,158.0],[309.0,159.5],[308.6,160.6]],
+  "parlour to kitchen":   [[311.9,156.6],[312.4,160.6],[314.0,160.6],[316.3,161.9],[316.65,163.6],[316.65,165.35]],
+  // the maintenance garage: across the lawn to the yard, in at the man door, round the shop
+  "to the garage yard":    [[17,0],[19.5,12],[22,24],[27.5,30.5],[30.6,33.7]],
+  "into the garage":       [[30.6,33.7],[32.0,33.68],[33.6,33.68],[36.0,34.9],[37.6,35.6],[39.9,34.6],[40.2,31.4],[39.9,29.6],[36.0,29.45],[33.6,29.45]],
+  "garage to the cot":     [[33.6,33.68],[34.0,36.1]],
+  "out a bay door":        [[33.6,29.45],[31.8,29.45],[29.0,29.45],[26.0,26.0]],
+  "the yard and the bin":  [[26.0,26.0],[28.8,24.4],[24.6,24.0],[23.9,40.0],[24.4,43.9],[28.4,44.0],[38.4,43.0]],
+  "the track to the gate": [[38.4,43.0],[41.5,44.2],[44.6,46.0]],
+  "round the gate":        {seek:[[44.6,46.0],[52.5,50.0]], then:[]},
+  // the stair, from its landing inside the front wall, and every room off the hall
+  "up the old stairs":     [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[313.0,160.4],[309.05,160.4],[309.05,159.0],[308.9,158.3]],
+  "upstairs sewing room":  [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[313.45,160.4],[313.45,159.4],[312.5,158.7]],
+  "upstairs child's room": [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[309.05,160.4],[309.05,161.8],[307.9,162.3]],
+  "upstairs box room":     [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[311.75,160.4],[311.75,161.4]],
+  "upstairs bathroom":     [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[314.05,160.4],[314.0,162.0],[315.8,162.5]],
+  "back down the stairs":  [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.3],[317.45,156.15],[316.0,156.3]],
 };
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
@@ -91,9 +99,30 @@ const ROUTES={
       REST.sit(); REST.sim(40); REST.keys.KeyW=false; REST.sit(); REST.sim(5);
       if(REST.probe(REST.player.pos.x, REST.player.pos.z, REST.player.feetY)) bad.push(s.label+" @"+s.x.toFixed(1)+","+s.z.toFixed(1)); });
     res["seats ("+REST.seats.length+")"]= bad.length ? "stuck after: "+bad.join("; ") : "ok";
+    // the stair once more with the real controller and the keys held down, at
+    // every pace: the eased feet must not lose the treads on the way up
+    const drive=(P, mod, y0)=>{
+      REST.go(P[0][0],P[0][1],0,y0); for(const k in REST.keys) REST.keys[k]=false; if(mod) REST.keys[mod]=true;
+      let top=-1e9;
+      for(let i=1;i<P.length;i++){ let t=0, last=1e9;
+        for(;;){ const dx=P[i][0]-REST.player.pos.x, dz=P[i][1]-REST.player.pos.z, d=Math.hypot(dx,dz);
+          if(d<0.12) break;
+          REST.player.yaw=Math.atan2(-dx,-dz); REST.keys.KeyW=true; REST.sim(1); t++;
+          top=Math.max(top, REST.player.feetY);
+          if(t%30===0){ if(last-d<0.02 || t>1200){ for(const k in REST.keys) REST.keys[k]=false;
+            return "stuck at "+REST.player.pos.x.toFixed(2)+","+REST.player.pos.z.toFixed(2)+" y "+REST.player.feetY.toFixed(2); } last=d; } } }
+      for(const k in REST.keys) REST.keys[k]=false;
+      return top;
+    };
+    const UP=[[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4]], DOWN=[[317.45,160.4],[317.45,156.15],[316.0,156.3],[313.2,156.8],[311.9,156.6]];
+    const upF=REST.surf(317.45,160.4,5);
+    for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
+      const u=drive(UP,m,0.2), d=drive(DOWN,m,upF+0.05);
+      res["stairs, keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : u<upF-0.2 ? "up: never reached the hall ("+u.toFixed(2)+")"
+                                     : typeof d==="string" ? "down: "+d : "ok"; }
     return res;
   }, ROUTES);
   let fail=0;
-  for(const k in out){ console.log((out[k].startsWith("ok")?"  ok   ":"  FAIL ")+k.padEnd(22)+out[k]); if(!out[k].startsWith("ok")) fail++; }
+  for(const k in out){ console.log((out[k].startsWith("ok")?"  ok   ":"  FAIL ")+k.padEnd(28)+out[k]); if(!out[k].startsWith("ok")) fail++; }
   await b.close(); process.exit(fail?1:0);
 })();

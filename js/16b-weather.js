@@ -75,7 +75,7 @@ function _nextWeather(from){
    later. The site stays dark until the utility comes back; then the switch
    moves back, the poles' lamps restrike and warm up over half a minute, and
    the set runs unloaded to cool before it shuts down. */
-const GRID={bldg:1, site:1, emerg:0, phase:"normal", t:0, rpm:0, rpm2:0, ats:"N", nAvail:1, run:false,
+const GRID={bldg:1, site:1, emerg:0, garage:0, phase:"normal", t:0, rpm:0, rpm2:0, ats:"N", nAvail:1, run:false,
             dur:120, siteWarm:1, flick:1, cool:0, smoke:0};
 GRID.trip=function(test){
   if(this.phase!=="normal" && this.phase!=="cool") return false;

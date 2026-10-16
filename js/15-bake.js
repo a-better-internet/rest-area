@@ -65,3 +65,4 @@ FOREST.finish();
 const BAKED=bakeBuckets(scene);
 buildColGrid();                     // everything solid is in place by now
 if(typeof _igBuild==="function") _igBuild();   // the building's floor grid for the people inside (14b), now, not at the first visitor
+if(typeof _ogBuild==="function") _ogBuild();   // and the custodian's grid over the lawns and the yard (14h)

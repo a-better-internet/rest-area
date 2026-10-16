@@ -106,6 +106,10 @@ const planBase=(function(){
   R(SITE.plaza.x0,-5,SITE.plaza.z0,SITE.plaza.z1,"#c9c6be");
   R(-6,6,-5.5,5.5,"#a94a34"); R(-5,7,-14.5,14.5,"#8e3c2c");                 // the pavilion
   R(SITE.sub.x0,SITE.sub.x1,SITE.sub.z0,SITE.sub.z1,"#6c6a64");
+  // the maintenance garage on its yard, and its track off through the woods
+  L(SERVICE, 1.4, "#7c786c");
+  R(GARAGE.yard.x0,GARAGE.yard.x1,GARAGE.yard.z0,GARAGE.yard.z1,"#7c786c");
+  R(GARAGE.x0,GARAGE.x1,GARAGE.z0,GARAGE.z1,"#b0a68e");
   x.strokeStyle="#c9ccce"; x.lineWidth=1; x.strokeRect(px(SITE.sub.x0),pz(SITE.sub.z0),
     px(SITE.sub.x1)-px(SITE.sub.x0), pz(SITE.sub.z1)-pz(SITE.sub.z0));
   // the path out back, dashed, and the clearing at the end of it
@@ -113,7 +117,7 @@ const planBase=(function(){
   x.fillStyle="#46663a"; x.beginPath(); x.arc(px(CAMP.x),pz(CAMP.z),CAMP.r*PLAN_S,0,7); x.fill();
   x.fillStyle="#e07a2a"; x.beginPath(); x.arc(px(CAMP.x),pz(CAMP.z),1.8,0,7); x.fill();
   x.fillStyle="#4f6a3a"; x.beginPath(); x.arc(px(HOMESTEAD.x),pz(HOMESTEAD.z),HOMESTEAD.r*PLAN_S,0,7); x.fill();
-  { const B=HOMESTEAD.box; x.fillStyle="#8a8478"; x.fillRect(px(B.x0+1),pz(B.z0+2.3),(B.x1-B.x0-2)*PLAN_S,(B.z1-B.z0-3.3)*PLAN_S); }
+  if(typeof HOUSE!=="undefined" && HOUSE.x0!==undefined){ x.fillStyle="#8a8478"; x.fillRect(px(HOUSE.x0),pz(HOUSE.z0),(HOUSE.x1-HOUSE.x0)*PLAN_S,(HOUSE.z1-HOUSE.z0)*PLAN_S); }
   // picnic tables, as dots
   x.fillStyle="#d8c49a";
   for(const t of (typeof PICNIC!=="undefined"?PICNIC:[])){ x.beginPath(); x.arc(px(t.x),pz(t.z),1.6,0,7); x.fill(); }

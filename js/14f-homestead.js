@@ -42,11 +42,11 @@ bucketOf("wallpaper", ()=>{
   const n0=scene.children.length;
   const HX=HOMESTEAD.x, HZ=HOMESTEAD.z, HY=HOMESTEAD.y;
   const FF=HY+0.72;                                     // the ground floor
-  const W2=4.6, D2=3.3, x0=HX-W2, x1=HX+W2, z0=HZ-D2, z1=HZ+D2, T2=0.20;
-  const EAVE=FF+5.45, RIDGE=FF+8.35;
+  const W2=6.2, D2=4.6, x0=HX-W2, x1=HX+W2, z0=HZ-D2, z1=HZ+D2, T2=0.20;
+  const EAVE=FF+5.45, RIDGE=FF+8.7;
   const CL=FF+2.6, UF=FF+2.86;                          // the ground floor's ceiling; the upstairs floor
-  // the stair: up the east wall from the front, thirteen risers to the hall
-  const SX0=x1-T2-1.0, SX1=x1-T2, SZB=z0+T2+0.15, NRIS=13, RISE=(UF-FF)/NRIS, RUN=0.25,
+  // the stair: up the east wall from a landing inside the front wall, thirteen risers to the hall
+  const SX0=x1-T2-1.1, SX1=x1-T2, SZB=z0+T2+1.15, NRIS=13, RISE=(UF-FF)/NRIS, RUN=0.25,
         SZT=SZB+RUN*(NRIS-1), SZO=SZB+RUN*2;            // top of the flight; where the opening over it starts
   const SID="#8c877c", SID2="#7a756b", TRIM="#55524c", BARE="#635d54";
   const r=_trng(1987);
@@ -76,13 +76,17 @@ bucketOf("wallpaper", ()=>{
   /* ---- the walls ------------------------------------------------------- */
   const DOOR={a:HX-0.55, b:HX+0.40, sill:FF-0.6, head:FF+2.12};
   const win=(a,b,lo)=>({a:a, b:b, sill:lo?FF+0.86:FF+3.45, head:lo?FF+2.14:FF+4.72});
-  const FRONT=[DOOR, win(HX-3.5,HX-2.5,1), win(HX+1.9,HX+2.9,1), win(HX-3.4,HX-2.6,0), win(HX-0.45,HX+0.35,0), win(HX+2.0,HX+2.8,0)];
-  const BDOOR={a:HX+2.4, b:HX+3.3, sill:FF-0.6, head:FF+2.08};
-  const BACK=[BDOOR, win(HX-2.8,HX-1.8,1), win(HX-2.7,HX-1.9,0), win(HX+1.6,HX+2.4,0)];
-  const WEST=[win(HZ-1.0,HZ+0.0,1), win(HZ-1.0,HZ+0.0,0)];
-  const EAST=[win(HZ+0.5,HZ+1.3,1), win(HZ-1.0,HZ-0.2,0), win(HZ+1.6,HZ+2.4,0)];
+  const FRONT=[DOOR, win(HX-4.4,HX-3.4,1), win(HX-2.4,HX-1.4,1), win(HX+2.2,HX+3.2,1),
+               win(HX-4.6,HX-3.8,0), win(HX-2.2,HX-1.4,0), win(HX+0.2,HX+1.0,0), win(HX+2.6,HX+3.4,0)];
+  const BDOOR={a:HX+4.2, b:HX+5.1, sill:FF-0.6, head:FF+2.08};
+  const BACK=[BDOOR, win(HX+1.7,HX+2.5,1), win(HX-3.0,HX-2.0,1), win(HX-5.4,HX-4.6,1),
+              win(HX-4.4,HX-3.6,0), win(HX-0.6,HX+0.2,0), win(HX+2.0,HX+2.8,0)];
+  const WEST=[win(HZ-2.4,HZ-1.4,1), win(HZ+1.6,HZ+2.6,1), win(HZ-2.6,HZ-1.6,0), win(HZ+2.0,HZ+2.8,0)];
+  const EAST=[win(HZ+1.2,HZ+2.2,1), win(HZ-2.4,HZ-1.6,0), win(HZ+2.0,HZ+2.8,0)];
   // each wall in two runs, a storey each, so a window over a door is its own opening
   const lo=L=>L.filter(o=>o.head<FF+2.6), hi=L=>L.filter(o=>o.sill>FF+2.6), MID=FF+2.6;
+  // a patch of w by h centred at (along, y) on a wall, kept off its openings and their casings
+  const clearOf=(L, along, w, y, h)=>!L.some(o=>along+w/2>o.a-0.16 && along-w/2<o.b+0.16 && y+h/2>o.sill-0.12 && y-h/2<o.head+0.12);
   for(const [L,y0,y1] of [[lo,FF,MID],[hi,MID,EAVE]]){
     runX("siding", z0+T2/2, T2, x0, x1, y0, y1, L(FRONT), SID, 0.5);
     runX("siding", z1-T2/2, T2, x0, x1, y0, y1, L(BACK), SID, 0.5);
@@ -211,12 +215,12 @@ bucketOf("wallpaper", ()=>{
   const ivyMat=new T.MeshStandardMaterial({map:IVY_TEX, alphaTest:0.5, roughness:0.85, side:T.DoubleSide});
   const ivy=(x,y,z,ry,w,h)=>{ const m=new T.Mesh(new T.PlaneGeometry(w,h), ivyMat);
     m.position.set(x+Math.sin(ry)*0.012, y+h/2, z+Math.cos(ry)*0.012); m.rotation.y=ry; scene.add(m); };
-  ivy(x0-0.014, FF-0.6, HZ-1.9, -Math.PI/2, 1.6, 3.4);
-  ivy(x0-0.014, FF-0.6, HZ+0.6, -Math.PI/2, 1.0, 5.2);
+  ivy(x0-0.014, FF-0.6, HZ-3.6, -Math.PI/2, 1.6, 3.4);
+  ivy(x0-0.014, FF-0.6, HZ+3.7, -Math.PI/2, 1.0, 5.2);
   ivy(x0+0.5, FF-0.6, z0-0.014, Math.PI, 1.1, 2.6);
   ivy(x1-0.6, FF-0.6, z1+0.014, 0, 1.4, 2.2);
   // the upstairs ceiling, and over the bathroom a hole in it under the hole in the roof
-  const HB={x0:HX+2.3, x1:HX+3.3, z0:HZ+1.7, z1:HZ+2.6};
+  const HB={x0:HX+2.4, x1:HX+3.4, z0:HZ+1.9, z1:HZ+2.9};
   for(const q of minus({x0:x0+T2, x1:x1-T2, z0:z0+T2, z1:z1-T2}, [HB])) ceilAt("plaster", q.x0, q.x1, q.z0, q.z1, EAVE-0.02, "#a39886", 0.5);
   // the attic over it: joists, the boards from above, lath hanging at the hole's edges
   for(const q of minus({x0:x0+T2, x1:x1-T2, z0:z0+T2, z1:z1-T2}, [HB])) floorAt("beam", q.x0, q.x1, q.z0, q.z1, EAVE+0.05, "#4a4032", 0.6);
@@ -230,7 +234,7 @@ bucketOf("wallpaper", ()=>{
       tube("beam", V3(x, under(z1-T2-0.02), z1-T2-0.02), V3(x, under(HZ+0.1), HZ+0.1), 0.045, 4, "#5a4a38"); } }
 
   /* ---- the chimney up the west gable, its top fallen in ------------------ */
-  { const cx=x0-0.34, cz=HZ+1.55;
+  { const cx=x0-0.34, cz=HZ+0.2;
     wallBox("brick", cx-0.33, cx+0.33, cz-0.45, cz+0.45, HY-0.3, RIDGE+0.4, "#6a3c30", 0.8, HY-0.3);
     bx("brick", 0.55, 0.36, 0.40, cx+0.05, RIDGE+0.58, cz-0.18, 0.8, 0, "#6a3c30");
     // soot down the face of it, and white bloom where the water comes through
@@ -248,9 +252,9 @@ bucketOf("wallpaper", ()=>{
   addFlat(x0, x1, pz0, z0, pY+0.02);
   // under it: dark, on stone piers
   bx("paintm", x1-x0, 0.02, 2.2, HX, HY+0.15, (pz0+z0)/2, 0, 0, "#1a1714");
-  for(const x of [x0+0.3, HX-1.6, HX+1.6, x1-0.3]) wallBox("rock", x-0.2, x+0.2, pz0+0.05, pz0+0.45, HY-0.3, pY-0.02, "#8d877b", 0.5, HY-0.3);
+  for(const x of [x0+0.3, HX-2.2, HX+2.2, x1-0.3]) wallBox("rock", x-0.2, x+0.2, pz0+0.05, pz0+0.45, HY-0.3, pY-0.02, "#8d877b", 0.5, HY-0.3);
   // a skirt of lattice, mostly kicked in
-  for(let k=0;k<12;k++){ if(r()<0.55) continue; push("paintm", boxGeo(0.70, 0.45, 0.02, 0), x0+0.4+k*0.75, HY+0.26, pz0+0.04+r()*0.1, 0, "#5a564e", (r()-0.5)*0.5, 0); }
+  for(let k=0;k<16;k++){ if(r()<0.55) continue; push("paintm", boxGeo(0.70, 0.45, 0.02, 0), x0+0.4+k*0.75, HY+0.26, pz0+0.04+r()*0.1, 0, "#5a564e", (r()-0.5)*0.5, 0); }
   // the steps: two, the lower one split
   const sx0=HX-0.85, sx1=HX+0.75;
   bx("beam", sx1-sx0, 0.05, 0.32, (sx0+sx1)/2, HY+0.47, pz0-0.17, 0.6, 0, "#7a6a54");
@@ -260,12 +264,13 @@ bucketOf("wallpaper", ()=>{
   addFlat(sx0, sx1, pz0-0.33, pz0, HY+0.49); addFlat(sx0, sx1, pz0-0.68, pz0-0.33, HY+0.24);
   // the posts: three standing; the corner one down in the grass
   const postY0=pY+0.02, roofAt=x=>x<x1-1.5 ? FF+2.48 : FF+2.48-(x-(x1-1.5))/1.7*0.62;
-  for(const x of [x0+0.18, HX-1.6, HX+1.6]){ bx("paintm", 0.13, roofAt(x)-postY0, 0.13, x, (postY0+roofAt(x))/2, pz0+0.18, 0, 0, "#7d786e");
+  for(const x of [x0+0.18, HX-2.2, HX+2.2]){ bx("paintm", 0.13, roofAt(x)-postY0, 0.13, x, (postY0+roofAt(x))/2, pz0+0.18, 0, 0, "#7d786e");
     addCol(x-0.08, x+0.08, pz0+0.1, pz0+0.26, pY-0.5, roofAt(x)); }
   push("paintm", boxGeo(0.13, 2.4, 0.13, 0), x1+0.6, HY+0.09, pz0-0.7, 0.4, "#8f8a7e", Math.PI/2, 0);
   // its roof: a shed off the wall, down to the beam over the posts, sagging at the east end
-  { const g=new FaceGeo().slab([V3(x0-0.2,FF+2.95,z0), V3(x1+0.2,FF+2.95,z0), V3(x1+0.2,FF+1.82,pz0-0.2), V3(x0-0.2,FF+2.46,pz0-0.2)], 0.10, 0.6).geo();
-    push("roofmetal", g, 0,0,0, 0, "#6e665a");
+  { const xs=x1-1.4;
+    push("roofmetal", new FaceGeo().slab([V3(x0-0.2,FF+2.95,z0), V3(xs,FF+2.95,z0), V3(xs,FF+2.46,pz0-0.2), V3(x0-0.2,FF+2.46,pz0-0.2)], 0.10, 0.6).geo(), 0,0,0, 0, "#6e665a");
+    push("roofmetal", new FaceGeo().slab([V3(xs,FF+2.95,z0), V3(x1+0.2,FF+2.95,z0), V3(x1+0.2,FF+1.82,pz0-0.2), V3(xs,FF+2.46,pz0-0.2)], 0.10, 0.6).geo(), 0,0,0, 0, "#6e665a");
     tube("paintm", V3(x0+0.05,FF+2.42,pz0+0.18), V3(x1-1.4,FF+2.42,pz0+0.18), 0.07, 4, "#8f8a7e");
     tube("paintm", V3(x1-1.4,FF+2.42,pz0+0.18), V3(x1+0.1,FF+1.80,pz0+0.18), 0.07, 4, "#8f8a7e"); }
   // what is left of the rail: a few balusters and the top rail on the west side
@@ -273,7 +278,7 @@ bucketOf("wallpaper", ()=>{
   bx("paintm", 2.9, 0.06, 0.08, x0+1.75, pY+0.76, pz0+0.06, 0, 0, "#7d786e");
   addCol(x0, x0+3.2, pz0-0.02, pz0+0.12, pY-0.3, pY+0.8);
   // an old glider on the porch, rusted, one cushion
-  { const gx=HX+2.9, gz=z0-0.75;
+  { const gx=HX+3.8, gz=z0-0.75;
     for(const sd of [-1,1]) tube("metal", V3(gx+sd*0.7, pY, gz-0.25), V3(gx+sd*0.7, pY+0.85, gz+0.10), 0.02, 5, "#7a4a32");
     bx("paintm", 1.45, 0.05, 0.50, gx, pY+0.42, gz, 0, 0, "#7a4a32"); bx("paintm", 1.45, 0.45, 0.05, gx, pY+0.70, gz+0.25, 0, 0, "#7a4a32");
     bx("paintm", 0.62, 0.10, 0.46, gx-0.36, pY+0.50, gz, 0, 0, "#6a7a5a");
@@ -281,30 +286,33 @@ bucketOf("wallpaper", ()=>{
 
   /* ---- inside ------------------------------------------------------------ */
   // the wall between the parlour and the kitchen, with its doorway
-  const PX=HX+0.9, PD={a:HZ-0.45, b:HZ+0.65, sill:FF-0.6, head:FF+2.08};
-  runZ("block", PX, 0.20, z0+T2, z1-T2, FF, FF+2.62, [PD], "#3e362c", 0.5);
-  lineZ("plaster", PX-0.10, -1, z0+T2, z1-T2, FF, FF+2.6, [PD], "#9a8c72", 0.5);
-  lineZ("plaster", PX+0.10, 1, z0+T2, z1-T2, FF, FF+2.6, [PD], "#958a74", 0.5);
+  const PX=HX+1.2, PD={a:HZ+0.0, b:HZ+1.2, sill:FF-0.6, head:FF+2.08}, PD2={a:HZ-3.7, b:HZ-2.7, sill:FF-0.6, head:FF+2.08};
+  const inDoor=z=>(z>PD.a-0.25 && z<PD.b+0.25) || (z>PD2.a-0.25 && z<PD2.b+0.25);
+  runZ("block", PX, 0.20, z0+T2, z1-T2, FF, FF+2.62, [PD, PD2], "#3e362c", 0.5);
+  lineZ("plaster", PX-0.10, -1, z0+T2, z1-T2, FF, FF+2.6, [PD, PD2], "#9a8c72", 0.5);
+  lineZ("plaster", PX+0.10, 1, z0+T2, z1-T2, FF, FF+2.6, [PD, PD2], "#958a74", 0.5);
   // wallpaper coming away in strips, lath showing behind the plaster
   for(let k=0;k<12;k++){ const onW=k%2, z=z0+0.5+r()*(z1-z0-1), y=FF+0.6+r()*1.7, h=0.3+r()*0.6, o=k*0.0015;
-    if(onW) push("paintm", planeGeo(0.18+r()*0.3, h, 0), x0+T2+0.012+o, y, z, Math.PI/2, "#6a5c48");
-    else push("paintm", planeGeo(0.12, h, 0), PX-0.112-o, y, z, -Math.PI/2, "#7a6a52", 0, (r()-0.5)*0.12); }
+    if(onW){ const w=0.18+r()*0.3; if(clearOf(WEST, z, w, y, h)) push("paintm", planeGeo(w, h, 0), x0+T2+0.012+o, y, z, Math.PI/2, "#6a5c48"); }
+    else if(!inDoor(z)) push("paintm", planeGeo(0.12, h, 0), PX-0.112-o, y, z, -Math.PI/2, "#7a6a52", 0, (r()-0.5)*0.12); }
   // water stains down from the ceiling, and damp coming up the walls
-  const stain=(x,z,ry,y,w,h,c)=>push("paintm", new T.CircleGeometry(0.5,10).scale(w,h,1), x, y, z, ry, c);
+  let _so=0;      // each stain a hair proud of the last, so two that overlap never share a plane
+  const stain=(x,z,ry,y,w,h,c)=>{ _so+=0.0012; push("paintm", new T.CircleGeometry(0.5,10).scale(w,h,1), x+Math.sin(ry)*_so, y, z+Math.cos(ry)*_so, ry, c); };
   for(let k=0;k<16;k++){ const side=(r()*4)|0, w=0.4+r()*0.9, h=0.5+r()*1.2, c=r()<0.6?"#6e604a":"#5a5444";
     const y=r()<0.5 ? FF+2.6-h*0.45 : FF+h*0.4;
-    if(side===0) stain(x0+0.4+r()*(x1-x0-0.8), z0+T2+0.024, 0, y, w, h, c);
-    else if(side===1) stain(x0+0.4+r()*(x1-x0-0.8), z1-T2-0.024, Math.PI, y, w, h, c);
-    else if(side===2) stain(x0+T2+0.024, z0+0.5+r()*(z1-z0-1), Math.PI/2, y, w, h, c);
-    else stain(PX+0.114, z0+0.5+r()*(z1-z0-1), Math.PI/2, y, w, h, c); }
+    const xx=x0+0.4+r()*(x1-x0-0.8), zz=z0+0.5+r()*(z1-z0-1);
+    if(side===0){ if(clearOf(FRONT, xx, w, y, h)) stain(xx, z0+T2+0.024, 0, y, w, h, c); }
+    else if(side===1){ if(clearOf(BACK, xx, w, y, h)) stain(xx, z1-T2-0.024, Math.PI, y, w, h, c); }
+    else if(side===2){ if(clearOf(WEST, zz, w, y, h)) stain(x0+T2+0.024, zz, Math.PI/2, y, w, h, c); }
+    else { const zz=z0+0.5+r()*(z1-z0-1); if(!inDoor(zz-w/2) && !inDoor(zz+w/2)) stain(PX+0.114, zz, Math.PI/2, y, w, h, c); } }
   // dirt and leaves blown in across the floor
   for(let k=0;k<40;k++){ const x=x0+0.4+r()*(x1-x0-0.8), z=z0+0.4+r()*(z1-z0-0.8);
     push("paintm", new T.CircleGeometry(0.08+r()*0.35, 7), x, FF+0.006+r()*0.002, z, 0, ["#4a3a28","#6a4a2a","#3e3428","#7a5a30"][(r()*4)|0], -Math.PI/2, 0); }
   // the ceiling, down in one corner of the parlour: joists showing, the rest on the floor
-  const ch={x0:HX-2.5, x1:HX-1.1, z0:HZ-0.7, z1:HZ+0.8};
+  const ch={x0:HX-2.6, x1:HX-1.0, z0:HZ-2.4, z1:HZ-0.9};
   const STW={x0:SX0, x1:SX1, z0:SZO, z1:SZT+0.03};           // the stairwell, open to the hall above
   // and through the upstairs floor too, a smaller hole, over the pile of it
-  const FHU={x0:HX-2.4, x1:HX-1.4, z0:HZ-0.65, z1:HZ-0.08};
+  const FHU={x0:HX-2.3, x1:HX-1.3, z0:HZ-2.1, z1:HZ-1.25};
   for(const q of minus({x0:x0+T2, x1:x1-T2, z0:z0+T2, z1:z1-T2}, [ch, STW])) ceilAt("plaster", q.x0, q.x1, q.z0, q.z1, CL, "#b8b0a0", 0.5);
   for(let x=ch.x0+0.15; x<ch.x1; x+=0.4) bx("beam", 0.06, 0.20, ch.z1-ch.z0+0.3, x, FF+2.72, (ch.z0+ch.z1)/2, 0.6, 0, "#5a4a38");
   for(const q of minus(ch, [FHU])) ceilAt("beam", q.x0, q.x1, q.z0, q.z1, UF-0.03, "#2a2420", 0.6);
@@ -317,7 +325,7 @@ bucketOf("wallpaper", ()=>{
     push("paintm", boxGeo(0.12+r()*0.3, 0.03, 0.10+r()*0.25, 0), x, FF+0.03+r()*0.04, z, r()*3, r()<0.5?"#cfc7b6":"#9a8a70", (r()-0.5)*0.3, (r()-0.5)*0.3); }
   for(let k=0;k<6;k++) tube("beam", V3(ch.x0+r()*1.4, FF+0.03, ch.z0+r()*1.5), V3(ch.x0+r()*1.4, FF+0.05+r()*0.4, ch.z0+r()*1.5), 0.012, 3, "#7a6a54");
   // a hole in the kitchen floor: the boards gone, dark under
-  const fh={x0:HX+1.2, x1:HX+1.9, z0:HZ+1.6, z1:HZ+2.5};
+  const fh={x0:HX+3.0, x1:HX+3.7, z0:HZ+2.6, z1:HZ+3.4};
   push("paintm", planeGeo(fh.x1-fh.x0, fh.z1-fh.z0, 0), (fh.x0+fh.x1)/2, FF+0.008, (fh.z0+fh.z1)/2, 0, "#0c0a08", -Math.PI/2, 0);
   for(const z of [fh.z0, fh.z1]) push("beam", boxGeo(fh.x1-fh.x0+0.1, 0.03, 0.06, 0.6), (fh.x0+fh.x1)/2, FF+0.012, z, 0, "#5a4a38", 0, z===fh.z0?0.1:-0.08);
   addCol(fh.x0, fh.x1, fh.z0, fh.z1, FF-0.6, FF+0.25);
@@ -350,9 +358,11 @@ bucketOf("wallpaper", ()=>{
     tube("beam", V3(SX0+0.065, FF+RISE*4+0.88, SZB+0.98), V3(SX0+0.065, UF+0.88, SZT+0.05), 0.026, 6, "#5a4836");
     for(let k=4;k<NRIS;k+=3){ const z=SZB+RUN*k, y=FF+RISE*(k+1)+0.84; bx("metal", 0.07, 0.03, 0.03, SX0+0.035, y, z, 0.5, 0, "#3a3430"); }
     // the wall that boxes it in, kitchen side (open for the first two steps), then all the way up
-    runZ("plaster", SX0-0.05, 0.10, SZB+0.95, SZT, FF, UF, [], "#958a74", 0.5);
+    runZ("plaster", SX0-0.05, 0.10, SZB+0.95, SZT, FF, UF-0.004, [], "#958a74", 0.5);       // its top just under the floorboards it meets
+    // the landing at its foot: you come into it from the kitchen and turn up the stair
+    addZone(SX0, SX1, z0+T2, SZB, FF-0.3, FF+2.4, "THE FOOT OF THE STAIRS", true);
     runZ("wallpaper", SX0-0.05, 0.112, z0+T2, SZT+0.025, UF, EAVE-0.02, [], "#a89c84", 1.6);
-    bx("plaster", 0.094, UF-CL, SZB+0.95-(z0+T2)-0.006, SX0-0.05, (CL+UF)/2, (z0+T2+SZB+0.95)/2+0.003, 0.5, 0, "#958a74");
+    bx("plaster", 0.094, UF-0.004-CL, SZB+0.95-(z0+T2)-0.006, SX0-0.05, (CL+UF-0.004)/2, (z0+T2+SZB+0.95)/2+0.003, 0.5, 0, "#958a74");
     addCol(SX0-0.10, SX0, z0+T2, SZB+0.95, CL-0.02, UF);      // over your head as you step on: solid only where it is
     bx("paintm", 0.13, CL-FF, 0.04, SX0-0.05, (FF+CL)/2, SZB+0.945, 0, 0, TRIM);
     // under the landing, the end of the closet under the stair: boards, a little door
@@ -375,14 +385,15 @@ bucketOf("wallpaper", ()=>{
     // a ring you cannot step through round the hole in the bedroom floor
     addCol(FHU.x0-0.03, FHU.x1+0.03, FHU.z0-0.03, FHU.z1+0.03, UF-0.2, UF+0.45);
     addZone(x0, x1, z0, z1, UF-0.4, EAVE, "THE OLD HOUSE · UPSTAIRS", true);
-    const HS=HZ+0.065, HN=HZ+1.15, PW=HX-0.58, PE=HX+1.4, t=0.10, DH=UF+2.02;
+    // the hall is just past the stairhead; the front rooms are deep, the back ones less so
+    const HS=SZT+0.015, HN=HS+1.2, PW=HX-0.8, PE=HX+1.0, PK=HX-1.6, t=0.10, DH=UF+2.02;
     const dr=(a,b)=>({a:a, b:b, sill:UF-0.6, head:DH});
-    const D_BED=dr(HX-3.65,HX-2.75), D_SEW=dr(HX+0.55,HX+1.45), D_KID=dr(HX-3.25,HX-2.35), D_BOX=dr(HX-0.2,HX+0.7), D_BATH=dr(HX+1.95,HX+2.85);
+    const D_BED=dr(HX-3.4,HX-2.5), D_SEW=dr(HX+1.0,HX+1.9), D_KID=dr(HX-3.4,HX-2.5), D_BOX=dr(HX-0.7,HX+0.2), D_BATH=dr(HX+1.6,HX+2.5);
     // the walls: the hall's two sides, the cross walls front and back
     runX("wallpaper", HS+t/2, t, x0+T2, SX0-0.10, UF, EAVE-0.02, [D_BED, D_SEW], "#b4a68a", 1.6);
     runX("wallpaper", HN+t/2, t, x0+T2, x1-T2, UF, EAVE-0.02, [D_KID, D_BOX, D_BATH], "#b4a68a", 1.6);
     runZ("wallpaper", PW, t, z0+T2, HS, UF, EAVE-0.02, [], "#bba98c", 1.6);
-    runZ("wallpaper", PW, t, HN+t, z1-T2, UF, EAVE-0.02, [], "#9fb2c4", 1.6);
+    runZ("wallpaper", PK, t, HN+t, z1-T2, UF, EAVE-0.02, [], "#9fb2c4", 1.6);
     runZ("plaster", PE, t, HN+t, z1-T2, UF, EAVE-0.02, [], "#a9b8a2", 0.5);
     // the bathroom is painted, not papered: its own face on the walls it has
     lineX("plaster", HN+t, 1, PE+t/2, x1-T2, UF, EAVE-0.02, [D_BATH], "#a9b8a2", 0.5, 0.006);
@@ -397,18 +408,19 @@ bucketOf("wallpaper", ()=>{
     // swung back nearly to the wall, the way a door is left in an empty house
     leaf(D_BED.a+0.03, HS-0.03, Math.PI-0.30, "#6a5a48"); leaf(D_SEW.b-0.03, HS-0.03, 0.30, "#6a5a48");
     leaf(D_KID.a+0.03, HN+t+0.03, -(Math.PI-0.30), "#7a8a96"); leaf(D_BOX.b-0.03, HN+t+0.03, -0.66, "#6a5a48");
-    push("paintm", boxGeo(0.76, 1.96, 0.04, 0), HX+3.25, UF+0.98, HN+t+0.25, 0.04, "#6a5a48", 0.22, 0);    // the bathroom's, off its hinges and leant on the wall
-    addCol(HX+2.86, HX+3.64, HN+t, HN+t+0.48, UF-0.3, UF+1.9);
+    push("paintm", boxGeo(0.76, 1.96, 0.04, 0), D_BATH.b+0.48, UF+0.98, HN+t+0.25, 0.04, "#6a5a48", 0.22, 0);    // the bathroom's, off its hinges and leant on the wall
+    addCol(D_BATH.b+0.09, D_BATH.b+0.87, HN+t, HN+t+0.48, UF-0.3, UF+1.9);
     // wallpaper coming away, water down it, the damp
     for(let k=0;k<18;k++){ const w=0.15+r()*0.35, h=0.4+r()*1.2, y=UF+0.3+r()*1.6, o=0.016+k*0.0016;
       const side=(r()*4)|0;
-      if(side===0) push("paintm", planeGeo(w,h,0), x0+T2+o, y, z0+0.5+r()*(z1-z0-1), Math.PI/2, r()<0.5?"#8a7a62":"#6a5c48", 0, (r()-0.5)*0.15);
-      else if(side===1) push("paintm", planeGeo(w,h,0), HX-3.9+r()*3, y, HS+t+o-0.008, 0, r()<0.5?"#8a7a62":"#6a5c48", 0, (r()-0.5)*0.15);
-      else if(side===2) push("paintm", planeGeo(w,h,0), HX-3.9+r()*3, y, HN-o+0.008, Math.PI, "#7a6a52", 0, (r()-0.5)*0.15);
-      else push("paintm", planeGeo(w,h,0), HX-4.2+r()*3.4, y, z0+T2+o, 0, "#6e604a", 0, (r()-0.5)*0.15); }
+      if(side===0){ const zz=z0+0.5+r()*(z1-z0-1), c=r()<0.5?"#8a7a62":"#6a5c48";
+        if(clearOf(WEST, zz, w, y, h)) push("paintm", planeGeo(w,h,0), x0+T2+o, y, zz, Math.PI/2, c, 0, (r()-0.5)*0.15); }
+      else if(side===1){ const xx=HX-5.5+r()*5; if(!(xx>D_BED.a-0.3 && xx<D_BED.b+0.3)) push("paintm", planeGeo(w,h,0), xx, y, HS+t+o-0.008, 0, r()<0.5?"#8a7a62":"#6a5c48", 0, (r()-0.5)*0.15); }
+      else if(side===2){ const xx=HX-5.5+r()*4.5; if(!(xx>D_KID.a-0.3 && xx<D_KID.b+0.3) && !(xx>D_BOX.a-0.3 && xx<D_BOX.b+0.3)) push("paintm", planeGeo(w,h,0), xx, y, HN-o+0.008, Math.PI, "#7a6a52", 0, (r()-0.5)*0.15); }
+      else { const xx=HX-5.8+r()*5; if(clearOf(FRONT, xx, w, y, h)) push("paintm", planeGeo(w,h,0), xx, y, z0+T2+o, 0, "#6e604a", 0, (r()-0.5)*0.15); } }
     // the hall: a runner down it, a little table, a picture down on the floor, the hatch to the attic
-    push("paintm", planeGeo(6.6, 0.62, 0), HX-0.4, UF+0.008, (HS+HN+t)/2, 0, "#6a3a32", -Math.PI/2, 0);
-    push("paintm", planeGeo(6.4, 0.46, 0), HX-0.4, UF+0.010, (HS+HN+t)/2, 0, "#7e4a3c", -Math.PI/2, 0);
+    push("paintm", planeGeo(9.0, 0.62, 0), HX-0.6, UF+0.008, (HS+HN+t)/2, 0, "#6a3a32", -Math.PI/2, 0);
+    push("paintm", planeGeo(8.8, 0.46, 0), HX-0.6, UF+0.010, (HS+HN+t)/2, 0, "#7e4a3c", -Math.PI/2, 0);
     { const tx=x0+T2+0.30, tz=(HS+HN+t)/2;
       bx("beam", 0.40, 0.03, 0.55, tx, UF+0.74, tz, 0.6, 0, "#6a4a32");
       for(const [dx,dz] of [[-0.16,-0.22],[0.16,-0.22],[-0.16,0.22],[0.16,0.22]]) bx("beam", 0.03, 0.73, 0.03, tx+dx, UF+0.365, tz+dz, 0.6, 0, "#5a3e2a");
@@ -428,7 +440,7 @@ bucketOf("wallpaper", ()=>{
       m.position.set(HX+0.8, UF+1.55, HN-0.004); m.rotation.y=Math.PI; scene.add(m); }
 
     /* the big bedroom: the iron bed, the dresser and its glass, a rocker, a suitcase */
-    { const bx0=x0+T2, bx1=HX-2.45, bz0=HZ-2.95, bz1=HZ-1.55, my=UF+0.50;
+    { const bx0=x0+T2, bx1=x0+T2+1.95, bz0=z0+T2+0.35, bz1=bz0+1.4, my=UF+0.50;
       for(const [x,h] of [[bx0+0.06,1.25],[bx1-0.04,0.85]]){
         for(const z of [bz0+0.03,bz1-0.03]) tube("metal", V3(x,UF,z), V3(x,UF+h,z), 0.022, 6, "#2e2a28");
         for(const y of [h-0.04, h*0.55, 0.30]) tube("metal", V3(x,UF+y,bz0+0.03), V3(x,UF+y,bz1-0.03), 0.014, 5, "#2e2a28");
@@ -442,7 +454,7 @@ bucketOf("wallpaper", ()=>{
       push("paintm", boxGeo(1.25, 0.03, 0.45, 0), (bx0+bx1)/2+0.18, UF+0.02, bz1+0.38, 0, "#8a4a42", 0.06, 0);
       addCol(bx0, bx1, bz0, bz1, UF-0.3, UF+0.8);
       // the dresser against the cross wall, a mirror over it, cracked
-      const dx=PW-t/2-0.25, dz=HZ-2.0;
+      const dx=PW-t/2-0.25, dz=z0+T2+1.6;
       bx("beam", 0.48, 0.86, 1.10, dx, UF+0.43, dz, 0.6, 0, "#5e4430");
       for(let k=0;k<3;k++){ bx("beam", 0.02, 0.22, 1.00, dx-0.245, UF+0.17+k*0.26, dz, 0.6, 0, "#6a4e36");
         for(const s2 of [-0.25,0.25]) bx("chrome", 0.03, 0.03, 0.08, dx-0.265, UF+0.17+k*0.26, dz+s2, 0.4, 0, "#8a7a5a"); }
@@ -453,21 +465,21 @@ bucketOf("wallpaper", ()=>{
       addCol(dx-0.26, dx+0.25, dz-0.56, dz+0.56, UF-0.3, UF+1.8);
       addUse(dx-0.75, dz, UF, "OPEN THE DRESSER", ()=>toast("MOTHBALLS. A MAN'S SUNDAY SHIRT, FOLDED. A WEDDING PICTURE, 1951, THE GLASS CRACKED ACROSS THE BRIDE","#cfe0d4"), 1.0);
       // the rocker by the window, the suitcase open on the floor, clothes
-      { const cx=HX-1.7, cz=HZ-2.55, a=0.6;
+      { const cx=HX-2.6, cz=z0+T2+0.9, a=0.6;
         for(const sd of [-1,1]){ const ox=Math.cos(a)*sd*0.22, oz=-Math.sin(a)*sd*0.22;
           tube("beam", V3(cx+ox-Math.sin(a)*0.35, UF+0.03, cz+oz-Math.cos(a)*0.35), V3(cx+ox+Math.sin(a)*0.35, UF+0.08, cz+oz+Math.cos(a)*0.35), 0.02, 5, "#5a3e2a");
           tube("beam", V3(cx+ox, UF+0.05, cz+oz), V3(cx+ox+Math.sin(a)*0.05, UF+0.95, cz+oz+Math.cos(a)*0.28), 0.018, 5, "#5a3e2a"); }
         push("beam", boxGeo(0.46, 0.04, 0.44, 0.6), cx, UF+0.42, cz, a, "#6a4a32");
         push("beam", boxGeo(0.44, 0.50, 0.03, 0.6), cx+Math.sin(a)*0.22, UF+0.72, cz+Math.cos(a)*0.22, a, "#6a4a32", -0.2, 0);
         addCol(cx-0.35, cx+0.35, cz-0.35, cz+0.35, UF-0.3, UF+1.0); }
-      { const sx=HX-2.0, sz=HZ-1.2;
+      { const sx=HX-4.0, sz=HZ-1.2;
         bx("paintm", 0.62, 0.16, 0.42, sx, UF+0.08, sz, 0, 0.3, "#5a4a3a");
         push("paintm", boxGeo(0.62, 0.42, 0.04, 0), sx+0.06, UF+0.20, sz+0.27, 0.3, "#5a4a3a", -1.9, 0);
         for(let k=0;k<4;k++) push("paintm", boxGeo(0.3+r()*0.3, 0.02, 0.2+r()*0.3, 0), sx-0.6+r()*1.2, UF+0.02+k*0.004, sz-0.2+r()*0.6, r()*3, ["#6a6a7a","#9a8a6a","#5a3a3a","#c8c0b0"][k]);
         addCol(sx-0.36, sx+0.36, sz-0.32, sz+0.32, UF-0.3, UF+0.3); }
     }
     /* the sewing room: the treadle machine under the window, a dress form, the trunk of letters */
-    { const mx=HX+2.4, mz=z0+T2+0.30;
+    { const mx=HX+0.6, mz=z0+T2+0.30;
       bx("beam", 0.92, 0.04, 0.46, mx, UF+0.76, mz, 0.6, 0, "#5a3e2a");
       bx("beam", 0.30, 0.40, 0.42, mx+0.28, UF+0.54, mz, 0.6, 0, "#5a3e2a");
       for(const sd of [-1,1]){ push("metal", boxGeo(0.04, 0.70, 0.40, 0.5), mx+sd*0.40, UF+0.38, mz, 0, "#1e1c1a");
@@ -480,7 +492,7 @@ bucketOf("wallpaper", ()=>{
       push("chrome", new T.CylinderGeometry(0.05,0.05,0.03,14), mx+0.24, UF+1.02, mz, 0, "#8a8070", 0, Math.PI/2);
       addCol(mx-0.48, mx+0.48, mz-0.26, mz+0.26, UF-0.3, UF+1.1);
       // the dress form, in the middle of the room, facing the door
-      const fx=HX+1.0, fz=HZ-1.25;
+      const fx=HX+1.6, fz=HZ-1.6;
       // a torso on a turned post: the bust, a waist, the hips, a cap where the neck would be
       const sc=(sx,sy,sz)=>bucketOf("paintm").entries[bucketOf("paintm").entries.length-1].matrix.scale(V3(sx,sy,sz));
       push("paintm", new T.SphereGeometry(0.5,16,12), fx, UF+1.36, fz, 0.4, "#c8b89a"); sc(0.36,0.30,0.24);
@@ -493,7 +505,7 @@ bucketOf("wallpaper", ()=>{
       for(let k=0;k<3;k++){ const a=k*2.094; tube("metal", V3(fx,UF+0.12,fz), V3(fx+Math.cos(a)*0.28,UF+0.01,fz+Math.sin(a)*0.28), 0.012, 5, "#2a2826"); }
       addCol(fx-0.22, fx+0.22, fz-0.22, fz+0.22, UF-0.3, UF+1.6);
       // the trunk, lid up, letters in it and out of it
-      const kx=HX+0.15, kz=z0+T2+0.40;
+      const kx=HX+1.95, kz=z0+T2+0.40;
       bx("beam", 0.95, 0.52, 0.55, kx, UF+0.26, kz, 0.6, 0, "#4a3426");
       for(const y of [0.10,0.42]) bx("metal", 0.97, 0.04, 0.57, kx, UF+y, kz, 0.5, 0, "#6a5a3a");
       push("beam", boxGeo(0.95, 0.06, 0.55, 0.6), kx, UF+0.70, kz-0.30, 0, "#4a3426", 1.25, 0);
@@ -506,7 +518,7 @@ bucketOf("wallpaper", ()=>{
       addCol(SX0-0.58, SX0-0.10, HZ-2.85, HZ-1.75, UF-0.3, UF+0.8);
     }
     /* the child's room: a small bed and the bear on it, the rocking horse, the toy box, the marks by the door */
-    { const bx0=x0+T2+0.03, bx1=HX-2.9, bz0=HZ+2.2, bz1=z1-T2-0.03;
+    { const bx0=x0+T2+0.03, bx1=x0+T2+1.5, bz0=z1-T2-1.2, bz1=z1-T2-0.03;
       bx("beam", bx1-bx0, 0.30, bz1-bz0, (bx0+bx1)/2, UF+0.15, (bz0+bz1)/2, 0.6, 0, "#7a6a54");
       bx("paintm", bx1-bx0-0.06, 0.12, bz1-bz0-0.06, (bx0+bx1)/2, UF+0.36, (bz0+bz1)/2, 0, 0, "#c0b8a0");
       bx("beam", 0.05, 0.75, bz1-bz0, bx0+0.012, UF+0.375, (bz0+bz1)/2, 0.6, 0, "#7a6a54");
@@ -520,7 +532,7 @@ bucketOf("wallpaper", ()=>{
         push("paintm", new T.SphereGeometry(0.012,5,4), tx+0.095, ty+0.16, tz, 0, "#1a1a1a"); }
       addCol(bx0, bx1, bz0, bz1, UF-0.3, UF+0.6);
       // the rocking horse
-      { const hx=HX-2.0, hz=HZ+2.55;
+      { const hx=HX-3.0, hz=HZ+3.0;
         for(const sd of [-1,1]){ const g=new T.TorusGeometry(0.55,0.02,4,24,1.4); push("beam", g, hx, UF+0.56, hz+sd*0.16, 0, "#8a2a22", 0, -Math.PI/2-0.7); }
         bx("paintm", 0.52, 0.20, 0.18, hx, UF+0.52, hz, 0, 0, "#d8cfc0");
         push("paintm", boxGeo(0.12, 0.30, 0.12, 0), hx+0.30, UF+0.70, hz, 0, "#d8cfc0", 0, -0.5);
@@ -528,10 +540,10 @@ bucketOf("wallpaper", ()=>{
         for(const [dx,dz] of [[-0.2,-0.07],[0.2,-0.07],[-0.2,0.07],[0.2,0.07]]) tube("beam", V3(hx+dx,UF+0.44,hz+dz), V3(hx+dx*1.3,UF+0.13,hz+dz*2), 0.02, 4, "#d8cfc0");
         push("paintm", boxGeo(0.06, 0.14, 0.03, 0), hx-0.30, UF+0.60, hz, 0, "#3a2a1a", 0, 0.5);
         addCol(hx-0.5, hx+0.55, hz-0.25, hz+0.25, UF-0.3, UF+0.9); }
-      bx("beam", 0.70, 0.42, 0.40, PW-t/2-0.40, UF+0.21, z1-T2-0.25, 0.6, 0, "#6a7a5a");
-      push("beam", boxGeo(0.70, 0.03, 0.40, 0.6), PW-t/2-0.40, UF+0.60, z1-T2-0.42, 0, "#6a7a5a", -1.1, 0);
-      push("paintm", new T.SphereGeometry(0.06,8,6), PW-t/2-0.85, UF+0.06, z1-T2-0.6, 0, "#c03a2a");
-      addCol(PW-t/2-0.76, PW-t/2-0.04, z1-T2-0.47, z1-T2, UF-0.3, UF+0.5);
+      bx("beam", 0.70, 0.42, 0.40, PK-t/2-0.40, UF+0.21, z1-T2-0.25, 0.6, 0, "#6a7a5a");
+      push("beam", boxGeo(0.70, 0.03, 0.40, 0.6), PK-t/2-0.40, UF+0.60, z1-T2-0.42, 0, "#6a7a5a", -1.1, 0);
+      push("paintm", new T.SphereGeometry(0.06,8,6), PK-t/2-0.85, UF+0.06, z1-T2-0.6, 0, "#c03a2a");
+      addCol(PK-t/2-0.76, PK-t/2-0.04, z1-T2-0.47, z1-T2, UF-0.3, UF+0.5);
       const marks=signTex(120,420,(c,W,H)=>{ c.clearRect(0,0,W,H); c.strokeStyle="rgba(40,40,40,0.85)"; c.fillStyle="rgba(40,40,40,0.9)"; c.lineWidth=3; c.font="bold 17px Arial";
         const L=[["DANNY 4",0.70],["MARIE 3",0.62],["DANNY 5",0.55],["MARIE 4",0.49],["DANNY 6",0.41],["MARIE 5",0.36],["DANNY 7",0.28]];
         for(const [s2,f] of L){ c.beginPath(); c.moveTo(6,H*f); c.lineTo(40,H*f); c.stroke(); c.fillText(s2,44,H*f+6); } });
@@ -540,7 +552,7 @@ bucketOf("wallpaper", ()=>{
       addUse(D_KID.b+0.27, HN+t+0.6, UF, "LOOK AT THE PENCIL MARKS", ()=>toast("PENCIL LINES UP THE WALL BY THE DOOR. DANNY 4, 5, 6, 7. MARIE 3, 4, 5. THEN NOTHING","#cfe0d4"), 0.9);
     }
     /* the box room: what nobody threw out */
-    { const cx=(PW+PE)/2;
+    { const cx=(PK+PE)/2;
       for(const [dx,dz,y,s2] of [[-0.5,1.5,0.2,0.4],[-0.05,1.55,0.2,0.4],[-0.3,1.55,0.6,0.36],[0.45,1.5,0.16,0.32],[0.5,1.0,0.16,0.32]])
         bx("paintm", s2+0.08, s2, s2, cx+dx, UF+y, HN+t+dz, 0, 0, ["#8a7a5a","#7e6e50","#958560"][((dx+dz)*10|0)%3]);
       addCol(cx-0.78, cx+0.72, HN+t+0.75, z1-T2, UF-0.3, UF+0.8);
@@ -550,7 +562,7 @@ bucketOf("wallpaper", ()=>{
     }
     /* the bathroom: the clawfoot tub under the window, the toilet with its high tank, a pedestal sink,
        and the hole over it all, with what has come in through it */
-    { const tx=x1-T2-0.37, tz=HZ+2.2, prof=[[0.0,0.17],[0.25,0.17],[0.31,0.24],[0.345,0.45],[0.36,0.58],[0.345,0.605],[0.325,0.585],[0.30,0.47],[0.25,0.23],[0.0,0.22]];
+    { const tx=x1-T2-0.37, tz=HZ+2.6, prof=[[0.0,0.17],[0.25,0.17],[0.31,0.24],[0.345,0.45],[0.36,0.58],[0.345,0.605],[0.325,0.585],[0.30,0.47],[0.25,0.23],[0.0,0.22]];
       const lg=new T.LatheGeometry(prof.map(([a,b])=>new T.Vector2(a,b)), 28); lg.scale(1,1,2.05);
       push("porcelain", lg, tx, UF, tz, 0, "#e2ddd2");
       push("paintm", (()=>{ const g=new T.CircleGeometry(0.29,20); g.rotateX(-Math.PI/2); g.scale(1,1,2.0); return g; })(), tx, UF+0.30, tz, 0, "#3e3626");
@@ -560,7 +572,7 @@ bucketOf("wallpaper", ()=>{
         push("metal", boxGeo(0.06,0.10,0.08,0.5), tx+dx, UF+0.04, tz+dz+(dz>0?0.02:-0.02), 0, "#3a3430"); }
       addCol(tx-0.37, tx+0.37, tz-0.75, tz+0.75, UF-0.3, UF+0.62);
       // the toilet: an old one, the tank up on the wall with its chain
-      const wx=HX+3.05, wz=z1-T2;
+      const wx=HX+3.6, wz=z1-T2;
       push("porcelain", _bowlGeo, wx, UF, wz, Math.PI, "#e2ddd2");
       push("porcelain", _neckGeo, wx, UF, wz, Math.PI, "#e2ddd2");
       push("paintm", _waterGeo, wx, UF+0.301, wz-0.472, Math.PI, "#5a5a40");
@@ -570,7 +582,7 @@ bucketOf("wallpaper", ()=>{
       push("paintm", new T.CylinderGeometry(0.018,0.018,0.10,8), wx+0.15, UF+1.25, wz-0.18, 0, "#d8d0bc");
       addCol(wx-0.22, wx+0.22, wz-0.72, wz, UF-0.3, UF+0.42);
       // the sink, on its pedestal, against the box room's wall; the cabinet over it, its mirror gone black
-      const sx=PE+t/2, sz=HZ+2.05;
+      const sx=PE+t/2, sz=HZ+2.4;
       push("porcelain", new T.CylinderGeometry(0.07,0.11,0.74,12), sx+0.24, UF+0.37, sz, 0, "#e2ddd2");
       push("porcelain", new T.CylinderGeometry(0.27,0.20,0.14,18), sx+0.26, UF+0.80, sz, 0, "#e2ddd2");
       bx("paintm", 0.12, 0.56, 0.44, sx+0.07, UF+1.45, sz, 0, 0, "#c8c0b0");
@@ -586,7 +598,7 @@ bucketOf("wallpaper", ()=>{
     }
   }
   // the parlour: the stove and its pipe, an armchair gone through, a mattress, the calendar, a picture
-  { const sx=x0+T2+0.55, sz=HZ+1.55;
+  { const sx=x0+T2+0.55, sz=HZ+0.2;
     push("paintm", new T.CylinderGeometry(0.28,0.30,0.62,14), sx, FF+0.47, sz, 0, "#1d1c1b");
     for(const [dx,dz] of [[-0.2,-0.2],[0.2,-0.2],[-0.2,0.2],[0.2,0.2]]) bx("paintm", 0.05, 0.16, 0.05, sx+dx, FF+0.08, sz+dz, 0, 0, "#1d1c1b");
     tube("metal", V3(sx, FF+0.78, sz), V3(sx, FF+1.6, sz), 0.07, 8, "#2a2826");
@@ -597,8 +609,25 @@ bucketOf("wallpaper", ()=>{
     push("paintm", boxGeo(0.80, 0.65, 0.18, 0), cx+0.1, FF+0.62, cz+0.35, 0.3, "#5e4234", -0.45, 0);
     bx("paintm", 0.18, 0.40, 0.70, cx-0.40, FF+0.45, cz+0.1, 0, 0.3, "#5e4234");
     addCol(cx-0.5, cx+0.5, cz-0.45, cz+0.5, FF-0.5, FF+0.7); }
-  { const mx=HX-3.0, mz=HZ-1.9; bx("paintm", 1.35, 0.16, 1.9, mx, FF+0.08, mz, 0, 0.15, "#b8ab90");
+  { const mx=HX-4.6, mz=HZ-2.8; bx("paintm", 1.35, 0.16, 1.9, mx, FF+0.08, mz, 0, 0.15, "#b8ab90");
     push("paintm", new T.CircleGeometry(0.3,10), mx+0.2, FF+0.165, mz+0.3, 0, "#8a7a58", -Math.PI/2, 0); }
+  // the back of the parlour, where they ate: a china hutch between the windows, the glass out of it,
+  // a table and one chair, the other on its back
+  { const hx=HX-3.85, hz=z1-T2-0.25;
+    bx("beam", 1.25, 0.90, 0.48, hx, FF+0.45, hz, 0.6, 0, "#5a3e2a");
+    bx("beam", 1.18, 0.95, 0.34, hx, FF+1.38, hz+0.06, 0.6, 0, "#5a3e2a");
+    for(const dx of [-0.29,0.29]) bx("paintm", 0.54, 0.84, 0.012, hx+dx, FF+1.38, hz-0.115, 0, 0, "#2a2420");
+    for(let k=0;k<4;k++) push("porcelain", new T.CylinderGeometry(0.08,0.06,0.03,12), hx-0.4+k*0.27, FF+1.12, hz+0.02, 0, "#e8e2d4", 1.3, 0);
+    bx("beam", 1.30, 0.04, 0.52, hx, FF+1.87, hz+0.02, 0.6, 0, "#4a3020");
+    addCol(hx-0.65, hx+0.65, hz-0.26, hz+0.25, FF-0.5, FF+1.9);
+    const dx=HX-3.6, dz=HZ+2.2;
+    bx("beam", 1.30, 0.04, 0.85, dx, FF+0.74, dz, 0.6, 0, "#6a4a32");
+    for(const [ex,ez] of [[-0.58,-0.36],[0.58,-0.36],[-0.58,0.36],[0.58,0.36]]) bx("beam", 0.05, 0.72, 0.05, dx+ex, FF+0.36, dz+ez, 0.6, 0, "#5a3e2a");
+    addCol(dx-0.67, dx+0.67, dz-0.45, dz+0.45, FF-0.5, FF+0.78);
+    bx("paintm", 0.42, 0.04, 0.42, dx+0.95, FF+0.45, dz-0.1, 0, 0.2, "#6a4a32");
+    for(const [ex,ez] of [[-0.18,-0.18],[0.18,-0.18],[-0.18,0.18],[0.18,0.18]]) bx("paintm", 0.035, 0.45, 0.035, dx+0.95+ex, FF+0.225, dz-0.1+ez, 0, 0, "#5a3e2a");
+    push("paintm", boxGeo(0.42, 0.04, 0.42, 0), dx-0.9, FF+0.21, dz+0.65, 0.4, "#6a4a32", 1.45, 0);
+    push("paintm", boxGeo(0.42, 0.5, 0.035, 0), dx-0.9, FF+0.02, dz+0.98, 0.4, "#5a3e2a", -1.5, 0); }
   // the calendar, the picture
   const calTex=signTex(240,300,(c,W,H)=>{ c.fillStyle="#efe6cf"; c.fillRect(0,0,W,H);
     c.fillStyle="#7a8a5a"; c.fillRect(0,0,W,H*0.42); c.fillStyle="#3a4a2a"; c.fillRect(W*0.1,H*0.08,W*0.8,H*0.26);
@@ -606,46 +635,46 @@ bucketOf("wallpaper", ()=>{
     fitText(c,"OCTOBER  1987",W*0.7,H*0.07,W/2,H*0.56,"700");
     c.fillStyle="#555"; for(let k=0;k<5;k++) for(let j=0;j<7;j++) c.fillRect(W*0.08+j*W*0.12, H*0.62+k*H*0.07, W*0.09, H*0.05);
     c.fillStyle="#b3151b"; c.font="bold 22px Arial"; c.fillText("X",W*0.08+3*W*0.12+2,H*0.62+2*H*0.07+18); });
-  signPanel(0.30,0.38,calTex, PX-0.116, FF+1.55, HZ-2.2, -Math.PI/2);
+  signPanel(0.30,0.38,calTex, PX-0.116, FF+1.55, HZ-1.6, -Math.PI/2);
   const picTex=signTex(200,160,(c,W,H)=>{ c.fillStyle="#3a2a1a"; c.fillRect(0,0,W,H); c.fillStyle="#b8a890"; c.fillRect(14,14,W-28,H-28);
     c.fillStyle="#6a5a48"; c.fillRect(14,H*0.62,W-28,H*0.3);
     for(const [px,h] of [[0.30,0.55],[0.42,0.62],[0.55,0.45],[0.66,0.50]]){ c.fillStyle="#3a3028"; c.fillRect(W*px,H*(0.9-h),W*0.07,H*h-14); c.beginPath(); c.arc(W*px+W*0.035,H*(0.9-h),W*0.04,0,7); c.fill(); }
     c.fillStyle="#5a4a3a"; c.fillRect(W*0.75,H*0.72,W*0.1,H*0.08); });
-  { const m=signPanel(0.36,0.29,picTex, x0+T2+0.012, FF+1.65, HZ-1.6, Math.PI/2); m.rotation.z=0.09; }
-  addUse(PX-0.6, HZ-2.2, FF, "READ THE CALENDAR", ()=>toast("OCTOBER 1987, FROM THE FEED STORE. THE 15TH IS CROSSED OFF. NOTHING AFTER","#cfe0d4"), 1.1);
-  addUse(x0+T2+0.7, HZ-1.6, FF, "LOOK AT THE PICTURE", ()=>toast("A FAMILY ON THIS PORCH, IN THEIR SUNDAY CLOTHES. NOBODY IS SMILING BUT THE DOG","#cfe0d4"), 1.1);
+  { const m=signPanel(0.36,0.29,picTex, x0+T2+0.012, FF+1.65, HZ-0.8, Math.PI/2); m.rotation.z=0.09; }
+  addUse(PX-0.6, HZ-1.6, FF, "READ THE CALENDAR", ()=>toast("OCTOBER 1987, FROM THE FEED STORE. THE 15TH IS CROSSED OFF. NOTHING AFTER","#cfe0d4"), 1.1);
+  addUse(x0+T2+0.7, HZ-0.8, FF, "LOOK AT THE PICTURE", ()=>toast("A FAMILY ON THIS PORCH, IN THEIR SUNDAY CLOTHES. NOBODY IS SMILING BUT THE DOG","#cfe0d4"), 1.1);
   // the kids have been in: a tag on the wall, cans, a candle stub on the sill
   { const tagTex=signTex(400,160,(c,W,H)=>{ c.clearRect(0,0,W,H); c.strokeStyle="rgba(40,90,200,0.85)"; c.lineWidth=10; c.lineCap="round";
       c.font="bold 84px Arial"; c.fillStyle="rgba(40,90,200,0.85)"; c.textAlign="center"; c.textBaseline="middle"; c.fillText("TY + JESS",W/2,H*0.45);
       c.fillStyle="rgba(200,40,40,0.8)"; c.font="bold 36px Arial"; c.fillText("GET OUT",W*0.7,H*0.85); });
     const m=new T.Mesh(new T.PlaneGeometry(1.4,0.56), new T.MeshStandardMaterial({map:tagTex, transparent:true, roughness:0.8, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
-    m.position.set(PX+0.116, FF+1.45, HZ-1.8); m.rotation.y=Math.PI/2; scene.add(m); HOUSE.tag=m;
-    for(let k=0;k<5;k++){ const x=HX+1.4+r()*1.7, z=z0+0.6+r()*1.5; push("paintm", new T.CylinderGeometry(0.033,0.033,0.04,10), x, FF+0.022, z, r()*3, ["#c8202a","#b8bcc0","#2b5aa8"][k%3], Math.PI/2, 0.4); } }
+    m.position.set(PX+0.116, FF+1.45, HZ-1.4); m.rotation.y=Math.PI/2; scene.add(m); HOUSE.tag=m;
+    for(let k=0;k<5;k++){ const x=HX+1.7+r()*2.6, z=z0+0.6+r()*1.5; push("paintm", new T.CylinderGeometry(0.033,0.033,0.04,10), x, FF+0.022, z, r()*3, ["#c8202a","#b8bcc0","#2b5aa8"][k%3], Math.PI/2, 0.4); } }
   // the kitchen: the table on its side, a chair, the sink, a cabinet door hanging, the old fridge
-  { const tx=HX+2.4, tz=HZ-0.95;
+  { const tx=HX+3.0, tz=HZ-1.4;
     push("beam", boxGeo(1.2, 0.05, 0.85, 0.6), tx, FF+0.43, tz, 0.2, "#8a6a48", 0, Math.PI/2);
     for(const [dx,dz] of [[-0.5,-0.35],[0.5,-0.35],[-0.5,0.35],[0.5,0.35]]){ const p=V3(dx,0,dz).applyAxisAngle(V3(0,1,0),0.2);
       tube("beam", V3(tx-0.02+p.x*0.05, FF+0.43+p.x*0.85, tz+p.z), V3(tx+0.68, FF+0.43+p.x*0.85, tz+p.z), 0.025, 5, "#7a5a3a"); }
     addCol(tx-0.6, tx+0.75, tz-0.55, tz+0.55, FF-0.5, FF+0.9);
-    const cx=HX+3.4, cz=HZ+0.6; bx("paintm", 0.42, 0.04, 0.42, cx, FF+0.45, cz, 0, 0.5, "#8a6a48");
+    const cx=HX+2.2, cz=HZ+1.9; bx("paintm", 0.42, 0.04, 0.42, cx, FF+0.45, cz, 0, 0.5, "#8a6a48");
     for(const [dx,dz] of [[-0.18,-0.18],[0.18,-0.18],[-0.18,0.18],[0.18,0.18]]) bx("paintm", 0.035, 0.45, 0.035, cx+dx, FF+0.225, cz+dz, 0, 0, "#7a5a3a");
     bx("paintm", 0.42, 0.5, 0.035, cx, FF+0.72, cz+0.2, 0, 0.5, "#7a5a3a");
-    // the sink under the back window, and the cabinets
-    bx("paintm", 1.6, 0.86, 0.58, HX-2.3, FF+0.43, z1-T2-0.30, 0, 0, "#8a8270");
-    bx("porcelain", 0.80, 0.08, 0.50, HX-2.3, FF+0.90, z1-T2-0.30, 0, 0, "#d8d0bc");
-    push("paintm", planeGeo(0.62,0.36,0), HX-2.3, FF+0.945, z1-T2-0.30, 0, "#5a5446", -Math.PI/2, 0);
-    tube("chrome", V3(HX-2.3, FF+0.94, z1-T2-0.08), V3(HX-2.3, FF+1.12, z1-T2-0.14), 0.015, 6, "#9a9080");
-    addCol(HX-3.1, HX-1.5, z1-T2-0.6, z1-T2, FF-0.5, FF+0.95);
-    bx("paintm", 1.4, 0.7, 0.32, HX-2.3, FF+1.95, z1-T2-0.17, 0, 0, "#8a8270");
-    push("paintm", boxGeo(0.45, 0.62, 0.02, 0), HX-2.95, FF+1.85, z1-T2-0.55, 0.9, "#8a8270", 0, 0.25);
+    // the sink under the back window, in its run of cabinets; one cabinet door down on the floor
+    const kx=PX+0.10+0.82;
+    bx("paintm", 1.6, 0.86, 0.58, kx, FF+0.43, z1-T2-0.30, 0, 0, "#8a8270");
+    bx("porcelain", 0.80, 0.08, 0.50, kx+0.18, FF+0.90, z1-T2-0.30, 0, 0, "#d8d0bc");
+    push("paintm", planeGeo(0.62,0.36,0), kx+0.18, FF+0.945, z1-T2-0.30, 0, "#5a5446", -Math.PI/2, 0);
+    tube("chrome", V3(kx+0.18, FF+0.94, z1-T2-0.08), V3(kx+0.18, FF+1.12, z1-T2-0.14), 0.015, 6, "#9a9080");
+    addCol(kx-0.8, kx+0.8, z1-T2-0.6, z1-T2, FF-0.5, FF+0.95);
+    push("paintm", boxGeo(0.45, 0.62, 0.02, 0), kx-0.3, FF+0.02, z1-T2-0.95, 0.5, "#8a8270", -Math.PI/2, 0);
     // the fridge: a rounded fifties one against the back wall, the door hanging open
-    const fx=HX+3.95, fz=z1-T2-0.36;
+    const fx=HX+3.6, fz=z1-T2-0.36;
     bx("paintm", 0.70, 1.55, 0.66, fx, FF+0.78, fz, 0, 0, "#d6d0bc");
     push("paintm", domeGeo(0.36, 0.12, 16), fx, FF+1.55, fz, 0, "#d6d0bc");
     push("paintm", boxGeo(0.70, 1.2, 0.06, 0), fx+0.22, FF+0.9, fz-0.69, 1.94, "#d6d0bc");
     push("paintm", planeGeo(0.6,1.1,0), fx, FF+0.85, fz-0.336, Math.PI, "#3a3630");
     addCol(fx-0.36, fx+0.36, fz-0.34, fz+0.34, FF-0.5, FF+1.6);
-    addUse(HX+2.6, HZ+0.9, FF, "OPEN THE DRAWER", ()=>toast("RECEIPTS FROM THE FEED STORE, A ROSARY, SEED PACKETS FOR 1988 THAT NOBODY PLANTED","#cfe0d4"), 1.2); }
+    addUse(kx-0.3, z1-T2-1.0, FF, "OPEN THE DRAWER", ()=>toast("RECEIPTS FROM THE FEED STORE, A ROSARY, SEED PACKETS FOR 1988 THAT NOBODY PLANTED","#cfe0d4"), 1.2); }
   // inside the door, the hall: a coat still on its hook
   bx("paintm", 0.06, 0.06, 0.08, HX-0.9, FF+1.75, z0+T2+0.04, 0, 0, "#3a3028");
   push("paintm", boxGeo(0.44, 0.9, 0.08, 0), HX-0.9, FF+1.30, z0+T2+0.07, 0, "#4a3a2c", 0.04, 0);
@@ -654,7 +683,7 @@ bucketOf("wallpaper", ()=>{
   /* ---- the yard ----------------------------------------------------------- */
   const gy=(x,z)=>Terrain.groundAt(x,z);
   // the well, fieldstone, its wooden cover half rotted away
-  { const wx=HX-7.2, wz=HZ-6.8, y=gy(wx,wz);
+  { const wx=HX-10.5, wz=HZ-8.2, y=gy(wx,wz);
     push("rock", new T.CylinderGeometry(0.72,0.78,0.72,14,1,true), wx, y+0.30, wz, 0, "#8d877b");
     push("rock", new T.CylinderGeometry(0.58,0.58,0.70,14,1,true), wx, y+0.30, wz, 0, "#6d685e");
     push("rock", new T.RingGeometry(0.58,0.74,14), wx, y+0.665, wz, 0, "#9a9488", -Math.PI/2, 0);
@@ -665,7 +694,7 @@ bucketOf("wallpaper", ()=>{
     addCol(wx-0.85, wx+0.85, wz-0.85, wz+0.85, y-0.5, y+0.7);
     addUse(wx, wz-1.2, y, "LOOK DOWN THE WELL", ()=>toast("YOU DROP A PEBBLE. IT TAKES A LONG TIME, AND THEN NOT A SPLASH","#cfe0d4"), 1.3); }
   // the pump by the back step
-  { const px=HX+5.6, pz=HZ+4.6, y=gy(px,pz);
+  { const px=HX+8.3, pz=HZ+6.6, y=gy(px,pz);
     bx("concrete", 0.9, 0.12, 0.9, px, y+0.06, pz, 0.5, 0.2, "#9a968c");
     tube("paintm", V3(px,y+0.1,pz), V3(px,y+1.0,pz), 0.05, 8, "#2c2a28");
     tube("paintm", V3(px,y+0.85,pz), V3(px+0.3,y+0.78,pz), 0.03, 6, "#2c2a28");
@@ -673,21 +702,21 @@ bucketOf("wallpaper", ()=>{
     addCol(px-0.12, px+0.12, pz-0.12, pz+0.12, y-0.5, y+1.1);
     addUse(px-0.6, pz-0.5, y, "WORK THE PUMP", ()=>toast("IT SQUEALS. A COUPLE OF COUGHS OF RUST-COLOURED WATER, THEN NOTHING","#cfe0d4"), 1.2); }
   // the shed, down on its face: two corner posts still up, its tin roof lying across the rest
-  { const sx=HX+9.6, sz=HZ+3.0, y=gy(sx,sz);
+  { const sx=HX+12.6, sz=HZ+3.6, y=gy(sx,sz);
     for(const [dx,dz] of [[-1.4,-1.2],[-1.4,1.2]]){ bx("beam", 0.12, 1.9, 0.12, sx+dx, y+0.95, sz+dz, 0.6, 0, "#5a4a38"); addCol(sx+dx-0.08, sx+dx+0.08, sz+dz-0.08, sz+dz+0.08, y-0.5, y+1.9); }
     const g=new FaceGeo().slab([V3(sx-1.5,y+1.85,sz-1.4), V3(sx-1.5,y+1.85,sz+1.4), V3(sx+1.6,y+0.15,sz+1.6), V3(sx+1.6,y+0.15,sz-1.2)], 0.03, 0.6).geo();
     push("roofmetal", g, 0,0,0, 0, "#7a4a2a");
     for(let k=0;k<6;k++) push("beam", boxGeo(0.14, 0.03, 2.2, 0.6), sx-0.6+k*0.4, y+0.05+r()*0.1, sz+(r()-0.5)*0.8, r()*0.6, "#6a5a44");
     addCol(sx-1.5, sx+1.6, sz-1.4, sz+1.6, y-0.5, y+0.6); }
   // the swing set: rust, one seat on one chain
-  { const sx=HX-8.4, sz=HZ+5.2, y=gy(sx,sz);
+  { const sx=HX-10.8, sz=HZ+6.2, y=gy(sx,sz);
     for(const dx of [-1.3,1.3]) for(const dz of [-0.7,0.7]) tube("metal", V3(sx+dx,y,sz+dz), V3(sx+dx*0.95,y+2.1,sz), 0.035, 6, "#7a4a32");
     tube("metal", V3(sx-1.3,y+2.1,sz), V3(sx+1.3,y+2.1,sz), 0.04, 6, "#7a4a32");
     tube("metal", V3(sx-0.4,y+2.08,sz), V3(sx-0.4,y+0.55,sz), 0.006, 3, "#4a3a2a");
     push("paintm", boxGeo(0.45, 0.03, 0.16, 0), sx-0.42, y+0.48, sz, 0.1, "#2a2a2a", 0, 1.2);
     addCol(sx-1.4, sx+1.4, sz-0.8, sz+0.8, y-0.5, y+0.3); }
   // the mailbox at the end of the drive, its door down, a name still on it
-  { const mx=HX+4.6, mz=HZ+13.2, y=gy(mx,mz);
+  { const mx=HX+4.6, mz=HZ+15.0, y=gy(mx,mz);
     bx("beam", 0.1, 1.05, 0.1, mx, y+0.52, mz, 0.6, 0, "#5a4a38");
     bx("paintm", 0.2, 0.18, 0.46, mx, y+1.13, mz, 0, 0, "#6a6660"); push("paintm", new T.CylinderGeometry(0.1,0.1,0.46,10,1,false,0,Math.PI), mx, y+1.22, mz, 0, "#6a6660", Math.PI/2, Math.PI/2);
     push("paintm", boxGeo(0.2, 0.26, 0.02, 0), mx, y+1.02, mz-0.3, 0, "#6a6660", -1.2, 0);
@@ -696,14 +725,14 @@ bucketOf("wallpaper", ()=>{
     addCol(mx-0.08, mx+0.08, mz-0.08, mz+0.08, y-0.5, y+1.3);
     addUse(mx-0.6, mz, y, "READ THE MAILBOX", ()=>toast("KOVALCHICK. INSIDE, A WASPS' NEST AND A SEED CATALOGUE FROM 1988","#cfe0d4"), 1.1); }
   // the lilacs by the porch corners, the apple tree gone wild, the saplings coming in
-  for(const [dx,dz,s] of [[-6.2,-4.2,1.5],[6.4,-4.6,1.3],[-6.0,2.6,1.2]]) FOREST.plant("shrub", HX+dx, HZ+dz, {scale:s, solid:true, color:"#5a7a3c", autumn:"#8a7a3a"});
-  FOREST.plant("edge", HX-10.5, HZ-1.0, {scale:0.42, color:"#6a8a40", autumn:"#c9a02a"});
+  for(const [dx,dz,s] of [[-8.4,-6.4,1.5],[8.6,-6.8,1.3],[-8.2,3.4,1.2]]) FOREST.plant("shrub", HX+dx, HZ+dz, {scale:s, solid:true, color:"#5a7a3c", autumn:"#8a7a3a"});
+  FOREST.plant("edge", HX-12.8, HZ-1.0, {scale:0.42, color:"#6a8a40", autumn:"#c9a02a"});
   for(let k=0;k<14;k++){
-    const a=r()*Math.PI*2, d=7+r()*8, x=HX+Math.cos(a)*d, z=HZ+Math.sin(a)*d*1.15;
+    const a=r()*Math.PI*2, d=9.5+r()*8, x=HX+Math.cos(a)*d, z=HZ+Math.sin(a)*d*1.15;
     if(Terrain.boxDist(HOMESTEAD.box,x,z)<2.5) continue;
     FOREST.plant(r()<0.65?"sapling":"shrub", x, z, {scale:0.5+r()*0.7, solid:false});
   }
-  for(let k=0;k<26;k++){ const a=r()*Math.PI*2, d=11+r()*6, x=HX+Math.cos(a)*d, z=HZ+Math.sin(a)*d*1.15; FOREST.plant("fern", x, z, {scale:0.8+r()*0.6, solid:false}); }
+  for(let k=0;k<26;k++){ const a=r()*Math.PI*2, d=13+r()*6, x=HX+Math.cos(a)*d, z=HZ+Math.sin(a)*d*1.15; FOREST.plant("fern", x, z, {scale:0.8+r()*0.6, solid:false}); }
   // a creak now and then while you are in it (20-audio)
   HOUSE.zone={x0:x0, x1:x1, z0:z0, z1:z1, y0:FF-0.6, y1:FF+6};
   for(const o of scene.children.slice(n0)) BACKWOODS.deep.push(o);
