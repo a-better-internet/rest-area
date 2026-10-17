@@ -102,6 +102,8 @@ const planBase=(function(){
   R(SITE.island.x0,SITE.island.x1,SITE.island.z1,SITE.truck.z1,"#8a8b8d");
   R(SITE.island.x0,SITE.island.x1,SITE.truck.z0,SITE.island.z0,"#8a8b8d");
   R(SITE.island.x0,SITE.island.x1,SITE.island.z0,SITE.island.z1,"#4f7040");
+  R(SITE.island.x0,SITE.island.x1,VENDHUT.apron.z0,VENDHUT.apron.z1,"#c9c6be");
+  R(VENDHUT.x0,VENDHUT.x1,VENDHUT.z0,VENDHUT.z1,"#a94a34");                    // the vending room
   R(SITE.walk.x0,SITE.walk.x1,SITE.walk.z0,SITE.walk.z1,"#c9c6be");
   R(SITE.plaza.x0,-5,SITE.plaza.z0,SITE.plaza.z1,"#c9c6be");
   R(-6,6,-5.5,5.5,"#a94a34"); R(-5,7,-14.5,14.5,"#8e3c2c");                 // the pavilion

@@ -21,6 +21,14 @@ const VEND_ITEMS={
     ["ROOT BEER",1.75],["ORANGE SODA",1.75],["ICED TEA",2.00],["LEMONADE",2.00],
     ["GINGER ALE",1.75],["BIRCH BEER",1.75],["SPORTS DRINK",2.25],["ENERGY DRINK",2.75],
     ["SELTZER",1.50],["CREAM SODA",1.75],["COLD BREW",2.75],["GRAPE SODA",1.75]]},
+  // the island's (13b): hot drinks, out of cups, and a refrigerated case of sandwiches on coils
+  coffee:{title:"HOT DRINKS", cols:4, stick:0.25, hot:true, items:[
+    ["COFFEE",1.25],["COFFEE · CREAM",1.25],["COFFEE · SUGAR",1.25],["CREAM & SUGAR",1.25],
+    ["DECAF",1.25],["FRENCH VANILLA",1.50],["CAPPUCCINO",1.75],["HOT CHOCOLATE",1.25]]},
+  sandwich:{title:"FRESH FOOD", cols:4, stick:0.18, items:[
+    ["HAM & SWISS",4.25],["TURKEY CLUB",4.75],["EGG SALAD",3.75],["TUNA SALAD",3.75],
+    ["ITALIAN HOAGIE",5.25],["CHICKEN SALAD",4.25],["PB & J",2.75],["CHEF SALAD",5.00],
+    ["YOGURT PARFAIT",3.25],["FRUIT CUP",3.00],["BEAN BURRITO",3.50],["CHEESE DANISH",2.50]]},
   snack:{title:"SNACKS", cols:5, stick:0.32, items:[
     ["PRETZELS",1.50],["POTATO CHIPS",1.50],["BBQ CHIPS",1.50],["CHEESE CURLS",1.50],["CORN CHIPS",1.50],
     ["PB CRACKERS",1.25],["CHEESE CRACKERS",1.25],["TRAIL MIX",2.00],["PEANUTS",1.25],["SUNFLOWER SEEDS",1.50],
@@ -53,7 +61,7 @@ function _vendDraw(){
   el.classList.toggle("dark", dark);
   const it=D.items[M.sel], code=String.fromCharCode(65+Math.floor(M.sel/D.cols))+((M.sel%D.cols)+1);
   el.querySelector(".led").textContent = dark ? "" : (M.state==="vending" ? "VENDING..." :
-      "CREDIT "+_money(M.credit)+"   "+code+" "+(M.out.has(M.sel)?"SOLD OUT":_money(it[1])));
+      "CREDIT "+_money(M.credit)+"   "+code+" "+(M.out.has(M.sel)?"SOLD OUT":_money(it[1]))+(D.hot && M.state==="idle" && (Date.now()/1500|0)%2 ? "   · OUT OF CUPS" : ""));
   let h="";
   D.items.forEach((q,i)=>{
     const c=String.fromCharCode(65+Math.floor(i/D.cols))+((i%D.cols)+1);
@@ -70,7 +78,8 @@ VEND.openAt=function(id, kind){
   _vendEl.classList.add("show");
   _vendDraw();
   _vendSay(GRID.bldg<0.5 ? "THE MACHINE IS DARK. NO POWER." :
-           VEND.m.state==="stuck" ? "YOUR "+VEND.m.item+" IS STILL HANGING THERE. SHAKE IT." :
+           VEND.m.state==="stuck" ? (VEND_ITEMS[kind].hot ? "THE BREWING LAMP IS STILL ON. IT NEEDS A THUMP." : "YOUR "+VEND.m.item+" IS STILL HANGING THERE. SHAKE IT.") :
+           VEND_ITEMS[kind].hot && VEND.m.credit<=0 ? "A RED LAMP UNDER THE BAY: SORRY, OUT OF CUPS. SOMEBODY HAS TAPED A NOTE ON IT TOO." :
            VEND.m.credit>0 ? "SOMEBODY LEFT "+_money(VEND.m.credit)+" IN IT." : "MAKE A SELECTION.");
 };
 VEND.close=function(){ VEND.open=false; _vendEl.classList.remove("show"); };
@@ -82,6 +91,17 @@ function _vendDrop(M){
   toast("CLUNK — "+M.item, "#cfe0d4");
   _vendSay("IT DROPS INTO THE FLAP. YOU REACH IN FOR YOUR "+M.item+".");
   if(M.credit>0.001){ const c=M.credit; M.credit=0; setTimeout(()=>{ _snd("coins"); if(VEND.m===M && VEND.open){ _vendSay("CHANGE: "+_money(c)+" RATTLES INTO THE CUP."); _vendDraw(); } }, 500); }
+  M.item=null;
+}
+/* the hot-drink machine's own way of going wrong: no cup drops, and it
+   brews anyway; or it hangs mid-brew with the lamp on until it is thumped */
+function _vendPour(M){
+  M.state="idle"; M.shakes=0;
+  const H=(typeof VENDHUT_RT!=="undefined") ? VENDHUT_RT : null; if(H){ H.brew=1.8; H.pour=1.8; }
+  _snd("pour");
+  toast("NO CUP — "+M.item+" DOWN THE DRAIN", "#ffb36a");
+  _vendSay("NO CUP DROPS. YOUR "+M.item+" RUNS STRAIGHT THROUGH THE GRATE AND DOWN THE DRAIN.");
+  if(M.credit>0.001){ const c=M.credit; M.credit=0; setTimeout(()=>{ _snd("coins"); if(VEND.m===M && VEND.open){ _vendSay("CHANGE: "+_money(c)+" RATTLES INTO THE CUP. THE COIN CUP, ANYWAY."); _vendDraw(); } }, 900); }
   M.item=null;
 }
 VEND.key=function(e){
@@ -102,17 +122,29 @@ VEND.key=function(e){
   else if(c==="Space"){
     VEND.shake=1; _snd("thump"); M.shakes++;
     if(M.state==="stuck"){
-      if(Math.random()<0.22+0.16*M.shakes || M.shakes>=6){ setTimeout(()=>{ if(M.state==="stuck") { _vendDrop(M); _vendDraw(); } }, 260); _vendSay("ONE MORE SHOVE..."); }
-      else _vendSay(["IT SWINGS. IT HOLDS.","THE WHOLE MACHINE ROCKS. IT'S STILL UP THERE.","A STICKER ON THE SIDE SAYS MACHINE MAY TIP OVER.","HARDER..."][Math.min(3,M.shakes-1)]);
+      const fin=D.hot?_vendPour:_vendDrop;
+      if(Math.random()<0.22+0.16*M.shakes || M.shakes>=6){ setTimeout(()=>{ if(M.state==="stuck") { fin(M); _vendDraw(); } }, 260); _vendSay(D.hot?"SOMETHING INSIDE GURGLES...":"ONE MORE SHOVE..."); }
+      else _vendSay(D.hot ? ["A CLICK. THE LAMP STAYS ON.","IT HUMS AT YOU.","THE NOTE ON THE FRONT FLAPS.","HARDER..."][Math.min(3,M.shakes-1)]
+                          : ["IT SWINGS. IT HOLDS.","THE WHOLE MACHINE ROCKS. IT'S STILL UP THERE.","A STICKER ON THE SIDE SAYS MACHINE MAY TIP OVER.","HARDER..."][Math.min(3,M.shakes-1)]);
     } else _vendSay("YOU ROCK THE MACHINE. NOTHING FALLS. SOMEONE LOOKS OVER.");
   }
   else if(c==="Enter"||c==="KeyE"||c==="NumpadEnter"){
     const it=D.items[M.sel];
-    if(M.state==="stuck"){ _vendSay("THE "+M.item+" IS STILL HANGING. SHAKE THE MACHINE (SPACE)."); }
+    if(M.state==="stuck"){ _vendSay(D.hot ? "IT IS STILL BREWING, OR SAYS IT IS. THUMP IT (SPACE)." : "THE "+M.item+" IS STILL HANGING. SHAKE THE MACHINE (SPACE)."); }
     else if(M.out.has(M.sel)) _vendSay("SOLD OUT. MAKE ANOTHER SELECTION.");
     else if(M.credit+1e-6<it[1]) _vendSay("INSERT "+_money(it[1]-M.credit)+" MORE.");
     else {
       M.credit-=it[1]; M.state="vending"; M.item=it[0]; M.shakes=0; _snd("whirr");
+      if(D.hot){ const H=(typeof VENDHUT_RT!=="undefined") ? VENDHUT_RT : null;
+        if(H) H.brew=4.0; _vendSay("NO CUP DROPS. THE BREWING LAMP COMES ON ANYWAY...");
+        setTimeout(()=>_snd("gurgle"), 500);
+        setTimeout(()=>{
+          if(Math.random()<D.stick){ M.state="stuck"; if(H) H.brew=1e9;
+            if(VEND.m===M && VEND.open) _vendSay("...AND STAYS ON. SOMETHING IN THERE CLICKS, AND STOPS. GIVE IT A THUMP (SPACE).");
+            toast("IT'S HUNG UP", "#ffb36a"); }
+          else _vendPour(M);
+          if(VEND.open) _vendDraw(); }, 3400);
+        _vendDraw(); return; }
       _vendSay("THE COIL TURNS...");
       setTimeout(()=>{
         if(Math.random()<D.stick){ M.state="stuck"; _snd("tick");

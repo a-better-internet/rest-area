@@ -307,6 +307,7 @@ const ADA_SIGNS=[], ADA_TEX={};
   curb(Is.x0, Is.x1, Is.z0, Is.z0+0.18); curb(Is.x0, Is.x1, Is.z1-0.18, Is.z1);
   addZone(Is.x0, Is.x1, Is.z0, Is.z1, -1, 4, "THE ISLAND");
   for(let z=Is.z0+8; z<Is.z1-6; z+=14.5){
+    if(z>VENDHUT.apron.z0-3 && z<VENDHUT.apron.z1+3) continue;      // where the vending room stands (13b)
     FOREST.plant("lawn", -53+(hash2(z,1)-0.5)*3.0, z+(hash2(1,z)-0.5)*3, {scale:0.72+hash2(z,2)*0.25});
   }
   // curbs at the lot edges, broken where traffic goes in and out

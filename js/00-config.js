@@ -69,6 +69,8 @@ const TRUCKLOT = { aisle0:-70, aisle1:-60, stallZ0:-138, stallZ1:94, angle:0.52,
 // and bare (no apron hung round it: that would hang through the room below)
 const GEN_PIT  = { x0:83.0, x1:86.75, z0:-177.35, z1:-176.25 };
 const GEN_HOLE = { x0:82, x1:88, z0:-178, z1:-176, bare:true };
+// the vending room on the island, by the truck lot (13b), and its walk round it
+const VENDHUT  = { x0:-55.4, x1:-50.6, z0:-3.6, z1:4.6, apron:{z0:-6.6, z1:7.6} };
 
 /* ----------------------------------------------------------------------
    0b · IMAGE SLOTS

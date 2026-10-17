@@ -42,6 +42,8 @@ const ROUTES={
   "back down the stairs":  [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.3],[317.45,156.15],[316.0,156.3]],
   // the generator house's basement (12b): in at its door, through the grey door, down the stair, round into the room
   "down to the basement":  [[80,-174.2],[80,-177.4],[81.5,-176.8],[82.6,-176.8],[83.0,-176.8],[85.5,-176.8],[86.2,-176.8],[86.2,-178.5],[83.5,-178.5],[82.2,-178.3],[79.6,-178.3]],
+  // the vending room on the island (13b): across the truck aisle on the stripes, in, round the machines, out the back to the cars
+  "to the vending room":   [[-66,0.5],[-60.5,0.5],[-56.6,0.5],[-55.3,0.5],[-54.2,0.5],[-54.4,-1.9],[-52.0,-1.9],[-52.0,2.8],[-53.6,2.8],[-53.0,0.5],[-50.7,0.5],[-49.0,0.5],[-44.0,0.5]],
   // the walk-in trailer (10b), its doors swung open first: up the step, past the jack, up the aisle to the load bar
   "into the trailer":      {pre:"TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);",
                             pts:[[-69.55,-1.71],[-70.94,-4.14],[-71.59,-5.38],[-72.4,-6.18],[-73.94,-8.87],[-73.88,-9.37],[-76.76,-14.4]]},
