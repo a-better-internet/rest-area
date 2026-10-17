@@ -473,6 +473,13 @@ const AUDIO=(function(){
       const s=ctx.createBufferSource(); s.buffer=noise(0.3,"white"); const f=ctx.createBiquadFilter();
       f.type="lowpass"; f.frequency.value=500; const g=ctx.createGain(); env(g,t,0.004,0.12*vol,0.04,0.2);
       s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="gurgle"||kind==="pour"){     // a coffee maker's gurgle and hiss; coffee running into a cup
+      const long=kind==="gurgle", dur=long?3.2:1.4;
+      const s2=ctx.createBufferSource(); s2.buffer=noise(dur+0.2,"pink"); const f=ctx.createBiquadFilter(); f.type="bandpass";
+      f.frequency.value=long?700:1400; f.Q.value=long?1.4:0.9; const g=ctx.createGain(); env(g,t,0.15,(long?0.10:0.07)*vol,dur*0.7,dur*0.3);
+      const am=ctx.createGain(); am.gain.value=0.5; const lfo=ctx.createOscillator(); lfo.frequency.value=long?7:18; const lg=ctx.createGain(); lg.gain.value=0.5;
+      lfo.connect(lg); lg.connect(am.gain); s2.connect(f); f.connect(am); am.connect(g); g.connect(master); s2.start(t); lfo.start(t); lfo.stop(t+dur+0.3);
+      if(long) for(let k=0;k<6;k++) tone("sine", 260+Math.random()*180, 180, 0.08, 0.025*vol, t+0.4+k*0.42+Math.random()*0.2, 0, master);
     }else if(kind==="tick"){
       tone("square", 900, null, 0.03, 0.02*vol, t, 0, master);
     }else if(kind==="airhorn"){

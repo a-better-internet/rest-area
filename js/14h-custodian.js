@@ -26,7 +26,7 @@
    ---------------------------------------------------------------------- */
 const CUST_ROUNDS=[6, 12, 18];
 const CUST_CHORES=[[9.0, 11.7], [14.6, 17.7]];
-const CUST_WAKE=5.25, CUST_SLEEP=22.6;
+const CUST_WAKE=4.9, CUST_SLEEP=22.6;
 const CUST_LOG={men:[], women:[], tex:{}};
 
 /* ---- outdoors: a grid over the lawns behind the building and the yard -- */
@@ -148,7 +148,9 @@ const CUST=(function(){
     const b=new T.Mesh(new T.SphereGeometry(0.05,8,6), new T.MeshStandardMaterial({color:0xe9e6dc, roughness:0.9})); b.position.y=-0.60; brush.add(b); }
   brush.visible=false; P.B[P.j.elR].add(brush);
   const home=GARAGE_RT.cart.home;
-  const p={kind:"custom", cust:true, P:P, x:37.0, z:34.6, y:FL, yaw:Math.PI/2, ph:0, seed:4.2, v:{col:null},
+  const mug=new T.Mesh(new T.CylinderGeometry(0.042,0.038,0.10,12), new T.MeshStandardMaterial({color:0x2a5d9a, roughness:0.4}));
+  mug.position.set(0, -0.30, 0.05); mug.rotation.x=-1.2; mug.visible=false; P.B[P.j.elL].add(mug);
+  const p={kind:"custom", cust:true, mug:mug, lit:true, doorsUp:true, radioLow:false, P:P, x:37.0, z:34.6, y:FL, yaw:Math.PI/2, ph:0, seed:4.2, v:{col:null},
            q:[], step:null, mode:"idle", act:null, t:0, pushing:false, riding:false, holdDoor:null, walking:false,
            ears:ears, bag:bag, brush:brush, day:0, lastH:-1, done:{}, lastRoundH:-99, talkN:0, msg:0};
   p.upd=_custUpdate;
@@ -230,8 +232,7 @@ function _planRoom(p, room){
   steps.push({k:"call", fn:()=>{ CUST_LOG[room].push(_clock(DayNight.state.hour)+"   T.K."); _logDraw(room); }});
   // the cans one after another, the bags carried, and all of them into the cart at the end
   const out=[], C=_G().cart;
-  let a=C.yaw+Math.PI/2; const q=(A)=>Math.abs(C.z+Math.cos(A)*0.75);
-  if(q(a)>q(a+Math.PI)) a+=Math.PI;                              // the side toward the middle of the lobby
+  const a=0;                       // the cart's south side: in the men's lobby the open side, in the women's the side the cans are on
   for(const s of steps){
     if(s.k==="can") out.push({k:"go", to:s.at}, {k:"face", yaw:s.yaw}, {k:"do", act:"can", dur:4.0});
     else if(s.k==="call") out.push({k:"go", to:{x:C.x+Math.sin(a)*0.75, z:C.z+Math.cos(a)*0.75}}, {k:"face", yaw:a+Math.PI}, {k:"do", act:"drop", dur:1.4}, s);
@@ -261,11 +262,37 @@ function _planBlow(p){
   _push(p, {k:"hangBlower"});
   _push(p, {k:"call", fn:()=>{ p.mode="idle"; }});
 }
+// the bay doors' switch, inside by the second bay
+const _DOOR_SW={x:33.25, z:32.45, yaw:-Math.PI/2};
 function _planSleep(p){
   const c=_G().cot, onCot=typeof seated!=="undefined" && seated && Math.hypot(seated.x-c.x, seated.z-c.z)<1.2;
   p.mode="sleep";
+  // the doors down first, then the lights, then the cot
+  if(p.doorsUp){ _push(p, {k:"go", to:_DOOR_SW}); _push(p, {k:"face", yaw:_DOOR_SW.yaw}); _push(p, {k:"do", act:"switch", dur:1.6, doors:false}); }
+  _push(p, {k:"call", fn:()=>{ p.lit=false; p.radioLow=true; }});
   if(onCot){ const ch=_G().chair; _push(p, {k:"go", to:{x:ch.x, z:ch.z-0.55}}); _push(p, {k:"face", yaw:Math.PI}); _push(p, {k:"do", act:"doze", dur:1e9, x:ch.x, z:ch.z}); }
   else { _push(p, {k:"go", to:c.stand}); _push(p, {k:"face", yaw:0}); _push(p, {k:"do", act:"sleep", dur:1e9}); }
+}
+/* the morning: up off the cot in the dark, face in the hands, the boots;
+   up, the lights, a stretch; the coffee maker, and a wait for it, and a
+   mug poured; the radio up, the doors up; and a while in the chair with
+   the mug before the round */
+function _planMorning(p, fromChair){
+  const G=_G(), c=G.cot, ch=G.chair, R=G.radio;
+  p.mode="morning";
+  if(!fromChair){ _push(p, {k:"do", act:"situp", dur:5.5}); _push(p, {k:"do", act:"boots", dur:7}); }
+  _push(p, {k:"call", fn:()=>{ p.x=c.stand.x; p.z=c.stand.z; p.yaw=0; p.lit=true; }});
+  _push(p, {k:"do", act:"stretch", dur:3.4});
+  _push(p, {k:"go", to:G.coffee}); _push(p, {k:"face", yaw:0});
+  _push(p, {k:"do", act:"brew", dur:9, sound:true});
+  _push(p, {k:"do", act:"pour", dur:3.2});
+  _push(p, {k:"go", to:{x:R.x-0.85, z:R.z}}); _push(p, {k:"face", yaw:Math.PI/2});
+  _push(p, {k:"do", act:"radio", dur:1.8});
+  _push(p, {k:"go", to:_DOOR_SW}); _push(p, {k:"face", yaw:_DOOR_SW.yaw});
+  _push(p, {k:"do", act:"switch", dur:1.6, doors:true});
+  _push(p, {k:"go", to:{x:ch.x, z:ch.z-0.55}}); _push(p, {k:"face", yaw:Math.PI});
+  _push(p, {k:"do", act:"chair", dur:26+Math.random()*10, x:ch.x, z:ch.z});
+  _push(p, {k:"call", fn:()=>{ p.mode="idle"; }});
 }
 // awake, at the garage, nothing due: one of the small things
 function _planIdle(p){
@@ -291,6 +318,40 @@ function _custDecide(p, dark){
     return; }
   _planIdle(p);
 }
+
+/* ---- never stuck, never round in circles ----------------------------------
+   Every walk Terry takes goes through _walk, which watches the distance
+   still to go. Held up by you is not stuck. Six seconds with no headway and
+   the way is found again from where Terry is; twice more and the point in
+   the way is given up for the next; and if a walk has taken far longer than
+   it should, and nobody is near enough to see, Terry is simply there. */
+function _pathLeft(p){
+  let d=0, x=p.x, z=p.z;
+  for(let i=p.pi;i<p.path.length;i++){ const q=p.path[i]; d+=Math.hypot(q.x-x, q.z-z); x=q.x; z=q.z; }
+  return d;
+}
+function _walk(p, dt, speed){
+  let W=p.guard;
+  if(!W || W.path!==p.path){ W=p.guard={path:p.path, best:1e9, t:0, tries:0, total:0, budget:14+_pathLeft(p)/speed*2.5}; }
+  if(_stepWalker(p, dt, speed)){ p.guard=null; return true; }
+  const left=_pathLeft(p), you=!driving && !droneMode && Math.hypot(player.pos.x-p.x, player.pos.z-p.z)<2.0;
+  W.total+=dt;
+  if(left<W.best-0.35){ W.best=left; W.t=0; } else if(!you) W.t+=dt;
+  const end=p.path[p.path.length-1];
+  if(W.t>6){
+    W.t=0; W.tries++; W.best=1e9;
+    CUST_STATS.log.push((W.tries<2?"replan":"skip")+" @"+p.x.toFixed(1)+","+p.z.toFixed(1)+" to "+end.x.toFixed(1)+","+end.z.toFixed(1)+" pi"+p.pi+"/"+p.path.length+" "+(p.step?p.step.k:"")+(p.pushing?" PUSH":""));
+    if(CUST_STATS.log.length>40) CUST_STATS.log.shift();
+    if(W.tries<=2){ const P=_custPath(p, end); CUST_STATS.replans++; if(P.length){ p.path=P; p.pi=0; p.wpT=0; p.stuck=0; W.path=p.path; } }
+    else if(p.pi<p.path.length-1){ p.pi++; p.wpT=0; p.stuck=0; }
+    else W.total=W.budget+1;
+  }
+  if(W.total>W.budget && (p.cd>16 || W.total>W.budget*2)){
+    p.x=end.x; p.z=end.z; p.y=surfaceY(p.x, p.z, p.y+0.4); p.pi=p.path.length; p.guard=null;
+    CUST_STATS.snaps++; CUST_STATS.log.push("SNAP to "+end.x.toFixed(1)+","+end.z.toFixed(1)); return true; }
+  return false;
+}
+const CUST_STATS={snaps:0, replans:0, log:[]};
 
 /* ---- the steps ------------------------------------------------------------ */
 function _custStart(p, s){
@@ -321,7 +382,7 @@ function _custStep(p, s, dt, now){
     if(!p.path.length) return true;
     if(p.pushing && !driving && !droneMode){ const C=_G().cart, f=_fwd(p.yaw, 0.9);
       if(Math.hypot(player.pos.x-(C.x+f.x), player.pos.z-(C.z+f.z))<1.0 && Math.abs(player.feetY-p.y)<1.2){ p.moving=false; return false; } }
-    return _stepWalker(p, dt, p.pushing?1.15:1.4);
+    return _walk(p, dt, p.pushing?1.15:1.4);
   }
   if(s.k==="face"){ let d=s.yaw-p.yaw; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2;
     p.yaw+=d*Math.min(1, dt*5); return Math.abs(d)<0.05 || p.t>1.5; }
@@ -338,8 +399,13 @@ function _custStep(p, s, dt, now){
       if(typeof AUDIO!=="undefined") AUDIO.blip("thump", _G().dumpster.x, _G().dumpster.z); } }
     if(a==="sleep"||a==="doze"){
       const H=DayNight.state.hour;
-      if(H>=CUST_WAKE && H<CUST_SLEEP){ p.mode="idle"; p.done={}; return true; }   // morning: a new day's list
+      if(H>=CUST_WAKE && H<CUST_SLEEP){ p.done={}; p.q.length=0; _planMorning(p, a==="doze"); return true; }   // morning: a new day's list
       return false; }
+    if(a==="brew" && !s.gurgle && p.t>2.2){ s.gurgle=1; if(typeof AUDIO!=="undefined") AUDIO.blip("gurgle", p.x, p.z); }
+    if(a==="pour" && !s.poured && p.t>0.6){ s.poured=1; p.poured=true; p.mug.visible=true; if(typeof AUDIO!=="undefined") AUDIO.blip("pour", p.x, p.z); }
+    if(a==="radio" && p.t>0.9) p.radioLow=false;
+    if(a==="switch" && p.t>0.8 && p.doorsUp!==s.doors){ p.doorsUp=s.doors; if(typeof AUDIO!=="undefined") AUDIO.blip("tick", p.x, p.z); }
+    if(a==="chair" && p.t>s.dur-0.5){ p.mug.visible=false; p.poured=false; }
     return p.t>s.dur;
   }
   return true;
@@ -348,7 +414,7 @@ function _custStep(p, s, dt, now){
 function _stallStep(p, s, dt){
   const st=s.st;
   if(s.skip) return true;
-  if(s.ph===0){ if(_stepWalker(p, dt, 1.15)){ s.ph=1; p.t=0; p.act="scrub"; p.brush.visible=true; p.walking=false; } return false; }
+  if(s.ph===0){ if(_walk(p, dt, 1.15)){ s.ph=1; p.t=0; p.act="scrub"; p.brush.visible=true; p.walking=false; } return false; }
   if(s.ph===1){
     let d=(st.yaw+Math.PI)-p.yaw; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; p.yaw+=d*Math.min(1,dt*5);
     p.x+=(st.inside.x-p.x)*Math.min(1,dt*3); p.z+=(st.inside.z-p.z)*Math.min(1,dt*3);
@@ -356,7 +422,7 @@ function _stallStep(p, s, dt){
     if(p.t>9.0 && !s.f2){ s.f2=1; st.mess=false; st.messMesh.visible=false; if(typeof AUDIO!=="undefined" && AUDIO.flush) AUDIO.flush(st.tx, st.dz); }
     if(p.t>11.0){ s.ph=2; p.act=null; p.brush.visible=false; p.path=[st.mouth, st.front]; p.pi=0; p.wpT=0; p.walking=true; }
     return false; }
-  if(_stepWalker(p, dt, 1.0)){ st.busy=null; st.door.occ=false; st.door.occBy=null; p.holdDoor=null; return true; }
+  if(_walk(p, dt, 1.0)){ st.busy=null; st.door.occ=false; st.door.occBy=null; p.holdDoor=null; return true; }
   return false;
 }
 // when a step is dropped (a new plan) whatever it held is let go
@@ -423,7 +489,9 @@ function _mowStep(p, s, dt, now){
     return false; }
   if(!tgt) return true;
   const dx=tgt.x-M.x, dz=tgt.z-M.z, d=Math.hypot(dx,dz);
-  if(d<0.35){ if(s.ph==="out") s.ri++; else if(s.ph==="go"||s.ph==="home") s.gi++; else s.li++; return false; }
+  const key=tgt.x.toFixed(1)+","+tgt.z.toFixed(1);
+  if(s.tg!==key){ s.tg=key; s.tgT=0; } else s.tgT+=dt;
+  if(d<0.35 || s.tgT>Math.max(20, d/1.2+12)){ if(s.ph==="out") s.ri++; else if(s.ph==="go"||s.ph==="home") s.gi++; else s.li++; return false; }
   // stop for anybody in front of it
   const ahead=(q)=>{ const ax=q.x-M.x, az=q.z-M.z, ad=Math.hypot(ax,az); return ad<3.2 && (ax*Math.sin(M.yaw)+az*Math.cos(M.yaw))>-0.3; };
   let hold=!driving && !droneMode && ahead(player.pos);
@@ -491,12 +559,12 @@ function _blowStep(p, s, dt, now){
   const due=CUST_ROUNDS.some(R=>H>=R && H<R+1.5 && !p.done[R]);
   if(s.ph==="to"){
     if(!s.path){ p.path=_custPath(p, s.pts[0]); p.pi=0; p.wpT=0; s.path=true; p.walking=true; }
-    if(_stepWalker(p, dt, 1.4)){ s.ph="blow"; s.i=1; p.path=[s.pts[1]]; p.pi=0; }
+    if(_walk(p, dt, 1.4)){ s.ph="blow"; s.i=1; p.path=[s.pts[1]]; p.pi=0; }
     return false; }
   if(s.ph==="blow"){
     if(!CUST_CHORES.some(([a,b])=>H>=a && H<b) || due || s.i>=s.pts.length){ if(E) E.on=false; return true; }
     if(E){ E.on=true; E.x=p.x; E.z=p.z; }
-    if(_stepWalker(p, dt, 0.55)){ s.i++; if(s.i<s.pts.length){ p.path=[s.pts[s.i]]; p.pi=0; } }
+    if(_walk(p, dt, 0.55)){ s.i++; if(s.i<s.pts.length){ p.path=[s.pts[s.i]]; p.pi=0; } }
     // the nozzle sweeps; the leaves and the dust go up ahead of it
     const sw=Math.sin(now*1.3+p.seed)*0.6, a=p.yaw+sw, nx=p.x+Math.sin(a)*1.0, nz=p.z+Math.cos(a)*1.0;
     p.sweep=sw;
@@ -511,6 +579,7 @@ function _blowStep(p, s, dt, now){
 /* ---- each frame ----------------------------------------------------------- */
 function _custUpdate(p, dt0, now, dark, cd){
   const P=p.P, G=_G(), H=DayNight.state.hour;
+  p.cd=cd;
   const dt=dt0*(cd>75 && !(p.step && p.step.k==="stall") ? 3 : 1);
   if(p.lastH>=0 && H<p.lastH-12){ p.day++; p.done={}; }                       // past midnight: today's list is new
   p.lastH=H;
@@ -530,11 +599,10 @@ function _custUpdate(p, dt0, now, dark, cd){
   const C=G.cart;
   if(p.pushing){ C.yaw=p.yaw; const f=_fwd(p.yaw, 1.0); C.x=p.x+f.x; C.z=p.z+f.z; C.y=surfaceY(C.x, C.z, p.y+0.3); _cartPlace(C); }
   // the garage: doors up while Terry is up, lights on while there or dark out
-  const awake=p.mode!=="sleep";
   const inG=p.x>GARAGE.x0 && p.x<GARAGE.x1 && p.z>GARAGE.z0 && p.z<GARAGE.z1;
-  for(const D of G.doors) D.want = awake ? 0.14 : D.top-FL;
-  G.lightsWant = awake && (inG || dark>0.4);
-  if(G.radio) G.radio.low = !awake;
+  for(const D of G.doors) D.want = p.doorsUp ? 0.14 : D.top-FL;
+  G.lightsWant = p.lit && (inG || dark>0.4);
+  if(G.radio) G.radio.low = !!p.radioLow;
   _leavesUpdate(dt);
   // the talk prompt follows
   p.use.x=p.x; p.use.z=p.z; p.use.y=p.y-(p.riding?0.24:0);
@@ -543,7 +611,9 @@ function _custUpdate(p, dt0, now, dark, cd){
   if(cd<70) _custPose(p, now);
   P.g.position.set(p.x, p.y, p.z); P.g.rotation.order="YXZ"; P.g.rotation.y=p.yaw;
   if(p.act==="sleep"){ const c=G.cot; P.g.position.set(c.x0+1.86, c.y+0.10, c.z); P.g.rotation.y=Math.PI/2; P.g.rotation.x=-Math.PI/2; }
+  else if(p.act==="situp"||p.act==="boots"){ const c=G.cot; P.g.position.set(c.x-0.25, FL, c.z-0.16); P.g.rotation.y=Math.PI; P.g.rotation.x=0; }
   else P.g.rotation.x=0;
+  if(p.act!=="chair" && p.act!=="coffee" && p.act!=="pour" && !(p.mode==="morning" && p.poured)) p.mug.visible=false;
 }
 function _custPose(p, now){
   const P=p.P, B=P.B, J=P.j, a=p.act, t=p.t;
@@ -567,7 +637,19 @@ function _custPose(p, now){
   if(a==="doze"||a==="chair"){ const st=p.step; p.x+=(st.x-p.x)*0.2; p.z+=(st.z-p.z)*0.2; p.y=FL;
     poseP(P, "sit", 0, now); B[J.root].position.y=0.47;
     if(a==="doze"){ B[J.head].rotation.set(0.55, 0.2, 0); B[J.shL].rotation.x=B[J.shR].rotation.x=-0.3; B[J.elL].rotation.x=B[J.elR].rotation.x=-1.2; }
-    else { B[J.shR].rotation.set(-0.5, 0, 0); B[J.elR].rotation.x=-1.9+Math.max(0, Math.sin(now*0.35+p.seed))*0.6; }   // the mug
+    else { p.mug.visible=true; const sip=smoothstep(0.75,0.95,Math.sin(now*0.35+p.seed));    // the mug: a sip now and then
+      B[J.shL].rotation.set(-0.55-sip*0.35, 0, 0.12); B[J.elL].rotation.x=-1.25-sip*0.75; B[J.head].rotation.x=0.08-sip*0.25; }
+    return; }
+  // the morning, on the edge of the cot: face in the hands, then the boots
+  if(a==="situp"||a==="boots"){ poseP(P, "sit", 0, now); B[J.root].position.y=0.47; B[J.head].rotation.y=0;
+    if(a==="situp"){ const k=1-smoothstep(2.4,3.4,t);
+      B[J.shL].rotation.set(-0.45-k*1.05, 0, 0.12+k*0.18); B[J.shR].rotation.set(-0.45-k*1.05, 0, -0.12-k*0.18);
+      B[J.elL].rotation.x=B[J.elR].rotation.x=-0.6-k*1.5; B[J.head].rotation.x=0.15+k*0.3+Math.sin(now*1.7)*0.04*k; B[J.spine].rotation.x=0.18+k*0.12; }
+    else { const w=Math.sin(t*5.5), side=Math.floor(t/3.5)%2;
+      B[J.spine].rotation.x=0.78; B[J.head].rotation.x=0.35;
+      B[J.shL].rotation.set(-0.95+(side?0:w*0.18), 0, 0.10); B[J.shR].rotation.set(-0.95+(side?w*0.18:0), 0, -0.10);
+      B[J.elL].rotation.x=B[J.elR].rotation.x=-0.25;
+      (side?B[J.knR]:B[J.knL]).rotation.x=1.15; }
     return; }
   poseP(P, "stand", 0, now);
   if(a==="scrub"){ const s=Math.sin(now*7)*0.22;
@@ -582,7 +664,20 @@ function _custPose(p, now){
     return; }
   if(a==="bench"){ B[J.spine].rotation.x=0.22; B[J.head].rotation.x=0.40; const s=Math.sin(now*2.2)*0.12;
     B[J.shR].rotation.set(-0.7+s, 0, -0.1); B[J.elR].rotation.x=-0.9; B[J.shL].rotation.set(-0.6, 0, 0.1); B[J.elL].rotation.x=-0.8; return; }
-  if(a==="coffee"){ B[J.shR].rotation.set(-0.5, 0, 0); B[J.elR].rotation.x=-1.9+Math.max(0, Math.sin(now*0.5+p.seed))*0.7; B[J.head].rotation.y*=0.4; return; }
+  if(a==="coffee"){ p.mug.visible=true; const sip=smoothstep(0.7,0.95,Math.sin(now*0.5+p.seed));
+    B[J.shL].rotation.set(-0.55-sip*0.35, 0, 0.12); B[J.elL].rotation.x=-1.25-sip*0.75; B[J.head].rotation.y*=0.4; B[J.head].rotation.x=-sip*0.25; return; }
+  if(a==="stretch"){ const k=Math.sin(Math.min(1,t/3.2)*Math.PI);
+    B[J.shL].rotation.set(-2.85*k, 0, 0.35*k); B[J.shR].rotation.set(-2.85*k, 0, -0.35*k); B[J.elL].rotation.x=B[J.elR].rotation.x=-0.2*k;
+    B[J.spine].rotation.x=-0.14*k; B[J.head].rotation.set(-0.32*k, 0, 0); return; }
+  if(a==="brew"){ const reach=1-smoothstep(1.2,1.9,t);      // the switch on, then arms folded, watching it drip
+    B[J.shR].rotation.set(-1.15*reach-0.45*(1-reach), 0, -0.4*(1-reach)); B[J.elR].rotation.x=-0.3*reach-1.65*(1-reach);
+    B[J.shL].rotation.set(-0.45*(1-reach), 0, 0.4*(1-reach)); B[J.elL].rotation.x=-1.65*(1-reach);
+    B[J.head].rotation.set(0.22, Math.sin(now*0.3)*0.15*(1-reach), 0); return; }
+  if(a==="pour"){ const tip=smoothstep(0.6,1.2,t)*(1-smoothstep(2.4,2.9,t));
+    B[J.shR].rotation.set(-1.05, 0, -0.15); B[J.elR].rotation.set(-0.55, 0, 0); B[J.shR].rotation.z=-0.15-tip*0.5;
+    B[J.shL].rotation.set(-0.95, 0, 0.25); B[J.elL].rotation.x=-0.75; B[J.head].rotation.x=0.3; B[J.spine].rotation.x=0.06; return; }
+  if(a==="radio"||a==="switch"){ const k=Math.sin(Math.min(1,t/(p.step?p.step.dur:1.5))*Math.PI);
+    B[J.shR].rotation.set(-1.25*k, 0, -0.05); B[J.elR].rotation.x=-0.25*k; B[J.spine].rotation.x=0.10*k; B[J.head].rotation.x=0.1*k; return; }
   if(a==="look"){ B[J.shL].rotation.z=-0.25; B[J.shR].rotation.z=0.25; B[J.elL].rotation.x=B[J.elR].rotation.x=-1.6; B[J.shL].rotation.x=B[J.shR].rotation.x=-0.25; return; }
 }
 

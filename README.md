@@ -251,9 +251,10 @@ If the scene runs hot on your machine, start there (see below).
 - **Life.**
   - Three whitetail deer graze at the edge of the woods. They walk with a
     four-beat gait and bound away with their tails up when you get close.
-  - Someone reads the map in the lobby, two people share a picnic table, a
-    trucker talks on the phone by his rig, and a dog is walked round the pet
-    area.
+  - Two people share a picnic table, a trucker talks on the phone by his
+    rig, and a dog is walked round the pet area. Visitors stop at the state
+    map in the lobby on their way through, tracing the interstates and now
+    and then putting a finger on YOU ARE HERE.
   - A smoker stands by the post outside the doors, clear of the planter and
     the doors' swing. The cigarette is lit: the coal brightens on each drag,
     a thread of smoke comes off the end, and they breathe it out after.

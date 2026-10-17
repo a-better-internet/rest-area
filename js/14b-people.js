@@ -458,6 +458,7 @@ function _igPath(ax, az, bx, bz){
 }
 const _VEND_SPOTS=[-3.35,-2.25,-1.15].map(z=>({x:LOBBY.x1-1.36, z:z, yaw:Math.PI/2, busy:null}));
 const _RACK_SPOT={x:-3.92, z:-3.6, yaw:-Math.PI/2, busy:null};
+const _MAP_SPOT={x:-3.2, z:-4.55, yaw:Math.PI, busy:null};          // in front of the state map on the north wall
 // is the player standing on it (or about to)? then it is not free
 const _youAt=(x,z,r)=>!driving && !droneMode && Math.abs(player.feetY-FL)<1 && Math.hypot(player.pos.x-x, player.pos.z-z)<r;
 function _planInside(p){
@@ -468,10 +469,12 @@ function _planInside(p){
     if(Math.random()<0.45) plan.push({kind:"dryer", room:room});
     if(Math.random()<0.22) plan.push({kind:"vend"});
     else if(Math.random()<0.12) plan.push({kind:"rack"});
+    else if(Math.random()<0.16) plan.push({kind:"map"});
   }else if(r<0.86){
     if(Math.random()<0.3) plan.push({kind:"rack"});
+    if(Math.random()<0.25) plan.push({kind:"map"});
     plan.push({kind:"vend"});
-  }else plan.push({kind:"rack"});
+  }else plan.push({kind:Math.random()<0.5?"rack":"map"});
   return plan;
 }
 // a free one of the kind wanted (a clean stall over a dirty one)
@@ -482,11 +485,12 @@ function _pickSpot(step){
   else if(step.kind==="sink") list=step.room.sinks;
   else if(step.kind==="dryer") list=step.room.dryers;
   else if(step.kind==="vend") list=_VEND_SPOTS;
+  else if(step.kind==="map") list=[_MAP_SPOT];
   else list=[_RACK_SPOT];
   const free=list.filter(o=>!o.busy && !_youAt(o.sit?o.sit.x:o.x, o.sit?o.sit.z:o.z, 0.8));
   return free.length ? free[(Math.random()*free.length)|0] : null;
 }
-const _DUR={urinal:[16,32], stall:[40,110], sink:[5,9], dryer:[7,11], vend:[9,13], rack:[9,24]};
+const _DUR={urinal:[16,32], stall:[40,110], sink:[5,9], dryer:[7,11], vend:[9,13], rack:[9,24], map:[10,26]};
 // begin the next thing on the list: find a free one, and the way to it
 function _nextStep(p){
   const step=p.plan[p.si];
@@ -562,6 +566,12 @@ function _poseInside(p, now){
     return;
   }
   if(a==="rack"){ poseP(P, "read", 0, now); B[J.head].rotation.y=Math.sin(now*0.4+p.seed)*0.25; return; }
+  if(a==="map"){ poseP(P, "stand", 0, now);
+    // looking it over, the head going along the interstates; now and then a finger on where we are
+    B[J.head].rotation.set(-0.06+Math.sin(now*0.23+p.seed)*0.05, Math.sin(now*0.31+p.seed)*0.3, 0);
+    const pt=Math.max(0, Math.sin(u*0.35+p.seed)), up=smoothstep(0.55,0.8,pt);
+    B[J.shR].rotation.set(-0.12-up*1.25, 0, -0.06+up*0.2); B[J.elR].rotation.x=-0.12-up*0.35;
+    B[J.shL].rotation.set(0.05, 0, 0.12); B[J.elL].rotation.x=-0.6; return; }
   poseP(P, "stand", 0, now);
   B[J.head].rotation.y*=0.2;
   if(a==="urinal"){
@@ -616,8 +626,7 @@ const PEOPLE_API=(function(){
   if(ts){ const x=ts.x0+ts.dx*9.0+ts.dz*1.9, z=ts.z0+ts.dz*9.0-ts.dx*1.9;
     PEOPLE.push({kind:"stand", mode:"phone", P:buildPerson({h:1.04, skin:SKINS[2], hair:HAIRS[0], shirt:"#5d6a73", pants:"#3b4a66", shoes:"#3a2a1a", long:true, cap:"#1d1d1f"}),
                  x:x, z:z, y:PAVE_T, yaw:Math.atan2(ts.dx,ts.dz)+1.8, seed:r()*10}); }
-  // somebody in the lobby reading the state map
-  PEOPLE.push({kind:"stand", mode:"read", P:randomPerson(r), x:-3.2, z:-4.55, y:FL, yaw:Math.PI, seed:r()*10, dayOnly:false});
+  // (the state map in the lobby is one of the things visitors stop at: _MAP_SPOT)
   // and a dog being walked round the pet area
   // (south of the bag dispenser at 15.4, 67.2, not through it)
   const loopPts=[{x:12,z:65.4},{x:19,z:65.8},{x:25,z:73},{x:26,z:86},{x:20,z:93},{x:13,z:88},{x:10,z:77}];
