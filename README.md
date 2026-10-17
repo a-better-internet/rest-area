@@ -118,9 +118,16 @@ If the scene runs hot on your machine, start there (see below).
     building, and the leaves go up in front of it. Both are loud, and Terry
     wears ear defenders for them.
   - In between are the bench, the coffee, the folding chair and the radio.
-  - At night Terry sleeps on the cot with the radio turned low. The roll-up
-    doors come down and the lights go off, and both come back at a quarter
-    past five.
+  - At night Terry brings the roll-up doors down, puts the lights out,
+    turns the radio low and sleeps on the cot. At ten to five Terry sits up
+    on the edge of it a while, pulls the boots on, stands and stretches, gets
+    the coffee maker going (it gurgles), pours a mug, turns the radio back
+    up, raises the doors, and sits in the folding chair with the coffee
+    before the day starts.
+  - Terry never gets stuck or walks in circles. Every walk is watched: with
+    no headway for a few seconds the way is found again round whatever is
+    in it, then a point is skipped, and as a last resort Terry is set down
+    at the end of it.
   - Out of sight (more than 75 m away) Terry works three times as fast, so
     the day's list gets done.
 - **The lots.**
@@ -131,6 +138,44 @@ If the scene runs hot on your machine, start there (see below).
     hatched access aisles between them, signs and blue curb.
   - Tractor-trailers park on the angled truck lot past the island. At night
     their marker lamps stay on, and the reefer units can be heard running.
+  - One Northern Tier dry van near the middle of the lot has had its seal
+    cut. `E` at the back swings its doors round flat against the sides, one
+    leaf then the other, and folds a step down off the sill. Inside is a
+    53-foot van:
+    - an oak plank floor scuffed by pallet jacks, white composite walls with
+      two rows of E-track and a galvanized scuff band, and a translucent roof
+      that lets the day through between the bows (two LED domes come on with
+      the doors at night);
+    - at the back, emptied at the last stop: the pallet jack, a pallet
+      leaning on the wall, a couple of cartons, the bill of lading, the cut
+      seal on the floor, straps hung off the track;
+    - two stretch-wrapped pallets, then cartons floor-loaded along both walls
+      (paper towels, canned beans, FRAGILE, KEEP DRY, freight labels) with an
+      aisle up the middle, and behind the load bar cartons wall to wall and
+      nearly to the roof.
+- **The vending room.** On the island, across a painted crosswalk from the
+  truck aisle, is a small brick room with a glass front under a canopy and a
+  light that never goes off, for drivers who want coffee at three in the
+  morning without walking the length of the car lot. A brown VENDING sign
+  hangs on the front and the back. Inside:
+  - a hot-drink machine with a lit picture of a steaming cup, eight buttons,
+    a cup bay with its drip grate, a BREWING lamp and a red OUT OF CUPS lamp,
+    and a note taped on it ("bring ur own"). It still takes your money: no
+    cup drops, the BREWING lamp comes on, and your coffee runs down the
+    drain. Or it hangs mid-brew with the lamp on until you thump it;
+  - a refrigerated sandwich case: lit shelves of wedges on wire coils behind
+    glass (they can hang on the coil too);
+  - the cold drinks and the snacks, a change machine that breaks a five or
+    pushes it back out, a pay phone with the book on its chain, the 511
+    board (I-79 traffic and the weather, a crawl) over a bench, a can and a
+    recycling bin, and two flat fluorescent fixtures, one with a bad tube;
+  - the Business Enterprise Program sticker on every machine, and its notice
+    on the wall: the machines are run by a licensed vendor who is blind.
+  - At night a trucker in slippers climbs down from his cab a few stalls
+    south, shuffles down the side of his rig and across the stripes with his
+    own steel mug, sets it in the bay and waits out the brew, looks at the
+    board, sometimes stands at the sandwiches, and goes back up into his cab.
+    If you are in the room he tells you about the cups.
   - A state trooper's cruiser parks in a stall by the walk: fleet grey, a
     light bar, a push bumper and a laptop on its mount. The trooper sits
     behind the wheel the way a driver sits, with a clipboard, writing, and
@@ -140,7 +185,10 @@ If the scene runs hot on your machine, start there (see below).
     visitors in the aisle as they give way to it.
 - **The vehicles** are lofted, not boxed.
   - Sedans, SUVs, pickups and minivans have rounded bodies with real wheel
-    arches. Each has a greenhouse, door seams, mirrors and lamps.
+    arches. Each has a greenhouse, door seams and mirrors. The head and tail
+    lamps are patches of the body's own corners, so they follow its curve:
+    a bezel, the lens and a chrome strip in front, the lens and a reversing
+    lamp behind.
   - Tyres have sidewalls and tread, mounted on spoked alloy rims.
   - Rigs run duals on painted steel wheels.
   - Trailers carry painted sides: posts and rivets, DOT tape, road grime,
@@ -178,19 +226,37 @@ If the scene runs hot on your machine, start there (see below).
     the verge from the truck lot: one car spun round in the grass, another
     pulled over with its hazards going, and a cruiser behind them with its
     bar flashing red and blue. Flares and cones close the right lane, and
-    traffic slows to look and squeezes by on the left. It is cleared after a
-    few minutes. `X` calls one up (or clears it).
-- **The picnic grove** spreads across the lawn south of the building. It has
-  tables on concrete pads, charcoal grills (some lit, with smoke and embers),
-  a picnic shelter and shade trees. Nearby are the flagpole with the US and
-  Pennsylvania flags, a Blue Star Memorial Highway marker and a pet area.
+    traffic slows to look and squeezes by on the left. Then it clears itself:
+    a wrecker comes up the closed lane and winches the spun car onto its
+    lift, tows it off down the shoulder, the other car drives away, the
+    flares burn out, the trooper picks up the cones and walks back, and the
+    cruiser kills its bar and leaves. `X` calls one up (or clears it).
+- **The picnic grove** spreads across the lawn south of the building. Paths
+  run to it, round the back and down to the pet area, and every one of them
+  ends somewhere (at the shelter's slab, in a round pad by the pet area's bag
+  dispenser, back at the plaza); the raised walk by the car lot ramps down
+  at its ends. The grove has tables on concrete pads, charcoal grills (some
+  lit, with smoke and embers), a picnic shelter and shade trees. Nearby are
+  the flagpole with the US and Pennsylvania flags, a Blue Star Memorial
+  Highway marker and a pet area.
 - **The substation** is about 180 m from the building, up a gated gravel
   drive. It is a gravel
   pad behind chain-link and barbed wire, with DANGER signs and a double gate
   that opens on `E` and stays where you leave it. Inside are:
   - a pad-mount transformer and two standby generator sets, with a diesel
     tank and conduit;
-  - a block generator house with switchgear, ATS lights and a logbook.
+  - a block generator house with switchgear, ATS lights and a logbook. To
+    the right inside its door is a plain grey door in a block partition
+    (NO SUPERVISORS PAST THIS POINT). Behind it a concrete stair with yellow
+    nosings and pipe rails goes down along the south wall to a cellar the
+    crew has made theirs: walnut panelling from the seventies, an octagonal
+    poker table under a green shade with a hand still on it (kings showing)
+    and the chips stacked, six chairs no two alike, a plaid couch with an
+    afghan facing a wood-cased television on a cart (`E` turns it on), a
+    cable spool for a coffee table, a harvest-gold fridge full of lager, a
+    dartboard with chalk scores, an Allegheny Lager neon, a PITTSBURGH
+    pennant, Christmas lights along the ceiling, a space heater glowing, and
+    the whiteboard of who owes who (Terry owes fourteen).
 
   A pole line runs off south down its cleared right-of-way.
 - **The forest.** Northern hardwoods (maple, oak, cherry, beech) mixed with
@@ -225,8 +291,9 @@ If the scene runs hot on your machine, start there (see below).
   thunderstorm. The HUD shows the weather and the temperature.
   - Cloud is a deck across the sky that thickens from broken to a lid. The
     sun's light goes soft and flat under it.
-  - Rain is streaks round you that never fall under a roof, with splashes
-    at your feet. The paving darkens and shines as it gets wet and dries
+  - Rain is streaks round you that never fall under a roof (in any of the
+    buildings, under the picnic shelter, in the open trailer, in the car you
+    are driving), with splashes at your feet. The paving darkens and shines as it gets wet and dries
     out after.
   - Fog pulls the haze in to a hundred metres or so, with banks of it
     lying low among the trees and over the lawn.
@@ -252,7 +319,9 @@ If the scene runs hot on your machine, start there (see below).
   - Three whitetail deer graze at the edge of the woods. They walk with a
     four-beat gait and bound away with their tails up when you get close.
   - Two people share a picnic table, a trucker talks on the phone by his
-    rig, and a dog is walked round the pet area. Visitors stop at the state
+    rig, and a dog is walked round the pet area. By day somebody sits in the
+    grass with their back to the big boulder by the grove, one knee up, a
+    paperback open, now and then turning a page or looking round. Visitors stop at the state
     map in the lobby on their way through, tracing the interstates and now
     and then putting a finger on YOU ARE HERE.
   - A smoker stands by the post outside the doors, clear of the planter and
@@ -261,8 +330,12 @@ If the scene runs hot on your machine, start there (see below).
   - Nobody stands or walks in anything. People and the dog steer round
     posts, bins, parked cars, each other and the flower beds. The doors open
     for anyone coming or going.
-  - Butterflies work the flower beds on summer days, and grey squirrels hop
-    between the grove's trees.
+  - Butterflies work the flower beds on summer days. Grey squirrels, with
+    pale bellies, eye rings and full plumed tails, forage in the grass round
+    the grove's trees: nose down, then up on their haunches to eat, tail
+    flicking. They run in a bounding gait from tree to tree, freeze when
+    you come near, and go up the nearest trunk and cling there head-down
+    until you have gone.
 - **The back woods.** Behind the building a path the kids have worn runs
   east off the loop walk, a quarter of a kilometre through the trees, to a
   clearing with a fire ring in it.
@@ -334,7 +407,9 @@ If the scene runs hot on your machine, start there (see below).
     laughing, louder as you get closer.
 - **Sound** is synthesized, with no audio files: road noise that pans with
   the highway, wind, cardinals, chickadees, a wood thrush and crows by day,
-  insects at night, the hum of the building and the generators, the hand
+  at night a chorus of tree crickets (soft, pulsing, in the 2.6 to 2.9 kHz
+of the real thing), a ground cricket's trill and now and then katydids,
+quieter and slower in October, the hum of the building and the generators, the hand
   dryers, and horns. There are also car doors, flushes in the restrooms, the
   flag halyard ringing on its pole in the wind, a distant jake brake, and a
   dog. Rain hisses outside and drums on the roof inside; thunder cracks and
@@ -404,6 +479,9 @@ centred on the origin.
 | Plaza and building | x −21.5 … +7 |
 | Picnic grove | x −20 … +30, z −35 … −95 |
 | Substation | x 60 … 90, z −184 … −154 (2.6 m up the drive) |
+| Generator house and its cellar | x 77 … 87, z −182 … −176; the cellar floor 2.65 m below the house's |
+| Vending room | x −55.4 … −50.6, z −3.6 … 4.6, on the island; crosswalk at z 0.5 |
+| The open trailer | the truck lot's stall 11, its tail at x −70.6, z −3.6 |
 | The path out back | from the loop walk at x 17, z 1 east to x 278, z 50 |
 | The camp | x 286, z 52 |
 | Maintenance garage | x 32.5 … 41.5, z 24 … 38; yard x 23.5 … 42.5, z 18.5 … 45 |
@@ -434,9 +512,12 @@ js/07-forest.js     tree species, instanced LOD chunks, canopy shell, wind, seas
 js/08-site.js       interstate, ramps, lots, striping, signs, walks, lamps, beds
 js/09-building.js   the rest area building, inside and out
 js/10-cars.js       parked cars and trucks
+js/10b-trailer.js   the trailer whose back doors open: its doors and step, the inside, the load
 js/11-driving.js    driving a parked car
 js/12-substation.js the drive, the fenced compound, generators, pole line
+js/12b-hangout.js   the stair down from the generator house, and the crew's room under it
 js/13-grounds.js    picnic grove, shelter, grills, flags, memorial, pet area
+js/13b-vendhut.js   the vending room on the island: machines, phone, board, lights, crosswalk
 js/14-life.js       visitors, deer, fireflies, falling leaves, grill smoke
 js/14b-people.js    people and a dog: skinned figures, poses, the drivers' walks, what they do inside
 js/14a-smoke.js     smoke and sparks: two point clouds shared by every fire and cigarette
@@ -446,6 +527,7 @@ js/14e-incidents.js the trooper's cruiser coming and going, and the occasional w
 js/14f-homestead.js the old house in the woods, inside and out, and its yard
 js/14g-garage.js    the maintenance garage, its yard, the track and gate, the truck, mower, carts and blower, the roll-up doors
 js/14h-custodian.js the custodian: rounds, stalls and cans, the restroom logs, mowing, leaf blowing, the cot; the outdoor path grid
+js/14i-trucker.js   the trucker in slippers and his coffee run
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
 js/16b-weather.js   weather (cloud deck, rain, fog banks, lightning) and the power: circuits, outage, generator, transfer switch
@@ -463,7 +545,9 @@ tools/walk.js       headless walk-through checks
 The engine comes from the Low Desert Motel and keeps its conventions:
 - classic scripts loaded in order into one global scope;
 - static geometry merged into material buckets and baked into 96 m tiles;
-- axis-aligned box colliders on a grid;
+- axis-aligned box colliders on a grid (and, for the one trailer you can
+  walk into at the lot's angle, boxes turned about the vertical: colliders,
+  floors, zones, the rain mask and its dome lamp all take them);
 - a pool of point lights handed to the nearest lamps (twelve by default; the
   graphics menu sets anywhere from four to twenty-four);
 - a fixed 1/60 s simulation step.
@@ -509,7 +593,8 @@ It reports draw calls, triangles and any console errors.
 **`walk.js`** walks fixed routes and checks that nothing blocks them, then
 checks that every seat can be sat in and stood up from. Last, it climbs the
 old house's stair with the real player controller and the keys held down,
-at walk, run and sprint, and comes back down. The routes are:
+at walk, run and sprint, and comes back down; the same for the stair to
+the generator house's cellar and the trailer's step. The routes are:
 - through the lobby into both restrooms and their accessible stalls;
 - into the family restroom and the office;
 - out the back and through both service doors;
@@ -520,7 +605,11 @@ at walk, run and sprint, and comes back down. The routes are:
   out a bay door, round the salt bin and the dumpster, and up the track and
   around the gate;
 - across the lot and the grove;
-- up the drive and through the substation gate.
+- up the drive and through the substation gate, into the generator house,
+  through the grey door and down the stair into the cellar;
+- across the truck aisle on the crosswalk, into the vending room, round the
+  machines and out the back door to the cars;
+- up the trailer's step (doors opened first) and up its aisle to the load bar.
 
 **`zfight.js`** lists faces in a box of the world that lie in one plane and
 overlap, which the depth buffer cannot sort and draws as flicker. It loads
@@ -540,4 +629,8 @@ The new systems are globals too: `WEATHER.set("storm")`, `GRID.trip()`,
 `CRASH.start()`, `MOON.phaseAt`, `TRAILCAM.photos`, `VEND.openAt(...)`,
 `GFX` and `applyGraphics()`, `TROOPER`, `RESTROOMS` (each stall's `mess`),
 `CUST` (the custodian: `mode`, `step`, the queue `q`), `GARAGE_RT` (doors,
-lights, radio station, cart, mower, blower), `CUST_MOW` and `CUST_LOG`.
+lights, radio station, cart, mower, blower), `CUST_MOW` and `CUST_LOG`,
+`CUST_STATS` (the walk watchdog's re-plans and set-downs), `WALKIN` and
+`TRAILER_RT` (the open trailer: `target` 1 to open it), `HANGOUT` (`tvOn`),
+`VENDHUT_RT` (`brew`, `pour`, `mugUnder`) and `SLIPPERS.p` (the trucker:
+`state`, `nextM`, the hours after six in the evening of his next trip).

@@ -51,14 +51,15 @@ const HANGOUT={tvOn:false, tv:null, tvLamp:null, screen:null};
   wallBox("block", IX1, H.x1, H.z0, H.z1, FB-0.1, FY-0.6, WALL, 0.6, FB);
   wallBox("block", IX0, IX1, H.z0, IZ0, FB-0.1, FY-0.6, WALL, 0.6, FB);
   wallBox("block", IX0, IX1, IZ1, H.z1, FB-0.1, FY-0.6, WALL, 0.6, FB);
-  wallBox("block", WX0, SX1, WZ0, WZ1, FB-0.1, CB, WALL, 0.6, FB);
+  wallBox("block", WX1, SX1, WZ0, WZ1, FB-0.1, CB, WALL, 0.6, FB);
   wallBox("block", WX0, WX1, WZ0, IZ1, FB-0.1, CB, WALL, 0.6, FB);
   // up in the generator house: the partition round the top of it, and the door in its end
   const DZ0=-177.24, DZ1=-176.30, DHEAD=FY+2.08;
-  wallBox("block", WX0, IX1, WZ0, WZ1, FY-0.4, FY+3.0, HOUSE, 0.6, FY-0.4);
-  wallBox("block", WX0, WX1, WZ0, DZ0, FY-0.4, FY+3.0, HOUSE, 0.6, FY-0.4);
-  wallBox("block", WX0, WX1, DZ1, IZ1, FY-0.4, FY+3.0, HOUSE, 0.6, FY-0.4);
-  wallBox("block", WX0, WX1, DZ0, DZ1, DHEAD, FY+3.0, HOUSE, 0.6, FY-0.4);
+  // (standing on the slab, not down through it: its cut edge shows in the stairwell, a face of its own)
+  wallBox("block", WX1, IX1, WZ0, WZ1, FY, FY+3.0, HOUSE, 0.6, FY);
+  wallBox("block", WX0, WX1, WZ0, DZ0, FY, FY+3.0, HOUSE, 0.6, FY);
+  wallBox("block", WX0, WX1, DZ1, IZ1, FY, FY+3.0, HOUSE, 0.6, FY);
+  wallBox("block", WX0, WX1, DZ0, DZ1, DHEAD, FY+3.0, HOUSE, 0.6, FY);
   for(const z of [DZ0-0.025, DZ1+0.025]) B(0.20, DHEAD-FY, 0.05, (WX0+WX1)/2, FY+(DHEAD-FY)/2, z, "#6e7474");
   B(0.21, 0.05, DZ1-DZ0+0.11, (WX0+WX1)/2, DHEAD+0.025, (DZ0+DZ1)/2, "#6e7474");
   makeDoor(XF((WX0+WX1)/2, DZ0+0.03, -Math.PI/2), 0, FY+0.02, 0, "THE BASEMENT", true, 0, "closet", 0x6f7a72);
@@ -66,7 +67,7 @@ const HANGOUT={tvOn:false, tv:null, tvLamp:null, screen:null};
   for(let k=1;k<=NS;k++){
     const xa=P.x0+(k-1)*RUN, xb=xa+RUN, y=FY-k*RISE;
     bx("concrete", RUN, y-FB, P.z1-P.z0-0.004, (xa+xb)/2, (y+FB)/2, (P.z0+P.z1)/2, 0.5, 0, "#a8a49a");
-    bx("paint", 0.05, 0.004, P.z1-P.z0-0.006, xa+0.025, y+0.002, (P.z0+P.z1)/2, 0, 0, "#e2b31c");
+    bx("paint", 0.05, 0.004, P.z1-P.z0-0.03, xb-0.026, y+0.002, (P.z0+P.z1)/2, 0, 0, "#e2b31c");     // at the edge you step down off
     addFlat(xa, xb, P.z0, P.z1, y);
   }
   bx("paint", 0.05, 0.004, P.z1-P.z0-0.006, P.x0-0.025, FY+0.006, (P.z0+P.z1)/2, 0, 0, "#e2b31c");
@@ -190,7 +191,7 @@ const HANGOUT={tvOn:false, tv:null, tvLamp:null, screen:null};
   cb(CW, 0.24, 0.86, CX, FB+0.22, CZ);                                   // the base
   for(const k of [-1,0,1]) cb(CW/3-0.03, 0.14, 0.62, CX+k*CW/3, FB+0.41, CZ+0.10);   // three cushions, sagging
   cb(CW, 0.48, 0.22, CX, FB+0.58, IZ0+0.13);                             // the back
-  for(const sd of [-1,1]) cb(0.20, 0.36, 0.86, CX+sd*(CW/2-0.10), FB+0.42, CZ);   // the arms
+  for(const sd of [-1,1]) cb(0.22, 0.36, 0.86, CX+sd*(CW/2-0.10), FB+0.42, CZ+0.01);   // the arms, a shade proud of the base
   for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]) B(0.05,0.10,0.05, CX+sx*(CW/2-0.08), FB+0.05, CZ+sz*0.36, "#2a1a10");
   // the afghan thrown over the back, zigzag stripes
   { const afg=signTex(256,128,(x,W,Hh)=>{ const cols=["#c9662a","#e0b24a","#6b8f3a","#8a3a22","#e8dcc0"];
@@ -282,7 +283,7 @@ const HANGOUT={tvOn:false, tv:null, tvLamp:null, screen:null};
     for(const y of [0.05,0.55,1.05,1.55]) B(0.40, 0.025, SZ1-SZ0, SX, FB+y, (SZ0+SZ1)/2, "#7d8286");
     for(const z of [SZ0, SZ1]) for(const x of [SX-0.19, SX+0.19]) B(0.03, 1.80, 0.03, x, FB+0.90, z, "#6d7276");
     B(0.36, 0.30, 0.42, SX, FB+0.22, SZ0+0.25, "#b98a58"); pic(0.30,0.10,(x,W,Hh)=>{ x.fillStyle="#b98a58"; x.fillRect(0,0,W,Hh); x.fillStyle="#b3191e";
-      x.font="bold 30px 'Comic Sans MS', cursive"; x.textAlign="center"; x.textBaseline="middle"; x.fillText("XMAS", W/2, Hh/2); }, SX-0.181, FB+0.26, SZ0+0.25, -Math.PI/2);
+      x.font="bold 30px 'Comic Sans MS', cursive"; x.textAlign="center"; x.textBaseline="middle"; x.fillText("XMAS", W/2, Hh/2); }, SX-0.186, FB+0.26, SZ0+0.25, -Math.PI/2);
     C(0.10, 0.14, SX, FB+0.64, SZ0+0.70, "#9aa0a2"); C(0.10, 0.14, SX, FB+0.64, SZ0+0.92, "#9aa0a2");
     ent(new T.SphereGeometry(0.15, 12, 8, 0, Math.PI*2, 0, Math.PI/2), SX, FB+1.07, SZ0+0.25, "#f2c418");
     C(0.05, 0.36, SX, FB+1.25, SZ0+0.70, "#e8e4d8", 10); C(0.07, 0.06, SX, FB+1.10, SZ0+0.70, "#b3191e", 10);    // a bowling pin

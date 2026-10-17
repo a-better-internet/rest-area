@@ -35,14 +35,14 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
     bx("concrete", b-a, 0.30, d-c, (a+b)/2, 0.0, (c+d)/2, 0.66, 0, "#c3c0b8");
     for(let z=A.z0+1.5; z<A.z1; z+=1.5) if(z>c+0.05 && z<d-0.05) bx("paint", b-a-0.04, 0.004, 0.012, (a+b)/2, 0.152, z, 0, 0, "#9c9890"); }
   addFlat(Is.x0-0.02, Is.x1+0.02, A.z0, A.z1, 0.15);
-  bx("concrete", V.x1-V.x0, FLV-0.01, V.z1-V.z0, (V.x0+V.x1)/2, (FLV-0.01)/2, (V.z0+V.z1)/2, 0.5, 0, "#a9a59c");
+  bx("concrete", V.x1-V.x0-0.02, FLV-0.01, V.z1-V.z0-0.02, (V.x0+V.x1)/2, (FLV-0.01)/2, (V.z0+V.z1)/2, 0.5, 0, "#a9a59c");
   addFlat(V.x0, V.x1, V.z0, V.z1, FLV);
   floorAt("quarry", IX0, IX1, IZ0, IZ1, FLV+0.003, "#b06a4e", 0.6);
   // the front, west, to the trucks: a brick knee wall under a storefront, the door in the middle of it
   const GL={sill:FLV+0.45, head:FLV+2.45};
-  runZ("brick", V.x0+WT/2, WT, IZ0, IZ1, 0, ROOF, [{a:IZ0+0.35, b:DZ0, sill:GL.sill, head:GL.head}, {a:DZ0, b:DZ1, sill:FLV-0.01, head:FLV+2.22},
+  runZ("brick", V.x0+WT/2, WT, IZ0, IZ1, 0, ROOF, [{a:IZ0+0.35, b:DZ0, sill:GL.sill, head:GL.head}, {a:DZ0, b:DZ1, sill:FLV-0.004, head:FLV+2.22},
        {a:DZ1, b:IZ1-0.35, sill:GL.sill, head:GL.head}], BRK, 0.83);
-  runZ("brick", V.x1-WT/2, WT, IZ0, IZ1, 0, ROOF, [{a:DZ0, b:DZ1, sill:FLV-0.01, head:FLV+2.22}], BRK, 0.83);
+  runZ("brick", V.x1-WT/2, WT, IZ0, IZ1, 0, ROOF, [{a:DZ0, b:DZ1, sill:FLV-0.004, head:FLV+2.22}], BRK, 0.83);
   runX("brick", V.z0+WT/2, WT, V.x0, V.x1, 0, ROOF, [], BRK, 0.83);
   runX("brick", V.z1-WT/2, WT, V.x0, V.x1, 0, ROOF, [], BRK, 0.83);
   // inside, painted block
@@ -57,8 +57,8 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
     const n=Math.max(1, Math.round((b-a)/1.1));
     for(let k=0;k<n;k++){ const za=a+(b-a)*k/n, zb=a+(b-a)*(k+1)/n;
       push("glass", planeGeo(zb-za-0.05, GL.head-GL.sill-0.05, 0), V.x0+WT/2, (GL.sill+GL.head)/2, (za+zb)/2, Math.PI/2, "#ffffff"); }
-    for(let k=0;k<=n;k++) bx("paintm", WT+0.04, GL.head-GL.sill, 0.05, V.x0+WT/2, (GL.sill+GL.head)/2, a+(b-a)*k/n, 0, 0, BRZ);
-    for(const y of [GL.sill+0.025, GL.head-0.025]) bx("paintm", WT+0.04, 0.05, b-a, V.x0+WT/2, y, (a+b)/2, 0, 0, BRZ);
+    for(let k=0;k<=n;k++) bx("paintm", WT+0.04, GL.head-GL.sill-0.006, 0.05, V.x0+WT/2, (GL.sill+GL.head)/2, a+(b-a)*k/n, 0, 0, BRZ);
+    for(const y of [GL.sill+0.025, GL.head-0.025]) bx("paintm", WT+0.036, 0.05, b-a, V.x0+WT/2, y, (a+b)/2, 0, 0, BRZ);
     addCol(V.x0, V.x0+WT, a, b, GL.sill, GL.head);
   }
   // the doors: aluminium and glass, closers on them, out to either lot
@@ -80,7 +80,7 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   for(const z of [-1.4, 2.4]){                                               // two cans in the soffit, on with the dark
     cyl("lamplens", 0.10,0.10,0.02,14, RX0+0.6, ROOF-0.012, z, "#ffffff");
     LAMPS.push({x:RX0+0.6, y:ROOF-0.15, z:z, color:0xe8f0ff, intensity:0.70, dist:10, decay:1.5, mothy:true, circ:"site"});
-    push("lightpool", discGeo(4.0, 24, 0), RX0+0.4, 0.162, z, 0, "#e8f0ff"); }
+    push("lightpool", discGeo(1.6, 24, 0), V.x0-1.4, 0.162, z, 0, "#e8f0ff"); }
   // a wall pack over the back door, to the cars
   bx("paintm", 0.18, 0.22, 0.14, V.x1+0.07, FLV+2.55, 0.5, 0, 0, BRZ);
   push("lamplens", boxGeo(0.02, 0.12, 0.10, 0), V.x1+0.145, FLV+2.53, 0.5, 0, "#ffffff");
@@ -88,8 +88,8 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   // brown signs, the way the state does them: VENDING, front and back
   const brown=(c,W,H)=>{ c.fillStyle="#5a3a22"; c.fillRect(0,0,W,H); c.strokeStyle="#f2f0e8"; c.lineWidth=H*0.06; c.strokeRect(H*0.08,H*0.08,W-H*0.16,H-H*0.16);
     c.fillStyle="#f2f0e8"; fitHwy(c,"VENDING",W*0.78,H*0.56,W/2,H*0.53); };
-  sign(1.6, 0.30, brown, SX0-0.035, ROOF+0.12, 0.5, -Math.PI/2);
-  sign(1.3, 0.28, brown, SX1+0.035, ROOF+0.12, 0.5, Math.PI/2);
+  sign(1.6, 0.30, brown, SX0-0.045, ROOF+0.12, 0.5, -Math.PI/2);
+  sign(1.3, 0.28, brown, SX1+0.045, ROOF+0.12, 0.5, Math.PI/2);
   // and across the truck aisle to its door, a crosswalk
   for(let x=TRUCKLOT.aisle0+0.5; x<TRUCKLOT.aisle1-0.2; x+=0.9)
     push("paint", planeGeo(0.45, 2.2, 0), x, PAVE_T+0.004, 0.5, 0, "#eceae2", -Math.PI/2, 0);

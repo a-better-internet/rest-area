@@ -137,7 +137,8 @@ function _liveLed(x,y,z,on,off,r){
   const H={x0:77, x1:87, z0:-182, z1:-176, h:3.4}, FY=SUB_G+0.15, T2=0.25;
   const DR={a:79.5, b:80.46, sill:FY-0.6, head:FY+2.14};
   // the slab and the floor on it, less the stairwell down to the room under it (12b)
-  for(const [a,b,c,d] of _rectLess(H.x0-0.2, H.x1+0.2, H.z0-0.2, H.z1+0.2, GEN_PIT))
+  // (the slab's cut a centimetre into the walls on the two sides it meets them, so its edge is in them, not on them)
+  for(const [a,b,c,d] of _rectLess(H.x0-0.2, H.x1+0.2, H.z0-0.2, H.z1+0.2, {x0:GEN_PIT.x0, x1:GEN_PIT.x1+0.01, z0:GEN_PIT.z0, z1:GEN_PIT.z1+0.01}))
     bx("concrete", b-a, 0.4, d-c, (a+b)/2, FY-0.2, (c+d)/2, 0.5, 0, "#a9a59c");
   for(const [a,b,c,d] of _rectLess(H.x0-0.25, H.x1+0.25, H.z0-0.25, H.z1+0.25, GEN_PIT)) addFlat(a, b, c, d, FY);
   const blockC="#cbbfa6";
