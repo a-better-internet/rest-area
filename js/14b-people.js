@@ -282,6 +282,7 @@ const BODY_R=0.28;
 function _hitAt(x, z, y, r, self){
   const own=self && self.v ? self.v.col : null;                         // a driver's own car is not in the way
   const hit=c=>{ if(c===own || c.y1<y+0.30 || c.y0>y+1.75) return false;  // a curb is stepped over
+    if(c.ob) return obNear(c.ob,x,z,r);
     const qx=clamp(x,c.x0,c.x1), qz=clamp(z,c.z0,c.z1), dx=x-qx, dz=z-qz;
     return dx*dx+dz*dz<r*r; };
   const near=colsNear(x,z);
@@ -378,6 +379,7 @@ function npcNearDoor(d){
 const _IG={x0:-5.65, z0:-14.1, x1:5.65, z1:14.1, cs:0.2, nx:0, nz:0, ok:null};
 function _staticHit(x, z, y, r){
   const hit=c=>{ if(c.y1<y+0.30 || c.y0>y+1.75) return false;
+    if(c.ob) return obNear(c.ob,x,z,r);
     const qx=clamp(x,c.x0,c.x1), qz=clamp(z,c.z0,c.z1), dx=x-qx, dz=z-qz;
     return dx*dx+dz*dz<r*r; };
   const near=colsNear(x,z);

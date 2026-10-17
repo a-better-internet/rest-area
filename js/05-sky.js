@@ -635,8 +635,8 @@ function laneX(dir, lane){
 }
 // a vehicle's group: its shell near, a coarse one far, the trailer's
 // painted box shared by both; wheels come from WHEEL_POOL
-function buildVehicleMesh(kind, paint, trailer, livery){
-  const parts=vehicleParts(kind, paint, trailer, livery), S=parts.spec;
+function buildVehicleMesh(kind, paint, trailer, livery, opts){
+  const parts=vehicleParts(kind, paint, trailer, livery, false, opts), S=parts.spec;
   const far=vehicleParts(kind, paint, trailer, livery, true);
   const g=new T.Group(), near=new T.Group(), farG=new T.Group();
   const body=new T.Mesh(mergeEntries(parts.OP), VEH_MAT); body.castShadow=true; body.receiveShadow=true;

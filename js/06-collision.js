@@ -57,6 +57,34 @@ function addCol(x0,x1,z0,z1,y0,y1){
             y0:(y0===undefined?-2:y0), y1:(y1===undefined?60:y1)});
 }
 function addFlat(x0,x1,z0,z1,y){ SURF.push({flat:true,x0:x0,x1:x1,z0:z0,z1:z1,y:y}); }
+/* A BOX TURNED ABOUT THE VERTICAL, for the one place a wall stands at an
+   angle you can walk along: the trailer whose back doors open (10b). Its
+   bounds are the turned box's own AABB, so the grid and the quick tests
+   find it as they find any other; ob is the turn, which the tests then
+   check (yaw as a group's rotation.y, hx and hz half-sizes across and along). */
+function _ob(cx,cz,yaw,hx,hz){
+  const c=Math.cos(yaw), s=Math.sin(yaw);
+  return {cx:cx, cz:cz, c:c, s:s, hx:hx, hz:hz, ex:Math.abs(c)*hx+Math.abs(s)*hz, ez:Math.abs(s)*hx+Math.abs(c)*hz};
+}
+function obNear(o,x,z,r){
+  const dx=x-o.cx, dz=z-o.cz, lx=dx*o.c-dz*o.s, lz=dx*o.s+dz*o.c;
+  const qx=lx-clamp(lx,-o.hx,o.hx), qz=lz-clamp(lz,-o.hz,o.hz);
+  return qx*qx+qz*qz<r*r;
+}
+function obIn(o,x,z){
+  const dx=x-o.cx, dz=z-o.cz;
+  return Math.abs(dx*o.c-dz*o.s)<o.hx && Math.abs(dx*o.s+dz*o.c)<o.hz;
+}
+function addColOB(cx,cz,yaw,hx,hz,y0,y1,list){
+  const o=_ob(cx,cz,yaw,hx,hz);
+  const e={x0:cx-o.ex, x1:cx+o.ex, z0:cz-o.ez, z1:cz+o.ez, y0:y0, y1:y1, ob:o};
+  (list||COL).push(e); return e;
+}
+function addFlatOB(cx,cz,yaw,hx,hz,y){
+  const o=_ob(cx,cz,yaw,hx,hz);
+  const e={flat:true, x0:cx-o.ex, x1:cx+o.ex, z0:cz-o.ez, z1:cz+o.ez, y:y, ob:o};
+  SURF.push(e); return e;
+}
 function addRamp(x0,x1,z0,z1,axis,a0,a1,y0,y1){
   SURF.push({flat:false,x0:x0,x1:x1,z0:z0,z1:z1,axis:axis,a0:a0,a1:a1,y0:y0,y1:y1});
 }
@@ -65,10 +93,15 @@ function addRamp(x0,x1,z0,z1,axis,a0,a1,y0,y1){
 function addZone(x0,x1,z0,z1,y0,y1,name,indoor){
   ZONES.push({x0:x0,x1:x1,z0:z0,z1:z1,y0:y0,y1:y1,name:name,indoor:!!indoor});
 }
+// a zone turned with its box (10b's trailer): its bounds, and ob to check
+function addZoneOB(cx,cz,yaw,hx,hz,y0,y1,name,indoor){
+  const o=_ob(cx,cz,yaw,hx,hz);
+  ZONES.push({x0:cx-o.ex,x1:cx+o.ex,z0:cz-o.ez,z1:cz+o.ez,y0:y0,y1:y1,name:name,indoor:!!indoor,ob:o});
+}
 function indoorsAt(x,z,y){
   for(let i=0;i<ZONES.length;i++){
     const q=ZONES[i];
-    if(q.indoor && x>q.x0&&x<q.x1&&z>q.z0&&z<q.z1&&y>=q.y0&&y<q.y1) return true;
+    if(q.indoor && x>q.x0&&x<q.x1&&z>q.z0&&z<q.z1&&y>=q.y0&&y<q.y1 && (!q.ob || obIn(q.ob,x,z))) return true;
   }
   return false;
 }
@@ -152,6 +185,7 @@ function surfaceY(x,z,curY){
   for(let i=0;i<SURF.length;i++){
     const s=SURF[i];
     if(x<=s.x0||x>=s.x1||z<=s.z0||z>=s.z1) continue;
+    if(s.ob && !obIn(s.ob,x,z)) continue;
     let y;
     if(s.flat) y=s.y;
     else{
@@ -165,7 +199,7 @@ function surfaceY(x,z,curY){
 function hitsAny(list,x,z,r,lo,hi,skip){
   for(let i=0;i<list.length;i++){
     const c=list[i]; if(c===skip) continue;
-    if(x>c.x0-r && x<c.x1+r && z>c.z0-r && z<c.z1+r && hi>c.y0 && lo<c.y1) return true;
+    if(x>c.x0-r && x<c.x1+r && z>c.z0-r && z<c.z1+r && hi>c.y0 && lo<c.y1 && (!c.ob || obNear(c.ob,x,z,r))) return true;
   }
   return false;
 }
@@ -179,7 +213,7 @@ function zoneAt(x,z,y){
   let hit=null;
   for(let i=0;i<ZONES.length;i++){
     const q=ZONES[i];
-    if(x>q.x0&&x<q.x1&&z>q.z0&&z<q.z1&&y>=q.y0&&y<q.y1) hit=q;
+    if(x>q.x0&&x<q.x1&&z>q.z0&&z<q.z1&&y>=q.y0&&y<q.y1 && (!q.ob || obIn(q.ob,x,z))) hit=q;
   }
   return hit?hit.name:null;
 }

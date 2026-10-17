@@ -252,7 +252,7 @@ function _roofs(){
   ROOFS.length=0;
   ROOFS.push([0,0,0,0,-99]);                                     // the car you are in, if you are
   ROOFS.push([-7.4,-15.6,8.1,15.6, 9.5]);                       // the pavilion and its eaves
-  for(const q of ZONES) if(q.indoor && ROOFS.length<ROOF_N && !(q.x0>-7.4 && q.x1<8.1 && q.z0>-15.6 && q.z1<15.6))
+  for(const q of ZONES) if(q.indoor && !q.ob && ROOFS.length<ROOF_N && !(q.x0>-7.4 && q.x1<8.1 && q.z0>-15.6 && q.z1<15.6))
     ROOFS.push([q.x0-0.3, q.z0-0.3, q.x1+0.3, q.z1+0.3, q.y1+0.5]);
   while(ROOFS.length<ROOF_N) ROOFS.push([0,0,0,0,-99]);
   if(_roofs.mat){ const u=_roofs.mat.uniforms;                  // (RAIN itself is not declared yet the first time)
@@ -274,7 +274,9 @@ const RAIN=(function(){
   const m=new T.ShaderMaterial({
     uniforms:T.UniformsUtils.merge([T.UniformsLib.fog, {uCam:{value:new T.Vector3()}, uTime:{value:0}, uAmt:{value:0},
       uWind:{value:new T.Vector2()}, uCol:{value:new T.Color(0xc8d0d8)}, uA:{value:0.35}, uBox:{value:BOX}, uH:{value:H},
-      uRoof:{value:roofV}, uRoofY:{value:roofY}}]),
+      uRoof:{value:roofV}, uRoofY:{value:roofY},
+      // and one roof at an angle: the trailer whose doors open (10b), centre and turn, half-sizes and top
+      uOB:{value:new T.Vector4(0,0,1,0)}, uOBh:{value:new T.Vector4(0,0,-99,0)}}]),
     vertexShader:`attribute vec4 aSeed; uniform vec3 uCam; uniform float uTime, uAmt, uBox, uH; uniform vec2 uWind;
 varying float vE; varying float vOn; varying vec3 vW;
 #include <fog_pars_vertex>
@@ -291,19 +293,23 @@ void main(){
   gl_Position=projectionMatrix*mvPosition;
   #include <fog_vertex>
 }`,
-    fragmentShader:`uniform vec3 uCol; uniform float uA; uniform vec4 uRoof[24]; uniform float uRoofY[24];
+    fragmentShader:`uniform vec3 uCol; uniform float uA; uniform vec4 uRoof[24]; uniform float uRoofY[24]; uniform vec4 uOB, uOBh;
 varying float vE; varying float vOn; varying vec3 vW;
 #include <fog_pars_fragment>
 void main(){
   if(vOn<0.5) discard;
   for(int i=0;i<24;i++){ vec4 r=uRoof[i];
     if(vW.x>r.x && vW.x<r.z && vW.z>r.y && vW.z<r.w && vW.y<uRoofY[i]) discard; }
+  vec2 d=vW.xz-uOB.xy;
+  if(abs(d.x*uOB.z-d.y*uOB.w)<uOBh.x && abs(d.x*uOB.w+d.y*uOB.z)<uOBh.y && vW.y<uOBh.z) discard;
   gl_FragColor=vec4(uCol, uA*(1.0-vE*0.85));
   #include <fog_fragment>
 }`,
     transparent:true, depthWrite:false, fog:true});
   // (merge() copied the uniforms: the material's own copies are the ones to write)
   _roofs.mat=m; _roofs();
+  if(typeof WALKIN!=="undefined" && WALKIN.ob){ const o=WALKIN.ob;
+    m.uniforms.uOB.value.set(o.cx, o.cz, o.c, o.s); m.uniforms.uOBh.value.set(o.hx, o.hz, WALKIN.top, 0); }
   const L=new T.LineSegments(g, m); L.frustumCulled=false; L.renderOrder=2; L.visible=false; scene.add(L);
   return L;
 })();
@@ -311,6 +317,7 @@ void main(){
 const SPLASH=(typeof _cloud==="function") ? _cloud(360, _SOFT_TEX, false) : null;
 function _underRoof(x,z,y){
   for(const r of ROOFS) if(x>r[0] && x<r[2] && z>r[1] && z<r[3] && y<r[4]) return true;
+  if(WALKIN.ob && y<WALKIN.top && obIn(WALKIN.ob,x,z)) return true;
   return false;
 }
 function updateSplash(dt, amt, lit){

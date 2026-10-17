@@ -522,6 +522,7 @@ function updateLife(dt, now, dark, dn){
   if(typeof updateBackwoods==="function") updateBackwoods(dt, now, dark);
   if(typeof updateHouse==="function") updateHouse(dt);
   if(typeof updateGarage==="function") updateGarage(dt);
+  if(typeof updateTrailer==="function") updateTrailer(dt, now, dark);
   if(typeof updateIncidents==="function") updateIncidents(dt, now, dark);
   if(typeof updatePuffs==="function") updatePuffs(dt, now, dark);
 }

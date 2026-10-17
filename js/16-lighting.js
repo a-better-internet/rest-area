@@ -33,6 +33,8 @@ function updateLights(dark, camPos){
   for(const l of LAMPS){
     // on a circuit that is off (a power cut) it is not a light at all
     if(l.circ && GRID[l.circ]<0.02) continue;
+    // (and one inside a turned box, 10b's trailer, only when you are in that)
+    if(l.ob && !(obIn(l.ob, camPos.x, camPos.z) && camPos.y<l.y+0.5)) continue;
     // a lamp with a volume is behind a wall unless you are inside that volume
     if(l.vol && !(camPos.x>l.vol[0] && camPos.x<l.vol[1] &&
                   camPos.z>l.vol[2] && camPos.z<l.vol[3] &&

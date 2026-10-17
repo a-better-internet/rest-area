@@ -96,6 +96,8 @@ function updateParkedLOD(cam){
 
 /* ---- the truck lot ------------------------------------------------------- */
 const TRUCK_STALLS=[], REEFERS=[];
+// one dry van, near the middle of the lot, whose back doors open (10b)
+const WALKIN={};
 // marker lamps on the parked rigs: a lens and a soft glow, both on with the dark
 const RIG_MARKER=(function(){
   const lens=new T.MeshBasicMaterial({color:0xffa21c, transparent:true, opacity:0, toneMapped:false, depthWrite:false});
@@ -106,6 +108,11 @@ const RIG_MARKER=(function(){
 (function trucks(){
   const TL=TRUCKLOT, sa=Math.sin(TL.angle), ca=Math.cos(TL.angle);
   const dx=-sa, dz=-ca, yaw=Math.atan2(dx, dz);
+  // which stall: the taken dry van nearest the middle, where you would walk past it
+  let pick=-1, pd=1e9;
+  { let k2=0; for(let z=TL.stallZ1; z-TL.pitch>=TL.stallZ0; z-=TL.pitch, k2++){
+      if(hash2(k2*1.9, 7.3)>0.36 || [5,6,5,7,6,5][k2%6]!==5) continue;
+      const d=Math.abs(z-TL.pitch/2-6); if(d<pd){ pd=d; pick=k2; } } }
   let k=0;
   for(let z=TL.stallZ1; z-TL.pitch>=TL.stallZ0; z-=TL.pitch, k++){
     // the stall's centre line, from the aisle edge into the stall
@@ -114,8 +121,9 @@ const RIG_MARKER=(function(){
     const h=hash2(k*1.9, 7.3);
     if(h>0.36) continue;
     const kind=[5,6,5,7,6,5][k%6];
+    const walk=k===pick;
     const m=buildVehicleMesh(kind, TRUCK_PAINTS[(k*3+1)%TRUCK_PAINTS.length],
-                             ["#e8e7e2","#dcdad3","#c9c9c4","#e9e9e6"][k%4], k%2);
+                             ["#e8e7e2","#dcdad3","#c9c9c4","#e9e9e6"][k%4], walk?1:k%2, walk?{open:true}:undefined);
     const S=m.spec, back=1.2-S.tail;            // tail sits 1.2 m off the aisle edge
     const cx=TL.aisle0+dx*back, cz=z0+dz*back;
     m.g.position.set(cx, PAVE_T, cz);
@@ -128,8 +136,10 @@ const RIG_MARKER=(function(){
     }
     if(kind===6) REEFERS.push({x:cx+dx*2.5, z:cz+dz*2.5});
     TRUCK_STALLS[TRUCK_STALLS.length-1].taken=true;
+    if(walk) Object.assign(WALKIN, {g:m.g, S:S, x:cx, z:cz, yaw:yaw, stall:k, row:1});
     // a 23 m rig at an angle is a stepped run of boxes down its length
-    for(let s=S.tail+1.2; s<S.nose; s+=2.4){
+    // (the walk-in's trailer is hollow: 10b gives it walls instead)
+    for(let s=(walk?3.6+1.2:S.tail+1.2); s<S.nose; s+=2.4){
       const px=cx+dx*s, pz=cz+dz*s;
       addCol(px-1.45, px+1.45, pz-1.45, pz+1.45, PAVE_T, PAVE_T+S.ht);
     }

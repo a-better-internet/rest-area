@@ -40,6 +40,9 @@ const ROUTES={
   "upstairs box room":     [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[311.75,160.4],[311.75,161.4]],
   "upstairs bathroom":     [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[314.05,160.4],[314.0,162.0],[315.8,162.5]],
   "back down the stairs":  [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.3],[317.45,156.15],[316.0,156.3]],
+  // the walk-in trailer (10b), its doors swung open first: up the step, past the jack, up the aisle to the load bar
+  "into the trailer":      {pre:"TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);",
+                            pts:[[-69.55,-1.71],[-70.94,-4.14],[-71.59,-5.38],[-72.4,-6.18],[-73.94,-8.87],[-73.88,-9.37],[-76.76,-14.4]]},
 };
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
@@ -61,6 +64,7 @@ const ROUTES={
       for(const d of REST.doors) if(d.manualOnly){ d.manual = name==="through the gate" ? 1 : 0; d.open = name==="through the gate" ? 1 : 0;
         if(d.blockCol) d.blockCol.y1 = name==="through the gate" ? d.blockCol.y0-1 : d.blockTop; }
       let P=ROUTES[name]==="TRAIL" ? TRAIL.map(q=>[q.x,q.z]) : ROUTES[name];
+      if(P.pre){ (0,eval)(P.pre); P=P.pts; }
       // off the paths there is no fixed line: find one through the trunks on
       // a quarter-metre grid (breadth first, eight ways), then walk it
       if(P.seek){ const [A,G]=P.seek, S=0.25, pad=12;
@@ -120,6 +124,13 @@ const ROUTES={
       const u=drive(UP,m,0.2), d=drive(DOWN,m,upF+0.05);
       res["stairs, keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : u<upF-0.2 ? "up: never reached the hall ("+u.toFixed(2)+")"
                                      : typeof d==="string" ? "down: "+d : "ok"; }
+    // and the trailer's step the same way, at every pace, then back down it
+    { (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");
+      const IN=ROUTES["into the trailer"].pts.slice(0,4), OUT=IN.slice().reverse(), fl=REST.surf(IN[3][0],IN[3][1],2);
+      for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
+        const u=drive(IN,m,0.2), d=drive(OUT,m,fl+0.05); REST.sim(40);        // (and let the feet settle)
+        res["trailer step, keys held ("+lab+")"] = typeof u==="string" ? "in: "+u : u<fl-0.05 ? "in: never reached the floor ("+u.toFixed(2)+")"
+                                         : typeof d==="string" ? "out: "+d : REST.player.feetY>0.2 ? "out: still up at "+REST.player.feetY.toFixed(2) : "ok"; } }
     return res;
   }, ROUTES);
   let fail=0;

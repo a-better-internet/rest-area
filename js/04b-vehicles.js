@@ -543,14 +543,14 @@ const TRAILER_MAT=envOut(new T.MeshStandardMaterial({map:TRAILER_TEX, vertexColo
 /* a box whose four long faces take a livery: sides from the band's first
    1600 px (the left side mirrored so it reads), the back from the doors,
    the front and the roof from a plain patch of the same sheet */
-function liveryBox(L, x0,x1,y0,y1,z0,z1, row, uSide){
+function liveryBox(L, x0,x1,y0,y1,z0,z1, row, uSide, noBack){
   const v0=1-(row+1)/4+0.002, v1=1-row/4-0.002, us=uSide||0.78, P=[], U=[], idx=[];
   const quad=(a,b,c,d,ua,ub,va,vb)=>{ const o=P.length/3; P.push(...a,...b,...c,...d);
     U.push(ua,va, ub,va, ub,vb, ua,vb); idx.push(o,o+1,o+2, o,o+2,o+3); };
   const vv=t=>lerp(v0,v1,t);
   quad([x1,y0,z1],[x1,y0,z0],[x1,y1,z0],[x1,y1,z1], 0, us, vv(0), vv(1));          // right side, front at u=0
   quad([x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0], 0, us, vv(0), vv(1));          // left side, read from the back
-  quad([x1,y0,z0],[x0,y0,z0],[x0,y1,z0],[x1,y1,z0], 0.797, 0.995, vv(0), vv(1));   // the back: the doors
+  if(!noBack) quad([x1,y0,z0],[x0,y0,z0],[x0,y1,z0],[x1,y1,z0], 0.797, 0.995, vv(0), vv(1));   // the back: the doors (unless they swing: 10-cars)
   quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1], 0.30, 0.34, vv(0.2), vv(0.8)); // the front
   quad([x0,y1,z1],[x1,y1,z1],[x1,y1,z0],[x0,y1,z0], 0.30, 0.34, vv(0.3), vv(0.5)); // the roof
   quad([x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1], 0.30, 0.31, vv(0.9), vv(0.95));// underneath
@@ -567,7 +567,7 @@ function truckOut(OP, GL, LV, S, LAMPS, coarse){
     return Math.max(s.x,s.y,s.z)>0.9 && (s.x*s.y+s.y*s.z+s.x*s.z)>0.25; };
   return {OP:OP.filter(keep), GL:GL, LV:[], spec:S, lamps:null};
 }
-function truckParts(kind, paintHex, trailerHex, livery, coarse){
+function truckParts(kind, paintHex, trailerHex, livery, coarse, opts){
   const S=VEH_SPEC[kind], OP=[], GL=[], LV=[], LAMPS={head:[], tail:[], amber:[]};
   const P=new T.Color(paintHex), BLK=0x17181a, CHR=0xcfd2d4, GLC=new T.Color(0x1a2329);
   const mud=(z, x)=>{ vBox(OP, 0.56, 0.62, 0.02, x, 0.52, z, 0x111214, FIN.rubber);
@@ -689,7 +689,7 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
        landing gear, the sliding tandem, the underride guard */
     const z0=S.tail, z1=3.60, y0=1.30, y1=4.06, hw=1.295;
     const row = kind===6 ? TRAILER_LIV.reefer : (livery===undefined ? 0 : livery);
-    liveryBox(LV, -hw,hw, y0,y1, z0,z1, row);
+    liveryBox(LV, -hw,hw, y0,y1, z0,z1, row, undefined, !!(opts && opts.open));
     for(const sd of [-1,1]){
       // rails and corner posts held a few millimetres off the box's top and underside
       vBox(OP, 0.03, 0.14, z1-z0-0.012, sd*(hw+0.01), y0+0.075, (z0+z1)/2, 0xb9bcbd, FIN.alloy);
@@ -723,8 +723,8 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
   }
   return truckOut(OP, GL, LV, S, LAMPS, coarse);
 }
-function vehicleParts(kind, paintHex, trailerHex, livery, coarse){
-  if(kind>=4) return truckParts(kind, paintHex, trailerHex, livery, coarse);
+function vehicleParts(kind, paintHex, trailerHex, livery, coarse, opts){
+  if(kind>=4) return truckParts(kind, paintHex, trailerHex, livery, coarse, opts);
   const p=carParts(kind, paintHex, coarse); p.LV=[]; return p;
 }
 

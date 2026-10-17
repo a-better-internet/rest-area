@@ -517,6 +517,19 @@ const AUDIO=(function(){
       const am=ctx.createGain(); am.gain.value=0.5; const lfo=ctx.createOscillator(); lfo.frequency.value=long?7:18; const lg=ctx.createGain(); lg.gain.value=0.5;
       lfo.connect(lg); lg.connect(am.gain); s2.connect(f); f.connect(am); am.connect(g); g.connect(master); s2.start(t); lfo.start(t); lfo.stop(t+dur+0.3);
       if(long) for(let k=0;k<6;k++) tone("sine", 260+Math.random()*180, 180, 0.08, 0.025*vol, t+0.4+k*0.42+Math.random()*0.2, 0, master);
+    }else if(kind==="latch"||kind==="slam"){      // a trailer's lock rods: the cams letting go; a door leaf home on its stop
+      const n=kind==="latch"?2:1;
+      for(let k=0;k<n;k++){ const at=t+k*0.34;
+        tone("sine", 820, 760, 0.16, 0.05*vol, at, 0, master); tone("sine", 1310, 1270, 0.10, 0.03*vol, at, 0, master);
+        const s=ctx.createBufferSource(); s.buffer=noise(0.25,"white"); const f=ctx.createBiquadFilter();
+        f.type="bandpass"; f.frequency.value=kind==="latch"?2600:900; f.Q.value=1.1; const g=ctx.createGain(); env(g,at,0.002,0.12*vol,0.02,0.16);
+        s.connect(f); f.connect(g); g.connect(master); s.start(at); }
+      if(kind==="slam") tone("sine", 75, 45, 0.35, 0.22*vol, t, 0, master);
+    }else if(kind==="hinge"){                      // a big hinge turning, dry
+      const dur=0.35+Math.random()*0.3, f0=320+Math.random()*160;
+      const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.setValueAtTime(f0,t); o.frequency.linearRampToValueAtTime(f0*0.8,t+dur);
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=f0*2.4; bp.Q.value=4;
+      const g=ctx.createGain(); env(g,t,0.04,0.018*vol,dur*0.6,dur*0.4); o.connect(bp); bp.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.05);
     }else if(kind==="tick"){
       tone("square", 900, null, 0.03, 0.02*vol, t, 0, master);
     }else if(kind==="airhorn"){
