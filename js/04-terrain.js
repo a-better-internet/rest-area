@@ -307,6 +307,7 @@ let TERRAIN_MAT=null;
       border.push(0);
       hangSkirt(border, skirt);
       for(const h of holes||[]){
+        if(h.bare) continue;
         const i0=Math.round((h.x0-x0)/cell), i1=Math.round((h.x1-x0)/cell);
         const j0=Math.round((h.z0-z0)/cell), j1=Math.round((h.z1-z0)/cell);
         if(i0<0 || j0<0 || i1>nx || j1>nz || i1-i0<1 || j1-j0<1) continue;
@@ -330,7 +331,7 @@ let TERRAIN_MAT=null;
   }
   grid({x0:-2400,x1:2400,z0:-2400,z1:2400}, 32, [RING_MID], "ground-far", 40);
   grid(RING_MID, 8, [RING_NEAR], "ground-mid", 24);
-  grid(RING_NEAR, 2, [], "ground-near", 6);
+  grid(RING_NEAR, 2, [GEN_HOLE], "ground-near", 6);
   TERRAIN_RINGS.sort((a,b)=>a.cell-b.cell);        // finest ring wins
 })();
 

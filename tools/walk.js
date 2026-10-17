@@ -40,6 +40,8 @@ const ROUTES={
   "upstairs box room":     [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[311.75,160.4],[311.75,161.4]],
   "upstairs bathroom":     [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[314.05,160.4],[314.0,162.0],[315.8,162.5]],
   "back down the stairs":  [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.3],[317.45,156.15],[316.0,156.3]],
+  // the generator house's basement (12b): in at its door, through the grey door, down the stair, round into the room
+  "down to the basement":  [[80,-174.2],[80,-177.4],[81.5,-176.8],[82.6,-176.8],[83.0,-176.8],[85.5,-176.8],[86.2,-176.8],[86.2,-178.5],[83.5,-178.5],[82.2,-178.3],[79.6,-178.3]],
   // the walk-in trailer (10b), its doors swung open first: up the step, past the jack, up the aisle to the load bar
   "into the trailer":      {pre:"TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);",
                             pts:[[-69.55,-1.71],[-70.94,-4.14],[-71.59,-5.38],[-72.4,-6.18],[-73.94,-8.87],[-73.88,-9.37],[-76.76,-14.4]]},
@@ -124,6 +126,12 @@ const ROUTES={
       const u=drive(UP,m,0.2), d=drive(DOWN,m,upF+0.05);
       res["stairs, keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : u<upF-0.2 ? "up: never reached the hall ("+u.toFixed(2)+")"
                                      : typeof d==="string" ? "down: "+d : "ok"; }
+    // the basement stair the same way, down and back up
+    { const TOP=[[82.6,-176.8],[83.0,-176.8],[85.5,-176.8],[86.3,-176.8]], BOT=TOP.slice().reverse(), fy=REST.surf(82.6,-176.8,3.0);
+      for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
+        const d=drive(TOP,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT,m,lo); REST.sim(40);
+        res["basement stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>0.3 ? "down: never reached the floor ("+lo.toFixed(2)+")"
+                                         : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
     // and the trailer's step the same way, at every pace, then back down it
     { (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");
       const IN=ROUTES["into the trailer"].pts.slice(0,4), OUT=IN.slice().reverse(), fl=REST.surf(IN[3][0],IN[3][1],2);

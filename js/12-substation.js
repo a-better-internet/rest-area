@@ -26,6 +26,14 @@ bucketOf("chainlink", ()=>new T.MeshStandardMaterial({map:TEX.chain, alphaTest:0
 bucketOf("roofmetal", ()=>new T.MeshStandardMaterial({map:TEX.galv, roughness:0.5, metalness:0.45}));
 bucketOf("pole",      ()=>new T.MeshStandardMaterial({map:TEX.wood, roughness:0.95}));
 const SUB_Y=SITE.sub.y, SUB_G=SUB_Y+PAVE_T;   // the stone's surface
+// a rectangle less a hole in it (GEN_PIT): the four pieces round the hole that are not empty
+function _rectLess(x0,x1,z0,z1,P){
+  const out=[], push4=(a,b,c,d)=>{ if(b-a>0.005 && d-c>0.005) out.push([a,b,c,d]); };
+  push4(x0,x1, z0,Math.min(z1,P.z0)); push4(x0,x1, Math.max(z0,P.z1),z1);
+  const m0=Math.max(z0,P.z0), m1=Math.min(z1,P.z1);
+  push4(x0,Math.min(x1,P.x0), m0,m1); push4(Math.max(x0,P.x1),x1, m0,m1);
+  return out;
+}
 const GATE={x:60, z0:-170.47, z1:-167.53};
 const GEN_POS=[];                                   // where the hum comes from (20-audio)
 /* The transfer switch's four lamps and the generator sets' run lamps, live
@@ -69,8 +77,12 @@ function _liveLed(x,y,z,on,off,r){
 (function compound(){
   const S=SITE.sub, Y=SUB_Y;
   // a centimetre over the drive's end, so the stone, not the asphalt, runs in at the gate
-  push("gravelbed", planeGeo(S.x1-S.x0+3, S.z1-S.z0+3, 0.5), (S.x0+S.x1)/2, Y+PAVE_T+0.01, (S.z0+S.z1)/2, 0,
-       "#b2aea4", -Math.PI/2, 0);
+  // (in pieces round the stairwell under the generator house, the stone's grain carried across them)
+  { const X0=S.x0-1.5, X1=S.x1+1.5, Z0=S.z0-1.5, Z1=S.z1+1.5;
+    for(const [a,b,c,d] of _rectLess(X0,X1,Z0,Z1,GEN_PIT)){
+      const g=new T.PlaneGeometry(b-a, d-c), U=g.attributes.uv;
+      for(let i=0;i<U.count;i++) U.setXY(i, (a-X0+U.getX(i)*(b-a))*0.5, (Z1-d+U.getY(i)*(d-c))*0.5);
+      push("gravelbed", g, (a+b)/2, Y+PAVE_T+0.01, (c+d)/2, 0, "#b2aea4", -Math.PI/2, 0); } }
   addPaveRect(S.x0-1.5, S.x1+1.5, S.z0-1.5, S.z1+1.5, Y);
   addZone(S.x0, S.x1, S.z0, S.z1, Y-2, Y+8, "THE SUBSTATION");
 
@@ -124,8 +136,10 @@ function _liveLed(x,y,z,on,off,r){
   /* ---- the generator house --------------------------------------------- */
   const H={x0:77, x1:87, z0:-182, z1:-176, h:3.4}, FY=SUB_G+0.15, T2=0.25;
   const DR={a:79.5, b:80.46, sill:FY-0.6, head:FY+2.14};
-  bx("concrete", H.x1-H.x0+0.4, 0.4, H.z1-H.z0+0.4, (H.x0+H.x1)/2, FY-0.2, (H.z0+H.z1)/2, 0.5, 0, "#a9a59c");
-  addFlat(H.x0-0.25, H.x1+0.25, H.z0-0.25, H.z1+0.25, FY);
+  // the slab and the floor on it, less the stairwell down to the room under it (12b)
+  for(const [a,b,c,d] of _rectLess(H.x0-0.2, H.x1+0.2, H.z0-0.2, H.z1+0.2, GEN_PIT))
+    bx("concrete", b-a, 0.4, d-c, (a+b)/2, FY-0.2, (c+d)/2, 0.5, 0, "#a9a59c");
+  for(const [a,b,c,d] of _rectLess(H.x0-0.25, H.x1+0.25, H.z0-0.25, H.z1+0.25, GEN_PIT)) addFlat(a, b, c, d, FY);
   const blockC="#cbbfa6";
   runX("block", H.z1-T2/2, T2, H.x0, H.x1, FY-0.6, FY+H.h, [DR], blockC, 0.6);
   runX("block", H.z0+T2/2, T2, H.x0, H.x1, FY-0.6, FY+H.h, [], blockC, 0.6);
@@ -153,7 +167,7 @@ function _liveLed(x,y,z,on,off,r){
   addZone(H.x0, H.x1, H.z0, H.z1, FY-0.5, FY+H.h, "GENERATOR HOUSE", true);
   // inside: concrete floor, the switchgear along the back wall, the transfer
   // switch with its lamps, a battery charger, a logbook on a shelf
-  floorAt("concrete", H.x0+T2, H.x1-T2, H.z0+T2, H.z1-T2, FY+0.004, "#bdb8ae", 0.6);
+  for(const [a,b,c,d] of _rectLess(H.x0+T2, H.x1-T2, H.z0+T2, H.z1-T2, GEN_PIT)) floorAt("concrete", a, b, c, d, FY+0.004, "#bdb8ae", 0.6);
   ceilAt("plaster", H.x0+T2, H.x1-T2, H.z0+T2, H.z1-T2, FY+3.0, "#d8d6cf", 0.5);
   for(const [f,dir,a,b] of [[H.z1-T2,-1,H.x0+T2,H.x1-T2],[H.z0+T2,1,H.x0+T2,H.x1-T2]])
     lineX("block", f, dir, a, b, FY, FY+3.0, f===H.z1-T2?[DR]:[], "#dcd8cc", 0.6);
@@ -183,8 +197,9 @@ function _liveLed(x,y,z,on,off,r){
   addCol(77.5, 83.9, H.z0, H.z0+T2+0.85, FY-0.5, FY+2.2);
   bx("paintm", 1.2, 1.4, 0.45, 85.6, FY+0.7, -178.4, 0, 0, "#6d7578");
   addCol(84.95, 86.25, -178.7, -178.1, FY-0.5, FY+1.4);
-  bx("beam", 0.8, 0.04, 0.35, 85.9, FY+1.1, H.z1-T2-0.2, 0.6, 0, "#7a5a3a");
-  bx("paintm", 0.3, 0.04, 0.22, 85.9, FY+1.14, H.z1-T2-0.2, 0, 0, "#2b4fa0");
+  // (the logbook's shelf: on the basement stair's partition, 12b, facing the gear)
+  bx("beam", 0.8, 0.04, 0.35, 84.2, FY+1.1, GEN_PIT.z0-0.15-0.18, 0.6, 0, "#7a5a3a");
+  bx("paintm", 0.3, 0.04, 0.22, 84.2, FY+1.14, GEN_PIT.z0-0.15-0.18, 0, 0, "#2b4fa0");
   bx("tube", 0.26, 0.04, 1.2, 82, FY+2.96, -179, 0, 0, "#ffffff");
   LAMPS.push({x:82, y:FY+2.7, z:-179, color:0xeef4f0, intensity:0.75, dist:8, decay:1.4, indoor:true, circ:"bldg",
               vol:[H.x0, H.x1, H.z0, H.z1, FY-1, FY+4]});

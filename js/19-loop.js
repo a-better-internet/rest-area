@@ -176,6 +176,9 @@ function frame(){
     key.intensity  *= 1-_indoorMix*0.25;
     amb.intensity  += _indoorMix*0.10;
   }
+  // and underground (12b's basement) the sky does not reach at all: only its lamps light it
+  _buriedMix += ((buriedAt(camera.position.x, camera.position.z, camera.position.y)?1:0)-_buriedMix)*Math.min(1, delta*2.5);
+  if(_buriedMix>0.002){ hemi.intensity *= 1-_buriedMix*0.88; key.intensity *= 1-_buriedMix; amb.intensity *= 1-_buriedMix*0.55; }
   // haze: by day the horizon's own colour, at night darker than the sky
   scene.fog.color.copy(skyImg.hz).lerp(NIGHT_HAZE, dn.nightAmount*0.72);
   scene.fog.near=150+dn.nightAmount*50;
@@ -324,7 +327,7 @@ function frame(){
     renderer.render(scene, camera);
   }
 }
-let _indoorMix=0;
+let _indoorMix=0, _buriedMix=0;
 const _sunCel=new T.Vector3(), _camX=new T.Vector3(), _camY=new T.Vector3();
 const _INDOOR_BOUNCE=new THREE.Color(0x9c9a94);
 requestAnimationFrame(frame);

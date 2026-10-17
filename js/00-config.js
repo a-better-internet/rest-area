@@ -64,6 +64,11 @@ const CARLOT = { aisle0:-40.5, aisle1:-32.0, stallZ0:-104, stallZ1:60, stallW:2.
   ada:{35:"ada", 36:"aisle", 37:"van", 38:"aisle", 39:"ada"} };
 // the truck lot: an aisle down the east side, stalls angled off it
 const TRUCKLOT = { aisle0:-70, aisle1:-60, stallZ0:-138, stallZ1:94, angle:0.52, pitch:8.4 };
+// under the generator house (12, 12b): the stairwell cut through its floor,
+// and the hole in the near ground ring it needs, on that ring's 2 m lattice
+// and bare (no apron hung round it: that would hang through the room below)
+const GEN_PIT  = { x0:83.0, x1:86.75, z0:-177.35, z1:-176.25 };
+const GEN_HOLE = { x0:82, x1:88, z0:-178, z1:-176, bare:true };
 
 /* ----------------------------------------------------------------------
    0b · IMAGE SLOTS
