@@ -243,14 +243,20 @@ function skyWeather(img, day, set, night){
    in x and z (so they do not swim when you turn) and falling in y on the
    GPU from a clock. How many show is how hard it rains. A streak inside a
    roofed volume is thrown away in the fragment shader, so it does not rain
-   in the lobby or under the picnic shelter. */
-const ROOFS=[];
+   in the lobby, under the picnic shelter, in the garage, in a trailer or
+   in the car you are driving. The roofs are every indoor zone, gathered
+   once everything is built (so the buildings that come after this file are
+   in it too); the first slot is kept for the car. */
+const ROOFS=[], ROOF_N=24;
 function _roofs(){
   ROOFS.length=0;
+  ROOFS.push([0,0,0,0,-99]);                                     // the car you are in, if you are
   ROOFS.push([-7.4,-15.6,8.1,15.6, 9.5]);                       // the pavilion and its eaves
-  for(const q of ZONES) if(q.indoor && ROOFS.length<12 && !(q.x0>-7.4 && q.x1<8.1 && q.z0>-15.6 && q.z1<15.6))
+  for(const q of ZONES) if(q.indoor && ROOFS.length<ROOF_N && !(q.x0>-7.4 && q.x1<8.1 && q.z0>-15.6 && q.z1<15.6))
     ROOFS.push([q.x0-0.3, q.z0-0.3, q.x1+0.3, q.z1+0.3, q.y1+0.5]);
-  while(ROOFS.length<12) ROOFS.push([0,0,0,0,-99]);
+  while(ROOFS.length<ROOF_N) ROOFS.push([0,0,0,0,-99]);
+  if(_roofs.mat){ const u=_roofs.mat.uniforms;                  // (RAIN itself is not declared yet the first time)
+    for(let i=0;i<ROOF_N;i++){ const r=ROOFS[i]; u.uRoof.value[i].set(r[0],r[1],r[2],r[3]); u.uRoofY.value[i]=r[4]; } }
 }
 _roofs();
 const RAIN=(function(){
@@ -264,7 +270,7 @@ const RAIN=(function(){
   g.setAttribute("position", new T.BufferAttribute(pos,3));
   g.setAttribute("aSeed", new T.BufferAttribute(sd,4));
   const roofV=[], roofY=[];
-  for(let i=0;i<12;i++){ roofV.push(new T.Vector4()); roofY.push(0); }
+  for(let i=0;i<ROOF_N;i++){ roofV.push(new T.Vector4()); roofY.push(-99); }
   const m=new T.ShaderMaterial({
     uniforms:T.UniformsUtils.merge([T.UniformsLib.fog, {uCam:{value:new T.Vector3()}, uTime:{value:0}, uAmt:{value:0},
       uWind:{value:new T.Vector2()}, uCol:{value:new T.Color(0xc8d0d8)}, uA:{value:0.35}, uBox:{value:BOX}, uH:{value:H},
@@ -285,18 +291,19 @@ void main(){
   gl_Position=projectionMatrix*mvPosition;
   #include <fog_vertex>
 }`,
-    fragmentShader:`uniform vec3 uCol; uniform float uA; uniform vec4 uRoof[12]; uniform float uRoofY[12];
+    fragmentShader:`uniform vec3 uCol; uniform float uA; uniform vec4 uRoof[24]; uniform float uRoofY[24];
 varying float vE; varying float vOn; varying vec3 vW;
 #include <fog_pars_fragment>
 void main(){
   if(vOn<0.5) discard;
-  for(int i=0;i<12;i++){ vec4 r=uRoof[i];
+  for(int i=0;i<24;i++){ vec4 r=uRoof[i];
     if(vW.x>r.x && vW.x<r.z && vW.z>r.y && vW.z<r.w && vW.y<uRoofY[i]) discard; }
   gl_FragColor=vec4(uCol, uA*(1.0-vE*0.85));
   #include <fog_fragment>
 }`,
     transparent:true, depthWrite:false, fog:true});
-  for(let i=0;i<12;i++){ const r=ROOFS[i]; roofV[i].set(r[0],r[1],r[2],r[3]); roofY[i]=r[4]; }
+  // (merge() copied the uniforms: the material's own copies are the ones to write)
+  _roofs.mat=m; _roofs();
   const L=new T.LineSegments(g, m); L.frustumCulled=false; L.renderOrder=2; L.visible=false; scene.add(L);
   return L;
 })();
@@ -463,6 +470,12 @@ function applyWeather(dt, now, dn, dark){
   RAIN.visible=W.rain>0.01;
   if(RAIN.visible){
     const u=RAIN.material.uniforms;
+    if(!_roofs.done){ _roofs.done=true; _roofs(); }               // every building is up by the first rain
+    // the car you are driving: its footprint, under its roof
+    if(typeof driving!=="undefined" && driving && driving.g){ const g=driving.g, c=Math.abs(Math.cos(g.rotation.y)), sn=Math.abs(Math.sin(g.rotation.y));
+      const hx=0.95*c+2.45*sn, hz=0.95*sn+2.45*c, y=g.position.y+1.9;
+      u.uRoof.value[0].set(g.position.x-hx, g.position.z-hz, g.position.x+hx, g.position.z+hz); u.uRoofY.value[0]=y; ROOFS[0]=[g.position.x-hx, g.position.z-hz, g.position.x+hx, g.position.z+hz, y]; }
+    else if(ROOFS[0][4]>-90){ u.uRoofY.value[0]=-99; ROOFS[0]=[0,0,0,0,-99]; }
     u.uCam.value.copy(cam); u.uTime.value=now; u.uAmt.value=W.rain;
     u.uWind.value.set(0.9+Wind.gust*2.6, 0.5+Wind.gust*1.2);
     const lit=0.12+0.88*Math.pow(1-dark,1.1)+W.flash*0.8;
