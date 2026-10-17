@@ -350,19 +350,103 @@ const INC=(function(){
   const ppl=[{P:tp, x:ax-1.9, z:az+3.2, yaw:-2.2, mode:"read"},{P:d1, x:ax-0.9, z:az+4.6, yaw:-0.4+Math.PI, mode:"stand"},
              {P:d2, x:shoulderX+2.4, z:-22.5, yaw:Math.PI*0.5, mode:"phone"}];
   for(const q of ppl){
-    q.y=Terrain.groundAt(q.x,q.z); q.P.g.visible=false;
+    q.y=Terrain.groundAt(q.x,q.z); q.P.g.visible=false; q.x0=q.x; q.z0=q.z;
     PEOPLE.push({kind:"custom", P:q.P, x:q.x, z:q.z, y:q.y, yaw:q.yaw, seed:Math.random()*9,
-      upd(p, dt, now, dark, cd){ p.P.g.visible=CRASH.on; if(!CRASH.on) return; p.P.seed=p.seed;
-        p.P.g.position.set(p.x,p.y,p.z); p.P.g.rotation.y=p.yaw; if(cd<120) poseP(p.P, q.mode, 0, now); }});
+      upd(p, dt, now, dark, cd){ p.P.g.visible=CRASH.on && !q.gone; if(!p.P.g.visible) return; p.P.seed=p.seed;
+        let mode=q.mode;
+        if(q.walkTo){ const dx=q.walkTo.x-p.x, dz=q.walkTo.z-p.z, d=Math.hypot(dx,dz);
+          if(d>0.02){ p.yaw=Math.atan2(dx,dz); p.x=q.walkTo.x; p.z=q.walkTo.z; p.ph=((p.ph||0)+d/1.45)%1; mode="walk"; }
+          p.y=Math.max(Terrain.groundAt(p.x,p.z), roadY(p.z)+PAVE_T*(Math.abs(p.x-HWY.nb)<9?1:0)); }
+        p.P.g.position.set(p.x,p.y,p.z); p.P.g.rotation.y=p.yaw; if(cd<120) poseP(p.P, mode, p.ph||0, now); }});
+    q.reset=()=>{ q.gone=false; q.walkTo=null; const P2=PEOPLE.find(o=>o.P===q.P); if(P2){ P2.x=q.x0; P2.z=q.z0; P2.y=q.y; P2.yaw=q.yaw; } };
   }
-  return {root:root, A:A, B:B, C:C, kit:kit, haz:haz, flares:flares, wash:wash, t:0, next:900+Math.random()*900, steam:0};
+  // the wrecker: a pickup with a boom and wheel-lift on the back and an
+  // amber bar on the cab; it comes later, for the one in the grass
+  const W=take(standingVehicle(2, "#b3241c", shoulderX, 300, Math.PI, gy(300)));
+  { const M=c=>new T.MeshStandardMaterial({color:c, roughness:0.5, metalness:0.3}), add=(geo,mat,x,y,z,rx)=>{ const m=new T.Mesh(geo,mat); m.position.set(x,y,z); if(rx) m.rotation.x=rx; W.g.add(m); return m; };
+    add(new T.BoxGeometry(0.22,0.22,1.9), M(0x2a2a2a), 0, 1.45, -1.7, -0.45);                // the boom
+    add(new T.BoxGeometry(0.30,0.60,0.30), M(0x2a2a2a), 0, 1.05, -1.05);
+    add(new T.BoxGeometry(1.70,0.10,0.24), M(0xd8a51c), 0, 0.42, -3.62);                     // the lift's crossbar
+    add(new T.BoxGeometry(0.16,0.10,0.70), M(0x2a2a2a), 0, 0.45, -3.25);
+    add(new T.BoxGeometry(1.10,0.06,0.26), M(0x1d1d1e), 0, 1.93, -0.30);
+    for(let k=0;k<4;k++) add(new T.BoxGeometry(0.24,0.08,0.24), M(0xe8962a), -0.42+k*0.28, 2.00, -0.30); }
+  W.g.visible=false;
+  // where everything stands at the start, so it can all be put back for the next one
+  const home=[A,B,C,W].map(V=>({V:V, p:V.g.position.clone(), r:V.g.rotation.clone()}));
+  return {root:root, A:A, B:B, C:C, W:W, kit:kit, haz:haz, flares:flares, cones:cones, wash:wash, ppl:ppl, home:home,
+          shoulderX:shoulderX, t:0, next:900+Math.random()*900, steam:0, mv:{}};
 })();
+/* ---- clearing up -------------------------------------------------------------
+   It does not stay. Somewhere past halfway the wrecker comes up the coned-off
+   lane and stops on the shoulder ahead of the car in the grass; the car is
+   winched round and up onto the wheel-lift, nose high, and away they go down
+   the shoulder, the driver riding along. The other car's driver gets back in
+   and goes. The flares burn down; the trooper walks the cones back to the
+   cruiser one by one, gets in, the bar goes dark, and the cruiser pulls out.
+   A mover is a vehicle running a polyline at its own pace: up to speed, and
+   down to a stop at the end if it is to stop there. */
+function _incMover(V, pts, vmax, acc, stop){ return {V:V, pts:pts, vmax:vmax, acc:acc, stop:stop, i:0, s:0, sp:stop?vmax*0.6:0, done:false}; }
+function _incStep(m, dt){
+  if(m.done) return;
+  let left=0; for(let k=m.i;k<m.pts.length-1;k++) left+=Math.hypot(m.pts[k+1].x-m.pts[k].x, m.pts[k+1].z-m.pts[k].z);
+  left-=m.s;
+  let want=m.vmax; if(m.stop) want=Math.min(want, Math.sqrt(2*2.2*Math.max(0,left)));
+  m.sp+=clamp(want-m.sp, -4*dt, m.acc*dt);
+  let d=m.sp*dt;
+  while(d>0 && m.i<m.pts.length-1){ const a=m.pts[m.i], b=m.pts[m.i+1], L=Math.hypot(b.x-a.x, b.z-a.z);
+    if(m.s+d<L){ m.s+=d; d=0; } else { d-=L-m.s; m.s=0; m.i++; } }
+  if(m.i>=m.pts.length-1){ m.done=true; m.i=m.pts.length-2; m.s=Math.hypot(m.pts[m.i+1].x-m.pts[m.i].x, m.pts[m.i+1].z-m.pts[m.i].z); }
+  const a=m.pts[m.i], b=m.pts[m.i+1], L=Math.hypot(b.x-a.x, b.z-a.z)||1, u=m.s/L, x=lerp(a.x,b.x,u), z=lerp(a.z,b.z,u);
+  const g=m.V.g, want2=Math.atan2(b.x-a.x, b.z-a.z);
+  let dy=want2-g.rotation.y; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
+  g.rotation.y+=dy*Math.min(1, dt*2.5); g.rotation.x=0; g.rotation.z=0;
+  g.position.set(x, roadY(z)+PAVE_T, z);
+  for(const w of m.V.wheels) w.rotation.x+=m.sp*dt/m.V.S.wr;
+}
+function _incClear(dt, now, dark){
+  const I=INC, u=I.t/I.dur, M=I.mv, sx=I.shoulderX, lane=laneX(-1,0);
+  // the wrecker comes, and stops ahead of the car in the grass
+  if(u>0.42 && !M.w){ I.W.g.visible=true; M.w=_incMover(I.W, [{x:lane,z:300},{x:lane,z:30},{x:lane+0.2,z:-30},{x:sx-0.3,z:-46},{x:sx+0.2,z:-54}], 20, 2.0, true); M.w.sp=18; }
+  if(M.w && !M.tow){ _incStep(M.w, dt);
+    if(M.w.done){ M.wt=(M.wt||0)+dt;
+      // the winch: the car comes round and up behind the wrecker, nose high
+      const g=I.A.g, H=I.home[0], W=I.W.g, k=smoothstep(2, 14, M.wt);
+      const tx=W.position.x-Math.sin(W.rotation.y)*6.1, tz=W.position.z-Math.cos(W.rotation.y)*6.1;
+      g.position.set(lerp(H.p.x,tx,k), lerp(H.p.y, roadY(tz)+PAVE_T+0.32, k), lerp(H.p.z,tz,k));
+      let dy=W.rotation.y-H.r.y; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
+      g.rotation.set(lerp(H.r.x,-0.11,k), H.r.y+dy*k, lerp(H.r.z,0,k));
+      if(M.wt>16){ M.tow=true; I.ppl[1].gone=true;
+        M.w=_incMover(I.W, [{x:sx+0.2,z:-54},{x:sx,z:-90},{x:sx,z:-900}], 24, 1.8, false); } } }
+  if(M.tow){ _incStep(M.w, dt); const W=I.W.g, g=I.A.g;
+    g.position.set(W.position.x-Math.sin(W.rotation.y)*6.1, W.position.y+0.32, W.position.z-Math.cos(W.rotation.y)*6.1);
+    g.rotation.set(-0.11, W.rotation.y, 0);
+    if(M.w.done){ I.W.g.visible=false; I.A.g.visible=false; } }
+  // the other car goes on its way
+  if(u>0.62 && !M.b){ I.ppl[2].gone=true; M.b=_incMover(I.B, [{x:I.B.g.position.x, z:I.B.g.position.z},{x:sx,z:-70},{x:sx,z:-900}], 27, 2.4, false); }
+  if(M.b){ _incStep(M.b, dt); if(M.b.done) I.B.g.visible=false; }
+  // the flares burn down
+  I.flareK=1-smoothstep(0.55, 0.78, u);
+  // the trooper walks the cones back; then into the cruiser
+  if(u>0.78){ const k=smoothstep(0.80, 0.90, u), n=I.cones.length;
+    I.cones.forEach((c,i)=>{ c.visible = i/n >= k; });
+    const tp=I.ppl[0], C=I.C.g, dx=C.position.x+1.1, dz=C.position.z+0.6, w=smoothstep(0.78, 0.91, u);
+    tp.walkTo={x:lerp(tp.x0,dx,w), z:lerp(tp.z0,dz,w)}; if(u>0.91) tp.gone=true; }
+  // the bar goes dark, and the cruiser pulls out
+  if(u>0.93 && !M.c){ M.c=_incMover(I.C, [{x:I.C.g.position.x, z:I.C.g.position.z},{x:sx,z:-30},{x:sx,z:-70},{x:sx,z:-900}], 28, 2.6, false); }
+  if(M.c){ _incStep(M.c, dt); if(M.c.done || I.C.g.position.z<-700) CRASH.stop(); }
+  return u>0.93;
+}
 CRASH.start=function(){
   if(CRASH.on) return;
-  CRASH.on=true; INC.t=0; INC.dur=420+Math.random()*300; INC.root.visible=true;
+  CRASH.on=true; INC.t=0; INC.dur=360+Math.random()*200; INC.root.visible=true; INC.mv={}; INC.flareK=1;
 };
 CRASH.stop=function(){
   CRASH.on=false; INC.root.visible=false; INC.wash.intensity=0; INC.next=1600+Math.random()*1800;
+  // all of it put back where it was, for next time
+  for(const h of INC.home){ h.V.g.position.copy(h.p); h.V.g.rotation.copy(h.r); h.V.g.visible=h.V!==INC.W; }
+  for(const c of INC.cones) c.visible=true;
+  for(const q of INC.ppl) q.reset();
+  INC.mv={}; INC.flareK=1;
 };
 CRASH.toggle=function(){ if(CRASH.on) CRASH.stop(); else { CRASH.pending=true; } };
 // the lane has to be clear for the cones to go down in it
@@ -383,22 +467,26 @@ function updateIncidents(dt, now, dark){
     return;
   }
   I.t+=dt;
-  if(I.t>I.dur){ CRASH.stop(); return; }
+  if(I.t>I.dur*1.25){ CRASH.stop(); return; }                 // however it went, it is over
+  const barOff=_incClear(dt, now, dark);
+  if(!CRASH.on) return;
   const cam=camera.position, far=Math.hypot(cam.x-I.C.g.position.x, cam.z-I.C.g.position.z);
-  const s=flashBar(I.kit, now, true, dark);
+  const s=flashBar(I.kit, now, !barOff, dark);
   I.wash.intensity=s ? (0.4+2.6*dark)*(far<160?1:0) : 0;
   if(s) I.wash.color.setHex(s>0?0xff2418:0x2a5cff);
   const hz=(now*1.5)%1<0.5 ? 1 : 0;
   for(const h of I.haz) h.material.opacity=hz*(0.45+0.55*dark);
+  const fk=I.flareK===undefined?1:I.flareK;
   for(const f of I.flares){
     f.t+=dt;
-    f.s.material.opacity=(0.55+0.45*dark)*(0.75+0.25*Math.sin(now*31+f.z)*Math.sin(now*17+f.x));
+    f.s.material.opacity=fk*(0.55+0.45*dark)*(0.75+0.25*Math.sin(now*31+f.z)*Math.sin(now*17+f.x));
+    if(fk<0.05) continue;
     if(far<220 && Math.random()<dt*6) SPARKS.emit(f.x, f.y, f.z, (Math.random()-0.5)*0.5, 0.8+Math.random()*0.6, (Math.random()-0.5)*0.5, 0.05, 0.5);
     if(far<220 && Math.random()<dt*3) PUFFS.emit(f.x, f.y+0.1, f.z, 0, 0.25, 0, 0.08, 0.7, 2.2, 0.25, 0.85, 0.6);
   }
   // a little steam off the one in the grass
   I.steam-=dt;
-  if(I.steam<=0 && far<220){ I.steam=0.35;
+  if(I.steam<=0 && far<220 && !I.mv.w){ I.steam=0.35;
     const a=I.A.g, nx=Math.sin(a.rotation.y)*2.0, nz=Math.cos(a.rotation.y)*2.0;
     PUFFS.emit(a.position.x+nx, a.position.y+0.95, a.position.z+nz, 0.05, 0.35, 0.05, 0.15, 1.1, 3.0, 0.22, 0.9, 0); }
 }

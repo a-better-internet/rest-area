@@ -627,6 +627,28 @@ const PEOPLE_API=(function(){
     PEOPLE.push({kind:"stand", mode:"phone", P:buildPerson({h:1.04, skin:SKINS[2], hair:HAIRS[0], shirt:"#5d6a73", pants:"#3b4a66", shoes:"#3a2a1a", long:true, cap:"#1d1d1f"}),
                  x:x, z:z, y:PAVE_T, yaw:Math.atan2(ts.dx,ts.dz)+1.8, seed:r()*10}); }
   // (the state map in the lobby is one of the things visitors stop at: _MAP_SPOT)
+  // somebody sat in the grass with their back to the big boulder by the
+  // grove, legs out, a paperback; now and then a page, now and then a look round
+  { const P=randomPerson(r), bk=new T.Group();
+    for(const sd of [-1,1]){ const pg=new T.Mesh(new T.BoxGeometry(0.075,0.008,0.11), new T.MeshStandardMaterial({color:sd<0?0x2a5d9a:0xf2efe6, roughness:0.8}));
+      pg.position.set(sd*0.038, 0, 0); pg.rotation.z=-sd*0.25; bk.add(pg); }
+    bk.position.set(-0.06, -0.31, 0.06); P.B[P.j.elR].add(bk);
+    PEOPLE.push({kind:"custom", P:P, x:24.48, z:-33.85, y:0, yaw:-Math.PI/2, seed:r()*10, dayOnly:true,
+      upd:(p, dt, now, dark, cd)=>{
+        const on=dark<0.55; P.g.visible=on; if(!on) return;
+        p.y=Terrain.groundAt(p.x,p.z);
+        if(cd<80){ poseP(P, "stand", 0, now); const B=P.B, J=P.j;
+          B[J.root].position.y=0.13;
+          B[J.hpL].rotation.set(-1.50, 0, 0.10); B[J.hpR].rotation.set(-1.42, 0, -0.06);
+          B[J.knL].rotation.x=0.10; B[J.knR].rotation.x=0.55;                        // one knee up
+          B[J.spine].rotation.x=-0.30;                                               // back to the rock
+          const look=smoothstep(0.85,0.97,Math.sin(now*0.11+p.seed));                // now and then, a look round
+          B[J.head].rotation.set(0.55-look*0.6, look*0.7*Math.sin(now*0.3), 0);
+          B[J.shR].rotation.set(-0.95, 0, -0.10); B[J.elR].rotation.x=-1.05;
+          const turn=smoothstep(0.96,1.0,Math.sin(now*0.23+p.seed*3));             // a page
+          B[J.shL].rotation.set(-0.85-turn*0.2, 0, 0.12+turn*0.2); B[J.elL].rotation.x=-1.15; }
+        P.g.position.set(p.x, p.y, p.z); P.g.rotation.y=p.yaw; }});
+    KEEP_OFF.push({x0:23.6, x1:25.4, z0:-34.4, z1:-33.3}); }
   // and a dog being walked round the pet area
   // (south of the bag dispenser at 15.4, 67.2, not through it)
   const loopPts=[{x:12,z:65.4},{x:19,z:65.8},{x:25,z:73},{x:26,z:86},{x:20,z:93},{x:13,z:88},{x:10,z:77}];

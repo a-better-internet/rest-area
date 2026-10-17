@@ -602,8 +602,11 @@ const BOARD={};                       // where the bulletin board's cork is (16c
   for(const [xf,dir] of [[R.x0,1],[R.x1,-1]]){
     const sh=new T.Shape([new T.Vector2(-5.35,3.0), new T.Vector2(5.35,3.0), new T.Vector2(5.35,cy(5.35)+0.02),
                           new T.Vector2(0,cy(0)+0.02), new T.Vector2(-5.35,cy(5.35)+0.02)]);
-    if(dir>0){ const gw=2.30, top2=(z)=>roofLY(z)-0.38;
-      const h=new T.Path(); h.moveTo(-gw,3.18); h.lineTo(-gw,top2(gw)); h.lineTo(0,Math.min(top2(0),cy(0))); h.lineTo(gw,top2(gw)); h.lineTo(gw,3.18); h.lineTo(-gw,3.18);
+    // the window's hole, its top a centimetre under the ceiling it meets: a
+    // hole that strays outside the wall's own outline breaks the triangulation
+    // and leaves one side of the glass plastered over
+    if(dir>0){ const gw=2.30, top2=(z)=>Math.min(roofLY(z)-0.38, cy(z)-0.01);
+      const h=new T.Path(); h.moveTo(-gw,3.18); h.lineTo(-gw,top2(gw)); h.lineTo(0,top2(0)); h.lineTo(gw,top2(gw)); h.lineTo(gw,3.18); h.lineTo(-gw,3.18);
       sh.holes.push(h); }
     const g=new T.ShapeGeometry(sh), U=g.attributes.uv; for(let i=0;i<U.count;i++) U.setXY(i,U.getX(i)*0.5,U.getY(i)*0.5);
     g.rotateY(dir>0?Math.PI/2:-Math.PI/2);

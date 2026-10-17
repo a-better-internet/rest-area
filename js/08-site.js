@@ -354,6 +354,10 @@ const PLAZA_Y=0.15;
     if(s.van) signPanel(0.30, 0.11, ADA_TEX.van, sx-0.04, PLAZA_Y+1.31, s.z, -Math.PI/2);
     addCol(sx-0.05, sx+0.05, s.z-0.05, s.z+0.05, PLAZA_Y-0.3, PLAZA_Y+2.1);
   }
+  for(const [ze,dir] of [[W.z0,-1],[W.z1,1]]){
+    const z2=ze+dir*1.6, g=new FaceGeo().slab([V3(W.x0,PLAZA_Y,ze),V3(W.x1,PLAZA_Y,ze),V3(W.x1,0.012,z2),V3(W.x0,0.012,z2)],0.3,0.66).geo();
+    push("concrete", g, 0,0,0, 0, "#c3c0b8");
+    addRamp(W.x0, W.x1, Math.min(ze,z2), Math.max(ze,z2), "z", ze, z2, PLAZA_Y, 0.012); }
   addZone(W.x0, W.x1, W.z0, W.z1, -1, 4, "THE WALK");
   addZone(P.x0, -5, P.z0, P.z1, -1, 5, "THE PLAZA");
   // paths across the lawn, flush with it: north to the picnic grove,
@@ -362,8 +366,11 @@ const PLAZA_Y=0.15;
     const S=smoothPath(pts, 1.5);
     layRibbon("walkflat", S, -w/2, w/2, 0.035, 0.66, "#c3c0b8");
   };
-  path([{x:-14,z:-19},{x:-13,z:-26},{x:-9,z:-36},{x:-2,z:-48},{x:6,z:-62},{x:12,z:-78}], 2.2);
-  path([{x:-14,z:19},{x:-12,z:28},{x:-6,z:40},{x:2,z:52},{x:8,z:66}], 2.0);
+  // (each ends somewhere: the grove's at the shelter's slab, the pet area's in
+  // a round pad by the bag dispenser, the loop back at the plaza)
+  path([{x:-14,z:-19},{x:-13,z:-26},{x:-9,z:-36},{x:-1,z:-46},{x:7,z:-54},{x:12.9,z:-57.4}], 2.2);
+  path([{x:-14,z:19},{x:-12,z:28},{x:-6,z:40},{x:2,z:52},{x:7.5,z:62},{x:11.6,z:66.2}], 2.0);
+  push("walkflat", discGeo(1.45, 32, 0.66), 12.6, 0.039, 66.6, 0, "#c3c0b8");
   path([{x:-5,z:-19},{x:4,z:-21},{x:12,z:-20},{x:16,z:-10},{x:17,z:0},{x:16,z:10},{x:12,z:20},{x:4,z:21},{x:-5,z:19}], 1.8);
 })();
 
@@ -405,12 +412,12 @@ function lampPost(x, z, h, y0){
   // south lawn, east of the walk: a pin oak, two spruce, a crabapple or two
   FOREST.plant("lawn", 2, 44, {scale:0.95});
   FOREST.plant("lawn", 22, 76, {scale:1.05});
-  FOREST.plant("spruce", -12, 26, {scale:0.9});
+  FOREST.plant("spruce", -7.0, 27.5, {scale:0.9});              // beside the path to the pet area, not on it
   FOREST.plant("spruce", 21, 34, {scale:1.0});
   FOREST.plant("sapling", -16, 58, {scale:0.8, color:"#7e9e4a", autumn:"#c8342a"});
   FOREST.plant("sapling", -2, 30, {scale:0.7, color:"#86a24e", autumn:"#d9a62c"});
   // by the building: a maple each side of the plaza, the one with the flag
-  FOREST.plant("lawn", -15, -27, {scale:0.85});
+  FOREST.plant("lawn", -18, -29, {scale:0.85});
   FOREST.plant("lawn", 24, -6, {scale:1.1});
   FOREST.plant("spruce", 24, 16, {scale:0.8});
 })();

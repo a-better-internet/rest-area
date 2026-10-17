@@ -61,17 +61,38 @@ const AUDIO=(function(){
     wind.bp=ctx.createBiquadFilter(); wind.bp.type="bandpass"; wind.bp.frequency.value=700; wind.bp.Q.value=0.5;
     wind.g=ctx.createGain(); wind.g.gain.value=0;
     loop(pink).connect(wind.bp); wind.bp.connect(wind.g); wind.g.connect(outLP);
-    // the night: crickets (a steady trill) and katydids (rasping pulses)
+    /* the night: a chorus of snowy tree crickets, the August sound of
+       Pennsylvania, chirping more or less together a couple of times a
+       second (each chirp a little burst of pulses, low and breathy at about
+       2.7 kHz, never a pure tone); under them a ground cricket's soft
+       distant trill; and now and then a katydid rasping its three
+       syllables from somewhere in the trees. Everything through a low-pass:
+       none of it is close. */
     night.g=ctx.createGain(); night.g.gain.value=0; night.g.connect(outLP);
-    for(const [f,rate,amt] of [[4400,34,0.5],[4950,29,0.35],[3800,2.6,0.6]]){
-      const o=ctx.createOscillator(); o.type="sine"; o.frequency.value=f;
-      const am=ctx.createGain(); am.gain.value=0;
-      const lfo=ctx.createOscillator(); lfo.type="square"; lfo.frequency.value=rate;
-      const lg=ctx.createGain(); lg.gain.value=amt*0.5; lfo.connect(lg); lg.connect(am.gain);
-      const bias=ctx.createConstantSource ? ctx.createConstantSource() : null;
-      if(bias){ bias.offset.value=amt*0.5; bias.connect(am.gain); bias.start(); }
-      o.connect(am); am.connect(night.g); o.start(); lfo.start();
-    }
+    night.lp=ctx.createBiquadFilter(); night.lp.type="lowpass"; night.lp.frequency.value=3600; night.lp.Q.value=0.4; night.lp.connect(night.g);
+    night.voices=[]; night.next=0; night.katT=3;
+    { const nz=noise(2,"white"), bias=v=>{ const c=ctx.createConstantSource ? ctx.createConstantSource() : null; if(c){ c.offset.value=v; c.start(); } return c; };
+      for(const [f,pan,lvl] of [[2640,-0.65,1.0],[2760,0.45,0.8],[2870,0.05,0.55],[2560,0.8,0.5],[2700,-0.25,0.4]]){
+        const mix=ctx.createGain(); mix.gain.value=1;
+        const o=ctx.createOscillator(); o.type="sine"; o.frequency.value=f*(1+(Math.random()-0.5)*0.01);
+        const og=ctx.createGain(); og.gain.value=0.25; o.connect(og); og.connect(mix); o.start();
+        const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=f; bp.Q.value=16;
+        const bg=ctx.createGain(); bg.gain.value=2.2; loop(nz).connect(bp); bp.connect(bg); bg.connect(mix);
+        // the pulses inside a chirp: a soft wobble, not a gate
+        const am=ctx.createGain(); am.gain.value=0;
+        const lfo=ctx.createOscillator(); lfo.type="sine"; lfo.frequency.value=34+Math.random()*10;
+        const lg=ctx.createGain(); lg.gain.value=0.45; lfo.connect(lg); lg.connect(am.gain); lfo.start();
+        const b=bias(0.55); if(b) b.connect(am.gain); else am.gain.value=0.6;
+        const env=ctx.createGain(); env.gain.value=0;
+        const pn=ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain(); if(pn.pan) pn.pan.value=pan;
+        mix.connect(am); am.connect(env); env.connect(pn); pn.connect(night.lp);
+        night.voices.push({env:env, lvl:lvl, lag:Math.random()*0.06}); }
+      // the ground cricket: a faint continuous trill, further off
+      const tb=ctx.createBiquadFilter(); tb.type="bandpass"; tb.frequency.value=3250; tb.Q.value=9;
+      const tam=ctx.createGain(); tam.gain.value=0; const tl=ctx.createOscillator(); tl.frequency.value=23; const tlg=ctx.createGain(); tlg.gain.value=0.5;
+      tl.connect(tlg); tlg.connect(tam.gain); tl.start(); const tbias=bias(0.5); if(tbias) tbias.connect(tam.gain);
+      const tg=ctx.createGain(); tg.gain.value=0.55; loop(nz).connect(tb); tb.connect(tam); tam.connect(tg); tg.connect(night.lp);
+      night.kat=ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain(); night.kat.connect(night.lp); }
     // the hum indoors, and the transformer's out at the substation
     hum.g=ctx.createGain(); hum.g.gain.value=0; hum.g.connect(master);
     gen.g=ctx.createGain(); gen.g.gain.value=0; gen.g.connect(outLP);
@@ -176,7 +197,23 @@ const AUDIO=(function(){
     wind.g.gain.setTargetAtTime((0.015+Wind.gust*0.10)*(0.5+inWoods*0.8), t, 0.3);
     wind.bp.frequency.setTargetAtTime(500+Wind.gust*600, t, 0.4);
     // the insects come in at dusk; fewer in October
-    night.g.gain.setTargetAtTime(smoothstep(0.35,0.8,dark)*(FOREST.isAutumn()?0.006:0.016), t, 0.8);
+    const nightLvl=smoothstep(0.35,0.8,dark)*(FOREST.isAutumn()?0.005:0.013);
+    night.g.gain.setTargetAtTime(nightLvl, t, 0.8);
+    if(nightLvl>0.0005){
+      // the chirps, scheduled a little ahead: slower when it is cool
+      const per=FOREST.isAutumn() ? 0.62 : 0.46;
+      if(night.next<t) night.next=t+0.05;
+      while(night.next<t+0.3){ const at=night.next;
+        for(const v of night.voices){ const a0=at+v.lag+(Math.random()-0.5)*0.015, g=v.env.gain;
+          g.setValueAtTime(0, a0); g.linearRampToValueAtTime(v.lvl, a0+0.025); g.setValueAtTime(v.lvl, a0+0.10); g.linearRampToValueAtTime(0, a0+0.16); }
+        night.next+=per*(1+(Math.random()-0.5)*0.04); }
+      // a katydid: ka-ty-did, or just ka-ty, from a random side
+      night.katT-=dt;
+      if(night.katT<=0){ night.katT=(FOREST.isAutumn()?7:2.5)+Math.random()*5;
+        if(night.kat.pan) night.kat.pan.setValueAtTime(Math.random()*1.6-0.8, t);
+        const f=3500+Math.random()*700, n=Math.random()<0.7?3:2, at=t+0.05, pk=0.35+Math.random()*0.4;
+        for(let k=0;k<n;k++) burst(at+k*0.15, 0.06, f, 2.2, pk, night.kat); }
+    }
     hum.g.gain.setTargetAtTime(inside?0.010*GRID.bldg:0, t, 0.2);
     let gd=1e9; for(const p of GEN_POS) gd=Math.min(gd, Math.hypot(cam.x-p.x, cam.z-p.z));
     // the transformer's hum, and when the set is running, the set: loud close

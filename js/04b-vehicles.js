@@ -262,6 +262,21 @@ function loftBody(D, S, paint, trim, coarse){
   return {OP:OP, sec:sec, pt:pt, nrm:nrm, angAt:angAt, patch:patch, zN:zs[zs.length-1], zT:zs[0]};
 }
 
+/* ---- a lamp laid on the skin where it turns the corner --------------------
+   A patch of the body itself between z0 and z1 and a band of height either
+   side of y, pushed a few millimetres out: it follows the curve in plan
+   and in section, so it never stands off the corner at an angle the way a
+   flat box set on one normal did. sd picks the side (the left one is the
+   right one's angles mirrored). Returns where its light comes from. */
+function cornerLamp(B, OP, sd, z0, z1, y, hh, color, fin, out){
+  const zc=(z0+z1)/2, a0=B.angAt(zc, y-hh), a1=B.angAt(zc, y+hh);
+  if(sd>0) B.patch(OP, z0, z1, a0, a1, out, color, fin, 5, 2);
+  else B.patch(OP, z0, z1, Math.PI-a1, Math.PI-a0, out, color, fin, 5, 2);
+  const ac=B.angAt(zc, y), p=B.pt(zc, ac), n=B.nrm(zc, ac);
+  if(sd<0){ p.x=-p.x; n.x=-n.x; }
+  return {p:p.addScaledVector(n, out+0.04), n:n};
+}
+
 /* ---- the greenhouse: glass, with the roof and pillars laid over it -------- */
 function greenhouse(G, OP, GL, paint){
   const fA=t=>1-Math.pow(1-t,1.7);
@@ -361,15 +376,15 @@ function carParts(kind, paintHex, coarse){
   const both=(fn)=>{ fn(1); fn(-1); };
   // lamps on the corners, where the skin turns
   both(sd=>{
-    const zH=B.zN-0.10, aH=B.angAt(zH, D.headY), pH=B.pt(zH,aH), nH=B.nrm(zH,aH);
-    const p=sd>0?pH:mir(pH), n=sd>0?nH:mirN(nH);
-    onSurf(OP, 0.34, 0.11, 0.035, p, n, 0xdfe4e6, FIN.lens, 0.002);
-    onSurf(OP, 0.26, 0.05, 0.036, p.clone().addScaledVector(_UP,-0.005), n, 0x9aa3a8, FIN.chrome, 0.009);
-    LAMPS.head.push({p:p.clone().addScaledVector(n,0.045), n:n.clone()});
-    const zT=B.zT+0.10, aT=B.angAt(zT, D.tailY), pT=B.pt(zT,aT), nT=B.nrm(zT,aT);
-    const q=sd>0?pT:mir(pT), m=sd>0?nT:mirN(nT);
-    onSurf(OP, 0.32, 0.12, 0.035, q, m, 0x8a1410, FIN.lens, 0.002);
-    LAMPS.tail.push({p:q.clone().addScaledVector(m,0.045), n:m.clone()});
+    // a dark bezel, the lens inside it, a chrome reflector band across its foot
+    cornerLamp(B, OP, sd, B.zN-0.208, B.zN-0.024, D.headY+0.002, 0.060, 0x3a3e42, FIN.trim, 0.0025);
+    const h=cornerLamp(B, OP, sd, B.zN-0.20, B.zN-0.03, D.headY+0.004, 0.052, 0xdfe4e6, FIN.lens, 0.0055);
+    cornerLamp(B, OP, sd, B.zN-0.17, B.zN-0.05, D.headY-0.022, 0.012, 0x9aa3a8, FIN.chrome, 0.0080);
+    LAMPS.head.push(h);
+    cornerLamp(B, OP, sd, B.zT+0.02, B.zT+0.21, D.tailY, 0.068, 0x2a1414, FIN.trim, 0.0025);
+    const t=cornerLamp(B, OP, sd, B.zT+0.035, B.zT+0.195, D.tailY, 0.055, 0x8a1410, FIN.lens, 0.0055);
+    cornerLamp(B, OP, sd, B.zT+0.05, B.zT+0.12, D.tailY-0.03, 0.014, 0xd8d4cc, FIN.lens, 0.0080);   // the reversing lamp
+    LAMPS.tail.push(t);
   });
   // the front: grille and lower intake on the nose cap
   {
@@ -639,10 +654,8 @@ function truckParts(kind, paintHex, trailerHex, livery, coarse){
   for(let k=0;k<11;k++) vBox(OP, 0.025, 0.96, 0.05, -0.50+k*0.10, 1.36, S.nose+0.014, 0x24262a, FIN.trim);
   vBox(OP, 2.54, 0.42, 0.32, 0, 0.74, S.nose+0.04, CHR, FIN.chrome);
   for(const sd of [-1,1]){
-    const z=S.nose-0.22, a=HB.angAt(z, 1.62), p=HB.pt(z,a), n=HB.nrm(z,a);
-    const q=sd>0?p:new T.Vector3(-p.x,p.y,p.z), m=sd>0?n:new T.Vector3(-n.x,n.y,n.z);
-    onSurf(OP, 0.36, 0.20, 0.04, q, m, 0xdfe4e6, FIN.lens, 0.0);
-    LAMPS.head.push({p:q.clone().addScaledVector(m,0.05), n:m.clone()});
+    cornerLamp(HB, OP, sd, S.nose-0.36, S.nose-0.07, 1.62, 0.12, 0x2a2d30, FIN.trim, 0.003);
+    LAMPS.head.push(cornerLamp(HB, OP, sd, S.nose-0.34, S.nose-0.09, 1.62, 0.095, 0xdfe4e6, FIN.lens, 0.007));
   }
   // the frame, the deck plate, the fifth wheel, the air and power lines
   vBox(OP, 0.92, 0.30, 7.4, 0, 1.00, 6.0, BLK, FIN.metal);
