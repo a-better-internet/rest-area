@@ -51,13 +51,17 @@ const THREE_JS=process.env.THREE_JS || path.join(ROOT, "tools", "three.min.js");
   }, PAD);
   await page.goto("file://"+path.join(ROOT,"index.html"));
   await page.waitForFunction(()=>window.REST, null, {timeout:240000});
+  let list=await page.evaluate(()=>window.__SIGNS.slice());
   // and what is drawn while it runs: the lobby's screens, the arcade's, the chalkboard by the dartboard
-  await page.evaluate(()=>{ REST.start(); });
-  const frames=n=>page.evaluate(n=>new Promise(res=>{ let k=0; const f=()=>{ if(++k>=n) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); }), n);
-  for(const [x,z,y] of [[2,0,0.5],[72,-216,-1.0],[74,-179.6,0.2]]){
-    await page.evaluate(([x,z,y])=>REST.go(x,z,0,y), [x,z,y]); await frames(30); }
-  await page.evaluate(()=>{ if(typeof DARTS!=="undefined" && DARTS.draw){ DARTS.newGame&&DARTS.newGame(); DARTS.draw(); } });
-  const list=await page.evaluate(()=>window.__SIGNS);
+  // (if the page gives out part way, what was found while it built is still reported)
+  try{
+    await page.evaluate(()=>{ REST.start(); });
+    const frames=n=>page.evaluate(n=>new Promise(res=>{ let k=0; const f=()=>{ if(++k>=n) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); }), n);
+    for(const [x,z,y] of [[2,0,0.5],[72,-216,-1.0],[74,-179.6,0.2]]){
+      await page.evaluate(([x,z,y])=>REST.go(x,z,0,y), [x,z,y]); await frames(30); }
+    await page.evaluate(()=>{ if(typeof DARTS!=="undefined" && DARTS.draw){ DARTS.newGame&&DARTS.newGame(); DARTS.draw(); } });
+    list=await page.evaluate(()=>window.__SIGNS);
+  }catch(e){ console.log("(the play-through stopped: "+String(e.message).split("\n")[0]+")"); }
   // one line per distinct (place, text)
   const seen=new Map();
   for(const s of list){ const k=s.at+"|"+s.str; if(!seen.has(k) || seen.get(k).over<s.over) seen.set(k, s); }
