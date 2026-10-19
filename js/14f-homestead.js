@@ -66,7 +66,7 @@ bucketOf("wallpaper", ()=>{
     return out;
   };
   // the stone it stands on
-  for(const [a,b,c,d] of [[x0,x1,z0,z0+0.3],[x0,x1,z1-0.3,z1],[x0,x0+0.3,z0,z1],[x1-0.3,x1,z0,z1]])
+  for(const [a,b,c,d] of [[x0,x1,z0,z0+0.3],[x0,x1,z1-0.3,z1],[x0,x0+0.3,z0+0.3,z1-0.3],[x1-0.3,x1,z0+0.3,z1-0.3]])   // (the ends between the sides, not over them)
     wallBox("rock", a, b, c, d, HY-0.6, FF, "#8d877b", 0.5, HY-0.6);
   // the ground floor, and the boards under it (seen through the holes)
   floorAt("beam", x0+T2, x1-T2, z0+T2, z1-T2, FF+0.004, "#7a6a54", 0.9);
@@ -296,8 +296,9 @@ bucketOf("wallpaper", ()=>{
     if(onW){ const w=0.18+r()*0.3; if(clearOf(WEST, z, w, y, h)) push("paintm", planeGeo(w, h, 0), x0+T2+0.012+o, y, z, Math.PI/2, "#6a5c48"); }
     else if(!inDoor(z)) push("paintm", planeGeo(0.12, h, 0), PX-0.112-o, y, z, -Math.PI/2, "#7a6a52", 0, (r()-0.5)*0.12); }
   // water stains down from the ceiling, and damp coming up the walls
-  let _so=0;      // each stain a hair proud of the last, so two that overlap never share a plane
-  const stain=(x,z,ry,y,w,h,c)=>{ _so+=0.0012; push("paintm", new T.CircleGeometry(0.5,10).scale(w,h,1), x+Math.sin(ry)*_so, y, z+Math.cos(ry)*_so, ry, c); };
+  const _so=new Map();   // each stain on a wall a few mm proud of the last on it, so two that overlap never share a plane
+  const stain=(x,z,ry,y,w,h,c)=>{ const key=ry.toFixed(2)+"|"+(Math.abs(Math.sin(ry))>0.5?x:z).toFixed(2), o=(_so.get(key)||0)+0.003; _so.set(key, o);
+    push("paintm", new T.CircleGeometry(0.5,10).scale(w,h,1), x+Math.sin(ry)*o, y, z+Math.cos(ry)*o, ry, c); };
   for(let k=0;k<16;k++){ const side=(r()*4)|0, w=0.4+r()*0.9, h=0.5+r()*1.2, c=r()<0.6?"#6e604a":"#5a5444";
     const y=r()<0.5 ? FF+2.6-h*0.45 : FF+h*0.4;
     const xx=x0+0.4+r()*(x1-x0-0.8), zz=z0+0.5+r()*(z1-z0-1);
@@ -306,8 +307,13 @@ bucketOf("wallpaper", ()=>{
     else if(side===2){ if(clearOf(WEST, zz, w, y, h)) stain(x0+T2+0.024, zz, Math.PI/2, y, w, h, c); }
     else { const zz=z0+0.5+r()*(z1-z0-1); if(!inDoor(zz-w/2) && !inDoor(zz+w/2)) stain(PX+0.114, zz, Math.PI/2, y, w, h, c); } }
   // dirt and leaves blown in across the floor
-  for(let k=0;k<40;k++){ const x=x0+0.4+r()*(x1-x0-0.8), z=z0+0.4+r()*(z1-z0-0.8);
-    push("paintm", new T.CircleGeometry(0.08+r()*0.35, 7), x, FF+0.006+r()*0.002, z, 0, ["#4a3a28","#6a4a2a","#3e3428","#7a5a30"][(r()*4)|0], -Math.PI/2, 0); }
+  // (one where it would lie over another is left out: flat on the floor, two cannot share a plane;
+  //  the draws from r() are the same either way, so nothing after this moves)
+  { const laid=[];
+    for(let k=0;k<40;k++){ const x=x0+0.4+r()*(x1-x0-0.8), z=z0+0.4+r()*(z1-z0-0.8), rad=0.08+r()*0.35, dy=r()*0.002, col=["#4a3a28","#6a4a2a","#3e3428","#7a5a30"][(r()*4)|0];
+      if(laid.some(q=>Math.hypot(q[0]-x, q[1]-z)<q[2]+rad)) continue;
+      if(x+rad>HX+3.0 && x-rad<HX+3.7 && z+rad>HZ+2.6 && z-rad<HZ+3.4) continue;            // nor over the hole in the kitchen floor
+      laid.push([x, z, rad]); push("paintm", new T.CircleGeometry(rad, 7), x, FF+0.007+dy, z, 0, col, -Math.PI/2, 0); } }
   // the ceiling, down in one corner of the parlour: joists showing, the rest on the floor
   const ch={x0:HX-2.6, x1:HX-1.0, z0:HZ-2.4, z1:HZ-0.9};
   const STW={x0:SX0, x1:SX1, z0:SZO, z1:SZT+0.03};           // the stairwell, open to the hall above
@@ -509,7 +515,7 @@ bucketOf("wallpaper", ()=>{
       bx("beam", 0.95, 0.52, 0.55, kx, UF+0.26, kz, 0.6, 0, "#4a3426");
       for(const y of [0.10,0.42]) bx("metal", 0.97, 0.04, 0.57, kx, UF+y, kz, 0.5, 0, "#6a5a3a");
       push("beam", boxGeo(0.95, 0.06, 0.55, 0.6), kx, UF+0.70, kz-0.30, 0, "#4a3426", 1.25, 0);
-      for(let k=0;k<7;k++) push("paintm", boxGeo(0.16, 0.003, 0.11, 0), kx-0.6+r()*1.4, UF+0.006+k*0.0015, kz+0.3+r()*0.8, r()*3, r()<0.5?"#e6dcc4":"#d8ccb0");
+      for(let k=0;k<7;k++) push("paintm", boxGeo(0.16, 0.003, 0.11, 0), kx-0.6+r()*1.4, UF+0.008+k*0.004, kz+0.3+r()*0.8, r()*3, r()<0.5?"#e6dcc4":"#d8ccb0");   // (each a few mm over the last)
       push("paintm", boxGeo(0.80, 0.05, 0.42, 0), kx, UF+0.50, kz, 0, "#d8ccb0");
       addCol(kx-0.5, kx+0.5, kz-0.3, kz+0.3, UF-0.3, UF+0.6);
       addUse(kx, kz+0.75, UF, "READ THE LETTERS", ()=>toast("FROM A SON IN THE ARMY, 1969 TO 1971. THE LAST ONE SAYS HE'LL BE HOME FOR THE HAYING","#cfe0d4"), 1.0);
@@ -663,7 +669,7 @@ bucketOf("wallpaper", ()=>{
     const kx=PX+0.10+0.82;
     bx("paintm", 1.6, 0.86, 0.58, kx, FF+0.43, z1-T2-0.30, 0, 0, "#8a8270");
     bx("porcelain", 0.80, 0.08, 0.50, kx+0.18, FF+0.90, z1-T2-0.30, 0, 0, "#d8d0bc");
-    push("paintm", planeGeo(0.62,0.36,0), kx+0.18, FF+0.945, z1-T2-0.30, 0, "#5a5446", -Math.PI/2, 0);
+    push("paintm", planeGeo(0.62,0.36,0), kx+0.18, FF+0.946, z1-T2-0.30, 0, "#5a5446", -Math.PI/2, 0);   // the basin, 6 mm over the top
     tube("chrome", V3(kx+0.18, FF+0.94, z1-T2-0.08), V3(kx+0.18, FF+1.12, z1-T2-0.14), 0.015, 6, "#9a9080");
     addCol(kx-0.8, kx+0.8, z1-T2-0.6, z1-T2, FF-0.5, FF+0.95);
     push("paintm", boxGeo(0.45, 0.62, 0.02, 0), kx-0.3, FF+0.02, z1-T2-0.95, 0.5, "#8a8270", -Math.PI/2, 0);
@@ -688,7 +694,7 @@ bucketOf("wallpaper", ()=>{
     push("rock", new T.CylinderGeometry(0.58,0.58,0.70,14,1,true), wx, y+0.30, wz, 0, "#6d685e");
     push("rock", new T.RingGeometry(0.58,0.74,14), wx, y+0.665, wz, 0, "#9a9488", -Math.PI/2, 0);
     push("paintm", new T.CircleGeometry(0.58,14), wx, y-0.2, wz, 0, "#050505", -Math.PI/2, 0);
-    for(let k=0;k<3;k++) bx("beam", 0.2, 0.04, 1.5-k*0.25, wx-0.36+k*0.22, y+0.70, wz-0.1*k, 0.6, 0.1*k, "#6a5a44");
+    for(let k=0;k<3;k++) bx("beam", 0.2, 0.04, 1.5-k*0.25, wx-0.36+k*0.22, y+0.70+k*0.012, wz-0.1*k, 0.6, 0.1*k, "#6a5a44");   // (each a little over the last where they cross)
     for(const sd of [-1,1]) bx("beam", 0.09, 1.5, 0.09, wx+sd*0.85, y+0.75, wz, 0.6, 0, "#5a4a38");
     tube("metal", V3(wx-0.9, y+1.35, wz), V3(wx+0.9, y+1.35, wz), 0.04, 6, "#5a3a2a");
     addCol(wx-0.85, wx+0.85, wz-0.85, wz+0.85, y-0.5, y+0.7);

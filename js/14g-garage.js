@@ -189,14 +189,15 @@ function blowerParts(){
     const eY=slopeY(X0-OH);
     for(const sd of [-1,1]){
       const xe=sd<0?X0-OH:X1+OH;
-      push("roofmetal", new FaceGeo().slab([V3(xe,eY,Z0-OH), V3(XM,RIDGE,Z0-OH), V3(XM,RIDGE,Z1+OH), V3(xe,eY,Z1+OH)], RT, 0.5).geo(), 0,0,0, 0, ROOF);
+      const o2=OH+(sd>0?0.006:0);                    // (the two slabs' gable ends a few mm apart where they meet at the ridge)
+      push("roofmetal", new FaceGeo().slab([V3(xe,eY,Z0-o2), V3(XM,RIDGE,Z0-o2), V3(XM,RIDGE,Z1+o2), V3(xe,eY,Z1+o2)], RT, 0.5).geo(), 0,0,0, 0, ROOF);
       // the ribs down it
       for(let z=Z0-OH+0.3; z<Z1+OH-0.1; z+=0.6){
         const a=V3(xe, eY+0.025, z), b=V3(XM-sd*0.05, RIDGE+0.022, z);
         tube("roofmetal", a, b, 0.018, 3, ROOF); }
       // the fascia and a gutter, a downspout at each end
       bx("paintm", 0.04, 0.18, Z1-Z0+2*OH, xe, eY-0.10, (Z0+Z1)/2, 0, 0, TRIM);
-      push("paintm", boxGeo(0.12, 0.10, Z1-Z0+2*OH, 0), xe+sd*0.07, eY-0.13, (Z0+Z1)/2, 0, "#6a5a48");
+      push("paintm", boxGeo(0.12, 0.10, Z1-Z0+2*OH+0.012, 0), xe+sd*0.07, eY-0.13, (Z0+Z1)/2, 0, "#6a5a48");   // (its ends past the fascia's)
       for(const z of [Z0+0.15, Z1-0.15]){ const x=sd<0?X0-0.06:X1+0.06;
         bx("paintm", 0.08, eY-0.15, 0.08, x, (eY-0.15)/2, z, 0, 0, "#6a5a48");
         push("paintm", boxGeo(0.10, 0.06, 0.30, 0), x+sd*0.05, 0.05, z, 0, "#6a5a48"); }
@@ -365,7 +366,10 @@ function blowerParts(){
     bx("paintm", 0.06, 0.10, 0.20, x0+0.04, top+0.07, z0+0.30, 0, 0, "#2a5d9a");
     cyl("paintm", 0.08, 0.08, 0.16, 12, x0+0.45, top+0.08, z0+1.1, "#b8231e");
     push("paintm", new T.TorusGeometry(0.14, 0.02, 6, 16), x0+0.45, top+0.02, z0+1.7, 0, "#e0a020", Math.PI/2, 0);
-    for(let k=0;k<6;k++) bx("paintm", 0.05, 0.02, 0.10, x0+0.25+r()*0.4, top+0.01, z0+0.6+r()*1.8, 0, r()*3, "#7d8186");
+    { const laid=[];                                   // (none laid over another: on the bench they would share a plane)
+      for(let k=0;k<6;k++){ const x=x0+0.25+r()*0.4, z=z0+0.6+r()*1.8, ry=r()*3;
+        if(laid.some(q=>Math.hypot(q[0]-x, q[1]-z)<0.13)) continue; laid.push([x,z]);
+        bx("paintm", 0.05, 0.02, 0.10, x, top+0.01, z, 0, ry, "#7d8186"); } }
     addCol(x0, x1, z0, z1, GF-0.5, top+0.05);
     // the radio: a yellow jobsite box in a roll cage, the dial lit
     const rx=x0+0.40, rz=z1-0.40;

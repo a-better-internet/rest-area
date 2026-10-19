@@ -64,7 +64,7 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   // the doors: aluminium and glass, closers on them, out to either lot
   for(const [x,ry,hz] of [[V.x0+WT/2, -Math.PI/2, DZ0+0.04],[V.x1-WT/2, Math.PI/2, DZ1-0.04]]){
     for(const z of [DZ0+0.02, DZ1-0.02]) bx("paintm", WT+0.05, 2.22, 0.05, x, FLV+1.11, z, 0, 0, BRZ);
-    bx("paintm", WT+0.05, 0.06, DZ1-DZ0, x, FLV+2.22+0.03, (DZ0+DZ1)/2, 0, 0, BRZ);
+    bx("paintm", WT+0.06, 0.06, DZ1-DZ0+0.11, x, FLV+2.22+0.03, (DZ0+DZ1)/2, 0, 0, BRZ);   // the head deeper and longer than the posts it caps
     makeDoor(XF(x, hz, ry), 0, FLV+0.01, 0, "VENDING", true, 0, "store");
     push("mat", planeGeo(1.1, 0.8, 1.0), x+(ry<0?0.65:-0.65), FLV+0.006, (DZ0+DZ1)/2, Math.PI/2, "#2a2a2a", -Math.PI/2, 0);
   }
@@ -72,7 +72,7 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   // the roof: a flat slab and its bronze fascia, run out over the front as a canopy on two posts
   const RX0=V.x0-1.5, SX0=RX0-0.15, SX1=V.x1+0.15, SZ0=V.z0-0.3, SZ1=V.z1+0.3;
   bx("concrete", SX1-SX0, 0.26, SZ1-SZ0, (SX0+SX1)/2, ROOF+0.13, (SZ0+SZ1)/2, 0.5, 0, "#8d8b86");
-  for(const [w,d,x,z] of [[SX1-SX0+0.06, 0.03, (SX0+SX1)/2, SZ0-0.015],[SX1-SX0+0.06, 0.03, (SX0+SX1)/2, SZ1+0.015],
+  for(const [w,d,x,z] of [[SX1-SX0+0.066, 0.03, (SX0+SX1)/2, SZ0-0.015],[SX1-SX0+0.066, 0.03, (SX0+SX1)/2, SZ1+0.015],   // (the long runs 3 mm past the ends')
                           [0.03, SZ1-SZ0, SX0-0.015, (SZ0+SZ1)/2],[0.03, SZ1-SZ0, SX1+0.015, (SZ0+SZ1)/2]])
     bx("paintm", w, 0.34, d, x, ROOF+0.12, z, 0, 0, BRZ);
   ceilAt("paintm", SX0, V.x0, SZ0, SZ1, ROOF-0.002, "#d9d6cf");
@@ -80,7 +80,7 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   for(const z of [-1.4, 2.4]){                                               // two cans in the soffit, on with the dark
     cyl("lamplens", 0.10,0.10,0.02,14, RX0+0.6, ROOF-0.012, z, "#ffffff");
     LAMPS.push({x:RX0+0.6, y:ROOF-0.15, z:z, color:0xe8f0ff, intensity:0.70, dist:10, decay:1.5, mothy:true, circ:"site"});
-    push("lightpool", discGeo(1.6, 24, 0), V.x0-1.4, 0.162, z, 0, "#e8f0ff"); }
+    push("lightpool", discGeo(1.6, 24, 0), V.x0-1.4, 0.168, z, 0, "#e8f0ff"); }
   // a wall pack over the back door, to the cars
   bx("paintm", 0.18, 0.22, 0.14, V.x1+0.07, FLV+2.55, 0.5, 0, 0, BRZ);
   push("lamplens", boxGeo(0.02, 0.12, 0.10, 0), V.x1+0.145, FLV+2.53, 0.5, 0, "#ffffff");

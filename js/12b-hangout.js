@@ -115,7 +115,7 @@ function chalkDraw(c, names, colA, colB, note){
   for(let k=1;k<=NS;k++){
     const xa=P.x0+(k-1)*RUN, xb=xa+RUN, y=FY-k*RISE;
     bx("concrete", RUN, y-FB, P.z1-P.z0-0.004, (xa+xb)/2, (y+FB)/2, (P.z0+P.z1)/2, 0.5, 0, "#a8a49a");
-    bx("paint", 0.05, 0.004, P.z1-P.z0-0.03, xb-0.026, y+0.002, (P.z0+P.z1)/2, 0, 0, "#e2b31c");     // at the edge you step down off
+    bx("paint", 0.05, 0.004, P.z1-P.z0-0.03, xb-0.022, y+0.002, (P.z0+P.z1)/2, 0, 0, "#e2b31c");     // at the edge you step down off, 3 mm proud of the riser
     addFlat(xa, xb, P.z0, P.z1, y);
   }
   bx("paint", 0.05, 0.004, P.z1-P.z0-0.006, P.x0-0.025, FY+0.006, (P.z0+P.z1)/2, 0, 0, "#e2b31c");

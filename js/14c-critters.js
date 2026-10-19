@@ -68,8 +68,9 @@ const SQ_TREES=[[-2,-40,1.15],[11,-45,1.05],[-15,-61,1.1],[6,-69,1.2],[25,-65,1.
   for(let i=0;i<4;i++){
     const g=new T.Group(); g.rotation.order="YXZ";
     const hip=new T.Group(); hip.position.set(0,0.075,-0.055); g.add(hip);          // everything above the hind legs turns here
-    { const b=new T.Mesh(bodyGeo, GR); b.scale.set(0.92,1.0,1.0); b.position.set(0, 0.014, 0.012); b.castShadow=true; hip.add(b);
-      const f=new T.Mesh(bodyGeo, BR); f.scale.set(0.95,0.78,0.86); f.position.set(0, 0.004, 0.012); hip.add(f);          // the brown along the flanks
+    // (the shells differ by a clear margin where they cross, so no band of the one lies in the other)
+    { const b=new T.Mesh(bodyGeo, GR); b.scale.set(0.90,1.0,1.0); b.position.set(0, 0.016, 0.012); b.castShadow=true; hip.add(b);
+      const f=new T.Mesh(bodyGeo, BR); f.scale.set(1.0,0.74,0.86); f.position.set(0, 0.002, 0.012); hip.add(f);          // the brown along the flanks
       const w=new T.Mesh(bellyGeo, WH); w.scale.set(0.86,0.72,0.82); w.position.set(0,-0.010, 0.030); hip.add(w); }     // the pale belly
     const head=new T.Group(); head.position.set(0, 0.040, 0.165); hip.add(head);
     head.add(sph(1, 0.036,0.034,0.045, GR, 0, 0.010, 0.022));

@@ -121,9 +121,11 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
   const TOP=Y+1.25;                                   // the rims of the aeration tank and the clarifier
   const RAIL="#d9b52a";                               // safety yellow
   // a guardrail between two points at a level: posts every metre and a half, the top and mid rails, a collider
+  const posts=new Set();                              // a corner post two rails share is put up once
   const rail=(x0,z0,x1,z1,y,noCol)=>{
     const L=Math.hypot(x1-x0,z1-z0), n=Math.max(1,Math.ceil(L/1.5));
-    for(let k=0;k<=n;k++){ const px=x0+(x1-x0)*k/n, pz=z0+(z1-z0)*k/n; tube("paintm", V3(px,y,pz), V3(px,y+1.07,pz), 0.022, 6, RAIL); }
+    for(let k=0;k<=n;k++){ const px=x0+(x1-x0)*k/n, pz=z0+(z1-z0)*k/n, key=px.toFixed(2)+","+pz.toFixed(2)+","+y.toFixed(2);
+      if(posts.has(key)) continue; posts.add(key); tube("paintm", V3(px,y,pz), V3(px,y+1.07,pz), 0.022, 6, RAIL); }
     tube("paintm", V3(x0,y+1.07,z0), V3(x1,y+1.07,z1), 0.024, 6, RAIL);
     tube("paintm", V3(x0,y+0.55,z0), V3(x1,y+0.55,z1), 0.018, 6, RAIL);
     if(!noCol) addCol(Math.min(x0,x1)-0.05, Math.max(x0,x1)+0.05, Math.min(z0,z1)-0.05, Math.max(z0,z1)+0.05, y-0.1, y+1.1);
@@ -131,7 +133,7 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
   // a steel stair up the -z way, from the ground at z=za to a landing at y1 at z=zb (za>zb), x from x0 to x1
   const stair=(x0,x1,za,zb,y1)=>{
     const rise=y1-G, n=Math.max(2,Math.round(rise/0.18)), h=rise/n, run=(za-zb)/n;
-    for(let i=1;i<=n;i++){ const z=za-run*(i-0.5), y=G+h*i;
+    for(let i=1;i<n;i++){ const z=za-run*(i-0.5), y=G+h*i;                 // (the last step up is the landing itself)
       push("grating", boxGeo(x1-x0, 0.03, run+0.02, 0), (x0+x1)/2, y-0.015, z, 0, "#ffffff"); }
     for(const x of [x0-0.03, x1+0.03]){
       const a=V3(x, G, za), b=V3(x, y1, zb); tube("paintm", a, b, 0.05, 4, "#6d7376");          // the stringers
@@ -160,13 +162,13 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
   const CWx0=138.5, CWx1=139.5;
   stair(CWx0, CWx1, AT.z1+3.05, AT.z1+1.15, TOP+0.03);
   deck(CWx0-1.0, CWx1+1.0, AT.z1, AT.z1+1.15, TOP+0.03);
-  deck(CWx0, CWx1, AT.z0+0.3, AT.z1, TOP+0.03);
+  deck(CWx0, CWx1, AT.z0+0.3, AT.z1-0.012, TOP+0.03);                        // (short of the landing's edge)
   rail(CWx0-1.0, AT.z1+1.15, CWx0-1.0, AT.z1, TOP+0.03); rail(CWx1+1.0, AT.z1+1.15, CWx1+1.0, AT.z1, TOP+0.03);
   rail(CWx0-1.0, AT.z1, CWx0, AT.z1, TOP+0.03); rail(CWx1, AT.z1, CWx1+1.0, AT.z1, TOP+0.03);
   rail(CWx0, AT.z1, CWx0, AT.z0+0.3, TOP+0.03); rail(CWx1, AT.z1, CWx1, AT.z0+0.3, TOP+0.03);
   rail(CWx0, AT.z0+0.3, CWx1, AT.z0+0.3, TOP+0.03);                                    // across the far end
   // the air: a header along the catwalk's east rail, drops down into the water, a valve and a wheel on each
-  tube("metal", V3(CWx1+0.18, TOP+0.45, AT.z1+0.9), V3(CWx1+0.18, TOP+0.45, AT.z0+0.4), 0.05, 10, "#8d9396");
+  tube("metal", V3(CWx1+0.18, TOP+0.45, AT.z1+0.54), V3(CWx1+0.18, TOP+0.45, AT.z0+0.4), 0.05, 10, "#8d9396");   // (its end inside the main's drop, below)
   for(const z of [93.4, 95.1, 96.8, 98.5]){
     tube("metal", V3(CWx1+0.18, TOP+0.45, z), V3(CWx1+0.55, TOP+0.45, z), 0.035, 8, "#8d9396");
     tube("metal", V3(CWx1+0.55, TOP+0.45, z), V3(CWx1+0.55, AT.wl-0.6, z), 0.035, 8, "#8d9396");
@@ -179,12 +181,11 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
   // the air main from the blowers: out of the control building's east wall, up on posts over the yard,
   // over the landing well above anybody's head, and down beside the catwalk into the header
   const AM=Y+3.7, ax=CWx1+0.18, az=AT.z1+0.5;
-  tube("metal", V3(129.0, Y+2.1, 114.0), V3(131.0, Y+2.1, 114.0), 0.075, 10, "#8d9396");
+  tube("metal", V3(128.9, Y+2.1, 114.0), V3(131.0, Y+2.1, 114.0), 0.075, 10, "#8d9396");               // (out of the wall, not from its face)
   tube("metal", V3(131.0, Y+2.1, 114.0), V3(131.0, AM, 114.0), 0.075, 10, "#8d9396");
   tube("metal", V3(131.0, AM, 114.0), V3(131.0, AM, az), 0.075, 10, "#8d9396");
   tube("metal", V3(131.0, AM, az), V3(ax, AM, az), 0.075, 10, "#8d9396");
   tube("metal", V3(ax, AM, az), V3(ax, TOP+0.45, az), 0.075, 10, "#8d9396");
-  tube("metal", V3(ax, TOP+0.45, az), V3(ax, TOP+0.45, AT.z1+0.9), 0.075, 10, "#8d9396");
   for(const [x,z] of [[131.0,108],[131.0,103],[135.0,az]]) tube("metal", V3(x,G,z), V3(x,AM-0.08,z), 0.04, 6, "#8d9396");
 
   // THE HEADWORKS: a concrete box where the sewer comes in, a grating over it, a bar screen in it
@@ -211,7 +212,7 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
     cyl("metal", 0.75, 0.75, 1.0, 20, CL.x, CL.wl+0.1, CL.z, "#7b8285");
     cyl("paintm", 0.45, 0.5, 0.55, 14, CL.x, TOP+0.33, CL.z, "#3e5d7a");
     // the bridge from the south rim to the drive, a stair up to it like the tank's
-    deck(CL.x-0.45, CL.x+0.45, CL.z+0.6, CL.z+CL.r+0.25, TOP+0.03);
+    deck(CL.x-0.45, CL.x+0.45, CL.z+0.6, CL.z+CL.r+0.24, TOP+0.03);
     deck(CL.x-1.0, CL.x+1.0, CL.z+CL.r+0.25, CL.z+CL.r+1.35, TOP+0.03);
     stair(CL.x-0.45, CL.x+0.45, CL.z+CL.r+3.25, CL.z+CL.r+1.35, TOP+0.03);
     rail(CL.x-0.45, CL.z+CL.r+0.25, CL.x-0.45, CL.z+0.7, TOP+0.03); rail(CL.x+0.45, CL.z+CL.r+0.25, CL.x+0.45, CL.z+0.7, TOP+0.03);
@@ -330,7 +331,7 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
     addCol(x-0.5, x+0.6, z-0.65, z+0.65, FY-0.1, FY+1.5);
   }
   tube("metal", V3(128.3, Y+2.1, 112.88), V3(128.3, Y+2.1, 115.68), 0.075, 10, "#8d9396");
-  tube("metal", V3(128.3, Y+2.1, 114.0), V3(129.0, Y+2.1, 114.0), 0.075, 10, "#8d9396");
+  tube("metal", V3(128.3, Y+2.1, 114.0), V3(128.9, Y+2.1, 114.0), 0.075, 10, "#8d9396");
   // the pumps, in the south-east corner: return sludge, two of them, on a pad
   bx("concrete", 1.6, 0.12, 0.9, 127.6, FY+0.06, 117.15, 0.5, 0, "#b3afa6");
   for(const x of [127.1, 128.1]){
@@ -357,7 +358,7 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
   addCol(121.3, 125.5, BZ-0.33, BZ+0.33, FY-0.1, BT);
   for(let x=121.85; x<125.4; x+=0.7) bx("paintm", 0.012, 0.6, 0.02, x, FY+0.45, BZ-0.311, 0, 0, "#9a968c");
   push("steel", boxGeo(0.46, 0.02, 0.36, 0), 121.95, BT+0.001, BZ, 0, "#ffffff");                    // the sink
-  push("paintm", boxGeo(0.40, 0.004, 0.30, 0), 121.95, BT+0.0125, BZ, 0, "#7d8185");
+  push("paintm", boxGeo(0.40, 0.004, 0.30, 0), 121.95, BT+0.020, BZ, 0, "#7d8185");                       // the basin, clear of the rim
   tube("chrome", V3(121.95, BT, BZ+0.22), V3(121.95, BT+0.32, BZ+0.22), 0.012, 6, "#ffffff");
   tube("chrome", V3(121.95, BT+0.32, BZ+0.22), V3(121.95, BT+0.30, BZ+0.06), 0.011, 6, "#ffffff");
   // sample bottles in a rack: clear, with white caps; and the amber ones for the lab that picks them up
@@ -368,7 +369,7 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
   for(let k=0;k<3;k++){ cyl("paintm", 0.05, 0.05, 0.20, 12, 123.45+k*0.13, BT+0.10, BZ+0.16, "#7a4a12"); cyl("paintm", 0.032, 0.032, 0.03, 10, 123.45+k*0.13, BT+0.215, BZ+0.16, "#1d1d1f"); }
   // the pH meter and its probe in a beaker; a thermometer
   bx("paintm", 0.20, 0.07, 0.16, 124.1, BT+0.035, BZ+0.08, 0, 0, "#e6e3da");
-  push("paintm", boxGeo(0.10, 0.004, 0.05, 0), 124.1, BT+0.072, BZ+0.07, 0, "#1e3d2a");
+  push("paintm", boxGeo(0.10, 0.006, 0.05, 0), 124.1, BT+0.078, BZ+0.07, 0, "#1e3d2a");             // its display, a raised bezel
   push("glass", new T.CylinderGeometry(0.04, 0.04, 0.10, 12), 124.35, BT+0.05, BZ+0.12, 0, "#e8eef0");
   tube("paintm", V3(124.35, BT+0.03, BZ+0.12), V3(124.33, BT+0.26, BZ+0.10), 0.006, 5, "#1d1d1f");
   // the logbook, open, and a pen across it
@@ -385,7 +386,7 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
       fitText(c, s, W2/2*0.82, 15, col*W2/2+W2/4+4, 62+row*44, "500", "'Bradley Hand','Segoe Print',cursive"); });
   });
   push("paintm", boxGeo(0.44, 0.02, 0.30, 0), 124.85, BT+0.011, BZ+0.02, 0, "#5a2a1e");
-  signPanel(0.42, 0.28, logTex, 124.85, BT+0.0235, BZ+0.02, 0, false, -Math.PI/2);
+  signPanel(0.42, 0.28, logTex, 124.85, BT+0.028, BZ+0.02, 0, false, -Math.PI/2);
   tube("paintm", V3(124.78, BT+0.026, BZ-0.08), V3(124.98, BT+0.026, BZ+0.06), 0.004, 5, "#1d3b8a");
   addUse(124.85, BZ-0.45, FY, "READ THE LOGBOOK", ()=>{
     const DO=(1.9+Math.random()*0.6).toFixed(1), pH=(6.9+Math.random()*0.4).toFixed(1), cl=(0.7+Math.random()*0.4).toFixed(1);
@@ -450,13 +451,14 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
 
   /* ---- the creek ------------------------------------------------------------- */
   { const tex=(function(){ const S=128, c=cvs(S,S*2), x=c.getContext("2d"), r=_trng(3301);
-      x.fillStyle="#3c4a3e"; x.fillRect(0,0,S,S*2);
-      for(let i=0;i<260;i++){ x.strokeStyle=r()<0.55?"#6f8278":"#2c3a30"; x.globalAlpha=0.35+r()*0.4; x.lineWidth=1+r()*1.5;
+      x.fillStyle="#2f3a2f"; x.fillRect(0,0,S,S*2);
+      for(let i=0;i<260;i++){ x.strokeStyle=r()<0.55?"#56665c":"#232e25"; x.globalAlpha=0.35+r()*0.4; x.lineWidth=1+r()*1.5;
         const px=r()*S, py=r()*S*2; x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px+4, py+8, px+1, py+16+r()*14); x.stroke(); }
       for(let i=0;i<40;i++){ x.fillStyle="#c8d4cc"; x.globalAlpha=0.35; x.fillRect(r()*S, r()*S*2, 2+r()*3, 1); }
       x.globalAlpha=1; const t=_tex(c); t.wrapS=t.wrapT=T.RepeatWrapping; return t; })();
     PLANT_RT.creekTex=tex;
-    bucketOf("creek", ()=>new T.MeshStandardMaterial({map:tex, roughness:0.10, metalness:0.12, transparent:true, opacity:0.86}));
+    // dark, brown-green water in the shade of the woods: a little gloss, not a mirror of the sky
+    bucketOf("creek", ()=>new T.MeshStandardMaterial({map:tex, color:0x6f7c70, roughness:0.32, metalness:0.0, transparent:true, opacity:0.90}));
     for(let a=0; a<CREEK.length-1; a+=40){
       const P=CREEK.slice(a, Math.min(CREEK.length, a+41));
       layRibbon("creek", P, -1.25, 1.25, 0.0, 0.5, "#ffffff");
@@ -502,7 +504,8 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
     for(const z of [H.z0+TH/2, H.z1-TH/2]) push("block", prismGeo([[H.x0+0.02,EV],[H.x1-0.02,EV],[XM,RG-0.06]], TH, 0.6), 0, 0, z, 0, "#c9c3b4");
     { const OH=0.25, eY=EV-OH*(RG-EV)/((H.x1-H.x0)/2);
       for(const sd of [-1,1]){ const xe=sd<0?H.x0-OH:H.x1+OH;
-        push("roofmetal", new FaceGeo().slab([V3(xe,eY,H.z0-OH), V3(XM,RG,H.z0-OH), V3(XM,RG,H.z1+OH), V3(xe,eY,H.z1+OH)], 0.06, 0.5).geo(), 0,0,0, 0, "#5f6a5c"); }
+        const o2=OH+(sd>0?0.006:0);                                  // (the two slabs' ends a few mm apart, not one plane)
+        push("roofmetal", new FaceGeo().slab([V3(xe,eY,H.z0-o2), V3(XM,RG,H.z0-o2), V3(XM,RG,H.z1+o2), V3(xe,eY,H.z1+o2)], 0.06, 0.5).geo(), 0,0,0, 0, "#5f6a5c"); }
       bx("roofmetal", 0.3, 0.05, H.z1-H.z0+2*OH, XM, RG+0.025, (H.z0+H.z1)/2, 0.5, 0, "#4c5649"); }
     ceilAt("plaster", H.x0+TH, H.x1-TH, H.z0+TH, H.z1-TH, EV-0.02, "#d9d6cd", 0.5);
     for(const z of [D.a-0.035, D.b+0.035]) bx("paintm", TH+0.12, D.head-FW, 0.07, H.x1-TH/2, FW+(D.head-FW)/2, z, 0, 0, "#4c5649");

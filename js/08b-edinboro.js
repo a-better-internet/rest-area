@@ -74,8 +74,8 @@ const EDIN_RT={};
   bx("concrete", E.bw1-E.bw0, deckT, 2*DW, (E.bw0+E.bw1)/2, Y-0.005-deckT/2, Z, 0.4, 0, "#b8b4aa");
   // parapets: a Jersey wall each side, set a centimetre into the deck
   for(const s of [-1,1]){
-    const zc=Z+s*(HW+0.225);
-    bx("concrete", E.bw1-E.bw0, 0.86, 0.45, (E.bw0+E.bw1)/2, Y-0.01+0.43, zc, 0.4, 0, "#c3bfb5");
+    const zc=Z+s*(HW+0.215);                                     // (its outer face 2 cm in from the deck's edge)
+    bx("concrete", E.bw1-E.bw0+0.04, 0.86, 0.43, (E.bw0+E.bw1)/2, Y-0.01+0.43, zc, 0.4, 0, "#c3bfb5");   // (2 cm past the deck's ends)
     addCol(E.bw0, E.bw1, zc-0.225, zc+0.225, Y-0.5, Y+0.86);
     // and W-beam guiderail off each end, tied into the parapet, on posts
     for(const [xa, xb] of [[E.bw1-0.3, E.bw1+26], [E.bw0-26, E.bw0+0.3]]){          // (its end inside the parapet's)

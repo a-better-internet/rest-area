@@ -42,15 +42,16 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
 
   /* ---- the stair down ------------------------------------------------------ */
   const WT=0.25, TOP=FB+2.4;
-  wallBox("block", CX0-WT, CX0, CZ1, LZ0, FH-0.1, TOP, LOW, 0.6, FH);
-  wallBox("block", CX1, CX1+WT, CZ1, LZ0, FH-0.1, TOP, LOW, 0.6, FH);
+  // (they start a centimetre into the arcade's wall, so their ends are inside it rather than in its face)
+  wallBox("block", CX0-WT, CX0, CZ1+0.01, LZ0, FH-0.1, TOP, LOW, 0.6, FH);
+  wallBox("block", CX1, CX1+WT, CZ1+0.01, LZ0, FH-0.1, TOP, LOW, 0.6, FH);
   for(let k=1;k<NS;k++){
     const za=LZ1-(k-1)*0.30, zb=za-0.30, y=FB-k*SR;
     bx("concrete", CX1-CX0-0.004, y-FH, 0.30, (CX0+CX1)/2, (y+FH)/2, (za+zb)/2, 0.5, 0, "#a8a49a");
-    bx("paint", CX1-CX0-0.03, 0.004, 0.05, (CX0+CX1)/2, y+0.002, zb+0.026, 0, 0, "#e2b31c");
+    bx("paint", CX1-CX0-0.03, 0.004, 0.05, (CX0+CX1)/2, y+0.002, zb+0.022, 0, 0, "#e2b31c");   // (3 mm proud of the riser)
     addFlat(CX0, CX1, zb, za, y);
   }
-  bx("paint", CX1-CX0-0.03, 0.004, 0.05, (CX0+CX1)/2, FB+0.006, LZ1+0.026, 0, 0, "#e2b31c");
+  bx("paint", CX1-CX0-0.03, 0.004, 0.05, (CX0+CX1)/2, FB+0.006, LZ1+0.022, 0, 0, "#e2b31c");
   for(const x of [CX0+0.07, CX1-0.07]){
     const a=V3(x, FB+0.92, LZ1+0.3), b=V3(x, FH+0.92, STZ1-0.4);
     tubeE(a, b, 0.021, "#2a2c2e");
@@ -115,8 +116,9 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
   wallBox("block", A.x0-WT, A.x0, A.z0-WT, A.z1+WT, A.y-0.1, ATOP, WALLC, 0.6, A.y);
   wallBox("block", A.x1, A.x1+WT, A.z0-WT, A.z1+WT, A.y-0.1, ATOP, WALLC, 0.6, A.y);
   wallBox("block", A.x0, A.x1, A.z0-WT, A.z0, A.y-0.1, ATOP, WALLC, 0.6, A.y);
-  wallBox("block", A.x0, CX0, A.z1, A.z1+WT, A.y-0.1, ATOP, WALLC, 0.6, A.y);
-  wallBox("block", CX1, A.x1, A.z1, A.z1+WT, A.y-0.1, ATOP, WALLC, 0.6, A.y);
+  // (the two either side of the way in stop a few mm into the corridor's walls, not in their faces)
+  wallBox("block", A.x0, CX0-0.006, A.z1, A.z1+WT, A.y-0.1, ATOP, WALLC, 0.6, A.y);
+  wallBox("block", CX1+0.006, A.x1, A.z1, A.z1+WT, A.y-0.1, ATOP, WALLC, 0.6, A.y);
   wallBox("block", CX0, CX1, A.z1, A.z1+WT, A.y+2.45, ATOP, WALLC, 0.6, A.y);
   ceilAt("paintm", A.x0, A.x1, A.z0, A.z1, A.y+A.h, "#141218", 0.5);
   addVoid(A.x0, A.x1, A.z0, A.z1, A.y-3, SUB_G-0.15, A.y);
@@ -136,8 +138,8 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
   { const g=new T.PlaneGeometry(A.x1-A.x0, A.z1-A.z0), U=g.attributes.uv;
     for(let i=0;i<U.count;i++) U.setXY(i, U.getX(i)*(A.x1-A.x0)/1.6, U.getY(i)*(A.z1-A.z0)/1.6);
     const m=new T.Mesh(g, new T.MeshStandardMaterial({map:carpet, roughness:1.0}));
-    m.rotation.x=-Math.PI/2; m.position.set((A.x0+A.x1)/2, A.y+0.004, (A.z0+A.z1)/2); m.receiveShadow=true; scene.add(m);
-    floorAt("concrete", CX0, CX1, A.z1, A.z1+WT, A.y+0.004, "#8a8d84", 0.5); }
+    m.rotation.x=-Math.PI/2; m.position.set((A.x0+A.x1)/2, A.y+0.004, (A.z0+A.z1)/2); m.receiveShadow=true; scene.add(m); }
+    // (the corridor's own floor runs on through the doorway)
   // neon along the walls, pink and blue, at the height the old place had it
   { const pink=new T.MeshBasicMaterial({color:0xff4fbf, toneMapped:false}), blue=new T.MeshBasicMaterial({color:0x4fd8ff, toneMapped:false});
     const run=(x0,x1,z0,z1,y,m)=>{ const g=new T.BoxGeometry(Math.max(0.025,x1-x0), 0.025, Math.max(0.025,z1-z0)); const o=new T.Mesh(g,m); o.position.set((x0+x1)/2,y,(z0+z1)/2); scene.add(o); };
@@ -316,8 +318,8 @@ function _arcadeScreen(x, k, ox, oy, t, seed){
   }
   // the score line, and the CRT's own light
   x.fillStyle="#fff"; x.font="bold 9px 'Courier New', monospace"; x.textAlign="left"; x.textBaseline="top";
-  x.fillText("1UP "+String(((t*731+seed*977)|0)%100000).padStart(5,"0"), 9, 7); x.textAlign="right"; x.fillText("CREDIT 0", W-9, 7);
-  if(((t*2)|0)%2) { x.textAlign="center"; x.fillStyle="#f2e23a"; x.fillText("INSERT COIN", W/2, H-18); }
+  x.fillText("1UP "+String(((t*731+seed*977)|0)%100000).padStart(5,"0"), 10, 12); x.textAlign="right"; x.fillText("CREDIT 0", W-10, 12);
+  if(((t*2)|0)%2) { x.textAlign="center"; x.fillStyle="#f2e23a"; x.fillText("INSERT COIN", W/2, H-24); }
   x.fillStyle="rgba(0,0,0,0.25)"; for(let y=0;y<H;y+=3) x.fillRect(0,y,W,1);
   x.restore();
 }

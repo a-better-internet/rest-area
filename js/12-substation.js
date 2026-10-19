@@ -55,8 +55,9 @@ function _liveLed(x,y,z,on,off,r){
   layRibbon("asphalt", DRIVE, -2.6, 2.6, PAVE_T, 0.40, "#8c8c88");
   addPaveRibbon(DRIVE, -2.6, 2.6);
   // patched where the plough caught it, and the edges gone to gravel
-  layRibbon("gravelbed", DRIVE, -3.4, -2.5, PAVE_T-0.006, 0.6, "#9a968c");
-  layRibbon("gravelbed", DRIVE, 2.5, 3.4, PAVE_T-0.006, 0.6, "#9a968c");
+  // (the gravel edges start where the asphalt stops, so neither lies over the other)
+  layRibbon("gravelbed", DRIVE, -3.4, -2.6, PAVE_T-0.006, 0.6, "#9a968c");
+  layRibbon("gravelbed", DRIVE, 2.6, 3.4, PAVE_T-0.006, 0.6, "#9a968c");
   addZone(-28, 60, -175, -132, -2, 8, "SERVICE DRIVE");
   // the yellow pipe gate at the bottom of it, swung open and chained back
   const gx=-16, gz=-148.6;
