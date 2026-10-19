@@ -318,7 +318,7 @@ function _arcadeScreen(x, k, ox, oy, t, seed){
   }
   // the score line, and the CRT's own light
   x.fillStyle="#fff"; x.font="bold 9px 'Courier New', monospace"; x.textAlign="left"; x.textBaseline="top";
-  x.fillText("1UP "+String(((t*731+seed*977)|0)%100000).padStart(5,"0"), 10, 12); x.textAlign="right"; x.fillText("CREDIT 0", W-10, 12);
+  x.fillText("1UP "+String(((t*731+seed*977)|0)%100000).padStart(5,"0"), 10, 14); x.textAlign="right"; x.fillText("CREDIT 0", W-10, 14);
   if(((t*2)|0)%2) { x.textAlign="center"; x.fillStyle="#f2e23a"; x.fillText("INSERT COIN", W/2, H-24); }
   x.fillStyle="rgba(0,0,0,0.25)"; for(let y=0;y<H;y+=3) x.fillRect(0,y,W,1);
   x.restore();
