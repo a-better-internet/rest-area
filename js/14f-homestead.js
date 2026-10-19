@@ -271,7 +271,7 @@ bucketOf("wallpaper", ()=>{
   { const xs=x1-1.4;
     push("roofmetal", new FaceGeo().slab([V3(x0-0.2,FF+2.95,z0), V3(xs,FF+2.95,z0), V3(xs,FF+2.46,pz0-0.2), V3(x0-0.2,FF+2.46,pz0-0.2)], 0.10, 0.6).geo(), 0,0,0, 0, "#6e665a");
     push("roofmetal", new FaceGeo().slab([V3(xs,FF+2.95,z0), V3(x1+0.2,FF+2.95,z0), V3(x1+0.2,FF+1.82,pz0-0.2), V3(xs,FF+2.46,pz0-0.2)], 0.10, 0.6).geo(), 0,0,0, 0, "#6e665a");
-    tube("paintm", V3(x0+0.05,FF+2.42,pz0+0.18), V3(x1-1.4,FF+2.42,pz0+0.18), 0.07, 4, "#8f8a7e");
+    tube("paintm", V3(x0+0.05,FF+2.42,pz0+0.18), V3(x1-1.395,FF+2.42,pz0+0.18), 0.07, 4, "#8f8a7e");   // (its end 5 mm past the roof's seam, not in it)
     tube("paintm", V3(x1-1.4,FF+2.42,pz0+0.18), V3(x1+0.1,FF+1.80,pz0+0.18), 0.07, 4, "#8f8a7e"); }
   // what is left of the rail: a few balusters and the top rail on the west side
   for(let k=0;k<14;k++){ if(r()<0.4) continue; bx("paintm", 0.04, 0.72, 0.04, x0+0.4+k*0.2, pY+0.38, pz0+0.06, 0, 0, "#7d786e"); }
@@ -417,13 +417,17 @@ bucketOf("wallpaper", ()=>{
     push("paintm", boxGeo(0.76, 1.96, 0.04, 0), D_BATH.b+0.48, UF+0.98, HN+t+0.25, 0.04, "#6a5a48", 0.22, 0);    // the bathroom's, off its hinges and leant on the wall
     addCol(D_BATH.b+0.09, D_BATH.b+0.87, HN+t, HN+t+0.48, UF-0.3, UF+1.9);
     // wallpaper coming away, water down it, the damp
-    for(let k=0;k<18;k++){ const w=0.15+r()*0.35, h=0.4+r()*1.2, y=UF+0.3+r()*1.6, o=0.016+k*0.0016;
+    // (one that would lie over another on the same wall is left out: flat on the wall, they would share its plane)
+    const _laid=[[],[],[],[]], put=(sd, along, y, w, h, ...a)=>{
+      if(_laid[sd].some(q=>Math.abs(q[0]-along)<(q[2]+w)/2+0.02 && Math.abs(q[1]-y)<(q[3]+h)/2+0.02)) return;
+      _laid[sd].push([along, y, w, h]); push(...a); };
+    for(let k=0;k<18;k++){ const w=0.15+r()*0.35, h=0.4+r()*1.2, y=UF+0.3+r()*1.6, o=0.016;
       const side=(r()*4)|0;
       if(side===0){ const zz=z0+0.5+r()*(z1-z0-1), c=r()<0.5?"#8a7a62":"#6a5c48";
-        if(clearOf(WEST, zz, w, y, h)) push("paintm", planeGeo(w,h,0), x0+T2+o, y, zz, Math.PI/2, c, 0, (r()-0.5)*0.15); }
-      else if(side===1){ const xx=HX-5.5+r()*5; if(!(xx>D_BED.a-0.3 && xx<D_BED.b+0.3)) push("paintm", planeGeo(w,h,0), xx, y, HS+t+o-0.008, 0, r()<0.5?"#8a7a62":"#6a5c48", 0, (r()-0.5)*0.15); }
-      else if(side===2){ const xx=HX-5.5+r()*4.5; if(!(xx>D_KID.a-0.3 && xx<D_KID.b+0.3) && !(xx>D_BOX.a-0.3 && xx<D_BOX.b+0.3)) push("paintm", planeGeo(w,h,0), xx, y, HN-o+0.008, Math.PI, "#7a6a52", 0, (r()-0.5)*0.15); }
-      else { const xx=HX-5.8+r()*5; if(clearOf(FRONT, xx, w, y, h)) push("paintm", planeGeo(w,h,0), xx, y, z0+T2+o, 0, "#6e604a", 0, (r()-0.5)*0.15); } }
+        if(clearOf(WEST, zz, w, y, h)) put(0, zz, y, w, h, "paintm", planeGeo(w,h,0), x0+T2+o, y, zz, Math.PI/2, c, 0, (r()-0.5)*0.15); }
+      else if(side===1){ const xx=HX-5.5+r()*5; if(!(xx>D_BED.a-0.3 && xx<D_BED.b+0.3)) put(1, xx, y, w, h, "paintm", planeGeo(w,h,0), xx, y, HS+t+o-0.008, 0, r()<0.5?"#8a7a62":"#6a5c48", 0, (r()-0.5)*0.15); }
+      else if(side===2){ const xx=HX-5.5+r()*4.5; if(!(xx>D_KID.a-0.3 && xx<D_KID.b+0.3) && !(xx>D_BOX.a-0.3 && xx<D_BOX.b+0.3)) put(2, xx, y, w, h, "paintm", planeGeo(w,h,0), xx, y, HN-o+0.008, Math.PI, "#7a6a52", 0, (r()-0.5)*0.15); }
+      else { const xx=HX-5.8+r()*5; if(clearOf(FRONT, xx, w, y, h)) put(3, xx, y, w, h, "paintm", planeGeo(w,h,0), xx, y, z0+T2+o, 0, "#6e604a", 0, (r()-0.5)*0.15); } }
     // the hall: a runner down it, a little table, a picture down on the floor, the hatch to the attic
     push("paintm", planeGeo(9.0, 0.62, 0), HX-0.6, UF+0.008, (HS+HN+t)/2, 0, "#6a3a32", -Math.PI/2, 0);
     push("paintm", planeGeo(8.8, 0.46, 0), HX-0.6, UF+0.010, (HS+HN+t)/2, 0, "#7e4a3c", -Math.PI/2, 0);
@@ -467,7 +471,7 @@ bucketOf("wallpaper", ()=>{
       push("beam", boxGeo(0.04, 0.03, 0.9, 0.6), dx-0.33, UF+0.38, dz, 0, "#6a4e36", 0, 0.5);                  // a drawer pulled and left
       bx("beam", 0.05, 0.85, 0.80, dx+0.10, UF+1.32, dz, 0.6, 0, "#5e4430");
       push("mirror", planeGeo(0.66, 0.70, 0), dx+0.062, UF+1.32, dz, -Math.PI/2, "#ffffff");
-      for(let k=0;k<5;k++){ const a=r()*Math.PI, L=0.15+r()*0.25; push("paintm", boxGeo(0.002, 0.006, L, 0), dx+0.059, UF+1.32+Math.cos(a)*L/2-0.1, dz+Math.sin(a)*0.1, 0, "#1a1a1a", a, 0); }
+      for(let k=0;k<5;k++){ const a=r()*Math.PI, L=0.15+r()*0.25; push("paintm", boxGeo(0.002, 0.006, L, 0), dx+0.059-k*0.002, UF+1.32+Math.cos(a)*L/2-0.1, dz+Math.sin(a)*0.1, 0, "#1a1a1a", a, 0); }
       addCol(dx-0.26, dx+0.25, dz-0.56, dz+0.56, UF-0.3, UF+1.8);
       addUse(dx-0.75, dz, UF, "OPEN THE DRESSER", ()=>toast("MOTHBALLS. A MAN'S SUNDAY SHIRT, FOLDED. A WEDDING PICTURE, 1951, THE GLASS CRACKED ACROSS THE BRIDE","#cfe0d4"), 1.0);
       // the rocker by the window, the suitcase open on the floor, clothes
