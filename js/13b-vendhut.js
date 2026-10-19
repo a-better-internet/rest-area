@@ -74,7 +74,7 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   bx("concrete", SX1-SX0, 0.26, SZ1-SZ0, (SX0+SX1)/2, ROOF+0.13, (SZ0+SZ1)/2, 0.5, 0, "#8d8b86");
   for(const [w,d,x,z] of [[SX1-SX0+0.066, 0.03, (SX0+SX1)/2, SZ0-0.015],[SX1-SX0+0.066, 0.03, (SX0+SX1)/2, SZ1+0.015],   // (the long runs 3 mm past the ends')
                           [0.03, SZ1-SZ0, SX0-0.015, (SZ0+SZ1)/2],[0.03, SZ1-SZ0, SX1+0.015, (SZ0+SZ1)/2]])
-    bx("paintm", w, 0.34, d, x, ROOF+0.12, z, 0, 0, BRZ);
+    bx("paintm", w, d===0.03 ? 0.346 : 0.34, d, x, ROOF+0.12, z, 0, 0, BRZ);   // (the long runs 3 mm deeper at top and bottom than the ends)
   ceilAt("paintm", SX0, V.x0, SZ0, SZ1, ROOF-0.002, "#d9d6cf");
   for(const z of [SZ0+0.15, SZ1-0.15]){ cyl("paintm", 0.05,0.05, ROOF-0.15, 10, SX0+0.15, 0.15+(ROOF-0.15)/2, z, BRZ); addCol(SX0+0.09, SX0+0.21, z-0.06, z+0.06, -0.5, ROOF); }
   for(const z of [-1.4, 2.4]){                                               // two cans in the soffit, on with the dark

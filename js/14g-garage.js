@@ -528,8 +528,8 @@ function blowerParts(){
     addCol(x-0.5, x+0.5, z-0.6, z+0.6, -0.5, 0.85); }
   { const x=39.5, z=21.6;                                                       // the gas tank on its stand
     for(const dx of [-0.55,0.55]) for(const dz of [-0.25,0.25]) bx("metal", 0.06, 0.62, 0.06, x+dx, 0.31, z+dz, 0.5, 0, "#5a5e62");
-    push("paintm", new T.CylinderGeometry(0.38, 0.38, 1.5, 18), x, 0.98, z, 0, "#b8231e", 0, Math.PI/2);
-    for(const sd of [-1,1]) push("paintm", new T.CircleGeometry(0.38, 18), x+sd*0.751, 0.98, z, sd*Math.PI/2, "#a01e1a");
+    push("paintm", new T.CylinderGeometry(0.38, 0.38, 1.5, 18, 1, true), x, 0.98, z, 0, "#b8231e", 0, Math.PI/2);   // (open: the heads are its own)
+    for(const sd of [-1,1]) push("paintm", new T.CircleGeometry(0.38, 18), x+sd*0.75, 0.98, z, sd*Math.PI/2, "#a01e1a");
     bx("paintm", 0.20, 0.32, 0.18, x+0.4, 1.38, z, 0, 0, "#2a2a2a");
     tube("paintm", V3(x+0.45, 1.25, z+0.08), V3(x+0.62, 0.55, z+0.32), 0.016, 5, "#1d1d1e");
     const t=signTex(256,64,(c,W,H)=>{ c.fillStyle="#b8231e"; c.fillRect(0,0,W,H); c.fillStyle="#f4f2ea"; fitHwy(c,"GASOLINE · NO SMOKING",W*0.92,H*0.55,W/2,H/2); });

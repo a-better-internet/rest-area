@@ -292,7 +292,7 @@ bucketOf("wallpaper", ()=>{
   lineZ("plaster", PX-0.10, -1, z0+T2, z1-T2, FF, FF+2.6, [PD, PD2], "#9a8c72", 0.5);
   lineZ("plaster", PX+0.10, 1, z0+T2, z1-T2, FF, FF+2.6, [PD, PD2], "#958a74", 0.5);
   // wallpaper coming away in strips, lath showing behind the plaster
-  for(let k=0;k<12;k++){ const onW=k%2, z=z0+0.5+r()*(z1-z0-1), y=FF+0.6+r()*1.7, h=0.3+r()*0.6, o=k*0.0015;
+  for(let k=0;k<12;k++){ const onW=k%2, z=z0+0.5+r()*(z1-z0-1), y=FF+0.6+r()*1.7, h=0.3+r()*0.6, o=k*0.003;
     if(onW){ const w=0.18+r()*0.3; if(clearOf(WEST, z, w, y, h)) push("paintm", planeGeo(w, h, 0), x0+T2+0.012+o, y, z, Math.PI/2, "#6a5c48"); }
     else if(!inDoor(z)) push("paintm", planeGeo(0.12, h, 0), PX-0.112-o, y, z, -Math.PI/2, "#7a6a52", 0, (r()-0.5)*0.12); }
   // water stains down from the ceiling, and damp coming up the walls
@@ -372,7 +372,7 @@ bucketOf("wallpaper", ()=>{
     addCol(SX0-0.10, SX0, z0+T2, SZB+0.95, CL-0.02, UF);      // over your head as you step on: solid only where it is
     bx("paintm", 0.13, CL-FF, 0.04, SX0-0.05, (FF+CL)/2, SZB+0.945, 0, 0, TRIM);
     // under the landing, the end of the closet under the stair: boards, a little door
-    for(let x=SX0+0.06; x<SX1-0.02; x+=0.13) bx("beam", 0.12, UF-0.30-FF, 0.025, x, (FF+UF-0.30)/2, SZT+0.035, 0.6, 0, x%0.26<0.13?"#6a5a46":"#625240");
+    for(let x=SX0+0.06, k=0; x<SX1-0.02; x+=0.13, k++) bx("beam", 0.12, UF-0.30-FF, 0.025, x, (FF+UF-0.30)/2, SZT+0.035+(k%2)*0.005, 0.6, 0, x%0.26<0.13?"#6a5a46":"#625240");   // (every other board set back, so neighbours' faces are not one plane)
     bx("paintm", 0.62, 1.30, 0.035, SX0+0.50, FF+0.67, SZT+0.06, 0, 0, "#5a5048");
     push("chrome", new T.SphereGeometry(0.025,8,6), SX0+0.25, FF+0.75, SZT+0.085, 0, "#8a7a5a");
     addCol(SX0, SX1, SZT, SZT+0.07, FF-0.5, FF+2.45);
@@ -407,7 +407,7 @@ bucketOf("wallpaper", ()=>{
     lineX("plaster", z1-T2, -1, PE+t/2, x1-T2, UF, EAVE-0.02, hi(BACK).filter(o=>o.b>PE), "#a9b8a2", 0.5, 0.010);
     // door trim and the leaves: standing open, one off its hinges
     const trimX=(c,o)=>{ bx("paintm", 0.07, DH-UF-0.002, t+0.04, o.a-0.031, (UF+DH)/2-0.001, c, 0, 0, TRIM); bx("paintm", 0.07, DH-UF-0.002, t+0.04, o.b+0.031, (UF+DH)/2-0.001, c, 0, 0, TRIM);
-      bx("paintm", o.b-o.a+0.16, 0.08, t+0.046, (o.a+o.b)/2, DH+0.04, c, 0, 0, TRIM); };
+      bx("paintm", o.b-o.a+0.16, 0.08, t+0.056, (o.a+o.b)/2, DH+0.04, c, 0, 0, TRIM); };   // (the head 8 mm proud of the posts each side)
     for(const o of [D_BED,D_SEW]) trimX(HS+t/2, o);
     for(const o of [D_KID,D_BOX,D_BATH]) trimX(HN+t/2, o);
     const leaf=(hx,hz,ang,c)=>push("paintm", boxGeo(0.78, 1.98, 0.04, 0), hx+Math.cos(ang)*0.39, UF+1.0, hz-Math.sin(ang)*0.39, ang, c);
@@ -599,7 +599,7 @@ bucketOf("wallpaper", ()=>{
       push("paintm", new T.CircleGeometry(0.75, 14), (HB.x0+HB.x1)/2, UF+0.009, (HB.z0+HB.z1)/2, 0, "#3a3426", -Math.PI/2, 0);
       bucketOf("paintm").entries[bucketOf("paintm").entries.length-1].matrix.multiply(new T.Matrix4().makeScale(1.0,1.35,1.0));
       push("paintm", new T.CircleGeometry(0.38, 11), (HB.x0+HB.x1)/2-0.15, UF+0.011, (HB.z0+HB.z1)/2+0.1, 0, "#4f5a34", -Math.PI/2, 0);
-      for(let k=0;k<10;k++) push(k%2?"shingle":"beam", boxGeo(0.12+r()*0.25, 0.012, 0.06+r()*0.2, 0.6), HB.x0+r()*(HB.x1-HB.x0), UF+0.015+k*0.002, HB.z0+r()*(HB.z1-HB.z0), r()*3, k%2?"#5b544b":"#7a6a54");
+      for(let k=0;k<10;k++) push(k%2?"shingle":"beam", boxGeo(0.12+r()*0.25, 0.012, 0.06+r()*0.2, 0.6), HB.x0+r()*(HB.x1-HB.x0), UF+0.015+k*0.004, HB.z0+r()*(HB.z1-HB.z0), r()*3, k%2?"#5b544b":"#7a6a54");
       for(let k=0;k<20;k++) push("paintm", new T.CircleGeometry(0.03+r()*0.03,5), HB.x0-0.4+r()*(HB.x1-HB.x0+0.8), UF+0.012+r()*0.003, HB.z0-0.4+r()*(HB.z1-HB.z0+0.8), 0, ["#8a5a2a","#a06a2a","#6a4a28","#7a7a3a"][k%4], -Math.PI/2, 0);
     }
   }
@@ -696,7 +696,7 @@ bucketOf("wallpaper", ()=>{
     push("paintm", new T.CircleGeometry(0.58,14), wx, y-0.2, wz, 0, "#050505", -Math.PI/2, 0);
     for(let k=0;k<3;k++) bx("beam", 0.2, 0.04, 1.5-k*0.25, wx-0.36+k*0.22, y+0.70+k*0.012, wz-0.1*k, 0.6, 0.1*k, "#6a5a44");   // (each a little over the last where they cross)
     for(const sd of [-1,1]) bx("beam", 0.09, 1.5, 0.09, wx+sd*0.85, y+0.75, wz, 0.6, 0, "#5a4a38");
-    tube("metal", V3(wx-0.9, y+1.35, wz), V3(wx+0.9, y+1.35, wz), 0.04, 6, "#5a3a2a");
+    tube("metal", V3(wx-0.94, y+1.35, wz), V3(wx+0.94, y+1.35, wz), 0.04, 6, "#5a3a2a");          // (out past the posts, an axle)
     addCol(wx-0.85, wx+0.85, wz-0.85, wz+0.85, y-0.5, y+0.7);
     addUse(wx, wz-1.2, y, "LOOK DOWN THE WELL", ()=>toast("YOU DROP A PEBBLE. IT TAKES A LONG TIME, AND THEN NOT A SPLASH","#cfe0d4"), 1.3); }
   // the pump by the back step

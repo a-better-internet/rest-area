@@ -443,9 +443,10 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
       fitText(c,"NPDES PERMIT No. PA0262154",W2*0.80,H*0.09,W2/2,H*0.42,"600");
       fitText(c,"TREATED SEWAGE EFFLUENT",W2*0.80,H*0.085,W2/2,H*0.60,"600");
       fitText(c,"Rest Area 154 · I-79",W2*0.78,H*0.08,W2/2,H*0.78,"500"); });
-    const sx=f.x(1.9, -0.6), sz=f.z(1.9, -0.6), sgy=Terrain.groundAt(sx, sz);
+    const sx=f.x(1.9, -0.62), sz=f.z(1.9, -0.62), sgy=Terrain.groundAt(sx, sz);
     bx("wood", 0.08, 1.5, 0.08, sx, sgy+0.6, sz, 0.4, ry, "#6d5c48");
-    signPanel(0.36, 0.29, ps, f.x(1.9, -0.555), sgy+1.12, f.z(1.9, -0.555), ry);
+    bx("wood", 0.40, 0.33, 0.02, f.x(1.9, -0.572), sgy+1.12, f.z(1.9, -0.572), 0.4, ry, "#7a6a52");      // its board, on the post
+    signPanel(0.36, 0.29, ps, f.x(1.9, -0.552), sgy+1.12, f.z(1.9, -0.552), ry);
     addCol(sx-0.06, sx+0.06, sz-0.06, sz+0.06, sgy-0.5, sgy+1.4);
   }
 
