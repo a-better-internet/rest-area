@@ -19,6 +19,8 @@ const WALK=3.05, RUN=5.6, SPRINT=10.4;
 addEventListener("keydown",e=>{
   // at a vending machine the keys are its keypad's (18b-vending)
   if(VEND.open){ e.preventDefault(); VEND.key(e); return; }
+  // on the oche the keys are the game's (18d-darts)
+  if(typeof DARTS!=="undefined" && DARTS.on){ e.preventDefault(); DARTS.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }

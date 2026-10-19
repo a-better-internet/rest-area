@@ -123,18 +123,28 @@ function buriedAt(x,z,y){ return !!buriedVolAt(x,z,y); }
    under it — and it is a surface you stand on, so it is registered here,
    not left to the terrain three centimetres below. Rectangles are tested
    directly; anything that curves (the ramps, the drive) is rasterised onto
-   a one-metre grid over the woods' zone when it is laid. */
+   a one-metre grid when it is laid: the one over the woods' zone, and one
+   each for anywhere else a curve is paved (Edinboro's ramps, 08b). */
 const PAVE_T=0.03;
 const PAVED_RECTS=[];
 function addPaveRect(x0,x1,z0,z1,y){ PAVED_RECTS.push({x0,x1,z0,z1,y:(y||0)+PAVE_T}); }
-const PRAST={x0:SITE.zone.x0, z0:SITE.zone.z0, nx:SITE.zone.x1-SITE.zone.x0, nz:SITE.zone.z1-SITE.zone.z0};
-PRAST.a=new Float32Array(PRAST.nx*PRAST.nz).fill(NaN);
+const PRASTS=[];
+function addPaveRaster(x0,z0,x1,z1){
+  const R={x0:x0, z0:z0, nx:Math.ceil(x1-x0), nz:Math.ceil(z1-z0)};
+  R.a=new Float32Array(R.nx*R.nz).fill(NaN); PRASTS.push(R); return R;
+}
+const PRAST=addPaveRaster(SITE.zone.x0, SITE.zone.z0, SITE.zone.x1, SITE.zone.z1);
+addPaveRaster(-280, EDIN.z-12, 4, EDIN.z+572);
 function addPaveRibbon(P, o0, o1){
   let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
   for(const p of P){ x0=Math.min(x0,p.x); x1=Math.max(x1,p.x); z0=Math.min(z0,p.z); z1=Math.max(z1,p.z); }
   const w=Math.max(Math.abs(o0),Math.abs(o1))+1;
+  for(const R of PRASTS) _paveInto(R, P, o0, o1, x0, x1, z0, z1, w);
+}
+function _paveInto(PRAST, P, o0, o1, x0, x1, z0, z1, w){
   const i0=Math.max(0,Math.floor(x0-w-PRAST.x0)), i1=Math.min(PRAST.nx-1,Math.ceil(x1+w-PRAST.x0));
   const j0=Math.max(0,Math.floor(z0-w-PRAST.z0)), j1=Math.min(PRAST.nz-1,Math.ceil(z1+w-PRAST.z0));
+  if(i0>i1 || j0>j1) return;
   const half=(Math.abs(o1-o0))/2, ctr=(o0+o1)/2;
   for(let j=j0;j<=j1;j++) for(let i=i0;i<=i1;i++){
     const x=PRAST.x0+i+0.5, z=PRAST.z0+j+0.5;
@@ -157,10 +167,12 @@ function pavedY(x,z){
     const r=PAVED_RECTS[i];
     if(x>r.x0 && x<r.x1 && z>r.z0 && z<r.z1) return r.y;
   }
-  const i=Math.floor(x-PRAST.x0), j=Math.floor(z-PRAST.z0);
-  if(i>=0 && j>=0 && i<PRAST.nx && j<PRAST.nz){
-    const v=PRAST.a[j*PRAST.nx+i];
-    if(v===v) return v;
+  for(let k=0;k<PRASTS.length;k++){
+    const R=PRASTS[k], i=Math.floor(x-R.x0), j=Math.floor(z-R.z0);
+    if(i>=0 && j>=0 && i<R.nx && j<R.nz){
+      const v=R.a[j*R.nx+i];
+      if(v===v) return v;
+    }
   }
   return null;
 }

@@ -30,7 +30,11 @@ function tickFlicker(dt){
 }
 function updateLights(dark, camPos){
   _lampSort.length=0;
+  // underground only the lamps down there count, and they are on as they are
+  // at any hour; above ground those lamps are behind rock (19-loop, 06 BURIED)
+  const down=buriedAt(camPos.x, camPos.z, camPos.y);
   for(const l of LAMPS){
+    if(!!l.under!==down) continue;
     // on a circuit that is off (a power cut) it is not a light at all
     if(l.circ && GRID[l.circ]<0.02) continue;
     // (and one inside a turned box, 10b's trailer, only when you are in that)
@@ -47,7 +51,7 @@ function updateLights(dark, camPos){
     const L=LIGHT_POOL[i], e=_lampSort[i];
     // indoors the tubes are on all day; the lot lights only after dusk
     // and a fire is a fire by day too, if a weak one
-    const mult=e ? (e.l.indoor ? Math.max(dark,0.80) : e.l.fire ? Math.max(dark,0.30) : dark)*(e.l.circ ? GRID[e.l.circ] : 1) : 0;
+    const mult=e ? (e.l.under ? 1 : e.l.indoor ? Math.max(dark,0.80) : e.l.fire ? Math.max(dark,0.30) : dark)*(e.l.circ ? GRID[e.l.circ] : 1) : 0;
     if(!e || mult<0.02){ L.intensity=0; continue; }
     L.position.set(e.l.x, e.l.y, e.l.z);
     L.color.setHex(e.l.color);

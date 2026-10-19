@@ -41,6 +41,11 @@ const HWY = {
   wrap:1560,        // traffic wraps here
   flat:560,         // the road is level at y = 0 for |z| < flat
 };
+// emergency crossovers: a paved cut through the median, level with the road, where a trooper or a
+// plow turns round (and anybody else, if nobody is looking). All inside the level stretch. 04
+// grades the berm across the swale, 07 leaves the treelines and the median walls open there,
+// 08 lays the paving and the signs
+const CROSSOVERS=[{z:-250, hw:4.5}, {z:-520, hw:4.5}, {z:470, hw:4.5}];
 const SITE = {
   truck: {x0:-90, x1:-60,  z0:-150, z1:108},   // the truck lot
   island:{x0:-60, x1:-46,  z0:-128, z1:84},    // planted median between the lots

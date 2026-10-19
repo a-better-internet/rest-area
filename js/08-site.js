@@ -131,6 +131,43 @@ function stripe(x0,z0,x1,z1,w,color,y){
   }
 })();
 
+/* ---- the crossovers --------------------------------------------------------
+   A paved cut through the median every so often (CROSSOVERS), level with
+   the road on its berm across the swale, for the troopers and the plows.
+   Each way in is signed for them and nobody else, on the median shoulder
+   just before it: NO U TURN over AUTHORIZED VEHICLES ONLY, black on white.
+   You can walk it or drive it all the same. */
+(function crossovers(){
+  const W=240, H=420;
+  const tex=signTex(W, H, (c)=>{
+    c.fillStyle="#f2f0ea"; rrect(c,0,0,W,H,14); c.fill();
+    c.strokeStyle="#1a1a1a"; c.lineWidth=6; rrect(c,9,9,W-18,H-18,10); c.stroke();
+    // the U-turn arrow: up the right, over the top, down the left to the head; the red ring and bar over it
+    const cx=W/2, cy=W*0.52, r=W*0.13;
+    c.strokeStyle="#1a1a1a"; c.lineWidth=W*0.07; c.lineCap="butt";
+    c.beginPath(); c.moveTo(cx+r, cy+W*0.20); c.lineTo(cx+r, cy-W*0.02); c.arc(cx, cy-W*0.02, r, 0, Math.PI, true); c.lineTo(cx-r, cy+W*0.08); c.stroke();
+    c.fillStyle="#1a1a1a"; c.beginPath(); c.moveTo(cx-r-W*0.09, cy+W*0.07); c.lineTo(cx-r+W*0.09, cy+W*0.07); c.lineTo(cx-r, cy+W*0.21); c.closePath(); c.fill();
+    c.strokeStyle="#b3151b"; c.lineWidth=W*0.065;
+    c.beginPath(); c.arc(cx, cy, W*0.33, 0, Math.PI*2); c.stroke();
+    c.beginPath(); c.moveTo(cx-W*0.233, cy-W*0.233); c.lineTo(cx+W*0.233, cy+W*0.233); c.stroke();
+    c.fillStyle="#1a1a1a";
+    const t0=W*0.97;
+    for(const [i,L] of ["AUTHORIZED","VEHICLES","ONLY"].entries()) fitHwy(c, L, W*0.80, H*0.085, W/2, t0+i*(H-t0-24)/3+(H-t0-24)/6);
+  });
+  const sign=(x, z, ry)=>{
+    const y=roadY(z), f=ry===0?1:-1, sw=0.72, sh=1.26, cy=y+1.55+sh/2;
+    bx("metal", 0.07, cy+sh/2-y-0.06, 0.07, x, (y+cy+sh/2-0.06)/2, z-f*0.07, 0.5, 0, "#a3a8aa");   // behind the plate
+    bx("metal", sw, sh, 0.03, x, cy, z-f*0.018, 0.4, 0, "#8d9294");
+    signPanel(sw, sh, tex, x, cy, z+f*0.002, ry);
+    addCol(x-0.06, x+0.06, z-f*0.07-0.06, z-f*0.07+0.06, y-1, cy+sh/2);
+  };
+  for(const c of CROSSOVERS){
+    paveRect("asphalt", SB_X1-0.05, NB_X0+0.05, c.z-c.hw, c.z+c.hw, "#9a9a98");
+    sign(NB_X0-1.4, c.z+c.hw+4, 0);          // read by northbound traffic, coming from +z
+    sign(SB_X1+1.4, c.z-c.hw-4, Math.PI);    // and southbound, from -z
+  }
+})();
+
 /* ---- guide signs --------------------------------------------------------
    Green, white legend, a white border inset from the edge, on two
    galvanised posts with breakaway bases. Lettering is the plainest wide
@@ -175,12 +212,12 @@ function guideSign(x, z, w, h, ry, lines, opts){
   // the blue services panel the state hangs under a rest area sign
   guideSign(east+0.1, 760, 3.0, 1.9, 0, ["RESTROOMS","VENDING · INFO"], {bg:"#1f4fa0", clear:1.6});
   guideSign(-103.4, 440, 2.6, 1.9, 0, ["REST AREA","↗"], {clear:1.5});
-  guideSign(east, -640, 4.4, 2.2, 0, ["Erie   37","N.Y. Line   54"]);
+  guideSign(east, -1540, 4.4, 2.2, 0, ["Erie   37","N.Y. Line   54"]);     // past Edinboro's interchange (08b)
   guideSign(west, -380, 4.6, 2.2, Math.PI, ["Meadville   6","Pittsburgh   89"]);
   // speed limits, black on white
   const limit=(x,z,ry)=>guideSign(x, z, 0.92, 1.18, ry, ["SPEED","LIMIT","70"],
                                   {bg:"#ecebe4", fg:"#1a1a1a", clear:1.6, posts:1});
-  limit(east, -760, 0); limit(west, 640, Math.PI);
+  limit(east, -1500, 0); limit(west, 640, Math.PI);
   // on the ramp: where the trucks go and where the cars go
   guideSign(-85.2, 140, 2.4, 1.5, 0, ["TRUCKS","↑"], {y:0, clear:1.5, posts:1});
   guideSign(-68.6, 140, 2.4, 1.5, 0, ["CARS","↗"], {y:0, clear:1.5, posts:1});

@@ -41,12 +41,29 @@ const ROUTES={
   "upstairs bathroom":     [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.4],[314.05,160.4],[314.0,162.0],[315.8,162.5]],
   "back down the stairs":  [[311.9,156.6],[313.2,156.8],[316.0,156.3],[317.45,156.15],[317.45,160.3],[317.45,156.15],[316.0,156.3]],
   // the generator house's basement (12b): in at its door, through the grey door, down the stair, round into the room
-  "down to the basement":  [[80,-174.2],[80,-177.4],[81.5,-176.8],[82.6,-176.8],[83.0,-176.8],[85.5,-176.8],[86.2,-176.8],[86.2,-178.5],[83.5,-178.5],[82.2,-178.3],[79.6,-178.3]],
+  "down to the basement":  [[80,-174.2],[80,-177.4],[81.5,-176.8],[82.6,-176.8],[83.0,-176.8],[85.5,-176.8],[86.2,-176.8],[86.2,-178.4],[83.5,-178.4],[82.2,-178.3],[79.6,-178.3],[77.8,-179.5],[74.0,-179.5],[72.9,-179.6]],
+  // on through the dug-out, the door and the corridor, to the arcade under the hill
+  "down to the arcade":    [[72.9,-179.6],[72.0,-182.6],[72.0,-183.5],[72.0,-184.2],[72.0,-186.5],[72.0,-210.0],[72.0,-212.0],[74.5,-214.5],[76.5,-219.5]],
   // the vending room on the island (13b): across the truck aisle on the stripes, in, round the machines, out the back to the cars
   "to the vending room":   [[-66,0.5],[-60.5,0.5],[-56.6,0.5],[-55.3,0.5],[-54.2,0.5],[-54.4,-1.9],[-52.0,-1.9],[-52.0,2.8],[-53.6,2.8],[-53.0,0.5],[-50.7,0.5],[-49.0,0.5],[-44.0,0.5]],
   // the walk-in trailer (10b), its doors swung open first: up the step, past the jack, up the aisle to the load bar
   "into the trailer":      {pre:"TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);",
                             pts:[[-69.55,-1.71],[-70.94,-4.14],[-71.59,-5.38],[-72.4,-6.18],[-73.94,-8.87],[-73.88,-9.37],[-76.76,-14.4]]},
+  // the median crossovers (08), on foot from the northbound shoulder to the southbound's
+  "crossover, north":      [[-104.5,-250],[-118,-250],[-135,-250],[-152,-250],[-166,-250]],
+  "crossover, beyond":     [[-104.5,-520],[-118,-520],[-135,-520],[-152,-520],[-166,-520]],
+  "crossover, south":      [[-104.5,470],[-118,470],[-135,470],[-152,470],[-166,470]],
+  // Edinboro (08b): up the off-ramp, along US 6N and over the bridge, down the on-ramp to southbound
+  "edinboro off-ramp":     "EDIN.off",
+  "us 6n over the bridge": [[-8,-1201.8],[-60,-1201.8],[-80,-1201.8],[-112,-1201.8],[-135,-1202.5],[-160,-1201.8],[-192,-1201.8],[-262,-1201.8]],
+  "edinboro on-ramp":      "EDIN.on",
+  // the water and the sewage (13c): down the spur, in at the gate, the control building, up on the tanks
+  "down to the plant":     {gate:true, pts:[[86.4,121.6],[96,116],[106,110.6],[113.5,107.2],[117,106.45],[119.5,106.45],[122.7,108.5],[122.7,110.4],[122.7,112.1],[122.7,113.3],[124.8,115.6]]},
+  "the aeration catwalk":  [[139,104.2],[139,103.0],[139,101.2],[139,100.4],[139,96.0],[139,92.8]],
+  "the clarifier bridge":  [[152.6,104.2],[152.6,103.0],[152.6,101.2],[152.6,99.0],[152.6,97.2]],
+  "onto the sand filter":  [[136,104.2],[136,104.86],[136,105.6],[136,108.5],[139.5,111.0]],
+  "to the well house":     [[79.6,97.4],[74.5,98.4],[70.2,99.4],[69.4,99.48],[68.7,99.48],[67.9,99.48],[66.6,99.9]],
+  "to the water tank":     [[88.4,129.0],[81,133.5],[74.6,138.2],[73.2,139.2]],
 };
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
@@ -65,9 +82,11 @@ const ROUTES={
     };
     for(const name in ROUTES){
       // the gate stands open for its own route, the way you would leave it
-      for(const d of REST.doors) if(d.manualOnly){ d.manual = name==="through the gate" ? 1 : 0; d.open = name==="through the gate" ? 1 : 0;
-        if(d.blockCol) d.blockCol.y1 = name==="through the gate" ? d.blockCol.y0-1 : d.blockTop; }
-      let P=ROUTES[name]==="TRAIL" ? TRAIL.map(q=>[q.x,q.z]) : ROUTES[name];
+      const og=name==="through the gate" || !!ROUTES[name].gate;
+      for(const d of REST.doors) if(d.manualOnly){ d.manual = og ? 1 : 0; d.open = og ? 1 : 0;
+        if(d.blockCol) d.blockCol.y1 = og ? d.blockCol.y0-1 : d.blockTop; }
+      const R0=ROUTES[name], named={TRAIL:TRAIL, "EDIN.off":EDIN.off, "EDIN.on":EDIN.on}[R0];
+      let P=named ? named.map(q=>[q.x,q.z]) : R0.gate ? R0.pts : R0;
       if(P.pre){ (0,eval)(P.pre); P=P.pts; }
       // off the paths there is no fixed line: find one through the trunks on
       // a quarter-metre grid (breadth first, eight ways), then walk it
@@ -133,6 +152,12 @@ const ROUTES={
       for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
         const d=drive(TOP,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT,m,lo); REST.sim(40);
         res["basement stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>0.3 ? "down: never reached the floor ("+lo.toFixed(2)+")"
+                                         : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
+    // and the corridor's six steps down from the dug-out
+    { const TOP2=[[72.0,-182.6],[72.0,-183.5],[72.0,-184.2],[72.0,-187.0]], BOT2=TOP2.slice().reverse(), fy=REST.surf(72.0,-182.6,0.3);
+      for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
+        const d=drive(TOP2,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT2,m,lo); REST.sim(40);
+        res["corridor stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-1.0 ? "down: never reached the corridor ("+lo.toFixed(2)+")"
                                          : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
     // and the trailer's step the same way, at every pace, then back down it
     { (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");

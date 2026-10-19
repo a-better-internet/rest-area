@@ -681,6 +681,30 @@ const FOREST=(function(){
       }
     }
   })();
+  /* ---- Edinboro's hedgerows -----------------------------------------------
+     Between the fields (EDIN.fields), where the plough never went: a ragged
+     line of hardwoods with gaps, a cedar or two, shrubs at their feet; and a
+     big lone oak left standing in a hay field for the shade. The fields are
+     out of the woods' zone, so their trunks are given colliders here. */
+  (function hedgerows(){
+    const E=EDIN, tree=(sp, x, z, s)=>{ if(Terrain.clearDist(x,z)>-1 && sp!=="oak") return;
+      plant(sp==="oak"?"hard":sp, x, z, {scale:s});
+      const y=Terrain.groundAt(x,z), r=0.22*s; addCol(x-r, x+r, z-r, z+r, y-0.5, y+6); };
+    const row=(x0,z0,x1,z1,seed)=>{ const L=Math.hypot(x1-x0,z1-z0), n=Math.floor(L/6.5);
+      for(let i=0;i<=n;i++){ const t=i/n, h=hash2(seed+i*1.7, seed*0.3);
+        if(h<0.22) continue;                                     // a gap where a tree came down
+        const x=lerp(x0,x1,t)+(hash2(i,seed)-0.5)*3, z=lerp(z0,z1,t)+(hash2(seed,i*2.1)-0.5)*3;
+        tree(h<0.32 ? "hemlock" : "hard", x, z, 0.75+h*0.5);
+        if(h>0.6) plant("shrub", x+2.0, z+1.1, {scale:0.9+h*0.5, solid:false}); } };
+    // between neighbouring fields, the length of the shorter edge
+    for(const a of E.fields) for(const b of E.fields){
+      if(a===b || b.x0<a.x1 || b.x0-a.x1>16 || b.z0!==a.z0) continue;
+      row((a.x1+b.x0)/2, a.z0+4, (a.x1+b.x0)/2, a.z1-4, a.x1);
+    }
+    // and along the back of each, where it meets the woods
+    for(const f of E.fields){ const zb=f.z0<E.z ? f.z0-5 : f.z1+5; row(f.x0+4, zb, f.x1-4, zb, f.x0*0.7+zb); }
+    tree("oak", E.fields[3].x0+96, E.fields[3].z0+170, 1.45);
+  })();
 
   /* ---- the canopy past the zone -----------------------------------------
      The crown height above the ground, wherever the woods are: about nineteen
@@ -844,10 +868,33 @@ const FOREST=(function(){
     }
     addCol(Z.x0-0.5, Z.x0+0.5, Z.z0, Z.z1, -40, 300);
     addCol(Z.x1-0.5, Z.x1+0.5, Z.z0, Z.z1, -40, 300);
+    // The two down the median stand open at the crossovers, and the strip of woods between them is
+    // closed off either side of each, so the way across is the paving and not a walk up the median.
+    // They duck under US 6N's deck at Edinboro. The two on the outside stop where Edinboro's fields
+    // begin, and the fields have their own fence (a run is open over `gaps` and low over `lows`).
+    const cut=CROSSOVERS.map(c=>[c.z-c.hw-1, c.z+c.hw+1]).filter(g=>g[1]<Z.z0 || g[0]>Z.z1);
+    const EP=EDIN.plain, deck=[[EDIN.z-6.5, EDIN.z+6.5, EDIN.y-1.5]];
+    const wall=(ex, a, b, gaps, lows)=>{
+      const ev=[]; for(const g of gaps) if(g[1]>a && g[0]<b) ev.push([g[0], g[1], null]);
+      for(const g of lows) if(g[1]>a && g[0]<b) ev.push(g);
+      ev.sort((p,q)=>p[0]-q[0]);
+      let z=a;
+      for(const g of ev){ if(g[0]>z) addCol(ex-0.4, ex+0.4, z, g[0], -40, 300);
+        if(g[2]!==null) addCol(ex-0.4, ex+0.4, g[0], g[1], -40, g[2]);
+        z=Math.max(z, g[1]); }
+      if(z<b) addCol(ex-0.4, ex+0.4, z, b, -40, 300); };
     for(const ex of [HWY.nb+19.5, HWY.nb-19.5, HWY.sb+19.5, HWY.sb-19.5]){
-      addCol(ex-0.4, ex+0.4, -1700, Z.z0, -40, 300);
-      addCol(ex-0.4, ex+0.4, Z.z1, 1700, -40, 300);
+      const med=ex===HWY.nb-19.5 || ex===HWY.sb+19.5;
+      wall(ex, -1700, Z.z0, med ? cut : [[EP.z0, EP.z1]], med ? deck : []);
+      wall(ex, Z.z1, 1700, med ? cut : [], []);
     }
+    for(const g of cut) for(const zz of g) addCol(HWY.sb+19.1, HWY.nb-19.1, zz-0.4, zz+0.4, -40, 300);
+    // round the fields: north and south from the woods' edge to the cut, and the two far ends
+    for(const zz of [EP.z0, EP.z1]){
+      addCol(EP.x0, HWY.sb-19.1, zz-0.4, zz+0.4, -40, 300);
+      addCol(HWY.nb+19.1, EP.x1, zz-0.4, zz+0.4, -40, 300);
+    }
+    for(const xx of [EP.x0, EP.x1]) addCol(xx-0.4, xx+0.4, EP.z0, EP.z1, -40, 300);
   })();
 
   /* ---- build the instanced chunks ---------------------------------------- */

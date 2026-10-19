@@ -320,11 +320,11 @@ function _trailDraw(sub, night, hour, day, seed){
   x.fillStyle="#fff"; x.font="600 10px 'JetBrains Mono', monospace"; x.textBaseline="middle"; x.textAlign="left";
   const dt=new Date(Date.now()+day*86400000), hh=Math.floor(hour), mm=Math.floor((hour%1)*60), ss=Math.floor(r()*60);
   const temp=Math.round((FOREST.isAutumn()?40:61)+((FOREST.isAutumn()?58:81)-(FOREST.isAutumn()?40:61))*(0.5+0.5*Math.cos((hour-15)/24*Math.PI*2)));
-  x.fillText("TRAILCAM 05", 5, H-8);
-  x.fillText((night?"☾ ":"☀ ")+temp+"°F", 104, H-8);
+  x.fillText("TRAILCAM 05", 9, H-8);
+  x.fillText((night?"☾ ":"☀ ")+temp+"°F", 106, H-8);
   x.textAlign="right";
   x.fillText((dt.getMonth()+1+"").padStart(2,"0")+"/"+(dt.getDate()+"").padStart(2,"0")+"/"+dt.getFullYear()+"  "+
-             (((hh+11)%12)+1+"").padStart(2,"0")+":"+(mm+"").padStart(2,"0")+":"+(ss+"").padStart(2,"0")+(hh<12?" AM":" PM"), W-5, H-8);
+             (((hh+11)%12)+1+"").padStart(2,"0")+":"+(mm+"").padStart(2,"0")+":"+(ss+"").padStart(2,"0")+(hh<12?" AM":" PM"), W-9, H-8);
   return c;
 }
 function trailPhoto(sub, hour, day){
@@ -473,7 +473,10 @@ function _noteDraw(n, torn){
     if(n.tel){ x.fillStyle="#f6f4ec";
       const tabs=8; for(let k=0;k<tabs;k++){ if(torn && (k*7+torn)%3===0) continue;
         x.save(); x.translate(8+k*(W-16)/tabs+(W-16)/tabs/2, H-24); x.fillRect(-(W-16)/tabs/2+1, -22, (W-16)/tabs-2, 46);
-        x.rotate(-Math.PI/2); x.fillStyle="#2a2a2a"; x.font="500 9px Arial"; x.textAlign="center"; x.textBaseline="middle"; x.fillText(n.tel, 0, 0); x.fillStyle="#f6f4ec"; x.restore(); } }
+        // the number along the tab, sized to the tab's length less a margin at each end
+        x.rotate(-Math.PI/2); x.fillStyle="#2a2a2a"; let fs=9; x.font="500 9px Arial";
+        while(x.measureText(n.tel).width>38 && fs>5){ fs-=0.5; x.font="500 "+fs+"px Arial"; }
+        x.textAlign="center"; x.textBaseline="middle"; x.fillText(n.tel, -1, 0); x.fillStyle="#f6f4ec"; x.restore(); } }
   }
   const t=setSRGB(new T.CanvasTexture(c)); t.anisotropy=4;
   return t;

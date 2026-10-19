@@ -64,7 +64,7 @@ function _carRoute(v){
   return {legs:legs, li:0, s:0, stall:{px:px, zs:zs, E:E}, release:()=>LOT_TAKEN.delete(st.sd+st.k)};
 }
 function _truckRoute(v){
-  const free=TRUCK_STALLS.filter(s=>!s.taken);
+  const free=TRUCK_STALLS.filter(s=>!s.taken && !s.held);     // (held: room beside a trucker's rig, 14i)
   if(!free.length) return null;
   const st=free[(Math.random()*free.length)|0]; st.taken=true;
   const S=v.spec, back=1.2-S.tail, ax=-65;
@@ -193,7 +193,7 @@ function stepVisitor(v, dt, dark){
   if(onFoot && consider(player.pos.x, player.pos.z, 0, 0.4, v.hw+1.0, R.dodge||0, dodging)) limBy="you";
   if(driving){ const p=driving.g.position; if(consider(p.x, p.z, 0, 2.4, v.hw+1.6)) limBy="car"; }
   if(typeof PEOPLE!=="undefined") for(const q of PEOPLE)        // and anyone on foot in the lot
-    if(q.kind==="driver" && q.P.g.visible && consider(q.x, q.z, 0, 0.3, v.hw+0.9)) limBy="you";
+    if((q.kind==="driver" || q.lot) && q.P.g.visible && consider(q.x, q.z, 0, 0.3, v.hw+0.9)) limBy="you";
   if(dodging) target=Math.min(target, 1.6);
   for(const o of TRAFFIC){
     if(o===v || !o.route || o.route.dwell>0) continue;      // parked ones are in their stalls, not the aisle
@@ -524,6 +524,8 @@ function updateLife(dt, now, dark, dn){
   if(typeof updateGarage==="function") updateGarage(dt);
   if(typeof updateTrailer==="function") updateTrailer(dt, now, dark);
   if(typeof updateHangout==="function") updateHangout();
+  if(typeof updateArcade==="function") updateArcade(dt);
+  if(typeof updatePlant==="function") updatePlant(dt);
   if(typeof updateVendHut==="function") updateVendHut(dt, now);
   if(typeof updateIncidents==="function") updateIncidents(dt, now, dark);
   if(typeof updatePuffs==="function") updatePuffs(dt, now, dark);

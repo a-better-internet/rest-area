@@ -50,7 +50,7 @@ bucketOf("cctv", ()=>{
   view(0,80,()=>{ x.fillStyle="#7f8486"; x.fillRect(0,0,128,80); x.fillStyle="#5a5e60"; x.fillRect(0,30,128,14);
     x.fillStyle="#d8d8d4"; x.fillRect(30,28,26,10); });                                                                 // the ramp
   view(128,80,()=>{ x.fillStyle="#5d6a5a"; x.fillRect(0,0,128,80); x.fillStyle="#8a8e88"; x.fillRect(30,30,60,40); }); // the sub
-  x.fillStyle="#e8e8e0"; x.font="9px monospace"; ["CAM 1 LOT","CAM 2 LOBBY","CAM 3 RAMP","CAM 4 SUBSTA"].forEach((s,i)=>x.fillText(s,4+(i%2)*128,11+((i/2)|0)*80));
+  x.fillStyle="#e8e8e0"; x.font="9px monospace"; ["CAM 1 LOT","CAM 2 LOBBY","CAM 3 RAMP","CAM 4 SUBSTA"].forEach((s,i)=>x.fillText(s,8+(i%2)*128,14+((i/2)|0)*80));
   x.fillStyle="#0d0f10"; x.fillRect(127,0,2,160); x.fillRect(0,79,256,2);
   const tex=setSRGB(new T.CanvasTexture(c));
   return glowMat({color:0x111111, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.55}, "indoor");

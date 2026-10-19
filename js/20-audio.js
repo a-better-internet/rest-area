@@ -530,6 +530,14 @@ const AUDIO=(function(){
       const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.setValueAtTime(f0,t); o.frequency.linearRampToValueAtTime(f0*0.8,t+dur);
       const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=f0*2.4; bp.Q.value=4;
       const g=ctx.createGain(); env(g,t,0.04,0.018*vol,dur*0.6,dur*0.4); o.connect(bp); bp.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.05);
+    }else if(kind==="whoosh"){                     // a dart leaving the hand
+      const s=ctx.createBufferSource(); s.buffer=noise(0.25,"white"); const f=ctx.createBiquadFilter(); f.type="bandpass";
+      f.frequency.setValueAtTime(1800,t); f.frequency.exponentialRampToValueAtTime(700,t+0.2); f.Q.value=0.8;
+      const g=ctx.createGain(); env(g,t,0.01,0.05*vol,0.05,0.12); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="dart"){                       // into the sisal: a short dull thock
+      tone("sine", 210, 120, 0.09, 0.16*vol, t, 0, master); tone("triangle", 900, 500, 0.03, 0.05*vol, t, 0, master);
+      const s=ctx.createBufferSource(); s.buffer=noise(0.08,"white"); const f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=1600;
+      const g=ctx.createGain(); env(g,t,0.001,0.10*vol,0.01,0.05); s.connect(f); f.connect(g); g.connect(master); s.start(t);
     }else if(kind==="tick"){
       tone("square", 900, null, 0.03, 0.02*vol, t, 0, master);
     }else if(kind==="airhorn"){

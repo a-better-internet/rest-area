@@ -795,6 +795,9 @@ function placeVehicle(v, x, z, head, dark, gy){
   const mid=(v.nose+v.tail)/2;
   c.x0=x+fx*mid-hx; c.x1=x+fx*mid+hx; c.z0=z+fz*mid-hz; c.z1=z+fz*mid+hz;
   c.y0=y; c.y1=y+v.ht;
+  // and the turned rectangle itself, which the tests check inside those bounds (06): a rig at an
+  // angle in its stall is its own width, not the square round it, and the gap beside it is a gap
+  const o=c.ob||(c.ob={}); o.cx=x+fx*mid; o.cz=z+fz*mid; o.c=fz; o.s=fx; o.hx=v.hw; o.hz=(v.nose-v.tail)/2;
   const lit=dark>0.04;
   for(const L of v.lamps){
     L.s.visible=lit;

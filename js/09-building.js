@@ -1137,9 +1137,12 @@ function cleanToilet(st){
       addCol(3.5, 4.0, ...zr(7.80,8.32), FL-0.5, FL+1.1);
       // on the walls: the whiteboard by the door, a safety poster, a clock, first aid, the keys, an extinguisher
       wallSign(1.20,0.80,(c,W,H)=>{ c.fillStyle="#fbfbf8"; c.fillRect(0,0,W,H); c.strokeStyle="#9a9c9e"; c.lineWidth=10; c.strokeRect(0,0,W,H);
-        c.fillStyle="#1d3b8a"; c.font="600 "+(H*0.085|0)+"px Arial"; c.textAlign="left";
-        ["ROUNDS: 6A · 12P · 6P  (TERRY)","MEN'S #2 — FLUSH VALVE, CALLED IN","2+ MESSES BETWEEN ROUNDS: RADIO TERRY","DUMPSTER PICKUP TUES / SAT"].forEach((s,i)=>c.fillText(s,W*0.06,H*(0.18+i*0.16)));
-        c.fillStyle="#b3151b"; c.fillText("PENNDOT D-1 MAINT: 814-555-0142",W*0.06,H*0.86); },
+        // marker on a whiteboard, left-aligned, every line at the one size the longest of them fits at
+        const L=["ROUNDS: 6A · 12P · 6P  (TERRY)","MEN'S #2 — FLUSH VALVE, CALLED IN","2+ MESSES BETWEEN ROUNDS: RADIO TERRY","DUMPSTER PICKUP TUES / SAT","PENNDOT D-1 MAINT: 814-555-0142"];
+        let sz=H*0.085|0; c.font="600 "+sz+"px Arial";
+        for(const s of L) while(c.measureText(s).width>W*0.86 && sz>8){ sz--; c.font="600 "+sz+"px Arial"; }
+        c.textAlign="left"; c.textBaseline="middle";
+        L.forEach((s,i)=>{ c.fillStyle=i===4?"#b3151b":"#1d3b8a"; c.fillText(s,W*0.07,i===4?H*0.84:H*(0.18+i*0.15)); }); },
         5.95, FL+1.55, Z(5.65)+sg*0.012, sg>0?0:Math.PI);
       wallSign(0.60,0.80,(c,W,H)=>{ c.fillStyle="#f2b418"; c.fillRect(0,0,W,H); c.fillStyle="#1a1a1a";
         fitHwy(c,"WORK ZONE",W*0.86,H*0.12,W/2,H*0.14); fitHwy(c,"SAFETY",W*0.7,H*0.12,W/2,H*0.28);

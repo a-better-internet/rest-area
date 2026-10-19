@@ -214,7 +214,12 @@ If the scene runs hot on your machine, start there (see below).
     at a crawl, and pull back to the middle once past.
 - **The interstate** is two lanes each way with a wooded median. It has
   rumble strips, mile markers, the REST AREA 1/2 MILE and NEXT RIGHT signs,
-  the gore sign and a DO NOT ENTER at the wrong end of the ramp. 44 vehicles
+  the gore sign and a DO NOT ENTER at the wrong end of the ramp. Three
+  paved emergency crossovers cut through the median, level with the road
+  on a berm across the swale: one just north of the site in the woods you
+  can walk, and one each way out along the road. They are signed NO U TURN
+  · AUTHORIZED VEHICLES ONLY for each direction, and you can walk or drive
+  across any of them. 44 vehicles
   run on it: sedans, SUVs, pickups, minivans, box trucks, reefers, flatbeds
   and tractor-trailers.
   - Each one follows the car in front with the Intelligent Driver Model
@@ -231,6 +236,27 @@ If the scene runs hot on your machine, start there (see below).
     lift, tows it off down the shoulder, the other car drives away, the
     flares burn out, the trooper picks up the cones and walks back, and the
     cruiser kills its bar and leaves. `X` calls one up (or clears it).
+- **Edinboro, exit 166.** Two thirds of a mile north, US 6N crosses over
+  I-79 on a four-span bridge. It has a concrete deck on weathering-steel
+  girders, a pier in the median and one off each outside shoulder, and
+  block abutments at the top of the cut. The interstate runs under it in a
+  cut through farm country graded level either side.
+  - An advance sign (EXIT 166 · US 6N Edinboro · NEXT RIGHT) and a gore
+    sign mark the exit. The northbound off-ramp leaves the right lane,
+    climbs the side of the cut and merges into US 6N eastbound under a
+    MERGE sign.
+  - The mirror ramp on the west side takes you from US 6N back down onto
+    southbound, so you can turn round. The crossovers will get you back
+    onto northbound.
+  - US 6N is two lanes with a double yellow line and W-beam rail off the
+    bridge ends. It has route markers, an Edinboro 3 · Union City 14
+    distance sign, and I-79 SOUTH signs pointing to the on-ramp.
+  - Both ends of the road are closed for now with type III barricades
+    reading ROAD CLOSED.
+  - Fields of corn, soybeans and hay (round bales left in it) and a
+    pasture lie either side, with farm fence along the road. There are
+    hedgerows between the fields, a big lone oak, and the pole line
+    crossing.
 - **The picnic grove** spreads across the lawn south of the building. Paths
   run to it, round the back and down to the pet area, and every one of them
   ends somewhere (at the shelter's slab, in a round pad by the pet area's bag
@@ -253,12 +279,70 @@ If the scene runs hot on your machine, start there (see below).
     poker table under a green shade with a hand still on it (kings showing)
     and the chips stacked, six chairs no two alike, a plaid couch with an
     afghan facing a wood-cased television on a cart (`E` turns it on), a
-    cable spool for a coffee table, a harvest-gold fridge full of lager, a
-    dartboard with chalk scores, an Allegheny Lager neon, a PITTSBURGH
-    pennant, Christmas lights along the ceiling, a space heater glowing, and
-    the whiteboard of who owes who (Terry owes fourteen).
+    cable spool for a coffee table, a harvest-gold fridge full of lager, an
+    Allegheny Lager neon, a PITTSBURGH pennant, Christmas lights along the
+    ceiling, a space heater glowing, and the whiteboard of who owes who
+    (Terry owes fourteen). The old foundation wall to the west has been
+    knocked through and the yard dug out under. The couch, the TV, the
+    spool and the fridge are in that second room now, with room to move.
+    - **Darts.** The second room has a darts lane with a regulation board,
+      an oche and a chalkboard. `E` at the oche picks up three darts. You
+      aim where you look, and your hand drifts a little as a hand does.
+      Click or `Space` throws. The dart flies its arc, sticks where it
+      lands, and scores off the board's own rings (single, double, treble,
+      outer bull, bull). It is 301 against Dale, who throws after you:
+      three darts a turn, finish exactly on zero, and go under and the turn
+      is bust. A panel and the chalkboard keep the score. `N` starts a new
+      game and `Esc` puts the darts down.
+    - **The corridor and the arcade.** A door in the far wall opens on six
+      steps down to a fallout-shelter corridor from 1962. It has block
+      walls painted green and cream, a yellow stripe, conduit and a cable
+      tray, vapour-tight tubes (one going), two locked steel doors and the
+      yellow shelter sign. Twenty-five metres on, under the hill, it opens
+      into an arcade with a cosmic carpet, black walls with pink and blue
+      neon, and a GAME ROOM sign. There are twelve upright cabinets
+      running their attract screens (ASTRO RAIDERS, MAZE MUNCHER, TURNPIKE
+      RACER, BLOCK DROP and the rest; `E` drops a token), two pinball
+      machines, a token changer, and an air hockey table with its puck
+      riding the air.
+
+  Everything underground (the cellar, the dug-out, the corridor and the
+  arcade) is lit only by its own lamps. It looks the same at noon and at
+  midnight, and it is not on the day/night cycle.
 
   A pole line runs off south down its cleared right-of-way.
+- **Water in, water out.** No city water or sewer reaches a rest area out
+  here, so it has its own.
+  - **The well house.** A block hut off the service track, in a clearing
+    in the woods. Inside are the well casing with its sanitary cap, a blue
+    pressure tank, the gauge and pressure switch on the tee, a chlorine
+    solution tank with its pump, a heater and a bulb.
+  - **The water tank.** On the rise above the well house is a steel tank
+    on a short tower: four battered legs, cross-bracing, a balcony and
+    rail, a caged ladder locked off at the bottom, and REST AREA 154 on
+    the side.
+  - **The treatment plant.** Downhill from everything, at the end of a
+    gravel spur off the track, is a fenced compound with a double gate
+    (`E`). Inside:
+    - a block control building with two blowers, two pumps and the motor
+      control panel with its run lights. Its lab bench has sample bottles,
+      a pH meter and the logbook open on it (`E` reads the last entry);
+    - the headworks box where the sewer comes in;
+    - a concrete aeration tank of brown, working water with foam drifting
+      on it, a stair up to a grating catwalk across it, and the air drops
+      with their red handwheels;
+    - a round clarifier, its skimmer arm turning slowly under the bridge
+      to its centre;
+    - a curbed sand filter bed;
+    - a baffled chlorine contact tank with its tablet tubes.
+    Manholes mark the sewer down the track. A red beacon on the control
+    building turns in a power cut, in a hard rain, and now and then for
+    no reason anybody can find.
+  - **The creek.** The treated water goes out a pipe to a concrete headwall
+    on the bank of a creek (OUTFALL 001, with its permit sign). The creek
+    comes down off the hills to the south, runs past the plant through the
+    bottom of the woods and away east. It is cut into its own bed, with
+    stones along it.
 - **The forest.** Northern hardwoods (maple, oak, cherry, beech) mixed with
   eastern hemlock, white pine and spruce, with an understory of saplings,
   shrubs and ferns. Logs, stumps and rocks lie on the forest floor. Trees
@@ -318,8 +402,17 @@ If the scene runs hot on your machine, start there (see below).
 - **Life.**
   - Three whitetail deer graze at the edge of the woods. They walk with a
     four-beat gait and bound away with their tails up when you get close.
-  - Two people share a picnic table, a trucker talks on the phone by his
-    rig, and a dog is walked round the pet area. By day somebody sits in the
+  - Two people share a picnic table, and a dog is walked round the pet
+    area.
+  - The truckers are big men in boots, beards and trucker caps. They live
+    in the row of parked rigs (14i). One paces the side of his rig on the
+    phone. By day another climbs down in a hi-vis vest for his walk-round,
+    thumping each tire on the driver's side and looking over the doors and
+    lights at the back. In the night the one in slippers goes over for
+    coffee. Where the row allows, each has an empty stall held on his
+    driver's side, so no visitor rig boxes him in. They stop for you, and rigs moving in the
+    aisle stop for them. The parked rigs are solid at their own width, at
+    their angle, so the gap between two of them is a gap you can walk. By day somebody sits in the
     grass with their back to the big boulder by the grove, one knee up, a
     paperback open, now and then turning a page or looking round. Visitors stop at the state
     map in the lobby on their way through, tracing the interstates and now
@@ -443,6 +536,9 @@ At a vending machine the keys are its keypad's: arrows (or `WASD`) to pick,
 `Q` a quarter, `F` a dollar bill, `E` or `Enter` to vend, `Space` to shake
 it, `R` coin return, `Esc` to walk away.
 
+At the oche you aim with the mouse. A click or `Space` throws, `N` starts a
+new game, and `Esc` or `E` puts the darts down.
+
 ## Graphics settings
 
 `G` opens the menu. Use the arrows (or `WASD`) or the mouse to change a
@@ -480,6 +576,13 @@ centred on the origin.
 | Picnic grove | x −20 … +30, z −35 … −95 |
 | Substation | x 60 … 90, z −184 … −154 (2.6 m up the drive) |
 | Generator house and its cellar | x 77 … 87, z −182 … −176; the cellar floor 2.65 m below the house's |
+| The dug-out (darts, couch) | x 70.25 … 77, z −183.4 … −176, off the cellar's west side |
+| The corridor and the arcade | corridor x 71 … 73 from z −184 to −211; arcade x 63.5 … 80.5, z −224 … −211 |
+| Median crossovers | z −250, −520 and +470 |
+| Edinboro (US 6N bridge) | z −1200; off-ramp from z −640; the fields x −330 … 610, z −1460 … −860 |
+| Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
+| Well house · water tank | x 65.6 … 68.8, z 97.6 … 101.2 · x 70, z 140 |
+| The creek | from x 170, z 262 north past the plant, then east along z ≈ 100 … 134 |
 | Vending room | x −55.4 … −50.6, z −3.6 … 4.6, on the island; crosswalk at z 0.5 |
 | The open trailer | the truck lot's stall 11, its tail at x −70.6, z −3.6 |
 | The path out back | from the loop walk at x 17, z 1 east to x 278, z 50 |
@@ -509,15 +612,18 @@ js/04b-vehicles.js  reflections, lofted car and truck bodies, trailer liveries, 
 js/05-sky.js        sky, sun, clouds, birds, day/night, highway traffic
 js/06-collision.js  colliders, paving raster, seats, uses, zones
 js/07-forest.js     tree species, instanced LOD chunks, canopy shell, wind, seasons
-js/08-site.js       interstate, ramps, lots, striping, signs, walks, lamps, beds
+js/08-site.js       interstate, ramps, lots, striping, signs, walks, lamps, beds, the median crossovers
+js/08b-edinboro.js  exit 166: the ramps, US 6N and its bridge over I-79, the signs, the fields
 js/09-building.js   the rest area building, inside and out
 js/10-cars.js       parked cars and trucks
 js/10b-trailer.js   the trailer whose back doors open: its doors and step, the inside, the load
 js/11-driving.js    driving a parked car
 js/12-substation.js the drive, the fenced compound, generators, pole line
-js/12b-hangout.js   the stair down from the generator house, and the crew's room under it
+js/12b-hangout.js   the stair down from the generator house, the crew's rooms under it, the darts lane
+js/12c-arcade.js    the shelter corridor on down from the dug-out, and the arcade at the end of it
 js/13-grounds.js    picnic grove, shelter, grills, flags, memorial, pet area
 js/13b-vendhut.js   the vending room on the island: machines, phone, board, lights, crosswalk
+js/13c-wastewater.js the well house, the tank on its tower, the treatment plant, the outfall and the creek
 js/14-life.js       visitors, deer, fireflies, falling leaves, grill smoke
 js/14b-people.js    people and a dog: skinned figures, poses, the drivers' walks, what they do inside
 js/14a-smoke.js     smoke and sparks: two point clouds shared by every fire and cigarette
@@ -527,7 +633,7 @@ js/14e-incidents.js the trooper's cruiser coming and going, and the occasional w
 js/14f-homestead.js the old house in the woods, inside and out, and its yard
 js/14g-garage.js    the maintenance garage, its yard, the track and gate, the truck, mower, carts and blower, the roll-up doors
 js/14h-custodian.js the custodian: rounds, stalls and cans, the restroom logs, mowing, leaf blowing, the cot; the outdoor path grid
-js/14i-trucker.js   the trucker in slippers and his coffee run
+js/14i-trucker.js   the truckers: the one on the phone, the walk-round, the one in slippers and his coffee run
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
 js/16b-weather.js   weather (cloud deck, rain, fog banks, lightning) and the power: circuits, outage, generator, transfer switch
@@ -535,11 +641,15 @@ js/16c-screens.js   the lobby TV, the office monitor and CAM 5's trail-camera pi
 js/17-player.js     movement, interaction, gates, drone
 js/18-hud.js        compass, clock, location, weather, plan view
 js/18b-vending.js   the vending machines' keypad, coins, coil and shaking
+js/18d-darts.js     darts: aiming, the throw and its flight, scoring, 301 against Dale
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
 tools/shot.js       headless screenshots
 tools/walk.js       headless walk-through checks
+tools/zfight.js     coplanar faces in a box of the world
+tools/signaudit.js  sign text too close to the edge of its board
+CLAUDE.md           the standing rules for anything added: no coplanar faces, nothing underground on the day/night cycle, sign text fitted with padding
 ```
 
 The engine comes from the Low Desert Motel and keeps its conventions:
@@ -577,13 +687,14 @@ Several systems were added for this world:
 
 ## Tools
 
-All three tools use Playwright with SwiftShader. Before running them, copy
+All four tools use Playwright with SwiftShader. Before running them, copy
 `three.min.js` (r128) into `tools/`; it is git-ignored.
 
 ```
 NODE_PATH=$(npm root -g) node tools/shot.js shots.json outDir 960 540
 NODE_PATH=$(npm root -g) node tools/walk.js
 NODE_PATH=$(npm root -g) node tools/zfight.js '{"x0":-10,"x1":17,"z0":-21,"z1":21,"y0":-0.6,"y1":10,"near":0.0011}'
+NODE_PATH=$(npm root -g) node tools/signaudit.js
 ```
 
 **`shot.js`** renders a list of views. Each entry in `shots.json` looks like
@@ -609,7 +720,17 @@ the generator house's cellar and the trailer's step. The routes are:
   through the grey door and down the stair into the cellar;
 - across the truck aisle on the crosswalk, into the vending room, round the
   machines and out the back door to the cars;
-- up the trailer's step (doors opened first) and up its aisle to the load bar.
+- up the trailer's step (doors opened first) and up its aisle to the load bar;
+- on through the dug-out, its door, the corridor and into the arcade (and the
+  corridor's stair, keys held, at all three speeds);
+- across each of the three median crossovers on foot;
+- up Edinboro's off-ramp, along US 6N and over the bridge, and down the
+  on-ramp to southbound;
+- down the spur to the treatment plant, through its gate (opened first)
+  and into the control building; up the stair and along the aeration
+  tank's catwalk, out the clarifier's bridge, and onto the sand filter;
+- along the paths to the well house (and in its door) and to the water
+  tank.
 
 **`zfight.js`** lists faces in a box of the world that lie in one plane and
 overlap, which the depth buffer cannot sort and draws as flicker. It loads
@@ -618,6 +739,16 @@ closer than `near` metres are reported by bucket, with the normal and where
 they are. Faces turned into a wall still show up, so read the normals.
 A merged mesh (a vehicle, say) counts as one piece, so faces fighting inside
 one are not seen by it; check those part by part, from `vehicleParts()`.
+It takes a list of boxes as well, each with a `name`, to sweep several
+places in one load. For rooms below ground, give a box `buried` and `floor`
+(the heights under which faces count as buried, and as resting on the
+floor) so that they are checked.
+
+**`signaudit.js`** wraps the canvas's `fillText` before the world builds,
+measures every piece of lettering as it is drawn, and lists any that comes
+within 3% of its canvas's edge (or runs off it), with the line that drew
+it. It then plays a few seconds in the lobby, the arcade and by the
+dartboard, to catch what is drawn at run time too.
 
 The `window.REST` handle exposes the world for scripting. For example:
 - `REST.go(x,z,yaw)` and `REST.hour(h)`;
@@ -633,4 +764,8 @@ lights, radio station, cart, mower, blower), `CUST_MOW` and `CUST_LOG`,
 `CUST_STATS` (the walk watchdog's re-plans and set-downs), `WALKIN` and
 `TRAILER_RT` (the open trailer: `target` 1 to open it), `HANGOUT` (`tvOn`),
 `VENDHUT_RT` (`brew`, `pour`, `mugUnder`) and `SLIPPERS.p` (the trucker:
-`state`, `nextM`, the hours after six in the evening of his next trip).
+`state`, `nextM`, the hours after six in the evening of his next trip),
+`TRUCKERS` (whose rig is whose, and the stalls held beside them), `DARTS`
+(`start()`, `game`), `ARCADE`, `EDIN` (the interchange: its ramps, bridge
+and fields), `CROSSOVERS`, `WWTP`, `CREEK` and `PLANT_RT` (the clarifier's
+arm, the alarm: set `alarmT` to a number of seconds to sound it).

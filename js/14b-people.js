@@ -1,7 +1,7 @@
 "use strict";
 /* REST AREA · 14b-people.js
    the people: drivers out of the cars that pull in, someone at a picnic
-   table, a dog being walked, a smoker by the post, a trucker on the phone
+   table, a dog being walked and a smoker by the post
    Loaded as a classic script, in order, sharing one global scope with
    its siblings — see index.html. */
 /* ----------------------------------------------------------------------
@@ -73,6 +73,12 @@ function buildPerson(o){
   // pelvis and torso
   add(new T.BoxGeometry(0.30*h,0.20*h,0.19*h), _pm(0,Y(-0.01),0), o.pants, root);
   add(cyl(0.165*h*(o.female?0.92:1), 0.145*h, 0.50*h, 12), _pm(0,Y(0.30),0, 1,1,0.62), o.shirt, spine);
+  // a gut over the belt, and a vest open down the front over it: the hi-vis a driver wears
+  // round a lot, two silver bands round it (each piece a size out from the one under it)
+  if(o.belly) add(sph(0.5,12,9), _pm(0,Y(0.17),0.045*h, 0.31*h,0.30*h,0.23*h), o.shirt, spine);
+  if(o.vest){ const vz=o.belly?1.0:0.66, vo=o.belly?0.02*h:0;           // cut fuller round a gut
+    const vt=(r,y,len,c)=>add(new T.CylinderGeometry(r*1.0,r*0.94,len,14,1,true, 0.55, Math.PI*2-1.1), _pm(0,Y(y),vo, 1,1,vz), c, spine);
+    vt(0.178*h, 0.31, 0.44*h, o.vest); vt(0.183*h, 0.20, 0.035*h, "#d9dcd8"); vt(0.180*h, 0.40, 0.035*h, "#d9dcd8"); }
   add(sph(0.5,12,8), _pm(0,Y(0.52),0, (sw*2+0.04)*1.0, 0.13*h, 0.21*h), o.shirt, spine);
   if(o.female) add(sph(0.5,10,8), _pm(0,Y(0.40),0.05*h, 0.26*h,0.12*h,0.12*h), o.shirt, spine);
   add(cyl(0.048*h,0.052*h,0.10*h,8), _pm(0,Y(0.61),0.005), o.skin, spine);
@@ -83,7 +89,14 @@ function buildPerson(o){
                           add(sph(0.024*h,6,5), _pm(s*0.097*h,Y(0.73),0.0, 0.5,1,0.8), o.skin, head); }
   add(new T.SphereGeometry(0.114*h,14,8,0,Math.PI*2,0,Math.PI*0.52), _pm(0,Y(0.745),-0.008*h, 0.95,0.95,1.04), o.hair, head);
   if(o.female) add(new T.BoxGeometry(0.20*h,0.26*h,0.06*h), _pm(0,Y(0.64),-0.075*h), o.hair, head);
-  if(o.cap){ add(new T.SphereGeometry(0.118*h,14,8,0,Math.PI*2,0,Math.PI*0.42), _pm(0,Y(0.758),-0.004*h), o.cap, head);
+  // a beard and a moustache, under the cap; shades across the eyes
+  if(o.beard){ add(sph(0.5,12,8), _pm(0,Y(0.668),0.042*h, 0.19*h,0.14*h,0.15*h), o.beard, head);
+               add(new T.BoxGeometry(0.075*h,0.016*h,0.02*h), _pm(0,Y(0.697),0.112*h), o.beard, head); }
+  if(o.shades) add(new T.BoxGeometry(0.155*h,0.032*h,0.012*h), _pm(0,Y(0.748),0.106*h), "#121416", head);
+  // a trucker's cap is two panels, the foam front a colour of its own and the mesh round the back
+  // (the two meet at an edge, they do not lie one over the other)
+  if(o.cap){ const f=o.capFront, cs=(a0,a1,c)=>add(new T.SphereGeometry(0.118*h,14,8,a0,a1,0,Math.PI*0.42), _pm(0,Y(0.758),-0.004*h), c, head);
+             if(f){ cs(Math.PI/2-0.9, 1.8, f); cs(Math.PI/2+0.9, Math.PI*2-1.8, o.cap); } else cs(0, Math.PI*2, o.cap);
              add(new T.BoxGeometry(0.17*h,0.012*h,0.10*h), _pm(0,Y(0.785),0.10*h), o.cap, head); }
   if(o.beanie){ add(new T.SphereGeometry(0.119*h,14,8,0,Math.PI*2,0,Math.PI*0.46), _pm(0,Y(0.752),-0.006*h, 1,1.12,1), o.beanie, head);
                 add(new T.CylinderGeometry(0.121*h,0.121*h,0.04*h,14,1,true), _pm(0,Y(0.785),-0.006*h), o.beanie, head); }
@@ -107,7 +120,8 @@ function buildPerson(o){
   for(const [s,hp,kn] of [[-1,hpL,knL],[1,hpR,knR]]){
     add(cyl(0.078*h,0.060*h,0.45*h,9), _pm(s*0.095*h,Y(-0.255),0), o.pants, hp);
     add(cyl(0.056*h,0.045*h,0.43*h,8), _pm(s*0.095*h,Y(-0.685),0), o.shorts?o.skin:o.pants, kn);
-    add(new T.BoxGeometry(0.095*h,0.075*h,0.26*h), _pm(s*0.095*h,0.04,0.045*h), o.shoes, kn);
+    if(o.boots) add(new T.BoxGeometry(0.10*h,0.15*h,0.27*h), _pm(s*0.095*h,0.075*h,0.045*h), o.shoes, kn);   // work boots, laced up the shin
+    else add(new T.BoxGeometry(0.095*h,0.075*h,0.26*h), _pm(s*0.095*h,0.04,0.045*h), o.shoes, kn);
   }
   const mesh=skinned(parts, B);
   const g=new T.Group(); g.add(mesh); scene.add(g);
@@ -623,11 +637,7 @@ const PEOPLE_API=(function(){
   // planter and the doors' swing, facing the lot, a cigarette going
   const sm={kind:"stand", mode:"smoke", P:randomPerson(r), x:-7.35, z:-1.95, y:PLAZA_Y, yaw:-Math.PI/2-0.25, seed:r()*10};
   sm.cig=giveCigarette(sm.P); PEOPLE.push(sm);
-  // and a trucker on the phone by his rig
-  const ts=TRUCK_STALLS.filter(s=>s.taken)[1];
-  if(ts){ const x=ts.x0+ts.dx*9.0+ts.dz*1.9, z=ts.z0+ts.dz*9.0-ts.dx*1.9;
-    PEOPLE.push({kind:"stand", mode:"phone", P:buildPerson({h:1.04, skin:SKINS[2], hair:HAIRS[0], shirt:"#5d6a73", pants:"#3b4a66", shoes:"#3a2a1a", long:true, cap:"#1d1d1f"}),
-                 x:x, z:z, y:PAVE_T, yaw:Math.atan2(ts.dx,ts.dz)+1.8, seed:r()*10}); }
+  // (the truckers, the one on the phone among them, are 14i's)
   // (the state map in the lobby is one of the things visitors stop at: _MAP_SPOT)
   // somebody sat in the grass with their back to the big boulder by the
   // grove, legs out, a paperback; now and then a page, now and then a look round

@@ -397,9 +397,8 @@ function blowerParts(){
   bucketOf("carton", ()=>{
     const c=cvs(256,256), x=c.getContext("2d"); x.fillStyle="#b48c5a"; x.fillRect(0,0,256,256);
     x.fillStyle="rgba(70,50,30,0.25)"; x.fillRect(0,124,256,8);
-    x.fillStyle="#3a5d8a"; x.font="700 34px Arial"; x.textAlign="center"; x.fillText("ROLL TOWEL",128,70);
-    x.font="600 24px Arial"; x.fillText("6 × 800 FT · NATURAL",128,104);
-    x.fillStyle="#2a2a2a"; x.font="700 30px Arial"; x.fillText("JUMBO TISSUE",128,186); x.font="600 20px Arial"; x.fillText("2-PLY · 12 ROLLS",128,214);
+    x.fillStyle="#3a5d8a"; fitText(x,"ROLL TOWEL",210,34,128,62,"700","Arial"); fitText(x,"6 × 800 FT · NATURAL",200,22,128,98,"600","Arial");
+    x.fillStyle="#2a2a2a"; fitText(x,"JUMBO TISSUE",210,30,128,178,"700","Arial"); fitText(x,"2-PLY · 12 ROLLS",200,20,128,210,"600","Arial");
     const t=setSRGB(new T.CanvasTexture(c)); return new T.MeshStandardMaterial({map:t, roughness:0.9}); });
   { const x0=37.2, x1=39.6, z0=Z1-T2-0.56, z1=Z1-T2-0.04, cz=(z0+z1)/2;
     for(const x of [x0+0.016, x1-0.016]) for(const z of [z0+0.016, z1-0.016]) bx("metal", 0.04, 1.95, 0.04, x, GF+0.975, z, 0.5, 0, "#7d8389");

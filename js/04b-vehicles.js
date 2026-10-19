@@ -532,10 +532,11 @@ const TRAILER_TEX=(function(){
     x.fillText("KEYSTONE COLD CHAIN", 120, y0+80);
     x.font="600 26px Oswald, Arial, sans-serif"; x.fillText("FRESH · FROZEN · ON TIME", 126, y0+124); }});
   band(3, {base:"#efefe9", door:"#d6d6d0", post:400, posts:false, draw:(x,y0,SW)=>{
-    x.fillStyle="#d2671f"; x.fillRect(0,y0+40,480,150);
-    x.fillStyle="#f6f4ee"; x.font="bold 44px Oswald, Impact, Arial Black, sans-serif"; x.textBaseline="middle";
-    x.fillText("KEY STATE", 26, y0+88); x.fillText("RENTALS", 26, y0+140);
-    x.fillStyle="#1f1f1f"; x.font="600 22px Oswald, Arial, sans-serif"; x.fillText("ONE WAY OR LOCAL · 1-800-555-0179", 24, y0+210); }});
+    x.fillStyle="#d2671f"; x.fillRect(60,y0+40,480,150);
+    x.fillStyle="#f6f4ee";
+    fitText(x, "KEY STATE", 400, 44, 300, y0+88, "bold", "Oswald, Impact, 'Arial Black', sans-serif");
+    fitText(x, "RENTALS", 400, 44, 300, y0+140, "bold", "Oswald, Impact, 'Arial Black', sans-serif");
+    x.fillStyle="#1f1f1f"; fitText(x, "ONE WAY OR LOCAL · 1-800-555-0179", 440, 22, 300, y0+210, "600", "Oswald, Arial, sans-serif"); }});
   const t=new T.CanvasTexture(c); t.anisotropy=8;
   return t;
 })();

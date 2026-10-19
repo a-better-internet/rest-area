@@ -137,11 +137,9 @@ const RIG_MARKER=(function(){
     if(kind===6) REEFERS.push({x:cx+dx*2.5, z:cz+dz*2.5});
     TRUCK_STALLS[TRUCK_STALLS.length-1].taken=true;
     if(walk) Object.assign(WALKIN, {g:m.g, S:S, x:cx, z:cz, yaw:yaw, stall:k, row:1});
-    // a 23 m rig at an angle is a stepped run of boxes down its length
-    // (the walk-in's trailer is hollow: 10b gives it walls instead)
-    for(let s=(walk?3.6+1.2:S.tail+1.2); s<S.nose; s+=2.4){
-      const px=cx+dx*s, pz=cz+dz*s;
-      addCol(px-1.45, px+1.45, pz-1.45, pz+1.45, PAVE_T, PAVE_T+S.ht);
-    }
+    // a 23 m rig at an angle is one box turned with it (06), its own width, so the 1.6 m between
+    // two rigs is somewhere a driver can walk (the walk-in's trailer is hollow: 10b gives it walls)
+    { const t0=walk?3.6:S.tail, mid=(t0+S.nose)/2;
+      addColOB(cx+dx*mid, cz+dz*mid, yaw, S.hw+0.03, (S.nose-t0)/2, PAVE_T, PAVE_T+S.ht); }
   }
 })();

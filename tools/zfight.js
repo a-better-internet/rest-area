@@ -5,10 +5,13 @@
    triangle in a box of the world, and reports the pairs within `near`
    metres of one plane that share more than `amin` square metres, grouped
    by bucket. Faces turned into a wall still count; read the normals.
-     node tools/zfight.js '{"x0":-10,"x1":17,"z0":-21,"z1":21,"y0":-0.6,"y1":10,"near":0.0011}' [examples]  */
+     node tools/zfight.js '{"x0":-10,"x1":17,"z0":-21,"z1":21,"y0":-0.6,"y1":10,"near":0.0011}' [examples]
+   or a list of such boxes, each with a "name", to sweep several places in one load.  */
 const path=require("path"); const { chromium } = require("playwright");
 const ROOT=path.resolve(__dirname,"..");
-const box=JSON.parse(process.argv[2]||'{"x0":-10,"x1":10,"z0":-16,"z1":16,"y0":-0.6,"y1":10}');
+// one box, or a list of them (each may carry a "name"), all checked in one load of the world
+const arg=JSON.parse(process.argv[2]||'{"x0":-10,"x1":10,"z0":-16,"z1":16,"y0":-0.6,"y1":10}');
+const boxes=Array.isArray(arg) ? arg : [arg];
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
   const p=await b.newPage({viewport:{width:320,height:200}});
@@ -17,6 +20,8 @@ const box=JSON.parse(process.argv[2]||'{"x0":-10,"x1":10,"z0":-16,"z1":16,"y0":-
   await p.route(/fonts\./, r=>r.fulfill({status:200, body:""}));
   await p.goto("file://"+path.join(ROOT,"index.html")+"?zdebug");
   await p.waitForFunction(()=>window.REST,null,{timeout:180000});
+  for(const box of boxes){
+  if(box.name) console.log("\n== "+box.name);
   const res=await p.evaluate((box)=>{
     const T=THREE, srcs=[];
     for(const e of (window.ZDBG||[])) srcs.push({name:"bk:"+e.bucket, geo:e.geo, m:e.matrix});
@@ -66,8 +71,8 @@ const box=JSON.parse(process.argv[2]||'{"x0":-10,"x1":10,"z0":-16,"z1":16,"y0":-
         if(Math.abs(A.d-B.d)>(box.near||0.0008)) continue;
         if(A.n[0]*B.n[0]+A.n[1]*B.n[1]+A.n[2]*B.n[2]<0.995) continue;
         const ov=overlap(proj(A), proj(B)); if(ov<(box.amin||3e-5)) continue;
-        if(A.n[1]<-0.9 && A.c[1]<0.17) continue;                 // undersides resting on the floor or ground
-        if(A.c[1]<-0.05) continue;                                // buried
+        if(A.n[1]<-0.9 && A.c[1]<(box.floor===undefined?0.17:box.floor)) continue;   // undersides resting on the floor or ground
+        if(A.c[1]<(box.buried===undefined?-0.05:box.buried)) continue;               // buried (underground rooms: pass buried and floor)
         const pk=Math.min(A.s,B.s)+"|"+Math.max(A.s,B.s);
         let r=pairs.get(pk); if(!r){ const bbx=s=>{ const g=srcs[s].geo; if(!g.boundingBox) g.computeBoundingBox(); const q=g.boundingBox.clone().applyMatrix4(srcs[s].m); return [q.min.x,q.min.y,q.min.z,q.max.x,q.max.y,q.max.z].map(v=>+v.toFixed(2)); };
           r={a:srcs[Math.min(A.s,B.s)].name, b:srcs[Math.max(A.s,B.s)].name, at:A.c.map(v=>+v.toFixed(2)), n:A.n.map(v=>+v.toFixed(2)), dd:+(A.d-B.d).toFixed(5), cnt:0,
@@ -82,6 +87,7 @@ const box=JSON.parse(process.argv[2]||'{"x0":-10,"x1":10,"z0":-16,"z1":16,"y0":-
   for(const k of Object.keys(byName).sort((x,y)=>byName[y].length-byName[x].length)){
     const L=byName[k]; console.log(String(L.length).padStart(4), k);
     for(const r of L.slice(0, +process.argv[3]||4)) console.log("        at", JSON.stringify(r.at), "n", JSON.stringify(r.n), "dd", r.dd, " A", JSON.stringify(r.ba), " B", JSON.stringify(r.bb));
+  }
   }
   await b.close();
 })();

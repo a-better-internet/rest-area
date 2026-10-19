@@ -176,15 +176,25 @@ function frame(){
     key.intensity  *= 1-_indoorMix*0.25;
     amb.intensity  += _indoorMix*0.10;
   }
-  // and underground (12b's basement) the sky does not reach at all: only its lamps light it
-  _buriedMix += ((buriedAt(camera.position.x, camera.position.z, camera.position.y)?1:0)-_buriedMix)*Math.min(1, delta*2.5);
-  if(_buriedMix>0.002){ hemi.intensity *= 1-_buriedMix*0.88; key.intensity *= 1-_buriedMix; amb.intensity *= 1-_buriedMix*0.55; }
   // haze: by day the horizon's own colour, at night darker than the sky
   scene.fog.color.copy(skyImg.hz).lerp(NIGHT_HAZE, dn.nightAmount*0.72);
   scene.fog.near=150+dn.nightAmount*50;
   scene.fog.far =1250+dn.nightAmount*300;
   scene.background=skyImg.hz;
   applyWeather(delta, now, dn, dark);
+  /* UNDERGROUND HAS NO CLOCK. Anywhere addBuried() marks (12b's cellar and
+     the arcade past it, and anything dug later) is lit the same at noon as
+     at midnight: the sky's light is swapped for a fixed dim fill, the sun
+     and the lightning are gone, every emissive is held at its night level,
+     and the pool lights take only the lamps that are down there (16). */
+  _buriedMix += ((buriedAt(camera.position.x, camera.position.z, camera.position.y)?1:0)-_buriedMix)*Math.min(1, delta*2.5);
+  const under=_buriedMix>0.002 ? _buriedMix : 0;
+  if(under){
+    hemi.intensity=lerp(hemi.intensity, UNDER_LIGHT.hemi, under);
+    hemi.color.lerp(UNDER_LIGHT.sky, under); hemi.groundColor.lerp(UNDER_LIGHT.ground, under);
+    key.intensity*=1-under; amb.intensity=lerp(amb.intensity, UNDER_LIGHT.amb, under);
+  }
+  const darkL=dark+(1-dark)*under;
   // a short draw distance brings the haze in to meet it
   { const D=DRAW_LEVELS[GFX.draw];
     if(scene.fog.far>D.fog){ scene.fog.far=D.fog; scene.fog.near=Math.min(scene.fog.near, D.fog*0.25); } }
@@ -193,7 +203,7 @@ function frame(){
   for(const g of GLOW){
     const pw=g.circ ? GRID[g.circ] : 1;          // on the rest area's supply: off in a power cut
     if(g.basic){
-      let a=(g.always?1:(g.day?(1-dark):dark))*(g.max===undefined?1:g.max)*pw;
+      let a=(g.always?1:(g.day?(1-darkL):darkL))*(g.max===undefined?1:g.max)*pw;
       if(g.blink){
         const u=(now/g.blink)%1, d2=g.duty===undefined?0.16:g.duty;
         a *= u<d2 ? Math.sin(Math.PI*(u/d2)) : 0;
@@ -201,9 +211,9 @@ function frame(){
       g.m.opacity=a;
       continue;
     }
-    const k=g.kind==="indoor" ? 1.25+dark*0.6
+    const k=g.kind==="indoor" ? 1.25+darkL*0.6
           : g.kind==="always" ? 2.0
-          : 0.10+dark*3.0;
+          : 0.10+darkL*3.0;
     if(g.base) g.m.emissive.copy(g.base);
     // NOTHING CLIPS TO WHITE: the intensity goes through a soft knee
     const want=g.baseInt*k*pw;
@@ -215,7 +225,7 @@ function frame(){
   for(const h of EMERG_HALO) h.material.opacity=GRID.emerg*0.8;
   EMERG_LENS.color.setScalar(0.16+0.84*GRID.emerg);
   tickFlicker(delta);
-  updateLights(dark, camera.position);
+  updateLights(darkL, camera.position);
   FOREST.update(camera.position);
   if(typeof updateDeep==="function") updateDeep(camera.position);
   cullBaked(camera.position, delta);
@@ -306,6 +316,7 @@ function frame(){
   if(typeof updateGrounds==="function") updateGrounds(delta, now, dark);
   if(typeof updateLife==="function") updateLife(delta, now, dark, dn);
   updateVending(delta);
+  if(typeof updateDarts==="function") updateDarts(delta);
   updateScreens(delta, now);
   if(typeof AUDIO!=="undefined") AUDIO.update(delta, dark);
   if(ANIM.length) tickAnim(now);
@@ -328,6 +339,7 @@ function frame(){
   }
 }
 let _indoorMix=0, _buriedMix=0;
+const UNDER_LIGHT={hemi:0.12, amb:0.09, sky:new T.Color(0xd9d4ca), ground:new T.Color(0x857f74)};
 const _sunCel=new T.Vector3(), _camX=new T.Vector3(), _camY=new T.Vector3();
 const _INDOOR_BOUNCE=new THREE.Color(0x9c9a94);
 requestAnimationFrame(frame);

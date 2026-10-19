@@ -544,7 +544,7 @@ bucketOf("wallpaper", ()=>{
       push("beam", boxGeo(0.70, 0.03, 0.40, 0.6), PK-t/2-0.40, UF+0.60, z1-T2-0.42, 0, "#6a7a5a", -1.1, 0);
       push("paintm", new T.SphereGeometry(0.06,8,6), PK-t/2-0.85, UF+0.06, z1-T2-0.6, 0, "#c03a2a");
       addCol(PK-t/2-0.76, PK-t/2-0.04, z1-T2-0.47, z1-T2, UF-0.3, UF+0.5);
-      const marks=signTex(120,420,(c,W,H)=>{ c.clearRect(0,0,W,H); c.strokeStyle="rgba(40,40,40,0.85)"; c.fillStyle="rgba(40,40,40,0.9)"; c.lineWidth=3; c.font="bold 17px Arial";
+      const marks=signTex(120,420,(c,W,H)=>{ c.clearRect(0,0,W,H); c.strokeStyle="rgba(40,40,40,0.85)"; c.fillStyle="rgba(40,40,40,0.9)"; c.lineWidth=3; c.font="bold 15px Arial";
         const L=[["DANNY 4",0.70],["MARIE 3",0.62],["DANNY 5",0.55],["MARIE 4",0.49],["DANNY 6",0.41],["MARIE 5",0.36],["DANNY 7",0.28]];
         for(const [s2,f] of L){ c.beginPath(); c.moveTo(6,H*f); c.lineTo(40,H*f); c.stroke(); c.fillText(s2,44,H*f+6); } });
       const mm=new T.Mesh(new T.PlaneGeometry(0.32,1.10), new T.MeshStandardMaterial({map:marks, transparent:true, roughness:0.9, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
@@ -645,8 +645,8 @@ bucketOf("wallpaper", ()=>{
   addUse(x0+T2+0.7, HZ-0.8, FF, "LOOK AT THE PICTURE", ()=>toast("A FAMILY ON THIS PORCH, IN THEIR SUNDAY CLOTHES. NOBODY IS SMILING BUT THE DOG","#cfe0d4"), 1.1);
   // the kids have been in: a tag on the wall, cans, a candle stub on the sill
   { const tagTex=signTex(400,160,(c,W,H)=>{ c.clearRect(0,0,W,H); c.strokeStyle="rgba(40,90,200,0.85)"; c.lineWidth=10; c.lineCap="round";
-      c.font="bold 84px Arial"; c.fillStyle="rgba(40,90,200,0.85)"; c.textAlign="center"; c.textBaseline="middle"; c.fillText("TY + JESS",W/2,H*0.45);
-      c.fillStyle="rgba(200,40,40,0.8)"; c.font="bold 36px Arial"; c.fillText("GET OUT",W*0.7,H*0.85); });
+      c.fillStyle="rgba(40,90,200,0.85)"; fitText(c,"TY + JESS",W*0.84,84,W/2,H*0.42,"bold","Arial");
+      c.fillStyle="rgba(200,40,40,0.8)"; fitText(c,"GET OUT",W*0.42,36,W*0.68,H*0.82,"bold","Arial"); });
     const m=new T.Mesh(new T.PlaneGeometry(1.4,0.56), new T.MeshStandardMaterial({map:tagTex, transparent:true, roughness:0.8, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
     m.position.set(PX+0.116, FF+1.45, HZ-1.4); m.rotation.y=Math.PI/2; scene.add(m); HOUSE.tag=m;
     for(let k=0;k<5;k++){ const x=HX+1.7+r()*2.6, z=z0+0.6+r()*1.5; push("paintm", new T.CylinderGeometry(0.033,0.033,0.04,10), x, FF+0.022, z, r()*3, ["#c8202a","#b8bcc0","#2b5aa8"][k%3], Math.PI/2, 0.4); } }
