@@ -62,11 +62,12 @@ const THREE_JS=process.env.THREE_JS || path.join(ROOT, "tools", "three.min.js");
     await page.evaluate(()=>{ if(typeof DARTS!=="undefined" && DARTS.draw){ DARTS.newGame&&DARTS.newGame(); DARTS.draw(); } });
     list=await page.evaluate(()=>window.__SIGNS);
   }catch(e){ console.log("(the play-through stopped: "+String(e.message).split("\n")[0]+")"); }
-  // one line per distinct (place, text)
+  // one line per place in the code (its worst case), with how many different texts it drew there
   const seen=new Map();
-  for(const s of list){ const k=s.at+"|"+s.str; if(!seen.has(k) || seen.get(k).over<s.over) seen.set(k, s); }
+  for(const s of list){ const r=seen.get(s.at); if(!r){ seen.set(s.at, Object.assign({n:new Set([s.str])}, s)); continue; }
+    r.n.add(s.str); if(r.over<s.over) Object.assign(r, s, {n:r.n}); }
   const rows=[...seen.values()].sort((a,b)=>a.at.localeCompare(b.at, undefined, {numeric:true}));
-  for(const s of rows) console.log(`${s.at.padEnd(26)} ${String(s.W+"x"+s.H).padEnd(9)} over ${String(s.over).padStart(5)}px${s.off>0?" (OFF "+s.off+")":""}  "${s.str}"  ${s.font}`);
+  for(const s of rows) console.log(`${s.at.padEnd(26)} ${String(s.W+"x"+s.H).padEnd(9)} over ${String(s.over).padStart(5)}px${s.off>0?" (OFF "+s.off+")":""}  "${s.str}"${s.n.size>1?" (+"+(s.n.size-1)+" more)":""}  ${s.font}`);
   console.log(rows.length+" too close to an edge (pad "+PAD+")");
   await browser.close();
 })();

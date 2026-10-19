@@ -316,15 +316,15 @@ function _trailDraw(sub, night, hour, day, seed){
     if(night){ const v=(dd[i]*0.3+dd[i+1]*0.59+dd[i+2]*0.11)+n; dd[i]=dd[i+1]=dd[i+2]=v; }
     else { dd[i]+=n; dd[i+1]+=n; dd[i+2]+=n; } }
   x.putImageData(im,0,0);
-  x.fillStyle="#000"; x.fillRect(0,H-16,W,16);
+  x.fillStyle="#000"; x.fillRect(0,H-22,W,22);
   x.fillStyle="#fff"; x.font="600 10px 'JetBrains Mono', monospace"; x.textBaseline="middle"; x.textAlign="left";
   const dt=new Date(Date.now()+day*86400000), hh=Math.floor(hour), mm=Math.floor((hour%1)*60), ss=Math.floor(r()*60);
   const temp=Math.round((FOREST.isAutumn()?40:61)+((FOREST.isAutumn()?58:81)-(FOREST.isAutumn()?40:61))*(0.5+0.5*Math.cos((hour-15)/24*Math.PI*2)));
-  x.fillText("TRAILCAM 05", 9, H-8);
-  x.fillText((night?"☾ ":"☀ ")+temp+"°F", 106, H-8);
+  x.fillText("TRAILCAM 05", 10, H-11);
+  x.fillText((night?"☾ ":"☀ ")+temp+"°F", 108, H-11);
   x.textAlign="right";
   x.fillText((dt.getMonth()+1+"").padStart(2,"0")+"/"+(dt.getDate()+"").padStart(2,"0")+"/"+dt.getFullYear()+"  "+
-             (((hh+11)%12)+1+"").padStart(2,"0")+":"+(mm+"").padStart(2,"0")+":"+(ss+"").padStart(2,"0")+(hh<12?" AM":" PM"), W-9, H-8);
+             (((hh+11)%12)+1+"").padStart(2,"0")+":"+(mm+"").padStart(2,"0")+":"+(ss+"").padStart(2,"0")+(hh<12?" AM":" PM"), W-10, H-11);
   return c;
 }
 function trailPhoto(sub, hour, day){
@@ -392,16 +392,16 @@ function updateCCTV(dt, now){
   x.font="600 13px 'JetBrains Mono', monospace"; x.textBaseline="top"; x.textAlign="left";
   if(M.mode==="quad"){
     for(let k=0;k<4;k++){ const ox=(k%2)*256, oy=((k/2)|0)*160; _camView(x, ox+1, oy+1, 254, 158, k, now);
-      x.fillStyle="#e8e8e0"; x.fillText(["CAM 1 LOT","CAM 2 LOBBY","CAM 3 RAMP","CAM 4 SUBSTA"][k], ox+6, oy+5); }
+      x.fillStyle="#e8e8e0"; x.fillText(["CAM 1 LOT","CAM 2 LOBBY","CAM 3 RAMP","CAM 4 SUBSTA"][k], ox+12, oy+11); }
     x.fillStyle="#0d0f10"; x.fillRect(255,0,2,H); x.fillRect(0,159,W,2);
   }else{
     const P=TRAILCAM.photos, v=Math.max(0,Math.min(P.length-1, TRAILCAM.view)), p=P[v];
     if(p) x.drawImage(p.c, 0, 0, W, H);
-    x.fillStyle="rgba(0,0,0,0.55)"; x.fillRect(0,0,W,22);
-    x.fillStyle="#e8e8e0"; x.fillText("CAM 5 TRAIL · "+(v+1)+"/"+P.length+(p?" · "+_TRAIL_SUBJ[p.sub]:""), 6, 5);
-    x.textAlign="right"; x.fillText("◄ E ►", W-6, 5);
+    x.fillStyle="rgba(0,0,0,0.55)"; x.fillRect(0,0,W,30);
+    x.fillStyle="#e8e8e0"; x.fillText("CAM 5 TRAIL · "+(v+1)+"/"+P.length+(p?" · "+_TRAIL_SUBJ[p.sub]:""), 12, 10);
+    x.textAlign="right"; x.fillText("◄ E ►", W-12, 10);
   }
-  x.textAlign="right"; x.fillStyle="#e8e8e0"; x.fillText(stamp, W-6, H-18);
+  x.textAlign="right"; x.fillStyle="#e8e8e0"; x.fillText(stamp, W-12, H-26);
   M.tex.needsUpdate=true;
 }
 function updateTrail(dt){
@@ -476,7 +476,7 @@ function _noteDraw(n, torn){
         // the number along the tab, sized to the tab's length less a margin at each end
         x.rotate(-Math.PI/2); x.fillStyle="#2a2a2a"; let fs=9; x.font="500 9px Arial";
         while(x.measureText(n.tel).width>38 && fs>5){ fs-=0.5; x.font="500 "+fs+"px Arial"; }
-        x.textAlign="center"; x.textBaseline="middle"; x.fillText(n.tel, -1, 0); x.fillStyle="#f6f4ec"; x.restore(); } }
+        x.textAlign="center"; x.textBaseline="middle"; x.fillText(n.tel, 3, 0); x.fillStyle="#f6f4ec"; x.restore(); } }
   }
   const t=setSRGB(new T.CanvasTexture(c)); t.anisotropy=4;
   return t;
