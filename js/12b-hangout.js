@@ -111,6 +111,10 @@ function chalkDraw(c, names, colA, colB, note){
   for(const z of [DZ0-0.025, DZ1+0.025]) B(0.20, DHEAD-FY, 0.05, (WX0+WX1)/2, FY+(DHEAD-FY)/2, z, "#6e7474");
   B(0.21, 0.05, DZ1-DZ0+0.11, (WX0+WX1)/2, DHEAD+0.02, (DZ0+DZ1)/2, "#6e7474");          // (its underside below the wall's)
   makeDoor(XF((WX0+WX1)/2, DZ0+0.03, -Math.PI/2), 0, FY+0.02, 0, "THE BASEMENT", true, 0, "closet", 0x6f7a72);
+  // a door you open: shut until you open it (E), left as you leave it, and solid while it is shut
+  { const d=DOORS[DOORS.length-1], gc={x0:WX0, x1:WX1, z0:DZ0, z1:DZ1, y0:FY, y1:FY+2.1};
+    COL_DYN.push(gc); d.manualOnly=true; d.sticky=true; d.blockCol=gc; d.blockTop=FY+2.1;
+    d.openMsg="IT STICKS IN ITS FRAME, THEN GIVES. MUSIC, DOWN THE STAIRS"; }
   // the treads: solid concrete to the floor, a yellow nosing on each, and where your feet go
   for(let k=1;k<=NS;k++){
     const xa=P.x0+(k-1)*RUN, xb=xa+RUN, y=FY-k*RISE;
@@ -471,6 +475,139 @@ function chalkDraw(c, names, colA, colB, note){
     const dead=new T.MeshStandardMaterial({color:0x3a3a3a, roughness:0.4});
     const geo=new T.SphereGeometry(0.022, 8, 6); geo.scale(1,1.35,1);
     bulbs.forEach((b,i)=>{ const m=new T.Mesh(geo, i%11===7?dead:mats[i%5]); m.position.set(b[0],b[1],b[2]); scene.add(m); }); }
+
+  /* ---- the man cave's newer things --------------------------------------------
+     The bar Big Mike built along the dug-out's back wall: a counter on a
+     panelled front, a kegerator under its east end with three taps up through
+     the top, a shelf of bottles and a can pyramid over it, a COLD BEER sign;
+     three stools at it. A real keg too, a half barrel in a tub of ice with a
+     party pump, for when the kegerator's empty. A recliner in the couch's
+     plaid. A foosball table in the poker room. A buck on the old wall.
+     (The long panelled wall over the poker table and the dug-out's west
+     wall north of the dartboard are left bare: that is where posters go.) */
+  // the bar: x 70.6 to 73.8 against the back wall, the counter at elbow height
+  const BX0=70.62, BX1=73.82, BZ1=XZ1, BZ0=XZ1-0.50, BTOP=FB+1.02, KX0=73.04;
+  B(KX0-BX0-0.02, BTOP-FB-0.002, BZ1-BZ0-0.06, (BX0+KX0-0.02)/2, FB+(BTOP-FB-0.002)/2, (BZ0+BZ1)/2-0.01, "#3b2616");   // the body (its front at BZ0+0.02)
+  for(let k=0;k<7;k++){ const x=BX0+0.18+k*0.36; if(x>KX0-0.15) break;
+    B(0.024, BTOP-FB-0.16, 0.012, x, FB+(BTOP-FB-0.04)/2, BZ0+0.016, "#2a1a0e"); }                              // battens on its front, a centimetre proud
+  B(BX1-BX0+0.06, 0.05, BZ1-BZ0+0.10, (BX0+BX1)/2, BTOP+0.025-0.04+0.04, (BZ0+BZ1)/2-0.045, "#6b4426");          // the top, over the front by 5 cm
+  B(BX1-BX0+0.07, 0.035, 0.05, (BX0+BX1)/2, BTOP+0.012, BZ0-0.095, "#2a1a10");                                     // its padded rail
+  // the foot rail, brass, on three brackets
+  tubeE(V3(BX0+0.05, FB+0.20, BZ0-0.16), V3(BX1-0.05, FB+0.20, BZ0-0.16), 0.022, "#b8963a");
+  for(const x of [BX0+0.25, (BX0+BX1)/2, BX1-0.25]) tubeE(V3(x, FB+0.20, BZ0-0.16), V3(x, FB+0.22, BZ0-0.01), 0.012, "#b8963a");
+  // the kegerator under its east end: a stainless box, a door, a handle, the temperature
+  B(BX1-KX0-0.02, BTOP-FB-0.05, BZ1-BZ0-0.04, (KX0+BX1)/2, FB+(BTOP-FB-0.05)/2, (BZ0+BZ1)/2, "#b9bec0");
+  B(BX1-KX0-0.10, BTOP-FB-0.17, 0.02, (KX0+BX1)/2, FB+(BTOP-FB-0.05)/2+0.02, BZ0+0.012, "#c9ced0");          // the door, 18 mm proud of the box
+  B(0.025, 0.40, 0.03, BX1-0.11, FB+0.62, BZ0-0.012, "#2a2a2c");
+  pic(0.07, 0.03, (x,W,Hh)=>{ x.fillStyle="#0a0a0a"; x.fillRect(0,0,W,Hh); say(x, "36°F", W/2, Hh/2, W*0.8, Hh*0.6, "#3aff6a", "700", "'Courier New', monospace"); },
+    KX0+0.16, FB+0.86, BZ0-0.004, Math.PI, false, 70, 30);
+  // the tap tower: a chrome column, a crossbar, three faucets and their handles, the drip tray
+  { const tx=(KX0+BX1)/2, tz=BZ0+0.28, ty=BTOP+0.04;
+    C(0.045, 0.34, tx, ty+0.17, tz, "#c9cbcc", 16);
+    ent(new T.CylinderGeometry(0.035,0.035,0.42,14), tx, ty+0.30, tz, "#c9cbcc", 0, 0, Math.PI/2);
+    for(const dx of [-0.15, 0, 0.15]){
+      C(0.012, 0.09, tx+dx, ty+0.25, tz-0.045, "#c9cbcc", 10, Math.PI/2);
+      C(0.010, 0.05, tx+dx, ty+0.215, tz-0.09, "#c9cbcc", 10);
+      C(0.016, 0.16, tx+dx, ty+0.40, tz-0.06, ["#1a1a1a","#7a1a12","#c9a23a"][(dx>0)+(dx>=0)], 10, -0.12); }
+    B(0.44, 0.018, 0.14, tx, ty+0.009, tz-0.13, "#9a9da0");
+    for(let k=0;k<2;k++) C(0.032, 0.12, tx-0.10+k*0.16, ty+0.075, tz-0.28, k?"#e8c46a":"#d8a43a", 12);   // two pints poured, on the counter in front of the tray
+    addUse(tx, BZ0-0.85, FB, "POUR A BEER", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("pour", tx, tz);
+      toast(["A PINT OF ALLEGHENY LAGER. A GOOD HEAD ON IT","THE MIDDLE TAP COUGHS, THEN POURS. TERRY'S STOUT","IT POURS FOAM. THE KEG'S KICKED. THERE'S THE OTHER ONE"][(Math.random()*3)|0],"#e8c46a"); }, 1.1); }
+  // over it: a shelf of bottles, a can pyramid, and the sign
+  { const SY=FB+1.45, SZ=XZ1-0.11;
+    B(2.30, 0.03, 0.20, BX0+1.20, SY, SZ, "#4a2c1a");
+    for(const x of [BX0+0.20, BX0+2.20]) B(0.03, 0.14, 0.16, x, SY-0.085, SZ+0.01, "#2a1a0e");
+    const bot=["#3a6a2a","#6a3a12","#2a3a6a","#e8e2d0","#7a1a12","#3a2a12","#c9a23a","#2a5a3a"];
+    // (each a few millimetres up off what it stands on: the shelf, the cans under it)
+    for(let k=0;k<9;k++){ const x=BX0+0.12+k*0.11, h=0.20+((k*37)%5)*0.02; C(0.032, h, x, SY+0.02+h/2, SZ, bot[k%8], 10); C(0.012, 0.05, x, SY+0.02+h+0.02, SZ, bot[k%8], 8); }
+    for(let r=0;r<4;r++) for(let k=0;k<4-r;k++) C(0.033, 0.122, BX0+1.30+k*0.07+r*0.035, SY+0.02+0.061+r*0.127, SZ, k%2?"#c8a23a":"#b9bcbd", 12); }
+  { const nt=signTex(512,140,(x,W,Hh)=>{ x.fillStyle="#000"; x.fillRect(0,0,W,Hh);
+      x.shadowColor="#3aa0ff"; x.shadowBlur=14; x.strokeStyle="#7ac4ff"; x.lineWidth=6; x.textAlign="center"; x.textBaseline="middle";
+      let s=80; do{ x.font="900 "+s+"px 'Arial Black', Arial"; s-=2; } while((x.measureText("COLD BEER").width>W*0.78 || s>Hh*0.62) && s>16);
+      x.strokeText("COLD BEER", W/2, Hh/2); });
+    const m=new T.Mesh(new T.PlaneGeometry(0.92, 0.25), new T.MeshBasicMaterial({map:nt, transparent:true, blending:T.AdditiveBlending, depthWrite:false, toneMapped:false}));
+    m.position.set(BX0+0.95, FB+1.92, XZ1-0.035); m.rotation.y=Math.PI; scene.add(m);
+    B(0.88, 0.21, 0.02, BX0+0.95, FB+1.92, XZ1-0.012, "#101010"); }
+  lamp({x:BX0+1.6, y:CB-0.30, z:BZ0-0.15, color:0xffd8a0, intensity:0.55, dist:5, decay:1.5});
+  addCol(BX0-0.03, BX1+0.03, BZ0-0.10, XZ1, FB-0.5, BTOP+0.06);
+  // three stools at it, chrome and red vinyl
+  for(const x of [71.55, 72.45, 73.35]){ const z=BZ0-0.55;
+    C(0.19, 0.08, x, FB+0.74, z, "#a8201a", 18); C(0.20, 0.012, x, FB+0.70, z, "#c9cbcc", 18);
+    C(0.028, 0.68, x, FB+0.35, z, "#c9cbcc", 10); C(0.22, 0.03, x, FB+0.015, z, "#c9cbcc", 18);
+    ent(new T.TorusGeometry(0.15, 0.010, 6, 20), x, FB+0.30, z, "#c9cbcc", Math.PI/2, 0, 0);
+    addCol(x-0.2, x+0.2, z-0.2, z+0.2, FB-0.5, FB+0.5);
+    addSeat(x, z, FB+0.30, Math.PI, "A BAR STOOL"); }
+
+  // the keg: a half barrel in a tub of ice by the bar's west end, the pump tap on its hose
+  { const kx=70.86, kz=-177.32, tubR=0.30;
+    ent(new T.CylinderGeometry(tubR, tubR-0.04, 0.46, 24, 1, true), kx, FB+0.23, kz, "#1f5fb0");
+    { const g=new T.CylinderGeometry(tubR-0.012, tubR-0.052, 0.45, 24, 1, true), I=g.index.array, N=g.attributes.normal;   // its inside, the faces turned in
+      for(let k=0;k<I.length;k+=3){ const t=I[k]; I[k]=I[k+2]; I[k+2]=t; } for(let k=0;k<N.count;k++) N.setXYZ(k, -N.getX(k), -N.getY(k), -N.getZ(k));
+      ent(g, kx, FB+0.23, kz, "#1a4f98"); }
+    ent(new T.TorusGeometry(tubR, 0.018, 6, 28), kx, FB+0.46, kz, "#2a6ac0", Math.PI/2, 0, 0);
+    // the ice, heaped, around the keg
+    for(let k=0;k<22;k++){ const a=k/22*Math.PI*2+R()*0.2, rr=0.22+R()*0.05; ent(new T.IcosahedronGeometry(0.035+R()*0.02, 0), kx+Math.cos(a)*rr, FB+0.40+R()*0.04, kz+Math.sin(a)*rr, "#e8f2f6"); }
+    C(tubR-0.02, 0.02, kx, FB+0.39, kz, "#d8e6ec", 24);
+    C(0.205, 0.56, kx, FB+0.30, kz, "#b9bec0", 24);
+    for(const y of [0.04, 0.56]) ent(new T.TorusGeometry(0.205, 0.016, 6, 28), kx, FB+y, kz, "#c9cbcc", Math.PI/2, 0, 0);
+    for(const y of [0.20, 0.40]) ent(new T.TorusGeometry(0.207, 0.010, 6, 28), kx, FB+y, kz, "#a8acae", Math.PI/2, 0, 0);
+    C(0.045, 0.06, kx, FB+0.605, kz, "#1a1a1a", 12); C(0.018, 0.10, kx+0.05, FB+0.66, kz, "#1a1a1a", 10, 0, 0, -0.9);   // the coupler and its pump
+    const hose=[V3(kx+0.04, FB+0.62, kz), V3(kx+0.16, FB+0.66, kz-0.05), V3(kx+0.27, FB+0.55, kz-0.12), V3(kx+0.30, FB+0.42, kz-0.20)];
+    for(let k=1;k<hose.length;k++) tubeE(hose[k-1], hose[k], 0.008, "#d8d8d0");
+    B(0.04, 0.10, 0.03, kx+0.30, FB+0.38, kz-0.21, "#1a1a1a");
+    addCol(kx-tubR, kx+tubR, kz-tubR, kz+tubR, FB-0.5, FB+0.7);
+    addUse(kx+0.5, kz-0.45, FB, "PUMP THE KEG", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("pour", kx, kz);
+      toast(["THREE PUMPS. MOSTLY FOAM. IT'S ALWAYS MOSTLY FOAM","A RED CUP OF IT, COLD. SOMEBODY'S BEEN AT IT ALREADY","IT SPITS. YOU PUMP IT AGAIN. BETTER"][(Math.random()*3)|0],"#e8c46a"); }, 1.0); }
+
+  // the recliner, the couch's plaid, angled at the set from beside the couch
+  { const rx=76.32, rz=XZ0+0.95, ry=Math.atan2(TVX-rx, TVZ-rz);                   // facing the TV
+    const g=new T.Group(); g.position.set(rx, FB, rz); g.rotation.y=ry; scene.add(g);
+    const pb=(w,h,d,x,y,z,rxx)=>{ const m=new T.Mesh(new T.BoxGeometry(w,h,d), fab); m.position.set(x,y,z); if(rxx) m.rotation.x=rxx; m.castShadow=m.receiveShadow=true; g.add(m); };
+    pb(0.80, 0.26, 0.78, 0, 0.21, 0);                                             // the base
+    pb(0.56, 0.14, 0.62, 0, 0.41, 0.06);                                          // the seat cushion
+    pb(0.62, 0.66, 0.24, 0, 0.66, -0.30, -0.18);                                  // the back, laid back a little
+    pb(0.54, 0.20, 0.16, 0, 1.00, -0.34, -0.18);                                  // the headrest roll
+    for(const sd of [-1,1]){ pb(0.12, 0.30, 0.74, sd*0.345, 0.47, 0.0);          // the arms, 5 mm proud of the base's sides
+      const m=new T.Mesh(new T.CylinderGeometry(0.075,0.075,0.76,14), fab); m.rotation.x=Math.PI/2; m.position.set(sd*0.345, 0.63, 0.0); g.add(m); }
+    pb(0.50, 0.10, 0.08, 0, 0.18, 0.42);                                          // the footrest, folded down
+    const lever=new T.Mesh(new T.BoxGeometry(0.02, 0.14, 0.04), new T.MeshStandardMaterial({color:0x5a3a22, roughness:0.5})); lever.position.set(0.41, 0.44, 0.22); g.add(lever);
+    for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const f=new T.Mesh(new T.BoxGeometry(0.05,0.08,0.05), new T.MeshStandardMaterial({color:0x2a1a10})); f.position.set(sx*0.34, 0.04, sz*0.32); g.add(f); }
+    addColOB(rx, rz, ry, 0.42, 0.42, FB-0.5, FB+0.55);
+    addSeat(rx+Math.sin(ry)*0.08, rz+Math.cos(ry)*0.08, FB, ry+Math.PI, "THE RECLINER"); }
+
+  // the foosball table in the poker room: a wooden box on legs, the green, eight rods and their men
+  { const fx=84.35, fz=-180.55, FL=1.20, FW=0.70, FT=FB+0.86;
+    for(const sd of [-1,1]){ B(FL, 0.22, 0.03, fx, FT-0.11, fz+sd*(FW/2-0.015), "#5a3a1e"); B(0.03, 0.22, FW-0.06, fx+sd*(FL/2-0.015), FT-0.11, fz, "#5a3a1e"); }   // an open box
+    B(FL-0.064, 0.03, FW-0.064, fx, FT-0.235, fz, "#4a2e16");                     // its bottom, under the green
+    for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]) B(0.08, FT-0.23-FB, 0.08, fx+sx*(FL/2-0.06), FB+(FT-0.23-FB)/2, fz+sz*(FW/2-0.06), "#3a2412");   // (their tops up inside the box's bottom)
+    B(FL-0.07, 0.012, FW-0.07, fx, FT-0.214, fz, "#2f7a3c");                      // the green, down in the box
+    for(const sd of [-1,1]) B(0.04, 0.06, 0.18, fx+sd*(FL/2-0.02), FT-0.15, fz, "#1a1a1a");   // the goal mouths
+    const rodX=[-0.49,-0.35,-0.21,-0.07,0.07,0.21,0.35,0.49], men=[1,2,3,5,5,3,2,1];
+    rodX.forEach((dx,k)=>{ const x=fx+dx*FL/1.1, red=(k===0||k===1||k===3||k===5);
+      tubeE(V3(x, FT-0.06, fz-FW/2-0.16), V3(x, FT-0.06, fz+FW/2+0.16), 0.008, "#c9cbcc");
+      C(0.018, 0.10, x, FT-0.06, (red?fz+FW/2+0.21:fz-FW/2-0.21), "#1a1a1a", 10, Math.PI/2);
+      for(let m=0;m<men[k];m++){ const z=fz+(m-(men[k]-1)/2)*(FW-0.12)/Math.max(1,men[k]);
+        B(0.03, 0.12, 0.04, x, FT-0.12, z, red?"#c42a1a":"#1f4fd8"); C(0.018, 0.03, x, FT-0.048, z, "#e8c8a8", 10); } });
+    ent(new T.SphereGeometry(0.017, 10, 8), fx+0.12, FT-0.208+0.017+0.005, fz+0.05, "#f2f2ee");          // the ball, where it stopped
+    addCol(fx-FL/2-0.05, fx+FL/2+0.05, fz-FW/2-0.25, fz+FW/2+0.25, FB-0.5, FT+0.05);
+    addUse(fx, fz+FW/2+0.65, FB, "SPIN THE RODS", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("tick", fx, fz);
+      toast(["YOU SPIN THE GOALIE. NO SPINNING, SAYS A NOTE TAPED ON IT","THE BALL RATTLES IN. ONE NOTHING, YOU","A SLAP SHOT OFF THE BACK WALL. THE CREW WOULD HAVE A WORD"][(Math.random()*3)|0],"#cfe0d4"); }, 1.1); }
+
+  // a buck on the old foundation wall, south of the hole through it: a plaque, the head, eight points
+  { const wx=IX0, wz=IZ1-0.75, wy=FB+1.72, AN="#d8ccb0", HD="#7a5434";
+    B(0.03, 0.42, 0.32, wx+0.01, wy-0.04, wz, "#4a2c1a");                                                  // (5 mm into the wall)
+    ent(new T.SphereGeometry(0.13, 12, 10).scale(1.0, 1.15, 0.9), wx+0.14, wy-0.02, wz, HD);                // the neck coming off it
+    ent(new T.SphereGeometry(0.10, 12, 10).scale(1.25, 0.95, 0.85), wx+0.30, wy+0.06, wz, HD);              // the head
+    ent(new T.ConeGeometry(0.06, 0.18, 10).rotateZ(-Math.PI/2), wx+0.45, wy+0.03, wz, "#5a3a22");          // the muzzle
+    C(0.02, 0.01, wx+0.54, wy+0.03, wz, "#141414", 8, 0, 0, Math.PI/2);
+    for(const sd of [-1,1]){ ent(new T.SphereGeometry(0.012, 8, 6), wx+0.37, wy+0.10, wz+sd*0.07, "#0a0a0a");
+      ent(new T.ConeGeometry(0.04, 0.12, 8).rotateX(sd*0.9), wx+0.26, wy+0.17, wz+sd*0.10, HD);
+      const b0=V3(wx+0.28, wy+0.14, wz+sd*0.05), b1=V3(wx+0.24, wy+0.34, wz+sd*0.20), b2=V3(wx+0.34, wy+0.50, wz+sd*0.22);
+      tubeE(b0, b1, 0.012, AN); tubeE(b1, b2, 0.010, AN);
+      tubeE(b1, V3(wx+0.38, wy+0.40, wz+sd*0.16), 0.008, AN); tubeE(V3(wx+0.26, wy+0.42, wz+sd*0.21), V3(wx+0.40, wy+0.52, wz+sd*0.14), 0.007, AN);
+      tubeE(V3(wx+0.30, wy+0.47, wz+sd*0.22), V3(wx+0.28, wy+0.60, wz+sd*0.26), 0.006, AN); }
+    pic(0.16, 0.04, (x,W,Hh)=>{ x.fillStyle="#c9a23a"; x.fillRect(0,0,W,Hh); say(x, "DALE · 2019 · 8 PT", W/2, Hh/2, W*0.84, Hh*0.6, "#2a1a0e", "700", "Georgia, serif"); },
+      wx+0.032, wy-0.21, wz, Math.PI/2, false, 160, 40); }
 
   const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.12}));
   mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);

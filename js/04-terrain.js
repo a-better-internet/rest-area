@@ -46,23 +46,30 @@ const RAMP_ENTRY=smoothPath([
 const EDIN=(function(){
   const z=-1200, y=roadY(z)+7.0;                 // the crossroad, level, 7 m over the interstate
   // (the bridge's ends, bw0 and bw1, are on the 8 m ground's lattice past the top of the cut, where it is level)
-  const E={z:z, y:y, hw:5.2, x0:-330, x1:610, bw0:-192, bw1:-80, piers:[-167.0, -135.0, -103.2],
+  const E={z:z, y:y, hw:5.2, rw:2.45, x0:-330, x1:610, bw0:-192, bw1:-80, piers:[-167.0, -135.0, -103.2],
            plain:{x0:-330, x1:610, z0:z-260, z1:z+340}};
   // the northbound off-ramp's centre line, from the highway to the crossroad (x, z from the crossroad)
   const nb=[[-106.4,560],[-104.2,470],[-100.0,380],[-94.0,290],[-87.5,200],[-81.0,120],[-74.0,60],[-63.0,22],
             [-46.0,7.5],[-26.0,3.0],[-6.0,1.8]];
-  // along the highway at its grade for the first 80 m, then up to the crossroad's, level for the last 70
+  // along the highway at its grade until it has parted from it (the gore's nose is 185 m or so out), then up to
+  // the crossroad's, level for the last 70; climbing any sooner, it would stand on the shoulder's edge in a step
   const mk=(pts, fromHwy)=>{
     const P=smoothPath(pts.map(p=>({x:p[0], z:z+p[1]})), 2.0), L=P[P.length-1].s;
-    for(const p of P){ const d=fromHwy ? p.s : L-p.s; p.y=lerp(roadY(p.z), y, smoothstep(80, L-70, d)); }
+    for(const p of P){ const d=fromHwy ? p.s : L-p.s; p.y=lerp(roadY(p.z), y, smoothstep(190, L-70, d)); }
     return P; };
   E.off=mk(nb, true);
   E.on=mk(nb.slice().reverse().map(p=>[-270-p[0], p[1]]), false);   // the mirror across the median, crossroad first
   // the fields either side of US 6N, clear of its right of way and the ramps; hedgerows between (07)
   const F=(x0,x1,z0,z1,crop)=>({x0:x0, x1:x1, z0:z+z0, z1:z+z1, crop:crop});
-  E.fields=[F(-66,128,-250,-16,"corn"), F(140,368,-250,-16,"hay"), F(380,600,-250,-16,"soy"),
-            F(-30,168,16,330,"hay"), F(180,388,16,330,"corn"), F(400,600,16,330,"pasture"),
-            F(-322,-200,-250,-16,"soy"), F(-322,-236,16,330,"hay")];
+  // (strips a hundred metres or so wide, corn and beans and hay turn about, the way the county farms them;
+  //  north of the road the corner by the bridge is the fuel stop's, south a farmstead sits back off the road
+  //  with its own pasture behind it: 14k builds both. Field 3 is the hay field with the oak in it.)
+  E.fields=[F(48,128,-250,-16,"corn"), F(140,248,-250,-16,"soy"), F(260,368,-250,-16,"hay"),
+            F(-30,100,16,330,"hay"), F(262,388,16,330,"corn"), F(400,500,16,330,"soy"),
+            F(512,600,16,330,"pasture"), F(380,488,-250,-16,"corn"), F(500,600,-250,-16,"hay"),
+            F(-322,-200,-250,-16,"soy"), F(-322,-236,16,330,"hay"), F(112,250,140,330,"pasture")];
+  E.station={x0:-56, x1:32, z0:z-66, z1:z-E.hw+0.05};                  // the fuel stop's lot, north of the road by the bridge
+  E.farm={x0:104, x1:258, z0:z+E.hw+1, z1:z+130};                      // the farmstead, south of it
   return E;
 })();
 // the drive up to the substation: off the north end of the car lot, east
@@ -95,7 +102,9 @@ const HOMESTEAD={x:312, z:160, r:17, y:0, box:{x0:312-7.2, x1:312+7.2, z0:160-8.
 const GARAGE={x0:32.5, x1:41.5, z0:24.0, z1:38.0, y:0, yard:{x0:23.5, x1:42.5, z0:18.5, z1:45.0}};
 const SERVICE=smoothPath([
   {x:40.5,z:43.5},{x:48,z:47.5},{x:57,z:54},{x:65,z:64},{x:72,z:78},{x:79,z:97},{x:86,z:122},
-  {x:93,z:152},{x:99,z:184},{x:104,z:218},{x:108,z:252}], 2.0);
+  {x:93,z:152},{x:99,z:184},{x:104,z:218},{x:108,z:252},{x:110.5,z:276},{x:110.5,z:298}], 2.0);
+// where it ends: a gravel turnaround in the woods, a gate across the old track on, the game lands past it (13c)
+const TURN={x:110.5, z:304.5, r:7.5};
 const TRAIL=smoothPath([
   {x:17.4,z:1.2},{x:24,z:3.5},{x:34,z:5.2},{x:48,z:8.5},{x:62,z:7.2},{x:78,z:4.6},{x:94,z:7.2},
   {x:110,z:12.4},{x:126,z:13.2},{x:142,z:10.2},{x:158,z:12.2},{x:174,z:18.2},{x:190,z:24},
@@ -119,7 +128,7 @@ const PLANT_TRACKS=[
   smoothPath([{x:86.4,z:121.6},{x:96,z:116},{x:106,z:110.6},{x:113.5,z:107.2},{x:120.5,z:106.45}], 2.0),   // the spur down to the gate
   smoothPath([{x:79.6,z:97.4},{x:74.5,z:98.4},{x:69.6,z:99.4}], 1.5),                                       // a path to the well house
   smoothPath([{x:88.4,z:129.0},{x:81,z:133.5},{x:74.6,z:138.2}], 1.5)];                                     // and to the tower
-const CREEK=smoothPath([{x:170,z:262},{x:168,z:232},{x:167,z:204},{x:171,z:176},{x:178,z:148},{x:182,z:120},{x:190,z:96},
+const CREEK=smoothPath([{x:175,z:380},{x:173,z:330},{x:171,z:296},{x:170,z:262},{x:168,z:232},{x:167,z:204},{x:171,z:176},{x:178,z:148},{x:182,z:120},{x:190,z:96},
   {x:210,z:84},{x:240,z:92},{x:272,z:104},{x:306,z:114},{x:340,z:120},{x:376,z:124},{x:412,z:128},{x:450,z:134}], 3.0);
 
 const Terrain=(function(){
@@ -193,15 +202,23 @@ const Terrain=(function(){
       h=toward(h, 0, distToPath(RAMP_EXIT,x,z).d, 9, 22);
     if(x>ENTRY_B.x0 && x<ENTRY_B.x1 && z>ENTRY_B.z0 && z<ENTRY_B.z1)
       h=toward(h, 0, distToPath(RAMP_ENTRY,x,z).d, 9, 22);
+    // Edinboro's ramps, a ledge up the side of the cut; and between a ramp and the interstate, where the ramp
+    // has begun to climb, a bank from the one's paving up to the other's, each with a 2 m cell of level ground
+    // past its edge, so the ground's grid never comes up through the shoulder in teeth
+    for(const [P,B,X,s] of [[EDIN.off,EOFF_B,NB_X1,1],[EDIN.on,EON_B,SB_X0,-1]])
+      if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1){ const q=distToPath(P,x,z); h=toward(h, q.y, q.d, 4.4, 10);
+        const dr=s*(x-X), gp=s*(q.x-X)-EDIN.rw, a=2.2, b=Math.max(a, gp-a);       // past the road's edge; the ramp's near edge
+        // (only while the two are close: farther apart, the cut's own slope stands between them as before)
+        if(dr>-12 && dr<gp && gp<16){ const hk=dr<=a ? ry : dr>=b ? q.y : ry+(q.y-ry)*smoothstep(a, b, dr);
+          h=lerp(hk, h, smoothstep(12, 16, gp)); } }
+    // the compound: a level shelf of fill with the woods running up to it
+    h=toward(h, SITE.sub.y, boxDist(SUBPAD,x,z), 0, 16);
+    // and the drive cut through the edge of that fill, all the way to the gate
+    // (after the shelf, or the fill buries the drive's last twenty metres)
     if(x>DRIVE_B.x0 && x<DRIVE_B.x1 && z>DRIVE_B.z0 && z<DRIVE_B.z1){
       const q=distToPath(DRIVE,x,z);
       h=toward(h, q.y, q.d, 4.2, 12);
     }
-    // Edinboro's ramps, a ledge up the side of the cut
-    for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B]])
-      if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1){ const q=distToPath(P,x,z); h=toward(h, q.y, q.d, 4.4, 10); }
-    // the compound: a level shelf of fill with the woods running up to it
-    h=toward(h, SITE.sub.y, boxDist(SUBPAD,x,z), 0, 16);
     // the camp's clearing, trodden level round the fire
     h=toward(h, CAMP.y, Math.hypot(x-CAMP.x, z-CAMP.z), 6.5, 9);
     // the house's ground, graded once and long since settled
@@ -223,6 +240,8 @@ const Terrain=(function(){
   function heightAt(x,z){
     let h=baseHeight(x,z);
     // the service track: a level strip across, following its own smoothed grade
+    // (its turnaround first, level at the track's end, so the track's own strip, after it, is never under it)
+    { const dt=Math.hypot(x-TURN.x, z-TURN.z); if(dt<TURN.r+8) h=toward(h, SERVICE[SERVICE.length-1].y, dt, TURN.r+0.6, 6); }
     if(x>SERV_B.x0 && x<SERV_B.x1 && z>SERV_B.z0 && z<SERV_B.z1){
       const q=distToPath(SERVICE,x,z); h=toward(h, q.y, q.d, 2.6, 5); }
     for(let k=0;k<PLANT_TRACKS.length;k++){ const B=PT_B[k];
@@ -266,6 +285,7 @@ const Terrain=(function(){
     // the garage yard and its track: no tree within a couple of metres of either
     d=Math.min(d, boxSD(GARAGE.yard,x,z)-2.0);
     if(x>SERV_B.x0 && x<SERV_B.x1 && z>SERV_B.z0 && z<SERV_B.z1) d=Math.min(d, distToPath(SERVICE,x,z).d-2.4);
+    d=Math.min(d, Math.hypot(x-TURN.x, z-TURN.z)-TURN.r-1.2);
     // the water and sewage works: round the compound, the well house, the tower, the tracks to them;
     // and no tree in the creek, though they come down to its banks
     d=Math.min(d, boxSD(WWTP,x,z)-3.0, boxSD(WELLH,x,z)-2.5, Math.hypot(x-WTOWER.x, z-WTOWER.z)-6.5);
@@ -306,9 +326,14 @@ const Terrain=(function(){
    is wholly in a hole or wholly out, and the border nodes are shared.
      far    32 m   ±2400                        the haze and the far ridges
      mid     8 m   x -512..640, z ±1600         the corridor and its cuts
-     near    2 m   x -256..448, z -336..256     the site and its woods      */
+     near    2 m   x -256..448, z -336..344     the site and its woods
+     hwyN    2 m   x -272..-48, z -1328..-336   the interstate north: the entry ramp's merge, two crossovers, Edinboro
+     hwyS    2 m   x -272..-48, z 344..568      the interstate south: the exit ramp's diverge, the third crossover */
 const RING_MID ={x0:-512, x1:640, z0:-1600, z1:1600};
-const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:256};
+const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:344};
+// and two more at 2 m along the interstate, so the ground under every ramp's merge, the crossovers and
+// Edinboro's interchange follows the paving instead of an 8 m triangle cutting up through its edge
+const RING_HWYN={x0:-272, x1:-48, z0:-1328, z1:-336}, RING_HWYS={x0:-272, x1:-48, z0:344, z1:568};
 const TERRAIN_RINGS=[];
 let TERRAIN_MAT=null;
 (function buildTerrain(){
@@ -428,8 +453,10 @@ let TERRAIN_MAT=null;
     scene.add(mesh); return mesh;
   }
   grid({x0:-2400,x1:2400,z0:-2400,z1:2400}, 32, [RING_MID], "ground-far", 40);
-  grid(RING_MID, 8, [RING_NEAR], "ground-mid", 24);
+  grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS], "ground-mid", 24);
   grid(RING_NEAR, 2, [GEN_HOLE], "ground-near", 6);
+  grid(RING_HWYN, 2, [], "ground-hwyn", 6);
+  grid(RING_HWYS, 2, [], "ground-hwys", 6);
   TERRAIN_RINGS.sort((a,b)=>a.cell-b.cell);        // finest ring wins
 })();
 

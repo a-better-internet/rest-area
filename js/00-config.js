@@ -58,7 +58,8 @@ const SITE = {
   // the forest is a canopy seen from the road and the air
   // (east, behind the building, it runs a long way back: there is a path
   // out there, and a camp at the end of it — 04-terrain, 14d)
-  zone:  {x0:-240, x1:416, z0:-328, z1:248},
+  zone:  {x0:-240, x1:416, z0:-328, z1:342},   // (south to 342: the service track runs on past the plant to its own end;
+                                                 //  2 m short of the fine ground's edge at 344, so the curtain is not hung in it)
   walkInset: 22,       // how far inside the zone's edge the walk stops: the curtain is always seen through trees
   walkInsetE: 58,      // and on the east, a little past the posted line, where the woods are open and you can see further
 };

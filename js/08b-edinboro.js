@@ -51,21 +51,13 @@ const EDIN_RT={};
   addFlat(E.bw0-0.5, E.bw1+0.5, Z-DW, Z+DW, Y+PAVE_T);
 
   /* ---- the ramps ---------------------------------------------------------- */
-  const RW=2.45;
-  for(const [P, hwy] of [[E.off, 0], [E.on, 1]]){
-    layRibbon("asphalt", P, -RW, RW, PAVE_T, 0.40, "#929290");
-    addPaveRibbon(P, -RW, RW);
-    // the edge lines, from where the ramp is clear of the highway's paving to where it meets US 6N's
-    const clear=p=>hwy ? p.x+RW<SB_X0-0.4 : p.x-RW>NB_X1+0.4, onX=p=>Math.abs(p.z-Z)<HW+RW+0.2;
-    const seg=[]; for(const p of P) if(clear(p) && !onX(p)) seg.push(p);
-    if(seg.length>2){
-      layRibbon("paint", seg, RW-0.32, RW-0.18, PAVE_T+0.002, 1, YELLOW_LINE);       // left (offsets are + to the left, 01)
-      layRibbon("paint", seg, -RW+0.18, -RW+0.32, PAVE_T+0.002, 1, WHITE_LINE);
-    }
-  }
-  // where the off-ramp leaves: the gore, a chevron'd triangle of paint, and the exit number on a post
-  const gore=E.off.find(p=>p.x-RW-NB_X1>3.0);
-  guideSign((NB_X1+gore.x-RW)/2, gore.z+2, 1.5, 1.5, 0, ["EXIT","166","↗"], {clear:1.3, posts:1, y:gore.y});
+  // (08's rampPave: each out of, or back into, the interstate's shoulder along a taper, never over its lanes)
+  const RW=E.rw, onX=p=>Math.abs(p.z-Z)<HW+RW+0.2;
+  const offM=rampPave(E.off, RW, NB_X1,  1, "start", 100, "#929290", onX);
+  rampPave(E.on, RW, SB_X0, -1, "end", 110, "#929290", onX);
+  // the exit number on a post just past the gore's nose, in the grass between the road and the ramp
+  { const q=offM.nose || E.off.find(p=>p.x-RW-NB_X1>3.0), z=q.z-2.5, xin=q.x-RW;
+    guideSign((NB_X1+xin)/2, z, 1.5, 1.5, 0, ["EXIT","166","↗"], {clear:1.3, posts:1, y:roadY(z)}); }
 
   /* ---- the bridge --------------------------------------------------------- */
   const deckT=0.30, girD=1.05, under=Y-deckT, girB=under-girD;   // under the deck; the girders' bottom

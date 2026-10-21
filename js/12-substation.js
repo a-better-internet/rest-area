@@ -51,6 +51,7 @@ function _liveLed(x,y,z,on,off,r){
 }
 
 /* ---- the drive ----------------------------------------------------------- */
+let GATE_SIGN=null;          // where the drive gate's sign stands (set with the gate)
 (function drive(){
   layRibbon("asphalt", DRIVE, -2.6, 2.6, PAVE_T, 0.40, "#8c8c88");
   addPaveRibbon(DRIVE, -2.6, 2.6);
@@ -59,19 +60,56 @@ function _liveLed(x,y,z,on,off,r){
   layRibbon("gravelbed", DRIVE, -3.4, -2.6, PAVE_T-0.006, 0.6, "#9a968c");
   layRibbon("gravelbed", DRIVE, 2.6, 3.4, PAVE_T-0.006, 0.6, "#9a968c");
   addZone(-28, 60, -175, -132, -2, 8, "SERVICE DRIVE");
-  // the yellow pipe gate at the bottom of it, swung open and chained back
-  const gx=-16, gz=-148.6;
-  for(const dz of [0, 4.6]) cyl("paintm", 0.07,0.07,1.1,10, gx, 0.55, gz+dz*0+(dz?0:0), "#d9a922");
-  cyl("paintm", 0.07,0.07,1.1,10, gx+4.4, 0.55, gz-1.3, "#d9a922");
-  push("paintm", new T.CylinderGeometry(0.045,0.045,4.6,10), gx+2.2, 0.98, gz-0.65, Math.atan2(4.4,-1.3), "#d9a922", 0, Math.PI/2);
-  addCol(gx-0.1,gx+0.1,gz-0.1,gz+0.1,-1,1.1);
+  /* the yellow pipe gate at the bottom of it: a hinge post on the north
+     shoulder and a latch post on the south, square across the drive; the
+     leaf, a welded frame of pipe with a brace, swung open back toward the
+     lot and chained to a short post so it lies along the shoulder, clear of
+     the gravel. Everything is laid off the drive's own line at x = -16. */
+  { let i=1; while(i<DRIVE.length-1 && DRIVE[i].x< -16) i++;
+    const A=DRIVE[i-1], B2=DRIVE[i], L=Math.hypot(B2.x-A.x, B2.z-A.z);
+    const tx=(B2.x-A.x)/L, tz=(B2.z-A.z)/L, nx=tz, nz=-tx;                // along the drive; to its left (north)
+    const u=(-16-A.x)/(B2.x-A.x||1), cx=-16, cz=A.z+(B2.z-A.z)*u;
+    const at=(a,o)=>({x:cx+tx*a+nx*o, z:cz+tz*a+nz*o}), gy=(q)=>Terrain.groundAt(q.x, q.z);
+    const YEL="#d9a922", OFF=3.75, LEAF=7.2;
+    const post=(q, r, h)=>{ cyl("paintm", r, r, h+0.5, 12, q.x, gy(q)+h/2-0.25, q.z, YEL);
+      cyl("paintm", r+0.012, r+0.012, 0.03, 12, q.x, gy(q)+h+0.015, q.z, YEL);            // a cap welded on
+      addCol(q.x-r-0.03, q.x+r+0.03, q.z-r-0.03, q.z+r+0.03, gy(q)-0.5, gy(q)+h); };
+    const hinge=at(0, OFF), latch=at(0, -OFF), hold=at(-LEAF-0.05, OFF+0.18);
+    GATE_SIGN=Object.assign(at(-1.2, -OFF-0.45), {ry:Math.atan2(-tx,-tz)});
+    post(hinge, 0.075, 1.30); post(latch, 0.075, 1.15); post(hold, 0.055, 0.85);
+    // the latch post's catch, a U of flat bar facing the way the leaf closes
+    bx("paintm", 0.05, 0.10, 0.20, latch.x+nx*0.10, gy(latch)+1.0, latch.z+nz*0.10, 0.4, Math.atan2(nx,nz), YEL);
+    // the leaf, open: from the hinge back along the shoulder
+    const h0=gy(hinge), V=(a,o,y)=>{ const q=at(a,o); return V3(q.x, h0+y, q.z); };
+    const o=OFF+0.11, rail=0.032;
+    tube("paintm", V(0,o,1.08), V(-LEAF,o,1.08), rail, 10, YEL);                              // top rail
+    tube("paintm", V(0,o,0.36), V(-LEAF,o,0.36), rail*0.85, 10, YEL);                         // bottom rail
+    tube("paintm", V(0,o,0.72), V(-LEAF,o,0.72), rail*0.7, 8, YEL);                           // middle rail
+    for(const a of [-0.04, -LEAF*0.5, -LEAF+0.04]) tube("paintm", V(a,o,0.30), V(a,o,1.14), rail, 10, YEL);   // stiles
+    tube("paintm", V(-0.06,o,0.40), V(-LEAF*0.5+0.06,o,1.04), rail*0.7, 8, YEL);              // braces, hinge end high
+    tube("paintm", V(-LEAF*0.5-0.06,o,0.40), V(-LEAF+0.10,o,1.04), rail*0.7, 8, YEL);
+    for(const y of [0.42, 1.00]) tube("metal", V(0.02,OFF,y), V(-0.06,o,y), 0.022, 8, "#5c5a52");   // the hinges, pin to leaf
+    // a red-and-white reflector board on the middle of it, so it is seen at night
+    { const q=at(-LEAF*0.5, o-0.038), sg=signTex(256,96,(c,W,H)=>{ for(let k=0;k<8;k++){ c.fillStyle=k%2?"#f2f0e8":"#c8102e";
+        c.beginPath(); c.moveTo(k*W/6-W/6,H); c.lineTo(k*W/6,0); c.lineTo(k*W/6+W/6,0); c.lineTo(k*W/6,H); c.fill(); } });
+      signPanel(0.62, 0.22, sg, q.x, h0+0.90, q.z, Math.atan2(-nx,-nz)); }                 // on the centre stile, facing the road
+    // the chain from the leaf's end to the hold-open post, a few links sagging
+    { const e=V(-LEAF+0.02,o,0.76), hp=V3(hold.x, gy(hold)+0.70, hold.z), n=7;
+      for(let k=0;k<n;k++){ const t0=k/n, t1=(k+1)/n, sag=(t)=>-0.05*Math.sin(Math.PI*t);
+        tube("metal", V3(e.x+(hp.x-e.x)*t0, e.y+(hp.y-e.y)*t0+sag(t0), e.z+(hp.z-e.z)*t0),
+                      V3(e.x+(hp.x-e.x)*t1, e.y+(hp.y-e.y)*t1+sag(t1), e.z+(hp.z-e.z)*t1), 0.007, 5, "#6a6a66"); } }
+    // the leaf is solid: a thin box along it
+    addColOB((hinge.x+at(-LEAF,o).x)/2, (hinge.z+at(-LEAF,o).z)/2, Math.atan2(tx,tz), 0.06, LEAF/2, h0-0.2, h0+1.2);
+  }
   const sign=signTex(300,220,(c,W,H)=>{ c.fillStyle="#f2f0e8"; c.fillRect(0,0,W,H);
     c.strokeStyle="#1a1a1a"; c.lineWidth=8; c.strokeRect(6,6,W-12,H-12); c.fillStyle="#1a1a1a";
     fitHwy(c,"AUTHORIZED",W*0.8,H*0.22,W/2,H*0.30); fitHwy(c,"VEHICLES",W*0.8,H*0.22,W/2,H*0.53);
     fitHwy(c,"ONLY",W*0.6,H*0.22,W/2,H*0.76); });
-  bx("metal",0.06,2.2,0.06, -21, 1.1, -146.2, 0.5, 0, "#a3a8aa");
-  signPanel(0.6,0.44,sign, -21, 1.9, -146.16, 0);
-  addCol(-21.1,-20.9,-146.3,-146.1,-1,2.3);
+  // on its own post on the right-hand shoulder, by the latch post, facing whoever drives up
+  { const q=GATE_SIGN, y=Terrain.groundAt(q.x, q.z);
+    bx("metal",0.06,2.4,0.06, q.x, y+0.95, q.z, 0.5, q.ry, "#a3a8aa");
+    signPanel(0.6,0.44,sign, q.x+Math.sin(q.ry)*0.04, y+1.85, q.z+Math.cos(q.ry)*0.04, q.ry);
+    addCol(q.x-0.1,q.x+0.1,q.z-0.1,q.z+0.1,y-1,y+2.3); }
 })();
 
 /* ---- the compound -------------------------------------------------------- */

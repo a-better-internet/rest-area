@@ -253,7 +253,7 @@ function distToPath(P, x, z){
     if(d<best){ best=d; bi=i; bt=t; }
   }
   const a=P[bi-1]||P[0], b=P[bi]||P[0];
-  return {d:best, y:lerp(a.y||0,b.y||0,bt), s:lerp(a.s||0,b.s||0,bt)};
+  return {d:best, y:lerp(a.y||0,b.y||0,bt), s:lerp(a.s||0,b.s||0,bt), x:lerp(a.x,b.x,bt), z:lerp(a.z,b.z,bt)};
 }
 
 /* --- faces built by hand: roofs, gables, anything that is not a box ----

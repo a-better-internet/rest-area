@@ -21,6 +21,9 @@ addEventListener("keydown",e=>{
   if(VEND.open){ e.preventDefault(); VEND.key(e); return; }
   // on the oche the keys are the game's (18d-darts)
   if(typeof DARTS!=="undefined" && DARTS.on){ e.preventDefault(); DARTS.key(e); return; }
+  // at the air hockey table and the hoops machine, theirs (18e-games)
+  if(typeof HOCKEY!=="undefined" && HOCKEY.on){ e.preventDefault(); HOCKEY.key(e); return; }
+  if(typeof HOOPS!=="undefined" && HOOPS.on){ e.preventDefault(); HOOPS.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
@@ -73,6 +76,7 @@ addEventListener("mousemove",e=>{
   look(e.clientX-lastX, e.clientY-lastY); lastX=e.clientX; lastY=e.clientY;
 });
 function look(dx,dy){
+  if(typeof HOCKEY!=="undefined" && HOCKEY.on){ HOCKEY.move(dx,dy); return; }   // the mouse is the mallet
   if(driving){                       // orbit the car rather than turn a head
     carCamYaw   -= dx*0.0042;
     carCamPitch  = clamp(carCamPitch - dy*0.0032, -0.18, 1.05);
@@ -209,7 +213,7 @@ function interact(){
     if(nearestDoor.partner) nearestDoor.partner.manual=nearestDoor.manual;
     if(nearestDoor.manualOnly && nearestDoor.manual>0 && !nearestDoor.told){
       nearestDoor.told=true; if(nearestDoor.partner) nearestDoor.partner.told=true;
-      toast("THE PADLOCK IS HANGING OPEN ON ITS HASP","#cfe0d4");
+      toast(nearestDoor.openMsg||"THE PADLOCK IS HANGING OPEN ON ITS HASP","#cfe0d4");
     }
     return;
   }
@@ -345,7 +349,7 @@ function fixedUpdate(dt){
     if((bx1||bz1) && nearEdge(nx,nz) && performance.now()-_edgeToast>6000){
       _edgeToast=performance.now();
       // out back, the edge is somebody's line, and they have said so
-      toast(nx>SITE.zone.x1-(SITE.walkInsetE||0)-6 ? "POSTED. THIS IS AS FAR AS YOU GO" : "THE WOODS ARE TOO THICK TO GO ON","#cfe0d4");
+      toast(nx>SITE.zone.x1-(SITE.walkInsetE||0)-6 ? "POSTED. THIS IS AS FAR AS YOU GO" : "THE WOODS ARE TOO THICK TO GO ON. YOU CAN'T WALK ANY FURTHER THIS WAY","#cfe0d4");
     }
     player.step += sp*dt;
     player.bob   = Math.sin(player.step*3.1)*0.025;

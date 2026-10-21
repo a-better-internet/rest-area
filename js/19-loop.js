@@ -317,6 +317,8 @@ function frame(){
   if(typeof updateLife==="function") updateLife(delta, now, dark, dn);
   updateVending(delta);
   if(typeof updateDarts==="function") updateDarts(delta);
+  if(typeof updateGames==="function") updateGames(delta);
+  if(typeof updateEdinboro==="function") updateEdinboro(delta);
   updateScreens(delta, now);
   if(typeof AUDIO!=="undefined") AUDIO.update(delta, dark);
   if(ANIM.length) tickAnim(now);

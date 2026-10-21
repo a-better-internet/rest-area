@@ -41,6 +41,90 @@ function layRibbon(bk, P, o0, o1, yOff, uv, color){
   g.translate(-c.x, -c.y, -c.z);
   push(bk, g, c.x, c.y, c.z, 0, color);
 }
+// a ribbon whose edges are worked out at each point: f0(i,p,n) and f1(i,p,n) are its two offsets
+// (left positive, as ribbonGeo's); it faces up whichever way they run, and a point can pinch to nothing
+function ribbonGeoVar(P, f0, f1, yOff, uv){
+  const pos=[], uvs=[], idx=[], s=uv||0.35;
+  for(let i=0;i<P.length;i++){
+    const n=pathSide(P,i), p=P[i], o0=f0(i,p,n), o1=f1(i,p,n);
+    pos.push(p.x+n.x*o0, (p.y||0)+yOff, p.z+n.z*o0,  p.x+n.x*o1, (p.y||0)+yOff, p.z+n.z*o1);
+    uvs.push(o0*s, p.s*s,  o1*s, p.s*s);
+    if(i){ const a=(i-1)*2, b=a+1, c=a+2, d=a+3; idx.push(a,c,b, b,c,d); }
+  }
+  const g=new T.BufferGeometry();
+  g.setAttribute("position", new T.Float32BufferAttribute(pos,3));
+  g.setAttribute("uv", new T.Float32BufferAttribute(uvs,2));
+  g.setIndex(idx); g.computeVertexNormals();
+  let up=0; const nr=g.attributes.normal; for(let k=0;k<nr.count;k++) up+=nr.getY(k);
+  if(up<0){ const ix=g.index.array; for(let k=0;k<ix.length;k+=3){ const t=ix[k+1]; ix[k+1]=ix[k+2]; ix[k+2]=t; } g.computeVertexNormals(); }
+  return g;
+}
+function layRibbonVar(bk, P, f0, f1, yOff, uv, color){
+  const g=ribbonGeoVar(P, f0, f1, yOff, uv);
+  g.computeBoundingBox(); const c=new T.Vector3(); g.boundingBox.getCenter(c); g.translate(-c.x, -c.y, -c.z);
+  push(bk, g, c.x, c.y, c.z, 0, color);
+}
+/* A RAMP WHERE IT MEETS THE INTERSTATE. P is its centre line, RW its half
+   width; X is the interstate's pavement edge on the ramp's side and s which
+   side of it the ramp is (+1 east of it, -1 west). The ramp is paved only
+   outside that edge, never over the lanes, so where it runs alongside it is
+   the strip between the edge and its own far side; and it widens out of
+   nothing along a taper of `taper` metres, before its first point (an exit,
+   at="start") or after its last (an entrance, at="end"). Where it parts from
+   the road the gore between them is paved to its nose (G wide), edged in
+   white and chevroned; past the nose it is grass. The ramp's left line is
+   yellow from the nose on, its right line white the whole way. `stop(p)`
+   says where its lines give out (at the far end's crossroad). Returns the
+   whole line, taper and all, and the gore's points. */
+function rampPave(P0, RW, X, s, at, taper, color, stop){
+  const G=3.6, nT=Math.max(2, Math.round(taper/6));
+  const end=at==="start" ? P0[0] : P0[P0.length-1], nb=at==="start" ? P0[1] : P0[P0.length-2];
+  const dir=Math.sign(end.z-nb.z)||1;                                      // along the road, out into the taper
+  const xo0=end.x+s*RW, tp=[];
+  for(let k=1;k<=nT;k++){ const t=k/nT, z=end.z+dir*taper*t, xo=lerp(xo0, X, t);
+    tp.push({x:xo-s*RW, z:z, y:roadY(z)}); }
+  const Q=(at==="start" ? tp.reverse().concat(P0) : P0.concat(tp)).map(p=>({x:p.x, z:p.z, y:p.y}));   // (copies: the path is the traffic's too)
+  Q.forEach((q,i)=>{ q.s=i ? Q[i-1].s+Math.hypot(q.x-Q[i-1].x, q.z-Q[i-1].z) : 0; });
+  // how far left the paving may come at each point before it would be on the interstate's (offsets + to the left)
+  const room=(p,n)=>{ const k=-s*n.x; return k>0.2 ? (s*(p.x-X)+0.03)/k : 1e9; };
+  const inner=(i,p,n)=>clamp(room(p,n), -RW, RW);
+  layRibbonVar("asphalt", Q, ()=>-RW, inner, PAVE_T, 0.40, color);
+  addPaveRibbon(Q, -RW, RW);
+  // the gore: the run of points where the ramp has parted from the road but not by G yet
+  const gap=Q.map((p,i)=>room(p, pathSide(Q,i))-RW);                       // > 0: grass (or gore) between them
+  // (a run of points between nothing and G apart, with the shared paving at one end of it: after it for an
+  //  exit, which parts from the road, before it for an entrance, which closes on it; the clipped point included)
+  let g0=-1, g1=-1;
+  for(let i=0;i<Q.length;){
+    if(!(gap[i]>0.02 && gap[i]<G)){ i++; continue; }
+    let j=i; while(j+1<Q.length && gap[j+1]>0.02 && gap[j+1]<G) j++;
+    const before=i>0 && gap[i-1]<=0.02, after=j+1<Q.length && gap[j+1]<=0.02;
+    if((at==="start" && before) || (at==="end" && after)){ g0=before ? i-1 : i; g1=after ? j+1 : j; break; }
+    i=j+1; }
+  const gore=g0>=0 ? Q.slice(g0, g1+1) : [];
+  if(gore.length>1){
+    layRibbonVar("asphalt", gore, ()=>RW-0.01, (i,p,n)=>clamp(room(p,n), RW-0.01, RW+G), PAVE_T, 0.40, color);
+    // (its road-side line clear of the road's own edge line, not on it; pinched to nothing until the gore is
+    //  40 cm wide, so at the tip it does not lie on the ramp-side line it meets there)
+    const gw=(p,n)=>clamp(room(p,n), RW, RW+G);
+    layRibbonVar("paint", gore, (i,p,n)=>gw(p,n)-(gw(p,n)-RW<0.40 ? 0.22 : 0.36), (i,p,n)=>gw(p,n)-0.22, PAVE_T+0.002, 1, WHITE_LINE);
+    layRibbonVar("paint", gore, ()=>RW-0.30, ()=>RW-0.16, PAVE_T+0.002, 1, WHITE_LINE);
+    // chevrons across it, every six metres, pointing the way traffic goes, stopping short of both its lines
+    let last=-1e9;
+    for(let i=0;i<gore.length;i++){ const p=gore[i], n=pathSide(gore,i), w=clamp(room(p,n), RW, RW+G)-RW;
+      if(w<1.4 || p.s-last<6) continue; last=p.s;
+      const a=V3(p.x+n.x*(RW+0.25), 0, p.z+n.z*(RW+0.25)), b=V3(p.x+n.x*(RW+w-0.58), 0, p.z+n.z*(RW+w-0.58));
+      const back=(at==="start" ? -1 : 1)*dir*Math.min(2.2, w*0.8);           // the chevron's tail upstream
+      stripe(a.x, a.z+back, b.x, b.z, 0.30, WHITE_LINE, p.y+PAVE_T); }
+  }
+  // the ramp's own lines: white on the right all the way, yellow on the left from the gore's nose on
+  const live=(p)=>!(stop && stop(p));
+  const right=Q.filter(live); if(right.length>2) layRibbon("paint", right, -RW+0.18, -RW+0.32, PAVE_T+0.002, 1, WHITE_LINE);
+  const nose=gore.length ? (at==="start" ? gore[gore.length-1] : gore[0]) : null;
+  const left=Q.filter((p,i)=>live(p) && gap[i]>=G-0.05 && (!nose || (at==="start" ? p.s>=nose.s : p.s<=nose.s)));
+  if(left.length>2) layRibbon("paint", left, RW-0.32, RW-0.18, PAVE_T+0.002, 1, YELLOW_LINE);
+  return {line:Q, gore:gore, nose:nose};
+}
 // a straight run along z at x, following the road's grade, in pieces
 function roadRun(bk, x, z0, z1, o0, o1, yOff, uv, color, step){
   const S=step||192;
@@ -235,21 +319,10 @@ function guideSign(x, z, w, h, ry, lines, opts){
 })();
 
 /* ---- the ramps ----------------------------------------------------------- */
+// each widens out of the northbound shoulder along a taper, or narrows back into it, and is never laid over the lanes
 (function ramps(){
-  for(const P of [RAMP_EXIT, RAMP_ENTRY]){
-    layRibbon("asphalt", P, -4.2, 4.2, PAVE_T, 0.40, "#9a9a98");
-    addPaveRibbon(P, -4.2, 4.2);
-    // a solid white line at the right edge (east) and yellow at the left
-    layRibbon("paint", P, -3.85, -3.70, PAVE_T+0.003, 1, WHITE_LINE);
-    layRibbon("paint", P,  3.70,  3.85, PAVE_T+0.003, 1, YELLOW_LINE);
-  }
-  // white chevrons in the gores where each ramp parts from the road
-  for(const [z0,dz] of [[470,-1],[-505,1]]){
-    for(let k=0;k<5;k++){
-      const z=z0+dz*k*7;
-      stripe(NB_X1-0.2, z, NB_X1+1.8, z+dz*2.4, 0.3, WHITE_LINE);
-    }
-  }
+  RAMP_EXIT.meet =rampPave(RAMP_EXIT,  4.2, NB_X1, 1, "start", 110, "#9a9a98");
+  RAMP_ENTRY.meet=rampPave(RAMP_ENTRY, 4.2, NB_X1, 1, "end",   120, "#9a9a98");
 })();
 
 /* ---- the lots ----------------------------------------------------------- */

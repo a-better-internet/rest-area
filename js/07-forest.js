@@ -828,7 +828,11 @@ const FOREST=(function(){
       const base=P.length/3;
       for(let k=0;k<=n;k++){
         const t=k/n, x=ax0+(ax1-ax0)*t, z=az0+(az1-az0)*t;
-        const top=canopyY(x+nx2*0.5, z+nz2*0.5, true), bot=Terrain.heightAt(x,z)-1;
+        // (never lower than a wood's height except over the interstate, which is meant to run on out of sight:
+        //  over a track or a creek or the power line's cut the canopy dips, and a low curtain there is a window
+        //  on the end of the world; "over the interstate" takes in its ramps and their mowed verges, out to 40 m)
+        const open=Math.min(Math.abs(x-HWY.nb), Math.abs(x-HWY.sb))<40;
+        const bot=Terrain.heightAt(x,z)-1, top=Math.max(canopyY(x+nx2*0.5, z+nz2*0.5, true), open ? -1e9 : bot+17);
         const h=Math.max(0, top-bot);
         P.push(x, bot+Math.max(h,0.01), z,  x, bot, z);
         U.push(t*L/18, 1, t*L/18, 0);

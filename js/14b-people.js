@@ -640,27 +640,55 @@ const PEOPLE_API=(function(){
   // (the truckers, the one on the phone among them, are 14i's)
   // (the state map in the lobby is one of the things visitors stop at: _MAP_SPOT)
   // somebody sat in the grass with their back to the big boulder by the
-  // grove, legs out, a paperback; now and then a page, now and then a look round
+  // grove, legs out, a paperback; now and then a page, now and then a look round.
+  // Their back rests ON the rock: the boulder's own shape (08's boulder at
+  // 26,-34) is built again here, and they are slid out from it along the way
+  // they face until nothing of them is inside it, a centimetre or so clear.
   { const P=randomPerson(r), bk=new T.Group();
     for(const sd of [-1,1]){ const pg=new T.Mesh(new T.BoxGeometry(0.075,0.008,0.11), new T.MeshStandardMaterial({color:sd<0?0x2a5d9a:0xf2efe6, roughness:0.8}));
       pg.position.set(sd*0.038, 0, 0); pg.rotation.z=-sd*0.25; bk.add(pg); }
     bk.position.set(-0.06, -0.31, 0.06); P.B[P.j.elR].add(bk);
-    PEOPLE.push({kind:"custom", P:P, x:24.48, z:-33.85, y:0, yaw:-Math.PI/2, seed:r()*10, dayOnly:true,
+    const sitPose=(p, now, F)=>{ poseP(P, "stand", 0, now); const B=P.B, J=P.j;
+      B[J.root].position.y=0.13;
+      B[J.hpL].rotation.set(-1.50, 0, 0.10); B[J.hpR].rotation.set(-1.42, 0, -0.06);
+      B[J.knL].rotation.x=0.10; B[J.knR].rotation.x=0.55;                        // one knee up
+      B[J.spine].rotation.x=-0.30;                                               // back to the rock
+      const look=F ? F.look : smoothstep(0.85,0.97,Math.sin(now*0.11+p.seed));  // now and then, a look round
+      B[J.head].rotation.set(0.55-look*0.6, look*0.7*(F ? F.side : Math.sin(now*0.3)), 0);
+      B[J.shR].rotation.set(-0.95, 0, -0.10); B[J.elR].rotation.x=-1.05;
+      const turn=F ? F.turn : smoothstep(0.96,1.0,Math.sin(now*0.23+p.seed*3)); // a page
+      B[J.shL].rotation.set(-0.85-turn*0.2, 0, 0.12+turn*0.2); B[J.elL].rotation.x=-1.15; };
+    const RK={x:26, z:-34, s:1.4, seed:21}, yaw=-Math.PI/2;
+    const rock=new T.Mesh(rockGeo(RK.s, RK.seed), new T.MeshBasicMaterial({side:T.DoubleSide}));
+    rock.position.set(RK.x, RK.s*0.32, RK.z); rock.rotation.set(0, RK.seed, 0, "YXZ"); rock.updateMatrixWorld(true);
+    const rc=new T.Raycaster(), C=rock.position, _v=new T.Vector3(), _d=new T.Vector3();
+    // the rock is star-shaped about its middle: a point is inside if the surface is further out along the same line
+    const inside=(q, pad)=>{ _d.subVectors(q, C); const L=_d.length(); if(L<1e-6) return true; _d.divideScalar(L);
+      rc.set(C, _d); rc.far=RK.s*2; const h=rc.intersectObject(rock, false)[0]; return !!h && h.distance>L-pad; };
+    const ps={x:24.48, z:-33.85, y:0, seed:r()*10};
+    const fx=Math.sin(yaw), fz=Math.cos(yaw);                                     // the way they face, away from the rock
+    // (every way they move: head down on the page, looking round either way, a page turning)
+    const POSES=[{look:0,side:0,turn:0},{look:1,side:1,turn:0},{look:1,side:-1,turn:0},{look:0,side:0,turn:1}];
+    const clash=()=>{ for(const F of POSES) if(clash1(F)) return true; return false; };
+    const clash1=(F)=>{ ps.y=Terrain.groundAt(ps.x, ps.z); sitPose(ps, 0, F); P.g.position.set(ps.x, ps.y, ps.z); P.g.rotation.y=yaw;
+      P.g.updateMatrixWorld(true); let hit=false;
+      P.g.traverse(o=>{ if(hit || !o.isMesh || o.parent===bk) return; const A=o.geometry.attributes.position;
+        for(let i=0;i<A.count;i++){
+          if(o.isSkinnedMesh) o.boneTransform(i, _v); else _v.fromBufferAttribute(A, i);
+          _v.applyMatrix4(o.matrixWorld);
+          if(_v.distanceTo(C)<RK.s*1.25 && inside(_v, 0.018)){ hit=true; return; } } });
+      return hit; };
+    // in until they touch, then out until they don't
+    for(let k=0;k<60 && !clash();k++){ ps.x-=fx*0.01; ps.z-=fz*0.01; }
+    for(let k=0;k<120 && clash();k++){ ps.x+=fx*0.01; ps.z+=fz*0.01; }
+    rock.geometry.dispose();
+    PEOPLE.push({kind:"custom", P:P, x:ps.x, z:ps.z, y:ps.y, yaw:yaw, seed:ps.seed, dayOnly:true,
       upd:(p, dt, now, dark, cd)=>{
         const on=dark<0.55; P.g.visible=on; if(!on) return;
         p.y=Terrain.groundAt(p.x,p.z);
-        if(cd<80){ poseP(P, "stand", 0, now); const B=P.B, J=P.j;
-          B[J.root].position.y=0.13;
-          B[J.hpL].rotation.set(-1.50, 0, 0.10); B[J.hpR].rotation.set(-1.42, 0, -0.06);
-          B[J.knL].rotation.x=0.10; B[J.knR].rotation.x=0.55;                        // one knee up
-          B[J.spine].rotation.x=-0.30;                                               // back to the rock
-          const look=smoothstep(0.85,0.97,Math.sin(now*0.11+p.seed));                // now and then, a look round
-          B[J.head].rotation.set(0.55-look*0.6, look*0.7*Math.sin(now*0.3), 0);
-          B[J.shR].rotation.set(-0.95, 0, -0.10); B[J.elR].rotation.x=-1.05;
-          const turn=smoothstep(0.96,1.0,Math.sin(now*0.23+p.seed*3));             // a page
-          B[J.shL].rotation.set(-0.85-turn*0.2, 0, 0.12+turn*0.2); B[J.elL].rotation.x=-1.15; }
+        if(cd<80) sitPose(p, now);
         P.g.position.set(p.x, p.y, p.z); P.g.rotation.y=p.yaw; }});
-    KEEP_OFF.push({x0:23.6, x1:25.4, z0:-34.4, z1:-33.3}); }
+    KEEP_OFF.push({x0:ps.x-0.9, x1:ps.x+0.9, z0:ps.z-0.55, z1:ps.z+0.55}); }
   // and a dog being walked round the pet area
   // (south of the bag dispenser at 15.4, 67.2, not through it)
   const loopPts=[{x:12,z:65.4},{x:19,z:65.8},{x:25,z:73},{x:26,z:86},{x:20,z:93},{x:13,z:88},{x:10,z:77}];

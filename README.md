@@ -222,6 +222,10 @@ If the scene runs hot on your machine, start there (see below).
   across any of them. 44 vehicles
   run on it: sedans, SUVs, pickups, minivans, box trucks, reefers, flatbeds
   and tractor-trailers.
+  - Where a ramp leaves or joins, the lane widens and tapers the way a
+    real deceleration or acceleration lane does. A painted gore with
+    chevrons lies between the ramp and the through lanes, the edge lines
+    run on to the nose, and the grass stays off the paving.
   - Each one follows the car in front with the Intelligent Driver Model
     (a time headway that grows with speed). They pass slower traffic only
     when there is room both ways, and move over for merging visitors.
@@ -253,10 +257,32 @@ If the scene runs hot on your machine, start there (see below).
     distance sign, and I-79 SOUTH signs pointing to the on-ramp.
   - Both ends of the road are closed for now with type III barricades
     reading ROAD CLOSED.
-  - Fields of corn, soybeans and hay (round bales left in it) and a
-    pasture lie either side, with farm fence along the road. There are
-    hedgerows between the fields, a big lone oak, and the pole line
-    crossing.
+  - Farmland runs out both ways: a dozen fields of corn, soybeans and hay
+    (round bales left in it) and two pastures, with farm fence along the
+    road. There are hedgerows between the fields, a big lone oak, and the
+    pole line crossing.
+  - **French Creek Fuel & Mart**, on the north side by the bridge. A lot,
+    a canopy with its lights over two islands of pumps (somebody filling
+    up), a pickup nosed in by the store. The store is block and brick with
+    a glass front and a pair of storefront doors you walk in at. Inside:
+    the counter by the door with the clerk behind it, the cigarettes and
+    the lottery behind him, a roller grill; three aisles of shelving with
+    endcaps; the lit cooler wall across the back; a coffee bar; the ATM,
+    an ice cream chest and the restroom door. Open all night, lit all
+    night. `E` talks to the clerk, grabs a drink or tries the pumps.
+  - **The Weir place**, south of the road up a gravel lane, past the
+    mailbox and a farm stand selling sweet corn on the honour system. A
+    white two-storey farmhouse faces the road with a porch along its front
+    (a swing, two rockers, a light by the door) and a stoop out back, a
+    pickup parked on the spur to it. You walk in at the front door to the
+    front room (a couch with an afghan, a recliner, the set, a wood stove,
+    a braided rug, a bookcase) and through a cased opening to the kitchen
+    (counters under the window, the range, the fridge, the table with four
+    chairs and a pie on it, the feed store's calendar), and out the back.
+    The stairs are behind a door; nobody asked you up. Across the yard are
+    the red bank barn (WEIR · 1911) and its two silos, a hay wagon, a pole
+    shed with the green tractor in it, the clothesline and the woodpile,
+    and cows grazing in the pasture behind.
 - **The picnic grove** spreads across the lawn south of the building. Paths
   run to it, round the back and down to the pet area, and every one of them
   ends somewhere (at the shelter's slab, in a round pad by the pet area's bag
@@ -265,15 +291,18 @@ If the scene runs hot on your machine, start there (see below).
   lit, with smoke and embers), a picnic shelter and shade trees. Nearby are
   the flagpole with the US and Pennsylvania flags, a Blue Star Memorial
   Highway marker and a pet area.
-- **The substation** is about 180 m from the building, up a gated gravel
-  drive. It is a gravel
+- **The substation** is about 180 m from the building, up a paved drive that
+  runs all the way to its gate. At the bottom, a yellow pipe gate stands
+  swung open along the shoulder and chained back, with an AUTHORIZED
+  VEHICLES ONLY sign facing whoever drives up. The compound is a gravel
   pad behind chain-link and barbed wire, with DANGER signs and a double gate
   that opens on `E` and stays where you leave it. Inside are:
   - a pad-mount transformer and two standby generator sets, with a diesel
     tank and conduit;
   - a block generator house with switchgear, ATS lights and a logbook. To
     the right inside its door is a plain grey door in a block partition
-    (NO SUPERVISORS PAST THIS POINT). Behind it a concrete stair with yellow
+    (NO SUPERVISORS PAST THIS POINT). It is shut until you open it (`E`),
+    and stays the way you leave it. Behind it a concrete stair with yellow
     nosings and pipe rails goes down along the south wall to a cellar the
     crew has made theirs: walnut panelling from the seventies, an octagonal
     poker table under a green shade with a hand still on it (kings showing)
@@ -282,9 +311,19 @@ If the scene runs hot on your machine, start there (see below).
     cable spool for a coffee table, a harvest-gold fridge full of lager, an
     Allegheny Lager neon, a PITTSBURGH pennant, Christmas lights along the
     ceiling, a space heater glowing, and the whiteboard of who owes who
-    (Terry owes fourteen). The old foundation wall to the west has been
+    (Terry owes fourteen). Along the back wall the crew has built a bar
+    with a panelled front: a kegerator under its end with three taps up
+    through the top, a shelf of bottles and a pyramid of cans, a COLD BEER
+    neon and three chrome stools. A half barrel sits in a tub of ice with
+    a party pump, for when the kegerator runs dry. There is a foosball
+    table in the poker room and a buck mounted on the old wall. Two walls
+    are left bare for posters: the long panelled wall over the poker
+    table, and the dug-out's west wall north of the dartboard. The old
+    foundation wall to the west has been
     knocked through and the yard dug out under. The couch, the TV, the
-    spool and the fridge are in that second room now, with room to move.
+    spool and the fridge are in that second room now, with room to move,
+    and a recliner in the couch's plaid sits beside the couch angled at
+    the set.
     - **Darts.** The second room has a darts lane with a regulation board,
       an oche and a chalkboard. `E` at the oche picks up three darts. You
       aim where you look, and your hand drifts a little as a hand does.
@@ -299,12 +338,26 @@ If the scene runs hot on your machine, start there (see below).
       walls painted green and cream, a yellow stripe, conduit and a cable
       tray, vapour-tight tubes (one going), two locked steel doors and the
       yellow shelter sign. Twenty-five metres on, under the hill, it opens
-      into an arcade with a cosmic carpet, black walls with pink and blue
-      neon, and a GAME ROOM sign. There are twelve upright cabinets
-      running their attract screens (ASTRO RAIDERS, MAZE MUNCHER, TURNPIKE
-      RACER, BLOCK DROP and the rest; `E` drops a token), two pinball
-      machines, a token changer, and an air hockey table with its puck
-      riding the air.
+      into a small arcade with a cosmic carpet, black walls with pink and
+      blue neon, and a GAME ROOM sign. Four upright cabinets stand spread
+      round the walls running their attract screens (ASTRO RAIDERS, MAZE
+      MUNCHER, TURNPIKE RACER, BLOCK DROP; `E` drops a token), with a token
+      changer by the way in.
+    - **Air hockey.** `E` at the near end of the table puts the red mallet
+      in your hand, and you play the table's computer, first to seven. The
+      mouse (or `WASD`) moves your mallet round your half. The puck rides
+      the air, comes off the rails with most of its speed and off a mallet
+      with the mallet's speed carried into it, so a swing is a shot and a
+      still mallet is a block. The one scored on serves, and the score is
+      kept on the table's LED. This is the physics of the little canvas
+      game the crew left on the office computer, moved onto the table in
+      metres.
+    - **Hoops.** `E` at the front of the basketball machine stands you at
+      the line. You aim where you look, and a click or `Space` shoots the
+      next ball from the tray. The rim and the backboard are hard: off the
+      front of the rim it bounces out, off the board it can still drop. A
+      basket is two, three in the last ten seconds, forty seconds from the
+      first shot. The balls roll back down the ramp to you.
 
   Everything underground (the cellar, the dug-out, the corridor and the
   arcade) is lit only by its own lamps. It looks the same at noon and at
@@ -338,6 +391,14 @@ If the scene runs hot on your machine, start there (see below).
     Manholes mark the sewer down the track. A red beacon on the control
     building turns in a power cut, in a hard rain, and now and then for
     no reason anybody can find.
+  - **The end of the track.** Past the plant the service track runs on
+    down through the woods to a gravel turnaround. A yellow gate is
+    chained across the old track there (STATE GAME LANDS · ROAD CLOSED
+    BEYOND THIS GATE), and the ruts go on under a thicket of young spruce
+    and hemlock you cannot get through. The same belt of thicket runs
+    along the north, south and west edges of the woods, just past where
+    you have to stop, and walking into it tells you that you can't go any
+    further that way.
   - **The creek.** The treated water goes out a pipe to a concrete headwall
     on the bank of a creek (OUTFALL 001, with its permit sign). The creek
     comes down off the hills to the south, runs past the plant through the
@@ -413,7 +474,8 @@ If the scene runs hot on your machine, start there (see below).
     driver's side, so no visitor rig boxes him in. They stop for you, and rigs moving in the
     aisle stop for them. The parked rigs are solid at their own width, at
     their angle, so the gap between two of them is a gap you can walk. By day somebody sits in the
-    grass with their back to the big boulder by the grove, one knee up, a
+    grass with their back to the big boulder by the grove (against it, not
+    in it), one knee up, a
     paperback open, now and then turning a page or looking round. Visitors stop at the state
     map in the lobby on their way through, tracing the interstates and now
     and then putting a finger on YOU ARE HERE.
@@ -539,6 +601,10 @@ it, `R` coin return, `Esc` to walk away.
 At the oche you aim with the mouse. A click or `Space` throws, `N` starts a
 new game, and `Esc` or `E` puts the darts down.
 
+At the air hockey table the mouse (or `WASD`) moves your mallet. At the
+hoops machine you aim with the mouse, and a click or `Space` shoots. At
+either, `N` starts a new game and `Esc` or `E` steps away.
+
 ## Graphics settings
 
 `G` opens the menu. Use the arrows (or `WASD`) or the mouse to change a
@@ -634,6 +700,7 @@ js/14f-homestead.js the old house in the woods, inside and out, and its yard
 js/14g-garage.js    the maintenance garage, its yard, the track and gate, the truck, mower, carts and blower, the roll-up doors
 js/14h-custodian.js the custodian: rounds, stalls and cans, the restroom logs, mowing, leaf blowing, the cot; the outdoor path grid
 js/14i-trucker.js   the truckers: the one on the phone, the walk-round, the one in slippers and his coffee run
+js/14k-edinboro.js  at exit 166: the fuel stop and its store, the Weir farm (house, barn, silos, shed, stand, cows)
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
 js/16b-weather.js   weather (cloud deck, rain, fog banks, lightning) and the power: circuits, outage, generator, transfer switch
@@ -642,6 +709,7 @@ js/17-player.js     movement, interaction, gates, drone
 js/18-hud.js        compass, clock, location, weather, plan view
 js/18b-vending.js   the vending machines' keypad, coins, coil and shaking
 js/18d-darts.js     darts: aiming, the throw and its flight, scoring, 301 against Dale
+js/18e-games.js     the arcade's games: air hockey against the table, and hoops
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience

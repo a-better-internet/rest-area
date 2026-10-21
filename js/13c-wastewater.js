@@ -594,6 +594,65 @@ const PLANT_RT={arm:null, foamTex:null, creekTex:null, trickleTex:null, beacon:n
 
   PLANT_RT.ready=true;
 })();
+/* ---- the end of the service track, and the edge of the woods --------------------
+   Past the plant the gravel goes on a quarter mile, down through the trees
+   to a turnaround where the plough trucks swing round. Beyond it the old
+   logging track carries on into the state's game lands, a pipe gate across
+   it, chained, and the woods closing in: spruce and hemlock come up thick
+   where the track used to be. That is as far as anybody goes on foot, and
+   so it is all the way round the woods' edge: a belt of young conifers and
+   brush, close set, just past where the walking stops, so the last thing
+   you see is woods too thick to push into, not the end of anything. */
+(function trackEnd(){
+  const r=_trng(3301), T0=TURN, gy=SERVICE[SERVICE.length-1].y;
+  // the turnaround: a gravel round, a hair under the track's own ribbon where the two overlap
+  { const g=new T.CircleGeometry(T0.r, 36), U=g.attributes.uv; for(let k=0;k<U.count;k++) U.setXY(k, U.getX(k)*T0.r, U.getY(k)*T0.r);
+    push("gravelbed", g, T0.x, gy+0.035, T0.z, 0, "#9a968c", -Math.PI/2, 0);
+    addPaveRect(T0.x-T0.r*0.7, T0.x+T0.r*0.7, T0.z-T0.r*0.7, T0.z+T0.r*0.7, gy); }
+  addZone(T0.x-T0.r, T0.x+T0.r, T0.z-T0.r, T0.z+T0.r, gy-2, gy+8, "THE TURNAROUND");
+  // the gate across the old track: two posts, a pipe leaf shut and chained, a sign on it
+  const GZ=T0.z+T0.r+1.6, gx0=T0.x-3.4, gx1=T0.x+3.4, YEL="#d9a922";
+  for(const x of [gx0, gx1]){ const y=Terrain.groundAt(x, GZ);
+    cyl("paintm", 0.075, 0.075, 1.75, 12, x, y+0.62, GZ, YEL); cyl("paintm", 0.087, 0.087, 0.03, 12, x, y+1.505, GZ, YEL);
+    addCol(x-0.1, x+0.1, GZ-0.1, GZ+0.1, y-0.5, y+1.5); }
+  { const y=Terrain.groundAt(T0.x, GZ), L=gx1-gx0-0.20, xa=gx0+0.10;
+    tube("paintm", V3(xa, y+1.08, GZ), V3(xa+L, y+1.08, GZ), 0.032, 10, YEL);
+    tube("paintm", V3(xa, y+0.40, GZ), V3(xa+L, y+0.40, GZ), 0.028, 10, YEL);
+    for(const t of [0, 0.5, 1]) tube("paintm", V3(xa+L*t, y+0.36, GZ), V3(xa+L*t, y+1.12, GZ), 0.03, 10, YEL);
+    tube("paintm", V3(xa+0.05, y+0.44, GZ), V3(xa+L*0.5-0.05, y+1.04, GZ), 0.022, 8, YEL);
+    tube("paintm", V3(xa+L*0.5+0.05, y+0.44, GZ), V3(xa+L-0.05, y+1.04, GZ), 0.022, 8, YEL);
+    // the chain and its padlock at the latch end
+    for(let k=0;k<5;k++){ const a=k/5*Math.PI*2; tube("metal", V3(gx1-0.02+Math.cos(a)*0.1, y+1.0+Math.sin(a)*0.06, GZ-0.02), V3(gx1-0.02+Math.cos(a+1.26)*0.1, y+1.0+Math.sin(a+1.26)*0.06, GZ-0.02), 0.006, 4, "#6a6a66"); }
+    bx("metal", 0.05, 0.065, 0.025, gx1-0.12, y+0.92, GZ-0.05, 0.4, 0, "#b8963a");
+    addColOB(T0.x, GZ, 0, (gx1-gx0)/2, 0.08, y-0.3, y+1.2);
+    // its sign, on a plate wired to the top rail, facing back up the track
+    const sg=signTex(300,200,(c,W,H)=>{ c.fillStyle="#f2c418"; c.fillRect(0,0,W,H); c.strokeStyle="#1a1a1a"; c.lineWidth=7; c.strokeRect(9,9,W-18,H-18);
+      c.fillStyle="#1a1a1a"; fitHwy(c,"STATE GAME LANDS",W*0.80,H*0.17,W/2,H*0.25); fitHwy(c,"ROAD CLOSED",W*0.70,H*0.20,W/2,H*0.52);
+      fitHwy(c,"BEYOND THIS GATE",W*0.70,H*0.13,W/2,H*0.76); });
+    bx("metal", 0.62, 0.42, 0.02, T0.x, y+0.76, GZ-0.045, 0.4, 0, "#8d9294");
+    signPanel(0.58, 0.39, sg, T0.x, y+0.76, GZ-0.066, Math.PI); }      // (clear of the plate once the bake has grown it)
+  // the old track on past it, two ruts going under the spruce
+  for(const o of [-0.8, 0.8]){ const P=[]; for(let k=0;k<=8;k++){ const z=GZ+0.4+k*1.5, x=T0.x+o+Math.sin(k*0.7)*0.3; P.push({x:x, z:z, y:Terrain.groundAt(x,z)}); }
+    P.forEach((q,i)=>q.s=i*1.5); const g=ribbonGeo(P, -0.22, 0.22, 0.03, 0.5); g.computeBoundingBox(); const c=new T.Vector3(); g.boundingBox.getCenter(c);
+    g.translate(-c.x,-c.y,-c.z); push("paintm", g, c.x, c.y, c.z, 0, "#6e6452"); }
+  // the thicket the track goes into: young spruce and hemlock close as a hedge, brush under them
+  const thick=(x, z, k)=>{ const u=r();
+    if(u<0.40) FOREST.plant("spruce", x, z, {scale:0.45+r()*0.35});
+    else if(u<0.62) FOREST.plant("hemlock", x, z, {scale:0.40+r()*0.30});
+    else if(u<0.82) FOREST.plant("sapling", x, z, {scale:0.65+r()*0.4});
+    else FOREST.plant("shrub", x, z, {scale:0.9+r()*0.5, solid:false}); };
+  for(let z=GZ+2.2; z<T0.z+40; z+=1.9) for(let x=T0.x-16; x<T0.x+16; x+=2.0){
+    const jx=x+(r()-0.5)*1.4, jz=z+(r()-0.5)*1.2;
+    if(Math.abs(jx-T0.x)<1.4 && jz<GZ+5) continue;                             // the track's mouth stays open a few metres
+    thick(jx, jz); }
+  // and the same belt all round the woods' edge, just past where you stop: two rows, staggered,
+  // on the north, south and west (the east is the posted line, where the woods are open and you see through)
+  const I=SITE.walkInset, Zn=SITE.zone, W={x0:Zn.x0+I, x1:Zn.x1-(SITE.walkInsetE||I), z0:Zn.z0+I, z1:Zn.z1-I};
+  const road=x=>Math.min(Math.abs(x-HWY.nb), Math.abs(x-HWY.sb))<21;
+  const belt=(x,z)=>{ if(road(x) || Terrain.clearDist(x,z)<0.5 && Math.hypot(x-T0.x, z-GZ)>40) return; if(Math.abs(x-T0.x)<20 && z>GZ) return; thick(x, z); };
+  for(const [z, dz] of [[W.z0, -1], [W.z1, 1]]) for(const row of [1.6, 4.2]) for(let x=W.x0+2; x<W.x1; x+=2.6) belt(x+(r()-0.5)*1.2+(row>2?1.3:0), z+dz*row+(r()-0.5)*0.8);
+  for(const row of [1.6, 4.2]) for(let z=W.z0+2; z<W.z1; z+=2.6) belt(W.x0-row+(r()-0.5)*0.8, z+(r()-0.5)*1.2+(row>2?1.3:0));
+})();
 /* ---- what moves: the clarifier's arm, the foam, the creek, the alarm ---------- */
 function updatePlant(dt){
   const R=PLANT_RT; if(!R.ready) return;

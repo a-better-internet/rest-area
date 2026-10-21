@@ -21,6 +21,12 @@ them as flicker, worst at a distance and at a grazing angle. So:
   label on a box, a mat on a floor, a card on a table, or a chip on felt.
   Paper-thin things such as cards, decals and screens should be a real
   thickness or sit a real gap above the surface.
+- **Thin baked boxes grow.** At bake, `01` grows every bucket box (`bx`, or
+  a box `push`ed into a bucket) thinner than 19.5 cm by up to about 5 mm a
+  side, so trim stands proud of the walls it meets. Anything on the face
+  of one, such as a sign on its plate, needs at least 1 cm of clearance
+  from the face as drawn, or the grown box swallows it. Boxes merged by hand
+  (`mergeEntries`) are not grown.
 - **Nothing is flush with the face it meets.** A trim piece, frame or
   baseboard either stands proud of the wall or stops short of it. When two
   boxes butt together, make one of them a few millimetres longer, or sink it
@@ -71,6 +77,15 @@ No lettering touches or runs past the edge of its board or its border.
 - **Check with `tools/signaudit.js`.** It reports every piece of canvas
   lettering that comes within 3% of its canvas's edge, and the line that
   drew it.
+
+## Building notes
+
+- `runX` / `runZ` / `lineX` / `lineZ` (09) take one row of openings. A wall
+  with windows on two storeys is built as one band per storey, each given
+  only its own storey's openings (the farmhouse in `14k` does this).
+  Otherwise the upstairs window's wall fills in the one below it.
+- A doorway needs a walkable surface across the wall's thickness
+  (`addFlat`), as well as on the floors either side of it.
 
 ## Tools
 
