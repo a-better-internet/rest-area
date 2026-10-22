@@ -170,7 +170,7 @@ const EDIN_RT={};
      the ground; a texture per crop, tiled every few metres. */
   const cropTex=(kind)=>{
     const S=256, c=cvs(S,S), x=c.getContext("2d"), r=_trng(kind.length*97+13);
-    const base={corn:"#4c6a25", soy:"#3d5c24", hay:"#868b45", pasture:"#5c7634"}[kind];
+    const base={corn:"#4c6a25", soy:"#3d5c24", hay:"#7c8244", pasture:"#4a6234"}[kind];
     x.fillStyle=base; x.fillRect(0,0,S,S);
     if(kind==="corn" || kind==="soy"){
       // rows: thirty inches apart for corn, fifteen for beans, the dirt between showing
@@ -187,8 +187,11 @@ const EDIN_RT={};
         for(let k=0;k<120;k++){ x.fillStyle=r()<0.5?"#787c3c":"#5a612c"; x.globalAlpha=0.5; x.fillRect(r()*S, y-10+r()*20, 6+r()*10, 2); } }
       for(let k=0;k<900;k++){ x.fillStyle=r()<0.5?"#9a9a52":"#76803c"; x.globalAlpha=0.35; x.fillRect(r()*S, r()*S, 1, 3+r()*4); }
     }else{
-      for(let k=0;k<1400;k++){ x.fillStyle=["#7c9a47","#5d7a33","#8f9a52","#6d7d3a"][(r()*4)|0]; x.globalAlpha=0.4;
-        x.beginPath(); x.arc(r()*S, r()*S, 1+r()*4, 0, 7); x.fill(); }
+      // grazed grass: short blades every way, clover, the odd thistle, no blobs to repeat
+      for(let k=0;k<5200;k++){ const px=r()*S, py=r()*S, L=2+r()*5, a=-1.57+(r()-0.5)*1.6;
+        x.strokeStyle=["#5f763c","#4a6134","#6c7644","#566634","#42582c"][(r()*5)|0]; x.globalAlpha=0.45; x.lineWidth=1;
+        x.beginPath(); x.moveTo(px,py); x.lineTo(px+Math.cos(a)*L, py+Math.sin(a)*L); x.stroke(); }
+      for(let k=0;k<90;k++){ x.fillStyle=r()<0.8?"#76845a":"#9a8aa8"; x.globalAlpha=0.35; x.beginPath(); x.arc(r()*S, r()*S, 1+r()*1.5, 0, 7); x.fill(); }
     }
     x.globalAlpha=1;
     const t=_tex(c); t.anisotropy=MAXANISO; return t;
@@ -230,3 +233,5 @@ const EDIN_RT={};
   }
   EDIN_RT.ready=true;
 })();
+// the interstate's outside edge lines and rumble strips, now that every ramp has said where it joins (08)
+interstateEdges();

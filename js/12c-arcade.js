@@ -188,18 +188,32 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
     q(0.30, 0.30, 0.01, 0, 0.52, 0.385, "#2a2a2e");                    // the coin door
     for(const sx of [-0.05,0.05]) q(0.02, 0.04, 0.012, sx, 0.58, 0.392, "#ff4a1a");
     q(0.64, 0.05, 0.30, 0, 0.94, 0.47, side, -0.18);                   // the control panel, its face tilted to you
-    const pj=L(-0.14, 0.50); C(0.008, 0.10, pj[0], A.y+1.01, pj[1], "#1a1a1a", 6); ent(new T.SphereGeometry(0.022,10,8), pj[0], A.y+1.07, pj[1], "#c42a1a");
+    const pj=L(-0.14, 0.50);
+    if(i===0){ // (this one is played: its stick a part of its own, so it can lean with your hand)
+      const st=new T.Group(); st.position.set(pj[0], A.y+0.965, pj[1]); st.rotation.order="YXZ"; st.rotation.y=ry; scene.add(st);
+      const sm=new T.Mesh(new T.CylinderGeometry(0.008,0.008,0.10,8), new T.MeshStandardMaterial({color:0x1a1a1a, roughness:0.5})); sm.position.y=0.045; st.add(sm);
+      const bm=new T.Mesh(new T.SphereGeometry(0.022,14,10), new T.MeshStandardMaterial({color:0xc42a1a, roughness:0.35})); bm.position.y=0.105; st.add(bm);
+      ARCADE.stick=st; }
+    else { C(0.008, 0.10, pj[0], A.y+1.01, pj[1], "#1a1a1a", 6); ent(new T.SphereGeometry(0.022,10,8), pj[0], A.y+1.07, pj[1], "#c42a1a"); }
     for(let b=0;b<3;b++){ const pb=L(0.04+b*0.07, 0.50-b*0.01); C(0.016, 0.02, pb[0], A.y+0.985, pb[1], ["#f2e23a","#3fa0ff","#ff3a3a"][b], 12); }
     q(0.60, 0.06, 0.40, 0, 1.79, 0.18, K);                             // the marquee's hood
     q(0.56, 0.02, 0.06, 0, 1.30-0.24, 0.355, K);                       // the bezel's lip
     // the screen tipped back a little, the marquee lit over it
     const ps=L(0, 0.40), pm=L(0, 0.392);                               // (the screen's top, tipped back, still clear of the box)
-    scrG.push({geo:cellGeo(0.48, 0.40, KIND[i], 1, 4), matrix:new T.Matrix4().compose(V3(ps[0], A.y+1.30, ps[1]), new T.Quaternion().setFromEuler(new T.Euler(-0.20, ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color(0xffffff)});
+    const scrQ=new T.Quaternion().setFromEuler(new T.Euler(-0.20, ry, 0, "YXZ"));
+    if(i===0){ // Astro Raiders is played (18f): a screen of its own, sharper than an attract cell
+      const c=cvs(336,280), tex=setSRGB(new T.CanvasTexture(c)); tex.minFilter=T.LinearFilter;
+      const m=new T.Mesh(new T.PlaneGeometry(0.48, 0.40), new T.MeshBasicMaterial({map:tex, toneMapped:false}));
+      m.position.set(ps[0], A.y+1.30, ps[1]); m.quaternion.copy(scrQ); scene.add(m);
+      const pf=L(0, 1.02);
+      ARCADE.raiders={c:c, x:c.getContext("2d"), tex:tex, mesh:m, stand:{x:pf[0], z:pf[1]}, ry:ry, screenY:A.y+1.30, screen:{x:ps[0], z:ps[1]}, floor:A.y}; }
+    else scrG.push({geo:cellGeo(0.48, 0.40, KIND[i], 1, 4), matrix:new T.Matrix4().compose(V3(ps[0], A.y+1.30, ps[1]), scrQ, V3(1,1,1)), color:new T.Color(0xffffff)});
     marG.push({geo:cellGeo(0.56, 0.16, i, 1, 4), matrix:new T.Matrix4().compose(V3(pm[0], A.y+1.68, pm[1]), new T.Quaternion().setFromEuler(new T.Euler(0, ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color(0xffffff)});
     const a0=L(-0.34,-0.42), a1=L(0.34,0.62);
     addCol(Math.min(a0[0],a1[0]), Math.max(a0[0],a1[0]), Math.min(a0[1],a1[1]), Math.max(a0[1],a1[1]), A.y-0.5, A.y+1.86);
     const pu=L(0, 1.15);
-    addUse(pu[0], pu[1], A.y, "PLAY "+NAMES[i], ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("coin", pu[0], pu[1]);
+    addUse(pu[0], pu[1], A.y, "PLAY "+NAMES[i], ()=>{ if(i===0 && typeof RAIDERS!=="undefined"){ RAIDERS.start(); return; }
+      if(typeof AUDIO!=="undefined") AUDIO.blip("coin", pu[0], pu[1]);
       toast([`A TOKEN IN. NINETY SECONDS LATER: GAME OVER. HI SCORE STILL "MKE"`, "IT EATS THE TOKEN AND KEEPS RUNNING ITS ATTRACT MODE", "YOU GET TO THE SECOND LEVEL. THE JOYSTICK STICKS LEFT"][(Math.random()*3)|0], "#cfe0d4"); }, 0.9);
     ARCADE.games.push({name:NAMES[i], x:pu[0], z:pu[1]});
   };
@@ -314,9 +328,16 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
     // the rim on its bracket, the net hanging off it
     ent(new T.TorusGeometry(RIM.r, 0.009, 8, 32), RIM.x, RIM.y, RIM.z, "#e8581a", Math.PI/2, 0, 0);
     B(0.06, 0.02, RIM.z-RIM.r-BOARD.z+0.01, X, RIM.y-0.01, (RIM.z-RIM.r+BOARD.z)/2, "#e8581a");
-    for(let k=0;k<12;k++){ const a=k/12*Math.PI*2, a2=a+Math.PI/12;
-      tubeE(V3(RIM.x+Math.cos(a)*RIM.r, RIM.y-0.01, RIM.z+Math.sin(a)*RIM.r), V3(RIM.x+Math.cos(a2)*0.105, RIM.y-0.26, RIM.z+Math.sin(a2)*0.105), 0.003, "#f2f2ee");
-      tubeE(V3(RIM.x+Math.cos(a2)*RIM.r, RIM.y-0.01, RIM.z+Math.sin(a2)*RIM.r), V3(RIM.x+Math.cos(a)*0.105, RIM.y-0.26, RIM.z+Math.sin(a)*0.105), 0.003, "#f2f2ee"); }
+    // the net: a cord mesh round a tapering sleeve, narrower at its foot than a ball, so a ball going
+    // through stretches it; 18e moves its rings (the bulge round the ball, the snap down, the sway after)
+    const NET={rows:7, segs:18, len:0.30, r0:RIM.r-0.006, r1:0.082};
+    { const nt=signTex(256,128,(c,Wd,Hh)=>{ c.clearRect(0,0,Wd,Hh); c.strokeStyle="rgba(246,246,240,1)"; c.lineWidth=5; c.lineCap="round";
+        const n=6; for(let k=-n;k<=2*n;k++){ c.beginPath(); c.moveTo(k*Wd/n,0); c.lineTo(k*Wd/n+Wd/n*1.0,Hh); c.stroke(); c.beginPath(); c.moveTo(k*Wd/n,Hh); c.lineTo(k*Wd/n+Wd/n*1.0,0); c.stroke(); } });
+      nt.wrapS=T.RepeatWrapping; nt.repeat.set(3,1);
+      const g=new T.CylinderGeometry(NET.r0, NET.r1, NET.len, NET.segs, NET.rows-1, true);
+      const m=new T.Mesh(g, new T.MeshStandardMaterial({map:nt, transparent:true, alphaTest:0.45, side:T.DoubleSide, roughness:0.9}));
+      m.position.set(RIM.x, RIM.y-0.012-NET.len/2, RIM.z); scene.add(m);
+      NET.mesh=m; NET.base=Float32Array.from(g.attributes.position.array); }
     // the balls: four, in the tray (18e throws them)
     const ballTex=signTex(256,128,(c,Wd,Hh)=>{ c.fillStyle="#d8641e"; c.fillRect(0,0,Wd,Hh);
       for(let k=0;k<900;k++){ c.fillStyle="rgba(90,30,10,0.25)"; c.fillRect(Math.random()*Wd, Math.random()*Hh, 1.5, 1.5); }
@@ -326,15 +347,16 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
     const ballM=new T.MeshStandardMaterial({map:ballTex, roughness:0.65}), BR=0.089, balls=[];
     for(let k=0;k<4;k++){ const m=new T.Mesh(new T.SphereGeometry(BR, 20, 14), ballM); m.castShadow=true;
       m.position.set(X-0.30+k*0.20, yF+0.05+BR, ZF-0.14); scene.add(m); balls.push(m); }
-    ARCADE.hoops={x:X, zf:ZF, zb:ZB, hw:HW, len:LEN, yF:yF, yB:yB, rampY:rampY, rim:RIM, board:BOARD, top:frameY, roofZ:roofZ, netZ0:fz0,
+    ARCADE.hoops={x:X, zf:ZF, zb:ZB, hw:HW, len:LEN, yF:yF, yB:yB, rampY:rampY, rim:RIM, board:BOARD, top:frameY, roofZ:roofZ, netZ0:fz0, net:NET,
                   balls:balls, br:BR, tray:{y:yF+0.05+BR, z:ZF-0.14}, score:{c:hoopsC, tex:hoopsTex}, floor:A.y};
     addCol(X-HW-0.05, X+HW+0.05, ZB, ZF+0.07, A.y-0.5, frameY+0.4);
     addUse(X, ZF+0.70, A.y, "PLAY HOOPS", ()=>{ if(typeof HOOPS!=="undefined") HOOPS.start(); }, 0.9); }
 
   // stools by the cabinets, a can by the door, the rules on the east wall
   for(const [x,z] of [[69.3,-214.7],[70.6,-217.6]]){ C(0.17, 0.05, x, A.y+0.66, z, "#c42a1a", 16); C(0.025, 0.62, x, A.y+0.33, z, "#9a9da0", 8); C(0.20, 0.02, x, A.y+0.01, z, "#9a9da0", 16); }
-  swingCan(A.x1-0.4, A.z1-1.40, -Math.PI/2, A.y);
-  addCol(A.x1-0.65, A.x1, A.z1-1.65, A.z1-1.15, A.y-0.5, A.y+0.9);
+  // (the can a stride south of the token changer, not in it)
+  swingCan(A.x1-0.4, A.z1-2.25, -Math.PI/2, A.y);
+  addCol(A.x1-0.65, A.x1, A.z1-2.50, A.z1-2.00, A.y-0.5, A.y+0.9);
   sign(0.70, 0.46, (x,W,Hh)=>{ x.fillStyle="#f4f0e2"; x.fillRect(0,0,W,Hh); x.strokeStyle="#c42a1a"; x.lineWidth=6; x.strokeRect(5,5,W-10,Hh-10);
       const F="'Comic Sans MS', 'Marker Felt', cursive";
       say(x, "HOUSE RULES", W/2, Hh*0.16, W*0.80, Hh*0.15, "#c42a1a", "700", F);
@@ -406,6 +428,6 @@ function updateArcade(dt){
   if(!near || !A.screens) return;
   A.acc+=dt; if(A.acc<1/12) return; A.acc=0;
   const x=A.screens.x;
-  for(let i=0;i<4;i++) _arcadeScreen(x, i, i*128, 0, A.t, i);
+  for(let i=1;i<4;i++) _arcadeScreen(x, i, i*128, 0, A.t, i);       // (the first cabinet's screen is its own: 18f draws it)
   A.screens.tex.needsUpdate=true;
 }

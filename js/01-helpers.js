@@ -107,19 +107,31 @@ function blobGeo(r){
 }
 // A rock: an icosahedron with every corner pushed in or out. The radial
 // factor is shared per corner or the rock comes apart into shards.
+// a rock: a subdivided ball pushed in and out by a few smooth lumps, squashed, its vertices shared so
+// it shades round, not in facets (the big ones finer: you sit against those)
 function rockGeo(s, seed){
-  const g=new T.IcosahedronGeometry(s, 1), pos=g.attributes.position;
+  const det=s>=0.9 ? 3 : s>=0.45 ? 2 : 1;
+  const src=new T.IcosahedronGeometry(1, det), sp=src.attributes.position;
   let sd2=seed*9301+4;
   const r3=()=>{ sd2=(sd2*9301+49297)%233280; return sd2/233280; };
   const squash=0.55+r3()*0.34;
-  const seen=new Map();
-  for(let i=0;i<pos.count;i++){
-    const k=pos.getX(i).toFixed(3)+","+pos.getY(i).toFixed(3)+","+pos.getZ(i).toFixed(3);
-    let f=seen.get(k);
-    if(f===undefined){ f=0.78+r3()*0.40; seen.set(k,f); }
-    pos.setXYZ(i, pos.getX(i)*f, pos.getY(i)*f*squash, pos.getZ(i)*f);
+  // lumps: a handful of waves through the ball at random headings, long and short
+  const L=[]; for(let k=0;k<6;k++){ const th=r3()*6.283, ph=Math.acos(2*r3()-1), f=k<2?1.3+r3()*0.8 : k<4?2.6+r3()*1.6 : 5+r3()*3;
+    L.push({x:Math.sin(ph)*Math.cos(th)*f, y:Math.cos(ph)*f, z:Math.sin(ph)*Math.sin(th)*f, p:r3()*6.283, a:k<2?0.11:k<4?0.06:0.025}); }
+  const pos=[], idx=[], seen=new Map();
+  for(let i=0;i<sp.count;i++){
+    const x=sp.getX(i), y=sp.getY(i), z=sp.getZ(i), key=x.toFixed(4)+","+y.toFixed(4)+","+z.toFixed(4);
+    let v=seen.get(key);
+    if(v===undefined){ let f=0.86; for(const w of L) f+=w.a*Math.sin(w.x*x+w.y*y+w.z*z+w.p);
+      v=pos.length/3; seen.set(key,v); pos.push(x*f*s, y*f*s*squash, z*f*s); }
+    idx.push(v);
   }
-  pos.needsUpdate=true; g.computeVertexNormals();
+  const g=new T.BufferGeometry();
+  g.setAttribute("position", new T.Float32BufferAttribute(pos,3)); g.setIndex(idx);
+  // (spherical UVs, for the maps that want them)
+  const uv=[]; for(let i=0;i<pos.length;i+=3){ const x=pos[i], y=pos[i+1], z=pos[i+2], r=Math.hypot(x,y,z)||1; uv.push(0.5+Math.atan2(z,x)/6.283, 0.5+Math.asin(y/r)/3.1416); }
+  g.setAttribute("uv", new T.Float32BufferAttribute(uv,2));
+  g.computeVertexNormals();
   return g;
 }
 // flat panel with world-scaled UVs
@@ -388,8 +400,10 @@ function push(name, geo, x,y,z, ry, color, rx, rz){
 function bx(name, w,h,d, x,y,z, uvScale, ry, color){
   push(name, boxGeo(w,h,d,uvScale===undefined?0.35:uvScale), x,y,z, ry||0, color);
 }
+// enough sides that a round thing reads round at the size it is: thin ones few, a post or a tank many
+function roundSegs(r, seg){ return Math.max(seg||0, r>=0.3?32 : r>=0.12?24 : r>=0.05?16 : r>=0.025?10 : 0) || 8; }
 function cyl(name, rt,rb,h,seg, x,y,z, color, rx,ry,rz){
-  push(name, new T.CylinderGeometry(rt,rb,h,seg||14), x,y,z, ry||0, color, rx||0, rz||0);
+  push(name, new T.CylinderGeometry(rt,rb,h,roundSegs(Math.max(rt,rb), seg||14)), x,y,z, ry||0, color, rx||0, rz||0);
 }
 // a cylinder from one point to another (posts, pipes, rails, branches)
 const _UPV=new T.Vector3(0,1,0);
@@ -398,7 +412,7 @@ function tube(name, a, b, r, seg, color, r2){
   if(L<1e-4) return;
   const q=new T.Quaternion().setFromUnitVectors(_UPV, d.clone().normalize());
   const m=new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), q, _s);
-  bucketOf(name).entries.push({geo:new T.CylinderGeometry(r2===undefined?r:r2, r, L, seg||8),
+  bucketOf(name).entries.push({geo:new T.CylinderGeometry(r2===undefined?r:r2, r, L, roundSegs(Math.max(r, r2||0), seg||8)),
     matrix:m, color:color?new T.Color(color):null});
 }
 /* WHAT IS ALLOWED TO CAST A SHADOW. Anything flat shadows itself (a plane in

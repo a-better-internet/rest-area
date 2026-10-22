@@ -24,6 +24,8 @@ addEventListener("keydown",e=>{
   // at the air hockey table and the hoops machine, theirs (18e-games)
   if(typeof HOCKEY!=="undefined" && HOCKEY.on){ e.preventDefault(); HOCKEY.key(e); return; }
   if(typeof HOOPS!=="undefined" && HOOPS.on){ e.preventDefault(); HOOPS.key(e); return; }
+  // at the Astro Raiders cabinet, the cabinet's (18f-raiders)
+  if(typeof RAIDERS!=="undefined" && RAIDERS.on){ e.preventDefault(); RAIDERS.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
@@ -77,6 +79,7 @@ addEventListener("mousemove",e=>{
 });
 function look(dx,dy){
   if(typeof HOCKEY!=="undefined" && HOCKEY.on){ HOCKEY.move(dx,dy); return; }   // the mouse is the mallet
+  if(typeof RAIDERS!=="undefined" && RAIDERS.on) return;                          // your eyes stay on the screen
   if(driving){                       // orbit the car rather than turn a head
     carCamYaw   -= dx*0.0042;
     carCamPitch  = clamp(carCamPitch - dy*0.0032, -0.18, 1.05);

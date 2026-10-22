@@ -324,7 +324,7 @@ const Terrain=(function(){
    Cell sizes are exact multiples of one another and each inner ring's box
    lands on the outer ring's lattice at all four edges, so every coarse cell
    is wholly in a hole or wholly out, and the border nodes are shared.
-     far    32 m   ±2400                        the haze and the far ridges
+     far    16 m   ±2400                        the haze and the far ridges
      mid     8 m   x -512..640, z ±1600         the corridor and its cuts
      near    2 m   x -256..448, z -336..344     the site and its woods
      hwyN    2 m   x -272..-48, z -1328..-336   the interstate north: the entry ramp's merge, two crossovers, Edinboro
@@ -335,10 +335,12 @@ const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:344};
 // Edinboro's interchange follows the paving instead of an 8 m triangle cutting up through its edge
 const RING_HWYN={x0:-272, x1:-48, z0:-1328, z1:-336}, RING_HWYS={x0:-272, x1:-48, z0:344, z1:568};
 const TERRAIN_RINGS=[];
-let TERRAIN_MAT=null;
+let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point, for whatever grows on it: 14z)
 (function buildTerrain(){
   const campC=new T.Color(0x5a4a38), yardC=new T.Color(0x6e7440), rutC=new T.Color(0x5e5240);
-  const lawnC=new T.Color(0x5b8034), mowC=new T.Color(0x67853a), vergeC=new T.Color(0x76883f),
+  // (greens a mown Pennsylvania lawn has in August: olive, not lime; dry patches straw, low spots darker)
+  const lawnC=new T.Color(0x506f38), mowC=new T.Color(0x5a713c), vergeC=new T.Color(0x67723f),
+        dryC=new T.Color(0x7c7848), lushC=new T.Color(0x3f5a2e),
         litterC=new T.Color(0x5f4d35), mossC=new T.Color(0x4d5a30), deepC=new T.Color(0x3d3729),
         gravelC=new T.Color(0x8e8a7e), rockC=new T.Color(0x6f6a5c), bedC=new T.Color(0x5a5446);
   const _c2=new T.Color();
@@ -351,6 +353,10 @@ let TERRAIN_MAT=null;
     out.copy(lawnC);
     if(Terrain.boxDist(SITE.pad,x,z)>2) out.lerp(mowC, smoothstep(2,30,Terrain.boxDist(SITE.pad,x,z)));
     out.lerp(vergeC, (1-smoothstep(6,22,hd))*0.75);
+    // and never one green: clumps at a couple of scales, thinner and drier on the rises, lusher where it is low
+    const g1=Terrain.fbm(x*0.045+3.1, z*0.045+7.7, 3), g2=Terrain.fbm(x*0.23+11.0, z*0.23+2.0, 2);
+    out.lerp(dryC, smoothstep(0.52,0.74,g1)*0.38);
+    out.lerp(lushC, smoothstep(0.44,0.22,g2)*0.28);
     // a band of gravel at the pavement's edge
     if(hd<7.2) out.lerp(gravelC, smoothstep(7.2,6.1,hd)*(Math.abs(x-HWY.nb)<7.2||Math.abs(x-HWY.sb)<7.2?1:0));
     // the floor of the woods: litter, moss in the damp, darker further in
@@ -452,7 +458,8 @@ let TERRAIN_MAT=null;
     const mesh=new T.Mesh(g,TERRAIN_MAT); mesh.receiveShadow=true; mesh.name=name;
     scene.add(mesh); return mesh;
   }
-  grid({x0:-2400,x1:2400,z0:-2400,z1:2400}, 32, [RING_MID], "ground-far", 40);
+  TERRAIN_TINT=tint;
+  grid({x0:-2400,x1:2400,z0:-2400,z1:2400}, 16, [RING_MID], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
   grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS], "ground-mid", 24);
   grid(RING_NEAR, 2, [GEN_HOLE], "ground-near", 6);
   grid(RING_HWYN, 2, [], "ground-hwyn", 6);

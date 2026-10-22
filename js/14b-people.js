@@ -67,8 +67,8 @@ function buildPerson(o){
   const shL=bone(spine,-sw,0.50*h,0), elL=bone(shL,0,-0.28*h,0), shR=bone(spine,sw,0.50*h,0), elR=bone(shR,0,-0.28*h,0);
   const hpL=bone(root,-0.095*h,-0.03*h,0), knL=bone(hpL,0,-0.44*h,0), hpR=bone(root,0.095*h,-0.03*h,0), knR=bone(hpR,0,-0.44*h,0);
   const add=(geo,m,c,b)=>parts.push({geo:geo, matrix:m, color:c, bone:b});
-  const cyl=(rt,rb,len,seg)=>new T.CylinderGeometry(rt,rb,len,seg||8);
-  const sph=(r,a,b)=>new T.SphereGeometry(r,a||10,b||8);
+  const cyl=(rt,rb,len,seg)=>new T.CylinderGeometry(rt,rb,len,Math.max(seg||0,14));       // (round enough not to show its sides)
+  const sph=(r,a,b)=>new T.SphereGeometry(r,Math.max(a||0,16),Math.max(b||0,12));
   const Y=y=>HIP+y*h;
   // pelvis and torso
   add(new T.BoxGeometry(0.30*h,0.20*h,0.19*h), _pm(0,Y(-0.01),0), o.pants, root);

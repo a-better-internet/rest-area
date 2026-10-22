@@ -24,7 +24,7 @@ bucketOf("gravelbed",()=>new T.MeshStandardMaterial(Object.assign({map:TEX.crush
 bucketOf("concrete", ()=>new T.MeshStandardMaterial({map:TEX.concrete, roughness:0.94}));
 bucketOf("metal",    ()=>new T.MeshStandardMaterial({map:TEX.galv,     roughness:0.42, metalness:0.55}));
 bucketOf("paintm",   ()=>new T.MeshStandardMaterial({map:TEX.enamel,   roughness:0.62, metalness:0.15}));
-bucketOf("rock",     ()=>new T.MeshStandardMaterial({map:TEX.rock, roughness:0.96, flatShading:true}));
+bucketOf("rock",     ()=>new T.MeshStandardMaterial({map:TEX.rock, roughness:0.96}));          // (shaded round: rockGeo shares its vertices)
 bucketOf("wood",     ()=>new T.MeshStandardMaterial({map:TEX.wood, roughness:0.86}));
 bucketOf("rubber",   ()=>new T.MeshStandardMaterial({map:TEX.rubber, roughness:0.95}));
 bucketOf("soot",     ()=>new T.MeshBasicMaterial(Object.assign({color:0xffffff, transparent:true, opacity:0.18,
@@ -71,11 +71,33 @@ function layRibbonVar(bk, P, f0, f1, yOff, uv, color){
    the strip between the edge and its own far side; and it widens out of
    nothing along a taper of `taper` metres, before its first point (an exit,
    at="start") or after its last (an entrance, at="end"). Where it parts from
-   the road the gore between them is paved to its nose (G wide), edged in
-   white and chevroned; past the nose it is grass. The ramp's left line is
-   yellow from the nose on, its right line white the whole way. `stop(p)`
-   says where its lines give out (at the far end's crossroad). Returns the
-   whole line, taper and all, and the gore's points. */
+   the road the gore between them is paved to its nose (G wide); past the
+   nose it is grass.
+   The markings are an interstate's. Where the taper begins, the through
+   lane's solid edge line kinks out to become the speed-change lane's outer
+   line, and a dotted extension carries on along the through lane, to the
+   gore. The gore begins at a point on that edge line: a solid white
+   channelizing line leaves it and runs out to the ramp's nose, and the
+   neutral area between the two is chevroned. The ramp's left line is yellow
+   from the nose on, its right line white the whole way. The interstate's
+   own edge lines and rumble strips are laid after every ramp is
+   (interstateEdges, called from 08b), with these stretches left out of them
+   (MERGE_ZONES). `stop(p)` says where the ramp's lines give out (at the far
+   end's crossroad). Returns the whole line, taper and all, and the gore's
+   points. */
+const MERGE_ZONES=[];
+// a painted line through points on the road, w wide, at the road's grade
+function paintLine(pts, w, color){
+  const P=pts.map(q=>({x:q[0], z:q[1], y:roadY(q[1])}));
+  P.forEach((q,i)=>{ q.s=i ? P[i-1].s+Math.hypot(q.x-P[i-1].x, q.z-P[i-1].z) : 0; });
+  if(P.length>1) layRibbon("paint", P, -w/2, w/2, PAVE_T+0.002, 1, color);
+}
+// a straight run of it, cut into points a few metres apart so it follows the grade
+function paintRun(x0, z0, x1, z1, w, color){
+  const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.ceil(L/4)), pts=[];
+  for(let k=0;k<=n;k++) pts.push([lerp(x0,x1,k/n), lerp(z0,z1,k/n)]);
+  paintLine(pts, w, color);
+}
 function rampPave(P0, RW, X, s, at, taper, color, stop){
   const G=3.6, nT=Math.max(2, Math.round(taper/6));
   const end=at==="start" ? P0[0] : P0[P0.length-1], nb=at==="start" ? P0[1] : P0[P0.length-2];
@@ -102,27 +124,32 @@ function rampPave(P0, RW, X, s, at, taper, color, stop){
     if((at==="start" && before) || (at==="end" && after)){ g0=before ? i-1 : i; g1=after ? j+1 : j; break; }
     i=j+1; }
   const gore=g0>=0 ? Q.slice(g0, g1+1) : [];
-  if(gore.length>1){
+  if(gore.length>1)
     layRibbonVar("asphalt", gore, ()=>RW-0.01, (i,p,n)=>clamp(room(p,n), RW-0.01, RW+G), PAVE_T, 0.40, color);
-    // (its road-side line clear of the road's own edge line, not on it; pinched to nothing until the gore is
-    //  40 cm wide, so at the tip it does not lie on the ramp-side line it meets there)
-    const gw=(p,n)=>clamp(room(p,n), RW, RW+G);
-    layRibbonVar("paint", gore, (i,p,n)=>gw(p,n)-(gw(p,n)-RW<0.40 ? 0.22 : 0.36), (i,p,n)=>gw(p,n)-0.22, PAVE_T+0.002, 1, WHITE_LINE);
-    layRibbonVar("paint", gore, ()=>RW-0.30, ()=>RW-0.16, PAVE_T+0.002, 1, WHITE_LINE);
-    // chevrons across it, every six metres, pointing the way traffic goes, stopping short of both its lines
-    let last=-1e9;
-    for(let i=0;i<gore.length;i++){ const p=gore[i], n=pathSide(gore,i), w=clamp(room(p,n), RW, RW+G)-RW;
-      if(w<1.4 || p.s-last<6) continue; last=p.s;
-      const a=V3(p.x+n.x*(RW+0.25), 0, p.z+n.z*(RW+0.25)), b=V3(p.x+n.x*(RW+w-0.58), 0, p.z+n.z*(RW+w-0.58));
-      const back=(at==="start" ? -1 : 1)*dir*Math.min(2.2, w*0.8);           // the chevron's tail upstream
-      stripe(a.x, a.z+back, b.x, b.z, 0.30, WHITE_LINE, p.y+PAVE_T); }
-  }
   // the ramp's own lines: white on the right all the way, yellow on the left from the gore's nose on
   const live=(p)=>!(stop && stop(p));
   const right=Q.filter(live); if(right.length>2) layRibbon("paint", right, -RW+0.18, -RW+0.32, PAVE_T+0.002, 1, WHITE_LINE);
   const nose=gore.length ? (at==="start" ? gore[gore.length-1] : gore[0]) : null;
   const left=Q.filter((p,i)=>live(p) && gap[i]>=G-0.05 && (!nose || (at==="start" ? p.s>=nose.s : p.s<=nose.s)));
   if(left.length>2) layRibbon("paint", left, RW-0.32, RW-0.18, PAVE_T+0.002, 1, YELLOW_LINE);
+  if(nose){
+    const outer=X-s*HWY.shR, tip=at==="start" ? gore[0] : gore[gore.length-1];
+    const zA=(at==="start" ? Q[0] : Q[Q.length-1]).z, zT=tip.z, zN=nose.z, da=Math.sign(zA-zT)||1;
+    const zK=zA+da*40, zG=zT+da*Math.max(20, 0.8*Math.abs(zN-zT));
+    // the kink: the through lane's edge line out across the shoulder to the speed-change lane's outer line
+    const kx=X-s*0.25; paintRun(outer, zK-da*0.1, kx, zA, 0.15, WHITE_LINE);
+    // the channelizing line: off the edge line at the gore's point, out to the ramp's left line at the nose
+    const ni=Q.indexOf(nose), nn=pathSide(Q, ni), ex=nose.x+nn.x*(RW-0.25), ez=nose.z+nn.z*(RW-0.25);
+    const cl=Math.hypot(ex-outer, ez-zG), f0=Math.min(0.1, 4/cl), sx=lerp(outer, ex, f0), sz=lerp(zG, ez, f0);   // (clear of the edge line where they part)
+    paintRun(sx, sz, ex, ez, 0.20, WHITE_LINE);
+    // the neutral area between them chevroned, every six metres, the ramp's end of each downstream
+    const xc=z=>lerp(outer, ex, clamp((z-zG)/(ez-zG), 0, 1));
+    for(let z=zG; Math.sign(zN-z)===Math.sign(zN-zG) && Math.abs(zN-z)>0.5; z-=da*6){
+      const w=s*(xc(z)-outer); if(w<1.4) continue;
+      const back=-da*Math.min(2.2, w*0.6), ax=xc(z)-s*0.35, bx2=outer+s*0.35;
+      stripe(ax, z+back, bx2, z, 0.30, WHITE_LINE, roadY(z)+PAVE_T); }
+    MERGE_ZONES.push({outer:outer, dot:[Math.min(zK,zG), Math.max(zK,zG)], quiet:[Math.min(zK,zN), Math.max(zK,zN)]});
+  }
   return {line:Q, gore:gore, nose:nose};
 }
 // a straight run along z at x, following the road's grade, in pieces
@@ -174,20 +201,14 @@ function stripe(x0,z0,x1,z1,w,color,y){
     roadRun("road", cx, -HWY.len/2, HWY.len/2, x0-cx, -HWY.lane+0.2, PAVE_T, 0.40, "#9c9c9a");
     roadRun("road", cx, -HWY.len/2, HWY.len/2, HWY.lane-0.2, x1-cx, PAVE_T, 0.40, "#9c9c9a");
     roadRun("road", cx, -HWY.len/2, HWY.len/2, -HWY.lane+0.2, HWY.lane-0.2, PAVE_T, 0.40, "#8a8a88");
-    // edge lines: white on the outside, yellow along the median
-    const outer = dir<0 ? cx+HWY.lane : cx-HWY.lane, inner = dir<0 ? cx-HWY.lane : cx+HWY.lane;
-    roadRun("paint", outer, -HWY.len/2, HWY.len/2, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
+    // edge lines: yellow along the median; the white on the outside, and the rumble strips, wait for the
+    // ramps (interstateEdges), which break them where they join
+    const inner = dir<0 ? cx-HWY.lane : cx+HWY.lane;
     roadRun("paint", inner, -HWY.len/2, HWY.len/2, -0.075, 0.075, PAVE_T+0.002, 1, YELLOW_LINE);
     // the lane line: ten-foot dashes on forty-foot centres
     for(let z=-HWY.len/2; z<HWY.len/2; z+=12.2){
       const P=[{x:cx,z:z,y:roadY(z),s:0},{x:cx,z:z+3.05,y:roadY(z+3.05),s:3.05}];
       layRibbon("paint", P, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
-    }
-    // rumble strips cut into the outside shoulder, ghosted
-    for(let z=-HWY.len/2; z<HWY.len/2; z+=24){
-      const xs = dir<0 ? cx+HWY.lane+1.0 : cx-HWY.lane-1.0;
-      const P=[{x:xs,z:z,y:roadY(z),s:0},{x:xs,z:z+16,y:roadY(z+16),s:16}];
-      layRibbon("soot", P, -0.20, 0.20, PAVE_T+0.003, 1, "#30302e");
     }
   }
   /* Mile markers every tenth of a mile, both sides. The rest area is at
@@ -317,6 +338,26 @@ function guideSign(x, z, w, h, ry, lines, opts){
   addCol(-82.3,-82.1,111.9,112.1,-1,2.6);
   signPanel(0.9,0.9,dne, -82.2, 2.2, 111.95, Math.PI);
 })();
+
+// the outside edge lines and their rumble strips, once the ramps have said where they join: the line
+// dotted across each speed-change lane's mouth to its gore, the strips left off the whole junction
+function interstateEdges(){
+  for(const [cx, dir] of [[HWY.nb, -1], [HWY.sb, 1]]){
+    const outer = dir<0 ? cx+HWY.lane : cx-HWY.lane, Z=MERGE_ZONES.filter(m=>Math.abs(m.outer-outer)<0.05);
+    let z=-HWY.len/2;
+    for(const [a,b] of Z.map(m=>m.dot).sort((p,q)=>p[0]-q[0])){
+      if(a>z+0.5) roadRun("paint", outer, z, a, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
+      for(let q=a+1.0; q<b-0.7; q+=2.4) paintRun(outer, q, outer, q+0.6, 0.15, WHITE_LINE);     // two feet on, six off
+      z=Math.max(z, b); }
+    if(z<HWY.len/2-0.5) roadRun("paint", outer, z, HWY.len/2, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
+    // rumble strips cut into the outside shoulder, ghosted, but not where traffic crosses it to a ramp
+    for(let q=-HWY.len/2; q<HWY.len/2; q+=24){
+      if(Z.some(m=>q+16>m.quiet[0]-6 && q<m.quiet[1]+6)) continue;
+      const xs = dir<0 ? outer+1.0 : outer-1.0;
+      layRibbon("soot", [{x:xs,z:q,y:roadY(q),s:0},{x:xs,z:q+16,y:roadY(q+16),s:16}], -0.20, 0.20, PAVE_T+0.003, 1, "#30302e");
+    }
+  }
+}
 
 /* ---- the ramps ----------------------------------------------------------- */
 // each widens out of the northbound shoulder along a taper, or narrows back into it, and is never laid over the lanes

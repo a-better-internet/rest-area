@@ -58,14 +58,16 @@ function _ledFace(S, left, right){
    ====================================================================== */
 const HOCKEY={on:false, g:null, panel:null, keys:{}, last:"",
   P:{u:0, v:0, vu:0, vv:0}, Y:{u:0, v:0, pu:0, pv:0, vu:0, vv:0}, C:{u:0, v:0, vu:0, vv:0},
-  pause:0, still:0, hitT:0, mood:1};
+  pause:0, still:0, hitT:0, mood:1,
+  // what the CPU believes: the puck as it saw it a beat ago, and this rally's misjudgements
+  ai:{u:0, v:0, vu:0, vv:0, err:0, aim:0, slack:1, side:0, late:0}};
 HOCKEY.panel=_gamePanel("hockey", "AIR HOCKEY · FIRST TO 7", '<span class="you">YOU <b>0</b></span><span class="cpu">CPU <b>0</b></span>',
   '<b>MOUSE</b> or <b>WASD</b> move your mallet · <b>N</b> new game · <b>ESC</b> step away');
 const _HK={rP:0.031, rM:0.050, e:0.86, hit:1.15, max:7.0, win:7};
 function _hkT(){ const T2=ARCADE.hockey; return {HU:T2.L/2-0.06, HV:T2.W/2-0.06, GH:T2.goal/2}; }
 HOCKEY.newGame=function(){
   const F=_hkT();
-  HOCKEY.g={you:0, cpu:0, over:null};
+  HOCKEY.g={you:0, cpu:0, over:null}; Object.assign(HOCKEY.ai, {u:0, v:0, vu:0, vv:0, err:0, aim:0, slack:1, side:1, late:0});
   Object.assign(HOCKEY.Y, {u:F.HU-0.25, v:0, pu:F.HU-0.25, pv:0, vu:0, vv:0});
   Object.assign(HOCKEY.C, {u:-(F.HU-0.25), v:0, vu:0, vv:0});
   HOCKEY.serve("you"); HOCKEY.last="YOUR SERVE. HIT IT."; HOCKEY.draw();
@@ -121,25 +123,34 @@ function _hkGoal(by){
 // away) it goes round behind the puck and hits it at your goal; the puck coming at it, it
 // gets across in front of its slot where the puck is headed; the puck in your half, it
 // waits at home a little to the puck's side; a puck behind it, it steps out of the way.
+// It is beatable: it sees the puck a beat late, misreads where a shot is going by a few
+// centimetres, aims its own shots a little off, and now and then is slow off the mark.
 function _hkCPU(dt){
-  const F=_hkT(), P=HOCKEY.P, C=HOCKEY.C, R=_HK.rP+_HK.rM, home=-F.HU+0.22;
-  HOCKEY.mood=clamp(HOCKEY.mood+(Math.random()-0.5)*dt*0.8, 0.78, 1.05);       // it has better and worse moments
+  const F=_hkT(), Pt=HOCKEY.P, C=HOCKEY.C, R=_HK.rP+_HK.rM, home=-F.HU+0.22, A=HOCKEY.ai;
+  HOCKEY.mood=clamp(HOCKEY.mood+(Math.random()-0.5)*dt*0.8, 0.76, 1.02);       // it has better and worse moments
+  // its eyes: the puck it acts on trails the real one by about a tenth of a second
+  const k=Math.min(1, dt/0.085); A.u+=(Pt.u-A.u)*k; A.v+=(Pt.v-A.v)*k; A.vu+=(Pt.vu-A.vu)*k; A.vv+=(Pt.vv-A.vv)*k;
+  // each time the puck comes over into its half, a fresh misjudgement for the rally
+  const side=Pt.u<0?-1:1;
+  if(side<0 && A.side>=0){ A.err=_gauss()*0.03; A.aim=_gauss()*0.07; A.slack=Math.random()<0.10 ? 0.55+Math.random()*0.3 : 1; A.late=Math.random()<0.10 ? 0.08+Math.random()*0.12 : 0; }
+  A.side=side; if(A.late>0){ A.late-=dt; return; }                                // caught flat-footed: it starts late
+  const P=A;
   let tu=home, tv=P.v*0.4, sp=1.0;
   const speed=Math.hypot(P.vu, P.vv);
   if(P.u<0 && (speed<1.0 || P.vu>0.2)){
     // round behind it, along the line from your goal through the puck, and on through it
-    const du=F.HU-P.u, dv=0-P.v, L=Math.hypot(du,dv)||1, nu=du/L, nv=dv/L;
+    const du=F.HU-P.u, dv=A.aim-P.v, L=Math.hypot(du,dv)||1, nu=du/L, nv=dv/L;   // (at a spot it means for your slot, a little off)
     const behind=(C.u-P.u)*nu+(C.v-P.v)*nv;                                     // > 0: on your side of the puck
     if(behind>-R*0.3){ tu=P.u-nu*R*1.4; tv=P.v-nv*R*1.4+(C.v>P.v?R:-R)*1.2; }  // go round it first
     else { tu=P.u+nu*0.06; tv=P.v+nv*0.06; }                                    // and through it
-    sp=1.55;
+    sp=1.45;
   }else if(P.vu<-0.1){
     const t=(home-P.u)/P.vu; let pv=P.v+P.vv*Math.max(0,t);
     const span=2*(F.HV-_HK.rP); pv=((pv+F.HV-_HK.rP)%(2*span)+2*span)%(2*span); pv=pv>span?2*span-pv:pv; pv-=F.HV-_HK.rP;   // off the rails
-    tu=home; tv=clamp(pv, -F.GH-0.06, F.GH+0.06); sp=1.8;
+    tu=home; tv=clamp(pv+A.err, -F.GH-0.06, F.GH+0.06); sp=1.7;
   }
-  if(P.u<C.u-0.01 && Math.abs(P.v-C.v)<R*1.1){ tu=C.u+0.08; tv=C.v+(C.v>=P.v?1:-1)*R*1.6; sp=1.6; }    // out of its way
-  const du=tu-C.u, dv=tv-C.v, d=Math.hypot(du,dv), step=Math.min(d, sp*HOCKEY.mood*dt);
+  if(Pt.u<C.u-0.01 && Math.abs(Pt.v-C.v)<R*1.1){ tu=C.u+0.08; tv=C.v+(C.v>=Pt.v?1:-1)*R*1.6; sp=1.6; }    // out of its way
+  const du=tu-C.u, dv=tv-C.v, d=Math.hypot(du,dv), step=Math.min(d, sp*HOCKEY.mood*A.slack*dt);
   const ou=C.u, ov=C.v;
   if(d>1e-6){ C.u+=du/d*step; C.v+=dv/d*step; }
   C.u=clamp(C.u, -F.HU+_HK.rM, -_HK.rM-0.02); C.v=clamp(C.v, -F.HV+_HK.rM, F.HV-_HK.rM);
@@ -206,10 +217,12 @@ function updateHockey(dt){
 /* ======================================================================
    HOOPS
    ====================================================================== */
-const HOOPS={on:false, g:null, panel:null, best:0, last:"", balls:[], swayT:0, sway:[0,0], dirty:true, drawT:0};
+const HOOPS={on:false, g:null, panel:null, best:0, last:"", balls:[], swayT:0, sway:[0,0], drift:[0,0], dirty:true, drawT:0,
+  // the net's state: each ring's bulge round a ball in it, the whole net's stretch down and its swing
+  net:{bulge:null, cx:null, cz:null, st:0, sv:0, sx:0, svx:0, sz:0, svz:0, live:0}};
 HOOPS.panel=_gamePanel("hoops", "HOOPS · 40 SECONDS", '<span class="pts">SCORE <b>0</b></span><span class="tm">TIME <b>40</b></span><span class="bs">BEST <b>0</b></span>',
   '<b>LOOK</b> aim · <b>CLICK</b> or <b>SPACE</b> shoot · <b>N</b> new game · <b>ESC</b> step away');
-const _HP={g:9.81, len:40, err:0.030};
+const _HP={g:9.81, len:40, err:0.045};
 function _hpSlot(k){ const H=ARCADE.hoops; return V3(H.x-0.30+k*0.20, H.tray.y, H.tray.z); }
 function _hpInit(){
   if(HOOPS.balls.length || !ARCADE.hoops) return;
@@ -286,7 +299,8 @@ function _hpBall(b, h){
     const cx=rim.x+qx/ql*rim.r, cz=rim.z+qz/ql*rim.r, dx=p.x-cx, dy=p.y-rim.y, dz=p.z-cz, dl=Math.hypot(dx,dy,dz), RR=R+0.009;
     if(dl<RR && dl>1e-6){ const nx=dx/dl, ny=dy/dl, nz=dz/dl; p.x=cx+nx*RR; p.y=rim.y+ny*RR; p.z=cz+nz*RR;
       const vn=v.x*nx+v.y*ny+v.z*nz; if(vn<0){ v.x-=1.55*vn*nx; v.y-=1.55*vn*ny; v.z-=1.55*vn*nz; v.multiplyScalar(0.88);
-        if(typeof AUDIO!=="undefined" && Math.abs(vn)>0.6) AUDIO.blip("tick", p.x, p.z); } }
+        const N=HOOPS.net; N.svx-=nx*Math.abs(vn)*0.25; N.svz-=nz*Math.abs(vn)*0.25; N.live=2;
+        if(typeof AUDIO!=="undefined" && Math.abs(vn)>0.6) AUDIO.blip("rim", p.x, p.z); } }
     // the backboard
     const Bd=H.board;
     if(p.z-R<Bd.z && py>Bd.y0-R && p.y<Bd.y1+R && p.x>Bd.x0-R && p.x<Bd.x1+R && v.z<0){ p.z=Bd.z+R; v.z=-v.z*0.55; v.x*=0.9; v.y*=0.9;
@@ -297,9 +311,18 @@ function _hpBall(b, h){
       if(p.z<H.roofZ && p.y>H.top-R){ p.y=H.top-R; v.y=-Math.abs(v.y)*0.25; } }
     // down through the hoop
     if(!b.scored && py>rim.y && p.y<=rim.y && Math.hypot(p.x-rim.x, p.z-rim.z)<rim.r-R*0.30){
-      b.scored=true; v.x*=0.25; v.z*=0.25;                                      // the net takes it
+      b.scored=true; b.net=true;
+      if(typeof AUDIO!=="undefined") AUDIO.blip("swish", rim.x, rim.z);
       if(G && G.started && !G.over && G.time>0){ const pts=G.time<=10?3:2; G.score+=pts; G.made++; HOOPS.last=pts===3?"THREE":"SWISH";
-        if(typeof AUDIO!=="undefined") AUDIO.blip("tone", rim.x, rim.z); HOOPS.dirty=true; } }
+        HOOPS.dirty=true; } }
+    // in the net: the cords take its speed and close round it, centring it, and it drops out the
+    // bottom slower than it went in, the net snapped down after it and swinging
+    if(b.net){ const N=H.net, k=Math.exp(-5.5*h);
+      v.y*=Math.exp(-3.2*h); v.x=v.x*k+(rim.x-p.x)*28*h; v.z=v.z*k+(rim.z-p.z)*28*h;
+      const ox=p.x-rim.x, oz=p.z-rim.z, off=Math.hypot(ox,oz), lim=rim.r-R*0.7;      // (it cannot leave by the side)
+      if(off>lim){ p.x=rim.x+ox/off*lim; p.z=rim.z+oz/off*lim; }
+      HOOPS.net.sv-=Math.max(0, -v.y)*2.6*h; HOOPS.net.live=2.5;
+      if(p.y<rim.y-0.012-N.len-R*0.6){ b.net=false; HOOPS.net.svx+=v.x*0.9; HOOPS.net.svz+=v.z*0.9; HOOPS.net.sv-=0.35; } }
     // the ramp: it lands, and rolls back down to you
     if(p.z<H.zf && p.y-R<H.rampY(p.z)){ b.st="roll"; p.y=H.rampY(p.z)+R; b.rv=Math.max(0.2, v.z*0.3); v.set(0,0,0); return; }
     // short, over the front: into the tray if it comes down on it, the carpet if it doesn't
@@ -318,9 +341,44 @@ function _hpBall(b, h){
     if(p.z>=H.tray.z){ b.st="tray"; b.slot=k; p.copy(_hpSlot(k)); }
   }
 }
+// the net: its rings springing back to their own size, pushed out round a ball inside them; the
+// whole net stretched down by a ball going through and springing back up; its foot swung on
+function _hpNet(dt){
+  const H=ARCADE.hoops, N=H.net, S=HOOPS.net, rim=H.rim, R=H.br;
+  if(!N || !N.mesh) return;
+  if(S.live<=0 && !HOOPS.balls.some(b=>b.net)) return;
+  S.live-=dt;
+  const rows=N.rows, segs=N.segs;
+  if(!S.bulge){ S.bulge=new Float32Array(rows); S.cx=new Float32Array(rows); S.cz=new Float32Array(rows); }
+  // springs: the stretch (down), the swing (x, z), each with its damping
+  const k=Math.exp(-6*dt);
+  S.sv+=(-90*S.st)*dt; S.sv*=Math.exp(-7*dt); S.st=clamp(S.st+S.sv*dt, -0.12, 0.02);
+  S.svx+=(-60*S.sx)*dt; S.svx*=Math.exp(-3.5*dt); S.sx=clamp(S.sx+S.svx*dt, -0.05, 0.05);
+  S.svz+=(-60*S.sz)*dt; S.svz*=Math.exp(-3.5*dt); S.sz=clamp(S.sz+S.svz*dt, -0.05, 0.05);
+  const top=rim.y-0.012;
+  for(let j=0;j<rows;j++){
+    const f=j/(rows-1), y=top-f*N.len+S.st*f, r=lerp(N.r0, N.r1, f);
+    let need=0, cx=0, cz=0;
+    for(const b of HOOPS.balls){ if(!b.net) continue;
+      const dy=b.p.y-y; if(Math.abs(dy)>=R) continue;
+      const half=Math.sqrt(R*R-dy*dy)+0.004, ox=b.p.x-rim.x, oz=b.p.z-rim.z, off=Math.hypot(ox,oz);
+      const w=Math.min(0.07, Math.max(0, off+half-r)); if(w>need){ need=w; cx=ox*0.5; cz=oz*0.5; } }
+    // out fast to the ball, back slower to its own size
+    S.bulge[j]=need>S.bulge[j] ? need : S.bulge[j]*k; S.cx[j]=need>0?cx:S.cx[j]*k; S.cz[j]=need>0?cz:S.cz[j]*k;
+  }
+  const P=N.mesh.geometry.attributes.position, B=N.base, h0=N.len/2;
+  for(let i=0;i<P.count;i++){
+    const bx=B[i*3], by=B[i*3+1], bz=B[i*3+2], j=Math.round((h0-by)/N.len*(rows-1)), f=j/(rows-1);
+    const r0=Math.hypot(bx,bz)||1e-6, r=r0+S.bulge[j];
+    const sw=f*f;                                                       // the foot swings, the top is tied to the rim
+    P.setXYZ(i, bx/r0*r+S.cx[j]+S.sx*sw, by+S.st*f, bz/r0*r+S.cz[j]+S.sz*sw);
+  }
+  P.needsUpdate=true; N.mesh.geometry.computeVertexNormals();
+}
 function updateHoops(dt){
   const H=ARCADE.hoops; if(!H) return;
   _hpInit();
+  _hpNet(dt);
   const busy=HOOPS.balls.some(b=>b.st!=="tray");
   if(!HOOPS.on && !busy) return;
   const G=HOOPS.g;
@@ -332,13 +390,15 @@ function updateHoops(dt){
       HOOPS.last="THE BUZZER"; toast("TIME · "+G.score+" POINTS","#f4a030"); if(typeof AUDIO!=="undefined") AUDIO.blip("horn", H.x, H.zf); HOOPS.dirty=true; } }
   if(HOOPS.dirty){ HOOPS.dirty=false; HOOPS.draw(); }
   if(!HOOPS.on) return;
-  // the hand: a slow drift with a quicker tremor on it, as at the darts
-  HOOPS.swayT+=dt; const t=HOOPS.swayT;
-  const sy=Math.sin(t*0.8)*0.0045+Math.sin(t*2.1+1.3)*0.0018, sp=Math.sin(t*1.0+0.4)*0.0038+Math.sin(t*2.7)*0.0014;
+  // the hand: a slow drift with a quicker tremor on it, as at the darts, and a wander that never
+  // quite settles, so a shot has to be timed to the sway as well as aimed
+  HOOPS.swayT+=dt; const t=HOOPS.swayT, D=HOOPS.drift;
+  D[0]=clamp(D[0]+_gauss()*dt*0.016-D[0]*dt*0.6, -0.013, 0.013); D[1]=clamp(D[1]+_gauss()*dt*0.013-D[1]*dt*0.6, -0.010, 0.010);
+  const sy=Math.sin(t*0.8)*0.015+Math.sin(t*2.1+1.3)*0.0065+D[0], sp=Math.sin(t*1.0+0.4)*0.013+Math.sin(t*2.7)*0.0050+D[1];
   player.yaw+=sy-HOOPS.sway[0]; player.pitch+=sp-HOOPS.sway[1]; HOOPS.sway=[sy,sp];
   player.pos.x=H.x; player.pos.z=H.zf+0.55; player.feetY=H.floor;
 }
-function updateGames(dt){ updateHockey(dt); updateHoops(dt); }
+function updateGames(dt){ updateHockey(dt); updateHoops(dt); if(typeof updateRaiders==="function") updateRaiders(dt); }
 // the scoreboards lit from the start, showing the last game's numbers (or none yet)
 if(ARCADE.hockey) _ledFace(ARCADE.hockey.score, "YOU 0", "0 CPU");
 if(ARCADE.hoops) _ledFace(ARCADE.hoops.score, "00", String(_HP.len));

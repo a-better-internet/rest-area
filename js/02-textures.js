@@ -224,13 +224,13 @@ TEX.ground=(function(){                       // the terrain's own grain: grass 
      carries luminance and nothing else: short blades for the lawn, leaf
      shapes for the litter, light and dark. The vertex colour says which. */
   const c=cvs(512,512), x=c.getContext("2d"), r=_trng(31337);
-  x.fillStyle="#c8c8c0"; x.fillRect(0,0,512,512);
-  for(let i=0;i<70;i++){                       // a soft mottle at a few scales
-    const g=x.createRadialGradient(0,0,0,0,0,1), px=r()*512, py=r()*512, rad=16+r()*60;
-    x.fillStyle="rgba("+(r()<0.5?"255,255,255":"40,40,30")+","+(0.03+r()*0.06).toFixed(3)+")";
+  x.fillStyle="#bdbdb4"; x.fillRect(0,0,512,512);
+  for(let i=0;i<70;i++){                       // a soft mottle at a few scales (soft: a hard one shows the tile)
+    const px=r()*512, py=r()*512, rad=16+r()*60;
+    x.fillStyle="rgba("+(r()<0.5?"255,255,255":"40,40,30")+","+(0.015+r()*0.03).toFixed(3)+")";
     x.beginPath(); x.arc(px,py,rad,0,7); x.fill();
   }
-  for(let i=0;i<14000;i++){                    // blades
+  for(let i=0;i<22000;i++){                    // blades
     const px=r()*512, py=r()*512, L=3+r()*7, a=-1.57+(r()-0.5)*0.9;
     const v=r();
     x.strokeStyle= v<0.5 ? "rgba(255,255,240,"+(0.10+r()*0.18).toFixed(2)+")"

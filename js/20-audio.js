@@ -538,6 +538,23 @@ const AUDIO=(function(){
       tone("sine", 210, 120, 0.09, 0.16*vol, t, 0, master); tone("triangle", 900, 500, 0.03, 0.05*vol, t, 0, master);
       const s=ctx.createBufferSource(); s.buffer=noise(0.08,"white"); const f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=1600;
       const g=ctx.createGain(); env(g,t,0.001,0.10*vol,0.01,0.05); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="swish"){                     // a ball through a net: the cords' soft rip, falling in pitch
+      const s=ctx.createBufferSource(); s.buffer=noise(0.4,"white"); const f=ctx.createBiquadFilter(); f.type="bandpass";
+      f.frequency.setValueAtTime(3200,t); f.frequency.exponentialRampToValueAtTime(1100,t+0.28); f.Q.value=1.6;
+      const g=ctx.createGain(); env(g,t,0.015,0.11*vol,0.08,0.22); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="rim"){                       // off the steel of a rim: a short clang with a ring to it
+      tone("triangle", 610, 590, 0.35, 0.07*vol, t, 0, master); tone("sine", 1480, 1440, 0.22, 0.03*vol, t, 0, master);
+      tone("sine", 140, 90, 0.10, 0.10*vol, t, 0, master);
+    }else if(kind.startsWith("march")){            // the invaders' four-note bass, one note a step
+      const f=[98,87,78,73][+kind.slice(5)||0]; tone("square", f, f*0.92, 0.09, 0.05*vol, t, 0, master);
+    }else if(kind==="zap"){                       // the cannon's shot
+      tone("square", 1250, 380, 0.14, 0.025*vol, t, 0, master);
+    }else if(kind==="invhit"){                    // a hit that did not kill
+      tone("square", 520, 300, 0.07, 0.025*vol, t, 0, master);
+    }else if(kind==="invkill"||kind==="boom"){    // an invader going, and the cannon going
+      const long=kind==="boom", s=ctx.createBufferSource(); s.buffer=noise(long?1.0:0.3,"white"); const f=ctx.createBiquadFilter();
+      f.type="lowpass"; f.frequency.setValueAtTime(long?2400:3800,t); f.frequency.exponentialRampToValueAtTime(long?160:600,t+(long?0.9:0.25));
+      const g=ctx.createGain(); env(g,t,0.004,(long?0.12:0.06)*vol,0.04,long?0.85:0.22); s.connect(f); f.connect(g); g.connect(master); s.start(t);
     }else if(kind==="tick"){
       tone("square", 900, null, 0.03, 0.02*vol, t, 0, master);
     }else if(kind==="airhorn"){
