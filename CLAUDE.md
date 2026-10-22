@@ -86,6 +86,16 @@ No lettering touches or runs past the edge of its board or its border.
   Otherwise the upstairs window's wall fills in the one below it.
 - A doorway needs a walkable surface across the wall's thickness
   (`addFlat`), as well as on the floors either side of it.
+- `FaceGeo().slab(pts, t)` treats `pts` as a face and builds the slab
+  behind it. A flat or sloped one always hangs `t` below its points, so a
+  roof's points are its top and its underside is `t` lower. A standing one
+  (a gable, a cheek wall) is pushed back against its winding, that is,
+  opposite to (b−a)×(c−a). Work out which side it lands on before placing
+  anything against it.
+- Things that lie on the ground everywhere (14y's leaves, 14z's grass)
+  are placed after everything that stands, and keep clear of colliders,
+  floors and indoor zones. Anything you add before them is avoided
+  automatically.
 
 ## Tools
 

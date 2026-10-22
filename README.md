@@ -136,6 +136,10 @@ If the scene runs hot on your machine, start there (see below).
     with `Space` as handbrake.
   - By the walk are three accessible stalls inside the stall lines, with
     hatched access aisles between them, signs and blue curb.
+  - The lots are worn: oil in the car stalls under where the engines stand,
+    black lines of crack sealant wandering across both lots (and across
+    the interstate's lanes by the site), storm inlets at the curbs and
+    lids down the aisles.
   - Tractor-trailers park on the angled truck lot past the island. At night
     their marker lamps stay on, and the reefer units can be heard running.
   - One Northern Tier dry van near the middle of the lot has had its seal
@@ -224,8 +228,10 @@ If the scene runs hot on your machine, start there (see below).
   and tractor-trailers.
   - Where a ramp leaves or joins, the lane widens and tapers the way a
     real deceleration or acceleration lane does. A painted gore with
-    chevrons lies between the ramp and the through lanes, the edge lines
-    run on to the nose, and the grass stays off the paving.
+    chevrons lies between the ramp and the through lanes, its channelizing
+    line running to the nose; the edge line kinks round the taper and runs
+    on past it dotted, the rumble strip stops short of the merge, and the
+    grass stays off the paving.
   - Each one follows the car in front with the Intelligent Driver Model
     (a time headway that grows with speed). They pass slower traffic only
     when there is room both ways, and move over for merging visitors.
@@ -263,26 +269,70 @@ If the scene runs hot on your machine, start there (see below).
     pole line crossing.
   - **French Creek Fuel & Mart**, on the north side by the bridge. A lot,
     a canopy with its lights over two islands of pumps (somebody filling
-    up), a pickup nosed in by the store. The store is block and brick with
-    a glass front and a pair of storefront doors you walk in at. Inside:
-    the counter by the door with the clerk behind it, the cigarettes and
-    the lottery behind him, a roller grill; three aisles of shelving with
-    endcaps; the lit cooler wall across the back; a coffee bar; the ATM,
-    an ice cream chest and the restroom door. Open all night, lit all
-    night. `E` talks to the clerk, grabs a drink or tries the pumps.
+    up; a squeegee in its bucket and a towel box at each island), a pickup
+    nosed in by the store. The store is block and brick with a glass front,
+    decals in it (PA LOTTERY, ATM INSIDE, ICE · BAIT · PROPANE) and a pair
+    of storefront doors you walk in at. Out front: a bench, the Erie and
+    Meadville papers in their boxes, pumpkins and mums on straw bales for
+    October, firewood (BUY IT WHERE YOU BURN IT), the live bait cooler, ice
+    and propane. Inside: the counter by the door with the clerk behind it,
+    a candy rack along its front, a case of donuts by the register, the
+    cigarettes and the lottery behind him, a roller grill; three aisles of
+    shelving with endcaps and a wet floor sign; the lit cooler wall across
+    the back; a coffee bar, and a fountain and slushie counter (blue
+    raspberry, cherry); a magazine rack under the glass; a camera in the
+    ceiling and a convex mirror in the corner. The grey door by the
+    slushies opens on the restroom: one room with tile to the shoulder, a
+    tube that flickers, the sink, the dryer, a fold-up changing table, the
+    mop bucket, and a wall written on by everybody who ever got off here.
+    Out back, the dumpster in its block enclosure. Open all night, lit all
+    night. `E` talks to the clerk, grabs a drink, pours a coffee or a
+    slushie, looks in the bait cooler, reads the wall, or tries the pumps.
   - **The Weir place**, south of the road up a gravel lane, past the
-    mailbox and a farm stand selling sweet corn on the honour system. A
-    white two-storey farmhouse faces the road with a porch along its front
-    (a swing, two rockers, a light by the door) and a stoop out back, a
-    pickup parked on the spur to it. You walk in at the front door to the
-    front room (a couch with an afghan, a recliner, the set, a wood stove,
-    a braided rug, a bookcase) and through a cased opening to the kitchen
-    (counters under the window, the range, the fridge, the table with four
-    chairs and a pie on it, the feed store's calendar), and out the back.
-    The stairs are behind a door; nobody asked you up. Across the yard are
-    the red bank barn (WEIR · 1911) and its two silos, a hay wagon, a pole
-    shed with the green tractor in it, the clothesline and the woodpile,
-    and cows grazing in the pasture behind.
+    mailbox and a farm stand selling sweet corn on the honour system. The
+    farmhouse is an I-house, sixteen metres by ten and a half, white
+    clapboard with green shutters, a porch the length of its front (a
+    swing, two rockers, a fern, pumpkins on the steps, a beadboard ceiling
+    painted haint blue), a brick chimney up its west end, lightning rods
+    and a dish on the roof, and a cellar bulkhead. You go in at the front
+    door, under its transom, to a centre hall with the stair up its east
+    side:
+    - the parlour, west: a wood stove on its hearth piped into the chimney,
+      the couch with the afghan facing the set, a recliner, a braided rug,
+      the upright piano (`E` plays it, badly), a rocking chair, the
+      grandfather clock, a bookcase, pictures (the farm from the air);
+    - the kitchen, east: counters down the wall with the sink under the
+      window, gingham valances, the range under its hood, the fridge with
+      its magnets, a hutch of the good plates, the pantry, the table with
+      oilcloth and a pie under a towel (`E`), the wall phone, the feed
+      store's calendar, coats and boots by the back door, the dog's bed;
+    - up the stair (oak treads, a red runner, a turned newel, a rail round
+      the well upstairs): the front bedroom with its rose paper, the bed,
+      nightstands, a cedar chest and a dresser with its mirror; the kids'
+      room with stars on the walls, two beds, a desk, a toy chest, a John
+      Deere poster and the fair's ribbons; the sewing room, striped, with a
+      daybed, a treadle machine at the window, a dress form, shelves of
+      cloth and the ironing board; the bath, checkered, with a clawfoot
+      tub under the window, the pedestal sink and the toilet; and through
+      the sewing room a storeroom of boxes, a crib and a trunk. The
+      bedroom doors stand half open. Two lamps upstairs are left on at
+      night, and you can see them from the road.
+  - Across the yard the red bank barn (WEIR · 1911) and its two silos. An
+    earth ramp between dry-stone cheeks runs up to its big doors, slid
+    open on their track, and you walk in onto the threshing floor under the
+    gambrel's timbers: bents with tie beams and knee braces, purlin posts,
+    rafters, the hay track along the ridge. The mow to the north is stacked
+    with square bales, stepped down where they've been taken from, with an
+    elevator up to them; along the south wall three cows stand in their
+    stanchions over the manger (`E` pats one), with a calf in a pen in the
+    corner. There are milk cans, the barn radio on its shelf (`E`, the farm
+    report), pitchforks, a wheelbarrow, a workbench across the east end,
+    and bulbs on cords. There is also a hay wagon, a pole shed with the
+    green tractor in it, the clothesline, the woodpile, and cows grazing in
+    the pasture behind.
+  - A pole line runs along US 6N on the north side, and a tap crosses the
+    road and goes up the Weirs' lane, with a transformer on its last pole
+    and drops to the house and the barn.
 - **The picnic grove** spreads across the lawn south of the building. Paths
   run to it, round the back and down to the pet area, and every one of them
   ends somewhere (at the shelter's slab, in a round pad by the pet area's bag
@@ -290,7 +340,10 @@ If the scene runs hot on your machine, start there (see below).
   at its ends. The grove has tables on concrete pads, charcoal grills (some
   lit, with smoke and embers), a picnic shelter and shade trees. Nearby are
   the flagpole with the US and Pennsylvania flags, a Blue Star Memorial
-  Highway marker and a pet area.
+  Highway marker and a pet area, and on the lawn north of the plaza a blue
+  and gold state historical marker for French Creek, which Washington came
+  up in 1753 (`E` reads it). Behind the men's wing two condensers hum on
+  their pad, with the meter on the wall.
 - **The substation** is about 180 m from the building, up a paved drive that
   runs all the way to its gate. At the bottom, a yellow pipe gate stands
   swung open along the shoulder and chained back, with an AUTHORIZED
@@ -340,22 +393,37 @@ If the scene runs hot on your machine, start there (see below).
       yellow shelter sign. Twenty-five metres on, under the hill, it opens
       into a small arcade with a cosmic carpet, black walls with pink and
       blue neon, and a GAME ROOM sign. Four upright cabinets stand spread
-      round the walls running their attract screens (ASTRO RAIDERS, MAZE
-      MUNCHER, TURNPIKE RACER, BLOCK DROP; `E` drops a token), with a token
-      changer by the way in.
+      round the walls running their attract screens (MAZE MUNCHER, TURNPIKE
+      RACER, BLOCK DROP; `E` drops a token), with a token changer by the
+      way in, clear of the trash can.
+    - **Astro Raiders.** The first cabinet plays. `E` stands you at it,
+      looking at its screen in the cabinet, with the room still round you.
+      It is a space invaders game after yojoecool's MIT-licensed
+      SpaceInvaders. Five rows of raiders march across and step down, faster
+      as there are fewer of them, to a four-note bass that speeds up with
+      them; squids take one hit, crabs two and octopuses three. You get two
+      shots in the air at once and five lives, over three waves, each faster
+      than the last. `A`/`D` or the arrows move, `Space` or a click fires,
+      the stick on the cabinet leans as you move, `N` starts again and `Esc`
+      or `E` steps away.
     - **Air hockey.** `E` at the near end of the table puts the red mallet
       in your hand, and you play the table's computer, first to seven. The
       mouse (or `WASD`) moves your mallet round your half. The puck rides
       the air, comes off the rails with most of its speed and off a mallet
       with the mallet's speed carried into it, so a swing is a shot and a
       still mallet is a block. The one scored on serves, and the score is
-      kept on the table's LED. This is the physics of the little canvas
+      kept on the table's LED. The computer is good but not perfect: it
+      sees the puck a moment late, aims a little off, and now and then
+      hangs back or reaches late, so a quick shot gets past it. This is the physics of the little canvas
       game the crew left on the office computer, moved onto the table in
       metres.
     - **Hoops.** `E` at the front of the basketball machine stands you at
       the line. You aim where you look, and a click or `Space` shoots the
       next ball from the tray. The rim and the backboard are hard: off the
-      front of the rim it bounces out, off the board it can still drop. A
+      front of the rim it bounces out, off the board it can still drop.
+      Your aim sways like a held breath, so you time the shot. A make goes
+      through a cloth net that stretches round the ball, slows it, swings
+      and settles, with a swish (or the clank of the rim first). A
       basket is two, three in the last ten seconds, forty seconds from the
       first shot. The balls roll back down the ramp to you.
 
@@ -413,7 +481,12 @@ If the scene runs hot on your machine, start there (see below).
   - A day lasts 20 minutes, with sunrise and sunset at Crawford County's
     real times: about 6:05 and 20:45 in July, 7:25 and 18:45 in October.
   - `Y` switches between summer and autumn, which recolours the leaves, drops
-    a few, and keeps the clock where it was, so the sun moves instead.
+    a few, and keeps the clock where it was, so the sun moves instead. In
+    autumn the leaves are down on the lawns and walks under the hardwoods
+    and round the farm; in summer there are only a few dry ones.
+  - The lawns, the verges and the farm have grass standing up off the
+    ground: tufts of blades, mown short on the lawns and longer on the
+    verges, each taking its colour from the ground it stands on.
   - At night the lot lights and building lights come on and, in summer,
     fireflies rise over the lawn.
   - Mist lies on the ground for an hour after sunrise and comes back at
@@ -601,6 +674,9 @@ it, `R` coin return, `Esc` to walk away.
 At the oche you aim with the mouse. A click or `Space` throws, `N` starts a
 new game, and `Esc` or `E` puts the darts down.
 
+At the Astro Raiders cabinet `A`/`D` or the arrows move, `Space` or a click
+fires, `N` (or `Enter`) starts a new game and `Esc` or `E` steps away.
+
 At the air hockey table the mouse (or `WASD`) moves your mallet. At the
 hoops machine you aim with the mouse, and a click or `Space` shoots. At
 either, `N` starts a new game and `Esc` or `E` steps away.
@@ -700,7 +776,9 @@ js/14f-homestead.js the old house in the woods, inside and out, and its yard
 js/14g-garage.js    the maintenance garage, its yard, the track and gate, the truck, mower, carts and blower, the roll-up doors
 js/14h-custodian.js the custodian: rounds, stalls and cans, the restroom logs, mowing, leaf blowing, the cot; the outdoor path grid
 js/14i-trucker.js   the truckers: the one on the phone, the walk-round, the one in slippers and his coffee run
-js/14k-edinboro.js  at exit 166: the fuel stop and its store, the Weir farm (house, barn, silos, shed, stand, cows)
+js/14k-edinboro.js  at exit 166: the fuel stop, its store and restroom, the Weir farm (the house and both its floors, the walk-in barn, silos, shed, stand, cows)
+js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
+js/14z-grass.js     tufts of grass on the lawns, the verges and the farm, in chunks shown near the camera
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
 js/16b-weather.js   weather (cloud deck, rain, fog banks, lightning) and the power: circuits, outage, generator, transfer switch
@@ -709,7 +787,8 @@ js/17-player.js     movement, interaction, gates, drone
 js/18-hud.js        compass, clock, location, weather, plan view
 js/18b-vending.js   the vending machines' keypad, coins, coil and shaking
 js/18d-darts.js     darts: aiming, the throw and its flight, scoring, 301 against Dale
-js/18e-games.js     the arcade's games: air hockey against the table, and hoops
+js/18e-games.js     the arcade's games: air hockey against the table, and hoops (its net)
+js/18f-raiders.js   Astro Raiders, the space invaders game on the first cabinet
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
@@ -794,6 +873,12 @@ the generator house's cellar and the trailer's step. The routes are:
 - across each of the three median crossovers on foot;
 - up Edinboro's off-ramp, along US 6N and over the bridge, and down the
   on-ramp to southbound;
+- into the fuel stop and through the grey door into its restroom;
+- up the Weirs' lane, onto the porch, in at the front door, into the
+  parlour and the kitchen and out the back; up the stair (and its keys
+  held, at all three speeds) into each room upstairs, the storeroom
+  through the sewing room;
+- up the bank into the barn, round the threshing floor and the stalls;
 - down the spur to the treatment plant, through its gate (opened first)
   and into the control building; up the stair and along the aeration
   tank's catwalk, out the clarifier's bridge, and onto the sand filter;
@@ -834,6 +919,7 @@ lights, radio station, cart, mower, blower), `CUST_MOW` and `CUST_LOG`,
 `VENDHUT_RT` (`brew`, `pour`, `mugUnder`) and `SLIPPERS.p` (the trucker:
 `state`, `nextM`, the hours after six in the evening of his next trip),
 `TRUCKERS` (whose rig is whose, and the stalls held beside them), `DARTS`
-(`start()`, `game`), `ARCADE`, `EDIN` (the interchange: its ramps, bridge
+(`start()`, `game`), `ARCADE`, `HOCKEY`, `HOOPS`, `RAIDERS` (`start()`), `GRASS` and `WEAR`
+(the leaves), `EDIN_PLACES` (the farm's floors, the cows), `EDIN` (the interchange: its ramps, bridge
 and fields), `CROSSOVERS`, `WWTP`, `CREEK` and `PLANT_RT` (the clarifier's
 arm, the alarm: set `alarmT` to a number of seconds to sound it).

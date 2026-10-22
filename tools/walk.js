@@ -68,7 +68,16 @@ const ROUTES={
   // Edinboro's exit (14k): in at the fuel stop's door, round the aisles to the coolers and the coffee;
   // up the farm lane, over the porch, through the front room to the kitchen and out the back
   "into the fuel stop":    [[-26,-1238],[-26,-1247],[-26,-1249.5],[-26,-1251.5],[-24.0,-1252.5],[-24.0,-1258],[-24.0,-1262.05],[-18,-1262.05],[-15,-1258]],
-  "into the farmhouse":    [[150,-1192],[150,-1178],[138,-1172.2],[124,-1172.2],[121.9,-1171.5],[121.9,-1170.0],[121.9,-1168.0],[121.9,-1166.6],[121.9,-1165.0],[122.3,-1162.5],[122.4,-1160.8],[124.4,-1160.8],[125.8,-1160.8],[126.0,-1162.4],[128.4,-1162.4],[128.5,-1159],[128.06,-1157.2],[128.06,-1155.5],[128.06,-1154.2],[128.06,-1153.0]],
+  "into the farmhouse":    [[150,-1192],[150,-1178],[138,-1172.3],[124,-1172.3],[123.5,-1171.8],[123.5,-1170.0],[123.5,-1168.4],[123.5,-1166.5],[123.5,-1165.1],[123.6,-1163.1],[121.6,-1163.1],[123.6,-1163.1],[123.8,-1159.05],[126.2,-1159.05],[127.46,-1157.4],[127.46,-1156.0],[127.46,-1155.0],[127.46,-1153.6]],
+  // and up its stair from the hall to each room off the upper hall (the doors stand half open)
+  "farmhouse, front bedroom": [[123.5,-1170.0],[123.5,-1168.4],[123.5,-1166.5],[123.5,-1165.1],[123.7,-1165.1],[124.85,-1165.1],[124.85,-1160.1],[123.5,-1160.1],[123.5,-1161.62],[121.75,-1161.62]],
+  "farmhouse, kids' room":  [[123.5,-1170.0],[123.5,-1168.4],[123.5,-1166.5],[123.5,-1165.1],[123.7,-1165.1],[124.85,-1165.1],[124.85,-1160.1],[123.5,-1160.1],[123.5,-1159.54],[121.75,-1159.54]],
+  "farmhouse, bathroom":    [[123.5,-1170.0],[123.5,-1168.4],[123.5,-1166.5],[123.5,-1165.1],[123.7,-1165.1],[124.85,-1165.1],[124.85,-1160.1],[124.85,-1159.54],[126.4,-1159.54],[127.0,-1158.4]],
+  "farmhouse, sewing room": [[123.5,-1170.0],[123.5,-1168.4],[123.5,-1166.5],[123.5,-1165.1],[123.7,-1165.1],[124.85,-1165.1],[124.85,-1160.1],[123.5,-1160.1],[123.7,-1165.14],[126.9,-1165.14],[127.4,-1163.6],[130.66,-1161.7],[130.66,-1160.1],[130.0,-1159.4]],
+  // the barn: up the lane, up the bank, in at the big doors, round the floor and the stalls
+  "into the barn":          [[150,-1192],[150,-1160],[152,-1150],[156,-1142],[159.5,-1142],[164,-1142],[168.5,-1142],[172.0,-1142],[178,-1142],[181,-1140.6],[181,-1135.6],[186,-1135.6],[186,-1140.6],[192.0,-1141.0]],
+  // the fuel stop's restroom, through the grey door by the slushies
+  "fuel stop restroom":     [[-15,-1258],[-13.5,-1255.85],[-12.6,-1255.85],[-11.6,-1255.85],[-10.4,-1256.6],[-10.4,-1254.5]],
   "to the water tank":     [[88.4,129.0],[81,133.5],[74.6,138.2],[73.2,139.2]],
 };
 (async()=>{
@@ -165,6 +174,12 @@ const ROUTES={
         const d=drive(TOP2,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT2,m,lo); REST.sim(40);
         res["corridor stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-1.0 ? "down: never reached the corridor ("+lo.toFixed(2)+")"
                                          : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
+    // and the farmhouse stair (14k), up from the hall and back down
+    { const UP2=[[123.6,-1165.1],[124.85,-1165.1],[124.85,-1160.1]], DN2=UP2.slice().reverse(), top=REST.surf(124.85,-1160.1,EDIN.y+5), lo0=REST.surf(123.6,-1165.1,EDIN.y+1);
+      for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
+        const u=drive(UP2,m,lo0); REST.sim(40); const hi=REST.player.feetY, d=drive(DN2,m,hi); REST.sim(40);
+        res["farmhouse stair, keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : hi<top-0.1 ? "up: never reached the hall ("+hi.toFixed(2)+")"
+                                         : typeof d==="string" ? "down: "+d : REST.player.feetY>lo0+0.1 ? "down: still up at "+REST.player.feetY.toFixed(2) : "ok"; } }
     // and the trailer's step the same way, at every pace, then back down it
     { (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");
       const IN=ROUTES["into the trailer"].pts.slice(0,4), OUT=IN.slice().reverse(), fl=REST.surf(IN[3][0],IN[3][1],2);

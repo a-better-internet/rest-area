@@ -227,7 +227,7 @@ function frame(){
   tickFlicker(delta);
   updateLights(darkL, camera.position);
   FOREST.update(camera.position);
-  if(typeof updateGrass==="function") updateGrass(camera.position);
+  if(typeof updateGrass==="function") updateGrass(camera.position); if(typeof updateWear==="function") updateWear();
   if(typeof updateDeep==="function") updateDeep(camera.position);
   cullBaked(camera.position, delta);
 
