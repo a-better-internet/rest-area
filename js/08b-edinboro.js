@@ -11,9 +11,12 @@
    end set into the top of the cut. The crossroad is level, at the height
    of the farm country either side (EDIN, 04), and goes out east and west
    to where the fields end. For now it stops there, at barricades.
-   The northbound exit leaves the right lane and climbs the side of the
-   cut to merge into US 6N eastbound. Its mirror on the west side takes you
-   from US 6N down onto southbound, so you can get back. The ramps are
+   A full diamond, a ramp in each corner. The northbound exit leaves the
+   right lane and climbs the side of the cut to merge into US 6N eastbound;
+   its mirror on the west side takes you from US 6N down onto southbound.
+   North of the road the other pair: on to northbound from US 6N between
+   the bridge and the fuel stop, and off southbound up into US 6N westbound,
+   so you can go back the way you came either way. The ramps are
    asphalt over the road's own surface (one polygon-offset step up, 08),
    with a white edge on the right and a yellow one on the left from the
    gore to the crossroad.
@@ -40,10 +43,10 @@ const EDIN_RT={};
   runX("road", E.x0, E.x1, -3.6, 3.6, PAVE_T, 0.40, "#8a8a88");
   // the double yellow, and the white edges (broken where a ramp comes in on the eastbound side)
   for(const o of [-0.13, 0.13]) runX("paint", E.x0, E.x1, o-0.05, o+0.05, PAVE_T+0.002, 1, YELLOW_LINE);
-  runX("paint", E.x0, E.x1, -3.6-0.075, -3.6+0.075, PAVE_T+0.002, 1, WHITE_LINE);     // the north edge (westbound)
-  { const breaks=[[-64,-4], [-266,-206]];                                              // the two ramp mouths
-    let a=E.x0; for(const [b0,b1] of breaks.sort((p,q)=>q[0]-p[0]).reverse()){ runX("paint", a, b0, 3.6-0.075, 3.6+0.075, PAVE_T+0.002, 1, WHITE_LINE); a=b1; }
-    runX("paint", a, E.x1, 3.6-0.075, 3.6+0.075, PAVE_T+0.002, 1, WHITE_LINE); }
+  // the white edges, each broken at the two ramp mouths on its side
+  for(const [o, breaks] of [[-3.6, [[-237,-200], [-70,-33]]], [3.6, [[-266,-206], [-64,-4]]]]){
+    let a=E.x0; for(const [b0,b1] of breaks){ runX("paint", a, b0, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE); a=b1; }
+    runX("paint", a, E.x1, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE); }
   // you stand on it: on the ground either side, and on the deck over the interstate (a surface,
   // so that under the bridge you are on the interstate and not up on the deck, 06)
   addPaveRect(E.x0, E.bw0, Z-HW, Z+HW, Y);
@@ -53,11 +56,15 @@ const EDIN_RT={};
   /* ---- the ramps ---------------------------------------------------------- */
   // (08's rampPave: each out of, or back into, the interstate's shoulder along a taper, never over its lanes)
   const RW=E.rw, onX=p=>Math.abs(p.z-Z)<HW+RW+0.2;
-  const offM=rampPave(E.off, RW, NB_X1,  1, "start", 100, "#929290", onX);
+  const offM=rampPave(E.off, RW, NB_X1,  1, "start", 0, "#9a9a98", onX);       // (the rest area's entrance lane runs on into it)
   rampPave(E.on, RW, SB_X0, -1, "end", 110, "#929290", onX);
-  // the exit number on a post just past the gore's nose, in the grass between the road and the ramp
+  rampPave(E.onN, RW, NB_X1, 1, "end", 110, "#929290", onX);
+  const offSM=rampPave(E.offS, RW, SB_X0, -1, "start", 100, "#929290", onX);
+  // the exit number on a post just past each gore's nose, in the grass between the road and the ramp
   { const q=offM.nose || E.off.find(p=>p.x-RW-NB_X1>3.0), z=q.z-2.5, xin=q.x-RW;
     guideSign((NB_X1+xin)/2, z, 1.5, 1.5, 0, ["EXIT","166","↗"], {clear:1.3, posts:1, y:roadY(z)}); }
+  { const q=offSM.nose || E.offS.find(p=>SB_X0-(p.x+RW)>3.0), z=q.z+2.5, xin=q.x+RW;
+    guideSign((SB_X0+xin)/2, z, 1.5, 1.5, Math.PI, ["EXIT","166","↗"], {clear:1.3, posts:1, y:roadY(z)}); }
 
   /* ---- the bridge --------------------------------------------------------- */
   const deckT=0.30, girD=1.05, under=Y-deckT, girB=under-girD;   // under the deck; the girders' bottom
@@ -69,8 +76,10 @@ const EDIN_RT={};
     const zc=Z+s*(HW+0.215);                                     // (its outer face 2 cm in from the deck's edge)
     bx("concrete", E.bw1-E.bw0+0.04, 0.86, 0.43, (E.bw0+E.bw1)/2, Y-0.01+0.43, zc, 0.4, 0, "#c3bfb5");   // (2 cm past the deck's ends)
     addCol(E.bw0, E.bw1, zc-0.225, zc+0.225, Y-0.5, Y+0.86);
-    // and W-beam guiderail off each end, tied into the parapet, on posts
-    for(const [xa, xb] of [[E.bw1-0.3, E.bw1+26], [E.bw0-26, E.bw0+0.3]]){          // (its end inside the parapet's)
+    // and W-beam guiderail off each end, tied into the parapet, on posts; on the north side only as far as the
+    // ramps' mouths, which leave the road there
+    const run=s>0 ? 26 : 9;
+    for(const [xa, xb] of [[E.bw1-0.3, E.bw1+run], [E.bw0-run, E.bw0+0.3]]){          // (its end inside the parapet's)
       const zr=Z+s*(HW+0.35);
       bx("metal", xb-xa, 0.31, 0.06, (xa+xb)/2, Y+0.62, zr, 0.5, 0, "#b9bdbe");
       for(let x=xa+1.9; x<xb-0.5; x+=1.905) bx("wood", 0.15, 0.95, 0.15, x, Y+0.40, zr+s*0.14, 0.4, 0, "#6d5c48");
@@ -131,23 +140,29 @@ const EDIN_RT={};
   // on US 6N eastbound, past the merge: how far
   xSign(32, Z+HW+3.2, 4.4, 2.0, EAST, ["Edinboro   3","Union City   14"]);
   xSign(-292, Z+HW+3.2, 3.6, 2.0, EAST, ["I-79 SOUTH","Pittsburgh"], {clear:1.8});     // coming from the west: the on-ramp is just ahead on the right
-  // westbound: the way back south is over the bridge and left
+  // westbound: north is the right turn this side of the bridge, south over the bridge and left
+  xSign(40, Z-HW-3.2, 3.2, 1.9, WEST, ["I-79 NORTH","Erie  ↗"], {clear:1.8});
   xSign(70, Z-HW-3.2, 4.0, 2.0, WEST, ["I-79 SOUTH","OVER BRIDGE · LEFT"], {clear:1.8});
   xSign(-196, Z-HW-3.2, 3.2, 1.9, WEST, ["I-79 SOUTH","↖"], {clear:1.8});
+  // eastbound, off the bridge's west end: north is the left turn on the far side
+  xSign(-200, Z+HW+3.2, 3.6, 2.0, EAST, ["I-79 NORTH","OVER BRIDGE · LEFT"], {clear:1.8});
+  // southbound I-79: the advance sign, before the taper
+  guideSign(SB_X0-5.0, Z-565, 6.0, 3.2, Math.PI, ["EXIT 166","US 6N  Edinboro","NEXT RIGHT"]);
   // the route itself, both ways, black on white
   xSign(-2, Z+HW+2.6, 1.1, 1.3, EAST, ["EAST","US 6N"], {bg:"#ecebe4", fg:"#1a1a1a", clear:1.5});
   xSign(-300, Z-HW-2.6, 1.1, 1.3, WEST, ["WEST","US 6N"], {bg:"#ecebe4", fg:"#1a1a1a", clear:1.5});
-  // a yellow MERGE diamond where the ramp comes in
-  { const mz=E.off.find(p=>Math.abs(p.z-Z)<HW+RW+6);
-    // a square blank turned on its corner: the face drawn square with its lettering turned back level
+  // a yellow MERGE diamond where each exit ramp comes in, on its outside: eastbound south of the road, westbound north
+  { // a square blank turned on its corner: the face drawn square with its lettering turned back level
     const tex=signTex(240,240,(c,W,H)=>{ c.fillStyle="#f2c230"; c.fillRect(0,0,W,H);
       c.strokeStyle="#1a1a1a"; c.lineWidth=7; rrect(c,12,12,W-24,H-24,10); c.stroke();
       c.save(); c.translate(W/2,H/2); c.rotate(-Math.PI/4); c.fillStyle="#1a1a1a"; fitHwy(c,"MERGE",W*0.62,H*0.17,0,0); c.restore(); });
-    const x=mz.x+1.0, z=mz.z+RW+2.2, f=XF(x,z,EAST);
-    bx("metal", 0.07, 2.6, 0.07, f.x(0,-0.06), Y+1.3, f.z(0,-0.06), 0.5, EAST, "#a3a8aa");
-    push("metal", boxGeo(0.64, 0.64, 0.03, 0), f.x(0,-0.018), Y+2.15, f.z(0,-0.018), EAST, "#8d9294", 0, Math.PI/4);
-    const ms=signPanel(0.62, 0.62, tex, f.x(0,0.002), Y+2.15, f.z(0,0.002), EAST); ms.rotation.z=Math.PI/4;
-    addCol(f.x(0,-0.06)-0.06, f.x(0,-0.06)+0.06, f.z(0,-0.06)-0.06, f.z(0,-0.06)+0.06, Y-1, Y+2.6); }
+    for(const [P, k, ry] of [[E.off, 1, EAST], [E.offS, -1, WEST]]){
+      const mz=P.find(p=>Math.abs(p.z-Z)<HW+RW+6);
+      const x=mz.x+k*1.0, z=mz.z+k*(RW+2.2), f=XF(x,z,ry);
+      bx("metal", 0.07, 2.6, 0.07, f.x(0,-0.06), Y+1.3, f.z(0,-0.06), 0.5, ry, "#a3a8aa");
+      push("metal", boxGeo(0.64, 0.64, 0.03, 0), f.x(0,-0.018), Y+2.15, f.z(0,-0.018), ry, "#8d9294", 0, Math.PI/4);
+      const ms=signPanel(0.62, 0.62, tex, f.x(0,0.002), Y+2.15, f.z(0,0.002), ry); ms.rotation.z=Math.PI/4;
+      addCol(f.x(0,-0.06)-0.06, f.x(0,-0.06)+0.06, f.z(0,-0.06)-0.06, f.z(0,-0.06)+0.06, Y-1, Y+2.6); } }
   // the ends of the road, for now: a type III barricade across, ROAD CLOSED
   { const tex=signTex(360,120,(c,W,H)=>{ c.fillStyle="#f2f0ea"; c.fillRect(0,0,W,H); c.strokeStyle="#1a1a1a"; c.lineWidth=5; c.strokeRect(6,6,W-12,H-12);
       c.fillStyle="#1a1a1a"; fitHwy(c,"ROAD CLOSED",W*0.80,H*0.48,W/2,H/2); });

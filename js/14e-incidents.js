@@ -21,7 +21,7 @@ function standingVehicle(kind, paint, x, z, yaw, gy){
   const parts=vehicleParts(kind, paint), S=parts.spec;
   const g=new T.Group();
   const body=new T.Mesh(mergeEntries(parts.OP), VEH_MAT); body.castShadow=true; body.receiveShadow=true; g.add(body);
-  if(parts.GL.length) g.add(new T.Mesh(mergeEntries(parts.GL), VEH_GLASS));
+  if(parts.GL.length) g.add(new T.Mesh(mergeEntries(parts.GL), parts.glassMat||VEH_GLASS));
   const wg=wheelGeoCached(S.wr, S.tw, false), wheels=[];
   for(const [wx,wz] of wheelSlots(S)){ const w=new T.Mesh(wg, VEH_MAT); w.position.set(wx, S.wr, wz); g.add(w); wheels.push(w); }
   g.position.set(x, gy===undefined ? PAVE_T : gy, z); g.rotation.order="YXZ"; g.rotation.y=yaw; scene.add(g);

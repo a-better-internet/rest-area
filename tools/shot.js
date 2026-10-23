@@ -27,7 +27,7 @@ fs.mkdirSync(OUT,{recursive:true});
   await page.route("**/three.min.js", r=>r.fulfill({path:THREE_JS, contentType:"application/javascript"}));
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r=>r.fulfill({status:200, contentType:"text/css", body:""}));
   const t0=Date.now();
-  await page.goto("file://"+path.join(ROOT,"index.html"));
+  await page.goto("file://"+path.join(ROOT,"index.html"), {timeout:240000});
   await page.waitForFunction(()=>window.REST, null, {timeout:240000});
   console.log("built in", ((Date.now()-t0)/1000).toFixed(1)+"s");
   const info=await page.evaluate(()=>{

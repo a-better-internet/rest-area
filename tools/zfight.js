@@ -18,7 +18,7 @@ const boxes=Array.isArray(arg) ? arg : [arg];
   p.on("pageerror", e=>console.log("[pageerror]", e.message));
   await p.route("**/three.min.js", r=>r.fulfill({path:path.join(ROOT,"tools","three.min.js")}));
   await p.route(/fonts\./, r=>r.fulfill({status:200, body:""}));
-  await p.goto("file://"+path.join(ROOT,"index.html")+"?zdebug");
+  await p.goto("file://"+path.join(ROOT,"index.html")+"?zdebug", {timeout:240000});
   await p.waitForFunction(()=>window.REST,null,{timeout:180000});
   for(const box of boxes){
   if(box.name) console.log("\n== "+box.name);

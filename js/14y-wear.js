@@ -9,7 +9,7 @@
 /* ----------------------------------------------------------------------
    14y · WEAR AND SMALL THINGS
    Everything here is laid over what 08 to 14k built, so it comes after
-   them, and before 14z, whose grass keeps clear of the colliders laid here.
+   them: the leaves keep clear of every collider, floor and room.
    The flat things sit on the polygon-offset ladder (08) above the paint:
    tar sealant at -5, oil and the iron lids at -6, the leaves at -6 a
    centimetre up.

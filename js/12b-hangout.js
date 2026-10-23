@@ -272,8 +272,24 @@ function chalkDraw(c, names, colA, colB, note){
   // the afghan thrown over the back, zigzag stripes
   { const afg=signTex(256,128,(x,W,Hh)=>{ const cols=["#c9662a","#e0b24a","#6b8f3a","#8a3a22","#e8dcc0"];
       for(let i=0;i<10;i++){ x.fillStyle=cols[i%5]; x.beginPath(); for(let j=0;j<=16;j++) x.lineTo(j*16, i*13+(j%2?0:8)); for(let j=16;j>=0;j--) x.lineTo(j*16, i*13+13+(j%2?0:8)); x.fill(); } });
-    const m=new T.Mesh(new T.PlaneGeometry(0.9, 0.62), new T.MeshStandardMaterial({map:afg, roughness:1.0, side:T.DoubleSide}));
-    m.position.set(CX-0.45, FB+0.74, XZ0+0.25); m.rotation.set(-0.5, 0, 0.04); scene.add(m); }
+    // draped, not stood up: over the back's top and down its front a centimetre clear of the plaid, rumpled a little,
+    // a curl where it ends above the cushions; the profile (z, y) swept along x, the length of the throw
+    const bk={z0:XZ0+0.02, z1:XZ0+0.24, top:FB+0.82}, prof=[];
+    for(let k=0;k<=6;k++){ const t=k/6; prof.push([bk.z0+0.04+t*(bk.z1-bk.z0-0.07), bk.top+0.012]); }             // across the top
+    for(let k=1;k<=5;k++){ const a=k/5*Math.PI/2; prof.push([bk.z1-0.03+Math.sin(a)*0.042, bk.top-0.03+Math.cos(a)*0.042]); }   // round the edge
+    for(let k=1;k<=9;k++){ const t=k/9; prof.push([bk.z1+0.012+Math.sin(t*Math.PI)*0.012, bk.top-0.03-t*0.27]); }   // down the front, bellied
+    for(let k=1;k<=3;k++){ const a=k/3*Math.PI*0.6; prof.push([bk.z1+0.012+Math.sin(a)*0.03, bk.top-0.30-Math.sin(a*0.8)*0.02]); }  // the curl
+    const L=0.92, nx=14, P=[], U=[], I=[]; let ac=0; const acc=[0];
+    for(let k=1;k<prof.length;k++){ ac+=Math.hypot(prof[k][0]-prof[k-1][0], prof[k][1]-prof[k-1][1]); acc.push(ac); }
+    for(let i=0;i<=nx;i++) for(let k=0;k<prof.length;k++){ const u=i/nx, x=CX-0.95+u*L, w=Math.sin(u*Math.PI*3+k*0.7)*0.004+Math.sin(k*1.3+u*7)*0.003;
+      P.push(x, prof[k][1]+w*0.5, prof[k][0]+w); U.push(u, 1-acc[k]/ac); }
+    const n=prof.length;
+    for(let i=0;i<nx;i++) for(let k=0;k<n-1;k++){ const a2=i*n+k, b2=a2+n; I.push(a2,a2+1,b2, b2,a2+1,b2+1); }
+    const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(P,3)); g.setAttribute("uv", new T.Float32BufferAttribute(U,2)); g.setIndex(I); g.computeVertexNormals();
+    const m=new T.Mesh(g, new T.MeshStandardMaterial({map:afg, roughness:1.0, side:T.DoubleSide})); m.castShadow=m.receiveShadow=true; scene.add(m);
+    // the fringe along its lower edge
+    const last=prof[prof.length-1];
+    for(let i=0;i<24;i++){ const x=CX-0.94+i*0.039; B(0.008, 0.05, 0.008, x, last[1]-0.03, last[0]+0.006, ["#c9662a","#e0b24a","#6b8f3a","#8a3a22"][i%4]); } }
   addCol(CX-CW/2, CX+CW/2, XZ0, XZ0+0.90, FB-0.5, FB+0.55);
   for(const k of [-0.7, 0, 0.7]) addSeat(CX+k, CZ+0.12, FB, Math.PI, "THE COUCH");
   // a cable spool for a coffee table, what is on it

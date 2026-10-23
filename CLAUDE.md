@@ -92,10 +92,24 @@ No lettering touches or runs past the edge of its board or its border.
   (a gable, a cheek wall) is pushed back against its winding, that is,
   opposite to (b−a)×(c−a). Work out which side it lands on before placing
   anything against it.
-- Things that lie on the ground everywhere (14y's leaves, 14z's grass)
-  are placed after everything that stands, and keep clear of colliders,
-  floors and indoor zones. Anything you add before them is avoided
-  automatically.
+- Things that lie on the ground everywhere (14y's leaves) are placed
+  after everything that stands, and keep clear of colliders, floors and
+  indoor zones. Anything you add before them is avoided automatically.
+- The lawn is the terrain's own shader (04): a `grass` vertex attribute
+  says how much is lawn and how much of that is mown in stripes. Grass is
+  not modelled as separate blades or tufts.
+- A ramp joins the interstate through `rampPave` (08). It paves the
+  speed-change lane over the shoulder beside the through lane, lays the
+  gore and the ramp's lines, and records a `MERGE_ZONES` entry that
+  `interstateEdges` (called once, at the end of 08b) uses to dot the edge
+  line and leave out the rumble strips. Give any new ramp a terrain
+  grading and `siteDist` entry in 04 as the Edinboro ones have, and keep
+  it inside the 2 m terrain rings.
+- Close to, a car's glass is see-through (`VEH_GLASS_CAR`) onto the cabin
+  `carParts` builds (04b). Anything added inside a car stands clear of the
+  glass and the roof, and a truck's cab keeps the dark glass.
+- The cows (14k) take the hide texture `COW_HIDE`. Its top-left corner is
+  kept white, and parts in a flat colour take their uv from it.
 
 ## Tools
 

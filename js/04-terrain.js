@@ -38,10 +38,11 @@ const RAMP_ENTRY=smoothPath([
 /* ---- Edinboro: exit 166 ---------------------------------------------
    Two thirds of a mile north, US 6N crosses over the interstate on a
    bridge, level with farm country that has been cleared and graded flat on
-   both sides (EDIN.plain), I-79 in a cut beneath it. Half a diamond: the
+   both sides (EDIN.plain), I-79 in a cut beneath it. A diamond: the
    northbound off-ramp leaves the right lane, climbs along the cut and
    merges into US 6N eastbound; its mirror on the west side takes you from
-   US 6N back down onto southbound. US 6N runs out east and west to where
+   US 6N back down onto southbound. North of the road the other two, on to
+   northbound and off southbound. US 6N runs out east and west to where
    the fields end, for now (08b). */
 const EDIN=(function(){
   const z=-1200, y=roadY(z)+7.0;                 // the crossroad, level, 7 m over the interstate
@@ -59,6 +60,14 @@ const EDIN=(function(){
     return P; };
   E.off=mk(nb, true);
   E.on=mk(nb.slice().reverse().map(p=>[-270-p[0], p[1]]), false);   // the mirror across the median, crossroad first
+  // and the other half, north of the crossroad: on to northbound off US 6N between the bridge and the fuel stop's lot,
+  // turning off the westbound lane, down the side of the cut and alongside; its mirror off southbound, up onto US 6N
+  // westbound. Built crossroad first, then the northbound one along the road's way
+  // (shorter than the south pair, so that it is at the highway's grade, alongside, well before the road's drawn end)
+  const nn=[[-36,-1.8],[-47,-1.9],[-56.5,-2.6],[-63,-5.4],[-68.5,-10.5],[-72,-18],[-73.8,-29],[-74.6,-44],[-76.2,-62],
+            [-79.5,-100],[-84.5,-160],[-91,-220],[-97.5,-270],[-102.5,-310],[-105.4,-345],[-106.4,-380],[-106.4,-430]];
+  E.onN=mk(nn, false);
+  E.offS=mk(nn.slice().reverse().map(p=>[-270-p[0], p[1]]), true);
   // the fields either side of US 6N, clear of its right of way and the ramps; hedgerows between (07)
   const F=(x0,x1,z0,z1,crop)=>({x0:x0, x1:x1, z0:z+z0, z1:z+z1, crop:crop});
   // (strips a hundred metres or so wide, corn and beans and hay turn about, the way the county farms them;
@@ -67,7 +76,7 @@ const EDIN=(function(){
   E.fields=[F(48,128,-250,-16,"corn"), F(140,248,-250,-16,"soy"), F(260,368,-250,-16,"hay"),
             F(-30,100,16,330,"hay"), F(262,388,16,330,"corn"), F(400,500,16,330,"soy"),
             F(512,600,16,330,"pasture"), F(380,488,-250,-16,"corn"), F(500,600,-250,-16,"hay"),
-            F(-322,-200,-250,-16,"soy"), F(-322,-236,16,330,"hay"), F(112,250,140,330,"pasture")];
+            F(-322,-214,-250,-16,"soy"), F(-322,-236,16,330,"hay"), F(112,250,140,330,"pasture")];
   E.station={x0:-56, x1:32, z0:z-66, z1:z-E.hw+0.05};                  // the fuel stop's lot, north of the road by the bridge
   E.farm={x0:104, x1:258, z0:z+E.hw+1, z1:z+130};                      // the farmstead, south of it
   return E;
@@ -106,7 +115,7 @@ const SERVICE=smoothPath([
 // where it ends: a gravel turnaround in the woods, a gate across the old track on, the game lands past it (13c)
 const TURN={x:110.5, z:304.5, r:7.5};
 const TRAIL=smoothPath([
-  {x:17.4,z:1.2},{x:24,z:3.5},{x:34,z:5.2},{x:48,z:8.5},{x:62,z:7.2},{x:78,z:4.6},{x:94,z:7.2},
+  {x:18.5,z:1.5},{x:24,z:3.5},{x:34,z:5.2},{x:48,z:8.5},{x:62,z:7.2},{x:78,z:4.6},{x:94,z:7.2},
   {x:110,z:12.4},{x:126,z:13.2},{x:142,z:10.2},{x:158,z:12.2},{x:174,z:18.2},{x:190,z:24},
   {x:206,z:27.2},{x:222,z:31.4},{x:238,z:36.2},{x:254,z:41.2},{x:267,z:46},{x:278,z:49.6}], 2.0, true);
 /* ---- water in, water out -------------------------------------------
@@ -175,7 +184,7 @@ const Terrain=(function(){
   const EXIT_B=pathBox(RAMP_EXIT,60), ENTRY_B=pathBox(RAMP_ENTRY,60), DRIVE_B=pathBox(DRIVE,40), TRAIL_B=pathBox(TRAIL,16),
         SERV_B=pathBox(SERVICE,12);
   const SUBPAD={x0:SITE.sub.x0-8, x1:SITE.sub.x1+8, z0:SITE.sub.z0-8, z1:SITE.sub.z1+8};
-  const EOFF_B=pathBox(EDIN.off,16), EON_B=pathBox(EDIN.on,16);
+  const EOFF_B=pathBox(EDIN.off,16), EON_B=pathBox(EDIN.on,16), EONN_B=pathBox(EDIN.onN,16), EOFFS_B=pathBox(EDIN.offS,16);
   const CREEK_B=pathBox(CREEK,12), PT_B=PLANT_TRACKS.map(P=>pathBox(P,8));
 
   // pull h towards level y with full weight inside `half` and none past half+blend
@@ -205,7 +214,7 @@ const Terrain=(function(){
     // Edinboro's ramps, a ledge up the side of the cut; and between a ramp and the interstate, where the ramp
     // has begun to climb, a bank from the one's paving up to the other's, each with a 2 m cell of level ground
     // past its edge, so the ground's grid never comes up through the shoulder in teeth
-    for(const [P,B,X,s] of [[EDIN.off,EOFF_B,NB_X1,1],[EDIN.on,EON_B,SB_X0,-1]])
+    for(const [P,B,X,s] of [[EDIN.off,EOFF_B,NB_X1,1],[EDIN.on,EON_B,SB_X0,-1],[EDIN.onN,EONN_B,NB_X1,1],[EDIN.offS,EOFFS_B,SB_X0,-1]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1){ const q=distToPath(P,x,z); h=toward(h, q.y, q.d, 4.4, 10);
         const dr=s*(x-X), gp=s*(q.x-X)-EDIN.rw, a=2.2, b=Math.max(a, gp-a);       // past the road's edge; the ramp's near edge
         // (only while the two are close: farther apart, the cut's own slope stands between them as before)
@@ -303,7 +312,7 @@ const Terrain=(function(){
     if(x>DRIVE_B.x0 && x<DRIVE_B.x1 && z>DRIVE_B.z0 && z<DRIVE_B.z1) d=Math.min(d, distToPath(DRIVE,x,z).d-4.6);
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
-    for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B]])
+    for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
     d=Math.min(d, boxSD(GARAGE.yard,x,z)+2);
     // the power line's right of way, a straight cut north through everything
@@ -325,17 +334,17 @@ const Terrain=(function(){
    lands on the outer ring's lattice at all four edges, so every coarse cell
    is wholly in a hole or wholly out, and the border nodes are shared.
      far    16 m   ±2400                        the haze and the far ridges
-     mid     8 m   x -512..640, z ±1600         the corridor and its cuts
+     mid     8 m   x -512..640, z -1760..1600   the corridor and its cuts
      near    2 m   x -256..448, z -336..344     the site and its woods
-     hwyN    2 m   x -272..-48, z -1328..-336   the interstate north: the entry ramp's merge, two crossovers, Edinboro
+     hwyN    2 m   x -272..-48, z -1752..-336   the interstate north: the entry ramp's merge, two crossovers, Edinboro
      hwyS    2 m   x -272..-48, z 344..568      the interstate south: the exit ramp's diverge, the third crossover */
-const RING_MID ={x0:-512, x1:640, z0:-1600, z1:1600};
+const RING_MID ={x0:-512, x1:640, z0:-1760, z1:1600};
 const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:344};
 // and two more at 2 m along the interstate, so the ground under every ramp's merge, the crossovers and
 // Edinboro's interchange follows the paving instead of an 8 m triangle cutting up through its edge
-const RING_HWYN={x0:-272, x1:-48, z0:-1328, z1:-336}, RING_HWYS={x0:-272, x1:-48, z0:344, z1:568};
+const RING_HWYN={x0:-272, x1:-48, z0:-1752, z1:-336}, RING_HWYS={x0:-272, x1:-48, z0:344, z1:568};
 const TERRAIN_RINGS=[];
-let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point, for whatever grows on it: 14z)
+let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point, for whatever lies on it: 14y)
 (function buildTerrain(){
   const campC=new T.Color(0x5a4a38), yardC=new T.Color(0x6e7440), rutC=new T.Color(0x5e5240);
   // (greens a mown Pennsylvania lawn has in August: olive, not lime; dry patches straw, low spots darker)
@@ -384,6 +393,21 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     if(x>155 && z>70 && z<275){ const cq=distToPath(CREEK,x,z).d; if(cq<3.4) out.lerp(bedC, (1-smoothstep(1.0,3.4,cq))*0.85); }
     out.lerp(rockC, smoothstep(0.35,0.8,slope)*0.6);
   }
+  /* how much of a point is lawn (the fine grain of TEX.lawn, 02, laid over the ground's map by the shader
+     below) and how much of that is mown in stripes: the rest area's own lawn is, the farm's yard a little */
+  function lawnAt(x,z,slope){
+    const sd=Terrain.siteDist(x,z), hd=Math.min(Math.abs(x-HWY.nb), Math.abs(x-HWY.sb));
+    let w=1-smoothstep(1.5, 10, sd);
+    if(hd<7.2) w*=smoothstep(6.1, 7.2, hd);
+    const dc=Math.hypot(x-CAMP.x, z-CAMP.z); if(dc<CAMP.r+3) w*=smoothstep(3.0, CAMP.r+1.5, dc);
+    const ys=Terrain.boxSD(GARAGE.yard,x,z); if(ys<2) w*=smoothstep(-0.8, 1.6, ys);
+    const ws=Terrain.boxSD(WWTP,x,z); if(ws<2) w*=smoothstep(-0.5, 1.8, ws);
+    if(x>155 && z>70 && z<275){ const cq=distToPath(CREEK,x,z).d; if(cq<3.4) w*=smoothstep(1.0, 3.4, cq); }
+    w*=1-smoothstep(0.35, 0.8, slope)*0.7;
+    const F=EDIN.farm, farm=(x>F.x0+6 && x<F.x0+60 && z>F.z0+12 && z<F.z0+58) ? 0.6 : 0;
+    const mown=Math.max(1-smoothstep(0, 8, Terrain.boxDist(SITE.pad,x,z)), farm);
+    return [w, w*mown*(hd<22 ? smoothstep(12, 22, hd) : 1)];
+  }
   function grid(R,cell,holes,name,skirt){
     const x0=R.x0, x1=R.x1, z0=R.z0, z1=R.z1;
     const nx=Math.round((x1-x0)/cell), nz=Math.round((z1-z0)/cell);
@@ -391,7 +415,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     const N=(nx+1)*(nz+1);
     const H=new Float32Array(N);
     for(let j=0;j<=nz;j++) for(let i=0;i<=nx;i++) H[j*(nx+1)+i]=Terrain.heightAt(x0+i*cell, z0+j*cell);
-    const P=[], C=[], U=[], IDX=[], c=new T.Color();
+    const P=[], C=[], U=[], G2=[], IDX=[], c=new T.Color();
     for(let j=0;j<=nz;j++) for(let i=0;i<=nx;i++){
       const k=j*(nx+1)+i, x=x0+i*cell, z=z0+j*cell, y=H[k];
       const hx=H[j*(nx+1)+Math.min(nx,i+1)]-H[j*(nx+1)+Math.max(0,i-1)];
@@ -401,6 +425,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
       const micro=(hash2(x*0.37,z*0.37)-0.5)*0.10;
       const g=0.94+micro;
       P.push(x,y,z); U.push(x*0.25, z*0.25); C.push(c.r*g, c.g*g, c.b*g);
+      const lw=lawnAt(x,z,slope); G2.push(lw[0], lw[1]);
     }
     const inHole=(cx0,cx1,cz0,cz1)=>{
       for(const h of holes||[]) if(cx0>=h.x0 && cx1<=h.x1 && cz0>=h.z0 && cz1<=h.z1) return true;
@@ -419,7 +444,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
       for(let pass=0;pass<2;pass++) for(const v of ring){
         P.push(P[v*3], P[v*3+1]-(pass?drop:0), P[v*3+2]);
         C.push(C[v*3]*(pass?0.8:1), C[v*3+1]*(pass?0.8:1), C[v*3+2]*(pass?0.8:1));
-        U.push(U[v*2], U[v*2+1]+(pass?drop*0.25:0));
+        U.push(U[v*2], U[v*2+1]+(pass?drop*0.25:0)); G2.push(G2[v*2]*(pass?0:1), 0);
       }
       const n=ring.length;
       for(let k=0;k<n-1;k++){
@@ -452,9 +477,34 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     g.setAttribute("position", new T.Float32BufferAttribute(P,3));
     g.setAttribute("color",    new T.Float32BufferAttribute(C,3));
     g.setAttribute("uv",       new T.Float32BufferAttribute(U,2));
+    g.setAttribute("grass",    new T.Float32BufferAttribute(G2,2));
     g.setIndex(IDX); g.computeVertexNormals();
-    if(!TERRAIN_MAT) TERRAIN_MAT=new T.MeshStandardMaterial({vertexColors:true, map:TEX.ground,
+    if(!TERRAIN_MAT){ TERRAIN_MAT=new T.MeshStandardMaterial({vertexColors:true, map:TEX.ground,
                           roughness:0.97, metalness:0, side:T.DoubleSide});
+      /* the lawn: TEX.lawn at 1.6 m, and multiplied with itself at 7.3 m (more of that further off) so no repeat
+         shows near or far; and where it is mown, bands down the lawn along z that go light and dark as you look
+         along them one way or the other, the way grass laid over by a mower does, and fade side on */
+      TERRAIN_MAT.onBeforeCompile=(sh)=>{
+        sh.uniforms.lawnMap={value:TEX.lawn};
+        sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec2 grass;\nvarying vec2 vGrass;\nvarying vec3 vWPos;")
+          .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGrass=grass; vWPos=(modelMatrix*vec4(transformed,1.0)).xyz;");
+        sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform sampler2D lawnMap;\nvarying vec2 vGrass;\nvarying vec3 vWPos;")
+          .replace("#include <map_fragment>", `
+            vec4 texelColor = mapTexelToLinear( texture2D( map, vUv ) );
+            if(vGrass.x > 0.003){
+              float fd = smoothstep(6.0, 60.0, distance(vWPos, cameraPosition));
+              vec3 l1 = mapTexelToLinear(texture2D(lawnMap, vWPos.xz*0.625)).rgb;
+              vec3 l2 = mapTexelToLinear(texture2D(lawnMap, vWPos.xz*0.137 + vec2(0.37, 0.71))).rgb;
+              vec3 lw = mix(l1, l1*l2*1.32, 0.35 + 0.45*fd);
+              texelColor.rgb = mix(texelColor.rgb, lw*1.06, vGrass.x);
+              float band = smoothstep(0.38, 0.62, abs(fract(vWPos.x/2.6) - 0.5)*2.0) - 0.5;
+              vec3 vd = normalize(vWPos - cameraPosition);
+              texelColor.rgb *= 1.0 + band*vd.z*0.20*vGrass.y*(1.0 - 0.6*fd);
+            }
+            diffuseColor *= texelColor;`);
+      };
+      TERRAIN_MAT.customProgramCacheKey=()=>"terrain-lawn";
+    }
     const mesh=new T.Mesh(g,TERRAIN_MAT); mesh.receiveShadow=true; mesh.name=name;
     scene.add(mesh); return mesh;
   }

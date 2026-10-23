@@ -250,6 +250,38 @@ TEX.ground=(function(){                       // the terrain's own grain: grass 
   return _tex(c);
 })();
 
+TEX.lawn=(function(){                         // a mown lawn close to: blades, crowded, each its own shade
+  /* Like the ground's map it is light and shade, with only a little hue: the
+     vertex colour (04) is the green, and this is its grain. 04's shader lays
+     it at 1.6 m and again at 7.3 m over itself, so neither repeat shows.
+     Every blade near an edge is drawn again across it, so the tile has no seam. */
+  const N=1024, c=cvs(N,N), x=c.getContext("2d"), r=_trng(4242);
+  x.fillStyle="rgb(176,180,166)"; x.fillRect(0,0,N,N);
+  const wrap=(px,py,m,f)=>{ for(const ox of [0,-N,N]) for(const oy of [0,-N,N]){
+    if((ox && Math.abs(px+ox-N/2)>N/2+m) || (oy && Math.abs(py+oy-N/2)>N/2+m)) continue; f(px+ox, py+oy); } };
+  for(let i=0;i<90;i++){                       // soft clumping, a little lighter and darker
+    const px=r()*N, py=r()*N, rad=30+r()*110, a=(0.025+r()*0.04).toFixed(3), lt=r()<0.5;
+    wrap(px,py,rad,(qx,qy)=>{ const g=x.createRadialGradient(qx,qy,0,qx,qy,rad);
+      g.addColorStop(0, lt?"rgba(236,240,200,"+a+")":"rgba(40,48,26,"+a+")"); g.addColorStop(1,"rgba(0,0,0,0)");
+      x.fillStyle=g; x.fillRect(qx-rad,qy-rad,rad*2,rad*2); }); }
+  for(let i=0;i<5200;i++){                     // the shade down among the stems
+    const px=r()*N, py=r()*N, s=1+r()*2.2;
+    wrap(px,py,4,(qx,qy)=>{ x.fillStyle="rgba(34,40,22,"+(0.25+r()*0.3).toFixed(2)+")"; x.fillRect(qx,qy,s,s*1.6); }); }
+  // the blades: darker ones first, lit tips last, each a thin tapered curve leaning its own way
+  for(let pass=0;pass<3;pass++) for(let i=0;i<17000;i++){
+    const px=r()*N, py=r()*N, L=7+r()*(pass===2?12:18), a=-Math.PI/2+(r()-0.5)*1.5, bend=(r()-0.5)*0.9, w=0.7+r()*1.2;
+    const l=pass===0 ? 0.48+r()*0.22 : pass===1 ? 0.70+r()*0.22 : 0.88+r()*0.20, h=r();
+    const R=Math.min(255,l*(h<0.3?250:236)|0), G=Math.min(255,l*246|0), Bc=Math.min(255,l*(h>0.7?232:206)|0);
+    const tx=Math.cos(a)*L, ty=Math.sin(a)*L, cx=Math.cos(a+bend)*L*0.55, cy=Math.sin(a+bend)*L*0.55, nx=-Math.sin(a)*w, ny=Math.cos(a)*w;
+    wrap(px,py,L+2,(qx,qy)=>{ x.fillStyle="rgba("+R+","+G+","+Bc+","+(0.55+r()*0.4).toFixed(2)+")";
+      x.beginPath(); x.moveTo(qx-nx, qy-ny); x.quadraticCurveTo(qx+cx, qy+cy, qx+tx, qy+ty); x.quadraticCurveTo(qx+cx+nx*0.4, qy+cy+ny*0.4, qx+nx, qy+ny); x.closePath(); x.fill(); }); }
+  for(let i=0;i<260;i++){                      // clover, three leaves to a stem, and the odd dandelion leaf
+    const px=r()*N, py=r()*N, s=2.4+r()*2.4, rot=r()*6.28;
+    wrap(px,py,s*3,(qx,qy)=>{ x.save(); x.translate(qx,qy); x.rotate(rot); x.fillStyle="rgba(214,230,200,0.55)";
+      for(let k=0;k<3;k++){ x.rotate(2.094); x.beginPath(); x.ellipse(0,-s,s*0.75,s,0,0,7); x.fill(); } x.restore(); }); }
+  return _tex(c);
+})();
+
 TEX.riverRock=(function(){                    // the beds round the pavilion
   const c=cvs(256,256), x=c.getContext("2d"), r=_trng(808);
   x.fillStyle="#5b5146"; x.fillRect(0,0,256,256);

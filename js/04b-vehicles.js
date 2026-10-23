@@ -81,6 +81,10 @@ function finUV(geo, id){
 const VEH_MAT=envOut(new T.MeshStandardMaterial({vertexColors:true, roughness:1, metalness:1,
                        roughnessMap:VEH_LUT, metalnessMap:VEH_LUT}), 1.0);
 const VEH_GLASS=envOut(new T.MeshStandardMaterial({vertexColors:true, roughness:0.05, metalness:0.45}), 1.1);
+// a car's own, close to: you see in through it to the seats and out through the far side's (a truck's cab
+// and any car far off keep the dark one, having nothing inside)
+const VEH_GLASS_CAR=envOut(new T.MeshStandardMaterial({vertexColors:true, roughness:0.03, metalness:0.50,
+                     transparent:true, opacity:0.80, depthWrite:false, side:T.DoubleSide}), 1.6);
 
 // paint people actually buy, now: mostly greyscale, then blue and red
 const CAR_PAINTS=["#e9e9e6","#1c1d20","#9fa3a8","#5b5f64","#273a5c","#7c1c1c","#d6d6d2",
@@ -221,12 +225,16 @@ function loftBody(D, S, paint, trim, coarse){
     if(z<D.nose-D.rN[0]-0.02) zs.push(z);
   }
   for(let k=0;k<=NE;k++) zs.push(D.nose-D.rN[0]*(1-Math.sin(k/NE*Math.PI/2)));
+  if(!coarse && D.extraZ) for(const e of D.extraZ) zs.push(e);
   zs.sort((a,b)=>a-b);
   for(let i=zs.length-1;i>0;i--) if(zs[i]-zs[i-1]<0.004) zs.splice(i,1);
   const M=coarse?12:(D.M||24), rings=[], secs=[];
   for(const zz of zs){ const s=sec(zz); secs.push(s); rings.push(bodyRing(s.w, s.t, s.b, s.n, D.tum, M)); }
   const P=new T.Color(paint), TR=new T.Color(trim||0x1b1c1e);
-  const g=skin(zs, rings, true, (i,j,p)=>(p[1]<secs[i].b+0.045 ? TR : P), FIN.paint);
+  // (under the glass, the top of the loft is the cabin's floor and door tops, in the trim's colour, not paint)
+  const IN=D.inside && !coarse ? D.inside : null, IC=IN ? new T.Color(IN.col) : null;
+  const g=skin(zs, rings, true, (i,j,p)=>(p[1]<secs[i].b+0.045 ? TR :
+                IN && zs[i]>IN.z0 && zs[i]<IN.z1 && p[1]>IN.y ? IC : P), FIN.paint);
   const OP=[{geo:g, matrix:new T.Matrix4(), color:null}];
   OP.push({geo:capGeo(rings[rings.length-1], zs[zs.length-1], true), matrix:new T.Matrix4(), color:P});
   OP.push({geo:capGeo(rings[0], zs[0], false), matrix:new T.Matrix4(), color:P});
@@ -304,10 +312,11 @@ function greenhouse(G, OP, GL, paint){
   const glassC=new T.Color(G.glass||0x1c252c);
   GL.push({geo:skin(zs, zs.map(z=>ring(z)), false, ()=>glassC, FIN.lens), matrix:new T.Matrix4(), color:null});
   // strips: a range of ring indices over a range of z, pushed out
-  const strip=(i0,i1,z0,z1,color,fin,out,n)=>{
+  // (inner: the same band a little inside the glass and turned to face in, for the lining seen from inside)
+  const strip=(i0,i1,z0,z1,color,fin,out,n,inner)=>{
     const C=new T.Color(color), zz=span(z0,z1,n||Math.max(2,Math.ceil((z1-z0)/0.12)));
     for(const [a,b] of [[i0,i1],[24-i1,24-i0]]){
-      const rings=zz.map(z=>ring(z, out||0.012).slice(a,b+1));
+      const rings=zz.map(z=>{ const r=ring(z, out||0.012).slice(a,b+1); return inner ? r.reverse() : r; });
       OP.push({geo:skin(zz, rings, false, ()=>C, fin), matrix:new T.Matrix4(), color:null});
     }
   };
@@ -322,6 +331,13 @@ function greenhouse(G, OP, GL, paint){
   }
   strip(4, 7, G.zRF-0.06, G.zA, G.aPillar||P, FIN.paint, 0.016, 10);            // A pillars
   for(const [z0,z1,c] of (G.pillars||[])) strip(0, 7, z0, z1, c==="paint"?P:c, c==="paint"?FIN.paint:FIN.trim, 0.016, 3);
+  // and seen through the glass from the other side, their linings and the headliner, a couple of centimetres in
+  if(G.lining!==undefined){
+    const C=new T.Color(G.lining), zz=span(G.zRR+0.04, G.zRF-0.04, 16);
+    OP.push({geo:skin(zz, zz.map(z=>ring(z,-0.022).slice(7,18).reverse()), false, ()=>C, FIN.trim), matrix:new T.Matrix4(), color:null});
+    strip(4, 7, G.zRF-0.06, G.zA, G.lining, FIN.trim, -0.022, 10, true);
+    for(const [z0,z1] of (G.pillars||[])) strip(0, 7, z0, z1, G.lining, FIN.trim, -0.022, 3, true);
+  }
   return {roofY:roofY, ring:ring};
 }
 
@@ -333,7 +349,8 @@ const CAR_DEF={
       n:5.0, tum:0.05, rN:[0.24,0.10,0.05], rT:[0.13,0.06,0.05], arch:0.45,
       gh:{belt:0.975, zA:1.00, zRF:0.08, zRR:-1.10, zB:-1.98, roof:1.44, wb:0.82, tum:0.36, crown:0.02,
           pillars:[[-0.50,-0.41,0x16171a],[-1.98,-1.30,"paint"]]},
-      seams:[0.98,-0.46,-1.32], handles:[0.30,-0.92], grille:[0.48,0.15], intake:[0.33,0.08], headY:0.66, tailY:0.80, plateY:0.54 },
+      seams:[0.98,-0.46,-1.32], handles:[0.30,-0.92], grille:[0.48,0.15], intake:[0.33,0.08], headY:0.66, tailY:0.80, plateY:0.54,
+      rows:[[-0.30,2],[-1.18,3]], tailIn:[0.27,0.055] },
   1:{ top:[[-2.38,1.02],[-2.3,1.08],[-2.1,1.10],[1.1,1.08],[1.7,1.03],[2.15,0.95],[2.38,0.88]],
       bot:[[-2.38,0.46],[-2.1,0.37],[2.1,0.36],[2.38,0.42]],
       wid:[[-2.38,0.93],[-1.9,0.97],[1.9,0.97],[2.38,0.92]],
@@ -341,15 +358,15 @@ const CAR_DEF={
       gh:{belt:1.09, zA:1.14, zRF:0.28, zRR:-2.02, zB:-2.30, roof:1.74, wb:0.87, tum:0.30, crown:0.02,
           pillars:[[-0.40,-0.31,0x16171a],[-1.38,-1.28,0x16171a],[-2.30,-2.06,"paint"]]},
       seams:[1.02,-0.36,-1.33], handles:[0.40,-0.88], grille:[0.70,0.20], intake:[0.50,0.10], headY:0.86, tailY:1.02, plateY:0.70,
-      rails:true, flare:true },
+      rails:true, flare:true, hatch:true, rows:[[-0.12,2],[-1.10,3]] },
   2:{ top:[[-2.98,1.10],[-2.9,1.15],[-0.86,1.16],[-0.76,1.19],[1.30,1.19],[1.9,1.14],[2.5,1.06],[2.92,0.97]],
       bot:[[-2.98,0.54],[-2.7,0.44],[2.6,0.43],[2.92,0.48]],
       wid:[[-2.98,0.98],[2.5,1.00],[2.92,0.95]],
       n:6.0, nz:[[-3,10],[-0.9,10],[-0.7,6],[3,6]], tum:0.03, rN:[0.22,0.12,0.05], rT:[0.08,0.04,0.04], arch:0.53,
       gh:{belt:1.19, zA:1.36, zRF:0.52, zRR:-0.66, zB:-0.80, roof:1.88, wb:0.90, tum:0.22, crown:0.02,
           pillars:[[-0.04,0.05,0x16171a],[-0.80,-0.58,"paint"]]},
-      seams:[1.30,0.02,-0.70], handles:[0.70,-0.30], grille:[0.80,0.30,true], intake:[0.52,0.08], headY:0.96, tailY:0.98, plateY:0.66,
-      bed:true, flare:true },
+      seams:[1.30,0.02,-0.70], handles:[0.70,-0.30], grille:[0.80,0.30,true], intake:[0.52,0.08], headY:0.96, tailY:0.92, plateY:0.66,
+      bed:true, flare:true, rows:[[0.20,2],[-0.56,3]], tailIn:[0.10,0.09] },
   3:{ top:[[-2.50,0.98],[-2.42,1.04],[-2.2,1.05],[1.30,1.05],[1.85,0.99],[2.3,0.86],[2.52,0.76]],
       bot:[[-2.50,0.38],[-2.2,0.32],[2.2,0.31],[2.52,0.34]],
       wid:[[-2.50,0.95],[-2.0,0.99],[2.0,0.99],[2.52,0.92]],
@@ -357,18 +374,41 @@ const CAR_DEF={
       gh:{belt:1.045, zA:1.42, zRF:0.30, zRR:-2.25, zB:-2.47, roof:1.76, wb:0.90, tum:0.30, crown:0.03,
           pillars:[[-0.20,-0.11,0x16171a],[-1.42,-1.32,0x16171a],[-2.47,-2.20,"paint"]]},
       seams:[1.28,-0.15,-1.36], handles:[0.55,-0.30], grille:[0.52,0.12], intake:[0.36,0.10], headY:0.72, tailY:0.95, plateY:0.60,
-      slider:true },
+      slider:true, hatch:true, rows:[[0.06,2],[-0.92,2],[-1.82,3]] },
 };
 function carParts(kind, paintHex, coarse){
   const S=VEH_SPEC[kind], D=Object.assign({nose:S.nose, tail:S.tail, archY:S.wr-0.06}, CAR_DEF[kind]);
+  // the cabin's trim, charcoal or grey or tan by the paint; under the glass the loft's top is in it, with rings
+  // either side of where the glass meets the body, so the paint does not shade into it out on the hood
+  const PC=new T.Color(paintHex), TONE=[0x2a2a2c,0x3e3d3b,0x6c604e][Math.floor((PC.r*7+PC.g*11+PC.b*5)*10)%3];
+  D.inside={z0:D.gh.zB+0.015, z1:D.gh.zA-0.025, y:D.gh.belt-0.004, col:TONE};
+  D.extraZ=[D.gh.zA-0.03, D.gh.zA+0.01, D.gh.zB+0.02, D.gh.zB-0.02];
   const B=loftBody(D, S, paintHex, null, coarse), OP=B.OP, GL=[];
   const P=new T.Color(paintHex), BLK=0x16171a, CHR=0xc9ccce, LAMPS={head:[], tail:[]};
   const G=Object.assign({coarse:coarse}, D.gh), zMid=(G.zA+G.zB)/2;
+  G.lining=new T.Color(TONE).lerp(new T.Color(0xb4b0a8), 0.35).getHex();
   G.wb=B.pt(zMid, B.angAt(zMid, G.belt-0.035)).x-0.006;
   const gh=greenhouse(G, OP, GL, paintHex);
   if(coarse){
     for(const a of S.axles) vBox(OP, 2*(S.track-0.17), 0.46, 2*D.arch-0.06, 0, S.wr+0.13, a, 0x16171a, FIN.trim);
     return {OP:OP, GL:GL, spec:S, lamps:null};
+  }
+  /* ---- the cabin, seen through the glass: the dash, the wheel on the left, a seat back and headrest for
+     each place, all standing up out of the loft's top (the floor of it) and clear of the glass ---- */
+  {
+    const yb=G.belt, R=G.roof-yb, wS=G.wb/0.9, DK=0x1c1c1e;
+    vBox(OP, 2*(G.wb-0.17), 0.13, 0.42, 0, yb-0.005, G.zA-0.40, DK, FIN.trim);
+    const xd=-0.40*wS, zW=G.zA-0.66, yW=yb+0.075;
+    vAdd(OP, new T.TorusGeometry(0.175, 0.018, 6, 22), xd, yW, zW, DK, FIN.trim, 0.55, 0, 0);
+    vBox(OP, 0.05, 0.05, 0.30, xd, yW-0.078, zW+0.128, DK, FIN.trim, 0.55, 0, 0);
+    vBox(OP, 0.07, 0.07, 0.035, xd, yW, zW, 0x2c2c2e, FIN.trim, 0.55, 0, 0);
+    const head=(x, z)=>vBox(OP, 0.25, 0.26*R, 0.09, x, yb+0.65*R, z-0.065, TONE, FIN.trim, -0.10, 0, 0);
+    for(const [z, n] of D.rows){
+      if(n===2) for(const sd of [-1,1]){ vBox(OP, 0.50, 0.48*R+0.12, 0.11, sd*0.40*wS, yb+0.24*R-0.06, z, TONE, FIN.trim, -0.16, 0, 0);
+        head(sd*0.40*wS, z); }
+      else{ vBox(OP, 2*(G.wb-0.20), 0.48*R+0.12, 0.12, 0, yb+0.24*R-0.06, z, TONE, FIN.trim, -0.16, 0, 0);
+        for(const x of [-0.44*wS, 0, 0.44*wS]) head(x, z); }
+    }
   }
   // wheel wells: dark, so the arches do not show daylight through the car
   for(const a of S.axles) vBox(OP, 2*(S.track-0.17), 0.46, 2*D.arch-0.06, 0, S.wr+0.13, a, BLK, FIN.trim);
@@ -430,6 +470,65 @@ function carParts(kind, paintHex, coarse){
     vBox(OP, 0.012, 0.09, 0.13, sd*(s.w+0.115), y, z-0.02, 0x30373c, FIN.chrome);
     vBox(OP, 0.10, 0.03, 0.06, sd*(s.w+0.02), y-0.04, z+0.02, BLK, FIN.trim);
   });
+  /* ---- the rest of the outside ---- */
+  const halfW=(z,y)=>B.pt(z, B.angAt(z,y)).x;                     // the skin's half width at height y
+  // a line in the skin (a shut line, a seam) through [z, y] points, both sides
+  const skinLine=(pts, w, color, fin, out)=>both(sd=>{
+    let prev=null;
+    for(let i=0;i<pts.length;i++){
+      const n=i ? Math.max(1, Math.ceil(Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1])/0.05)) : 1;
+      for(let k=i?1:0;k<=n;k++){
+        const t=i ? k/n : 0, z=i ? lerp(pts[i-1][0], pts[i][0], t) : pts[0][0], y=i ? lerp(pts[i-1][1], pts[i][1], t) : pts[0][1];
+        const a=B.angAt(z,y), p=B.pt(z,a), m=B.nrm(z,a), q=sd>0?p:mir(p), mm=sd>0?m:mirN(m);
+        q.addScaledVector(mm, out||0.002);
+        if(prev) bar(OP, prev.q, q, w, 0.004, mm, color, fin);
+        prev={q:q}; if(!i) break; } } });
+  const aF=S.axles[0], aR=S.axles[S.axles.length-1];
+  // the bumpers' shut lines: the front one from behind the headlamp down to the wheel arch, the back one
+  // across under the tail lamps, round the corner and down to its arch
+  skinLine([[B.zN-0.24, D.headY-0.07], [aF+D.arch*0.72, D.archY+D.arch*0.70]], 0.008, 0x0e0f10, FIN.trim);
+  { const yR=Math.min(D.plateY+0.12, D.tailY-0.10);
+    skinLine([[B.zT+0.03, yR], [B.zT+0.30, yR], [aR-D.arch*0.74, D.archY+D.arch*0.68]], 0.008, 0x0e0f10, FIN.trim);
+    vBox(OP, 2*(halfW(B.zT, yR)-0.012), 0.008, 0.004, 0, yR, B.zT-0.003, 0x0e0f10, FIN.trim);
+    // the black diffuser along its foot (its face behind the plate's), and the exhaust out under it on the left
+    if(!D.bed){ const yd=B.sec(B.zT).b+0.06, xe=-0.46*halfW(B.zT, yd);
+      vBox(OP, 2*(halfW(B.zT, yd)-0.05), 0.09, 0.010, 0, yd, B.zT-0.001, 0x161718, FIN.trim);
+      vCylZ(OP, 0.034, 0.11, xe, yd-0.035, B.zT+0.02, CHR, FIN.chrome, 14);
+      vCylZ(OP, 0.024, 0.118, xe, yd-0.035, B.zT+0.02, 0x0b0b0c, FIN.trim, 12); } }
+  // the hood's shut lines down either side, and the trunk's or the hatch's
+  { const top=z=>B.sec(z).t-0.035, n=6, hood=[], deck=[];
+    for(let k=0;k<=n;k++){ const z=lerp(G.zA+0.04, B.zN-0.16, k/n); hood.push([z, top(z)]); }
+    skinLine(hood, 0.007, 0x101112, FIN.trim);
+    if(!D.hatch && !D.bed){ for(let k=0;k<=n;k++){ const z=lerp(G.zB-0.05, B.zT+0.12, k/n); deck.push([z, top(z)]); }
+      skinLine(deck, 0.007, 0x101112, FIN.trim); } }
+  // a black seal along the foot of the side glass
+  { const pts=[]; for(let k=0;k<=12;k++){ const z=lerp(G.zB+0.06, G.zA-0.06, k/12); pts.push([z, G.belt-0.028]); }
+    skinLine(pts, 0.026, BLK, FIN.trim, 0.005); }
+  // the tail lamps carried in across the back where there is room for them (a housing, the lens, a reversing lamp)
+  if(D.tailIn){
+    const [wl, hh]=D.tailIn, zt=B.zT, y=D.tailY, xe=Math.min(halfW(zt, y+hh+0.012), halfW(zt, y-hh-0.012))-0.03;
+    both(sd=>{ const xo=sd*(xe-wl/2);
+      vBox(OP, wl+0.024, 2*hh+0.024, 0.012, xo, y, zt-0.005, 0x2a1414, FIN.trim);
+      vBox(OP, wl, 2*hh, 0.012, xo, y, zt-0.012, 0x8a1410, FIN.lens);
+      vBox(OP, wl*0.30, hh*0.7, 0.012, sd*(xe-wl*0.74), y-hh*0.30, zt-0.017, 0xd8d4cc, FIN.lens); });
+  }
+  // side markers: amber at the front, red at the back
+  both(sd=>{ cornerLamp(B, OP, sd, B.zN-0.44, B.zN-0.36, D.headY-0.05, 0.016, 0xd08a1c, FIN.lens, 0.003);
+             cornerLamp(B, OP, sd, B.zT+0.34, B.zT+0.42, D.tailY-0.07, 0.016, 0x8a1410, FIN.lens, 0.003); });
+  // badges, front and back
+  vBox(OP, 0.10, 0.05, 0.008, 0, D.grille[0], B.zN+0.044, CHR, FIN.chrome);
+  vBox(OP, 0.12, 0.034, 0.008, 0, D.tailIn ? D.tailY : D.plateY+0.17, B.zT-0.010, CHR, FIN.chrome);
+  // wipers parked at the windshield's foot; on a hatch one more on the back glass
+  { const gl=(z)=>gh.roofY(z)+(G.crown||0)*Math.min(1, Math.max(0, gh.roofY(z)-G.belt)/0.3);
+    const nAt=(z)=>new T.Vector3(0, 1, -(gl(z+0.01)-gl(z-0.01))/0.02).normalize();
+    const wipe=(z, x0, x1)=>{ const n=nAt(z), a=new T.Vector3(x0, gl(z), z).addScaledVector(n, 0.014),
+                                b=new T.Vector3(x1, gl(z), z).addScaledVector(n, 0.014); bar(OP, a, b, 0.018, 0.012, n, BLK, FIN.trim); };
+    wipe(G.zA-0.09, -0.60*G.wb, -0.05); wipe(G.zA-0.11, 0.0, 0.52*G.wb);
+    if(D.hatch) wipe(G.zB+0.07, 0.02, 0.38*G.wb);
+    // the third brake lamp over the back glass, and a fin aerial on the roof
+    // (its front edge where the roof begins to fall away, so the whole of it is over the glass)
+    vBox(OP, 0.34, 0.028, 0.05, 0, gl(G.zRR-0.035)+0.02, G.zRR-0.06, 0x8a1410, FIN.lens);
+    vBox(OP, 0.045, 0.07, 0.15, 0, G.roof+(G.crown||0)+0.03, G.zRR+0.22, BLK, FIN.trim); }
   // per kind
   if(D.rails){
     const z0=D.gh.zRR+0.15, z1=D.gh.zRF-0.12, rr0=gh.ring((z0+z1)/2);
@@ -462,7 +561,7 @@ function carParts(kind, paintHex, coarse){
     const p0=B.pt(z0,B.angAt(z0,y)), p1=B.pt(z1,B.angAt(z1,y)), n=B.nrm(-1,B.angAt(-1,y));
     bar(OP, sd>0?p0:mir(p0), sd>0?p1:mir(p1), 0.025, 0.012, sd>0?n:mirN(n), 0x1c1d1f, FIN.trim);
   });
-  return {OP:OP, GL:GL, spec:S, lamps:LAMPS};
+  return {OP:OP, GL:GL, spec:S, lamps:LAMPS, glassMat:VEH_GLASS_CAR};
 }
 
 /* ---- trucks ---------------------------------------------------------------

@@ -641,7 +641,7 @@ function buildVehicleMesh(kind, paint, trailer, livery, opts){
   const g=new T.Group(), near=new T.Group(), farG=new T.Group();
   const body=new T.Mesh(mergeEntries(parts.OP), VEH_MAT); body.castShadow=true; body.receiveShadow=true;
   near.add(body);
-  if(parts.GL.length) near.add(new T.Mesh(mergeEntries(parts.GL), VEH_GLASS));
+  if(parts.GL.length) near.add(new T.Mesh(mergeEntries(parts.GL), parts.glassMat||VEH_GLASS));
   const fb=new T.Mesh(mergeEntries(far.OP), VEH_MAT); fb.castShadow=true; farG.add(fb);
   if(far.GL.length) farG.add(new T.Mesh(mergeEntries(far.GL), VEH_GLASS));
   farG.visible=false;

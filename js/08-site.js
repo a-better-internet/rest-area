@@ -66,25 +66,26 @@ function layRibbonVar(bk, P, f0, f1, yOff, uv, color){
 }
 /* A RAMP WHERE IT MEETS THE INTERSTATE. P is its centre line, RW its half
    width; X is the interstate's pavement edge on the ramp's side and s which
-   side of it the ramp is (+1 east of it, -1 west). The ramp is paved only
-   outside that edge, never over the lanes, so where it runs alongside it is
-   the strip between the edge and its own far side; and it widens out of
-   nothing along a taper of `taper` metres, before its first point (an exit,
-   at="start") or after its last (an entrance, at="end"). Where it parts from
-   the road the gore between them is paved to its nose (G wide); past the
-   nose it is grass.
-   The markings are an interstate's. Where the taper begins, the through
-   lane's solid edge line kinks out to become the speed-change lane's outer
-   line, and a dotted extension carries on along the through lane, to the
-   gore. The gore begins at a point on that edge line: a solid white
-   channelizing line leaves it and runs out to the ramp's nose, and the
-   neutral area between the two is chevroned. The ramp's left line is yellow
-   from the nose on, its right line white the whole way. The interstate's
-   own edge lines and rumble strips are laid after every ramp is
-   (interstateEdges, called from 08b), with these stretches left out of them
-   (MERGE_ZONES). `stop(p)` says where the ramp's lines give out (at the far
-   end's crossroad). Returns the whole line, taper and all, and the gore's
-   points. */
+   side of it the ramp is (+1 east of it, -1 west). Where the ramp runs
+   alongside, it is a speed-change lane right beside the through lane: it is
+   paved from the through lane's edge (XL, over the shoulder) out to its own
+   far side, never over the lanes. It widens out of nothing along a taper of
+   `taper` metres, before its first point (an exit, at="start") or after its
+   last (an entrance, at="end"), its outer edge running in to the through
+   lane's. Where it parts from the road the gore between them is paved to its
+   nose (G past the shoulder); past the nose it is grass.
+   The markings are an interstate's. The speed-change lane's outer line runs
+   along the taper into the through lane's solid edge line, and from the
+   taper's point to the gore the edge line is a wide dotted one between the
+   two lanes. The gore begins where the ramp's paving leaves that line: the
+   edge line carries on solid, the ramp's left line leaves it white out to
+   the nose (the channelizing line), and the neutral area between the two is
+   chevroned. The ramp's left line is yellow from the nose on, its right
+   line white the whole way. The interstate's own edge lines and rumble
+   strips are laid after every ramp is (interstateEdges, called from 08b),
+   with these stretches left out of them (MERGE_ZONES). `stop(p)` says where
+   the ramp's lines give out (at the far end's crossroad). Returns the whole
+   line, taper and all, and the gore's points. */
 const MERGE_ZONES=[];
 // a painted line through points on the road, w wide, at the road's grade
 function paintLine(pts, w, color){
@@ -99,58 +100,75 @@ function paintRun(x0, z0, x1, z1, w, color){
   paintLine(pts, w, color);
 }
 function rampPave(P0, RW, X, s, at, taper, color, stop){
-  const G=3.6, nT=Math.max(2, Math.round(taper/6));
+  const G=3.6, XL=X-s*HWY.shR, GL=G+HWY.shR;                               // XL: the through lane's edge
   const end=at==="start" ? P0[0] : P0[P0.length-1], nb=at==="start" ? P0[1] : P0[P0.length-2];
   const dir=Math.sign(end.z-nb.z)||1;                                      // along the road, out into the taper
-  const xo0=end.x+s*RW, tp=[];
-  for(let k=1;k<=nT;k++){ const t=k/nT, z=end.z+dir*taper*t, xo=lerp(xo0, X, t);
+  // the taper: the outer edge runs in until the ramp's right line lies on the through lane's edge line. Or,
+  // where the next ramp leaves close by, no taper but the lane carried on to it ({to: z, xo: its outer edge
+  // there}), an auxiliary lane between the two; and that next ramp then has none (taper 0)
+  const ext=typeof taper==="object" ? taper : null, TL=ext ? Math.abs(ext.to-end.z) : taper;
+  const nT=TL>0.5 ? Math.max(2, Math.round(TL/6)) : 0;
+  const xo0=end.x+s*RW, xo1=ext ? ext.xo : XL+s*0.25, tp=[];
+  for(let k=1;k<=nT;k++){ const t=k/nT, z=end.z+dir*TL*t, xo=lerp(xo0, xo1, t);
     tp.push({x:xo-s*RW, z:z, y:roadY(z)}); }
   const Q=(at==="start" ? tp.reverse().concat(P0) : P0.concat(tp)).map(p=>({x:p.x, z:p.z, y:p.y}));   // (copies: the path is the traffic's too)
   Q.forEach((q,i)=>{ q.s=i ? Q[i-1].s+Math.hypot(q.x-Q[i-1].x, q.z-Q[i-1].z) : 0; });
-  // how far left the paving may come at each point before it would be on the interstate's (offsets + to the left)
-  const room=(p,n)=>{ const k=-s*n.x; return k>0.2 ? (s*(p.x-X)+0.03)/k : 1e9; };
-  const inner=(i,p,n)=>clamp(room(p,n), -RW, RW);
-  layRibbonVar("asphalt", Q, ()=>-RW, inner, PAVE_T, 0.40, color);
+  // how far left the paving may come at each point before it would be over the line at x = L (offsets + to the left)
+  const room=(L, e)=>(p,n)=>{ const k=-s*n.x; return k>0.2 ? (s*(p.x-L)+e)/k : 1e9; };
+  const roomL=room(XL, 0.03), roomX=room(X, 0.03), roomP=room(XL, -0.10);
+  // where the ramp's paving lies over the shoulder it is a layer on the road, so it sits a centimetre and a
+  // bit above it (and one polygon-offset step over it), easing up and down over fifteen metres either side;
+  // it stops just outside the edge line, which stays on the road's own surface
+  { const over=Q.map((p,i)=>roomX(p, pathSide(Q,i))<RW ? 1 : 0), lift=Q.map(()=>0);
+    for(let i=0;i<Q.length;i++) if(over[i]) for(let j=0;j<Q.length;j++){ const d=Math.abs(Q[j].s-Q[i].s); if(d<15) lift[j]=Math.max(lift[j], 1-smoothstep(5, 15, d)); }
+    Q.forEach((q,i)=>{ q.y+=0.012*lift[i]; }); }
+  layRibbonVar("asphalt", Q, ()=>-RW, (i,p,n)=>clamp(roomP(p,n), -RW, RW), PAVE_T, 0.40, color);
   addPaveRibbon(Q, -RW, RW);
-  // the gore: the run of points where the ramp has parted from the road but not by G yet
-  const gap=Q.map((p,i)=>room(p, pathSide(Q,i))-RW);                       // > 0: grass (or gore) between them
-  // (a run of points between nothing and G apart, with the shared paving at one end of it: after it for an
-  //  exit, which parts from the road, before it for an entrance, which closes on it; the clipped point included)
+  // the gore: the run of points where the ramp has parted from the lane but not by GL yet
+  const gap=Q.map((p,i)=>roomL(p, pathSide(Q,i))-RW);                      // > 0: shoulder, gore or grass between them
+  // (a run of points between nothing and GL apart, with the shared paving at one end of it: after it for an
+  //  exit, which parts from the road, before it for an entrance, which closes on it; the last shared point included)
   let g0=-1, g1=-1;
   for(let i=0;i<Q.length;){
-    if(!(gap[i]>0.02 && gap[i]<G)){ i++; continue; }
-    let j=i; while(j+1<Q.length && gap[j+1]>0.02 && gap[j+1]<G) j++;
+    if(!(gap[i]>0.02 && gap[i]<GL)){ i++; continue; }
+    let j=i; while(j+1<Q.length && gap[j+1]>0.02 && gap[j+1]<GL) j++;
     const before=i>0 && gap[i-1]<=0.02, after=j+1<Q.length && gap[j+1]<=0.02;
     if((at==="start" && before) || (at==="end" && after)){ g0=before ? i-1 : i; g1=after ? j+1 : j; break; }
     i=j+1; }
   const gore=g0>=0 ? Q.slice(g0, g1+1) : [];
+  // paved out past the shoulder's edge to the nose; a layer over the shoulder's edge and the ramp's, so a
+  // little higher than either (the ramp's own paving sits up to 12 mm over the road)
   if(gore.length>1)
-    layRibbonVar("asphalt", gore, ()=>RW-0.01, (i,p,n)=>clamp(room(p,n), RW-0.01, RW+G), PAVE_T, 0.40, color);
-  // the ramp's own lines: white on the right all the way, yellow on the left from the gore's nose on
+    layRibbonVar("asphalt", gore, ()=>RW-0.01, (i,p,n)=>clamp(roomX(p,n), RW-0.01, RW+G), PAVE_T+0.018, 0.40, color);
+  // the ramp's own lines: white on the right all the way; on the left, white from the gore's point to its nose
+  // (the channelizing line), yellow from the nose on
   const live=(p)=>!(stop && stop(p));
-  const right=Q.filter(live); if(right.length>2) layRibbon("paint", right, -RW+0.18, -RW+0.32, PAVE_T+0.002, 1, WHITE_LINE);
+  const right=Q.filter(live); if(right.length>2) layRibbon("paint", right, -RW+0.18, -RW+0.32, PAVE_T+0.008, 1, WHITE_LINE);
   const nose=gore.length ? (at==="start" ? gore[gore.length-1] : gore[0]) : null;
-  const left=Q.filter((p,i)=>live(p) && gap[i]>=G-0.05 && (!nose || (at==="start" ? p.s>=nose.s : p.s<=nose.s)));
-  if(left.length>2) layRibbon("paint", left, RW-0.32, RW-0.18, PAVE_T+0.002, 1, YELLOW_LINE);
+  const tip=gore.length ? (at==="start" ? gore[0] : gore[gore.length-1]) : null;
+  const past=(p)=>at==="start" ? p.s>=nose.s : p.s<=nose.s;
+  const left=Q.filter((p,i)=>live(p) && gap[i]>=GL-0.05 && (!nose || past(p)));
+  if(left.length>2) layRibbon("paint", left, RW-0.32, RW-0.18, PAVE_T+0.008, 1, YELLOW_LINE);
   if(nose){
-    const outer=X-s*HWY.shR, tip=at==="start" ? gore[0] : gore[gore.length-1];
-    const zA=(at==="start" ? Q[0] : Q[Q.length-1]).z, zT=tip.z, zN=nose.z, da=Math.sign(zA-zT)||1;
-    const zK=zA+da*40, zG=zT+da*Math.max(20, 0.8*Math.abs(zN-zT));
-    // the kink: the through lane's edge line out across the shoulder to the speed-change lane's outer line
-    const kx=X-s*0.25; paintRun(outer, zK-da*0.1, kx, zA, 0.15, WHITE_LINE);
-    // the channelizing line: off the edge line at the gore's point, out to the ramp's left line at the nose
-    const ni=Q.indexOf(nose), nn=pathSide(Q, ni), ex=nose.x+nn.x*(RW-0.25), ez=nose.z+nn.z*(RW-0.25);
-    const cl=Math.hypot(ex-outer, ez-zG), f0=Math.min(0.1, 4/cl), sx=lerp(outer, ex, f0), sz=lerp(zG, ez, f0);   // (clear of the edge line where they part)
-    paintRun(sx, sz, ex, ez, 0.20, WHITE_LINE);
-    // the neutral area between them chevroned, every six metres, the ramp's end of each downstream
-    const xc=z=>lerp(outer, ex, clamp((z-zG)/(ez-zG), 0, 1));
-    for(let z=zG; Math.sign(zN-z)===Math.sign(zN-zG) && Math.abs(zN-z)>0.5; z-=da*6){
-      const w=s*(xc(z)-outer); if(w<1.4) continue;
-      const back=-da*Math.min(2.2, w*0.6), ax=xc(z)-s*0.35, bx2=outer+s*0.35;
-      stripe(ax, z+back, bx2, z, 0.30, WHITE_LINE, roadY(z)+PAVE_T); }
-    MERGE_ZONES.push({outer:outer, dot:[Math.min(zK,zG), Math.max(zK,zG)], quiet:[Math.min(zK,zN), Math.max(zK,zN)]});
+    const chan=Q.filter((p,i)=>i>=g0 && i<=g1 && gap[i]>=0 && live(p));
+    if(chan.length>1) layRibbon("paint", chan, RW-0.32, RW-0.18, PAVE_T+0.008, 1, WHITE_LINE);
+    const zA=(at==="start" ? Q[0] : Q[Q.length-1]).z, zT=tip.z, zN=nose.z, da=Math.sign(zA-zT)||1;   // da: from the gore toward the taper
+    // the dotted line from the taper's point, once the ramp's right line is clear of it, to the gore's
+    const zD=(ext || !nT) ? zA : zA-da*Math.min(12, 0.24*TL/Math.max(0.5, Math.abs(xo0-xo1)), 0.5*Math.abs(zA-zT));
+    // the neutral area chevroned every six metres between the edge line and the channelizing line, the ramp's end
+    // of each downstream; that line's x at z, from the gore's points
+    const cl=chan.map(p=>{ const i=Q.indexOf(p), n=pathSide(Q,i); return {x:p.x+n.x*(RW-0.25), z:p.z+n.z*(RW-0.25)}; })
+                 .sort((a,b)=>a.z-b.z);
+    const xc=z=>{ if(z<=cl[0].z) return cl[0].x; for(let i=1;i<cl.length;i++) if(z<=cl[i].z)
+                    return lerp(cl[i-1].x, cl[i].x, (z-cl[i-1].z)/((cl[i].z-cl[i-1].z)||1)); return cl[cl.length-1].x; };
+    if(cl.length>1) for(let z=zT-da*3; Math.sign(zN-z)===Math.sign(zN-zT) && Math.abs(zN-z)>1.0; z-=da*6){
+      const back=-da*Math.min(2.2, s*(xc(z)-XL)*0.6), w=s*(xc(z+back)-XL); if(w<1.4) continue;
+      stripe(xc(z+back)-s*0.35, z+back, XL+s*0.35, z, 0.30, WHITE_LINE, roadY(z)+PAVE_T+0.022); }      // (over the gore's paving too)
+    // (the edge line gives way from the taper's point to the gore's; dotted from where the ramp's line is clear of it)
+    MERGE_ZONES.push({outer:XL, open:[Math.min(zA,zT), Math.max(zA,zT)], dot:[Math.min(zD,zT), Math.max(zD,zT)],
+                      quiet:[Math.min(zA,zN), Math.max(zA,zN)]});
   }
-  return {line:Q, gore:gore, nose:nose};
+  return {line:Q, gore:gore, nose:nose, tip:tip};
 }
 // a straight run along z at x, following the road's grade, in pieces
 function roadRun(bk, x, z0, z1, o0, o1, yOff, uv, color, step){
@@ -345,9 +363,12 @@ function interstateEdges(){
   for(const [cx, dir] of [[HWY.nb, -1], [HWY.sb, 1]]){
     const outer = dir<0 ? cx+HWY.lane : cx-HWY.lane, Z=MERGE_ZONES.filter(m=>Math.abs(m.outer-outer)<0.05);
     let z=-HWY.len/2;
-    for(const [a,b] of Z.map(m=>m.dot).sort((p,q)=>p[0]-q[0])){
+    for(const m of Z.slice().sort((p,q)=>p.open[0]-q.open[0])){
+      const [a,b]=m.open, [d0,d1]=m.dot;
       if(a>z+0.5) roadRun("paint", outer, z, a, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
-      for(let q=a+1.0; q<b-0.7; q+=2.4) paintRun(outer, q, outer, q+0.6, 0.15, WHITE_LINE);     // two feet on, six off
+      // the wide dotted line between the through lane and the speed-change lane: three feet on, nine off
+      const n=Math.max(1, Math.round((d1-d0-0.9)/3.6)), st=(d1-d0-0.9)/n;
+      for(let k=0;k<=n;k++){ const q=d0+k*st; paintRun(outer, q, outer, q+0.9, 0.20, WHITE_LINE); }
       z=Math.max(z, b); }
     if(z<HWY.len/2-0.5) roadRun("paint", outer, z, HWY.len/2, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
     // rumble strips cut into the outside shoulder, ghosted, but not where traffic crosses it to a ramp
@@ -363,7 +384,8 @@ function interstateEdges(){
 // each widens out of the northbound shoulder along a taper, or narrows back into it, and is never laid over the lanes
 (function ramps(){
   RAMP_EXIT.meet =rampPave(RAMP_EXIT,  4.2, NB_X1, 1, "start", 110, "#9a9a98");
-  RAMP_ENTRY.meet=rampPave(RAMP_ENTRY, 4.2, NB_X1, 1, "end",   120, "#9a9a98");
+  // (the entrance's lane carries on to Edinboro's exit a hundred metres on: one auxiliary lane, no weave)
+  RAMP_ENTRY.meet=rampPave(RAMP_ENTRY, 4.2, NB_X1, 1, "end", {to:EDIN.off[0].z, xo:EDIN.off[0].x+EDIN.rw}, "#9a9a98");
 })();
 
 /* ---- the lots ----------------------------------------------------------- */
@@ -507,7 +529,8 @@ const PLAZA_Y=0.15;
     addCol(sx-0.05, sx+0.05, s.z-0.05, s.z+0.05, PLAZA_Y-0.3, PLAZA_Y+2.1);
   }
   for(const [ze,dir] of [[W.z0,-1],[W.z1,1]]){
-    const z2=ze+dir*1.6, g=new FaceGeo().slab([V3(W.x0,PLAZA_Y,ze),V3(W.x1,PLAZA_Y,ze),V3(W.x1,0.012,z2),V3(W.x0,0.012,z2)],0.3,0.66).geo();
+    // (4 mm narrower than the walk, so its sides do not lie in the walk's where the two lap)
+    const z2=ze+dir*1.6, g=new FaceGeo().slab([V3(W.x0+0.004,PLAZA_Y,ze),V3(W.x1-0.004,PLAZA_Y,ze),V3(W.x1-0.004,0.012,z2),V3(W.x0+0.004,0.012,z2)],0.3,0.66).geo();
     push("concrete", g, 0,0,0, 0, "#c3c0b8");
     addRamp(W.x0, W.x1, Math.min(ze,z2), Math.max(ze,z2), "z", ze, z2, PLAZA_Y, 0.012); }
   addZone(W.x0, W.x1, W.z0, W.z1, -1, 4, "THE WALK");
@@ -518,12 +541,28 @@ const PLAZA_Y=0.15;
     const S=smoothPath(pts, 1.5);
     layRibbon("walkflat", S, -w/2, w/2, 0.035, 0.66, "#c3c0b8");
   };
+  /* where a flush path meets a raised slab (the plaza, the walk's ends, the shelter's floor) it comes up a
+     ramp, not against a 12 cm step: a sloped slab from the slab's edge (x,z), out along (dx,dz), its top
+     buried a centimetre in the slab and its foot just over the path, the path starting under its foot */
+  const curbRamp=(x, z, dx, dz, w, top, len)=>{
+    const nx=-dz, nz=dx, a=V3(x-dx*0.01+nx*w/2, top, z-dz*0.01+nz*w/2), b=V3(x-dx*0.01-nx*w/2, top, z-dz*0.01-nz*w/2);
+    const c=V3(x+dx*len-nx*w/2, 0.040, z+dz*len-nz*w/2), d=V3(x+dx*len+nx*w/2, 0.040, z+dz*len+nz*w/2);
+    push("concrete", new FaceGeo().slab([a,b,c,d], 0.30, 0.66).geo(), 0,0,0, 0, "#c3c0b8");
+    if(Math.abs(dx)>0.5) addRamp(Math.min(x, x+dx*len)-0.02, Math.max(x, x+dx*len)+0.02, z-w/2, z+w/2, "x", x, x+dx*len, top, 0.035);
+    else addRamp(x-w/2, x+w/2, Math.min(z, z+dz*len)-0.02, Math.max(z, z+dz*len)+0.02, "z", z, z+dz*len, top, 0.035); };
   // (each ends somewhere: the grove's at the shelter's slab, the pet area's in
-  // a round pad by the bag dispenser, the loop back at the plaza)
-  path([{x:-14,z:-19},{x:-13,z:-26},{x:-9,z:-36},{x:-1,z:-46},{x:7,z:-54},{x:12.9,z:-57.4}], 2.2);
-  path([{x:-14,z:19},{x:-12,z:28},{x:-6,z:40},{x:2,z:52},{x:7.5,z:62},{x:11.6,z:66.2}], 2.0);
-  push("walkflat", discGeo(1.45, 32, 0.66), 12.6, 0.039, 66.6, 0, "#c3c0b8");
-  path([{x:-5,z:-19},{x:4,z:-21},{x:12,z:-20},{x:16,z:-10},{x:17,z:0},{x:16,z:10},{x:12,z:20},{x:4,z:21},{x:-5,z:19}], 1.8);
+  // a round pad by the bag dispenser, the loop back at the plaza; and each
+  // end of the walk by the lot runs on, the north to the shelter through the
+  // grove, the south to the pet area)
+  curbRamp(-14, P.z0, 0, -1, 2.5, PLAZA_Y, 1.3);  path([{x:-14,z:-20.1},{x:-13,z:-26},{x:-9,z:-36},{x:-1,z:-46},{x:7,z:-54},{x:11.3,z:-57.0}], 2.2);
+  curbRamp(12.6, -57.0, -1, 0, 2.5, 0.15, 1.3);
+  curbRamp(-14, P.z1, 0, 1, 2.3, PLAZA_Y, 1.3);   path([{x:-14,z:20.1},{x:-12,z:28},{x:-6,z:40},{x:2,z:52},{x:7.5,z:62},{x:10.8,z:65.4}], 2.0);
+  push("walkflat", discGeo(1.45, 32, 0.66), 12.6, 0.041, 66.6, 0, "#c3c0b8");
+  curbRamp(-5.0, -17.8, 1, 0, 2.1, PLAZA_Y, 1.3); curbRamp(-5.0, 17.8, 1, 0, 2.1, PLAZA_Y, 1.3);
+  path([{x:-3.9,z:-17.8},{x:4,z:-20.6},{x:12,z:-20},{x:16,z:-10},{x:17,z:0},{x:16,z:10},{x:12,z:20},{x:4,z:20.6},{x:-3.9,z:17.8}], 1.8);
+  path([{x:-23.75,z:W.z0-1.55},{x:-22.6,z:-111.6},{x:-18,z:-112.6},{x:-11,z:-109.5},{x:-4,z:-104},{x:6,z:-98.5},{x:13.5,z:-90},{x:18.6,z:-79},{x:19.2,z:-70},{x:15.4,z:-63.3}], 2.0);
+  curbRamp(15.4, -62.1, 0, -1, 2.3, 0.15, 1.3);
+  path([{x:-23.75,z:W.z1+1.55},{x:-21,z:78.5},{x:-12,z:79.5},{x:-1,z:76},{x:7,z:70.5},{x:11.2,z:67.9}], 2.0);
 })();
 
 /* ---- lights: the mushroom posts round the walks, taller poles in the lots --

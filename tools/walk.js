@@ -18,6 +18,13 @@ const ROUTES={
   "lot to walk":         [[-36,30],[-27,30],[-23,30],[-23,-30]],
   "grove":               [[-14,-20],[-13,-30],[-2,-48],[12,-78]],
   "to the shelter":      [[10,-58],[17.5,-56.2]],
+  // the sidewalks (08): off the plaza's curb ramps north to the shelter and south to the pet area, round the
+  // building's back, and off each end of the long walk
+  "plaza to the shelter":    [[-14,-17.5],[-14,-20.5],[-13,-26],[-9,-36],[-1,-46],[7,-54],[11.3,-57],[13.6,-57]],
+  "plaza to the pet area":   [[-14,17.5],[-14,20.5],[-12,28],[-6,40],[2,52],[7.5,62],[10.8,65.4],[12.6,66.6]],
+  "round the building":      [[-4.4,-17.8],[-3.9,-17.8],[4,-20.6],[12,-20],[16,-10],[17,0],[16,10],[12,20],[4,20.6],[-3.9,17.8],[-4.4,17.8]],
+  "walk's end to the shelter": [[-23.75,-107],[-23.75,-109.6],[-22.6,-111.6],[-18,-112.6],[-11,-109.5],[-4,-104],[6,-98.5],[13.5,-90],[18.6,-79],[19.2,-70],[15.4,-63.3],[15.4,-61.2]],
+  "walk's end to the pets":  [[-23.75,73],[-23.75,75.6],[-21,78.5],[-12,79.5],[-1,76],[7,70.5],[11.2,67.9],[12.6,66.6]],
   "drive to gate":       [[-25,-142],[0,-150],[40,-158],[57,-169]],
   "through the gate":    [[57,-169],[64,-169],[70,-170.5],[80,-174.2],[80,-178.5]],
   "the path out back":   "TRAIL",
@@ -57,6 +64,9 @@ const ROUTES={
   "edinboro off-ramp":     "EDIN.off",
   "us 6n over the bridge": [[-8,-1201.8],[-60,-1201.8],[-80,-1201.8],[-112,-1201.8],[-135,-1202.5],[-160,-1201.8],[-192,-1201.8],[-262,-1201.8]],
   "edinboro on-ramp":      "EDIN.on",
+  // and the north pair: off US 6N down onto northbound, and up off southbound onto US 6N
+  "edinboro on-ramp north":  "EDIN.onN",
+  "edinboro off-ramp south": "EDIN.offS",
   // the service track on past the plant, down through the woods to its turnaround and the game lands gate (13c)
   "down the service track":  [[86,122],[89.5,137],[93,152],[96,168],[99,184],[101.5,201],[104,218],[106,235],[108,252],[110,270],[110.5,288],[110.5,300],[110.5,309]],
   // the water and the sewage (13c): down the spur, in at the gate, the control building, up on the tanks
@@ -86,7 +96,7 @@ const ROUTES={
   p.on("pageerror", e=>console.log("[pageerror]", e.message));
   await p.route("**/three.min.js", r=>r.fulfill({path:path.join(ROOT,"tools","three.min.js")}));
   await p.route(/fonts\./, r=>r.fulfill({status:200, contentType:"text/css", body:""}));
-  await p.goto("file://"+path.join(ROOT,"index.html"));
+  await p.goto("file://"+path.join(ROOT,"index.html"), {timeout:240000});
   await p.waitForFunction(()=>window.REST,null,{timeout:120000});
   const out=await p.evaluate((ROUTES)=>{
     const res={};
@@ -100,7 +110,7 @@ const ROUTES={
       const og=name==="through the gate" || !!ROUTES[name].gate;
       for(const d of REST.doors) if(d.manualOnly){ d.manual = og ? 1 : 0; d.open = og ? 1 : 0;
         if(d.blockCol) d.blockCol.y1 = og ? d.blockCol.y0-1 : d.blockTop; }
-      const R0=ROUTES[name], named={TRAIL:TRAIL, "EDIN.off":EDIN.off, "EDIN.on":EDIN.on}[R0];
+      const R0=ROUTES[name], named={TRAIL:TRAIL, "EDIN.off":EDIN.off, "EDIN.on":EDIN.on, "EDIN.onN":EDIN.onN, "EDIN.offS":EDIN.offS}[R0];
       let P=named ? named.map(q=>[q.x,q.z]) : R0.gate ? R0.pts : R0;
       if(P.pre){ (0,eval)(P.pre); P=P.pts; }
       // off the paths there is no fixed line: find one through the trunks on

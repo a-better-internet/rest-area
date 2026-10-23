@@ -33,7 +33,7 @@ function parkCar(x, z, yaw, kind, paint, y0){
   // near: the full shell; far: the coarse one. updateParkedLOD swaps them
   const near=new T.Group(), farG=new T.Group();
   const body=new T.Mesh(mergeEntries(sh(parts.OP)), VEH_MAT); body.castShadow=true; body.receiveShadow=true;
-  near.add(body); near.add(new T.Mesh(mergeEntries(sh(parts.GL)), VEH_GLASS));
+  near.add(body); near.add(new T.Mesh(mergeEntries(sh(parts.GL)), parts.glassMat||VEH_GLASS));
   const fb=new T.Mesh(mergeEntries(sh(far.OP)), VEH_MAT); fb.castShadow=true;
   farG.add(fb); farG.add(new T.Mesh(mergeEntries(sh(far.GL)), VEH_GLASS));
   farG.visible=false;

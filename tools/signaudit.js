@@ -49,7 +49,7 @@ const THREE_JS=process.env.THREE_JS || path.join(ROOT, "tools", "three.min.js");
       };
     }
   }, PAD);
-  await page.goto("file://"+path.join(ROOT,"index.html"));
+  await page.goto("file://"+path.join(ROOT,"index.html"), {timeout:240000});
   await page.waitForFunction(()=>window.REST, null, {timeout:240000});
   let list=await page.evaluate(()=>window.__SIGNS.slice());
   // and what is drawn while it runs: the lobby's screens, the arcade's, the chalkboard by the dartboard

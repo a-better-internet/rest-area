@@ -458,6 +458,31 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
 /* ======================================================================
    THE FARM
    ====================================================================== */
+// the Holstein hide: white with black patches, ragged at the edges, tiling both ways; a short coat over it.
+// The square in the top-left corner is kept white for the plain parts (14k's cow), which take its uv
+const COW_HIDE=(function(){
+  const S=512, c=cvs(S,S), x=c.getContext("2d"), r=_trng(4409);
+  x.fillStyle="#f2f0eb"; x.fillRect(0,0,S,S);
+  x.fillStyle="#161517";
+  const blob=(cx,cy,R,ph)=>{ x.beginPath();
+    for(let i=0;i<=48;i++){ const a=i/48*Math.PI*2, k=1+0.24*Math.sin(a*3+ph[0])+0.13*Math.sin(a*5+ph[1])+0.06*Math.sin(a*11+ph[2]);
+      const px=cx+Math.cos(a)*R*k*1.2, py=cy+Math.sin(a)*R*k; i?x.lineTo(px,py):x.moveTo(px,py); }
+    x.closePath(); x.fill(); };
+  // (toroidal distance to the white corner's centre, so the wrapped copies keep off it too)
+  const td=(ax,ay)=>{ let dx=Math.abs(ax-40)%S, dy=Math.abs(ay-40)%S; dx=Math.min(dx,S-dx); dy=Math.min(dy,S-dy); return Math.hypot(dx,dy); };
+  let n=0;
+  for(let k=0;k<200 && n<12;k++){ const cx=r()*S, cy=r()*S, R=S*(0.06+r()*0.10);
+    if(td(cx,cy)<R*1.55+60) continue; n++;
+    const ph=[r()*6.3, r()*6.3, r()*6.3];
+    for(const dx of [-S,0,S]) for(const dy of [-S,0,S]) blob(cx+dx, cy+dy, R, ph); }
+  // the coat: short strokes, lighter and darker, every way but mostly down the hide
+  for(let k=0;k<14000;k++){ const px=r()*S, py=r()*S, a=1.57+(r()-0.5)*0.8, L=2+r()*4;
+    x.strokeStyle=r()<0.5 ? "rgba(255,255,255,0.10)" : "rgba(60,50,40,0.10)"; x.lineWidth=1;
+    x.beginPath(); x.moveTo(px,py); x.lineTo(px+Math.cos(a)*L, py+Math.sin(a)*L); x.stroke(); }
+  x.fillStyle="#f2f0eb"; x.fillRect(4,4,56,56);
+  const t=_tex(c); t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=MAXANISO; return t;
+})();
+const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, roughness:0.85});
 (function weirPlace(){
   const E=EDIN, Z=E.z, Y=E.y, r=_trng(7723);
   const ME=[];
@@ -472,22 +497,99 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
   const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*400), Math.round((cw||w*400)*h/w), draw), px,py,pz,ry,lit);
   const slab=(bk, pts, t, color)=>push(bk, new FaceGeo().slab(pts, t, 0.5).geo(), 0,0,0, 0, color);
   const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s; addCol(x-rr, x+rr, z-rr, z+rr, Y-0.5, Y+6); };
-  // a Holstein: one merged mesh in a group that turns a little as she grazes, or hardly at all in her stall
-  const cow=(x, z, ry, graze, y, sway, sc)=>{ const s=sc||1, gy=y===undefined?Y:y, g=new T.Group(); g.position.set(x, gy, z); g.rotation.y=ry; g.scale.set(s,s,s); scene.add(g);
-    const M=[], add=(geo,px,py,pz,c,rx)=>M.push({geo:geo, matrix:new T.Matrix4().compose(V3(px,py,pz), new T.Quaternion().setFromEuler(new T.Euler(rx||0,0,0)), V3(1,1,1)), color:new T.Color(c)});
-    const W="#f2f0ea", K="#1a1a1a", spot=()=>r()<0.5?W:K;
-    add(new T.SphereGeometry(0.5, 22, 14).scale(0.95, 0.95, 1.65), 0, 1.15, 0, spot());
-    for(const [px,pz] of [[0.2,0.4],[-0.25,-0.3],[0.15,-0.6]]) add(new T.SphereGeometry(0.30, 16, 12).scale(1.0, 0.9, 1.3), px*1.4, 1.2+r()*0.15, pz, r()<0.5?K:W);
-    for(const [lx,lz] of [[-0.26,0.55],[0.26,0.55],[-0.26,-0.55],[0.26,-0.55]]) add(new T.CylinderGeometry(0.075,0.065,0.85,12), lx, 0.43, lz, r()<0.6?W:K);
-    add(new T.SphereGeometry(0.16, 14, 10).scale(1.0,0.7,1.0), 0, 0.68, -0.25, "#e8b8a8");
-    const hy=graze?0.42:1.25, hz=graze?1.05:1.0, hr=graze?0.9:0.15;
-    add(new T.BoxGeometry(0.30, 0.34, 0.50), 0, hy, hz, spot(), hr);
-    add(new T.BoxGeometry(0.24, 0.16, 0.14), 0, hy-(graze?0.12:0.08), hz+(graze?0.14:0.26), "#e8b8a8", hr);
-    for(const sd of [-1,1]) add(new T.BoxGeometry(0.16, 0.05, 0.08), sd*0.20, hy+0.10, hz-0.12, K, hr);
-    add(new T.CylinderGeometry(0.02,0.03,0.7,8), 0, 0.95, -0.82, K, 0.25);
-    const m=new T.Mesh(mergeEntries(M), new T.MeshStandardMaterial({vertexColors:true, roughness:0.8})); m.castShadow=true; g.add(m);
-    addColOB(x, z, ry, 0.5*s, 1.1*s, gy-0.5, gy+1.6*s);
-    EDIN_PLACES.cows.push({g:g, x:x, z:z, ry:ry, t:r()*10, sway:sway===undefined?0.25:sway}); };
+  /* a Holstein. The hide is a tiling texture (COW_HIDE, below) laid over lofted shapes: the barrel of the
+     body from the pin bones to the brisket, with the hooks standing out at the hips and the spine narrowing
+     to a ridge; legs jointed at the elbow and knee, the stifle and the hock, white below the knee, on dark
+     cloven hooves; the udder, the tail hanging to the hocks with its switch. The neck and head are a group of
+     their own that dips as she grazes, the tail another that swishes. Each cow takes the hide at its own
+     offset, so no two are marked alike. pose: "graze" (head to the grass), "stand", "manger" (in a stanchion) */
+  const cow=(x, z, ry, graze, y, sway, sc, pose)=>{ const s=sc||1, gy=y===undefined?Y:y, g=new T.Group(); g.position.set(x, gy, z); g.rotation.y=ry; g.scale.set(s,s,s); scene.add(g);
+    pose=pose||(graze ? "graze" : "stand");
+    const uo=r(), vo=r(), WUV=[0.06, 0.94];                           // (WUV: the hide's white corner, for the plain parts)
+    const body=[], head=[], tail=[];
+    // a tube through centres C with half widths a (sideways) and b (the other way) at each, its rings square to it
+    const tube=(L, C, A, Bb, seg, col, uv, shape)=>{
+      const n=C.length, P=[], U=[], CO=[], I=[], cc=new T.Color(col);
+      let sAcc=0;
+      for(let i=0;i<n;i++){
+        if(i) sAcc+=C[i].distanceTo(C[i-1]);
+        const t=new T.Vector3().subVectors(C[Math.min(n-1,i+1)], C[Math.max(0,i-1)]).normalize();
+        const ref=Math.abs(t.y)>0.9 ? V3(0,0,1) : V3(0,1,0);
+        const sd=new T.Vector3().crossVectors(t, ref).normalize(), up=new T.Vector3().crossVectors(sd, t).normalize();
+        for(let j=0;j<=seg;j++){ const th=j/seg*Math.PI*2, f=shape ? shape(th, i/(n-1)) : [Math.cos(th), Math.sin(th)];
+          const p=C[i].clone().addScaledVector(sd, f[0]*A[i]).addScaledVector(up, f[1]*Bb[i]);
+          P.push(p.x, p.y, p.z); CO.push(cc.r, cc.g, cc.b);
+          if(uv) U.push(uv[0]+j/seg*uv[2], uv[1]+sAcc/1.9); else U.push(WUV[0], WUV[1]); } }
+      for(let i=0;i<n-1;i++) for(let j=0;j<seg;j++){ const a=i*(seg+1)+j, b=a+1, c=a+seg+2, d=a+seg+1; I.push(a,d,b, b,d,c); }
+      const gm=new T.BufferGeometry(); gm.setAttribute("position", new T.Float32BufferAttribute(P,3));
+      gm.setAttribute("uv", new T.Float32BufferAttribute(U,2)); gm.setAttribute("color", new T.Float32BufferAttribute(CO,3));
+      gm.setIndex(I); gm.computeVertexNormals(); L.push({geo:gm, matrix:new T.Matrix4(), color:null}); };
+    // a plain shape (hooves, udder, eyes, the switch) in a flat colour off the hide's white corner
+    const plain=(L, geo, px, py, pz, c, rx, rz)=>{ const u=geo.attributes.uv; for(let i=0;i<u.count;i++) u.setXY(i, WUV[0], WUV[1]);
+      L.push({geo:geo, matrix:new T.Matrix4().compose(V3(px,py,pz), new T.Quaternion().setFromEuler(new T.Euler(rx||0,0,rz||0)), V3(1,1,1)), color:new T.Color(c)}); };
+    const W="#f3f1ec", HOOF="#2c2824", PINK="#e3ada0";
+    // the barrel: [z, top, bottom, half width] from the pins to the brisket
+    // (closed at both ends: the first and last sections come to nothing, at the pin bones and inside the neck)
+    const top=crv([[-0.975,1.24],[-0.95,1.30],[-0.90,1.40],[-0.78,1.45],[-0.60,1.47],[-0.35,1.44],[-0.05,1.43],[0.25,1.44],[0.48,1.49],[0.66,1.45],[0.80,1.34],[0.90,1.20],[0.96,1.10],[0.985,1.07]]);
+    const bot=crv([[-0.975,1.20],[-0.95,1.08],[-0.90,0.94],[-0.78,0.81],[-0.60,0.70],[-0.35,0.63],[-0.05,0.59],[0.25,0.61],[0.48,0.67],[0.66,0.75],[0.80,0.86],[0.90,0.97],[0.96,1.03],[0.985,1.06]]);
+    const wid=crv([[-0.975,0.004],[-0.95,0.05],[-0.90,0.15],[-0.78,0.22],[-0.60,0.28],[-0.35,0.31],[-0.05,0.33],[0.25,0.32],[0.48,0.28],[0.66,0.24],[0.80,0.19],[0.90,0.12],[0.96,0.04],[0.985,0.004]]);
+    { const C=[], A=[], Bb=[], zs=[-0.975];
+      for(let zz=-0.96; zz<0.96; zz+=0.06) zs.push(zz);
+      zs.push(0.96, 0.985);
+      for(const zz of zs){ C.push(V3(0, (top(zz)+bot(zz))/2, zz)); A.push(wid(zz)); Bb.push((top(zz)-bot(zz))/2); }
+      // the section: a rounded box, the back narrowing to the spine, the hooks and pins standing out at the top corners
+      const hipK=zz=>0.07*Math.exp(-Math.pow((zz+0.62)/0.10,2))+0.035*Math.exp(-Math.pow((zz+0.88)/0.05,2));
+      const shape=(th, f)=>{ const zz=zs[Math.round(f*(zs.length-1))], c=Math.cos(th), sn=Math.sin(th);
+        let px=Math.sign(c)*Math.pow(Math.abs(c), 2/2.5), py=Math.sign(sn)*Math.pow(Math.abs(sn), 2/2.5);
+        if(py>0) px*=1-0.32*Math.pow(py,3); else px*=1-0.06*Math.abs(py);
+        const w=wid(zz); px+=Math.sign(c)*hipK(zz)/Math.max(0.05,w)*Math.exp(-Math.pow((py-0.80)/0.13,2));
+        return [px, py]; };
+      // (the tube's side axis is to the cow's left as it runs nose-ward, so the seam and the hide's u start on her right)
+      tube(body, C, A, Bb, 28, W, [uo, vo, 1], shape); }
+    // the legs: patched above the knee and the hock, white below, each segment over-lapping the next
+    for(const sd of [-1,1]){
+      const fr=[[0.19,1.00,0.52,0.09,0.15],[0.18,0.75,0.50,0.08,0.11],[0.17,0.46,0.53,0.056,0.062]];
+      const fl=[[0.17,0.50,0.53,0.052,0.058],[0.17,0.44,0.53,0.055,0.060],[0.17,0.13,0.55,0.040,0.045],[0.17,0.075,0.57,0.046,0.052]];
+      const hr=[[0.22,1.06,-0.62,0.11,0.21],[0.22,0.80,-0.56,0.095,0.15],[0.19,0.52,-0.76,0.055,0.07]];
+      const hl=[[0.19,0.56,-0.75,0.050,0.062],[0.19,0.50,-0.76,0.054,0.066],[0.18,0.13,-0.66,0.040,0.045],[0.18,0.075,-0.63,0.046,0.052]];
+      for(const [Lg, uvOn] of [[fr,true],[fl,false],[hr,true],[hl,false]])
+        tube(body, Lg.map(q=>V3(sd*q[0], q[1], q[2])), Lg.map(q=>q[3]), Lg.map(q=>q[4]), 10, W, uvOn ? [uo+0.3+sd*0.2, vo+0.4, 0.22] : null);
+      for(const hz of [0.585, -0.615]){
+        plain(body, new T.CylinderGeometry(0.048, 0.064, 0.08, 12), sd*(hz>0?0.17:0.18), 0.04, hz, HOOF);
+        plain(body, new T.BoxGeometry(0.008, 0.06, 0.05), sd*(hz>0?0.17:0.18), 0.035, hz+0.045, "#141210"); }    // the cleft, in front
+    }
+    // the udder and its four teats, between the hind legs
+    plain(body, new T.SphereGeometry(1, 16, 12).scale(0.17, 0.13, 0.23), 0, 0.66, -0.43, PINK);
+    for(const tx of [-0.065, 0.065]) for(const tz of [-0.34, -0.50]) plain(body, new T.CylinderGeometry(0.016, 0.019, 0.075, 8), tx, 0.525, tz, "#d99a8e");
+    // the neck and head, in a group pivoting at the withers
+    const ph=new T.Group(); ph.position.set(0, 1.18, 0.62); g.add(ph);
+    const NK={graze:[[0,0,0],[0,-0.30,0.34],[0,-0.66,0.52]], stand:[[0,0,0],[0,0.06,0.33],[0,0.14,0.55]], manger:[[0,0,0],[0,-0.10,0.32],[0,-0.22,0.50]]}[pose];
+    const HD={graze:[0.25,-1.0], stand:[0.62,-0.78], manger:[0.30,-0.95]}[pose];      // the face's direction (z, y) from the poll
+    { const C=NK.map(q=>V3(q[0],q[1],q[2])), poll=C[2];
+      // the neck, deep with the dewlap under it
+      tube(head, [V3(0,0.02,-0.12), C[0], C[1], poll], [0.17, 0.155, 0.115, 0.085], [0.27, 0.25, 0.18, 0.12], 16, W, [uo+0.5, vo+0.6, 0.6],
+           (th)=>{ const sn=Math.sin(th); return [Math.cos(th), sn<0 ? sn*1.25 : sn]; });
+      // the head: forehead to muzzle, wide across the eyes, narrow at the face, the muzzle flaring
+      const hd=V3(0, HD[1], HD[0]).normalize(), hp=[0, 0.07, 0.17, 0.30, 0.42, 0.47].map(t=>poll.clone().addScaledVector(hd, t));
+      tube(head, hp, [0.075, 0.105, 0.095, 0.072, 0.080, 0.05], [0.09, 0.10, 0.085, 0.07, 0.068, 0.04], 14, W, [uo+0.15, vo+0.2, 0.35]);
+      // the nose pad, the nostrils
+      const nz=poll.clone().addScaledVector(hd, 0.465);
+      plain(head, new T.SphereGeometry(1, 12, 8).scale(0.075, 0.05, 0.05), nz.x, nz.y, nz.z, "#8e6c66", Math.atan2(hd.y, hd.z)+Math.PI/2);
+      // the eyes, either side of the forehead; the ears out level from the poll, a little back
+      const fe=poll.clone().addScaledVector(hd, 0.11), fu=new T.Vector3(0, hd.z, -hd.y);   // fu: up the face
+      for(const sd of [-1,1]){
+        plain(head, new T.SphereGeometry(0.022, 8, 6), fe.x+sd*0.098, fe.y+fu.y*0.02, fe.z+fu.z*0.02, "#141210");
+        plain(head, new T.SphereGeometry(1, 10, 6).scale(0.11, 0.022, 0.055), poll.x+sd*0.15, poll.y+fu.y*0.02, poll.z+fu.z*0.02-0.03, r()<0.7?"#1c1b1d":W, 0, sd*0.25); }
+    }
+    // the tail from its head, hanging down the rump, the switch at its end; it swishes from the tailhead
+    const pt=new T.Group(); pt.position.set(0, 1.36, -0.93); g.add(pt);
+    tube(tail, [V3(0,0.02,0.02), V3(0,0.05,-0.04), V3(0,-0.10,-0.08), V3(0,-0.40,-0.07), V3(0,-0.68,-0.05), V3(0,-0.86,-0.04)],
+         [0.04,0.035,0.028,0.022,0.018,0.016], [0.04,0.035,0.028,0.022,0.018,0.016], 8, W, [uo+0.8, vo, 0.1]);
+    plain(tail, new T.SphereGeometry(1, 10, 8).scale(0.032, 0.11, 0.032), 0, -0.93, -0.04, r()<0.5?"#e8e4da":"#1c1b1d");
+    const mk=(L, parent)=>{ const m=new T.Mesh(mergeEntries(L), COW_MAT); m.castShadow=true; m.receiveShadow=true; parent.add(m); };
+    mk(body, g); mk(head, ph); mk(tail, pt);
+    addColOB(x, z, ry, 0.42*s, 1.05*s, gy-0.5, gy+1.5*s);
+    EDIN_PLACES.cows.push({g:g, head:ph, tail:pt, x:x, z:z, ry:ry, t:r()*10, sway:sway===undefined?0.25:sway, pose:pose}); };
 
   /* ---- the lane, the yard ---- */
   const LX=150, YARD={x0:138, x1:202, z0:Z+44, z1:Z+74};
@@ -566,15 +668,47 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
       for(let i=0;i<4;i++) for(let j=0;j<4;j++) if((i+j)%2) c.fillRect(i*32+2,j*32+2,28,28);
       const q=_trng(31); c.fillStyle="rgba(0,0,0,0.06)"; for(let k=0;k<300;k++) c.fillRect(q()*W, q()*Hh, 2, 2); }), roughness:0.5}));
 
+  // the clapboard: painted wood, twelve-centimetre courses each lapped over the one under it, a shadow along
+  // every lap; the grain under the paint, the butt joints staggered, the paint worn thin to grey here and there
+  bucketOf("fh_clap", ()=>new T.MeshStandardMaterial({map:tileTex(256,256,(c,W,Hh)=>{ const q=_trng(919);
+      c.fillStyle="#f3f1ea"; c.fillRect(0,0,W,Hh);
+      for(let k=0;k<16;k++){ const y=k*16, g=c.createLinearGradient(0,y,0,y+16);
+        g.addColorStop(0,"rgba(55,50,42,0.42)"); g.addColorStop(0.18,"rgba(55,50,42,0.10)"); g.addColorStop(0.55,"rgba(255,255,255,0)");
+        g.addColorStop(0.90,"rgba(255,255,255,0.12)"); g.addColorStop(1,"rgba(40,36,30,0.26)"); c.fillStyle=g; c.fillRect(0,y,W,16);
+        for(let j=0;j<6;j++){ const yy=y+3+q()*11; c.strokeStyle="rgba(120,110,95,0.10)"; c.lineWidth=1; c.beginPath(); c.moveTo(0,yy); c.lineTo(W,yy+(q()-0.5)*2); c.stroke(); }
+        for(let j=0;j<2;j++){ c.fillStyle="rgba(50,45,38,0.35)"; c.fillRect((k*97+j*131)%W, y+2, 1, 13); } }
+      for(let k=0;k<90;k++){ c.fillStyle=q()<0.6 ? "rgba(150,140,125,0.22)" : "rgba(105,96,84,0.20)"; c.fillRect(q()*W, q()*Hh, 2+q()*7, 1+q()*2); } }), roughness:0.82}));
+  // the foundation: fieldstone laid up in courses, grey mortar, each stone its own shade
+  bucketOf("fh_stone", ()=>new T.MeshStandardMaterial({map:tileTex(256,256,(c,W,Hh)=>{ const q=_trng(4243);
+      c.fillStyle="#77726a"; c.fillRect(0,0,W,Hh);
+      for(let row=0;row<6;row++){ let x=q()*20; const y0=row*Hh/6;
+        while(x<W){ const w=24+q()*40, h=Hh/6-5-q()*6, cx=x+w/2, cy=y0+Hh/12+(q()-0.5)*4, t=q(), ph=q()*9;
+          for(const ox of [-W, 0, W]){
+            c.fillStyle="rgb("+(118+t*52|0)+","+(110+t*46|0)+","+(96+t*38|0)+")"; c.beginPath();
+            for(let i=0;i<12;i++){ const a=i/12*Math.PI*2, rr=1+0.10*Math.sin(a*3+ph); c.lineTo(cx+ox+Math.cos(a)*w/2*rr*0.94, cy+Math.sin(a)*h/2*rr); }
+            c.closePath(); c.fill(); c.fillStyle="rgba(255,255,255,0.12)"; c.fillRect(cx+ox-w*0.28, cy-h*0.34, w*0.4, 2);
+            c.fillStyle="rgba(0,0,0,0.16)"; c.fillRect(cx+ox-w*0.3, cy+h*0.34, w*0.55, 2); }
+          x+=w+3; } } }), roughness:0.95}));
+  // the curtains: cloth in folds, tinted by the room
+  bucketOf("fh_curtain", ()=>new T.MeshStandardMaterial({map:tileTex(128,64,(c,W,Hh)=>{
+      for(let x=0;x<W;x++){ const v=0.80+0.17*Math.cos(x/W*Math.PI*8)+0.04*Math.sin(x/W*Math.PI*22), g=Math.round(255*Math.min(1,v));
+        c.fillStyle="rgb("+g+","+g+","+g+")"; c.fillRect(x,0,1,Hh); }
+      const q=_trng(77); for(let k=0;k<500;k++){ c.fillStyle="rgba(0,0,0,0.05)"; c.fillRect(q()*W, q()*Hh, 1, 1); } }), roughness:0.95, side:T.DoubleSide}));
+
   // the stone it stands on, its top a centimetre under the floor
-  bx("rock", H.x1-H.x0+0.10, FF-0.01-(Y-0.4), H.z1-H.z0+0.10, (H.x0+H.x1)/2, (FF-0.01+Y-0.4)/2, (H.z0+H.z1)/2, 0.6, 0, "#8d877b");
+  bx("fh_stone", H.x1-H.x0+0.10, FF-0.01-(Y-0.4), H.z1-H.z0+0.10, (H.x0+H.x1)/2, (FF-0.01+Y-0.4)/2, (H.z0+H.z1)/2, 0.6, 0, "#ffffff");
   // the walls: white clapboard, a band a storey so a window upstairs never fills in the one under it
   const dn=L=>L.filter(o=>o.sill<CL), upr=L=>L.filter(o=>o.sill>CL);
   for(const [y0,y1,f] of [[FF-0.15, FF2, dn],[FF2, EAV, upr]]){
-    runX("siding", H.z0+WT/2, WT, H.x0, H.x1, y0, y1, f(FRONT), WHT, 0.5);
-    runX("siding", H.z1-WT/2, WT, H.x0, H.x1, y0, y1, f(BACK), WHT, 0.5);
-    runZ("siding", H.x0+WT/2, WT, IZ0, IZ1, y0, y1, f(WEST), WHT, 0.5);
-    runZ("siding", H.x1-WT/2, WT, IZ0, IZ1, y0, y1, f(EAST), WHT, 0.5); }
+    runX("fh_clap", H.z0+WT/2, WT, H.x0, H.x1, y0, y1, f(FRONT), "#ffffff", 0.5);
+    runX("fh_clap", H.z1-WT/2, WT, H.x0, H.x1, y0, y1, f(BACK), "#ffffff", 0.5);
+    runZ("fh_clap", H.x0+WT/2, WT, IZ0, IZ1, y0, y1, f(WEST), "#ffffff", 0.5);
+    runZ("fh_clap", H.x1-WT/2, WT, IZ0, IZ1, y0, y1, f(EAST), "#ffffff", 0.5); }
+  // corner boards, a pair at each corner standing proud of the clapboard, from the stone up into the roof's eave;
+  // at the corner each one's edge is inside the other's, and they stop at different heights
+  for(const [cx, sx] of [[H.x0, 1],[H.x1, -1]]) for(const [cz, sz] of [[H.z0, 1],[H.z1, -1]]){
+    B(0.15, EAV-0.06-(FF-0.03), 0.035, cx+sx*(0.13-0.15/2), (EAV-0.06+FF-0.03)/2, cz-sz*0.0075, TRM);
+    B(0.035, EAV-0.055-(FF-0.03), 0.17, cx-sx*0.0075, (EAV-0.055+FF-0.03)/2, cz+sz*(0.15-0.17/2), TRM); }
   // the walls inside: the hall's two, downstairs and up; the cross wall upstairs; the bath's
   const PARL={a:Z+36.0, b:Z+37.8, sill:FF-0.004, head:FF+2.14}, KITO={a:Z+40.2, b:Z+41.7, sill:FF-0.004, head:FF+2.14};
   const dU=(a,b)=>({a:a, b:b, sill:FF2-0.004, head:FF2+2.06});
@@ -603,6 +737,31 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
   room("fh_stripe", KA, IX1, IZ0, ZM-HT/2, FF2, UC, "#ffffff", {n:FRONT, e:EAST, w:[D_NE], s:[D_ST], inW:PIN, inS:PIN});
   room("plaster",   KA, BW-HT/2, ZM+HT/2, IZ1, FF2, UC, "#e2ecec", {s:BACK, w:[D_BA], inW:PIN, inN:PIN, inE:PIN});
   room("plaster",   BW+HT/2, IX1, ZM+HT/2, IZ1, FF2, UC, "#e8e2d4", {s:BACK, e:EAST, n:[D_ST], inW:PIN, inN:PIN});
+  // trim round every room: a painted baseboard, broken at the doors (into their casings) and carried on under
+  // the windows, and a crown along the ceiling; each sunk into its wall, proud of the paper; the north and
+  // south runs a few millimetres lower than the east and west, so where they cross at a corner no faces meet
+  const trimRoom=(x0, x1, z0, z1, y0, y1, op)=>{
+    const runs=(a, b, L)=>{ const out=[]; let q=a;
+      for(const o of (L||[]).filter(o=>o.sill<y0+0.1 && o.b>a && o.a<b).sort((p,q2)=>p.a-q2.a)){ if(o.a-0.06>q+0.05) out.push([q, o.a-0.06]); q=Math.max(q, o.b+0.06); }
+      if(b>q+0.05) out.push([q, b]); return out; };
+    for(const [f, dir, L] of [[z0, 1, op.n], [z1, -1, op.s]]){
+      for(const [a,b] of runs(x0, x1, L)) B(b-a, 0.144, 0.035, (a+b)/2, y0+0.068, f+dir*0.0125, TRM);      // (its foot 4 mm into the floor)
+      B(x1-x0, 0.07, 0.05, (x0+x1)/2, y1-0.033, f+dir*0.02, TRM); }
+    // (the east and west runs stop 5 mm short of each corner, inside the north and south ones, so their ends
+    //  are not in the faces of the walls they butt against)
+    for(const [f, dir, L] of [[x0, 1, op.w], [x1, -1, op.e]]){
+      for(const [a,b] of runs(z0+0.005, z1-0.005, L)) B(0.035, 0.149, b-a, f+dir*0.0125, y0+0.0705, (a+b)/2, TRM);
+      B(0.05, 0.075, z1-z0-0.01, f+dir*0.02, y1-0.0365, (z0+z1)/2, TRM); } };
+  const WELL={a:ST.z0-0.10, b:ST.z1+0.10, sill:FF2-1};                     // (no baseboard along the stairwell's edge upstairs)
+  trimRoom(IX0, PA, IZ0, IZ1, FF, CL, {n:FRONT, s:BACK, w:WEST, e:[PARL]});
+  trimRoom(HA, HB, IZ0, IZ1, FF, CL, {n:FRONT, s:BACK, w:[PARL], e:[KITO]});
+  trimRoom(KA, IX1, IZ0, IZ1, FF, CL, {n:FRONT, s:BACK, w:[KITO], e:EAST});
+  trimRoom(IX0, PA, IZ0, ZM-HT/2, FF2, UC, {n:FRONT, w:WEST, e:[D_NW]});
+  trimRoom(IX0, PA, ZM+HT/2, IZ1, FF2, UC, {s:BACK, w:WEST, e:[D_SW]});
+  trimRoom(HA, HB, IZ0, IZ1, FF2, UC, {n:FRONT, s:BACK, w:[D_NW, D_SW], e:[D_NE, D_BA, WELL]});
+  trimRoom(KA, IX1, IZ0, ZM-HT/2, FF2, UC, {n:FRONT, e:EAST, w:[D_NE], s:[D_ST]});
+  trimRoom(KA, BW-HT/2, ZM+HT/2, IZ1, FF2, UC, {s:BACK, w:[D_BA]});
+  trimRoom(BW+HT/2, IX1, ZM+HT/2, IZ1, FF2, UC, {s:BACK, e:EAST, n:[D_ST]});
   // the floors and ceilings; between the storeys a deck round the stairwell, plastered where it shows
   floorAt("fh_floor", IX0, PA, IZ0, IZ1, FF+0.004, "#ffffff", 0.9);
   floorAt("fh_floor", HA, HB, IZ0, IZ1, FF+0.004, "#e8dccc", 0.9);
@@ -678,6 +837,22 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
   for(const o of BACK)  if(o.sill>FF) glaze("x", H.z1-WT/2, o, 1);
   for(const o of WEST)  glaze("z", H.x0+WT/2, o, -1);
   for(const o of EAST)  glaze("z", H.x1-WT/2, o, 1);
+  // curtains inside every window, a panel drawn back either side of it on a rod, in the room's colour:
+  // gold in the parlour, lace in the hall, red in the kitchen; upstairs each bedroom its own
+  { const col=(x, z, upst)=>!upst ? (x<PA ? "#b89a6a" : x<HB ? "#e2dccf" : "#c25a4a")
+                                  : (x<PA ? (z<ZM ? "#d0bcaa" : "#8eb0d4") : x<HB ? "#e2dccf" : (z<ZM ? "#bccfa2" : x<BW ? "#e8e8e4" : "#d4ccbc"));
+    const drape=(axis, f, dir, o, c)=>{ const top=o.head+0.12, h=top-o.sill, cy=(top+o.sill)/2;
+      for(const m of [o.a-0.22, o.b+0.22]){
+        if(axis==="x") push("fh_curtain", planeGeo(0.30, h, 1.67), m, cy, f+dir*0.07, 0, c);
+        else push("fh_curtain", planeGeo(0.30, h, 1.67), f+dir*0.07, cy, m, Math.PI/2, c); }
+      const a=V3(0,0,0), b=V3(0,0,0);
+      if(axis==="x"){ a.set(o.a-0.38, o.head+0.15, f+dir*0.08); b.set(o.b+0.38, o.head+0.15, f+dir*0.08); }
+      else { a.set(f+dir*0.08, o.head+0.15, o.a-0.38); b.set(f+dir*0.08, o.head+0.15, o.b+0.38); }
+      tubeE(a, b, 0.011, "#5a4a36"); for(const e of [a,b]) ent(new T.SphereGeometry(0.022, 10, 8), e.x, e.y, e.z, "#5a4a36"); };
+    for(const o of FRONT) if(o.sill>FF) drape("x", IZ0, 1, o, col((o.a+o.b)/2, H.z0, o.sill>CL));
+    for(const o of BACK)  if(o.sill>FF) drape("x", IZ1, -1, o, col((o.a+o.b)/2, H.z1, o.sill>CL));
+    for(const o of WEST)  drape("z", IX0, 1, o, col(H.x0, (o.a+o.b)/2, o.sill>CL));
+    for(const o of EAST)  drape("z", IX1, -1, o, col(H.x1, (o.a+o.b)/2, o.sill>CL)); }
   for(const o of [...FRONT, ...BACK]) if(o.sill>FF) addCol(o.a, o.b, (FRONT.includes(o)?H.z0:H.z1-WT), (FRONT.includes(o)?H.z0+WT:H.z1), o.sill, o.head);
   for(const o of [...WEST, ...EAST]) addCol((WEST.includes(o)?H.x0:H.x1-WT), (WEST.includes(o)?H.x0+WT:H.x1), o.a, o.b, o.sill, o.head);
   // at night, a lamp left on in two of the rooms upstairs, seen from the road
@@ -705,10 +880,21 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
       slab("shingle", [V3(xa-e, yo, z0), V3(xb+e, yo, z0), V3(xb+e, RID, z1), V3(xa-e, RID, z1)], 0.12, "#5a4e48"); }
     for(const x of [H.x0+WT/2, H.x1-WT/2]){
       const tri=[V3(x, EAV, H.z0+0.01), V3(x, EAV, H.z1-0.01), V3(x, RID-0.10, zm)];
-      push("siding", new FaceGeo().slab(tri.map(p=>p.clone().add(V3(-WT/2,0,0))), WT, 0.5).geo(), 0,0,0, 0, WHT);
+      push("fh_clap", new FaceGeo().slab(tri.map(p=>p.clone().add(V3(-WT/2,0,0))), WT, 0.5).geo(), 0,0,0, 0, "#ffffff");
       const ox=x<(H.x0+H.x1)/2 ? -1 : 1;
       B(0.04, 0.70, 0.60, x+ox*(WT/2+0.02), EAV+1.10, zm, TRM); for(let k=0;k<6;k++) B(0.03, 0.035, 0.52, x+ox*(WT/2+0.05), EAV+0.82+k*0.11, zm, "#c8c4b8"); }
-    B(H.x1-H.x0+0.66, 0.18, 0.04, (H.x0+H.x1)/2, EAV-0.09, H.z0-ov+0.02, TRM); B(H.x1-H.x0+0.66, 0.18, 0.04, (H.x0+H.x1)/2, EAV-0.09, H.z1+ov-0.02, TRM);
+    // the fascia over each slab's lower edge, and a gutter hung on it; the downspouts off the gutters' ends,
+    // back in to the wall and down it, onto the porch roof in front and to splash blocks behind
+    const yo=EAV-(RID-EAV)/((H.z1-H.z0)/2)*ov, GW="#ecebe6";
+    for(const [zf, sd] of [[H.z0-ov, -1],[H.z1+ov, 1]]){
+      B(H.x1-H.x0+0.78, 0.16, 0.04, (H.x0+H.x1)/2, yo-0.065, zf+sd*0.005, TRM);
+      B(H.x1-H.x0+0.74, 0.11, 0.12, (H.x0+H.x1)/2, yo-0.07, zf+sd*0.089, GW);
+      for(const x of [H.x0+0.30, H.x1-0.30]){
+        const zw=(sd<0 ? H.z0 : H.z1)+sd*0.065, bot=sd<0 ? FF+2.98 : Y+0.25;
+        const P=[V3(x, yo-0.12, zf+sd*0.089), V3(x, yo-0.30, zf+sd*0.089), V3(x, yo-0.62, zw), V3(x, bot, zw),
+                 V3(x, sd<0 ? FF+2.93 : Y+0.08, zw+sd*(sd<0 ? 0.0 : 0.28)+(sd<0 ? -0.25 : 0))];
+        for(let i=1;i<P.length;i++){ tubeE(P[i-1], P[i], 0.035, GW); if(i<P.length-1) ent(new T.SphereGeometry(0.035, 10, 8), P[i].x, P[i].y, P[i].z, GW); }
+        if(sd>0){ B(0.26, 0.04, 0.50, x, Y+0.015, H.z1+0.42, "#a8a49a"); addCol(x-0.06, x+0.06, H.z1, H.z1+0.12, Y-0.5, EAV); } } }
     // the chimney: brick up the outside of the west gable, stepped in under the eave, on up through the rake past the ridge
     const cz=Z+38.4;
     bx("brick", 0.62, EAV-0.5-(Y-0.2), 1.30, H.x0-0.33, (EAV-0.5+Y-0.2)/2, cz, 0.83, 0, "#8a4a36");
@@ -767,7 +953,12 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
       ent(new T.SphereGeometry(s, 18, 12).scale(1, 0.78, 1), x, PY+s*0.78, z, col); C(0.018, 0.06, x, PY+s*1.56+0.02, z, "#4a5a2a", 8); }
     C(0.17, 0.20, SA.b+0.75, PY+0.10, PZ0+0.32, "#7a4a2a", 16); ent(new T.SphereGeometry(0.22, 14, 10).scale(1, 0.7, 1), SA.b+0.75, PY+0.28, PZ0+0.32, "#c84a7a");
     addCol(SA.a-0.85, SA.a-0.08, PZ0+0.10, PZ0+0.58, PY-0.5, PY+0.4); addCol(SA.b+0.12, SA.b+0.98, PZ0+0.10, PZ0+0.56, PY-0.5, PY+0.4);
-    addZone(xa, xb, PZ0, H.z0, PY-1, PY+3, "THE PORCH"); }
+    addZone(xa, xb, PZ0, H.z0, PY-1, PY+3, "THE PORCH");
+    // a row of shrubs along the front of the porch either side of the steps, and down the house's ends
+    for(let x=xa+0.5; x<xb-0.3; x+=1.25) if(x<SA.a-0.7 || x>SA.b+0.7)
+      FOREST.plant("bush", x, PZ0-0.75, {y:Y, scale:0.55+hash2(x, PZ0)*0.25, solid:false, lean:false});
+    for(const [x, z0, z1] of [[H.x0-0.95, H.z0+0.7, Z+37.4], [H.x0-0.95, Z+39.5, H.z1-0.6], [H.x1+0.95, H.z0+0.7, H.z1-0.6]])
+      for(let z=z0; z<z1; z+=1.5) FOREST.plant("bush", x, z, {y:Y, scale:0.5+hash2(x, z)*0.25, solid:false, lean:false}); }
 
   /* ---- downstairs: the parlour ---- */
   { // the stove on its hearth against the west wall, its pipe into the chimney's thimble, a box of splits
@@ -1175,7 +1366,7 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
         if(k>0 && k<10){ tubeE(V3(x, BF+1.05, zMg-0.40), V3(x, BF+1.05, zMg-1.60), 0.025, "#8a8d90"); tubeE(V3(x, BF+1.05, zMg-1.60), V3(x, BF+0.30, zMg-1.80), 0.025, "#8a8d90"); }
         if(k<10) for(const dx of [0.42, 0.78]) tubeE(V3(x+dx, BF+0.68, zMg-0.40), V3(x+dx, BF+1.64, zMg-0.40), 0.018, "#9a9da0"); }
       addCol(x0-0.05, x1+0.05, zMg-0.42, BJ1, BF-0.5, BF+1.7);
-      for(const k of [2,3,6]) cow(x0+k*1.2+0.6, zMg-1.18, 0, 0, BF, 0.03, 1);
+      for(const k of [2,3,6]) cow(x0+k*1.2+0.6, zMg-1.30, 0, 0, BF, 0.03, 1, "manger");
       addUse(x0+3.6, zMg-2.6, BF, "PAT THE COW", ()=>toast(["SHE LEANS INTO IT. HER NAME'S ON THE STANCHION IN MARKER: “DOT”","WARM, AND A LOT BIGGER UP CLOSE","SHE LOOKS AT YOU THE WAY COWS DO, WHICH IS TO SAY NOT MUCH"][(Math.random()*3)|0],"#cfe0d4"), 1.6);
       // milk cans by the door, the strainer on a nail, the barn radio on a shelf with the farm report on
       for(let k=0;k<4;k++){ const x=170.0+k*0.42, z=zm+4.0;
@@ -1237,7 +1428,14 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
   mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
   EDIN_PLACES.farm={house:H, ff:FF, ff2:FF2, door:FDOOR, lane:LX};
 })();
-// the cows: one in a while lifts its head, flicks, puts it down again; they turn a little as they graze
+// the cows: they turn a little as they graze, the head working at the grass and now and then coming up
+// to look round; the tail swishing at the flies, harder some times than others
 function updateEdinboro(dt){
-  for(const c of EDIN_PLACES.cows){ c.t+=dt; c.g.rotation.y=c.ry+Math.sin(c.t*0.05)*c.sway; }
+  for(const c of EDIN_PLACES.cows){ c.t+=dt; const t=c.t;
+    c.g.rotation.y=c.ry+Math.sin(t*0.05)*c.sway;
+    if(c.pose==="graze"){ const up=smoothstep(0.80, 0.97, Math.sin(t*0.11+c.ry*3));     // a while with her head up, now and then
+      c.head.rotation.x=-0.55*up+0.05*Math.sin(t*2.3)*(1-up); c.head.rotation.y=0.18*up*Math.sin(t*0.4); }
+    else c.head.rotation.x=0.04*Math.sin(t*0.7);
+    const sw=0.5+0.5*Math.sin(t*0.23+c.ry);
+    c.tail.rotation.z=Math.sin(t*(2.2+sw))*0.28*sw; c.tail.rotation.x=0.08*Math.sin(t*1.3)*sw; }
 }

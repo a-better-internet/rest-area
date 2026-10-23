@@ -192,7 +192,17 @@ If the scene runs hot on your machine, start there (see below).
     arches. Each has a greenhouse, door seams and mirrors. The head and tail
     lamps are patches of the body's own corners, so they follow its curve:
     a bezel, the lens and a chrome strip in front, the lens and a reversing
-    lamp behind.
+    lamp behind. On a sedan or pickup the tail lamps carry on in across the
+    back.
+  - Close to, the glass is tinted and see-through. Inside are the dash, the
+    wheel on its column, a seat back and headrest for every place (three
+    rows in a minivan), the headliner and the pillars' linings. Past fifty
+    metres the glass goes dark.
+  - The bumpers have shut lines round the corners to the wheel arches, and
+    the hood and trunk have theirs. There is a black seal along the foot of
+    the side glass, a diffuser with the exhaust under it, side markers,
+    badges, wipers (one on the back glass of a hatch), a third brake lamp
+    and a fin aerial.
   - Tyres have sidewalls and tread, mounted on spoked alloy rims.
   - Rigs run duals on painted steel wheels.
   - Trailers carry painted sides: posts and rivets, DOT tape, road grime,
@@ -226,12 +236,18 @@ If the scene runs hot on your machine, start there (see below).
   across any of them. 44 vehicles
   run on it: sedans, SUVs, pickups, minivans, box trucks, reefers, flatbeds
   and tractor-trailers.
-  - Where a ramp leaves or joins, the lane widens and tapers the way a
-    real deceleration or acceleration lane does. A painted gore with
-    chevrons lies between the ramp and the through lanes, its channelizing
-    line running to the nose; the edge line kinks round the taper and runs
-    on past it dotted, the rumble strip stops short of the merge, and the
-    grass stays off the paving.
+  - Where a ramp leaves or joins, a speed-change lane runs right beside
+    the through lane, over the shoulder, and tapers in or out the way a
+    real deceleration or acceleration lane does. Its outer line runs down
+    the taper into the through lane's edge line, and between the two lanes
+    the edge line is wide and dotted. Where the ramp parts from the lane
+    the edge line goes solid again, and the ramp's own left line leaves it
+    white out to the paved nose. The gore triangle between them is
+    chevroned, and past the nose the ramp's left line is yellow. The rumble
+    strip stops short of the junction, and the grass stays off the paving.
+    The rest area's entrance lane runs on as an auxiliary lane into the
+    Edinboro exit a hundred metres north, dotted off the through lane the
+    whole way, so the two never cross.
   - Each one follows the car in front with the Intelligent Driver Model
     (a time headway that grows with speed). They pass slower traffic only
     when there is room both ways, and move over for merging visitors.
@@ -251,16 +267,18 @@ If the scene runs hot on your machine, start there (see below).
   girders, a pier in the median and one off each outside shoulder, and
   block abutments at the top of the cut. The interstate runs under it in a
   cut through farm country graded level either side.
-  - An advance sign (EXIT 166 · US 6N Edinboro · NEXT RIGHT) and a gore
-    sign mark the exit. The northbound off-ramp leaves the right lane,
-    climbs the side of the cut and merges into US 6N eastbound under a
-    MERGE sign.
-  - The mirror ramp on the west side takes you from US 6N back down onto
-    southbound, so you can turn round. The crossovers will get you back
-    onto northbound.
+  - It is a full diamond, a ramp in each corner. Each way an advance sign
+    (EXIT 166 · US 6N Edinboro · NEXT RIGHT) and a gore sign mark the exit.
+    The northbound off-ramp leaves the right lane, climbs the side of the
+    cut and merges into US 6N eastbound under a MERGE sign. The southbound
+    off-ramp does the same on the north-west side into US 6N westbound.
+  - On to southbound from US 6N on the south-west side. On to northbound
+    you turn north off US 6N between the bridge's east end and the fuel
+    stop, and come down the cut to an acceleration lane, so you can get
+    back on the way you came either way.
   - US 6N is two lanes with a double yellow line and W-beam rail off the
     bridge ends. It has route markers, an Edinboro 3 · Union City 14
-    distance sign, and I-79 SOUTH signs pointing to the on-ramp.
+    distance sign, and I-79 NORTH and SOUTH signs pointing to the on-ramps.
   - Both ends of the road are closed for now with type III barricades
     reading ROAD CLOSED.
   - Farmland runs out both ways: a dozen fields of corn, soybeans and hay
@@ -290,8 +308,12 @@ If the scene runs hot on your machine, start there (see below).
     slushie, looks in the bait cooler, reads the wall, or tries the pumps.
   - **The Weir place**, south of the road up a gravel lane, past the
     mailbox and a farm stand selling sweet corn on the honour system. The
-    farmhouse is an I-house, sixteen metres by ten and a half, white
-    clapboard with green shutters, a porch the length of its front (a
+    farmhouse is an I-house, sixteen metres by ten and a half. It is white
+    clapboard, each course lapped and the paint worn thin in places, with
+    corner boards, green shutters and curtains in every window, on a
+    fieldstone foundation with shrubs along it. Gutters run on the fascias,
+    with downspouts down the corners to splash blocks. A porch runs the
+    length of its front (a
     swing, two rockers, a fern, pumpkins on the steps, a beadboard ceiling
     painted haint blue), a brick chimney up its west end, lightning rods
     and a dish on the roof, and a cellar bulkhead. You go in at the front
@@ -307,7 +329,8 @@ If the scene runs hot on your machine, start there (see below).
       oilcloth and a pie under a towel (`E`), the wall phone, the feed
       store's calendar, coats and boots by the back door, the dog's bed;
     - up the stair (oak treads, a red runner, a turned newel, a rail round
-      the well upstairs): the front bedroom with its rose paper, the bed,
+      the well upstairs; every room has a painted baseboard and a crown):
+      the front bedroom with its rose paper, the bed,
       nightstands, a cedar chest and a dresser with its mirror; the kids'
       room with stars on the walls, two beds, a desk, a toy chest, a John
       Deere poster and the fair's ribbons; the sewing room, striped, with a
@@ -324,8 +347,12 @@ If the scene runs hot on your machine, start there (see below).
     rafters, the hay track along the ridge. The mow to the north is stacked
     with square bales, stepped down where they've been taken from, with an
     elevator up to them; along the south wall three cows stand in their
-    stanchions over the manger (`E` pats one), with a calf in a pen in the
-    corner. There are milk cans, the barn radio on its shelf (`E`, the farm
+    stanchions with their heads through to the manger (`E` pats one), with
+    a calf in a pen in the corner. The cows are Holsteins, each marked her
+    own way. They have hip bones and a spine, jointed legs white below the
+    knee on dark cloven hooves, an udder, ears, and a tail hanging to the
+    hocks that swishes at the flies. Out in the pasture they graze, and now
+    and then one lifts her head to look round. There are milk cans, the barn radio on its shelf (`E`, the farm
     report), pitchforks, a wheelbarrow, a workbench across the east end,
     and bulbs on cords. There is also a hay wagon, a pole shed with the
     green tractor in it, the clothesline, the woodpile, and cows grazing in
@@ -334,10 +361,11 @@ If the scene runs hot on your machine, start there (see below).
     road and goes up the Weirs' lane, with a transformer on its last pole
     and drops to the house and the barn.
 - **The picnic grove** spreads across the lawn south of the building. Paths
-  run to it, round the back and down to the pet area, and every one of them
-  ends somewhere (at the shelter's slab, in a round pad by the pet area's bag
-  dispenser, back at the plaza); the raised walk by the car lot ramps down
-  at its ends. The grove has tables on concrete pads, charcoal grills (some
+  run to it off curb ramps at the plaza's corners: north to the shelter's
+  slab and its ramp, south to a round pad by the pet area's bag dispenser,
+  round the back of the building from one side of the plaza to the other,
+  and off each end of the raised walk by the car lot. Every one meets
+  another walk, a slab or a pad, and none of them ends in the grass. The grove has tables on concrete pads, charcoal grills (some
   lit, with smoke and embers), a picnic shelter and shade trees. Nearby are
   the flagpole with the US and Pennsylvania flags, a Blue Star Memorial
   Highway marker and a pet area, and on the lawn north of the plaza a blue
@@ -484,9 +512,10 @@ If the scene runs hot on your machine, start there (see below).
     a few, and keeps the clock where it was, so the sun moves instead. In
     autumn the leaves are down on the lawns and walks under the hardwoods
     and round the farm; in summer there are only a few dry ones.
-  - The lawns, the verges and the farm have grass standing up off the
-    ground: tufts of blades, mown short on the lawns and longer on the
-    verges, each taking its colour from the ground it stands on.
+  - The lawns are grass close to: fine blades laid over the ground's own
+    colour at two scales, so no repeat shows near or far, and the rest
+    area's lawn is mown in stripes that go light and dark as you look
+    along them one way and the other, the way a mown lawn does.
   - At night the lot lights and building lights come on and, in summer,
     fireflies rise over the lawn.
   - Mist lies on the ground for an hour after sunrise and comes back at
@@ -721,7 +750,7 @@ centred on the origin.
 | The dug-out (darts, couch) | x 70.25 … 77, z −183.4 … −176, off the cellar's west side |
 | The corridor and the arcade | corridor x 71 … 73 from z −184 to −211; arcade x 63.5 … 80.5, z −224 … −211 |
 | Median crossovers | z −250, −520 and +470 |
-| Edinboro (US 6N bridge) | z −1200; off-ramp from z −640; the fields x −330 … 610, z −1460 … −860 |
+| Edinboro (US 6N bridge) | z −1200; ramps from z −640 (south) and −1630 (north); the fields x −330 … 610, z −1460 … −860 |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
 | Well house · water tank | x 65.6 … 68.8, z 97.6 … 101.2 · x 70, z 140 |
 | The creek | from x 170, z 262 north past the plant, then east along z ≈ 100 … 134 |
@@ -778,7 +807,6 @@ js/14h-custodian.js the custodian: rounds, stalls and cans, the restroom logs, m
 js/14i-trucker.js   the truckers: the one on the phone, the walk-round, the one in slippers and his coffee run
 js/14k-edinboro.js  at exit 166: the fuel stop, its store and restroom, the Weir farm (the house and both its floors, the walk-in barn, silos, shed, stand, cows)
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
-js/14z-grass.js     tufts of grass on the lawns, the verges and the farm, in chunks shown near the camera
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
 js/16b-weather.js   weather (cloud deck, rain, fog banks, lightning) and the power: circuits, outage, generator, transfer switch
@@ -872,7 +900,9 @@ the generator house's cellar and the trailer's step. The routes are:
   corridor's stair, keys held, at all three speeds);
 - across each of the three median crossovers on foot;
 - up Edinboro's off-ramp, along US 6N and over the bridge, and down the
-  on-ramp to southbound;
+  on-ramp to southbound; and the other two, down onto northbound and up
+  off southbound;
+- along every sidewalk off the plaza and the long walk;
 - into the fuel stop and through the grey door into its restroom;
 - up the Weirs' lane, onto the porch, in at the front door, into the
   parlour and the kitchen and out the back; up the stair (and its keys
@@ -919,7 +949,7 @@ lights, radio station, cart, mower, blower), `CUST_MOW` and `CUST_LOG`,
 `VENDHUT_RT` (`brew`, `pour`, `mugUnder`) and `SLIPPERS.p` (the trucker:
 `state`, `nextM`, the hours after six in the evening of his next trip),
 `TRUCKERS` (whose rig is whose, and the stalls held beside them), `DARTS`
-(`start()`, `game`), `ARCADE`, `HOCKEY`, `HOOPS`, `RAIDERS` (`start()`), `GRASS` and `WEAR`
+(`start()`, `game`), `ARCADE`, `HOCKEY`, `HOOPS`, `RAIDERS` (`start()`), `WEAR`
 (the leaves), `EDIN_PLACES` (the farm's floors, the cows), `EDIN` (the interchange: its ramps, bridge
 and fields), `CROSSOVERS`, `WWTP`, `CREEK` and `PLANT_RT` (the clarifier's
 arm, the alarm: set `alarmT` to a number of seconds to sound it).
