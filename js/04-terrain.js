@@ -72,13 +72,15 @@ const EDIN=(function(){
   const F=(x0,x1,z0,z1,crop)=>({x0:x0, x1:x1, z0:z+z0, z1:z+z1, crop:crop});
   // (strips a hundred metres or so wide, corn and beans and hay turn about, the way the county farms them;
   //  north of the road the corner by the bridge is the fuel stop's, south a farmstead sits back off the road
-  //  with its own pasture behind it: 14k builds both. Field 3 is the hay field with the oak in it.)
-  E.fields=[F(48,128,-250,-16,"corn"), F(140,248,-250,-16,"soy"), F(260,368,-250,-16,"hay"),
+  //  with its own pasture behind it: 14k builds both. Field 3 is the hay field with the oak in it. The first
+  //  corn field stands back from the road behind the chapel and its churchyard, 14l.)
+  E.fields=[F(48,128,-250,-100,"corn"), F(140,248,-250,-16,"soy"), F(260,368,-250,-16,"hay"),
             F(-30,100,16,330,"hay"), F(262,388,16,330,"corn"), F(400,500,16,330,"soy"),
             F(512,600,16,330,"pasture"), F(380,488,-250,-16,"corn"), F(500,600,-250,-16,"hay"),
             F(-322,-214,-250,-16,"soy"), F(-322,-236,16,330,"hay"), F(112,250,140,330,"pasture")];
   E.station={x0:-56, x1:32, z0:z-66, z1:z-E.hw+0.05};                  // the fuel stop's lot, north of the road by the bridge
   E.farm={x0:104, x1:258, z0:z+E.hw+1, z1:z+130};                      // the farmstead, south of it
+  E.chapel={x0:50, x1:128, z0:z-96, z1:z-E.hw};                        // the chapel, its lot and its graveyard, north of it
   return E;
 })();
 // the drive up to the substation: off the north end of the car lot, east
@@ -405,7 +407,8 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     if(x>155 && z>70 && z<275){ const cq=distToPath(CREEK,x,z).d; if(cq<3.4) w*=smoothstep(1.0, 3.4, cq); }
     w*=1-smoothstep(0.35, 0.8, slope)*0.7;
     const F=EDIN.farm, farm=(x>F.x0+6 && x<F.x0+60 && z>F.z0+12 && z<F.z0+58) ? 0.6 : 0;
-    const mown=Math.max(1-smoothstep(0, 8, Terrain.boxDist(SITE.pad,x,z)), farm);
+    const CH=EDIN.chapel, kirk=(x>CH.x0+2 && x<CH.x1-2 && z>CH.z0+4 && z<CH.z1-2) ? 0.7 : 0;      // (the churchyard is kept)
+    const mown=Math.max(1-smoothstep(0, 8, Terrain.boxDist(SITE.pad,x,z)), farm, kirk);
     return [w, w*mown*(hd<22 ? smoothstep(12, 22, hd) : 1)];
   }
   function grid(R,cell,holes,name,skirt){

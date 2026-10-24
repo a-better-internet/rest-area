@@ -62,6 +62,7 @@ RAIDERS.start=function(){
   if(typeof DARTS!=="undefined" && DARTS.on) DARTS.stop();
   if(typeof HOCKEY!=="undefined" && HOCKEY.on) HOCKEY.stop();
   if(typeof HOOPS!=="undefined" && HOOPS.on) HOOPS.stop();
+  if(typeof CABS!=="undefined" && CABS.on) CABS.stop();
   RAIDERS.on=true; RAIDERS.keys={}; clearKeys();
   if(seated) standUp();
   if(!RAIDERS.g || RAIDERS.g.over || RAIDERS.g.won) RAIDERS.newGame();

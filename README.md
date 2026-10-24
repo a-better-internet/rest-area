@@ -357,6 +357,31 @@ If the scene runs hot on your machine, start there (see below).
     and bulbs on cords. There is also a hay wagon, a pole shed with the
     green tractor in it, the clothesline, the woodpile, and cows grazing in
     the pasture behind.
+  - **French Creek Union Chapel**, north of the road past the fuel stop,
+    set back in its own mown yard with the corn behind it. A gravel lot
+    with a car in it, and a sign at the road with this week's letters
+    (HARVEST SUPPER SAT 5 PM · ALL WELCOME · WORSHIP SUNDAY 10:30). The
+    chapel is white clapboard on a fieldstone foundation, gable to the
+    road, with a steeple on the front of the ridge: a square tower, a
+    louvred belfry with the bell hanging in it, a spire and a gilt cross.
+    Down each side four tall windows of coloured glass with pointed caps
+    over them outside (ruby and cobalt round pale quarries, a gold roundel
+    with a cross); they glow at night. You go up four steps between pipe
+    rails to red double doors under a transom. Inside is one room: an oak
+    floor, oak wainscot to the chair rail and plaster above, eight rows of
+    pews either side of a red runner (you can sit in them), three
+    schoolhouse globes, and at the front, up two steps, the pulpit (`E`),
+    the table with its cloth, candles and the open Bible, the cross on the
+    wall, the hymn board and the piano (`E`). At the back hang the bell
+    rope (`E` rings the bell, and it is heard across the fields) and the
+    coat pegs, and the guest book lies open on its table (`E`).
+  - East of it, behind a dry-stone wall along the road with a gap at the
+    gate, is the old graveyard: two hundred-odd stones in rows facing the
+    road. They are round-topped tablets, uprights on bases, slant markers,
+    an obelisk or two, flush markers and a child's lamb, with the oldest at
+    the back weathered dark and leaning. A few have a flag by them. There
+    are three old maples and a bench under one of them. `E` at the gate
+    reads the stones.
   - A pole line runs along US 6N on the north side, and a tap crosses the
     road and goes up the Weirs' lane, with a transformer on its last pole
     and drops to the house and the barn.
@@ -417,14 +442,41 @@ If the scene runs hot on your machine, start there (see below).
     - **The corridor and the arcade.** A door in the far wall opens on six
       steps down to a fallout-shelter corridor from 1962. It has block
       walls painted green and cream, a yellow stripe, conduit and a cable
-      tray, vapour-tight tubes (one going), two locked steel doors and the
-      yellow shelter sign. Twenty-five metres on, under the hill, it opens
-      into a small arcade with a cosmic carpet, black walls with pink and
-      blue neon, and a GAME ROOM sign. Four upright cabinets stand spread
-      round the walls running their attract screens (MAZE MUNCHER, TURNPIKE
-      RACER, BLOCK DROP; `E` drops a token), with a token changer by the
-      way in, clear of the trash can.
-    - **Astro Raiders.** The first cabinet plays. `E` stands you at it,
+      tray, vapour-tight tubes (one going), two steel doors in its east wall
+      (MECH 2, and STORAGE · NO ENTRY) and the yellow shelter sign.
+      Twenty-five metres on, under the hill, a pair of sliding glass doors
+      parts as you come up to them, each leaf running into a pocket in the
+      wall, onto a small arcade with a cosmic carpet, black walls with pink
+      and blue neon, and a GAME ROOM sign. Four upright cabinets stand
+      spread round the walls, each running its own attract screen (ASTRO
+      RAIDERS, MAZE MUNCHER, BRICKYARD BREAKOUT and BLOCK DROP), with a
+      token changer by the way in, clear of the trash can.
+    - **MECH 2.** The first steel door opens on what its name says: the air
+      handler that breathes for the corridor and the arcade (`E`), its duct
+      away along the ceiling, a water heater, the sump under its grate, the
+      electrical panel with the log on a clipboard beside it, a shelf of
+      boxed filters and the mop bucket, under one tube fixture with one of
+      its two tubes gone grey.
+    - **The stair down and the sub-basement.** The door marked NO ENTRY
+      opens on the shelter's old stores (cracker tins on a steel shelf, the
+      Civil Defense water drums, a broom) and a straight concrete stair,
+      eighteen risers with yellow nosings under a ceiling that falls with
+      it, down to the sub-basement. That is a loop of block hallways not
+      much wider than your shoulders, running out under the hill, with
+      dead ends off it, laid out on a grid so every wall turns its corners
+      cleanly. A bare bulb hangs every so often, some of them out and one
+      going. Pipes run along the ceilings, water stands on the floor, and
+      there is chalk on the walls (DON'T GO PAST THE RED LIGHT, TURN BACK,
+      OUT →). Water drips somewhere near while you are down there. Off the
+      hallways are the old boiler room, cold since the sixties (`E`); a
+      bunk room the shelter never needed, with four cots, a table with a
+      radio that plays only static (`E`), and an October 1962 calendar
+      crossed off to the 27th; a passage with a chair at its end, facing
+      the wall under rows of tally marks (`E`); and at the far end, under a
+      red bulb, a steel door with a wheel on it marked LEVEL 3 that does not
+      turn (`E`, and something knocks back). It is the darkest place in the
+      world: bring the flashlight (`L`).
+    - **Astro Raiders.** Every cabinet plays. `E` at the first stands you at it,
       looking at its screen in the cabinet, with the room still round you.
       It is a space invaders game after yojoecool's MIT-licensed
       SpaceInvaders. Five rows of raiders march across and step down, faster
@@ -434,6 +486,25 @@ If the scene runs hot on your machine, start there (see below).
       than the last. `A`/`D` or the arrows move, `Space` or a click fires,
       the stick on the cabinet leans as you move, `N` starts again and `Esc`
       or `E` steps away.
+    - **The other three** play exactly the same way: `E` stands you at the
+      cabinet, you play on its screen with the stick leaning under your
+      hand, `N` (or `Space` once it is over) starts again, and `Esc` or `E`
+      steps away. Each keeps its high score.
+      - **Maze Muncher** follows Ania Kubów's MIT-licensed pac-man: her
+        28 × 28 maze, a dot a point, a power pellet ten and the ghosts
+        frightened for ten seconds, a frightened ghost a hundred and sent
+        home. Blinky, Pinky, Inky and Clyde wander at their own paces. The
+        muncher keeps going the way you last pushed him, you have three of
+        him, and the tunnel runs across the middle.
+      - **Brickyard Breakout** (the old Turnpike Racer, its marquee
+        repainted) follows Sara Sánchez's MIT-licensed 2D breakout: a wall
+        of fifteen bricks, a point a brick, three balls, the bat on the
+        stick or the mouse.
+      - **Block Drop** follows Jake Gordon's MIT-licensed
+        javascript-tetris: a well ten by twenty, the seven pieces from a
+        bag, ten for a piece set down and a hundred for a row (doubling
+        for each more at once), the drop quickening as the rows go, and the
+        next piece in its box.
     - **Air hockey.** `E` at the near end of the table puts the red mallet
       in your hand, and you play the table's computer, first to seven. The
       mouse (or `WASD`) moves your mallet round your half. The puck rides
@@ -456,8 +527,10 @@ If the scene runs hot on your machine, start there (see below).
       first shot. The balls roll back down the ramp to you.
 
   Everything underground (the cellar, the dug-out, the corridor and the
-  arcade) is lit only by its own lamps. It looks the same at noon and at
-  midnight, and it is not on the day/night cycle.
+  arcade, MECH 2, the stair and the sub-basement) is lit only by its own
+  lamps. It looks the same at noon and at midnight, and it is not on the
+  day/night cycle. The sub-basement keeps only a fifth of the fill light
+  the rest of it has, so between its bulbs it is all but dark.
 
   A pole line runs off south down its cleared right-of-way.
 - **Water in, water out.** No city water or sewer reaches a rest area out
@@ -704,7 +777,12 @@ At the oche you aim with the mouse. A click or `Space` throws, `N` starts a
 new game, and `Esc` or `E` puts the darts down.
 
 At the Astro Raiders cabinet `A`/`D` or the arrows move, `Space` or a click
-fires, `N` (or `Enter`) starts a new game and `Esc` or `E` steps away.
+fires, `N` (or `Enter`) starts a new game and `Esc` or `E` steps away. At
+the other three the arrows or `WASD` work the stick: in Maze Muncher they
+steer, in Brickyard Breakout they (or the mouse) move the bat, and in Block
+Drop left and right move the piece, up turns it and down drops it faster.
+`N` (or `Space`, when the game is over) starts again, and `Esc` or `E` steps
+away.
 
 At the air hockey table the mouse (or `WASD`) moves your mallet. At the
 hoops machine you aim with the mouse, and a click or `Space` shoots. At
@@ -748,9 +826,12 @@ centred on the origin.
 | Substation | x 60 … 90, z −184 … −154 (2.6 m up the drive) |
 | Generator house and its cellar | x 77 … 87, z −182 … −176; the cellar floor 2.65 m below the house's |
 | The dug-out (darts, couch) | x 70.25 … 77, z −183.4 … −176, off the cellar's west side |
-| The corridor and the arcade | corridor x 71 … 73 from z −184 to −211; arcade x 63.5 … 80.5, z −224 … −211 |
+| The corridor and the arcade | corridor x 71 … 73 from z −184 to −211; arcade x 67.5 … 76.5, z −219.5 … −211 |
+| MECH 2 · the stores and the stair | x 73.25 … 78.25, z −193.75 … −188.25 · x 73.25 … 80.2, z −205.4 … −201.6 |
+| The sub-basement | x 58.4 … 100.8, z −242 … −183.4, its floor 3.42 m under the corridor's |
 | Median crossovers | z −250, −520 and +470 |
 | Edinboro (US 6N bridge) | z −1200; ramps from z −640 (south) and −1630 (north); the fields x −330 … 610, z −1460 … −860 |
+| The chapel and its graveyard | x 50 … 128, z −1296 … −1205; the chapel x 84 … 93, z −1238 … −1222 |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
 | Well house · water tank | x 65.6 … 68.8, z 97.6 … 101.2 · x 70, z 140 |
 | The creek | from x 170, z 262 north past the plant, then east along z ≈ 100 … 134 |
@@ -791,7 +872,8 @@ js/10b-trailer.js   the trailer whose back doors open: its doors and step, the i
 js/11-driving.js    driving a parked car
 js/12-substation.js the drive, the fenced compound, generators, pole line
 js/12b-hangout.js   the stair down from the generator house, the crew's rooms under it, the darts lane
-js/12c-arcade.js    the shelter corridor on down from the dug-out, and the arcade at the end of it
+js/12c-arcade.js    the shelter corridor on down from the dug-out, its two steel doors, and the arcade at the end of it behind its sliding doors
+js/12d-subbasement.js MECH 2, the stores and the stair behind the other door, and the sub-basement's hallways and rooms
 js/13-grounds.js    picnic grove, shelter, grills, flags, memorial, pet area
 js/13b-vendhut.js   the vending room on the island: machines, phone, board, lights, crosswalk
 js/13c-wastewater.js the well house, the tank on its tower, the treatment plant, the outfall and the creek
@@ -806,6 +888,7 @@ js/14g-garage.js    the maintenance garage, its yard, the track and gate, the tr
 js/14h-custodian.js the custodian: rounds, stalls and cans, the restroom logs, mowing, leaf blowing, the cot; the outdoor path grid
 js/14i-trucker.js   the truckers: the one on the phone, the walk-round, the one in slippers and his coffee run
 js/14k-edinboro.js  at exit 166: the fuel stop, its store and restroom, the Weir farm (the house and both its floors, the walk-in barn, silos, shed, stand, cows)
+js/14l-chapel.js    at exit 166: French Creek Union Chapel, inside and out, its lot and sign, and the old graveyard
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -817,6 +900,7 @@ js/18b-vending.js   the vending machines' keypad, coins, coil and shaking
 js/18d-darts.js     darts: aiming, the throw and its flight, scoring, 301 against Dale
 js/18e-games.js     the arcade's games: air hockey against the table, and hoops (its net)
 js/18f-raiders.js   Astro Raiders, the space invaders game on the first cabinet
+js/18g-cabinets.js  the other three cabinets: Maze Muncher, Brickyard Breakout, Block Drop
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
@@ -898,12 +982,18 @@ the generator house's cellar and the trailer's step. The routes are:
 - up the trailer's step (doors opened first) and up its aisle to the load bar;
 - on through the dug-out, its door, the corridor and into the arcade (and the
   corridor's stair, keys held, at all three speeds);
+- in at MECH 2's door; in at the other, down the stair to the sub-basement
+  (and the stair, keys held, at all three speeds), along the hallways to
+  the bunk room, to the chair, round to the boiler room, and up to the
+  door at the end;
 - across each of the three median crossovers on foot;
 - up Edinboro's off-ramp, along US 6N and over the bridge, and down the
   on-ramp to southbound; and the other two, down onto northbound and up
   off southbound;
 - along every sidewalk off the plaza and the long walk;
 - into the fuel stop and through the grey door into its restroom;
+- up the chapel's walk and steps, in at its doors and up the aisle to the
+  chancel; and in at the graveyard's gate and along between the stones;
 - up the Weirs' lane, onto the porch, in at the front door, into the
   parlour and the kitchen and out the back; up the stair (and its keys
   held, at all three speeds) into each room upstairs, the storeroom

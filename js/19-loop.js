@@ -187,12 +187,16 @@ function frame(){
      at midnight: the sky's light is swapped for a fixed dim fill, the sun
      and the lightning are gone, every emissive is held at its night level,
      and the pool lights take only the lamps that are down there (16). */
-  _buriedMix += ((buriedAt(camera.position.x, camera.position.z, camera.position.y)?1:0)-_buriedMix)*Math.min(1, delta*2.5);
+  // (a volume given a share, addBuried's last argument, holds the fill at that fraction of it: 12d's
+  // sub-basement is all but dark between its bulbs)
+  const _bv=buriedVolAt(camera.position.x, camera.position.z, camera.position.y);
+  _buriedMix += ((_bv?1:0)-_buriedMix)*Math.min(1, delta*2.5);
+  _buriedDim += (((_bv && _bv.amb) || 1)-_buriedDim)*Math.min(1, delta*1.2);
   const under=_buriedMix>0.002 ? _buriedMix : 0;
   if(under){
-    hemi.intensity=lerp(hemi.intensity, UNDER_LIGHT.hemi, under);
+    hemi.intensity=lerp(hemi.intensity, UNDER_LIGHT.hemi*_buriedDim, under);
     hemi.color.lerp(UNDER_LIGHT.sky, under); hemi.groundColor.lerp(UNDER_LIGHT.ground, under);
-    key.intensity*=1-under; amb.intensity=lerp(amb.intensity, UNDER_LIGHT.amb, under);
+    key.intensity*=1-under; amb.intensity=lerp(amb.intensity, UNDER_LIGHT.amb*_buriedDim, under);
   }
   const darkL=dark+(1-dark)*under;
   // a short draw distance brings the haze in to meet it
@@ -341,7 +345,7 @@ function frame(){
     renderer.render(scene, camera);
   }
 }
-let _indoorMix=0, _buriedMix=0;
+let _indoorMix=0, _buriedMix=0, _buriedDim=1;
 const UNDER_LIGHT={hemi:0.12, amb:0.09, sky:new T.Color(0xd9d4ca), ground:new T.Color(0x857f74)};
 const _sunCel=new T.Vector3(), _camX=new T.Vector3(), _camY=new T.Vector3();
 const _INDOOR_BOUNCE=new THREE.Color(0x9c9a94);

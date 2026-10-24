@@ -26,6 +26,8 @@ addEventListener("keydown",e=>{
   if(typeof HOOPS!=="undefined" && HOOPS.on){ e.preventDefault(); HOOPS.key(e); return; }
   // at the Astro Raiders cabinet, the cabinet's (18f-raiders)
   if(typeof RAIDERS!=="undefined" && RAIDERS.on){ e.preventDefault(); RAIDERS.key(e); return; }
+  // and at the other three, theirs (18g-cabinets)
+  if(typeof CABS!=="undefined" && CABS.on){ e.preventDefault(); CABS.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
@@ -80,6 +82,7 @@ addEventListener("mousemove",e=>{
 function look(dx,dy){
   if(typeof HOCKEY!=="undefined" && HOCKEY.on){ HOCKEY.move(dx,dy); return; }   // the mouse is the mallet
   if(typeof RAIDERS!=="undefined" && RAIDERS.on) return;                          // your eyes stay on the screen
+  if(typeof CABS!=="undefined" && CABS.on){ CABS.mouse(dx,dy); return; }           // (the bat, at Brickyard Breakout)
   if(driving){                       // orbit the car rather than turn a head
     carCamYaw   -= dx*0.0042;
     carCamPitch  = clamp(carCamPitch - dy*0.0032, -0.18, 1.05);
@@ -255,8 +258,10 @@ function updateDoors(dt){
       const gc=d.stall.gap, i=COL_DYN.indexOf(gc), shut=d.occ && d.open<0.3;
       if(shut && i<0) COL_DYN.push(gc); else if(!shut && i>=0) COL_DYN.splice(i,1);
     }
-    d.open += (d.target-d.open)*Math.min(1, dt*(d.manualOnly?1.6:5.2));
-    d.g.rotation.y = d.base + d.swing*d.open;
+    d.open += (d.target-d.open)*Math.min(1, dt*(d.rate || (d.manualOnly?1.6:5.2)));
+    // a sliding pair runs its leaves apart; anything else swings on its hinge
+    if(d.slide) for(const s of d.slide) s.g.position.x=s.x0+s.dx*d.open;
+    else d.g.rotation.y = d.base + d.swing*d.open;
     // and while it is shut it is solid, which a leaf on its own never is
     if(d.blockCol){
       const shut=d.open<0.35 && (!d.partner || d.partner.open<0.35);

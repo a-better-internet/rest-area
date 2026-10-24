@@ -555,6 +555,42 @@ const AUDIO=(function(){
       const long=kind==="boom", s=ctx.createBufferSource(); s.buffer=noise(long?1.0:0.3,"white"); const f=ctx.createBiquadFilter();
       f.type="lowpass"; f.frequency.setValueAtTime(long?2400:3800,t); f.frequency.exponentialRampToValueAtTime(long?160:600,t+(long?0.9:0.25));
       const g=ctx.createGain(); env(g,t,0.004,(long?0.12:0.06)*vol,0.04,long?0.85:0.22); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="paddle"){                    // the arcade's other three (18g): the ball off the bat,
+      tone("square", 520, null, 0.05, 0.025*vol, t, 0, master);
+    }else if(kind==="wall"){                      //  off a wall,
+      tone("square", 330, null, 0.04, 0.018*vol, t, 0, master);
+    }else if(kind==="brick"){                     //  through a brick
+      tone("square", 880, 700, 0.07, 0.024*vol, t, 0, master);
+    }else if(kind==="chomp0"||kind==="chomp1"){   // the muncher's two-note chew, a dot at a time
+      const up=kind==="chomp0"; tone("triangle", up?260:480, up?480:260, 0.08, 0.05*vol, t, 0, master);
+    }else if(kind==="pellet"){                    // a power pellet
+      tone("square", 200, 900, 0.22, 0.03*vol, t, 0, master);
+    }else if(kind==="eatghost"){                  // a blue ghost eaten
+      tone("sawtooth", 300, 1600, 0.28, 0.025*vol, t, 0, master);
+    }else if(kind==="die"){                       // caught: down and down, then the two pops
+      tone("square", 900, 90, 1.1, 0.03*vol, t, 0, master);
+      tone("square", 160, 120, 0.08, 0.03*vol, t+1.2, 0, master); tone("square", 160, 120, 0.08, 0.03*vol, t+1.36, 0, master);
+    }else if(kind==="rotate"){                    // a piece turned,
+      tone("square", 1100, null, 0.025, 0.014*vol, t, 0, master);
+    }else if(kind==="lock"){                      //  set down,
+      tone("square", 150, 110, 0.07, 0.03*vol, t, 0, master);
+    }else if(kind==="line"){                      //  and a row of them gone
+      [523, 659, 784, 1046].forEach((f,i)=>tone("square", f, null, 0.07, 0.022*vol, t+i*0.05, 0, master));
+    }else if(kind==="jingle"){                    // the start of a game, and a win
+      [392, 523, 659, 784, 659, 784].forEach((f,i)=>tone("square", f, null, 0.09, 0.022*vol, t+i*0.09, 0, master));
+    }else if(kind==="drip"){                      // the sub-basement (12d): water off a pipe into standing water,
+      const f0=1300+Math.random()*900; tone("sine", f0, f0*1.9, 0.06, 0.05*vol, t, 0, master);
+      tone("sine", f0*0.5, f0*0.7, 0.10, 0.02*vol, t+0.02, 0, master);
+    }else if(kind==="knock"){                     //  three slow knocks on steel from the far side of a door,
+      for(let k=0;k<3;k++){ const at=t+0.9+k*0.62; tone("sine", 92, 60, 0.22, 0.30*vol, at, 0, master); tone("triangle", 240, 150, 0.08, 0.06*vol, at, 0, master);
+        const s=ctx.createBufferSource(); s.buffer=noise(0.12,"white"); const f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=700;
+        const g=ctx.createGain(); env(g,at,0.002,0.10*vol,0.02,0.08); s.connect(f); f.connect(g); g.connect(master); s.start(at); }
+    }else if(kind==="static"){                    //  and a radio with nothing on it
+      const s=ctx.createBufferSource(); s.buffer=noise(2.6,"white"); const f=ctx.createBiquadFilter(); f.type="bandpass"; f.frequency.value=2200; f.Q.value=0.5;
+      const g=ctx.createGain(); env(g,t,0.05,0.05*vol,1.9,0.5); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+      tone("sine", 620, 600, 1.4, 0.006*vol, t+0.6, 0, master);
+    }else if(kind==="bell"){                      // the chapel's bell (14l): a strike, its partials dying slowly, and again
+      for(const at of [t, t+2.2]) [[1,0.10],[2.0,0.05],[2.4,0.04],[3.0,0.025],[4.2,0.012]].forEach(([m,a])=>tone("sine", 196*m, 196*m*0.998, 4.5/Math.sqrt(m), a*Math.max(vol,0.25), at, 0, master));
     }else if(kind==="tick"){
       tone("square", 900, null, 0.03, 0.02*vol, t, 0, master);
     }else if(kind==="airhorn"){

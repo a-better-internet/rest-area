@@ -51,6 +51,14 @@ const ROUTES={
   "down to the basement":  {gate:true, pts:[[80,-174.2],[80,-177.4],[81.5,-176.8],[82.6,-176.8],[83.0,-176.8],[85.5,-176.8],[86.2,-176.8],[86.2,-178.4],[83.5,-178.4],[82.2,-178.3],[79.6,-178.3],[77.8,-179.5],[74.0,-179.5],[72.9,-179.6]]},
   // on through the dug-out, the door and the corridor, to the arcade under the hill
   "down to the arcade":    [[72.9,-179.6],[72.0,-182.6],[72.0,-183.5],[72.0,-184.2],[72.0,-186.5],[72.0,-210.0],[72.0,-212.0],[74.6,-212.8],[75.4,-215.0],[74.4,-216.0],[72.0,-216.2],[69.2,-216.0],[69.8,-217.7],[71.7,-217.7]],
+  // the two steel doors in its east wall (12d): MECH 2; and the stores, the stair and the sub-basement under them,
+  // the hallways out to the bunk room, the chair, the boiler room and the door at the end
+  "into mech 2":           [[72.0,-191.0],[72.6,-191.0],[73.1,-191.0],[73.6,-191.0],[75.0,-190.6],[75.6,-190.0]],
+  "down to the sub-basement": [[72.0,-203.5],[72.6,-203.5],[73.1,-203.5],[73.6,-203.5],[74.2,-203.5],[75.0,-203.6],[78.0,-203.6],[80.6,-203.6],[92.0,-203.6],[92.0,-205.0],
+                           [92.0,-231.9],[84.0,-232.0],[63.0,-232.0],[62.8,-230.0],[62.8,-214.6],[62.8,-213.0],[63.0,-212.0],[63.0,-210.6]],
+  "sub-basement, the chair": {y0:-4.2, pts:[[80.0,-232.0],[75.2,-232.0],[75.2,-229.0],[75.2,-227.4]]},
+  "sub-basement, the boiler room": {y0:-4.2, pts:[[92.0,-203.6],[100.0,-203.6],[100.0,-195.0],[100.0,-186.0],[86.0,-186.0],[84.4,-185.6],[82.0,-184.6]]},
+  "sub-basement, the door at the end": {y0:-4.2, pts:[[92.0,-230.0],[92.0,-236.0],[92.0,-241.0]]},
   // the vending room on the island (13b): across the truck aisle on the stripes, in, round the machines, out the back to the cars
   "to the vending room":   [[-66,0.5],[-60.5,0.5],[-56.6,0.5],[-55.3,0.5],[-54.2,0.5],[-54.4,-1.9],[-52.0,-1.9],[-52.0,2.8],[-53.6,2.8],[-53.0,0.5],[-50.7,0.5],[-49.0,0.5],[-44.0,0.5]],
   // the walk-in trailer (10b), its doors swung open first: up the step, past the jack, up the aisle to the load bar
@@ -86,6 +94,10 @@ const ROUTES={
   "farmhouse, sewing room": [[123.5,-1170.0],[123.5,-1168.4],[123.5,-1166.5],[123.5,-1165.1],[123.7,-1165.1],[124.85,-1165.1],[124.85,-1160.1],[123.5,-1160.1],[123.7,-1165.14],[126.9,-1165.14],[127.4,-1163.6],[130.66,-1161.7],[130.66,-1160.1],[130.0,-1159.4]],
   // the barn: up the lane, up the bank, in at the big doors, round the floor and the stalls
   "into the barn":          [[150,-1192],[150,-1160],[152,-1150],[156,-1142],[159.5,-1142],[164,-1142],[168.5,-1142],[172.0,-1142],[178,-1142],[181,-1140.6],[181,-1135.6],[186,-1135.6],[186,-1140.6],[192.0,-1141.0]],
+  // the chapel (14l): up the walk from US 6N, the steps, in at the red doors, up the aisle to the chancel; and the
+  // graveyard, in at the gate in its wall and along between two rows of stones
+  "into the chapel":        [[88.5,-1204],[88.5,-1210],[88.5,-1219.6],[88.5,-1220.2],[88.5,-1221.2],[88.5,-1222.1],[88.5,-1222.6],[88.5,-1226],[88.5,-1233.6],[88.5,-1234.2],[88.5,-1235.3]],
+  "into the graveyard":     [[100.9,-1204],[100.9,-1215],[100.9,-1219.7],[100.9,-1221],[100.9,-1228.4],[105,-1228.4],[110,-1228.4]],
   // the fuel stop's restroom, through the grey door by the slushies
   "fuel stop restroom":     [[-15,-1258],[-13.5,-1255.85],[-12.6,-1255.85],[-11.6,-1255.85],[-10.4,-1256.6],[-10.4,-1254.5]],
   "to the water tank":     [[88.4,129.0],[81,133.5],[74.6,138.2],[73.2,139.2]],
@@ -110,8 +122,10 @@ const ROUTES={
       const og=name==="through the gate" || !!ROUTES[name].gate;
       for(const d of REST.doors) if(d.manualOnly){ d.manual = og ? 1 : 0; d.open = og ? 1 : 0;
         if(d.blockCol) d.blockCol.y1 = og ? d.blockCol.y0-1 : d.blockTop; }
+        // and a door that opens itself as you come up to it (the arcade's sliding pair) is open
+        else if(d.blockCol){ d.open=1; d.blockCol.y1=d.blockCol.y0-1; }
       const R0=ROUTES[name], named={TRAIL:TRAIL, "EDIN.off":EDIN.off, "EDIN.on":EDIN.on, "EDIN.onN":EDIN.onN, "EDIN.offS":EDIN.offS}[R0];
-      let P=named ? named.map(q=>[q.x,q.z]) : R0.gate ? R0.pts : R0;
+      let P=named ? named.map(q=>[q.x,q.z]) : (R0.gate || R0.y0!==undefined) ? R0.pts : R0;
       if(P.pre){ (0,eval)(P.pre); P=P.pts; }
       // off the paths there is no fixed line: find one through the trunks on
       // a quarter-metre grid (breadth first, eight ways), then walk it
@@ -132,7 +146,7 @@ const ROUTES={
         const out=[]; for(let c=idx(ti,tj); c>=0; c=prev[c]) out.push([gx0+(c%NX)*S, gz0+((c/NX)|0)*S]);
         out.reverse(); out[0]=A.slice();
         P=out.concat([G], P.then||[]); }
-      let f=REST.surf(P[0][0],P[0][1],0.2), msg="ok", minY=1e9, maxY=-1e9;
+      let f=REST.surf(P[0][0],P[0][1],R0.y0!==undefined ? R0.y0 : 0.2), msg="ok", minY=1e9, maxY=-1e9;
       outer: for(let i=1;i<P.length;i++){
         const [x0,z0]=P[i-1], [x1,z1]=P[i], L=Math.hypot(x1-x0,z1-z0), n=Math.max(1,Math.ceil(L/0.08));
         for(let k=0;k<=n;k++){
@@ -183,6 +197,12 @@ const ROUTES={
       for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
         const d=drive(TOP2,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT2,m,lo); REST.sim(40);
         res["corridor stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-1.0 ? "down: never reached the corridor ("+lo.toFixed(2)+")"
+                                         : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
+    // and the stair down to the sub-basement (12d), all eighteen risers, and back up
+    { const TOP3=[[73.6,-203.6],[74.6,-203.6],[75.2,-203.6],[80.9,-203.6]], BOT3=TOP3.slice().reverse(), fy=REST.surf(73.6,-203.6,0.2), sb=SUBBASE.y;
+      for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
+        const d=drive(TOP3,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT3,m,lo); REST.sim(40);
+        res["sub-basement stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>sb+0.05 ? "down: never reached the bottom ("+lo.toFixed(2)+")"
                                          : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
     // and the farmhouse stair (14k), up from the hall and back down
     { const UP2=[[123.6,-1165.1],[124.85,-1165.1],[124.85,-1160.1]], DN2=UP2.slice().reverse(), top=REST.surf(124.85,-1160.1,EDIN.y+5), lo0=REST.surf(123.6,-1165.1,EDIN.y+1);

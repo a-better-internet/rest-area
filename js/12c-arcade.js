@@ -10,16 +10,18 @@
    to a corridor somebody built in 1962 as a fallout shelter and nobody
    has listed since: block walls painted green below and cream above, a
    yellow stripe, conduit and a cable tray overhead, vapour-tight tubes
-   every few metres (one of them going), two locked steel doors, the
-   shelter's yellow sign. Twenty-five metres on, under the hill, it opens
-   into a small room the crew filled with what came out of a closed arcade
+   every few metres (one of them going), two steel doors (MECH 2, and the
+   one marked NO ENTRY with a stair down behind it: 12d), the shelter's
+   yellow sign. Twenty-five metres on, under the hill, it opens
+   through a pair of sliding glass doors into a small room the crew filled
+   with what came out of a closed arcade
    in Erie: a cosmic carpet, black walls with pink and blue neon along
    them, four upright cabinets spread round the walls running their attract
-   screens, a token changer, an air hockey table in the middle and a hoops
+   screens (each of them playable, 18f and 18g), a token changer, an air hockey table in the middle and a hoops
    machine against the back wall, both of which you can play (18e). All of
    it BURIED: the same at any hour (19).
    ---------------------------------------------------------------------- */
-const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
+const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
 (function arcade(){
   const D=HANGOUT.door; if(!D) return;
   const FB=D.y, SR=0.19, NS=6, FH=FB-NS*SR;                       // the corridor floor, six risers under the cellar's
@@ -43,9 +45,12 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
 
   /* ---- the stair down ------------------------------------------------------ */
   const WT=0.25, TOP=FB+2.4;
+  // the two doors in the east wall: MECH 2, and the one marked NO ENTRY that has a stair behind it (12d)
+  const DMECH={a:-191.5, b:-190.5, sill:FH-0.004, head:FH+2.10}, DSTAIR={a:-204.0, b:-203.0, sill:FH-0.004, head:FH+2.10};
+  ARCADE.corr={x0:CX0, x1:CX1, wt:WT, y:FH, ceil:CEIL_LO, mech:DMECH, stair:DSTAIR};
   // (they start a centimetre into the arcade's wall, so their ends are inside it rather than in its face)
   wallBox("block", CX0-WT, CX0, CZ1+0.01, LZ0, FH-0.1, TOP, LOW, 0.6, FH);
-  wallBox("block", CX1, CX1+WT, CZ1+0.01, LZ0, FH-0.1, TOP, LOW, 0.6, FH);
+  runZ("block", CX1+WT/2, WT, CZ1+0.01, LZ0, FH-0.1, TOP, [DMECH, DSTAIR], LOW, 0.6);
   for(let k=1;k<NS;k++){
     const za=LZ1-(k-1)*0.30, zb=za-0.30, y=FB-k*SR;
     bx("concrete", CX1-CX0-0.004, y-FH, 0.30, (CX0+CX1)/2, (y+FH)/2, (za+zb)/2, 0.5, 0, "#a8a49a");
@@ -53,6 +58,10 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
     addFlat(CX0, CX1, zb, za, y);
   }
   bx("paint", CX1-CX0-0.03, 0.004, 0.05, (CX0+CX1)/2, FB+0.006, LZ1+0.022, 0, 0, "#e2b31c");
+  // a sill across the cellar door's wall, a centimetre onto the floor either side of it
+  B(D.x1-D.x0-0.004, 0.016, 0.27, (D.x0+D.x1)/2, FB+0.006, LZ0+0.125, "#6a6d70");
+  // the first riser, under the landing's edge (a centimetre into the top tread)
+  bx("concrete", CX1-CX0-0.008, 0.40, 0.31, (CX0+CX1)/2, FB-0.202, LZ1+0.145, 0.5, 0, "#a8a49a");
   for(const x of [CX0+0.07, CX1-0.07]){
     const a=V3(x, FB+0.92, LZ1+0.3), b=V3(x, FH+0.92, STZ1-0.4);
     tubeE(a, b, 0.021, "#2a2c2e");
@@ -69,9 +78,12 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
   /* ---- the corridor --------------------------------------------------------- */
   // painted: green below, cream above, a yellow stripe between (liners, so the block's own colour is the green)
   for(const [f,dir] of [[CX0,1],[CX1,-1]]){
-    lineZ("block", f, dir, CZ1, STZ1, FH+1.2, CEIL_LO, [], HIGH, 0.6);
+    const op=f===CX1 ? [DMECH, DSTAIR] : [];
+    lineZ("block", f, dir, CZ1, STZ1, FH+1.2, CEIL_LO, op, HIGH, 0.6);
     lineZ("block", f, dir, STZ1, LZ0, FB+1.2, CEIL_HI, [], HIGH, 0.6);
-    bx("paint", 0.006, 0.08, STZ1-CZ1, f+dir*0.008, FH+1.2, (CZ1+STZ1)/2, 0, 0, "#e2b31c"); }
+    // the stripe, broken at the doors (it stops short of their casings)
+    let za=CZ1; for(const o of op.concat([{a:STZ1+0.07, b:STZ1}]).sort((p,q)=>p.a-q.a)){ const zb=o.a-0.07;
+      if(zb>za+0.05) bx("paint", 0.006, 0.08, zb-za, f+dir*0.008, FH+1.2, (za+zb)/2, 0, 0, "#e2b31c"); za=o.b+0.07; } }
   // overhead: a cable tray on hangers, two conduits, a duct; the tubes every five metres
   for(let z=STZ1-0.5; z>CZ1+0.5; z-=1.5){ tubeE(V3(CX0+0.25, CEIL_LO, z), V3(CX0+0.25, CEIL_LO-0.18, z), 0.006, "#7d8286"); }
   B(0.30, 0.05, STZ1-CZ1-0.6, CX0+0.25, CEIL_LO-0.20, (CZ1+STZ1)/2, "#8d9194");
@@ -84,19 +96,23 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
   }
   lamp({x:(CX0+CX1)/2, y:CEIL_HI-0.3, z:LZ1-0.2, color:0xffe8c8, intensity:0.5, dist:5, decay:1.5});
   C(0.035, 0.05, (CX0+CX1)/2, CEIL_HI-0.025, LZ1-0.2, "#d8d4c6", 10); push("tube", new T.SphereGeometry(0.035,10,8), (CX0+CX1)/2, CEIL_HI-0.08, LZ1-0.2, 0, "#ffffff");
-  // a water line along the west wall on brackets, a floor drain, the extinguisher, two locked doors
+  // a water line along the west wall on brackets, a floor drain, the extinguisher
   tubeE(V3(CX0+0.06, FH+0.35, STZ1), V3(CX0+0.06, FH+0.35, CZ1), 0.025, "#2f5f9a");
   for(let z=STZ1-1; z>CZ1; z-=3) B(0.04, 0.06, 0.03, CX0+0.03, FH+0.35, z, "#5a5d60");
   B(0.30, 0.006, 0.30, (CX0+CX1)/2, FH+0.013, -199.0, "#3a3c3e");                       // (clear of the floor's skin)
   B(0.22, 0.60, 0.14, CX1-0.08, FH+1.25, -195.0, "#b3151b"); C(0.07, 0.42, CX1-0.12, FH+1.23, -195.0, "#c41a1a", 12);
-  for(const [z,name] of [[-191.0,"MECH 2"],[-203.5,"STORAGE · NO ENTRY"]]){
-    B(0.05, 2.10, 1.00, CX1-0.025, FH+1.05, z, "#5f6a6e");
-    for(const zz of [z-0.53, z+0.53]) B(0.08, 2.16, 0.06, CX1-0.04, FH+1.08, zz, "#4a4f52");
-    B(0.08, 0.06, 1.12, CX1-0.04, FH+2.19, z, "#4a4f52");
-    B(0.06, 0.10, 0.03, CX1-0.08, FH+1.02, z+0.36, "#c9cbcc");
+  // the two steel doors, hung in casings proud of both faces of the wall (posts under the head, the head a
+  // little longer and deeper than they span), the name over each; a threshold across the wall
+  for(const [o,name,tint] of [[DMECH,"MECH 2",0x5f6a6e],[DSTAIR,"STORAGE · NO ENTRY",0x6e4a3e]]){
+    const xc=CX1+WT/2, zc=(o.a+o.b)/2;
+    // (the posts stand 4 mm into the opening and the head comes 4 mm down into it, so none of their faces lies in the wall's)
+    for(const zz of [o.a-0.031, o.b+0.031]) B(WT+0.12, o.head-FH, 0.07, xc, FH+(o.head-FH)/2, zz, "#4a4f52");
+    B(WT+0.13, 0.07, o.b-o.a+0.15, xc, o.head+0.031, zc, "#4a4f52");
+    B(WT+0.03, 0.016, o.b-o.a, xc, FH+0.006, zc, "#6a6d70");
+    addFlat(CX1-0.02, CX1+WT+0.02, o.a, o.b, FH);
+    makeDoor(XF(xc, o.a+0.02, -Math.PI/2), 0, FH+0.01, 0, name, false, 0, "steel", tint);
     sign(0.40, 0.12, (x,W,Hh)=>{ x.fillStyle="#f2f0e8"; x.fillRect(0,0,W,Hh); say(x, name, W/2, Hh/2, W*0.86, Hh*0.6, "#1a1a1a", "700", "Arial"); },
-      CX1-0.056, FH+1.62, z, -Math.PI/2, false, 240);
-    addUse(CX1-0.7, z, FH, "TRY THE DOOR", ()=>toast("LOCKED. A PADLOCK, AND A STICKER: KEEP OUT","#cfe0d4"), 1.1); }
+      CX1-0.03, o.head+0.20, zc, -Math.PI/2, false, 240); }
   // the shelter sign at the top of the stair, and the way on painted on the wall
   sign(0.46, 0.34, (x,W,Hh)=>{ x.fillStyle="#f2c418"; x.fillRect(0,0,W,Hh); x.fillStyle="#141414"; x.fillRect(W*0.04,Hh*0.05,W*0.92,Hh*0.62);
       const cx=W*0.18, cy=Hh*0.36, r=Hh*0.25; x.fillStyle="#f2c418"; x.beginPath(); x.arc(cx,cy,r,0,7); x.fill(); x.fillStyle="#141414";
@@ -121,6 +137,24 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
   wallBox("block", A.x0, CX0-0.006, A.z1, A.z1+WT, A.y-0.1, ATOP, WALLC, 0.6, A.y);
   wallBox("block", CX1+0.006, A.x1, A.z1, A.z1+WT, A.y-0.1, ATOP, WALLC, 0.6, A.y);
   wallBox("block", CX0, CX1, A.z1, A.z1+WT, A.y+2.45, ATOP, WALLC, 0.6, A.y);
+  // the way in: a pair of sliding glass doors that part as you come up to them, each running into a pocket
+  // in the wall either side (the two leaves a few centimetres apart in depth, so they lap in the middle)
+  { const zc=A.z1+WT/2, H2=2.42, half=(CX1-CX0)/2+0.02, gl=[], panels=[];
+    for(const [sd, dz] of [[-1, -0.03], [1, 0.03]]){
+      const E2=[], G2=[], w=half, add=(w2,h,d,x,y,z,c)=>E2.push({geo:boxGeo(w2,h,d), matrix:new T.Matrix4().makeTranslation(x,y,z), color:new T.Color(c)});
+      add(0.06, H2, 0.045, -w/2+0.03, H2/2, 0, "#1c1c20"); add(0.06, H2, 0.045, w/2-0.03, H2/2, 0, "#1c1c20");
+      add(w-0.12, 0.10, 0.045, 0, H2-0.05, 0, "#1c1c20"); add(w-0.12, 0.16, 0.045, 0, 0.08, 0, "#1c1c20");
+      add(w-0.12, 0.05, 0.051, 0, 1.05, 0, "#8a8d90");                                   // a pull rail across, both faces
+      G2.push({geo:boxGeo(w-0.11, H2-0.25, 0.012), matrix:new T.Matrix4().makeTranslation(0, 0.16+(H2-0.26)/2, 0), color:new T.Color(0xffffff)});
+      const g=new T.Group(), m=new T.Mesh(mergeEntries(E2), new T.MeshStandardMaterial({vertexColors:true, roughness:0.45, metalness:0.4}));
+      m.castShadow=true; g.add(m); g.add(new T.Mesh(mergeEntries(G2), DOOR_GLASS_MAT));
+      const x0=(CX0+CX1)/2+sd*w/2; g.position.set(x0, A.y+0.012, zc+dz); scene.add(g);
+      panels.push({g:g, x0:x0, dx:sd*(w-0.02)}); }
+    // the track in the floor, and the leaves' collider while they are shut
+    B(CX1-CX0+0.04, 0.012, 0.14, (CX0+CX1)/2, A.y+0.006, zc, "#8a8d90");
+    const bc={x0:CX0, x1:CX1, z0:zc-0.06, z1:zc+0.06, y0:A.y-0.5, y1:A.y+2.4}; COL_DYN.push(bc);
+    DOORS.push({g:panels[0].g, slide:panels, rate:3.2, open:0, target:0, x:(CX0+CX1)/2, z:zc, y:A.y, base:0, manual:0, ajar:0, swing:0,
+                label:"THE ARCADE", reach:2.4, blockCol:bc, blockTop:A.y+2.4}); }
   ceilAt("paintm", A.x0, A.x1, A.z0, A.z1, A.y+A.h, "#141218", 0.5);
   addVoid(A.x0, A.x1, A.z0, A.z1, A.y-3, SUB_G-0.15, A.y);
   // the carpet: black, with the shapes and squiggles every arcade carpet has
@@ -161,11 +195,11 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
   for(const [x,z,c] of [[69.0,-212.8,0x9a5cff],[75.4,-212.8,0x4fb8ff],[69.0,-218.2,0xff5fb0],[72.6,-218.0,0x7a6cff],[72.4,-214.2,0xfff0e0],[74.4,-217.6,0xfff0e0]])
     lamp({x:x, y:A.y+2.25, z:z, color:c, intensity:c===0xfff0e0?0.62:0.80, dist:8, decay:1.4});
 
-  /* ---- the cabinets: four of them, a good stride apart ---------------------------- */
-  const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","TURNPIKE RACER","BLOCK DROP"];
-  const KIND=[0,1,2,3];                                               // which attract screen each runs
-  const SIDE=["#1f3fa0","#c42a1a","#1a1a1c","#2f7a3c"];
-  const scrC=cvs(512,128), scrTex=setSRGB(new T.CanvasTexture(scrC)); scrTex.minFilter=T.LinearFilter;
+  /* ---- the cabinets: four of them, a good stride apart, every one of them played ----------- */
+  // (18f plays Astro Raiders; 18g the other three, each on its own screen the same way)
+  const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP"];
+  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c"];
+  ARCADE.cabs=[];
   const marC=cvs(512,96), mx=marC.getContext("2d");
   NAMES.forEach((n,i)=>{ const ox=i*128, oy=0, g=mx.createLinearGradient(0,oy,0,oy+96);
     g.addColorStop(0,["#1a0a2e","#2e0a0a","#0a1a2e"][i%3]); g.addColorStop(1,"#000"); mx.fillStyle=g; mx.fillRect(ox,oy,128,96);
@@ -174,10 +208,10 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
     const words=n.split(" "); words.forEach((w,j)=>fitText(mx, w, 104, 30, ox+64, oy+48+(j-(words.length-1)/2)*30, "900", "'Arial Black', Arial"));
     mx.shadowBlur=0; });
   const marTex=setSRGB(new T.CanvasTexture(marC));
-  const scrM=new T.MeshBasicMaterial({map:scrTex, toneMapped:false}), marM=new T.MeshBasicMaterial({map:marTex, toneMapped:false});
+  const marM=new T.MeshBasicMaterial({map:marTex, toneMapped:false});
   const cellGeo=(w,h,i,rows,cols)=>{ const g=new T.PlaneGeometry(w,h), U=g.attributes.uv, cu=i%cols, cv=(i/cols)|0;
     for(let k=0;k<U.count;k++) U.setXY(k, (cu+0.02+U.getX(k)*0.96)/cols, 1-(cv+1)/rows+(0.02+U.getY(k)*0.96)/rows); return g; };
-  const scrG=[], marG=[];
+  const marG=[];
   const cab=(i, x, z, ry)=>{
     const c=Math.cos(ry), s=Math.sin(ry), L=(lx,lz)=>[x+lx*c+lz*s, z-lx*s+lz*c];     // local +z: out of the cabinet's front
     const q=(w,h,d,lx,ly,lz,col,rx)=>{ const p=L(lx,lz); ent(boxGeo(w,h,d), p[0], A.y+ly, p[1], col, rx||0, ry, 0); };
@@ -188,41 +222,38 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
     q(0.30, 0.30, 0.01, 0, 0.52, 0.385, "#2a2a2e");                    // the coin door
     for(const sx of [-0.05,0.05]) q(0.02, 0.04, 0.012, sx, 0.58, 0.392, "#ff4a1a");
     q(0.64, 0.05, 0.30, 0, 0.94, 0.47, side, -0.18);                   // the control panel, its face tilted to you
-    const pj=L(-0.14, 0.50);
-    if(i===0){ // (this one is played: its stick a part of its own, so it can lean with your hand)
-      const st=new T.Group(); st.position.set(pj[0], A.y+0.965, pj[1]); st.rotation.order="YXZ"; st.rotation.y=ry; scene.add(st);
-      const sm=new T.Mesh(new T.CylinderGeometry(0.008,0.008,0.10,8), new T.MeshStandardMaterial({color:0x1a1a1a, roughness:0.5})); sm.position.y=0.045; st.add(sm);
-      const bm=new T.Mesh(new T.SphereGeometry(0.022,14,10), new T.MeshStandardMaterial({color:0xc42a1a, roughness:0.35})); bm.position.y=0.105; st.add(bm);
-      ARCADE.stick=st; }
-    else { C(0.008, 0.10, pj[0], A.y+1.01, pj[1], "#1a1a1a", 6); ent(new T.SphereGeometry(0.022,10,8), pj[0], A.y+1.07, pj[1], "#c42a1a"); }
+    // the stick a part of its own, so it can lean with your hand
+    const pj=L(-0.14, 0.50), st=new T.Group(); st.position.set(pj[0], A.y+0.965, pj[1]); st.rotation.order="YXZ"; st.rotation.y=ry; scene.add(st);
+    const sm=new T.Mesh(new T.CylinderGeometry(0.008,0.008,0.10,8), new T.MeshStandardMaterial({color:0x1a1a1a, roughness:0.5})); sm.position.y=0.045; st.add(sm);
+    const bm=new T.Mesh(new T.SphereGeometry(0.022,14,10), new T.MeshStandardMaterial({color:0xc42a1a, roughness:0.35})); bm.position.y=0.105; st.add(bm);
+    if(i===0) ARCADE.stick=st;
     for(let b=0;b<3;b++){ const pb=L(0.04+b*0.07, 0.50-b*0.01); C(0.016, 0.02, pb[0], A.y+0.985, pb[1], ["#f2e23a","#3fa0ff","#ff3a3a"][b], 12); }
     q(0.60, 0.06, 0.40, 0, 1.79, 0.18, K);                             // the marquee's hood
     q(0.56, 0.02, 0.06, 0, 1.30-0.24, 0.355, K);                       // the bezel's lip
     // the screen tipped back a little, the marquee lit over it
     const ps=L(0, 0.40), pm=L(0, 0.392);                               // (the screen's top, tipped back, still clear of the box)
     const scrQ=new T.Quaternion().setFromEuler(new T.Euler(-0.20, ry, 0, "YXZ"));
-    if(i===0){ // Astro Raiders is played (18f): a screen of its own, sharper than an attract cell
-      const c=cvs(336,280), tex=setSRGB(new T.CanvasTexture(c)); tex.minFilter=T.LinearFilter;
+    // a screen of its own, which its game draws (18f, 18g): its attract mode, or the game you are playing
+    { const c=cvs(336,280), tex=setSRGB(new T.CanvasTexture(c)); tex.minFilter=T.LinearFilter;
       const m=new T.Mesh(new T.PlaneGeometry(0.48, 0.40), new T.MeshBasicMaterial({map:tex, toneMapped:false}));
       m.position.set(ps[0], A.y+1.30, ps[1]); m.quaternion.copy(scrQ); scene.add(m);
       const pf=L(0, 1.02);
-      ARCADE.raiders={c:c, x:c.getContext("2d"), tex:tex, mesh:m, stand:{x:pf[0], z:pf[1]}, ry:ry, screenY:A.y+1.30, screen:{x:ps[0], z:ps[1]}, floor:A.y}; }
-    else scrG.push({geo:cellGeo(0.48, 0.40, KIND[i], 1, 4), matrix:new T.Matrix4().compose(V3(ps[0], A.y+1.30, ps[1]), scrQ, V3(1,1,1)), color:new T.Color(0xffffff)});
+      ARCADE.cabs[i]={name:NAMES[i], c:c, x:c.getContext("2d"), tex:tex, mesh:m, stick:st, stand:{x:pf[0], z:pf[1]}, ry:ry,
+                      screenY:A.y+1.30, screen:{x:ps[0], z:ps[1]}, floor:A.y};
+      if(i===0) ARCADE.raiders=ARCADE.cabs[0]; }
     marG.push({geo:cellGeo(0.56, 0.16, i, 1, 4), matrix:new T.Matrix4().compose(V3(pm[0], A.y+1.68, pm[1]), new T.Quaternion().setFromEuler(new T.Euler(0, ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color(0xffffff)});
     const a0=L(-0.34,-0.42), a1=L(0.34,0.62);
     addCol(Math.min(a0[0],a1[0]), Math.max(a0[0],a1[0]), Math.min(a0[1],a1[1]), Math.max(a0[1],a1[1]), A.y-0.5, A.y+1.86);
     const pu=L(0, 1.15);
-    addUse(pu[0], pu[1], A.y, "PLAY "+NAMES[i], ()=>{ if(i===0 && typeof RAIDERS!=="undefined"){ RAIDERS.start(); return; }
-      if(typeof AUDIO!=="undefined") AUDIO.blip("coin", pu[0], pu[1]);
-      toast([`A TOKEN IN. NINETY SECONDS LATER: GAME OVER. HI SCORE STILL "MKE"`, "IT EATS THE TOKEN AND KEEPS RUNNING ITS ATTRACT MODE", "YOU GET TO THE SECOND LEVEL. THE JOYSTICK STICKS LEFT"][(Math.random()*3)|0], "#cfe0d4"); }, 0.9);
+    addUse(pu[0], pu[1], A.y, "PLAY "+NAMES[i], ()=>{ if(i===0){ if(typeof RAIDERS!=="undefined") RAIDERS.start(); }
+      else if(typeof CABS!=="undefined") CABS.start(i); }, 0.9);
     ARCADE.games.push({name:NAMES[i], x:pu[0], z:pu[1]});
   };
   // two on the west wall facing in, two on the back wall facing the door
   cab(0, A.x0+0.45, -213.4, Math.PI/2); cab(1, A.x0+0.45, -216.0, Math.PI/2);
   cab(2, 69.5, A.z0+0.45, 0);           cab(3, 71.7, A.z0+0.45, 0);
-  // the screens and marquees: two meshes, two textures, every cabinet a cell of them
-  scene.add(new T.Mesh(mergeEntries(scrG), scrM)); scene.add(new T.Mesh(mergeEntries(marG), marM));
-  ARCADE.screens={c:scrC, x:scrC.getContext("2d"), tex:scrTex};
+  // the marquees: one mesh, one texture, every cabinet a cell of it
+  scene.add(new T.Mesh(mergeEntries(marG), marM));
 
   /* ---- the token changer by the door ---------------------------------------------- */
   { const x=A.x1-0.24, z=-212.2;
@@ -370,64 +401,13 @@ const ARCADE={screens:null, puck:null, t:0, acc:0, games:[], room:null};
   ARCADE.room=A;
 })();
 
-/* the attract screens: twelve cells of one canvas, redrawn a dozen times a
-   second while you are near enough to see them, each one its game's loop */
-function _arcadeScreen(x, k, ox, oy, t, seed){
-  const W=128, H=128; x.save(); x.beginPath(); x.rect(ox,oy,W,H); x.clip(); x.translate(ox,oy);
-  x.fillStyle="#000"; x.fillRect(0,0,W,H);
-  const ph=t+seed*3.1;
-  if(k===0){                                                         // invaders: a block of them stepping, a ship, its shot
-    const sx=Math.round(Math.sin(ph*0.8)*12);
-    for(let r=0;r<4;r++) for(let c=0;c<7;c++){ x.fillStyle=["#ff4fbf","#4fd8ff","#7aff7a","#f2e23a"][r]; const px=18+c*14+sx, py=16+r*12+((ph*2|0)%2)*2;
-      x.fillRect(px,py,8,5); x.fillRect(px+1,py+5,2,2); x.fillRect(px+5,py+5,2,2); }
-    const shx=64+Math.sin(ph*1.3)*40; x.fillStyle="#7aff7a"; x.fillRect(shx-6,112,12,5); x.fillRect(shx-1,108,2,4);
-    x.fillStyle="#fff"; x.fillRect(shx-1, 104-((ph*120)%90), 2, 5);
-  }else if(k===1){                                                   // a maze, its dots, and the muncher round it
-    x.strokeStyle="#2a3aff"; x.lineWidth=3; for(let i=0;i<5;i++){ x.strokeRect(10+i*6,10+i*6,108-i*12,108-i*12); }
-    x.fillStyle="#f2e2a0"; for(let i=0;i<20;i++){ const a=i/20*Math.PI*2; x.fillRect(64+Math.cos(a)*40, 64+Math.sin(a)*40, 2, 2); }
-    const a=ph*1.4, px=64+Math.cos(a)*40, py=64+Math.sin(a)*40, m=Math.abs(Math.sin(ph*10))*0.6;
-    x.fillStyle="#f2e23a"; x.beginPath(); x.moveTo(px,py); x.arc(px,py,7,a+Math.PI/2+m,a+Math.PI/2-m+Math.PI*2); x.fill();
-    x.fillStyle="#ff3a3a"; const b=a-0.9; x.fillRect(64+Math.cos(b)*40-6, 64+Math.sin(b)*40-6, 12, 10);
-  }else if(k===2){                                                   // a road running at you, a car on it
-    const g=x.createLinearGradient(0,0,0,60); g.addColorStop(0,"#0a0a3a"); g.addColorStop(1,"#3a1a5a"); x.fillStyle=g; x.fillRect(0,0,W,60);
-    x.fillStyle="#1a3a1a"; x.fillRect(0,60,W,68);
-    x.fillStyle="#3a3a3a"; x.beginPath(); x.moveTo(60,60); x.lineTo(68,60); x.lineTo(124,128); x.lineTo(4,128); x.fill();
-    for(let i=0;i<6;i++){ const u=((ph*1.5+i/6)%1), y=60+u*u*68, w=2+u*8; x.fillStyle="#fff"; x.fillRect(64-w/2, y, w, 2+u*6); }
-    x.fillStyle="#ff3a3a"; const cx=64+Math.sin(ph)*22; x.fillRect(cx-12,104,24,12); x.fillStyle="#222"; x.fillRect(cx-14,112,6,6); x.fillRect(cx+8,112,6,6);
-  }else if(k===3){                                                   // blocks falling into a well
-    x.strokeStyle="#888"; x.strokeRect(34,6,60,116);
-    const cols=["#ff4fbf","#4fd8ff","#f2e23a","#7aff7a","#ff7a2a"];
-    for(let r=0;r<5;r++) for(let c=0;c<6;c++) if((r*7+c*3+seed)%4) { x.fillStyle=cols[(r+c)%5]; x.fillRect(35+c*10, 112-r*10, 9, 9); }
-    const y=((ph*30)%60)|0; x.fillStyle="#f2e23a"; for(const [dx,dy] of [[0,0],[10,0],[20,0],[10,-10]]) x.fillRect(55+dx, 10+y*1+dy+10, 9, 9);
-  }else if(k===4){                                                   // lanes of traffic and a frog trying it
-    for(let r=0;r<6;r++){ x.fillStyle=r%3===0?"#1a3a1a":"#222"; x.fillRect(0,10+r*18,W,18);
-      for(let c=0;c<3;c++){ const px=((ph*(20+r*9)*(r%2?1:-1)+c*50+r*13)%160+160)%160-16; x.fillStyle=["#ff3a3a","#3fa0ff","#f2e23a"][(r+c)%3]; x.fillRect(px, 14+r*18, 20, 10); } }
-    x.fillStyle="#7aff7a"; x.fillRect(58, 118-((ph*12|0)%6)*18, 10, 8);
-  }else{                                                             // a wall of bricks, a ball, a bat
-    const cols=["#ff3a3a","#ff7a2a","#f2e23a","#7aff7a","#4fd8ff"];
-    for(let r=0;r<5;r++) for(let c=0;c<8;c++) if((r*8+c+seed)%5) { x.fillStyle=cols[r]; x.fillRect(4+c*15, 14+r*7, 14, 6); }
-    const bx=64+Math.sin(ph*2.1)*56, by=80+Math.sin(ph*3.3)*30; x.fillStyle="#fff"; x.fillRect(bx-2,by-2,4,4);
-    x.fillStyle="#4fd8ff"; x.fillRect(bx-14,118,28,4);
-  }
-  // the score line, and the CRT's own light
-  x.fillStyle="#fff"; x.font="bold 9px 'Courier New', monospace"; x.textAlign="left"; x.textBaseline="top";
-  x.fillText("1UP "+String(((t*731+seed*977)|0)%100000).padStart(5,"0"), 10, 14); x.textAlign="right"; x.fillText("CREDIT 0", W-10, 14);
-  if(((t*2)|0)%2) { x.textAlign="center"; x.fillStyle="#f2e23a"; x.fillText("INSERT COIN", W/2, H-24); }
-  x.fillStyle="rgba(0,0,0,0.25)"; for(let y=0;y<H;y+=3) x.fillRect(0,y,W,1);
-  x.restore();
-}
 function updateArcade(dt){
   const A=ARCADE; if(!A.room) return;
-  const cam=camera.position, R=A.room, near=cam.x>R.x0-6 && cam.x<R.x1+6 && cam.z>R.z0-6 && cam.z<R.z1+8 && cam.y<R.y+4;
   A.t+=dt;
   // the puck drifts on the air, off the rails
   const P=A.puck; if(P && !(typeof HOCKEY!=="undefined" && HOCKEY.on)){ P.x+=P.vx*dt; P.z+=P.vz*dt;
     if(Math.abs(P.x-P.cx)>P.hx){ P.vx=-P.vx; P.x=P.cx+Math.sign(P.x-P.cx)*P.hx; }
     if(Math.abs(P.z-P.cz)>P.hz){ P.vz=-P.vz; P.z=P.cz+Math.sign(P.z-P.cz)*P.hz; }
     P.m.position.set(P.x, P.y, P.z); }
-  if(!near || !A.screens) return;
-  A.acc+=dt; if(A.acc<1/12) return; A.acc=0;
-  const x=A.screens.x;
-  for(let i=1;i<4;i++) _arcadeScreen(x, i, i*128, 0, A.t, i);       // (the first cabinet's screen is its own: 18f draws it)
-  A.screens.tex.needsUpdate=true;
+  // (the cabinets' screens are their games' own: 18f and 18g draw them)
 }

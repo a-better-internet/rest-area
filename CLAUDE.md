@@ -55,7 +55,9 @@ examples, and so is anything dug later. For anything underground:
 - Register the volume with `addBuried(x0,x1,z0,z1,y0,y1)` (06). While the
   camera is inside one, `19-loop` holds the sky, sun and ambient at the
   fixed `UNDER_LIGHT`, and the glow materials and lamps run as though it
-  were night.
+  were night. A seventh argument, when it is not 0, holds that fill at a
+  fraction of `UNDER_LIGHT` (12d's sub-basement uses 0.22, the stair down
+  to it 0.5).
 - Give its lamps `under:true` (12b's `lamp()` does this). Under lamps run at
   full strength regardless of the hour. They are only considered while the
   camera is underground, and lamps above ground are dropped while it is.
@@ -110,6 +112,17 @@ No lettering touches or runs past the edge of its board or its border.
   glass and the roof, and a truck's cab keeps the dark glass.
 - The cows (14k) take the hide texture `COW_HIDE`. Its top-left corner is
   kept white, and parts in a flat colour take their uv from it.
+- The sub-basement's walls (12d) are not placed by hand. They are worked
+  out from its `RECTS` on a 20 cm grid: a wall wherever open floor meets
+  rock, carried round outside corners and stopped at openings so no two
+  faces meet. To add a hallway or a room down there, add a rectangle on
+  the grid. The stair's own walls are built with it and left out of the
+  grid.
+- A door that slides (the arcade's pair, 12c) is a `DOORS` entry with
+  `slide` (each leaf's group, its shut `x0` and how far it runs, `dx`) and
+  a `rate`. `updateDoors` moves the leaves along x instead of swinging
+  them. Its `blockCol` makes it solid while shut, and `tools/walk.js`
+  opens any door that opens itself before walking a route.
 
 ## Tools
 

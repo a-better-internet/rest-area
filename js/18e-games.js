@@ -398,7 +398,7 @@ function updateHoops(dt){
   player.yaw+=sy-HOOPS.sway[0]; player.pitch+=sp-HOOPS.sway[1]; HOOPS.sway=[sy,sp];
   player.pos.x=H.x; player.pos.z=H.zf+0.55; player.feetY=H.floor;
 }
-function updateGames(dt){ updateHockey(dt); updateHoops(dt); if(typeof updateRaiders==="function") updateRaiders(dt); }
+function updateGames(dt){ updateHockey(dt); updateHoops(dt); if(typeof updateRaiders==="function") updateRaiders(dt); if(typeof updateCabs==="function") updateCabs(dt); }
 // the scoreboards lit from the start, showing the last game's numbers (or none yet)
 if(ARCADE.hockey) _ledFace(ARCADE.hockey.score, "YOU 0", "0 CPU");
 if(ARCADE.hoops) _ledFace(ARCADE.hoops.score, "00", String(_HP.len));
