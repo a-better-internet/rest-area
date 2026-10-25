@@ -452,6 +452,46 @@ If the scene runs hot on your machine, start there (see below).
     a basketball hoop over a garage, the AC and the propane tank, and two
     pink flamingos. Two cars are parked on the shoulder for a cookout. The
     woods close round the back of the lots and both ends of the street.
+  - **Inside every house on Lake Street.** The front doors open as you come
+    up to them, and the rooms behind agree with what the outside shows.
+    Every window is a real opening with glass in it: from inside you see
+    the street or the lake through it, and from outside the curtains and
+    the lamp behind them look as they always did. Every room has its own
+    paint, its floor (boards, carpet, lino, tile, or the garage's slab),
+    a light in the ceiling, furniture, and its name on the screen.
+    - The **cape cod** has a hall from the door with the stair up its side.
+      The living room runs the length of one side, with the fireplace on
+      its end wall where the chimney stands outside, a set, a loveseat and
+      a bookcase. The kitchen runs the length of the other side, its table
+      by the front windows and its counters, range and fridge along the
+      back under the window there. A half bath sits at the end of the hall
+      under its window. Upstairs, under the slopes, there is a bedroom at
+      each end lit by the gable windows. Each dormer on the front slope is
+      an alcove let into a bedroom, with its window at the end and a desk
+      in it.
+    - The **ranch**: in at the front door to the living room behind the
+      picture window, and the galley kitchen beside it under the small front
+      window, open to the dining room behind. A hall crosses to the
+      bedrooms at the far end and the bathroom under the back window. From
+      the dining room a door, a landing and two steps go down into the
+      garage. Inside it are the back of the big door with its tracks, the
+      opener on the ceiling, the bench and pegboard under the back window,
+      steel shelves, a freezer, the water heater, the mower, and a car
+      under a cover. The back windows now sit the same way round the
+      house whichever end its garage is at.
+    - The **bungalow**: off the porch into a living room across the front.
+      A hall runs back the middle, with the stair to the attic up its side,
+      two bedrooms on one side, the dining room and kitchen on the other,
+      and the bathroom at its end. Upstairs, under the roof, the window in
+      the front gable lights a bedroom, and behind it is the attic room with
+      its futon, shelves and boxes.
+    - The **two-storey**: a centre hall and stair. The living room, with a
+      piano by the front window, is on the side away from the carport. The
+      dining room and kitchen are on the carport side, and the kitchen has
+      a new side door out under the carport onto a landing and steps beside
+      the car. Upstairs are two bedrooms on one side, the kids' room and
+      the bathroom on the other, and the hall with the little window over
+      the front door.
   - **Lakeside Park**, on the north side of the street. A lot sits off the
     road with its stalls angled toward the water and wheel stops at the
     curb. The lawn goes down to the shore under big trees. A paved path
@@ -615,7 +655,12 @@ If the scene runs hot on your machine, start there (see below).
       brass tokens with the pusher going back and forth behind them. `A`
       and `D` (or the arrows, or the mouse) move the chute along the back,
       `Space` or a click drops a token, and `X` shakes the machine (once
-      every few seconds). Anything pushed over the lip is won; into the
+      every few seconds). A dropped token falls from the chute and bounces
+      once. If the pusher is under it, it lands on the pusher's shelf and
+      rides it back until the wall scrapes it off the front edge onto the
+      deck. Otherwise it lands in front of the pusher's face. What you have
+      won, the tokens left and the last message are lit across the top of
+      the backglass, in front of you as you play. Anything pushed over the lip is won; into the
       bonus bucket running along under the lip, three more tokens besides.
       The hopper holds fifty and fills back by one every three seconds.
       Now and then the chute drops a prize instead (a big coin, a die, a gem
@@ -697,7 +742,14 @@ If the scene runs hot on your machine, start there (see below).
     of sight and patchy in a slow drift, so it has no edges. The grass at
     your feet is clear, the far side of the lawn goes milky, posts and
     trunks fade into it at the bottom, and from up in the woods the site
-    lies in it.
+    lies in it. On a long sight line, across a field or the lake, it never
+    closes in completely, and by the lake it lies on the water. So a morning
+    across the lake is a soft band of mist on the water, not a white sheet.
+  - Distance has its own colour. The haze a hill sits in, a kilometre
+    off, is bluer and darker than the pale sky at the horizon, so ridges go
+    blue-grey and layered as they recede. The far woods go in patches of
+    darker and lighter stands, and where they come down to the lake their
+    face darkens toward the foot like the inside of a wood.
 - **The night sky.** On a clear night there are stars in several magnitudes
   and colours, and the Milky Way crosses the sky, clumped into star clouds
   and split by the dark of the Great Rift. The moon has its phases. It
@@ -997,7 +1049,8 @@ js/14i-trucker.js   the truckers: the one on the phone, the walk-round, the one 
 js/14k-edinboro.js  at exit 166: the fuel stop, its store and restroom, the Weir farm (the house and both its floors, the walk-in barn, silos, shed, stand, cows)
 js/14l-chapel.js    at exit 166: French Creek Union Chapel, inside and out, the fellowship hall under it, its lot and sign, and the old graveyard
 js/14m-fireworks.js US 6N on east through the woods, and French Creek Fireworks, which you can walk into
-js/14n-lakeside.js  the end of the road east: Lake Street's houses, Lakeside Park and its docks, and Edinboro Lake
+js/14n-lakeside.js  the end of the road east: Lake Street's houses (their outsides), Lakeside Park and its docks, and Edinboro Lake
+js/14o-houses.js    the houses on Lake Street from inside: their walls round real openings, glazed and with doors hung, and the rooms of each kind
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -1111,6 +1164,12 @@ the generator house's cellar and the trailer's step. The routes are:
   doors and down an aisle;
 - along Lake Street into the park, through its lot, down the path to the
   shore and out to the end of a dock;
+- into every house on Lake Street and to every room in it. Each house
+  lays out its own routes as it builds (`LAKE_HOUSES.routes` in 14o, so
+  they move with the plans): in at the front door, round the ground floor,
+  out a two-storey's side door and down into a ranch's garage, and up each
+  stair to every room upstairs, with each stair also climbed and come down
+  with the keys held at all three speeds;
 - up the Weirs' lane, onto the porch, in at the front door, into the
   parlour and the kitchen and out the back; up the stair (and its keys
   held, at all three speeds) into each room upstairs, the storeroom

@@ -154,7 +154,34 @@ No lettering touches or runs past the edge of its board or its border.
   the street, the way the front faces, an eave height, a pitch and which
   way the ridge runs, and returns `win`, `door` and `fp` for placing
   things on its faces. The four kinds (`capeCod`, `ranch`, `bungalow`,
-  `twoStorey`) are built on it.
+  `twoStorey`) are built on it. `house()` builds only the outside: its
+  `win` and `door` put the trim on the face and record an opening in
+  `h.ops`. 14o builds the walls round those openings, glazes them, hangs
+  the doors, and lays out the rooms.
+- 14o's plans are in a house's own terms: `p` across it (world x is
+  `x + sx*p`, with `sx` the ranch's garage side or the two-storey's carport
+  side) and `d` back from the front wall's face. A room runs to an outside
+  wall's inner face or to a partition's middle. A partition is a line,
+  `{ax:"d"|"p", at, from, to, doors}`. To change a house, change its rooms
+  and its lines. A window must not run into a partition: 14o warns when
+  one meets a room's corner. The rooms upstairs in a cape or a bungalow
+  are `attic()`'s, cut to the roof's slopes.
+- Far from the origin a float has a tenth of a millimetre of play. Lake
+  Street is a kilometre east, and at that distance two pieces of one wall,
+  each built as a plane or box centred and turned into place, open hairline
+  cracks where they meet, worst at T-junctions. 14o builds each wall, gable
+  and liner as one outline less its openings, cut into a grid at every
+  opening's sides, sill and head (`pieces`). It puts the grid straight into
+  world coordinates (`vslab`, `vliner`). Build anything out there the same
+  way.
+- A collider upstairs must not be sunk below its floor (14o's furniture,
+  the attic's partitions). A stair under it would catch your head on the
+  way up.
+- The haze is tinted by distance. `HAZE_U` (03) darkens and blues the fog
+  colour at middle distances and eases back to the horizon's colour at the
+  far end. 19-loop sets how much (`HAZE_U.w`) each frame: less in weather
+  fog and at night. The ground mist is capped on long sight lines, and by
+  the lake it lies on the water (14c).
 - `zoneAt` names the last zone added that holds you, so add the general
   zone first and the particular ones (a dock, a pavilion) after it.
 - A door that slides (the arcade's pair, 12c) is a `DOORS` entry with
@@ -172,7 +199,10 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   game itself (see its header for the shot format).
 - `tools/walk.js` walks every route and seat with keys held at walk, run and
   sprint, and fails if you get stuck anywhere. Add a route for any new place
-  you can walk to.
+  you can walk to. It also takes routes and stairs from the page:
+  `LAKE_HOUSES.routes` and `.stairs` (14o) are laid out by each house
+  through its own plan as it builds. The walker is a square ±0.34 m across,
+  not a circle, so give corners room.
 - `tools/zfight.js '{"x0":..,"x1":..,"z0":..,"z1":..,"y0":..,"y1":..}'`
   finds coplanar faces in a box.
 - `tools/signaudit.js [pad]` finds sign text too close to an edge.

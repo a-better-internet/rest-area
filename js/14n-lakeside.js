@@ -93,21 +93,34 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     const RID=along==="x" ? EAV+pitch*o.D/2 : EAV+pitch*o.W/2;
     const fp=(face, u, d)=>face==="F" ? [u, zf+f*d, f>0?0:Math.PI] : face==="K" ? [u, zb-f*d, f>0?Math.PI:0]
                           : face==="L" ? [x0-d, u, -Math.PI/2] : [x1+d, u, Math.PI/2];
-    // the foundation, a course of block showing; the walls; corner boards
-    bx("block", o.W+0.04, FF-(Y-0.4), o.D+0.04, o.x, (FF+Y-0.4)/2, zm, 0.5, 0, "#a29e94");
-    wallBox(bk, x0, x1, zf>zb ? zf-T0 : zf, zf>zb ? zf : zf+T0, FF-0.02, EAV, SID, uv, FF);
-    wallBox(bk, x0, x1, zb>zf ? zb-T0 : zb, zb>zf ? zb : zb+T0, FF-0.02, EAV, SID, uv, FF);
-    wallBox(bk, x0, x0+T0, z0+T0, z1-T0, FF-0.02, EAV, SID, uv, FF);
-    wallBox(bk, x1-T0, x1, z0+T0, z1-T0, FF-0.02, EAV, SID, uv, FF);
-    if(!o.brick) for(const cx of [x0, x1]) for(const cz of [z0, z1]) B(0.15, EAV-FF-0.02, 0.15, cx, (EAV+FF-0.02)/2, cz, TRIM);
-    // the gables: siding up to the roof, under its slabs
-    if(along==="x") for(const gx of [x0, x1-T0]){ push("lk_lap", new FaceGeo().slab([V3(gx, EAV, z0+0.01), V3(gx, EAV, z1-0.01), V3(gx, RID-0.10, zm)], T0, 1/1.28).geo(), 0,0,0, 0, o.gable||SID); }
-    else for(const gz of [z0+T0, z1]){ push("lk_lap", new FaceGeo().slab([V3(x0+0.01, EAV, gz), V3(x1-0.01, EAV, gz), V3(o.x, RID-0.10, gz)], T0, 1/1.28).geo(), 0,0,0, 0, o.gable||SID); }
+    // every window and door is an opening in its wall: the walls themselves, round them, and the rooms behind, are 14o's
+    const ops={F:[], K:[], L:[], R:[]};
+    // the foundation, a course of block showing, its top 7 cm under the floor (clear of the decks and stoops at the
+    // doors, 3 and 4 under it); under a garage, under its slab
+    if(o.garage){ const [ga, gb]=o.garage, top=FF-0.07, gt=Y-0.02;
+      for(const [a, b, t] of [[x0-0.02, ga, top],[ga, gb, gt],[gb, x1+0.02, top]]) if(b-a>0.01) bx("block", b-a, t-(Y-0.4), o.D+0.04, (a+b)/2, (t+Y-0.4)/2, zm, 0.5, 0, "#a29e94"); }
+    else bx("block", o.W+0.04, FF-0.07-(Y-0.4), o.D+0.04, o.x, (FF-0.07+Y-0.4)/2, zm, 0.5, 0, "#a29e94");
+    if(!o.brick) for(const cx of [x0, x1]) for(const cz of [z0, z1]) B(0.15, EAV-FF+0.06, 0.15, cx, (EAV+FF-0.08)/2, cz, TRIM);
+    // dormers on the front slope (a cape's): each a hole in the main roof, cut along its cheeks and up its valleys,
+    // that its own walls and roof close; d is depth from the front wall's face
+    const dorm=(o.dormers||[]).map(dx=>{ const wd=1.8, setb=0.7, yr=EAV+pitch*setb, yde=yr+1.30, ydr=yde+wd/2*0.9;
+      const dv=ax=>(ydr-0.9*Math.abs(ax)-EAV)/pitch;                       // where its slope at ax off its middle meets the main roof
+      return {xc:o.x+dx, wd:wd, setb:setb, zd:zf-f*setb, yr:yr, yde:yde, ydr:ydr, dv:dv, hw:wd/2-0.02, d0:setb+0.02, d1:dv(wd/2-0.02), dA:dv(0)}; });
     // the roof: two slabs of shingle, overhanging; the fascia along the eaves, the rake boards up the gables
     const ov=0.38, rk=0.26, e=0.012, ROOF=o.roof||"#4e5256";
+    // (the front slope as convex pieces round the dormers' holes, in plan: x along the street, d back from the front face)
+    const frontSlope=(xa, xb)=>{ const Pt=(x, d)=>V3(x, EAV+pitch*d, zf-f*d), dA=dorm.length ? dorm[0].dA : 0;
+      const quad=(P)=>push("shingle", new FaceGeo().slab(P.map(([x,d])=>Pt(x,d)), 0.14, 0.5).geo(), 0,0,0, 0, ROOF);
+      if(!dorm.length){ quad([[xa,-ov],[xb,-ov],[xb,o.D/2],[xa,o.D/2]]); return; }
+      const H2=dorm.slice().sort((p,q)=>p.xc-q.xc), d0=H2[0].d0, d1=H2[0].d1;
+      quad([[xa,-ov],[xb,-ov],[xb,d0],[xa,d0]]); quad([[xa,dA],[xb,dA],[xb,o.D/2],[xa,o.D/2]]);
+      let x=xa; for(const q of H2){ quad([[x,d0],[q.xc-q.hw,d0],[q.xc-q.hw,d1],[x,d1]]); x=q.xc+q.hw; } quad([[x,d0],[xb,d0],[xb,d1],[x,d1]]);
+      quad([[xa,d1],[H2[0].xc-H2[0].hw,d1],[H2[0].xc,dA],[xa,dA]]);
+      for(let i=0;i<H2.length-1;i++) quad([[H2[i].xc,dA],[H2[i].xc+H2[i].hw,d1],[H2[i+1].xc-H2[i+1].hw,d1],[H2[i+1].xc,dA]]);
+      const L=H2[H2.length-1]; quad([[L.xc,dA],[L.xc+L.hw,d1],[xb,d1],[xb,dA]]); };
     if(along==="x"){ const yo=EAV-pitch*ov, za=z0-ov, zb2=z1+ov, xa=x0-rk, xb=x1+rk;
-      push("shingle", new FaceGeo().slab([V3(xa, yo, zb2), V3(xb, yo, zb2), V3(xb, RID, zm), V3(xa, RID, zm)], 0.14, 0.5).geo(), 0,0,0, 0, ROOF);
-      push("shingle", new FaceGeo().slab([V3(xb+e, yo, za), V3(xa-e, yo, za), V3(xa-e, RID, zm), V3(xb+e, RID, zm)], 0.14, 0.5).geo(), 0,0,0, 0, ROOF);
+      if(f>0) frontSlope(xa, xb); else push("shingle", new FaceGeo().slab([V3(xa, yo, zb2), V3(xb, yo, zb2), V3(xb, RID, zm), V3(xa, RID, zm)], 0.14, 0.5).geo(), 0,0,0, 0, ROOF);
+      if(f<0) frontSlope(xa-e, xb+e); else push("shingle", new FaceGeo().slab([V3(xb+e, yo, za), V3(xa-e, yo, za), V3(xa-e, RID, zm), V3(xb+e, RID, zm)], 0.14, 0.5).geo(), 0,0,0, 0, ROOF);
       B(xb-xa+0.06, 0.08, 0.20, o.x, RID+0.02, zm, "#3e4246");
       for(const z of [za-0.02, zb2+0.02]) B(xb-xa, 0.17, 0.035, o.x, yo-0.075, z, TRIM);
       const L=Math.hypot(zm-za, RID-yo), th=Math.atan2(RID-yo, zm-za);
@@ -119,32 +132,31 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
       for(const x of [xa-0.02, xb+0.02]) B(0.035, 0.17, zb2-za, x, yo-0.075, zm, TRIM);
       const L=Math.hypot(o.x-xa, RID-yo), th=Math.atan2(RID-yo, o.x-xa);
       for(const z of [za-0.02, zb2+0.02]) for(const sd of [-1,1]) B(L, 0.18, 0.035+(sd>0?0.006:0), o.x+sd*(o.x-xa)/2, (RID+yo)/2-0.09, z, TRIM, 0, 0, -sd*th); }
-    // a window: casing, sill, the glass with the room behind it, muntins, and shutters if the house has them
+    // a window: casing, sill, muntins, and shutters if the house has them; the glass and the room behind it are 14o's
     const win=(face, u, ys, w, h, lit, sh)=>{
       const [gx, gz, ry]=fp(face, u, 0.016), c=Math.cos(ry), s=Math.sin(ry), at=(du, d)=>[gx+c*du+s*(d-0.016), gz-s*du+c*(d-0.016)];
-      push((lit===undefined ? r()<0.45 : lit) ? "lk_win" : "lk_wind", planeGeo(w, h, 0), gx, ys+h/2, gz, ry, "#ffffff");
+      ops[face].push({a:u-w/2, b:u+w/2, sill:ys, head:ys+h, lit:(lit===undefined ? r()<0.45 : lit)});
       const p=(du, y, d, bw, bh, bd, col)=>{ const [px,pz]=at(du, d); B(bw, bh, bd, px, y, pz, col, ry); };
       p(0, ys+h+0.06, 0.03, w+0.26, 0.12, 0.05, TRIM); p(0, ys-0.03, 0.045, w+0.22, 0.05, 0.09, TRIM);
       for(const sd of [-1,1]) p(sd*(w/2+0.055), ys+h/2, 0.03, 0.11, h, 0.05, TRIM);
       p(0, ys+h/2, 0.034, 0.03, h, 0.012, TRIM); p(0, ys+h/2, 0.035, w, 0.03, 0.012, TRIM);
       if(sh && o.shutter) for(const sd of [-1,1]){ p(sd*(w/2+0.12+w*0.24), ys+h/2, 0.04, w*0.46, h+0.04, 0.03, o.shutter);
         for(let k=1;k<6;k++) p(sd*(w/2+0.12+w*0.24), ys+k*(h/6), 0.058, w*0.40, 0.012, 0.006, o.shutter); } };
-    // the front door: a panelled slab in its casing, a storm door's frame over it, the light by it, the number
-    const door=(face, u, col)=>{ const [gx, gz, ry]=fp(face, u, 0.03), c=Math.cos(ry), s=Math.sin(ry), at=(du, d)=>[gx+c*du+s*(d-0.03), gz-s*du+c*(d-0.03)];
+    // a door: an opening 0.92 wide for a leaf (14o hangs it), its casing and a storm door's head over it, the light
+    // by it, and on the front one the number
+    const door=(face, u, col, side)=>{ const [gx, gz, ry]=fp(face, u, 0.03), c=Math.cos(ry), s=Math.sin(ry), at=(du, d)=>[gx+c*du+s*(d-0.03), gz-s*du+c*(d-0.03)];
       const p=(du, y, d, bw, bh, bd, cl)=>{ const [px,pz]=at(du, d); B(bw, bh, bd, px, y, pz, cl, ry); };
-      p(0, FF+1.03, 0.025, 0.96, 2.06, 0.05, col||o.door||"#7a2a1e");
-      for(const [dy, hh] of [[0.55, 0.62],[1.45, 0.62]]) for(const sd of [-1,1]) p(sd*0.2, FF+dy, 0.054, 0.32, hh, 0.012, col||o.door||"#7a2a1e");
-      p(0.36, FF+1.0, 0.07, 0.04, 0.10, 0.04, "#c9b26a");
-      p(0, FF+2.14, 0.035, 1.24, 0.12, 0.07, TRIM); for(const sd of [-1,1]) p(sd*0.555, FF+1.03, 0.035, 0.11, 2.08, 0.07, TRIM);
+      ops[face].push({a:u-0.46, b:u+0.46, sill:FF-0.09, head:FF+2.08, door:true, col:col||o.door||"#7a2a1e", label:side ? "THE SIDE DOOR" : "No. "+o.no});
+      p(0, FF+2.14, 0.035, 1.24, 0.12, 0.07, TRIM); for(const sd of [-1,1]) p(sd*0.515, FF+1.03, 0.035, 0.11, 2.08, 0.07, TRIM);
       const [lx, lz]=at(0.82, 0.10); B(0.12, 0.22, 0.10, lx, FF+1.85, lz, "#2a2a2c", ry);
       const [gx2, gz2]=at(0.82, 0.16); push("lk_porch", new T.CylinderGeometry(0.045, 0.045, 0.14, 10), gx2, FF+1.82, gz2, 0, "#ffffff");
       const [qx, qz]=at(0, 1.2); LAMPS.push({x:qx, y:FF+2.0, z:qz, color:0xffd9a0, intensity:0.42, dist:6.5, decay:1.6, mothy:true});
+      if(side) return;
       const [nx, nz]=at(-0.80, 0.045); B(0.30, 0.12, 0.012, nx, FF+1.6, nz, "#2a2a2c", ry);
       sign(0.28, 0.10, (c2,Wc,H)=>{ c2.fillStyle="#2a2a2c"; c2.fillRect(0,0,Wc,H); say(c2, String(o.no), Wc/2, H/2, Wc*0.72, H*0.58, "#e8d8a8", "700", "Georgia, serif"); },
         ...(()=>{ const [sx, sz]=at(-0.80, 0.058); return [sx, FF+1.6, sz]; })(), ry, false, 160); };
-    // its collider, its own little zone for the name on the screen
-    addCol(x0-0.02, x1+0.02, z0-0.02, z1+0.02, Y-0.5, RID);
-    return {x0, x1, z0, z1, zm, FF, EAV, RID, f, win, door, fp, along};
+    return {x:o.x, W:o.W, D:o.D, x0, x1, z0, z1, zm, zf, zb, T0, FF, EAV, RID, f, pitch, along, win, door, fp, ops, dormers:dorm,
+            bk, uv, siding:SID, trim:TRIM, gable:o.gable||SID, no:o.no, garage:o.garage};
   }
   // steps up to a door, or to a deck: n risers from the ground at the face's foot; their flats
   const steps=(x, zEdge, f, w, top, n)=>{ const rs=(top-Y)/n, run=0.28;
@@ -237,26 +249,23 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
      ====================================================================== */
   // the four kinds; each gets its lot's x, its side of the road (f), and colours
   const capeCod=(x, f, no, col)=>{                                 // a storey and a half, two dormers, a little deck at the door, gravel drive
-    const zf=Z+f*(-(HW+14)), h=house({x:x, f:f, zf:zf, W:10.8, D:8.4, eave:2.75, pitch:1.0, siding:col.s, trim:col.t, roof:col.r, shutter:col.sh, door:col.d, no:no});
+    const zf=Z+f*(-(HW+14)), h=house({x:x, f:f, zf:zf, W:10.8, D:8.4, eave:2.75, pitch:1.0, siding:col.s, trim:col.t, roof:col.r, shutter:col.sh, door:col.d, no:no, dormers:[-2.9, 2.9]});
+    h.kind="cape";
     const F="F";
     h.win(F, x-3.6, h.FF+0.85, 0.9, 1.4, undefined, true); h.win(F, x-2.2, h.FF+0.85, 0.9, 1.4, undefined, true);
     h.win(F, x+2.2, h.FF+0.85, 0.9, 1.4, undefined, true); h.win(F, x+3.6, h.FF+0.85, 0.9, 1.4, undefined, true);
     h.door(F, x);
     for(const face of ["L","R"]){ h.win(face, h.zm, h.FF+0.85, 0.9, 1.4); h.win(face, h.zm-1.0, h.EAV+0.6, 0.75, 1.1); h.win(face, h.zm+1.0, h.EAV+0.6, 0.75, 1.1); }
     for(const u of [x-2.6, x, x+2.6]) h.win("K", u, h.FF+0.95, 0.9, 1.2);
-    // the dormers on the front slope: cheek walls, a window, a little gable roof of their own
-    const pitch=1.0, RID=h.RID, zr=h.zm;
-    for(const dx of [-2.9, 2.9]){ const wd=1.8, setb=0.7, zd=zf-f*setb, dd=Math.abs(zd-zr), yr=RID-pitch*dd, yde=yr+1.30, ydr=yde+wd/2*0.9;
-      const back=(RID-ydr-0.12)/pitch, zk=zr+f*back, za=Math.min(zd, zk), zb2=Math.max(zd, zk), zkr=zk-f*0.04;   // (its roof runs on 4 cm past the box into the main roof)
-      wallBox("lk_lap", x+dx-wd/2, x+dx+wd/2, za, zb2, yr-0.6, yde, col.s, 1/1.28, h.FF);
-      const zg=f>0 ? zb2 : za+0.12;
-      push("lk_lap", new FaceGeo().slab([V3(x+dx-wd/2+0.01, yde, zg), V3(x+dx+wd/2-0.01, yde, zg), V3(x+dx, ydr-0.08, zg)], 0.12, 1/1.28).geo(), 0,0,0, 0, col.s);
-      const ov=0.22, zo=zd+f*ov, xa=x+dx-wd/2-ov, xb=x+dx+wd/2+ov, yo=yde-0.9*ov;
-      const z_lo=Math.min(zo, zkr), z_hi=Math.max(zo, zkr);
-      push("shingle", new FaceGeo().slab([V3(xa, yo, z_lo), V3(xa, yo, z_hi), V3(x+dx, ydr, z_hi), V3(x+dx, ydr, z_lo)], 0.10, 0.5).geo(), 0,0,0, 0, col.r);
-      push("shingle", new FaceGeo().slab([V3(xb, yo, z_hi+0.01), V3(xb, yo, z_lo-0.01), V3(x+dx, ydr, z_lo-0.01), V3(x+dx, ydr, z_hi+0.01)], 0.10, 0.5).geo(), 0,0,0, 0, col.r);
-      const [gx, gz, ry]=[x+dx, zd+f*0.016, f>0?0:Math.PI];
-      push(r()<0.5 ? "lk_win" : "lk_wind", planeGeo(0.8, 0.9, 0), gx, yr+0.25+0.45, gz, ry, "#ffffff");
+    // the dormers on the front slope: their walls (the cheeks, the front with its window, and the alcove they make
+    // inside) are 14o's; here their little gable roofs, cut off along the valleys where they run into the main roof,
+    // and the window's trim
+    for(const q of h.dormers){ const ov=0.22, xc=q.xc, dF=q.setb-ov, Pt=(xx, d)=>V3(xx, q.ydr-0.9*Math.abs(xx-xc), zf-f*d);
+      const xa=xc-q.wd/2-ov, xb=xc+q.wd/2+ov, back=ax=>q.dv(ax)+0.06;      // (each runs 6 cm on, under the main roof's shingles)
+      push("shingle", new FaceGeo().slab([Pt(xa, dF), Pt(xc, dF), Pt(xc, back(0)), Pt(xa, back(xc-xa))], 0.10, 0.5).geo(), 0,0,0, 0, col.r);
+      push("shingle", new FaceGeo().slab([Pt(xc, dF-0.01), Pt(xb, dF-0.01), Pt(xb, back(xb-xc)+0.01), Pt(xc, back(0)+0.01)], 0.10, 0.5).geo(), 0,0,0, 0, col.r);
+      const [gx, gz, ry]=[xc, q.zd+f*0.016, f>0?0:Math.PI], yr=q.yr;
+      q.win={a:gx-0.4, b:gx+0.4, sill:yr+0.25, head:yr+1.16, lit:r()<0.5};
       B(1.04, 0.10, 0.05, gx, yr+0.25+0.96, gz+f*0.014, col.t, ry); B(1.0, 0.05, 0.08, gx, yr+0.22, gz+f*0.03, col.t, ry);
       for(const sd of [-1,1]) B(0.10, 0.92, 0.05, gx+sd*0.46, yr+0.70, gz+f*0.014, col.t, ry);
       B(0.03, 0.9, 0.012, gx, yr+0.70, gz+f*0.018, col.t, ry); B(0.8, 0.03, 0.012, gx, yr+0.70, gz+f*0.019, col.t, ry); }
@@ -279,8 +288,13 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     flowers(x-5.2, x-2.0, zf+f*0.7, Y); flowers(x+2.0, x+5.2, zf+f*0.7, Y);
     return h; };
   const ranch=(x, f, no, col, gSide)=>{                            // one storey of brick, the garage at one end, a stoop and a little roof over the door
-    const zf=Z+f*(-(HW+13)), h=house({x:x, f:f, zf:zf, W:16.0, D:9.0, eave:2.6, pitch:0.42, siding:col.s, brick:true, trim:col.t, roof:col.r, door:col.d, no:no, ff:0.35, gable:col.g});
+    // (the garage: from its wall to the house, at 2.2 off the middle, out to the end; its floor is the drive's, down a step)
+    const zf=Z+f*(-(HW+13)), gw=[x+gSide*2.2, x+gSide*8.02];
+    const h=house({x:x, f:f, zf:zf, W:16.0, D:9.0, eave:2.6, pitch:0.42, siding:col.s, brick:true, trim:col.t, roof:col.r, door:col.d, no:no, ff:0.35, gable:col.g,
+                   garage:[Math.min(...gw), Math.max(...gw)]});
     const gx=x+gSide*5.0;                                          // the garage's middle
+    h.kind="ranch"; h.gSide=gSide; h.gx=gx;
+    h.ops.F.push({a:gx-2.45, b:gx+2.45, sill:Y-0.03, head:Y+2.27, garage:true});
     // the garage door: white panels in its opening, the light over it
     { const [px, pz, ry]=h.fp("F", gx, 0.03); B(4.9, 2.25, 0.06, px, Y+1.125+0.02, pz, "#f4f2ec", ry);
       for(let k=1;k<4;k++) B(4.9, 0.02, 0.012, px, Y+0.02+k*0.5625, pz+f*0.035, "#d8d6d0", ry);
@@ -291,7 +305,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     h.win("F", lx+(-gSide)*5.4, h.FF+0.95, 1.0, 1.2); h.win("F", gx+(gSide>0?-3.6:3.6), h.FF+0.95, 0.8, 1.0);
     h.door("F", lx+gSide*0.4);
     for(const face of ["L","R"]) if((face==="R")!==(gSide>0)) { h.win(face, h.zm-1.8, h.FF+0.95, 1.0, 1.2); h.win(face, h.zm+1.8, h.FF+0.95, 1.0, 1.2); }
-    for(const u of [x-5.5, x-2.0, x+1.5, x+5.0]) h.win("K", u, h.FF+0.95, 1.0, 1.2);
+    for(const p of [-5.5, -2.0, 1.5, 5.0]) h.win("K", x+gSide*p, h.FF+0.95, 1.0, 1.2);          // (the last in the garage)
     // the stoop, two steps, a pipe rail, and a little gabled hood on brackets over the door
     const sx=lx+gSide*0.4, sz0=zf, sz1=zf+f*1.4, sy=h.FF-0.03;
     bx("concrete", 1.8, sy-(Y-0.2), 1.4, sx, (sy+Y-0.2)/2, (sz0+sz1)/2, 0.5, 0, "#b8b4aa"); addFlat(sx-0.9, sx+0.9, Math.min(sz0,sz1), Math.max(sz0,sz1), sy);
@@ -305,6 +319,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     return h; };
   const bungalow=(x, f, no, col)=>{                                // gable to the road, a porch across the front, shutters, a barn star
     const zf=Z+f*(-(HW+15)), h=house({x:x, f:f, zf:zf, W:9.0, D:11.0, eave:2.8, pitch:0.95, ridge:"z", siding:col.s, trim:col.t, roof:col.r, shutter:col.sh, door:col.d, no:no});
+    h.kind="bungalow";
     h.win("F", x-2.6, h.FF+0.85, 0.95, 1.45, undefined, true); h.win("F", x+2.6, h.FF+0.85, 0.95, 1.45, undefined, true); h.door("F", x);
     h.win("F", x, h.EAV+0.55, 0.85, 1.15, undefined, true);
     for(const face of ["L","R"]) for(const u of [-3.4, 0, 3.4]) h.win(face, h.zm+u, h.FF+0.9, 0.9, 1.3, undefined, true);
@@ -335,6 +350,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     return h; };
   const twoStorey=(x, f, no, col, cSide)=>{                        // two storeys, plain, trim picked out; a carport on posts over a concrete drive
     const zf=Z+f*(-(HW+13.5)), h=house({x:x, f:f, zf:zf, W:9.4, D:8.2, eave:5.3, pitch:0.55, siding:col.s, trim:col.t, roof:col.r, shutter:col.sh, door:col.d, no:no});
+    h.kind="twoStorey"; h.cSide=cSide;
     for(const u of [x-2.9, x+2.9]){ h.win("F", u, h.FF+0.9, 0.95, 1.4, undefined, true); h.win("F", u, h.FF+3.45, 0.95, 1.3, undefined, true); }
     h.win("F", x, h.FF+3.55, 0.7, 1.0); h.door("F", x);
     for(const face of ["L","R"]) for(const [u, y] of [[-1.6, 0.9],[1.6, 0.9],[-1.6, 3.45],[1.6, 3.45]]) h.win(face, h.zm+u, h.FF+y, 0.9, 1.25);
@@ -343,6 +359,11 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     { const [px, pz, ry]=h.fp("F", x, 0.5); B(1.8, 0.10, 0.9, px, h.FF+2.55, pz, col.t, ry); for(const sd of [-0.75, 0.75]){ const [qx,qz]=[px+Math.cos(ry)*sd, pz-Math.sin(ry)*sd]; B(0.08, 0.40, 0.70, qx, h.FF+2.30, qz-f*0.05, col.t, ry); } }
     bx("concrete", 2.0, h.FF-0.03-(Y-0.2), 1.3, x, (h.FF-0.03+Y-0.2)/2, zf+f*0.65, 0.5, 0, "#b8b4aa"); addFlat(x-1.0, x+1.0, Math.min(zf, zf+f*1.3), Math.max(zf, zf+f*1.3), h.FF-0.03);
     steps(x, zf+f*1.3, f, 1.4, h.FF-0.03, 3);
+    // the kitchen's side door, out under the carport: a landing and three steps down along the wall, beside the car
+    { const zc=zf-f*4.36, wx=cSide>0 ? h.x1 : h.x0, sy=h.FF-0.03, lx0=Math.min(wx-cSide*0.02, wx+cSide*0.9), lx1=Math.max(wx-cSide*0.02, wx+cSide*0.9);
+      h.door(cSide>0 ? "R" : "L", zc, col.d, true);
+      bx("concrete", 0.92, sy-(Y-0.2), 1.2, (lx0+lx1)/2, (sy+Y-0.2)/2, zc, 0.5, 0, "#b8b4aa"); addFlat(lx0, lx1, zc-0.6, zc+0.6, sy);
+      steps(wx+cSide*0.45, zc+f*0.6, f, 0.88, sy, 3); }                          // (the landing 2 cm into the wall, the steps against it)
     // the carport: four posts, a low-pitched metal roof, the drive under it to the road
     const cx0=cSide>0 ? h.x1+0.05 : h.x0-3.65, cx1=cx0+3.6, cz0=Math.min(zf+f*0.4, zf-f*6.4), cz1=Math.max(zf+f*0.4, zf-f*6.4), cy=Y+2.55;
     for(const xx of [cx0+0.1, cx1-0.1]) for(const zz of [cz0+0.1, cz1-0.1]) B(0.10, cy-Y, 0.10, xx, (cy+Y)/2, zz, "#f4f2ec");
@@ -375,6 +396,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
   H.s6=bungalow(1318, S, 1317, COL.whiteC);
   H.s7=capeCod(1360, S, 1361, COL.cream);
   H.s8=twoStorey(1402, S, 1403, COL.tanD, -1);
+  LAKESIDE.houses=[H.n1, H.n2, H.n3, H.n4, H.n5, H.s1, H.s2, H.s3, H.s4, H.s5, H.s6, H.s7, H.s8];
   // the rest of each lot: mailbox, drive, car, the trees and the yard
   const lot=(h, mx, opts)=>{ const f=h.f, zr=Z-f*(HW+0.7);
     mailbox(mx, zr, f, opts.mb);
@@ -385,7 +407,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
   // (north side: z decreasing away from the road; the yards run back to the shore at SH)
   { const zN=Z-HW, zr=v=>Z-HW-v;
     lot(H.n1, 1089.6, {gravel:[1090.6, 1093.8], car:[3, "#7a8a96", 1092.2, zr(10.5), Math.PI], trees:[["hard", 1074, zr(4), 1.25],["hemlock", 1064.5, zr(36), 1.1]]});
-    lot(H.n2, 1119.6, {car:[1, "#2a3a2a", H.n2.x0-1.85, zr(16.0), Math.PI], trees:[["hard", 1137.5, zr(6), 1.2],["pine", 1144, zr(40), 1.15]], mb:"#2e5a3a"});
+    lot(H.n2, 1119.6, {car:[1, "#2a3a2a", H.n2.x0-2.2, zr(16.0), Math.PI], trees:[["hard", 1137.5, zr(6), 1.2],["pine", 1144, zr(40), 1.15]], mb:"#2e5a3a"});
     lot(H.n3, 1178.2, {gravel:[1178.8, 1182.0], car:[0, "#8a2418", 1180.4, zr(11), Math.PI], trees:[["hard", 1160, zr(5), 1.3]]});
     lot(H.n4, 1205.4, {car:[2, "#e8e4da", 1209.0, zr(9.5), Math.PI], trees:[["hard", 1199, zr(52), 1.35],["hemlock", 1233, zr(5), 1.05]]});
     lot(H.n5, 1402.0, {gravel:[1402.6, 1405.8], car:[0, "#3a5a8a", 1404.2, zr(10), Math.PI], trees:[["hard", 1385, zr(5), 1.2],["pine", 1416, zr(42), 1.1]]});
@@ -399,12 +421,12 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
   { const zs=v=>Z+HW+v;
     lot(H.s1, 1089.4, {car:[3, "#a8a8a2", 1093.0, zs(8.5), 0], trees:[["hard", 1072, zs(6), 1.25],["hemlock", 1104, zs(48), 1.1]]});
     lot(H.s2, 1123.4, {gravel:[1124.0, 1127.2], car:[2, "#2a4a7a", 1125.6, zs(10), 0], trees:[["hard", 1142, zs(5), 1.3],["pine", 1126, zs(44), 1.15]]});
-    lot(H.s3, 1185.0, {car:[0, "#d8d4c8", H.s3.x1+1.85, zs(12), 0], trees:[["hard", 1164, zs(5), 1.2]], mb:"#2a3442"});
+    lot(H.s3, 1185.0, {car:[0, "#d8d4c8", H.s3.x1+2.2, zs(12), 0], trees:[["hard", 1164, zs(5), 1.2]], mb:"#2a3442"});
     lot(H.s4, 1228.0, {gravel:[1228.6, 1231.8], car:[1, "#5a2a2a", 1230.2, zs(11), 0], trees:[["hard", 1212, zs(4), 1.25],["hemlock", 1238, zs(40), 1.1]]});
     lot(H.s5, 1263.6, {car:[3, "#1e2a3a", 1267.0, zs(8.5), 0], trees:[["hard", 1286.5, zs(5), 1.3],["hard", 1258, zs(46), 1.35]]});
     lot(H.s6, 1323.0, {gravel:[1323.6, 1326.8], car:[0, "#c8a040", 1325.2, zs(11), 0], trees:[["hard", 1306, zs(5), 1.25],["pine", 1330, zs(44), 1.1]]});
     lot(H.s7, 1349.8, {gravel:[1350.4, 1353.6], car:[2, "#6a6a62", 1352.0, zs(10.5), 0], trees:[["hard", 1368, zs(6), 1.2]]});
-    lot(H.s8, 1392.8, {car:[1, "#8a2418", H.s8.x0-1.85, zs(12), 0], trees:[["hard", 1414, zs(30), 1.2]], mb:"#6a4a2e"});
+    lot(H.s8, 1392.8, {car:[1, "#8a2418", H.s8.x0-2.2, zs(12), 0], trees:[["hard", 1414, zs(30), 1.2]], mb:"#6a4a2e"});
     swingSet(1088, zs(36), 0.0); garden(1096, 1103, zs(40), zs(45));
     shed(1140, zs(40), 0.2, "#e8e4da", "#4e5256"); boat(1171.6+6.2, zs(30), 0.0);
     swingSet(1226, zs(40), -0.2); picnic(1274, zs(36), 0.3); grill(1268, zs(33));

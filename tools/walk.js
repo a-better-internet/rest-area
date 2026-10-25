@@ -118,6 +118,8 @@ const ROUTES={
   await p.route(/fonts\./, r=>r.fulfill({status:200, contentType:"text/css", body:""}));
   await p.goto("file://"+path.join(ROOT,"index.html"), {timeout:240000});
   await p.waitForFunction(()=>window.REST,null,{timeout:120000});
+  // the houses on Lake Street (14o) lay out their own routes, through their own transforms, as they build
+  Object.assign(ROUTES, await p.evaluate(()=>typeof LAKE_HOUSES!=="undefined" ? LAKE_HOUSES.routes : {}));
   const out=await p.evaluate((ROUTES)=>{
     const res={};
     const hit=(x,z,f)=>{
@@ -224,6 +226,12 @@ const ROUTES={
         const d=drive(TOP4,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT4,m,lo); REST.sim(40);
         res["hall stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-2.0 ? "down: never reached the hall ("+lo.toFixed(2)+")"
                                          : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
+    // and each house's stair on Lake Street (14o), up from its hall and back down
+    for(const S of (typeof LAKE_HOUSES!=="undefined" ? LAKE_HOUSES.stairs : [])){ const UPh=S.up, DNh=UPh.slice().reverse();
+      for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
+        const u=drive(UPh,m,S.lo); REST.sim(40); const hi=REST.player.feetY, d=drive(DNh,m,hi); REST.sim(40);
+        res[S.name+", keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : hi<S.hi-0.1 ? "up: never reached the top ("+hi.toFixed(2)+")"
+                                         : typeof d==="string" ? "down: "+d : REST.player.feetY>S.lo+0.1 ? "down: still up at "+REST.player.feetY.toFixed(2) : "ok"; } }
     // and the trailer's step the same way, at every pace, then back down it
     { (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");
       const IN=ROUTES["into the trailer"].pts.slice(0,4), OUT=IN.slice().reverse(), fl=REST.surf(IN[3][0],IN[3][1],2);
