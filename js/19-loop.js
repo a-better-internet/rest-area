@@ -182,6 +182,8 @@ function frame(){
   scene.fog.far =1250+dn.nightAmount*300;
   scene.background=skyImg.hz;
   applyWeather(delta, now, dn, dark);
+  // (the blue of distance is a clear day's: weather fog and the night have their own colour, 03)
+  HAZE_U.w=(1-WEATHER.fog)*(1-WEATHER.cover*0.6)*(1-dn.nightAmount);
   /* UNDERGROUND HAS NO CLOCK. Anywhere addBuried() marks (12b's cellar and
      the arcade past it, and anything dug later) is lit the same at noon as
      at midnight: the sky's light is swapped for a fixed dim fill, the sun

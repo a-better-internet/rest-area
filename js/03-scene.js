@@ -63,19 +63,29 @@ T.ShaderChunk.tonemapping_pars_fragment =
    integrated along the line of sight. So it has no edges anywhere: the
    grass at your feet is clear, the far side of the lawn goes milky, posts
    and trunks fade into it at the bottom, and the crowns stand up out of
-   it. Thinner and thicker in slow-drifting patches. 14c says how much
+   it. Thinner and thicker in slow-drifting patches. Past a hundred
+   metres or so it is held back from closing in completely, so the
+   far side of the lake is softened by it, not whited out. 14c says how much
    there is; the two shared vec4s are plain objects, so every material's
    copy of the uniform is the same one.
      MIST_U: density per metre at the ground, the thinning height, the
              ground level, the drift clock
      MIST_C: its colour, and 0 to switch it off                          */
 const MIST_U={x:0, y:1.7, z:0, w:0}, MIST_C={x:0.86, y:0.88, z:0.90, w:0};
-for(const k in T.ShaderLib){ const u=T.ShaderLib[k].uniforms; if(u && u.fogColor){ u.uMist={value:MIST_U}; u.uMistC={value:MIST_C}; } }
-T.UniformsLib.fog.uMist={value:MIST_U}; T.UniformsLib.fog.uMistC={value:MIST_C};
+/* AERIAL PERSPECTIVE. The haze a hill a kilometre off sits in is not the
+   pale sky at the horizon but bluer and darker than it: hills go blue-grey
+   with distance and lighten towards the sky only at the very end. So the
+   colour the fog mixes in is the horizon's times a tint, HAZE_U.rgb at the
+   middle distances easing to HAZE_F at the far end of the fog; w says how
+   much of that tint there is (19-loop: less of it in weather fog and at
+   night, when the haze is the weather's grey or the night's dark). */
+const HAZE_U={x:0.64, y:0.72, z:0.86, w:1};
+for(const k in T.ShaderLib){ const u=T.ShaderLib[k].uniforms; if(u && u.fogColor){ u.uMist={value:MIST_U}; u.uMistC={value:MIST_C}; u.uHaze={value:HAZE_U}; } }
+T.UniformsLib.fog.uMist={value:MIST_U}; T.UniformsLib.fog.uMistC={value:MIST_C}; T.UniformsLib.fog.uHaze={value:HAZE_U};
 T.ShaderChunk.fog_pars_vertex += "\n#ifdef USE_FOG\n\tvarying vec3 vFogWorld;\n#endif";
 T.ShaderChunk.fog_vertex += "\n#ifdef USE_FOG\n\t{ mat3 vr=mat3(viewMatrix); vec3 v=mvPosition.xyz;"+
   " vFogWorld=cameraPosition+vec3(dot(vr[0],v),dot(vr[1],v),dot(vr[2],v)); }\n#endif";
-T.ShaderChunk.fog_pars_fragment += "\n#ifdef USE_FOG\n\tvarying vec3 vFogWorld;\n\tuniform vec4 uMist;\n\tuniform vec4 uMistC;\n#endif";
+T.ShaderChunk.fog_pars_fragment += "\n#ifdef USE_FOG\n\tvarying vec3 vFogWorld;\n\tuniform vec4 uMist;\n\tuniform vec4 uMistC;\n\tuniform vec4 uHaze;\n#endif";
 T.ShaderChunk.fog_fragment = [
   "#ifdef USE_FOG",
   "if(uMistC.w>0.001){",
@@ -87,11 +97,18 @@ T.ShaderChunk.fog_fragment = [
   "  float n00=fract(sin(dot(qi,vec2(127.1,311.7)))*43758.5453), n10=fract(sin(dot(qi+vec2(1.0,0.0),vec2(127.1,311.7)))*43758.5453);",
   "  float n01=fract(sin(dot(qi+vec2(0.0,1.0),vec2(127.1,311.7)))*43758.5453), n11=fract(sin(dot(qi+vec2(1.0,1.0),vec2(127.1,311.7)))*43758.5453);",
   "  float nn=mix(mix(n00,n10,qf.x),mix(n01,n11,qf.x),qf.y);",
-  "  float mf=1.0-exp(-uMist.x*avg*distance(vFogWorld,cameraPosition)*(0.45+1.1*nn));",
+  "  float md=distance(vFogWorld,cameraPosition);",
+  "  float mf=1.0-exp(-uMist.x*avg*md*(0.45+1.1*nn));",
+  // (a long way off it never closes in completely: across a field or the lake the far side shows through
+  // it, softened, where it would otherwise go one flat white band; in a wood no sight line is that long)
+  "  mf=min(mf, mix(1.0, 0.42, smoothstep(100.0, 520.0, md)));",
   "  gl_FragColor.rgb=mix(gl_FragColor.rgb, uMistC.rgb, mf*uMistC.w);",
   "}",
   "#endif",
-  T.ShaderChunk.fog_fragment].join("\n");
+  T.ShaderChunk.fog_fragment.replace("gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );",
+    "vec3 hazeC = fogColor*mix(vec3(1.0), mix(uHaze.rgb, vec3(0.84,0.89,0.96), fogFactor*fogFactor), uHaze.w);\n"+
+    "\tgl_FragColor.rgb = mix( gl_FragColor.rgb, hazeC, fogFactor );")].join("\n");
+if(T.ShaderChunk.fog_fragment.indexOf("hazeC")<0) console.warn("fog: the haze tint did not take");
 renderer.toneMapping=T.CustomToneMapping;
 renderer.toneMappingExposure=1.0;
 app.appendChild(renderer.domElement);

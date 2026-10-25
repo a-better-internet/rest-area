@@ -23,6 +23,12 @@
    heavier pushing harder) and is shoved by the pusher's face; a second
    layer rides on top of the first and drops down when nothing holds it up.
    That is enough for the pile to creep forward and spill over the lip.
+   A dropped token falls under gravity from the chute. If the pusher is
+   under it, it lands on the pusher's shelf and rides it; the back wall
+   holds it as the shelf goes back under, so it is scraped off the front
+   edge onto the deck. Otherwise it lands on the deck in front of the face.
+   What you've won and the tokens left are lit on the backglass, where you
+   are looking, as well as on the readout under the marquee.
    ---------------------------------------------------------------------- */
 const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
 (function dozerCabinet(){
@@ -61,10 +67,15 @@ const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
   const glass=new T.MeshStandardMaterial({color:0xcfe8ff, transparent:true, opacity:0.12, roughness:0.05, metalness:0.2, depthWrite:false, side:T.DoubleSide});
   { const m=new T.Mesh(new T.PlaneGeometry(W-0.08, TOP-DECK-0.06), glass); m.position.set(0, (TOP+DECK)/2+0.01, 0.44); G.add(m); }
   // the backglass: a sunburst, the name faint over it
-  { const bg=signTex(512,320,(c,Wc,Hc)=>{ const g=c.createLinearGradient(0,0,0,Hc); g.addColorStop(0,"#3b0f52"); g.addColorStop(1,"#12041f"); c.fillStyle=g; c.fillRect(0,0,Wc,Hc);
-      c.save(); c.translate(Wc/2, Hc*0.95); for(let i=0;i<24;i++){ c.rotate(Math.PI*2/24); c.fillStyle=i%2?"rgba(255,62,203,0.16)":"rgba(61,243,255,0.12)"; c.beginPath(); c.moveTo(0,0); c.lineTo(Wc,-Hc*0.2); c.lineTo(Wc,Hc*0.2); c.closePath(); c.fill(); } c.restore();
-      c.globalAlpha=0.35; c.fillStyle="#8fd6ff"; fitText(c, "COIN DOZER", Wc*0.72, Hc*0.20, Wc/2, Hc*0.40, "900", "'Arial Black', Arial"); c.globalAlpha=1; });
-    const m=new T.Mesh(new T.PlaneGeometry(0.86, TOP-DECK-0.02), new T.MeshBasicMaterial({map:bg, toneMapped:false}));
+  // (its top band is the player's readout, redrawn over this base in _dzReadout)
+  const bgBase=cvs(512,320), bgc=cvs(512,320), bgTex=setSRGB(new T.CanvasTexture(bgc));
+  { const c=bgBase.getContext("2d"), Wc=512, Hc=320, g=c.createLinearGradient(0,0,0,Hc); g.addColorStop(0,"#3b0f52"); g.addColorStop(1,"#12041f"); c.fillStyle=g; c.fillRect(0,0,Wc,Hc);
+    c.save(); c.translate(Wc/2, Hc*0.95); for(let i=0;i<24;i++){ c.rotate(Math.PI*2/24); c.fillStyle=i%2?"rgba(255,62,203,0.16)":"rgba(61,243,255,0.12)"; c.beginPath(); c.moveTo(0,0); c.lineTo(Wc,-Hc*0.2); c.lineTo(Wc,Hc*0.2); c.closePath(); c.fill(); } c.restore();
+    c.globalAlpha=0.35; c.fillStyle="#8fd6ff"; fitText(c, "COIN DOZER", Wc*0.62, Hc*0.16, Wc/2, Hc*0.70, "900", "'Arial Black', Arial"); c.globalAlpha=1;
+    // the readout's panel: a dark bezel across the top
+    c.fillStyle="#05040a"; c.strokeStyle="rgba(255,62,203,0.7)"; c.lineWidth=4; c.beginPath(); c.rect(28, 18, Wc-56, 104); c.fill(); c.stroke();
+    bgc.getContext("2d").drawImage(bgBase, 0, 0); }
+  { const m=new T.Mesh(new T.PlaneGeometry(0.86, TOP-DECK-0.02), new T.MeshBasicMaterial({map:bgTex, toneMapped:false}));
     m.position.set(0, (TOP+DECK)/2, BACK-0.012); G.add(m); }
   // the deck: dark plate, chevrons pointing at the lip, a rail of yellow neon along it
   { const dk=signTex(256,256,(c,Wc,Hc)=>{ c.fillStyle="#14131c"; c.fillRect(0,0,Wc,Hc);
@@ -81,16 +92,17 @@ const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
   // the deck's walls either side, low, so nothing leaves but over the lip
   for(const sd of [-1,1]) B(0.02, 0.05, EDGE-BACK, sd*(HX+0.01), DECK+0.025, (EDGE+BACK)/2, "#2a2436");
   // the pusher: brushed steel, its leading edge hazard-striped
-  const pz0=-0.30, pz1=-0.14;
+  // (fully back, its face is at the back wall, so whatever rides its shelf is scraped off)
+  const pz0=-0.375, pz1=-0.205, PD=0.21;
   const pusher=new T.Group(); G.add(pusher);
   { const st=signTex(256,32,(c,Wc,Hc)=>{ c.fillStyle="#12101a"; c.fillRect(0,0,Wc,Hc); for(let i=-2;i<20;i++){ c.save(); c.translate(i*16,0); c.rotate(0.5); c.fillStyle=i%2?"#ffd247":"#171320"; c.fillRect(0,-20,8,80); c.restore(); } });
-    const steel=new T.Mesh(boxGeo(HX*2-0.004, 0.06, 0.40), new T.MeshStandardMaterial({color:0xb8bcc8, metalness:0.7, roughness:0.25})); steel.position.set(0, DECK+0.032, -0.20); pusher.add(steel);
-    const lip=new T.Mesh(boxGeo(HX*2-0.004, 0.022, 0.012), new T.MeshStandardMaterial({map:st, roughness:0.5})); lip.position.set(0, DECK+0.05, 0.006); pusher.add(lip); }
+    const steel=new T.Mesh(boxGeo(HX*2-0.004, 0.06, PD), new T.MeshStandardMaterial({color:0xb8bcc8, metalness:0.7, roughness:0.25})); steel.position.set(0, DECK+0.032, -PD/2); pusher.add(steel);
+    const lip=new T.Mesh(boxGeo(HX*2-0.008, 0.022, 0.012), new T.MeshStandardMaterial({map:st, roughness:0.5})); lip.position.set(0, DECK+0.05, -0.004); pusher.add(lip); }     // (2 mm proud of the face)
   // the chute along the back, over the deck: where the next token falls from
   const chute=new T.Group(); G.add(chute);
   { const m=new T.Mesh(boxGeo(0.07, 0.05, 0.06), new T.MeshStandardMaterial({color:0x8a8d98, metalness:0.6, roughness:0.3})); chute.add(m);
     const mk=new T.Mesh(new T.ConeGeometry(0.018, 0.035, 10), new T.MeshBasicMaterial({color:0xffd247, toneMapped:false})); mk.position.y=-0.045; mk.rotation.x=Math.PI; chute.add(mk); }
-  chute.position.set(0, DECK+0.36, -0.24);
+  const CHZ=-0.30; chute.position.set(0, DECK+0.36, CHZ);
   // the bonus bucket's pad, lit, running along under the lip
   const bucket=new T.Mesh(new T.PlaneGeometry(0.13, 0.05), new T.MeshBasicMaterial({color:0x6fc41c, toneMapped:false, transparent:true, opacity:0.6}));
   bucket.position.set(0, DECK-0.012, EDGE+0.07); bucket.rotation.x=-0.6; G.add(bucket);
@@ -115,7 +127,7 @@ const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
     c.fillStyle=g; c.fillRect(0,0,Wc,Hc); c.strokeStyle="#7a4a0a"; c.lineWidth=5; c.beginPath(); c.arc(Wc/2,Hc/2,Wc/2-10,0,7); c.stroke();
     c.fillStyle="#b87a10"; c.beginPath(); for(let k=0;k<10;k++){ const a=k*Math.PI/5-Math.PI/2, r=k%2?14:32; c.lineTo(Wc/2+Math.cos(a)*r, Hc/2+Math.sin(a)*r); } c.closePath(); c.fill(); });
   const RC=0.024, TH=0.007, MAXC=260;
-  const coinM=new T.MeshStandardMaterial({map:face, metalness:0.2, roughness:0.42, emissive:0xffffff, emissiveMap:face, emissiveIntensity:0.32});      // (brass under the glass: lit a little from within, or the pile reads as dark beans)
+  const coinM=new T.MeshStandardMaterial({map:face, metalness:0.2, roughness:0.42, emissive:0xffffff, emissiveMap:face, emissiveIntensity:0.5});      // (brass under the glass: lit a little from within, or the pile reads as dark beans)
   const coins=new T.InstancedMesh(new T.CylinderGeometry(RC, RC, TH, 20), coinM, MAXC);
   coins.instanceMatrix.setUsage(T.DynamicDrawUsage); coins.count=0; coins.frustumCulled=false; G.add(coins);
   coins.setColorAt(0, new T.Color(0xffffff)); coins.instanceColor.setUsage(T.DynamicDrawUsage);
@@ -130,7 +142,7 @@ const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
       return new T.Mesh(mergeEntries(E2), new T.MeshStandardMaterial({vertexColors:true, roughness:0.35, metalness:0.3})); }
     return new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 0.010, 28), new T.MeshStandardMaterial({color:0xc8ccd4, map:face, metalness:0.6, roughness:0.3, emissive:0x2a2a30, emissiveIntensity:0.5})); };
   // its light, inside under the roof (BURIED: the arcade's, 12c)
-  LAMPS.push({x:D.x-0.10, y:D.y+TOP-0.06, z:D.z, color:0xfff0d8, intensity:0.55, dist:2.6, decay:1.6, under:true, indoor:true, circ:"bldg"});
+  LAMPS.push({x:D.x-0.10, y:D.y+TOP-0.06, z:D.z, color:0xfff0d8, intensity:0.75, dist:2.6, decay:1.6, under:true, indoor:true, circ:"bldg"});
   const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.5, metalness:0.15}));
   mesh.castShadow=true; mesh.receiveShadow=true; G.add(mesh);
   // in world terms: the stand in front of it, the screen to look at, its collider
@@ -140,16 +152,20 @@ const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
   addUse(st[0], st[1], A.y, "PLAY COIN DOZER", ()=>DOZER.start(), 0.9);
   ARCADE.games.push({name:"COIN DOZER", x:st[0], z:st[1]});
   DOZER.cab={G:G, D:D, coins:coins, prizeMesh:prizeMesh, pusher:pusher, chute:chute, bucket:bucket, trayGlow:trayGlow, bulbs:bulbs, bA:bA, bB:bB, domes:domes, neons:neons,
-             read:{c:rc, x:rc.getContext("2d"), tex:rtex}, stand:{x:st[0], z:st[1]}, look:{x:look[0], z:look[1]}, floor:A.y,
-             DECK:DECK, HX:HX, BACK:BACK, EDGE:EDGE, pz0:pz0, pz1:pz1, RC:RC, TH:TH, MAXC:MAXC};
+             read:{c:rc, x:rc.getContext("2d"), tex:rtex}, back:{c:bgc, x:bgc.getContext("2d"), base:bgBase, tex:bgTex},
+             stand:{x:st[0], z:st[1]}, look:{x:look[0], z:look[1]}, floor:A.y,
+             DECK:DECK, HX:HX, BACK:BACK, EDGE:EDGE, pz0:pz0, pz1:pz1, RC:RC, TH:TH, MAXC:MAXC,
+             WALL:BACK-0.010, SHELF:DECK+0.062, CHZ:CHZ, CHY:DECK+0.32};
 })();
 
 /* ---- the game ------------------------------------------------------------ */
 const _DZ={HOP:50, REGEN:3.0, SHAKE:4.0,
   VAL:{coin:1, big:10, die:15, gem:25, car:50}, R:{coin:0.024, big:0.045, die:0.026, gem:0.026, car:0.045}};
 function _dzSnd(k){ const C=DOZER.cab; if(typeof AUDIO!=="undefined" && C) AUDIO.blip(k, C.D.x, C.D.z); }
-// a body on the deck: a disc of radius r, mass by its area; layer 0 on the deck, 1 on top of the tokens under it
-function _dzBody(type, x, z, layer){ const r=_DZ.R[type]; return {type:type, x:x, z:z, vx:0, vz:0, r:r, m:r*r/(0.024*0.024), layer:layer||0, y:0, fall:-1, drop:-1, mesh:null, rot:Math.random()*6.28}; }
+// a body: a disc of radius r, mass by its area. On the deck, layer 0, or 1 on top of the tokens under
+// it; or riding the pusher's shelf (shelf); or in the air (drop>=0, its height y and speed vy); or gone
+// over the lip (fall>=0)
+function _dzBody(type, x, z, layer){ const r=_DZ.R[type]; return {type:type, x:x, z:z, vx:0, vz:0, r:r, m:r*r/(0.024*0.024), layer:layer||0, y:0, vy:0, fall:-1, drop:-1, shelf:false, hop:false, tip:0, mesh:null, rot:Math.random()*6.28}; }
 DOZER.newGame=function(){
   const C=DOZER.cab, g={items:[], won:0, hop:30, regen:0, shakeCD:0, t:0, aim:0, last:"", flash:0, bonusX:0};
   // a deck already well covered: a jittered grid of tokens, a few riding on top, two prizes to aim at
@@ -163,8 +179,15 @@ DOZER.newGame=function(){
 };
 function _dzMesh(it){ if(it.type==="coin" || it.mesh) return; const C=DOZER.cab; it.mesh=C.prizeMesh(it.type); C.G.add(it.mesh); }
 function _dzDrop(g, type){
-  const C=DOZER.cab, it=_dzBody(type, g.aim+(Math.random()-0.5)*0.01, -0.24, 0);
-  it.drop=0.36; g.items.push(it); _dzMesh(it); return it; }
+  const C=DOZER.cab, it=_dzBody(type, g.aim+(Math.random()-0.5)*0.01, C.CHZ+(Math.random()-0.5)*0.01, 0);
+  it.drop=0; it.y=C.CHY; it.vy=-0.15; it.tip=0.9+Math.random()*0.6; g.items.push(it); _dzMesh(it); return it; }
+// where something coming down lands: the shelf if the pusher is under it, else the deck, or the tokens on it
+function _dzLand(g, it, pz){
+  const C=DOZER.cab; it.drop=-1; it.vy=0; it.tip=0; it.vx=0; it.vz=0;
+  if(it.shelf) return;
+  if(it.z-it.r<pz) it.z=pz+it.r+0.001;
+  let on=0; for(const o of g.items) if(o!==it && o.layer===0 && !o.shelf && o.fall<0 && o.drop<0 && Math.hypot(o.x-it.x, o.z-it.z)<(o.r+it.r)*0.8) on++;
+  it.layer=on>0 && it.type==="coin" ? 1 : 0; }
 DOZER.dropCoin=function(){
   const g=DOZER.g; if(!g) return;
   if(g.hop<=0){ g.last="HOPPER EMPTY"; _dzSnd("tick"); return; }
@@ -183,19 +206,33 @@ DOZER.doShake=function(){
 function _dzStep(g, dt, live){
   const C=DOZER.cab, t=g.t+=dt;
   const ph=t*Math.PI*2/2.6, pz=C.pz0+(C.pz1-C.pz0)*(0.5-0.5*Math.cos(ph)), vp=(C.pz1-C.pz0)*0.5*Math.sin(ph)*Math.PI*2/2.6;
+  const dpz=g.pz===undefined ? 0 : pz-g.pz;
   g.pz=pz; g.bonusX=Math.sin(t*1.3)*(C.HX-0.08);
-  const L0=[], L1=[], fr=Math.exp(-9*dt);
+  const L0=[], L1=[], SH=[], fr=Math.exp(-9*dt), hs=C.TH/2+0.0015;
   for(const it of g.items){
-    if(it.drop>=0){ it.drop-=dt*1.6; if(it.drop<=0){ it.drop=-1;
-        // where it lands: inside the pusher, it's put down in front of it; on a pile, on top of it
-        if(it.z-it.r<pz) it.z=pz+it.r+0.001;
-        let on=0; for(const o of g.items) if(o!==it && o.layer===0 && o.fall<0 && o.drop<0 && Math.hypot(o.x-it.x, o.z-it.z)<(o.r+it.r)*0.8) on++;
-        it.layer=on>0 && it.type==="coin" ? 1 : 0; _dzSnd("tick"); }
+    if(it.drop>=0){ it.drop+=dt;
+      // coming down under gravity: onto the shelf if the pusher is under it, else past its face to the deck
+      it.vy-=6.5*dt; it.y+=it.vy*dt; it.z+=it.vz*dt;
+      const over=it.z<pz-0.004, floor=over ? C.SHELF : C.DECK;
+      if(!over && it.y<C.SHELF+hs && it.z-it.r<pz) it.z=pz+it.r;          // below the shelf, the face shoves it
+      if(it.y<=floor+hs){ it.y=floor+hs;
+        if(!it.hop && it.vy<-0.8){ it.hop=true; it.vy*=-0.22; _dzSnd("tick"); }  // one small bounce, then down
+        else { it.shelf=over; _dzLand(g, it, pz); } }
       continue; }
     if(it.fall>=0){ it.fall+=dt; continue; }
+    if(it.shelf){ it.z+=dpz; SH.push(it); continue; }
     it.ox=it.x; it.oz=it.z;
     if(it.layer===0){ it.x+=it.vx*dt; it.z+=it.vz*dt; it.vx*=fr; it.vz*=fr; L0.push(it); } else L1.push(it);
   }
+  // the shelf: what rides it is held by the back wall as it goes under, and by each other,
+  // and whatever finds itself past the front edge tips off it onto the deck
+  for(let pass=0;pass<2;pass++){
+    for(const a of SH){ if(a.z-a.r<C.WALL) a.z=C.WALL+a.r; if(a.x<-C.HX+a.r) a.x=-C.HX+a.r; else if(a.x>C.HX-a.r) a.x=C.HX-a.r; }
+    for(let i=0;i<SH.length;i++) for(let j=i+1;j<SH.length;j++){ const a=SH[i], b=SH[j], dx=b.x-a.x, dz=b.z-a.z, R=a.r+b.r, d2=dx*dx+dz*dz;
+      if(d2>=R*R || d2<1e-10) continue; const d=Math.sqrt(d2), o=R-d, nx=dx/d, nz=dz/d;
+      let wa=0.5, wb=0.5; if(a.z-a.r<=C.WALL+0.0005 && nz>0){ wa=0; wb=1; } else if(b.z-b.r<=C.WALL+0.0005 && nz<0){ wa=1; wb=0; }
+      a.x-=nx*o*wa; a.z-=nz*o*wa; b.x+=nx*o*wb; b.z+=nz*o*wb; } }
+  for(const a of SH) if(a.z>pz){ a.shelf=false; a.drop=0; a.hop=true; a.y=C.SHELF+hs; a.vy=0; a.vz=0.06; a.tip=0.5; }
   // the deck's tokens: the pusher's face, the walls, each other (three passes)
   for(let pass=0;pass<3;pass++){
     for(const a of L0){ if(a.z-a.r<pz){ a.z=pz+a.r; if(vp>0 && a.vz<vp) a.vz=vp; }
@@ -237,7 +274,8 @@ function _dzDraw(g){
   const C=DOZER.cab; let n=0;
   for(const it of g.items){
     let y=C.DECK+C.TH/2+0.0015+(it.layer===1 ? C.TH+0.0006 : 0), x=it.x, z=it.z, tilt=0;
-    if(it.drop>=0){ y=C.DECK+0.02+it.drop; }
+    if(it.shelf) y=C.SHELF+C.TH/2+0.0015;
+    if(it.drop>=0){ y=it.y; tilt=it.tip*Math.max(0, Math.cos(it.drop*9)); }       // (it tumbles a little on the way down)
     if(it.fall>=0){ z=it.z+it.fall*0.10; y=C.DECK+0.004-it.fall*it.fall*1.4; tilt=Math.min(1.2, it.fall*4); }
     if(it.type==="coin"){ if(n>=C.MAXC) continue;
       _dzE.set(tilt, it.rot, 0, "YXZ"); _dzQ.setFromEuler(_dzE); _dzV.set(x, y, z); _dzM.compose(_dzV, _dzQ, _dzS);
@@ -266,6 +304,19 @@ function _dzReadout(g, live){
     x.fillStyle=((DOZER.t*2)|0)%2 ? "#ffd247" : "#ff3ecb"; x.fillText("E TO PLAY · HI "+("0000"+DOZER.hi).slice(-4), W/2, H/2);
   }
   R.tex.needsUpdate=true;
+  // and the same on the backglass, in the band across its top, where you look while you play
+  const B=DOZER.cab.back, b=B.x, put=(t, px, py, size, w, col)=>{ let f=size; b.font="bold "+f+"px 'Courier New', monospace";
+    while(f>10 && b.measureText(t).width>w){ f-=2; b.font="bold "+f+"px 'Courier New', monospace"; } b.fillStyle=col; b.fillText(t, px, py); };
+  b.drawImage(B.base, 0, 0); b.textAlign="center"; b.textBaseline="middle";
+  if(live){
+    put("WON "+("0000"+g.won).slice(-4), 150, 52, 36, 196, g.flash>0 ? "#fff3b0" : "#ffd247");
+    put("TOKENS "+("00"+g.hop).slice(-2), 362, 52, 36, 196, g.hop>0 ? "#3df3ff" : "#ff5a3a");
+    put(g.last || (g.hop<_DZ.HOP ? "NEXT TOKEN IN "+Math.ceil(_DZ.REGEN-g.regen)+"s" : "HOPPER FULL"), 256, 98, 24, 400, g.last ? "#ff3ecb" : "#8a8aa0");
+  } else {
+    put("E TO PLAY", 256, 52, 36, 400, ((DOZER.t*2)|0)%2 ? "#ffd247" : "#ff3ecb");
+    put("HIGH SCORE "+("0000"+DOZER.hi).slice(-4), 256, 98, 24, 400, "#3df3ff");
+  }
+  B.tex.needsUpdate=true;
 }
 DOZER.start=function(){
   const C=DOZER.cab; if(!C || DOZER.on) return;
@@ -290,7 +341,12 @@ DOZER.key=function(e){
 };
 DOZER.mouse=function(dx){ const g=DOZER.g, C=DOZER.cab; if(!g) return; g.aim=clamp(g.aim+dx*0.0009, -C.HX+0.04, C.HX-0.04); };
 addEventListener("keyup", e=>{ DOZER.keys[e.code]=false; });
-renderer.domElement.addEventListener("mousedown", e=>{ if(DOZER.on && e.button===0 && document.pointerLockElement===renderer.domElement) DOZER.dropCoin(); });
+// a click drops a token: at once under pointer lock, and without it on letting go, if the mouse
+// hardly moved (a drag is the chute's, as the mouse is everywhere else)
+let _dzDown=null;
+renderer.domElement.addEventListener("mousedown", e=>{ if(!DOZER.on || e.button!==0) return;
+  if(document.pointerLockElement===renderer.domElement) DOZER.dropCoin(); else _dzDown=[e.clientX, e.clientY]; });
+addEventListener("mouseup", e=>{ if(DOZER.on && _dzDown && Math.hypot(e.clientX-_dzDown[0], e.clientY-_dzDown[1])<6) DOZER.dropCoin(); _dzDown=null; });
 function updateDozer(dt){
   const C=DOZER.cab; if(!C) return;
   DOZER.t+=dt; DOZER.shake=Math.max(0, DOZER.shake-dt);

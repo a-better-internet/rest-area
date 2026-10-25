@@ -765,9 +765,12 @@ const FOREST=(function(){
         const pa=Terrain.fbm(x*0.008+1, z*0.008+8, 3), pb=hash2(Math.floor(x/9),Math.floor(z/9));
         cs.copy(sumA[Math.floor(pb*3)]).lerp(sumA[3], smoothstep(0.55,0.72,pa));
         ca.copy(autA[Math.floor(pb*4)]).lerp(autA[4], smoothstep(0.55,0.72,pa));
-        // hollows between crowns are darker
-        const lump=fine ? _cell(x,z)/4.8 : 0.6;
-        const shade=0.62+0.38*lump;
+        // hollows between crowns are darker; far off, where there are no crowns to shade, it goes in
+        // patches, darker and lighter stands (one even green is what reads flat and blown out from the lake)
+        const lump=fine ? _cell(x,z)/4.8 : 0.10+0.80*Terrain.fbm(x*0.011+5.3, z*0.011+2.9, 3);
+        // and where it comes down at the edge of a clearing, its face goes dark towards the foot: the
+        // inside of a wood, not a lit green wall
+        const shade=(fine ? 0.62+0.38*lump : 0.50+0.36*lump)*(0.34+0.66*M[k]);
         CS.push(cs.r*shade, cs.g*shade, cs.b*shade); CA.push(ca.r*shade, ca.g*shade, ca.b*shade);
       }
       const inHole=(cx0,cx1,cz0,cz1)=>{

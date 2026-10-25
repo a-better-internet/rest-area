@@ -141,7 +141,11 @@ function updateCritters(dt, now, dark){
   const evening=smoothstep(18.5,21.0,h)+ (h<4.8 ? 1 : 0);
   const k=Math.max(morning*1.0, Math.min(1,evening)*0.55)*(FOREST.isAutumn()?1.3:1.0);
   MIST_K=k;
-  const cam=camera.position, gnd=Terrain.groundAt(cam.x, cam.z);
+  const cam=camera.position;
+  // (by the lake it lies on the water, which is lower than the shore: anchored at the shore, the whole
+  // lake would be under its densest foot and go one white sheet)
+  let gnd=Terrain.groundAt(cam.x, cam.z);
+  if(typeof EAST!=="undefined" && Terrain.lakeSD) gnd=lerp(gnd, Math.min(gnd, EAST.wy), 1-smoothstep(60, 260, Terrain.lakeSD(cam.x, cam.z)));
   MIST_U.z += (gnd-0.3-MIST_U.z)*Math.min(1, dt*0.4);
   MIST_U.x = 0.030*Math.min(1.3,k);
   MIST_U.w = now;

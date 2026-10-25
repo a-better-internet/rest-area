@@ -276,6 +276,9 @@ function updateDoors(dt){
   // Doors and chairs are on different keys now, so both prompts can stand.
   const el=document.getElementById("prompt");
   if(droneMode){ el.classList.remove("show"); return; }
+  // at a game the toast has told you its keys, and the prompt would sit over what you are playing
+  if((typeof DARTS!=="undefined" && DARTS.on) || (typeof HOCKEY!=="undefined" && HOCKEY.on) || (typeof HOOPS!=="undefined" && HOOPS.on) ||
+     (typeof RAIDERS!=="undefined" && RAIDERS.on) || (typeof CABS!=="undefined" && CABS.on) || (typeof DOZER!=="undefined" && DOZER.on)){ el.classList.remove("show"); return; }
   const bits=[];
   if(driving) bits.push("E  ·  GET OUT");
   else if(seated) bits.push("C  ·  "+(seated.lie?"GET UP":"STAND UP"));
