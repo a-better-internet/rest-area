@@ -28,6 +28,8 @@ addEventListener("keydown",e=>{
   if(typeof RAIDERS!=="undefined" && RAIDERS.on){ e.preventDefault(); RAIDERS.key(e); return; }
   // and at the other three, theirs (18g-cabinets)
   if(typeof CABS!=="undefined" && CABS.on){ e.preventDefault(); CABS.key(e); return; }
+  // and at the coin dozer, its (18h-dozer)
+  if(typeof DOZER!=="undefined" && DOZER.on){ e.preventDefault(); DOZER.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
@@ -83,6 +85,7 @@ function look(dx,dy){
   if(typeof HOCKEY!=="undefined" && HOCKEY.on){ HOCKEY.move(dx,dy); return; }   // the mouse is the mallet
   if(typeof RAIDERS!=="undefined" && RAIDERS.on) return;                          // your eyes stay on the screen
   if(typeof CABS!=="undefined" && CABS.on){ CABS.mouse(dx,dy); return; }           // (the bat, at Brickyard Breakout)
+  if(typeof DOZER!=="undefined" && DOZER.on){ DOZER.mouse(dx,dy); return; }         // (the chute, at the coin dozer)
   if(driving){                       // orbit the car rather than turn a head
     carCamYaw   -= dx*0.0042;
     carCamPitch  = clamp(carCamPitch - dy*0.0032, -0.18, 1.05);

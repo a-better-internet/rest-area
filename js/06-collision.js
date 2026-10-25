@@ -93,6 +93,10 @@ function addRamp(x0,x1,z0,z1,axis,a0,a1,y0,y1){
 function addZone(x0,x1,z0,z1,y0,y1,name,indoor){
   ZONES.push({x0:x0,x1:x1,z0:z0,z1:z1,y0:y0,y1:y1,name:name,indoor:!!indoor});
 }
+// a roof with open sides (a canopy, a porch, a shed): it keeps the rain off what is under it (16b) without
+// being an indoor zone. top: the height of the roof's underside, near enough
+const ROOF_EXTRA=[];
+function addRoof(x0,x1,z0,z1,top){ ROOF_EXTRA.push([x0,z0,x1,z1,top]); }
 // a zone turned with its box (10b's trailer): its bounds, and ob to check
 function addZoneOB(cx,cz,yaw,hx,hz,y0,y1,name,indoor){
   const o=_ob(cx,cz,yaw,hx,hz);

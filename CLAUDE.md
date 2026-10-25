@@ -37,10 +37,19 @@ them as flicker, worst at a distance and at a grazing angle. So:
   Each layer is one polygon-offset step stronger than the one under it, and
   sits a few centimetres above it. `08-site.js` sets out the ladder: terrain,
   road (-1), ramps and asphalt (-2), lots (-3), paint (-4). Sign faces use
-  `signPanel` (02), which carries its own offset.
+  `signPanel` (02), which carries its own offset. Those buckets (`road`,
+  `asphalt`, `gravelbed`, `lotpave`, `paint`, `mulch`) are for flat planes.
+  Never use one for a box whose sides can be seen. The offset grows with
+  how edge-on a face is, so a side face seen at a grazing angle jumps
+  through walls metres in front of it. A raised bed or a strip of stone
+  is a box in a plain bucket (14l's `kirk_gravel`).
 - **Round walls seen from inside** need their inside faces. Turn a copy of
   the geometry inside out (the `inward` helper in `13c`), not a material set
   to DoubleSide that z-fights with the outside.
+- **Wall liners share their corners.** `lineX` / `lineZ` cut every piece
+  at every opening's sill and head, so two pieces meeting along a vertical
+  edge share its corners. A corner of one partway along the other's edge
+  leaves a hairline crack with the wall showing through.
 - **Check new work with `tools/zfight.js`** over a box around it before you
   commit. It lists coplanar, overlapping, same-facing faces from different
   pieces. It cannot see faces inside one hand-merged mesh (a door leaf, a
@@ -52,6 +61,12 @@ Anything built below ground keeps the same light at noon and at midnight.
 The basement under the generator house, its corridor and the arcade are
 examples, and so is anything dug later. For anything underground:
 
+- If it is dug under the ground's surface, the terrain must not run
+  through it. Hole the ring it is in, on that ring's lattice (`GEN_HOLE`,
+  or `KIRK_RING` / `KIRK_HOLES` in 00, a 2 m patch let into the 8 m ground
+  with holes over the chapel's hall and its outside stair). Fill whatever
+  the hole leaves open with something solid. Also add a VOID (06) so that
+  you stand on its floor and not on the ground above.
 - Register the volume with `addBuried(x0,x1,z0,z1,y0,y1)` (06). While the
   camera is inside one, `19-loop` holds the sky, sun and ambient at the
   fixed `UNDER_LIGHT`, and the glow materials and lamps run as though it
@@ -118,6 +133,30 @@ No lettering touches or runs past the edge of its board or its border.
   faces meet. To add a hallway or a room down there, add a rectangle on
   the grid. The stair's own walls are built with it and left out of the
   grid.
+- A roof with open sides (a canopy, a porch, a carport, a pavilion) is
+  registered with `addRoof(x0,x1,z0,z1,top)` (06) so it keeps the rain off.
+  Indoor zones do this on their own. The rain mask takes the 23 roofs
+  nearest the camera each frame (16b), so there is no limit on how many
+  there are.
+- Rounded furniture and fittings use `rboxGeo(w,h,d,r,seg)` (01), a box
+  with eased edges and box-projected UVs in metres, cached by size. The
+  farmhouse's `RW` / `RF` / `RP` (14k) take a grain or a weave on it.
+- Cars put down with `parked` (14k) or `parkCar` (10) are drivable
+  anywhere, not only in the rest area's lot. Trucks are not.
+- East of Edinboro's fields everything hangs off `EAST` (04). It sets out
+  the road's clearing, the fireworks outlet's, the street and park, and
+  the lake. `Terrain.lakeSD` is the signed distance to the lake's shore
+  (negative over the water), and `EAST.wy` is the water's level. The ground
+  there is its own 4 m ring (`RING_EAST`) and the canopy its own 8 m shell
+  (`EAST.can`, 07). A drive or a lot mouth that the wires along the road
+  must miss goes in `EAST.noPole` before 14y builds them.
+- The street's houses are 14n's `house()`. It takes a footprint square to
+  the street, the way the front faces, an eave height, a pitch and which
+  way the ridge runs, and returns `win`, `door` and `fp` for placing
+  things on its faces. The four kinds (`capeCod`, `ranch`, `bungalow`,
+  `twoStorey`) are built on it.
+- `zoneAt` names the last zone added that holds you, so add the general
+  zone first and the particular ones (a dock, a pavilion) after it.
 - A door that slides (the arcade's pair, 12c) is a `DOORS` entry with
   `slide` (each leaf's group, its shut `x0` and how far it runs, `dx`) and
   a `rate`. `updateDoors` moves the leaves along x instead of swinging

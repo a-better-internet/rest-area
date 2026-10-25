@@ -526,6 +526,7 @@ function updateLife(dt, now, dark, dn){
   if(typeof updateHangout==="function") updateHangout();
   if(typeof updateArcade==="function") updateArcade(dt);
   if(typeof updateSubbasement==="function") updateSubbasement(dt);
+  if(typeof updateLakeside==="function") updateLakeside(dt);
   if(typeof updatePlant==="function") updatePlant(dt);
   if(typeof updateVendHut==="function") updateVendHut(dt, now);
   if(typeof updateIncidents==="function") updateIncidents(dt, now, dark);

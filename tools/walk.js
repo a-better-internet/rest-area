@@ -97,7 +97,15 @@ const ROUTES={
   // the chapel (14l): up the walk from US 6N, the steps, in at the red doors, up the aisle to the chancel; and the
   // graveyard, in at the gate in its wall and along between two rows of stones
   "into the chapel":        [[88.5,-1204],[88.5,-1210],[88.5,-1219.6],[88.5,-1220.2],[88.5,-1221.2],[88.5,-1222.1],[88.5,-1222.6],[88.5,-1226],[88.5,-1233.6],[88.5,-1234.2],[88.5,-1235.3]],
+  // and round the back of it, down the outside stair, in at the white door to the fellowship hall and through it to
+  // the kitchen counter
+  "down to the fellowship hall": [[88.5,-1204],[88.5,-1213.5],[80.5,-1216],[80.5,-1244.6],[86.0,-1244.6],[86.0,-1243.0],[86.0,-1242.6],[86.0,-1241.0],
+                           [86.0,-1239.6],[86.0,-1238.6],[86.0,-1237.9],[86.0,-1237.2],[86.0,-1234.4],[88.5,-1234.0],[89.0,-1233.4],[89.0,-1226.0],[88.97,-1225.0],[88.97,-1223.6],[86.5,-1223.6]],
   "into the graveyard":     [[100.9,-1204],[100.9,-1215],[100.9,-1219.7],[100.9,-1221],[100.9,-1228.4],[105,-1228.4],[110,-1228.4]],
+  // US 6N on east through the woods (14m): in at the fireworks outlet's glass doors and down an aisle
+  "east to the fireworks store": [[600,-1201],[700,-1201],[900,-1201],[913.96,-1215],[913.96,-1255],[913.96,-1257.4],[913.96,-1258.6],[913.96,-1260.6],[905.6,-1260.6],[905.6,-1265.4]],
+  // the lakeside park (14n): off the street through the lot, down the path to the shore and out to the end of a dock
+  "out on the dock":       [[1240,-1201],[1300,-1201],[1300,-1216],[1300,-1219.5],[1300.5,-1232],[1301,-1250],[1300,-1289.5],[1290,-1290],[1289.8,-1292.5],[1289.8,-1293.9],[1289.8,-1305],[1289.8,-1317.2],[1286,-1317.2]],
   // the fuel stop's restroom, through the grey door by the slushies
   "fuel stop restroom":     [[-15,-1258],[-13.5,-1255.85],[-12.6,-1255.85],[-11.6,-1255.85],[-10.4,-1256.6],[-10.4,-1254.5]],
   "to the water tank":     [[88.4,129.0],[81,133.5],[74.6,138.2],[73.2,139.2]],
@@ -210,6 +218,12 @@ const ROUTES={
         const u=drive(UP2,m,lo0); REST.sim(40); const hi=REST.player.feetY, d=drive(DN2,m,hi); REST.sim(40);
         res["farmhouse stair, keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : hi<top-0.1 ? "up: never reached the hall ("+hi.toFixed(2)+")"
                                          : typeof d==="string" ? "down: "+d : REST.player.feetY>lo0+0.1 ? "down: still up at "+REST.player.feetY.toFixed(2) : "ok"; } }
+    // and the chapel's outside stair down to the fellowship hall (14l), in at its door, and back up
+    { const TOP4=[[86.0,-1244.0],[86.0,-1242.0],[86.0,-1238.6],[86.0,-1236.6]], BOT4=TOP4.slice().reverse(), fy=REST.surf(86.0,-1244.0,EDIN.y+0.5);
+      for(const [m,lab] of [[null,"walk"],["ShiftLeft","run"],["KeyQ","sprint"]]){
+        const d=drive(TOP4,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT4,m,lo); REST.sim(40);
+        res["hall stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-2.0 ? "down: never reached the hall ("+lo.toFixed(2)+")"
+                                         : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
     // and the trailer's step the same way, at every pace, then back down it
     { (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");
       const IN=ROUTES["into the trailer"].pts.slice(0,4), OUT=IN.slice().reverse(), fl=REST.surf(IN[3][0],IN[3][1],2);

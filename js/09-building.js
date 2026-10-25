@@ -94,10 +94,14 @@ function _liner(bk, axis, f, dir, a, b, y0, y1, open, color, uv, inset){
     if(axis==="x") push(bk, g, (pa+pb)/2, (qa+qb)/2, f+dir*off, dir>0?0:Math.PI, color);
     else           push(bk, g, f+dir*off, (qa+qb)/2, (pa+pb)/2, dir>0?Math.PI/2:-Math.PI/2, color);
   };
+  // every piece cut at every opening's sill and head, so where two meet along a vertical edge they share its corners
+  // (a corner of one partway along the other's edge leaves a hairline crack down it, with the wall behind showing)
+  const cuts=(open||[]).flatMap(o=>[o.sill, o.head]).filter(y=>y>y0+0.005 && y<y1-0.005).sort((p,q)=>p-q);
+  const band=(pa,pb,qa,qb)=>{ let q=qa; for(const c of cuts) if(c>q+0.005 && c<qb-0.005){ piece(pa,pb,q,c); q=c; } piece(pa,pb,q,qb); };
   for(const sp of _spans(a,b,open)){
-    if(!sp.o){ piece(sp.a, sp.b, y0, y1); continue; }
-    if(sp.o.sill>y0) piece(sp.a, sp.b, y0, Math.min(y1, sp.o.sill));
-    if(sp.o.head<y1) piece(sp.a, sp.b, Math.max(y0, sp.o.head), y1);
+    if(!sp.o){ band(sp.a, sp.b, y0, y1); continue; }
+    if(sp.o.sill>y0) band(sp.a, sp.b, y0, Math.min(y1, sp.o.sill));
+    if(sp.o.head<y1) band(sp.a, sp.b, Math.max(y0, sp.o.head), y1);
   }
 }
 const lineX=(bk,f,dir,a,b,y0,y1,open,color,uv,inset)=>_liner(bk,"x",f,dir,a,b,y0,y1,open,color,uv,inset);

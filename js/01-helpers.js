@@ -88,6 +88,29 @@ function boxGeo(w,h,d,uvScale){
   }
   return g;
 }
+// A box with its edges and corners rounded off, r in metres (seg steps round each
+// edge), its normals bent round them so it shades soft. UVs are box-projected in
+// metres, so a tiling map (grain, cloth) lies on it at a steady scale. Cached by size.
+const _RBOX=new Map();
+function rboxGeo(w,h,d,r,seg){
+  seg=seg||2; r=Math.min(r, w/2-1e-4, h/2-1e-4, d/2-1e-4);
+  const key=[w,h,d,r,seg].map(v=>+v.toFixed(4)).join(",");
+  let g=_RBOX.get(key); if(g) return g;
+  const n=seg*2+1;
+  g=new T.BoxGeometry(1,1,1,n,n,n).toNonIndexed();
+  const P=g.attributes.position, N=g.attributes.normal, U=g.attributes.uv, half=0.5/n;
+  const bx=w/2-r, by=h/2-r, bz=d/2-r, nv=new T.Vector3();
+  for(let i=0;i<P.count;i++){
+    const x=P.getX(i), y=P.getY(i), z=P.getZ(i);
+    nv.set(x-Math.sign(x)*half, y-Math.sign(y)*half, z-Math.sign(z)*half).normalize();
+    const px=bx*Math.sign(x)+nv.x*r, py=by*Math.sign(y)+nv.y*r, pz=bz*Math.sign(z)+nv.z*r;
+    P.setXYZ(i, px, py, pz); N.setXYZ(i, nv.x, nv.y, nv.z);
+    const ax=Math.abs(nv.x), ay=Math.abs(nv.y), az=Math.abs(nv.z);
+    if(ay>=ax && ay>=az) U.setXY(i, px, pz); else if(ax>=az) U.setXY(i, pz, py); else U.setXY(i, px, py);
+  }
+  P.needsUpdate=N.needsUpdate=U.needsUpdate=true;
+  _RBOX.set(key, g); return g;
+}
 // An icosahedron with every normal pointed straight out from its centre:
 // twenty triangles that shade as a soft ball. Cached by radius.
 const _BLOBS=new Map();
@@ -641,7 +664,7 @@ function makeDoor(xf, lx, ly, lz, label, opensIn, ajar, style, tint){
     ent.push({geo:boxGeo(0.02,0.07,0.06,0), matrix:m4(leafW/2, 1.36, leafT/2+0.045), color:chr});
     ent.push({geo:new T.CylinderGeometry(0.022,0.022,0.04,10), matrix:new T.Matrix4().makeRotationX(Math.PI/2).setPosition(leafW/2, 1.20, leafT/2+0.02), color:C(0x2a2a2a)});  // bumper
   }else{                                         // closet: painted flush
-    const pc=C(tint||0x7f7466), ln=C(0x6c6256);
+    const pc=C(tint||0x7f7466), ln=tint ? C(tint).multiplyScalar(0.9) : C(0x6c6256);      // (its panel a shade under the leaf's paint)
     ent.push({geo:boxGeo(leafW,leafH,leafT,0.5), matrix:m4(leafW/2, leafH/2, 0), color:pc});
     for(const sd of [1,-1]){
       ent.push({geo:boxGeo(leafW-0.10,leafH-0.10,0.006,0), matrix:m4(leafW/2, leafH/2, sd*(leafT/2+0.003)), color:ln});

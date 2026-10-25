@@ -75,6 +75,10 @@ const TRUCKLOT = { aisle0:-70, aisle1:-60, stallZ0:-138, stallZ1:94, angle:0.52,
 // and bare (no apron hung round it: that would hang through the room below)
 const GEN_PIT  = { x0:83.0, x1:86.75, z0:-177.35, z1:-176.25 };
 const GEN_HOLE = { x0:82, x1:88, z0:-178, z1:-176, bare:true };
+// round the chapel at Edinboro (14l): a patch of the 2 m lattice let into the 8 m ground, holed where the fellowship
+// hall is under the chapel and where the stair down to it is dug out behind; both bare, the walls hide their edges
+const KIRK_RING = { x0:80, x1:96, z0:-1248, z1:-1216 };
+const KIRK_HOLES= [{ x0:84, x1:94, z0:-1238, z1:-1222, bare:true }, { x0:84, x1:88, z0:-1244, z1:-1238, bare:true }];
 // the vending room on the island, by the truck lot (13b), and its walk round it
 const VENDHUT  = { x0:-55.4, x1:-50.6, z0:-3.6, z1:4.6, apron:{z0:-6.6, z1:7.6} };
 

@@ -792,7 +792,8 @@ const FOREST=(function(){
       CAN.meshes.push(mesh); CAN.colS.push(new Float32Array(CS)); CAN.colA.push(new Float32Array(CA));
     }
     shell(RING_MID, 8, [Z], true);
-    shell({x0:-2400,x1:2400,z0:-2400,z1:2400}, 32, [RING_MID], false);
+    shell(EAST.can, 8, [], true);                                   // (east along US 6N: the woods the road goes through, close to)
+    shell({x0:-2400,x1:2400,z0:-2400,z1:2400}, 32, [RING_MID, EAST.can], false);
     /* The curtain. From inside the zone, through a hundred metres of trunks,
        the edge of the canopy would be a lid with daylight under it. So the
        zone's boundary hangs a dark wall from the canopy down to the ground:
@@ -898,7 +899,9 @@ const FOREST=(function(){
       addCol(EP.x0, HWY.sb-19.1, zz-0.4, zz+0.4, -40, 300);
       addCol(HWY.nb+19.1, EP.x1, zz-0.4, zz+0.4, -40, 300);
     }
-    for(const xx of [EP.x0, EP.x1]) addCol(xx-0.4, xx+0.4, EP.z0, EP.z1, -40, 300);
+    // (open at the east end where US 6N goes on through the woods: 14m walls its way from there)
+    addCol(EP.x0-0.4, EP.x0+0.4, EP.z0, EP.z1, -40, 300);
+    addCol(EP.x1-0.4, EP.x1+0.4, EP.z0, EAST.corr.z0, -40, 300); addCol(EP.x1-0.4, EP.x1+0.4, EAST.corr.z1, EP.z1, -40, 300);
   })();
 
   /* ---- build the instanced chunks ---------------------------------------- */

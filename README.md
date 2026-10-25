@@ -279,8 +279,9 @@ If the scene runs hot on your machine, start there (see below).
   - US 6N is two lanes with a double yellow line and W-beam rail off the
     bridge ends. It has route markers, an Edinboro 3 · Union City 14
     distance sign, and I-79 NORTH and SOUTH signs pointing to the on-ramps.
-  - Both ends of the road are closed for now with type III barricades
-    reading ROAD CLOSED.
+  - The road's west end is closed for now with a type III barricade
+    reading ROAD CLOSED. East, it goes on past the fields (below) to the
+    lake, and is closed there instead, past the last house.
   - Farmland runs out both ways: a dozen fields of corn, soybeans and hay
     (round bales left in it) and two pastures, with farm fence along the
     road. There are hedgerows between the fields, a big lone oak, and the
@@ -375,6 +376,29 @@ If the scene runs hot on your machine, start there (see below).
     wall, the hymn board and the piano (`E`). At the back hang the bell
     rope (`E` rings the bell, and it is heard across the fields) and the
     coat pegs, and the guest book lies open on its table (`E`).
+  - **The fellowship hall** is under the chapel, and the only way in is
+    from behind it: a concrete areaway dug down along the back wall, a
+    pipe rail round it and a sign at its head (FELLOWSHIP HALL ·
+    DOWNSTAIRS · ALL WELCOME), twelve risers down to a white door in the
+    fieldstone with a jelly-jar light over it. Inside is one long room set
+    out for Saturday's harvest supper: a speckled tile floor, tan
+    panelling to a white chair rail, a drop ceiling with fluorescent
+    panels, and white columns down the middle with yellow balloons tied
+    to them (two got away and are up against the tiles, one has gone soft
+    on the floor). Six folding tables in checked cloths, blue, yellow and
+    grey, with a canning jar of asters and a gourd on each and the steel
+    chairs round them (sit at any middle one). By the door: coat hooks with
+    two coats, the bulletin board (`E`; the chest freezer is still for
+    sale), a HARVEST SUPPER banner, the free will offering basket (`E`),
+    a cart of spare chairs, and the clock. Across the south end the
+    kitchen behind its counter and pass-through: the almond fridge (`E`),
+    the range with a stock-pot on it, the sink, the cupboards, crock-pots
+    (`E`), and the coffee urn on the counter (`E`), with the sign-up sheet
+    on the wall by it (`E`). Past the kitchen, the old upright piano (`E`)
+    under a picture of the chapel, a drinking fountain, and the children's
+    hand turkeys taped up between the small high windows, which have
+    checked valances and look out at the grass. It is underground, so its
+    light is the same at noon and at midnight.
   - East of it, behind a dry-stone wall along the road with a gap at the
     gate, is the old graveyard: two hundred-odd stones in rows facing the
     road. They are round-topped tablets, uprights on bases, slant markers,
@@ -384,7 +408,67 @@ If the scene runs hot on your machine, start there (see below).
     reads the stones.
   - A pole line runs along US 6N on the north side, and a tap crosses the
     road and goes up the Weirs' lane, with a transformer on its last pole
-    and drops to the house and the barn.
+    and drops to the house and the barn. The poles and wires go on east
+    with the road, and along the lake street each carries a light out
+    over it.
+  - **East through the woods.** Past the last hay field US 6N goes on
+    into the trees for a quarter mile and more. Second growth stands
+    close on both sides, hemlock and maple at the edge with shrubs at their
+    feet. There is a 45 sign each way, a deer crossing each way, and a
+    board for the fireworks place (AHEAD ON LEFT) before you see it. The
+    woods are as far as you can push through.
+  - **French Creek Fireworks**, in its own clearing on the north side. It
+    is a long white block building with a red band round the top on an
+    asphalt lot. Three roll-up doors stand at its west end with yellow
+    bollards in front of them and an OPEN 7 DAYS · ALL YEAR banner over
+    them. At its east end are the glass doors (you walk in) and a display
+    window with posters in it (BUY 1 GET 2 FREE), under the lit name. At
+    the road stands the red pole sign (FIREWORKS · WHOLESALE PRICES · OPEN
+    7 DAYS), lit at night, and a big yew on its bed of mulch. There are lot
+    lights, a shipping container out back, and a dumpster. Inside is one
+    big sales floor under bare joists and strip lights: five gondolas of
+    cakes, artillery shells, rockets, fountains and sparklers, each aisle
+    signed overhead (`E` to browse); shelving up the back wall under
+    ASSORTMENTS · 500 GRAM CAKES; pallets of cases inside the roll-up
+    doors; the counter by the door with the register, a case of lighters
+    and the 21 · PHOTO ID notice (`E`); a cart corral, the NO SMOKING and
+    LIGHT ONE AT A TIME posters, and bunting over the windows.
+  - **Lake Street.** Where the woods give out, the road runs on between two
+    rows of houses on mown lots, the lake behind the ones on the north
+    side. The street is built from four kinds of house. One is a cape cod
+    with two dormers, a little deck at its door and a gravel drive. One is
+    a red brick ranch with its garage at one end, a stoop under a little
+    hood, and a picnic table and a kettle grill out back. One is a bungalow
+    with its gable to the road, a porch across the front with two rockers,
+    shutters and a barn star. The last is a two-storey house in grey with
+    green trim and a carport over a concrete drive. Thirteen of them stand
+    in their own colours: tan, white, blue, cream, sage, slate, yellow, red
+    and tan brick. Each has its mailbox at the road, its drive and its car
+    (`E` gets you in, as at the rest area), shade trees, flowers at the
+    front, a porch light and its house number, and windows lit at night
+    behind the curtains. In the yards are what people keep in yards: swing
+    sets, sheds, kayaks on a rack, a bass boat on its trailer, a fire ring
+    with chairs round it looking at the water, a vegetable garden, a flag,
+    a basketball hoop over a garage, the AC and the propane tank, and two
+    pink flamingos. Two cars are parked on the shoulder for a cookout. The
+    woods close round the back of the lots and both ends of the street.
+  - **Lakeside Park**, on the north side of the street. A lot sits off the
+    road with its stalls angled toward the water and wheel stops at the
+    curb. The lawn goes down to the shore under big trees. A paved path
+    runs from the lot to the water and along it the length of the park,
+    with benches facing the lake (sit on them) and lamps for the evening.
+    There is a pavilion with picnic tables under a hip roof, swings and a
+    slide on wood chips, a NO LIFEGUARD sign, and big stones along the
+    waterline. Two docks go out into the lake, one with a T at its end and
+    one with a finger off it and a bench (sit). Pontoon boats are tied up
+    at them, with a ladder and a life ring. You can walk out on the docks.
+    Geese graze on the lawn and paddle about between the docks.
+  - **Edinboro Lake** opens out north and east of the park, most of a mile
+    across to the far woods, with cottages along the far shore whose
+    windows light up at night. A sailboat sits out in the middle, a
+    fisherman sits very still in a jon boat nearer in, and a NO WAKE buoy
+    floats past the docks. The water ripples and has the sky in it, and
+    the boats ride a little on it.
 - **The picnic grove** spreads across the lawn south of the building. Paths
   run to it off curb ramps at the plaza's corners: north to the shelter's
   slab and its ramp, south to a round pad by the pet area's bag dispenser,
@@ -525,10 +609,26 @@ If the scene runs hot on your machine, start there (see below).
       and settles, with a swish (or the clank of the rim first). A
       basket is two, three in the last ten seconds, forty seconds from the
       first shot. The balls roll back down the ramp to you.
+    - **Coin dozer.** On the east wall, a pusher machine in purple with
+      pink and cyan neon, its marquee lit and its chase bulbs running.
+      `E` stands you at it looking down through the glass at a deck of
+      brass tokens with the pusher going back and forth behind them. `A`
+      and `D` (or the arrows, or the mouse) move the chute along the back,
+      `Space` or a click drops a token, and `X` shakes the machine (once
+      every few seconds). Anything pushed over the lip is won; into the
+      bonus bucket running along under the lip, three more tokens besides.
+      The hopper holds fifty and fills back by one every three seconds.
+      Now and then the chute drops a prize instead (a big coin, a die, a gem
+      or a toy car) worth more if you can get it over. Nobody at it, it
+      drops a token now and then by itself, so the deck is always moving.
+      It follows the pusher game the crew had on a laptop, cut down to
+      what the room's style holds: the tokens slide, shove each other and
+      ride up on top of each other, which is all it takes for the pile to
+      creep forward and spill.
 
   Everything underground (the cellar, the dug-out, the corridor and the
-  arcade, MECH 2, the stair and the sub-basement) is lit only by its own
-  lamps. It looks the same at noon and at midnight, and it is not on the
+  arcade, MECH 2, the stair and the sub-basement, and the chapel's
+  fellowship hall at Edinboro) is lit only by its own lamps. It looks the same at noon and at midnight, and it is not on the
   day/night cycle. The sub-basement keeps only a fifth of the fill light
   the rest of it has, so between its bulbs it is all but dark.
 
@@ -786,7 +886,10 @@ away.
 
 At the air hockey table the mouse (or `WASD`) moves your mallet. At the
 hoops machine you aim with the mouse, and a click or `Space` shoots. At
-either, `N` starts a new game and `Esc` or `E` steps away.
+either, `N` starts a new game and `Esc` or `E` steps away. At the coin
+dozer `A` and `D` (or the arrows, or the mouse) move the chute, `Space` or
+a click drops a token, `X` shakes the machine, `N` empties it and starts
+again, and `Esc` or `E` steps away.
 
 ## Graphics settings
 
@@ -831,7 +934,11 @@ centred on the origin.
 | The sub-basement | x 58.4 … 100.8, z −242 … −183.4, its floor 3.42 m under the corridor's |
 | Median crossovers | z −250, −520 and +470 |
 | Edinboro (US 6N bridge) | z −1200; ramps from z −640 (south) and −1630 (north); the fields x −330 … 610, z −1460 … −860 |
-| The chapel and its graveyard | x 50 … 128, z −1296 … −1205; the chapel x 84 … 93, z −1238 … −1222 |
+| The chapel and its graveyard | x 50 … 128, z −1296 … −1205; the chapel x 84 … 93, z −1238 … −1222; the hall under it, the stair down x 85.2 … 86.8, z −1242.3 … −1238 |
+| US 6N east through the woods | x 586 … 1062, z −1213 … −1187 |
+| French Creek Fireworks | x 872 … 966, z −1284 … −1205; the building x 893 … 925, z −1274 … −1258 |
+| Lake Street and Lakeside Park | x 1062 … 1420, z −1298 … −1134; the park x 1238 … 1372 north of the road; the shore at z −1296 |
+| Edinboro Lake | x 980 … 2260, z −2090 … −1296, a rounded oblong, wandering off the street |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
 | Well house · water tank | x 65.6 … 68.8, z 97.6 … 101.2 · x 70, z 140 |
 | The creek | from x 170, z 262 north past the plant, then east along z ≈ 100 … 134 |
@@ -888,7 +995,9 @@ js/14g-garage.js    the maintenance garage, its yard, the track and gate, the tr
 js/14h-custodian.js the custodian: rounds, stalls and cans, the restroom logs, mowing, leaf blowing, the cot; the outdoor path grid
 js/14i-trucker.js   the truckers: the one on the phone, the walk-round, the one in slippers and his coffee run
 js/14k-edinboro.js  at exit 166: the fuel stop, its store and restroom, the Weir farm (the house and both its floors, the walk-in barn, silos, shed, stand, cows)
-js/14l-chapel.js    at exit 166: French Creek Union Chapel, inside and out, its lot and sign, and the old graveyard
+js/14l-chapel.js    at exit 166: French Creek Union Chapel, inside and out, the fellowship hall under it, its lot and sign, and the old graveyard
+js/14m-fireworks.js US 6N on east through the woods, and French Creek Fireworks, which you can walk into
+js/14n-lakeside.js  the end of the road east: Lake Street's houses, Lakeside Park and its docks, and Edinboro Lake
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -901,6 +1010,7 @@ js/18d-darts.js     darts: aiming, the throw and its flight, scoring, 301 agains
 js/18e-games.js     the arcade's games: air hockey against the table, and hoops (its net)
 js/18f-raiders.js   Astro Raiders, the space invaders game on the first cabinet
 js/18g-cabinets.js  the other three cabinets: Maze Muncher, Brickyard Breakout, Block Drop
+js/18h-dozer.js     the coin dozer on the arcade's east wall: its cabinet, and the game
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
@@ -994,6 +1104,13 @@ the generator house's cellar and the trailer's step. The routes are:
 - into the fuel stop and through the grey door into its restroom;
 - up the chapel's walk and steps, in at its doors and up the aisle to the
   chancel; and in at the graveyard's gate and along between the stones;
+- round the back of the chapel, down the outside stair (and its keys held,
+  at all three speeds), in at the white door and through the fellowship
+  hall to the kitchen counter;
+- east along US 6N through the woods, in at the fireworks outlet's glass
+  doors and down an aisle;
+- along Lake Street into the park, through its lot, down the path to the
+  shore and out to the end of a dock;
 - up the Weirs' lane, onto the porch, in at the front door, into the
   parlour and the kitchen and out the back; up the stair (and its keys
   held, at all three speeds) into each room upstairs, the storeroom

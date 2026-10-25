@@ -244,19 +244,36 @@ function skyWeather(img, day, set, night){
    GPU from a clock. How many show is how hard it rains. A streak inside a
    roofed volume is thrown away in the fragment shader, so it does not rain
    in the lobby, under the picnic shelter, in the garage, in a trailer or
-   in the car you are driving. The roofs are every indoor zone, gathered
-   once everything is built (so the buildings that come after this file are
-   in it too); the first slot is kept for the car. */
-const ROOFS=[], ROOF_N=24;
+   in the car you are driving. The roofs are every indoor zone and every
+   open roof (06's addRoof), gathered once everything is built (so the
+   buildings that come after this file are in it too). The shader has room
+   for 24, and the world has far more than that, so each frame it is given
+   the 23 nearest the camera (the rain only falls in a box 18 m round it);
+   the first slot is kept for the car. */
+const ROOFS=[], ROOF_N=24, ROOF_ALL=[];
 function _roofs(){
-  ROOFS.length=0;
-  ROOFS.push([0,0,0,0,-99]);                                     // the car you are in, if you are
-  ROOFS.push([-7.4,-15.6,8.1,15.6, 9.5]);                       // the pavilion and its eaves
-  for(const q of ZONES) if(q.indoor && !q.ob && ROOFS.length<ROOF_N && !(q.x0>-7.4 && q.x1<8.1 && q.z0>-15.6 && q.z1<15.6))
-    ROOFS.push([q.x0-0.3, q.z0-0.3, q.x1+0.3, q.z1+0.3, q.y1+0.5]);
+  ROOF_ALL.length=0;
+  ROOF_ALL.push([-7.4,-15.6,8.1,15.6, 9.5]);                     // the pavilion and its eaves
+  for(const q of ZONES) if(q.indoor && !q.ob && !(q.x0>-7.4 && q.x1<8.1 && q.z0>-15.6 && q.z1<15.6))
+    ROOF_ALL.push([q.x0-0.3, q.z0-0.3, q.x1+0.3, q.z1+0.3, q.y1+0.5]);
+  if(typeof ROOF_EXTRA!=="undefined") for(const r of ROOF_EXTRA) ROOF_ALL.push(r.slice());
+  ROOFS.length=0; ROOFS.push([0,0,0,0,-99]);                     // the car you are in, if you are
+  _pickRoofs(camera.position, true);
+}
+// the nearest roofs to (x,z) into slots 1.., and into the shader's uniforms
+const _roofD=[];
+function _pickRoofs(c, force){
+  if(!force && _pickRoofs.x!==undefined && Math.abs(c.x-_pickRoofs.x)+Math.abs(c.z-_pickRoofs.z)<1.5) return;
+  _pickRoofs.x=c.x; _pickRoofs.z=c.z;
+  _roofD.length=0;
+  for(let i=0;i<ROOF_ALL.length;i++){ const r=ROOF_ALL[i];
+    const dx=Math.max(r[0]-c.x, 0, c.x-r[2]), dz=Math.max(r[1]-c.z, 0, c.z-r[3]); _roofD.push([dx*dx+dz*dz, i]); }
+  _roofD.sort((a,b)=>a[0]-b[0]);
+  ROOFS.length=1;
+  for(let k=0;k<ROOF_N-1 && k<_roofD.length;k++) ROOFS.push(ROOF_ALL[_roofD[k][1]]);
   while(ROOFS.length<ROOF_N) ROOFS.push([0,0,0,0,-99]);
   if(_roofs.mat){ const u=_roofs.mat.uniforms;                  // (RAIN itself is not declared yet the first time)
-    for(let i=0;i<ROOF_N;i++){ const r=ROOFS[i]; u.uRoof.value[i].set(r[0],r[1],r[2],r[3]); u.uRoofY.value[i]=r[4]; } }
+    for(let i=1;i<ROOF_N;i++){ const r=ROOFS[i]; u.uRoof.value[i].set(r[0],r[1],r[2],r[3]); u.uRoofY.value[i]=r[4]; } }
 }
 _roofs();
 const RAIN=(function(){
@@ -478,6 +495,7 @@ function applyWeather(dt, now, dn, dark){
   if(RAIN.visible){
     const u=RAIN.material.uniforms;
     if(!_roofs.done){ _roofs.done=true; _roofs(); }               // every building is up by the first rain
+    _pickRoofs(cam);
     // the car you are driving: its footprint, under its roof
     if(typeof driving!=="undefined" && driving && driving.g){ const g=driving.g, c=Math.abs(Math.cos(g.rotation.y)), sn=Math.abs(Math.sin(g.rotation.y));
       const hx=0.95*c+2.45*sn, hz=0.95*sn+2.45*c, y=g.position.y+1.9;

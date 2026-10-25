@@ -173,7 +173,7 @@ const EDIN_RT={};
       for(const lx of [-4.6, 4.6]) bx("metal", 0.10, 1.6, 0.10, f.x(lx,-0.06), Y+0.80, f.z(lx,-0.06), 0.5, ry, "#a3a8aa");
       for(const h of [0.55, 0.95, 1.35]){ const m=signPanel(9.6, 0.20, rails, f.x(0,0.002), Y+h, f.z(0,0.002), ry);
         m.material.map.wrapS=T.RepeatWrapping; m.material.map.repeat.set(4,1);
-        bx("wood", 9.6, 0.20, 0.03, f.x(0,-0.017), Y+h, f.z(0,-0.017), 0.4, ry, "#d8d4c8"); }
+        bx("wood", 9.6, 0.20, 0.03, f.x(0,-0.024), Y+h, f.z(0,-0.024), 0.4, ry, "#d8d4c8"); }       // (back far enough that the bake's growth keeps it behind the stripes)
       signPanel(1.5, 0.5, tex, f.x(0,0.03), Y+1.85, f.z(0,0.03), ry);
       bx("wood", 1.5, 0.5, 0.03, f.x(0,0.012), Y+1.85, f.z(0,0.012), 0.4, ry, "#d8d4c8");
       bx("metal", 0.06, 0.62, 0.06, f.x(0,-0.02), Y+1.52, f.z(0,-0.02), 0.5, ry, "#a3a8aa");

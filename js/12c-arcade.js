@@ -314,7 +314,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
       // a side skirt cut to the ramp: a wedge, the ramp's height at each end, three centimetres thick
       const q=[V3(xs, A.y, ZF), V3(xs, yF, ZF), V3(xs, yB, ZB), V3(xs, A.y, ZB)];
       E.push({geo:new FaceGeo().slab(q, 0.03, 0.5).geo(), matrix:new T.Matrix4().makeTranslation(-0.015, 0, 0), color:new T.Color("#7a1a1a")});   // (centred on xs either side)
-      ent(boxGeo(0.034, 0.06, LEN/Math.cos(ang)+0.02), xs, (yF+yB)/2+0.0, ZF-LEN/2, "#e8e4d8", ang, 0, 0); }
+      // (a centimetre proud of the skirt's face outside, and a centimetre over the ramp's edge inside)
+      ent(boxGeo(0.05, 0.06, LEN/Math.cos(ang)+0.02), X+sd*(HW+0.015), (yF+yB)/2+0.0, ZF-LEN/2, "#e8e4d8", ang, 0, 0); }
     // the ramp's playing surface, tilted: dark green with white lines, and the edge strips
     { const rt=signTex(128,384,(c,Wd,Hh)=>{ c.fillStyle="#1e4a2a"; c.fillRect(0,0,Wd,Hh); c.strokeStyle="rgba(240,240,232,0.6)"; c.lineWidth=3;
         for(let k=1;k<6;k++){ c.beginPath(); c.moveTo(0,k*Hh/6); c.lineTo(Wd,k*Hh/6); c.stroke(); } });
@@ -330,7 +331,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
         say(c, "HOOPS", Wd*0.58, Hh*0.42, Wd*0.62, Hh*0.50, "#fff6d0", "900", "'Arial Black', Arial");
         say(c, "2 PTS · 3 IN THE LAST 10 SEC", Wd*0.58, Hh*0.80, Wd*0.62, Hh*0.16, "#fff6d0", "700", "Arial"); }, X, A.y+0.42, ZF+0.062, 0, true, 320);
     B(HW*2+0.06, 0.05, 0.30, X, yF+0.025, ZF-0.12, "#1a1a1c");                   // the tray's floor
-    B(HW*2+0.06, 0.12, 0.04, X, yF+0.07, ZF+0.04, "#1a1a1c");                    // its lip
+    B(HW*2+0.04, 0.12, 0.05, X, yF+0.07, ZF+0.045, "#1a1a1c");                   // its lip, a centimetre proud of the panel
     // the frame: square tube up the four corners, across the top, and the nets
     const fz0=ZF-0.62, frameY=A.y+2.80, roofZ=ZB+0.95;                         // the roof net only over the hoop's end
     for(const sd of [-1,1]) for(const zz of [fz0, ZB+0.04]) tubeE(V3(X+sd*(HW+0.02), rampY(zz), zz), V3(X+sd*(HW+0.02), frameY, zz), 0.02, "#2a2a2e");
@@ -348,8 +349,9 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
       tubeE(V3(X-HW-0.035, frameY, roofZ), V3(X+HW+0.035, frameY, roofZ), 0.015, "#2a2a2e"); }
     // the backboard: white, an orange square, on the frame; the scoreboard over it
     B(0.92, 0.68, 0.035, X, (BOARD.y0+BOARD.y1)/2, BOARD.z-0.018, "#f2f0e8");
-    for(const [w,h,dy] of [[0.30,0.02,0.10],[0.30,0.02,-0.10]]) B(w, h, 0.004, X, RIM.y+0.13+dy, BOARD.z+0.0015, "#e86a1a");
-    for(const sd of [-1,1]) B(0.02, 0.22, 0.004, X+sd*0.14, RIM.y+0.13, BOARD.z+0.0015, "#e86a1a");
+    // the square on it: its four bars meeting edge to edge, not lapping, each 6 mm proud of the board
+    for(const dy of [0.10,-0.10]) B(0.30, 0.02, 0.008, X, RIM.y+0.13+dy, BOARD.z+0.0055, "#e86a1a");
+    for(const sd of [-1,1]) B(0.02, 0.18, 0.008, X+sd*0.14, RIM.y+0.13, BOARD.z+0.0055, "#e86a1a");
     B(0.92, 0.06, 0.20, X, BOARD.y1+0.03, BOARD.z-0.06, "#1a1a1c");
     // the scoreboard sits on the board's top rail, under the frame
     B(0.94, 0.20, 0.12, X, BOARD.y1+0.16, BOARD.z-0.08, "#141416");
@@ -392,7 +394,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
       const F="'Comic Sans MS', 'Marker Felt', cursive";
       say(x, "HOUSE RULES", W/2, Hh*0.16, W*0.80, Hh*0.15, "#c42a1a", "700", F);
       ["NO DRINKS ON THE MACHINES","WINNER STAYS ON (AIR HOCKEY)","NO HANGING ON THE RIM, DALE","WHAT'S DOWN HERE STAYS DOWN HERE"].forEach((s,i)=>say(x, s, W/2, Hh*(0.36+i*0.15), W*0.86, Hh*0.10, "#1a1a1a", "600", F)); },
-    A.x1-0.012, A.y+1.70, -215.0, -Math.PI/2);
+    A.x1-0.012, A.y+1.70, -217.7, -Math.PI/2);                                    // (south of the coin dozer, 18h)
 
   const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, metalness:0.15}));
   mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);

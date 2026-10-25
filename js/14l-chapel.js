@@ -71,8 +71,17 @@
     GLOW.push({m:m, base:new T.Color(0xffe2b8), kind:"indoor", baseInt:0.30}); return m; });
   bucketOf("chapel_globe", ()=>emitMat(0xffe6c0, 0.9, "indoor"));
 
-  // the stone it stands on, its top a centimetre under the floor; the walls, clapboard; corner boards
-  bx("fh_stone", H.x1-H.x0+0.10, FF-0.01-(Y-0.4), H.z1-H.z0+0.10, xm, (FF-0.01+Y-0.4)/2, (H.z0+H.z1)/2, 0.6, 0, "#ffffff");
+  // the stone it stands on, its top a centimetre under the floor: four walls round the fellowship hall under it (below),
+  // the white door into that in the back one and two small windows down each side just over the grass; then the
+  // walls, clapboard; corner boards
+  const BF=Y+0.03-12*0.19, CL2=BF+2.70, FT=0.35;                  // the hall's floor (twelve risers under the ground), its drop ceiling
+  const F={x0:H.x0-0.05, x1:H.x1+0.05, z0:H.z0-0.05, z1:H.z1+0.05}, HX0=F.x0+FT, HX1=F.x1-FT, HZ0=F.z0+FT, HZ1=F.z1-FT;
+  const BDOOR={a:85.54, b:86.46, sill:BF, head:BF+2.10};
+  const BWIN=[Z-33.6, Z-27.6].map(c=>({a:c-0.36, b:c+0.36, sill:Y+0.08, head:Y+0.36}));
+  runX("fh_stone", F.z0+FT/2, FT, F.x0, F.x1, BF-0.25, FF-0.01, [BDOOR], "#ffffff", 0.6);
+  runX("fh_stone", F.z1-FT/2, FT, F.x0, F.x1, BF-0.25, FF-0.01, [], "#ffffff", 0.6);
+  runZ("fh_stone", F.x0+FT/2, FT, HZ0, HZ1, BF-0.25, FF-0.01, BWIN, "#ffffff", 0.6);
+  runZ("fh_stone", F.x1-FT/2, FT, HZ0, HZ1, BF-0.25, FF-0.01, BWIN, "#ffffff", 0.6);
   runX("fh_clap", H.z1-WT/2, WT, H.x0, H.x1, FF-0.15, EAV, FRONT, "#ffffff", 0.5);
   runX("fh_clap", H.z0+WT/2, WT, H.x0, H.x1, FF-0.15, EAV, [], "#ffffff", 0.5);
   runZ("fh_clap", H.x0+WT/2, WT, IZ0, IZ1, FF-0.15, EAV, SIDE, "#ffffff", 0.5);
@@ -254,6 +263,303 @@
     LAMPS.push({x:xm, y:CL-1.1, z:z, color:0xffe2b8, intensity:0.8, dist:9, decay:1.5, indoor:true, vol:[IX0, IX1, IZ0, IZ1, FF-0.5, CL]}); }
   addZone(E.chapel.x0, E.chapel.x1, E.chapel.z0, E.chapel.z1, Y-2, Y+14, "FRENCH CREEK UNION CHAPEL");
   addZone(IX0, IX1, IZ0, IZ1, FF-0.5, CL, "THE CHAPEL", true);
+
+  /* ---- the fellowship hall under it ----
+       inside the foundation, x HX0..HX1, z HZ0..HZ1, floor BF, a drop ceiling at CL2; the only way in is the outside
+       stair behind the chapel, down to the white door in the back wall. Set out for Saturday's harvest supper: six
+       folding tables in checked cloths, the chairs round them, yellow balloons on the columns down the middle, the
+       kitchen across the south end behind its counter. BURIED (06): its light is the same at any hour */
+  { const lamp=(o)=>{ o.under=true; o.indoor=true; o.circ="bldg"; LAMPS.push(o); return o; };
+    const tex=(w, h, draw)=>{ const t=signTex(w, h, draw); t.wrapS=t.wrapT=T.RepeatWrapping; return t; };
+    // the floor in speckled vinyl tile, a foot square; the wainscot in grooved tan panelling; the ceiling's tiles in their grid
+    bucketOf("hall_vct", ()=>new T.MeshStandardMaterial({roughness:0.5, map:tex(256, 256, (c,W,Hh)=>{ const q=_trng(808);
+      for(let i=0;i<2;i++) for(let j=0;j<2;j++){ c.fillStyle=(i+j)%2 ? "#d6cab0" : "#e6dcc4"; c.fillRect(i*128, j*128, 128, 128);
+        for(let k=0;k<170;k++){ c.fillStyle=q()<0.5 ? "rgba(120,98,66,0.28)" : "rgba(255,255,255,0.40)"; c.fillRect(i*128+q()*126, j*128+q()*126, 1+q()*3, 1+q()*2); } }
+      c.fillStyle="rgba(90,78,58,0.30)"; for(const v of [0,127]){ c.fillRect(v, 0, 1, Hh); c.fillRect(0, v, W, 1); } })}));
+    bucketOf("hall_wains", ()=>new T.MeshStandardMaterial({roughness:0.65, map:tex(128, 128, (c,W,Hh)=>{ const q=_trng(717);
+      c.fillStyle="#c9a676"; c.fillRect(0,0,W,Hh);
+      for(let k=0;k<40;k++){ c.strokeStyle="rgba(110,78,42,"+(0.05+q()*0.12).toFixed(2)+")"; c.lineWidth=1+q()*2; const x=q()*W; c.beginPath(); c.moveTo(x,0); c.lineTo(x+(q()-0.5)*4, Hh); c.stroke(); }
+      for(let k=0;k<4;k++){ c.fillStyle="rgba(70,46,22,0.55)"; c.fillRect(k*32, 0, 2, Hh); c.fillStyle="rgba(255,240,210,0.25)"; c.fillRect(k*32+2, 0, 1, Hh); } })}));
+    bucketOf("hall_ceil", ()=>new T.MeshStandardMaterial({roughness:0.95, map:tex(128, 128, (c,W,Hh)=>{ const q=_trng(909);
+      c.fillStyle="#f2f0ea"; c.fillRect(0,0,W,Hh);
+      for(let k=0;k<520;k++){ c.fillStyle="rgba(120,114,104,"+(0.10+q()*0.25).toFixed(2)+")"; c.fillRect(q()*W, q()*Hh, 1+q()*1.5, 1); }
+      c.fillStyle="#dcdad4"; c.fillRect(0,0,W,4); c.fillRect(0,0,4,Hh); c.fillStyle="#aeaca6"; c.fillRect(0,4,W,1); c.fillRect(4,0,1,Hh); })}));
+    // the cloths: gingham, white and one colour, three of them
+    const GING={b:"#3a62a8", y:"#e0b020", g:"#7c8088"};
+    for(const k in GING) bucketOf("hall_ging_"+k, ()=>new T.MeshStandardMaterial({roughness:0.92, map:tex(64, 64, (c,W,Hh)=>{
+      c.fillStyle="#f6f4ee"; c.fillRect(0,0,W,Hh); c.fillStyle=GING[k]; c.globalAlpha=0.5;
+      for(let i=0;i<8;i+=2){ c.fillRect(i*8, 0, 8, Hh); c.fillRect(0, i*8, W, 8); } c.globalAlpha=1; })}));
+    bucketOf("hall_balloon", ()=>new T.MeshStandardMaterial({roughness:0.22, metalness:0.0}));
+
+    // the shell: the floor, the walls lined (panelling to the chair rail, paint over it), the ceiling
+    floorAt("hall_vct", HX0, HX1, HZ0, HZ1, BF+0.004, "#ffffff", 1/0.6);
+    for(const [y0,y1,bk,col,uv] of [[BF, BF+0.95, "hall_wains", "#ffffff", 1/0.6],[BF+0.95, CL2, "plaster", "#f1ede4", 0.5]]){
+      lineX(bk, HZ0, 1, HX0, HX1, y0, y1, [BDOOR], col, uv);
+      lineX(bk, HZ1, -1, HX0, HX1, y0, y1, [], col, uv);
+      lineZ(bk, HX0, 1, HZ0, HZ1, y0, y1, BWIN, col, uv);
+      lineZ(bk, HX1, -1, HZ0, HZ1, y0, y1, BWIN, col, uv); }
+    ceilAt("hall_ceil", HX0, HX1, HZ0, HZ1, CL2, "#ffffff", 1/0.6);
+    // the chair rail and the cove base: sunk 5 mm into the wall; the runs along z a few millimetres taller than those
+    // along x, so where they meet in a corner no faces lie together
+    { const runs=(a, b, L, y)=>{ const out=[]; let q=a;
+        for(const o of (L||[]).filter(o=>o.sill<y && o.head>y && o.b>a && o.a<b).sort((p,q2)=>p.a-q2.a)){ if(o.a-0.06>q+0.05) out.push([q, o.a-0.06]); q=Math.max(q, o.b+0.06); }
+        if(b>q+0.05) out.push([q, b]); return out; };
+      for(const [f, dir, L] of [[HZ0, 1, [BDOOR]], [HZ1, -1, []]]){
+        for(const [a,b] of runs(HX0, HX1, L, BF+0.05)) B(b-a, 0.10, 0.025, (a+b)/2, BF+0.05, f+dir*0.0075, "#4a3a2c");
+        for(const [a,b] of runs(HX0, HX1, L, BF+0.95)) B(b-a, 0.06, 0.04, (a+b)/2, BF+0.95, f+dir*0.015, "#f4f2ec"); }
+      for(const [f, dir] of [[HX0, 1], [HX1, -1]]){
+        for(const [a,b] of runs(HZ0+0.005, HZ1-0.005, BWIN, BF+0.05)) B(0.025, 0.105, b-a, f+dir*0.0075, BF+0.0525, (a+b)/2, "#4a3a2c");
+        for(const [a,b] of runs(HZ0+0.005, HZ1-0.005, BWIN, BF+0.95)) B(0.04, 0.065, b-a, f+dir*0.015, BF+0.9525, (a+b)/2, "#f4f2ec"); } }
+    addFlat(HX0, HX1, HZ0, HZ1, BF);
+    addVoid(HX0, HX1, HZ0, HZ1, BF-3, Y-0.15, BF);
+    addBuried(HX0, HX1, HZ0, HZ1, BF-0.5, CL2+0.05, 0);
+    addZone(HX0, HX1, HZ0, HZ1, BF-0.5, CL2, "THE FELLOWSHIP HALL", true);
+
+    // the windows: small, high, just over the grass outside; frosted, white jambs lining the stone, a checked valance
+    for(const o of BWIN) for(const [f, out] of [[F.x0+FT/2, -1],[F.x1-FT/2, 1]]){
+      const c=(o.a+o.b)/2, w=o.b-o.a, h=o.head-o.sill, inn=f-out*(FT/2+0.012);
+      B(0.012, h-0.04, w-0.04, f+out*0.06, (o.sill+o.head)/2, c, "#c4cec9");
+      B(FT+0.024, 0.02, w+0.008, f, o.sill+0.01, c, "#f4f2ec"); B(FT+0.024, 0.02, w+0.008, f, o.head-0.01, c, "#f4f2ec");
+      for(const z of [o.a+0.01, o.b-0.01]) B(FT+0.024, h-0.04, 0.02, f, (o.sill+o.head)/2, z, "#f4f2ec");
+      B(0.05, 0.03, w+0.14, inn-out*0.02, o.sill-0.012, c, "#f4f2ec");
+      push("hall_ging_y", boxGeo(0.008, 0.12, w+0.10, 4), inn-out*0.03, o.head-0.04, c, 0, "#ffffff");
+      tubeE(V3(inn-out*0.02, o.head+0.03, c-w/2-0.08), V3(inn-out*0.02, o.head+0.03, c+w/2+0.08), 0.006, "#c9b07a"); }
+
+    // the door in from the stair: white, in a white frame; the threshold; the clock over it
+    frX(F.z0+FT/2, FT, BDOOR.a, BDOOR.b, BF, BDOOR.head, "#f4f2ec");
+    makeDoor(XF(BDOOR.a+0.02, F.z0+FT/2, 0), 0, BF+0.01, 0, "THE FELLOWSHIP HALL", true, 0, "closet", 0xf2f0e8);
+    B(BDOOR.b-BDOOR.a+0.004, 0.016, FT+0.03, (BDOOR.a+BDOOR.b)/2, BF+0.008, F.z0+FT/2, "#8a6a44");
+    addFlat(BDOOR.a, BDOOR.b, F.z0-0.01, HZ0+0.01, BF);
+    addVoid(BDOOR.a, BDOOR.b, F.z0-0.02, HZ0+0.02, BF-3, Y-0.15, BF);
+    C(0.16, 0.04, 86.0, BF+2.45, HZ0+0.026, "#2a2a2c", 24, Math.PI/2); C(0.145, 0.006, 86.0, BF+2.45, HZ0+0.049, "#f6f4ec", 24, Math.PI/2);
+    for(const [th, L, w, d] of [[1.05, 0.12, 0.010, 0.055],[-2.0, 0.08, 0.012, 0.059]]) B(w, L, 0.004, 86.0+Math.sin(th)*L/2, BF+2.45+Math.cos(th)*L/2, HZ0+d, "#1a1a1a", 0, 0, -th);
+
+    // the lights: fluorescent troffers in the grid, their prismatic lenses a centimetre under the frames
+    for(const z of [Z-35.0, Z-31.1, Z-27.2]) for(const x of [86.4, 90.6]){
+      B(0.62, 0.035, 1.22, x, CL2-0.0075, z, "#e8e6e0"); push("tube", boxGeo(0.54, 0.008, 1.14, 0), x, CL2-0.031, z, 0, "#ffffff"); }
+    B(1.22, 0.035, 0.62, 86.9, CL2-0.0075, Z-23.6, "#e8e6e0"); push("tube", boxGeo(1.14, 0.008, 0.54, 0), 86.9, CL2-0.031, Z-23.6, 0, "#ffffff");
+    for(const z of [Z-34.8, Z-30.4, Z-26.2]) lamp({x:88.5, y:CL2-0.35, z:z, color:0xf2f4ee, intensity:0.72, dist:9, decay:1.5});
+    lamp({x:86.9, y:CL2-0.35, z:Z-23.6, color:0xf4f2ea, intensity:0.55, dist:6, decay:1.5});
+
+    // the columns down the middle, white, a square plate top and bottom; yellow balloons tied to each
+    const balloon=(x, y, z, col, s)=>{ push("hall_balloon", new T.SphereGeometry(0.13*(s||1), 16, 12).scale(1, 1.16, 1), x, y, z, 0, col);
+      ent(new T.ConeGeometry(0.018, 0.035, 8), x, y-0.15*(s||1)-0.012, z, col, Math.PI); };
+    const ribbon=(a, b)=>{ const m=a.clone().lerp(b, 0.5).add(V3(0.03, 0, -0.02)); tubeE(a, m, 0.003, "#f4f2ea"); tubeE(m, b, 0.003, "#f4f2ea"); };
+    const q=_trng(3131);
+    for(const z of [Z-32.6, Z-29.6, Z-26.6]){ const x=88.5;
+      B(0.26, 0.04, 0.26, x, BF+0.01, z, "#e8e6e0"); B(0.26, 0.04, 0.26, x, CL2-0.01, z, "#e8e6e0");
+      C(0.09, CL2-BF-0.06, x, (BF+CL2)/2, z, "#f4f2ee", 18); C(0.105, 0.05, x, BF+0.055, z, "#e8e6e0", 18);
+      addCol(x-0.14, x+0.14, z-0.14, z+0.14, BF-0.5, CL2);
+      const tie=V3(x+0.09, BF+1.55, z);
+      for(let k=0;k<3;k++){ const a=k*2.1+q()*0.6, bx0=x+Math.cos(a)*0.24, bz0=z+Math.sin(a)*0.24, by=BF+2.08+q()*0.30;
+        balloon(bx0, by, bz0, k===2 && z===Z-29.6 ? "#f6f4ea" : "#f2c41a"); ribbon(V3(bx0, by-0.19, bz0), tie); }
+      B(0.03, 0.03, 0.03, tie.x, tie.y, tie.z, "#f2c41a"); }
+    // two that got away, up against the tiles; one gone soft on the floor by the wall
+    for(const [x,z] of [[91.9, Z-30.9],[85.2, Z-28.0]]){ balloon(x, CL2-0.17, z, "#f2c41a"); tubeE(V3(x, CL2-0.33, z), V3(x+0.05, BF+1.20, z+0.04), 0.003, "#f4f2ea"); }
+    push("hall_balloon", new T.SphereGeometry(0.10, 14, 10).scale(1.2, 0.55, 1), 92.35, BF+0.065, Z-34.4, 0.4, "#e8b81a");
+
+    // the tables: six of them in three rows, a checked cloth over each hanging a hand's length, folding legs under;
+    // the chairs round them, steel, putty-coloured, three a side; a jar of asters and a gourd on each
+    const chair=(x, z, ry)=>{ const f=XF(x, z, ry), P=(lx,ly,lz)=>V3(f.x(lx,lz), BF+ly, f.z(lx,lz)),
+        qq=(w,h,d,lx,ly,lz,c,rx)=>ent(boxGeo(w,h,d), f.x(lx,lz), BF+ly, f.z(lx,lz), c, rx||0, ry, 0);
+      qq(0.40, 0.025, 0.38, 0, 0.455, 0.01, "#c4b89e");
+      qq(0.36, 0.16, 0.022, 0, 0.80, -0.205, "#c4b89e", -0.10);
+      for(const sx of [-0.19, 0.19]){ tubeE(P(sx, 0.01, -0.21), P(sx, 0.89, -0.235), 0.011, "#8a8476"); tubeE(P(sx, 0.01, 0.20), P(sx, 0.445, 0.17), 0.011, "#8a8476");
+        ent(new T.CylinderGeometry(0.014, 0.014, 0.02, 8), f.x(sx, 0.20), BF+0.01, f.z(sx, 0.20), "#2a2a2a"); ent(new T.CylinderGeometry(0.014, 0.014, 0.02, 8), f.x(sx, -0.21), BF+0.01, f.z(sx, -0.21), "#2a2a2a"); }
+      tubeE(P(-0.19, 0.13, 0.19), P(0.19, 0.13, 0.19), 0.008, "#8a8476"); tubeE(P(-0.19, 0.30, -0.215), P(0.19, 0.30, -0.215), 0.008, "#8a8476");
+      addCol(x-0.22, x+0.22, z-0.22, z+0.22, BF-0.5, BF+0.92); };
+    const CLOTH=["b","y","g","y","g","b"];
+    [[86.2, Z-32.6],[90.8, Z-32.6],[86.2, Z-29.6],[90.8, Z-29.6],[86.2, Z-26.6],[90.8, Z-26.6]].forEach(([tx, tz], i)=>{
+      const top=BF+0.75;
+      push("hall_ging_"+CLOTH[i], boxGeo(2.52, 0.27, 0.86, 4), tx, top-0.135, tz, 0, "#ffffff");
+      for(const sx of [-1,1]){ for(const sz of [-1,1]) tubeE(V3(tx+sx*1.05, top-0.20, tz+sz*0.30), V3(tx+sx*1.05, BF+0.01, tz+sz*0.30), 0.012, "#5a5c60");
+        tubeE(V3(tx+sx*1.05, BF+0.12, tz-0.30), V3(tx+sx*1.05, BF+0.12, tz+0.30), 0.009, "#5a5c60"); }
+      addCol(tx-1.26, tx+1.26, tz-0.43, tz+0.43, BF-0.5, top);
+      // on it: a canning jar of asters, a little gourd, salt and pepper
+      C(0.045, 0.13, tx-0.15, top+0.067, tz, "#c8dcd4", 14); C(0.040, 0.008, tx-0.15, top+0.136, tz, "#c9a34a", 14);
+      for(let k=0;k<5;k++){ const a=k*1.26, fx=tx-0.15+Math.cos(a)*0.035, fz=tz+Math.sin(a)*0.035;
+        tubeE(V3(tx-0.15, top+0.12, tz), V3(fx, top+0.22+k%2*0.03, fz), 0.003, "#4a6a2a");
+        ent(new T.SphereGeometry(0.022, 8, 6), fx, top+0.23+k%2*0.03, fz, ["#8a5ab8","#f4f2ea","#b85a9a"][k%3]); }
+      ent(new T.SphereGeometry(0.06, 12, 8).scale(1, 0.7, 1), tx+0.20, top+0.044, tz+0.08, i%2 ? "#d8781e" : "#e0c25a");
+      C(0.015, 0.08, tx+0.20, top+0.10, tz+0.08, "#5a6a2a", 6);
+      for(const [dx,col] of [[0.42,"#f4f2ec"],[0.47,"#3a3a3a"]]){ C(0.016, 0.06, tx+dx, top+0.032, tz-0.12, "#d8dcdc", 10); C(0.017, 0.012, tx+dx, top+0.068, tz-0.12, col, 10); }
+      for(const sx of [-0.8, 0, 0.8]){
+        const j1=(q()-0.5)*0.06, j2=(q()-0.5)*0.06;
+        chair(tx+sx+j1, tz-0.64, (q()-0.5)*0.14); chair(tx+sx+j2, tz+0.64, Math.PI+(q()-0.5)*0.14);
+        if(sx===0){ addSeat(tx+j1, tz-0.64, BF, Math.PI, "A FOLDING CHAIR"); addSeat(tx+j2, tz+0.64, BF, 0, "A FOLDING CHAIR"); } } });
+
+    // the north end, by the door: the coat rail, the bulletin board, the banner, the offering table, the chair cart
+    { B(1.6, 0.10, 0.025, HX0+0.0175, BF+1.62, Z-36.0, "#6a4a2c", Math.PI/2);
+      for(let k=0;k<6;k++) C(0.010, 0.08, HX0+0.06, BF+1.63, Z-36.6+k*0.24, "#2a2a2a", 8, 0, 0, Math.PI/2);
+      for(const [z, col] of [[Z-36.36, "#3a4a2a"],[Z-35.4, "#8a2a22"]]){
+        ent(rboxGeo(0.12, 0.82, 0.46, 0.04, 2), HX0+0.11, BF+1.18, z, col); ent(new T.SphereGeometry(0.09, 10, 8).scale(0.8, 0.6, 2.2), HX0+0.11, BF+1.58, z, col); }
+      B(0.40, 0.02, 0.9, HX0+0.24, BF+0.01, Z-36.0, "#1e1e1e");
+      addCol(HX0, HX0+0.45, Z-36.9, Z-35.1, BF-0.5, BF+1.7);
+      B(1.44, 0.96, 0.03, 87.62, BF+1.50, HZ0+0.021, "#6a4a2c"); B(1.36, 0.88, 0.012, 87.62, BF+1.50, HZ0+0.042, "#b48858");
+      sign(1.32, 0.84, (c,W,Hh)=>{ c.fillStyle="#b48858"; c.fillRect(0,0,W,Hh); const q2=_trng(52); for(let k=0;k<900;k++){ c.fillStyle=q2()<0.5 ? "rgba(90,58,30,0.30)" : "rgba(230,190,140,0.30)"; c.fillRect(q2()*W, q2()*Hh, 2, 2); }
+          const note=(x,y,w,h,bg,L,col,rot)=>{ c.save(); c.translate(x+w/2,y+h/2); c.rotate(rot||0); c.fillStyle=bg; c.fillRect(-w/2,-h/2,w,h);
+            const s=sizeAll(c, L, w*0.82, h*0.62/L.length, "700", "Arial");
+            L.forEach((t,k)=>say(c, t, 0, -h/2+h*(k+0.5)/L.length, w*0.82, s, col, "700", "Arial")); c.fillStyle="#c42a1a"; c.beginPath(); c.arc(0, -h/2+5, 4, 0, 7); c.fill(); c.restore(); };
+          note(W*0.04, Hh*0.06, W*0.40, Hh*0.40, "#f8f2c8", ["HARVEST SUPPER","SAT 5 PM","HAM · BEANS · PIE"], "#7a2a12", -0.03);
+          note(W*0.50, Hh*0.05, W*0.44, Hh*0.30, "#f4f4f2", ["PRAYER LIST","THE WEIRS · DOT K.","EARL'S HIP"], "#1a2a5a", 0.02);
+          note(W*0.52, Hh*0.42, W*0.24, Hh*0.30, "#c8e0f4", ["QUILT","RAFFLE","$1"], "#1a1a1a", 0.05);
+          note(W*0.80, Hh*0.42, W*0.16, Hh*0.26, "#f4c8d8", ["VBS","JULY"], "#5a1a3a", -0.06);
+          note(W*0.06, Hh*0.54, W*0.38, Hh*0.38, "#e8f0d0", ["CHOIR PRACTICE","WEDNESDAYS 7","ALL VOICES"], "#2a4a1a", 0.03);
+          note(W*0.50, Hh*0.76, W*0.44, Hh*0.18, "#f8e0b0", ["FOR SALE: CHEST FREEZER"], "#3a2a1a", -0.01); },
+        87.62, BF+1.50, HZ0+0.062, 0, false, 520);
+      sign(3.0, 0.42, (c,W,Hh)=>{ c.fillStyle="#f6f0dc"; c.fillRect(0,0,W,Hh); c.strokeStyle="#c47a1a"; c.lineWidth=6; c.strokeRect(5,5,W-10,Hh-10);
+          for(let k=0;k<14;k++){ c.fillStyle=["#c4501a","#e0a020","#8a3a1a"][k%3]; c.beginPath(); c.moveTo(14+k*(W-28)/13, 9); c.lineTo(24+k*(W-28)/13, 9); c.lineTo(19+k*(W-28)/13, 22); c.fill(); }
+          say(c, "HARVEST SUPPER", W/2, Hh*0.58, W*0.78, Hh*0.50, "#7a2a12", "700", "Georgia, serif"); },
+        90.85, BF+2.22, HZ0+0.02, 0, false, 900);
+      B(0.80, 0.03, 0.50, 89.4, BF+0.74, HZ0+0.32, "#7a5634");
+      for(const dx of [-0.36,0.36]) for(const dz of [-0.21,0.21]) B(0.03, 0.725, 0.03, 89.4+dx, BF+0.3625, HZ0+0.32+dz, "#5a4028");
+      C(0.15, 0.10, 89.25, BF+0.805, HZ0+0.32, "#b88a4a", 16); C(0.12, 0.012, 89.25, BF+0.851, HZ0+0.32, "#7a5a2a", 16);
+      B(0.20, 0.03, 0.26, 89.62, BF+0.772, HZ0+0.30, "#f4f2ea", 0.1);
+      sign(0.24, 0.12, (c,W,Hh)=>{ c.fillStyle="#f6f2e4"; c.fillRect(0,0,W,Hh); const L=["FREE WILL","OFFERING"], s=sizeAll(c, L, W*0.80, Hh*0.30, "700", "Georgia, serif");
+          L.forEach((t,k)=>say(c, t, W/2, Hh*(0.32+k*0.38), W*0.80, s, "#3a2a1a", "700", "Georgia, serif")); }, 89.62, BF+0.83, HZ0+0.112, 0, false, 200);
+      B(0.24, 0.14, 0.012, 89.62, BF+0.83, HZ0+0.098, "#f6f2e4");
+      addCol(88.98, 89.82, HZ0, HZ0+0.58, BF-0.5, BF+0.9);
+      addUse(89.4, HZ0+1.1, BF, "THE OFFERING BASKET", ()=>toast(["A FEW DOLLARS, A CHECK MADE OUT IN PENCIL, A BUTTON. YOU ADD WHAT YOU HAVE","AN ENVELOPE: “FOR THE FURNACE FUND”. IT IS THICK","EMPTY BUT FOR A NOTE: “IOU · PIE · DOT”"][(Math.random()*3)|0], "#e8dcc0"), 0.9);
+      addUse(87.62, HZ0+0.9, BF, "THE BULLETIN BOARD", ()=>toast(["THE CHEST FREEZER IS STILL FOR SALE. IT HAS BEEN SINCE MARCH","THE QUILT IN THE RAFFLE IS A DOUBLE WEDDING RING. TICKETS FROM DOT","SOMEONE HAS PENCILLED “AMEN” UNDER EARL'S HIP"][(Math.random()*3)|0], "#e8dcc0"), 0.9);
+      // the cart of spare chairs in the corner, folded and stacked against its back
+      const cx=92.05, cz=HZ0+0.5;
+      B(0.56, 0.05, 0.86, cx, BF+0.08, cz, "#3a3c40"); for(const dz of [-0.36, 0.36]) for(const dx of [-0.22, 0.22]) C(0.04, 0.03, cx+dx, BF+0.04, cz+dz, "#1a1a1a", 10, 0, 0, Math.PI/2);
+      B(0.04, 1.0, 0.86, cx+0.26, BF+0.60, cz, "#3a3c40");
+      for(let k=0;k<9;k++) B(0.03, 0.86, 0.44, cx+0.215-k*0.034, BF+0.55, cz, k%2 ? "#c4b89e" : "#bcb096", 0, 0, 0.06);
+      addCol(cx-0.3, cx+0.3, cz-0.45, cz+0.45, BF-0.5, BF+1.1); }
+
+    // the south end: the kitchen behind its counter, the pass-through over it under a soffit; a wall at its east end
+    { const KZ=Z-24.85, KX1=89.60;
+      B(88.30-84.29, 0.84, 0.56, (84.29+88.30)/2, BF+0.46, KZ, "#a2865a"); B(88.30-84.29, 0.08, 0.50, (84.29+88.30)/2, BF+0.04, KZ, "#2a2420");
+      B(88.34-84.29, 0.04, 0.66, (84.29+88.34)/2, BF+0.90, KZ, "#e6dcc4");
+      for(let k=0;k<6;k++){ const x=84.65+k*0.62; for(const sd of [-1,1]) B(0.56, 0.62, 0.012, x, BF+0.47, KZ+sd*0.285, "#ae9266"); }
+      addCol(84.29, 88.34, KZ-0.33, KZ+0.33, BF-0.5, BF+0.92);
+      B(KX1-HX0+0.01, CL2-(BF+2.20)+0.01, 0.30, (HX0-0.005+KX1)/2, (BF+2.20+CL2+0.01)/2, KZ, "#f1ede4");
+      // (the wall stands a centimetre proud of the soffit's face, its panelling and rail proud of it in turn)
+      const pw=(w, h, y, z0, c)=>B(w, h, HZ1+0.005-z0, KX1+0.06, y, (z0+HZ1+0.005)/2, c);
+      pw(0.12, CL2-BF+0.01, (BF+CL2+0.01)/2, KZ-0.16, "#f1ede4"); pw(0.13, 0.95, BF+0.475, KZ-0.165, "#c9a676"); pw(0.15, 0.06, BF+0.95, KZ-0.17, "#f4f2ec");
+      addCol(KX1, KX1+0.12, KZ-0.16, HZ1, BF-0.5, CL2);
+      // behind it: the fridge, the base cabinets with the range and the sink in them, the cupboards over, the hood
+      const BZ=HZ1-0.30;
+      B(0.78, 1.72, 0.72, HX0+0.40, BF+0.86, HZ1-0.37, "#e6dfc8"); B(0.78, 0.012, 0.006, HX0+0.40, BF+1.20, HZ1-0.733, "#b8b098");
+      B(0.03, 0.24, 0.03, HX0+0.70, BF+1.40, HZ1-0.745, "#c9cbcc"); B(0.03, 0.36, 0.03, HX0+0.70, BF+0.92, HZ1-0.745, "#c9cbcc");
+      addCol(HX0, HX0+0.80, HZ1-0.74, HZ1, BF-0.5, BF+1.75);
+      B(KX1-85.15, 0.84, 0.58, (85.15+KX1)/2, BF+0.46, BZ+0.01, "#a2865a"); B(KX1-85.15, 0.08, 0.52, (85.15+KX1)/2, BF+0.04, BZ+0.02, "#2a2420");
+      for(const [a,b] of [[85.15, 85.88],[86.68, KX1]]) B(b-a, 0.04, 0.64, (a+b)/2, BF+0.90, BZ-0.01, "#e6dcc4");
+      for(const x of [85.5, 87.0, 87.62, 88.86, 89.30]) B(0.40, 0.60, 0.012, x, BF+0.47, BZ-0.285, "#ae9266");
+      for(const x of [85.5, 87.0, 87.62, 88.86, 89.30]) B(0.10, 0.02, 0.02, x, BF+0.70, BZ-0.30, "#c9cbcc");
+      // the range: white enamel, four coils, its clock at the back
+      B(0.76, 0.92, 0.64, 86.28, BF+0.46, BZ-0.01, "#efece2"); B(0.70, 0.006, 0.56, 86.28, BF+0.923, BZ-0.02, "#1e1e1e");
+      for(const [dx,dz] of [[-0.18,-0.12],[0.18,-0.12],[-0.18,0.14],[0.18,0.14]]) ent(new T.TorusGeometry(0.075, 0.008, 6, 18), 86.28+dx, BF+0.93, BZ-0.02+dz, "#3a3a3a", Math.PI/2);
+      B(0.76, 0.22, 0.06, 86.28, BF+1.03, BZ+0.27, "#efece2"); for(let k=0;k<4;k++) C(0.018, 0.03, 85.98+k*0.2, BF+1.0, BZ+0.235, "#2a2a2a", 10, Math.PI/2);
+      B(0.60, 0.40, 0.012, 86.28, BF+0.45, BZ-0.336, "#2a2a2a");
+      B(0.76, 0.14, 0.46, 86.28, BF+1.80, HZ1-0.23, "#d8d4c8");
+      // the sink: steel, two bowls, the faucet up out of the back
+      B(0.82, 0.006, 0.50, 88.24, BF+0.923, BZ-0.02, "#b8bcc0");
+      for(const dx of [-0.2, 0.2]) B(0.34, 0.004, 0.38, 88.24+dx, BF+0.928, BZ-0.03, "#6a6e72");
+      tubeE(V3(88.24, BF+0.92, BZ+0.17), V3(88.24, BF+1.20, BZ+0.17), 0.014, "#c9cbcc"); tubeE(V3(88.24, BF+1.20, BZ+0.17), V3(88.24, BF+1.16, BZ-0.05), 0.012, "#c9cbcc");
+      for(const dx of [-0.10, 0.10]) C(0.02, 0.05, 88.24+dx, BF+0.95, BZ+0.17, "#c9cbcc", 10);
+      // the cupboards over the counter, east of the hood
+      B(KX1-86.80, 0.70, 0.34, (86.80+KX1)/2, BF+1.80, HZ1-0.17, "#a2865a");
+      for(const x of [87.15, 87.85, 88.55, 89.25]) B(0.62, 0.62, 0.012, x, BF+1.80, HZ1-0.346, "#ae9266");
+      addCol(85.1, KX1, BZ-0.34, HZ1, BF-0.5, BF+0.94);
+      // on the counters: the coffee urn on the pass-through, cups; crock-pots, a stock-pot on the range, plates, a pie
+      C(0.17, 0.48, 87.85, BF+0.92+0.30, KZ, "#c8ccd0", 20); C(0.18, 0.06, 87.85, BF+0.92+0.03, KZ, "#1e1e1e", 20); C(0.12, 0.04, 87.85, BF+0.92+0.56, KZ, "#1e1e1e", 18);
+      B(0.04, 0.05, 0.08, 87.85, BF+1.04, KZ-0.20, "#1e1e1e"); ent(new T.SphereGeometry(0.02, 8, 6), 87.85, BF+1.53, KZ, "#f2c41a");
+      for(let k=0;k<3;k++) C(0.04, 0.28, 87.40+k*0.10, BF+0.92+0.14, KZ-0.10, "#f4f4f0", 12);
+      for(let k=0;k<2;k++) C(0.13, 0.08, 86.2+k*0.36, BF+0.92+0.04, KZ+0.02, "#f6f6f2", 20);
+      ent(new T.CylinderGeometry(0.13, 0.11, 0.05, 20), 85.4, BF+0.92+0.025, KZ, "#c8a060"); C(0.12, 0.005, 85.4, BF+0.92+0.052, KZ, "#a0562a", 20);
+      for(const x of [87.15, 89.10]){ ent(new T.CylinderGeometry(0.17, 0.15, 0.20, 18).scale(1, 1, 0.75), x, BF+0.92+0.10, BZ-0.05, "#5a3a22");
+        ent(new T.SphereGeometry(0.16, 16, 8, 0, Math.PI*2, 0, Math.PI/2).scale(1, 0.35, 0.75), x, BF+0.92+0.20, BZ-0.05, "#a8b0b0"); ent(new T.SphereGeometry(0.02, 8, 6), x, BF+0.92+0.26, BZ-0.05, "#1e1e1e"); }
+      C(0.17, 0.26, 86.10, BF+0.93+0.13, BZ-0.12, "#b8bcc0", 20); C(0.175, 0.012, 86.10, BF+0.93+0.262, BZ-0.12, "#a8acb0", 20);
+      addUse(87.85, KZ-0.75, BF, "THE COFFEE URN", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("pour", 87.85, KZ);
+        toast(["YOU DRAW A CUP. CHURCH COFFEE: HOT, BROWN, AND THAT'S ALL YOU CAN SAY FOR IT","A CARD TAPED TO IT: “DECAF IS THE GREEN ONE.” THERE IS NO GREEN ONE","IT PERKS AND SIGHS. THE CUP IS STYROFOAM AND SQUEAKS"][(Math.random()*3)|0], "#e8d0a8"); }, 0.9);
+      addUse(HX0+0.40, HZ1-1.3, BF, "THE FRIDGE", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("door", HX0+0.4, HZ1-0.4);
+        toast(["A HAM UNDER FOIL, THREE JELLO SALADS AND A NOTE: “HANDS OFF · DOT”","CREAMERS, A SHEET CAKE THAT SAYS “50 YEARS PASTOR JIM”, HALF GONE","PICKLED EGGS IN A JAR NOBODY WILL ADMIT TO"][(Math.random()*3)|0], "#d8e4e8"); }, 0.9);
+      addUse(87.15, BZ-0.9, BF, "THE CROCK-POTS", ()=>toast(["BAKED BEANS, LOW. SMELLS OF MOLASSES AND BACON","SLOPPY JOES, KEEPING WARM FOR TOMORROW","THE LID IS FOGGED. WHATEVER IT IS, IT HAS ONIONS IN IT"][(Math.random()*3)|0], "#e8d0a8"), 0.9);
+      // the sign-up sheet on its clipboard on the west wall by the counter
+      B(0.25, 0.34, 0.012, HX0+0.013, BF+1.42, Z-26.05, "#6a5038", Math.PI/2);
+      sign(0.22, 0.29, (c,W,Hh)=>{ c.fillStyle="#f6f4ee"; c.fillRect(0,0,W,Hh);
+          say(c, "SIGN-UP · SAT", W/2, Hh*0.08, W*0.80, Hh*0.07, "#1a1a1a", "700", "Arial");
+          c.strokeStyle="rgba(60,90,160,0.35)"; c.lineWidth=1; for(let y=Hh*0.16;y<Hh-6;y+=Hh*0.09){ c.beginPath(); c.moveTo(6,y); c.lineTo(W-6,y); c.stroke(); }
+          ["DOT · HAM","BEV · SCALLOPED","THE WEIRS · PIE x2","KANTZ · ROLLS","EARL · ICE","JUNE · JELLO","???"].forEach((t,k)=>say(c, t, W/2, Hh*(0.20+k*0.105), W*0.80, Hh*0.06, "#1a2a6a", "600", "'Comic Sans MS', cursive")); },
+        HX0+0.026, BF+1.41, Z-26.05, Math.PI/2, false, 160);
+      addUse(HX0+0.6, Z-26.05, BF, "THE SIGN-UP SHEET", ()=>toast(["SEVEN NAMES, SEVEN DISHES. THREE OF THEM ARE JELLO","AT THE BOTTOM, IN A CHILD'S HAND: “CANDY”","YOU WRITE YOUR NAME. NEXT TO IT: “CHIPS”. THE PEN IS ON A STRING"][(Math.random()*3)|0], "#e8dcc0"), 0.9); }
+
+    // east of the kitchen: the old upright piano against the south wall, its bench, the picture over it; the fountain
+    { const px=91.2, pz=HZ1-0.30;
+      ent(rboxGeo(1.46, 1.22, 0.58, 0.02, 2), px, BF+0.61, pz, "#4a2c1a"); B(1.30, 0.04, 0.30, px, BF+0.74, pz-0.40, "#3a2214");
+      B(1.22, 0.02, 0.15, px, BF+0.765, pz-0.36, "#f4f0e2"); for(let k=0;k<24;k++) if(k%7!==2 && k%7!==6) B(0.022, 0.02, 0.09, px-0.58+k*0.05, BF+0.782, pz-0.33, "#141414");
+      B(1.30, 0.14, 0.03, px, BF+0.84, pz-0.31, "#4a2c1a"); B(0.36, 0.24, 0.012, px, BF+1.04, pz-0.30, "#f0e8d4", 0, -0.2);
+      for(const sd of [-1,1]) B(0.06, 0.74, 0.06, px+sd*0.62, BF+0.37, pz-0.42, "#4a2c1a");
+      B(0.90, 0.48, 0.36, px, BF+0.24, pz-0.95, "#4a2c1a");
+      addCol(px-0.74, px+0.74, pz-0.48, HZ1, BF-0.5, BF+1.25); addCol(px-0.47, px+0.47, pz-1.14, pz-0.76, BF-0.5, BF+0.5);
+      addSeat(px, pz-0.95, BF, Math.PI, "THE PIANO BENCH");
+      addUse(px, pz-1.35, BF, "PLAY THE OLD PIANO", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("rim", px, pz);
+        toast(["“WHAT A FRIEND WE HAVE IN JESUS”, AND HALF THE KEYS STICK","CHOPSTICKS. THE ONLY THING ANYONE HAS EVER PLAYED ON IT DOWN HERE","IT IS A HALF-STEP FLAT AND HAS BEEN SINCE THE FLOOD OF '72"][(Math.random()*3)|0], "#e8c46a"); }, 0.9);
+      B(0.84, 0.58, 0.03, px, BF+1.78, HZ1-0.021, "#6a4a2c");
+      sign(0.76, 0.50, (c,W,Hh)=>{ const g=c.createLinearGradient(0,0,0,Hh); g.addColorStop(0,"#c8d8e0"); g.addColorStop(1,"#e8e0c8"); c.fillStyle=g; c.fillRect(0,0,W,Hh);
+          c.fillStyle="#8a9a5a"; c.fillRect(0, Hh*0.72, W, Hh*0.28);
+          c.fillStyle="#f4f2ea"; c.fillRect(W*0.38, Hh*0.42, W*0.26, Hh*0.32); c.beginPath(); c.moveTo(W*0.36, Hh*0.43); c.lineTo(W*0.51, Hh*0.26); c.lineTo(W*0.66, Hh*0.43); c.fill();
+          c.fillRect(W*0.475, Hh*0.14, W*0.07, Hh*0.16); c.fillStyle="#5a5e60"; c.beginPath(); c.moveTo(W*0.465, Hh*0.15); c.lineTo(W*0.51, Hh*0.03); c.lineTo(W*0.555, Hh*0.15); c.fill();
+          c.fillStyle="#8a2418"; c.fillRect(W*0.485, Hh*0.60, W*0.05, Hh*0.14);
+          say(c, "FRENCH CREEK · 1891", W/2, Hh*0.88, W*0.70, Hh*0.10, "#2a2a1a", "700", "Georgia, serif"); },
+        px, BF+1.78, HZ1-0.044, Math.PI, false, 300);
+      // the drinking fountain on the east wall
+      B(0.36, 0.30, 0.34, HX1-0.18, BF+0.86, Z-24.3, "#b8bcc0"); B(0.30, 0.02, 0.26, HX1-0.20, BF+1.015, Z-24.3, "#9a9ea2");
+      C(0.012, 0.05, HX1-0.30, BF+1.04, Z-24.3, "#c9cbcc", 8); B(0.03, 0.07, 0.07, HX1-0.03, BF+0.95, Z-24.12, "#c9cbcc");
+      addCol(HX1-0.36, HX1, Z-24.47, Z-24.13, BF-0.5, BF+1.05);
+      // the children's hand turkeys, taped up between the windows on the east wall
+      sign(1.40, 0.36, (c,W,Hh)=>{ c.fillStyle="#f1ede4"; c.fillRect(0,0,W,Hh);
+          for(let k=0;k<5;k++){ const ox=k*W/5+6, w=W/5-12, cx=ox+w/2, cy=Hh*0.58; c.fillStyle=["#f6f4ee","#f4e8c8","#e8f0f4","#f6f4ee","#f4e0e8"][k]; c.fillRect(ox, 4, w, Hh-8);
+            for(let f=0;f<5;f++){ const a=-Math.PI*0.85+f*Math.PI*0.17; c.fillStyle=["#c4301a","#e08a1a","#e0c21a","#3a8a2a","#7a3ab8"][(f+k)%5];
+              c.beginPath(); c.ellipse(cx+Math.cos(a)*w*0.22, cy+Math.sin(a)*w*0.22, w*0.07, w*0.16, a+Math.PI/2, 0, 7); c.fill(); }
+            c.fillStyle="#7a4a22"; c.beginPath(); c.ellipse(cx, cy, w*0.16, w*0.20, 0, 0, 7); c.fill(); c.beginPath(); c.arc(cx+w*0.12, cy-w*0.20, w*0.08, 0, 7); c.fill();
+            c.fillStyle="#e0a020"; c.beginPath(); c.moveTo(cx+w*0.19, cy-w*0.21); c.lineTo(cx+w*0.27, cy-w*0.18); c.lineTo(cx+w*0.19, cy-w*0.15); c.fill(); } },
+        HX1-0.018, BF+1.55, Z-30.6, -Math.PI/2, false, 700); }
+
+    // the stair: outside, behind the chapel, a concrete areaway dug down along its back wall, twelve risers from the
+    // grass; walls either side with a pipe rail on them, the concrete apron round its head, a light over the door
+    { const SX0=85.2, SX1=86.8, LZ=F.z0-1.2, RS=0.19, RN=0.28, TZ=LZ-11*RN, PT=Y+0.03, AZ=Z-44.05;
+      bx("concrete", SX1-SX0-0.004, 0.25, F.z0-LZ+0.004, (SX0+SX1)/2, BF-0.125, (LZ+F.z0)/2-0.002, 0.5, 0, "#a8a49a");
+      addFlat(SX0, SX1, LZ, F.z0+0.01, BF);
+      B(0.26, 0.006, 0.26, 86.0, BF+0.003, LZ+0.5, "#3a3a3a");
+      for(let k=1;k<=11;k++){ const za=LZ-k*RN-(k===11?0.01:0), zb=LZ-(k-1)*RN, y=BF+k*RS;
+        bx("concrete", SX1-SX0-0.004, y-(BF-0.1), zb-za, (SX0+SX1)/2, (y+BF-0.1)/2, (za+zb)/2, 0.5, 0, k%2 ? "#b0aca2" : "#aaa69c");
+        addFlat(SX0, SX1, LZ-k*RN, zb, y); }
+      for(const [a,b] of [[85.0, SX0],[SX1, 87.0]]) bx("concrete", b-a, Y+0.12-(BF-0.3), F.z0+0.10-TZ, (a+b)/2, (Y+0.12+BF-0.3)/2, (F.z0+0.10+TZ)/2, 0.5, 0, "#b4b0a6");
+      // the apron at the grass's level: down each side, and across the stair's head
+      bx("concrete", 85.05-83.95, PT-(Y-0.25), F.z0-AZ, (83.95+85.05)/2, (PT+Y-0.25)/2, (AZ+F.z0)/2, 0.5, 0, "#bab6ac");
+      bx("concrete", 88.05-86.95, PT-(Y-0.25), F.z0-AZ, (86.95+88.05)/2, (PT+Y-0.25)/2, (AZ+F.z0)/2, 0.5, 0, "#bab6ac");
+      bx("concrete", 86.95-85.05, PT-(Y-0.25), TZ-AZ, (85.05+86.95)/2, (PT+Y-0.25)/2, (AZ+TZ)/2, 0.5, 0, "#bab6ac");
+      addFlat(83.95, 85.05, AZ, F.z0, PT); addFlat(86.95, 88.05, AZ, F.z0, PT); addFlat(85.05, 86.95, AZ, TZ, PT);
+      addVoid(SX0, SX1, TZ, F.z0, BF-3, Y+0.6, BF);
+      // the rails on the walls, and one down the east wall inside
+      for(const x of [85.1, 86.9]){ const top=Y+0.12;
+        for(const z of [TZ+0.06, (TZ+F.z0)/2, F.z0-0.10]) tubeE(V3(x, top, z), V3(x, top+0.94, z), 0.02, "#1e1e20");
+        tubeE(V3(x, top+0.94, TZ+0.06), V3(x, top+0.94, F.z0-0.10), 0.022, "#1e1e20"); tubeE(V3(x, top+0.48, TZ+0.06), V3(x, top+0.48, F.z0-0.10), 0.016, "#1e1e20");
+        for(const z of [TZ+0.06, F.z0-0.10]) ent(new T.SphereGeometry(0.022, 8, 6), x, top+0.94, z, "#1e1e20"); }
+      addCol(85.0, SX0, TZ, F.z0, BF-0.5, Y+1.2); addCol(SX1, 87.0, TZ, F.z0, BF-0.5, Y+1.2);
+      { const a=V3(SX1-0.06, PT+0.86, TZ-0.05), b=V3(SX1-0.06, BF+0.86, LZ+0.15); tubeE(a, b, 0.019, "#1e1e20");
+        for(const t of [0.08, 0.5, 0.92]){ const p=a.clone().lerp(b, t); tubeE(p, V3(SX1-0.004, p.y-0.06, p.z), 0.011, "#1e1e20"); } }
+      // the light over the door, the door's frame outside is frX's; a mat
+      B(0.12, 0.12, 0.07, 86.0, BF+2.32, F.z0-0.035, "#2a2a2c"); push("chapel_globe", new T.CylinderGeometry(0.05, 0.05, 0.12, 12), 86.0, BF+2.26, F.z0-0.11, 0, "#ffffff");
+      C(0.06, 0.02, 86.0, BF+2.33, F.z0-0.11, "#2a2a2c", 12);
+      LAMPS.push({x:86.0, y:BF+2.1, z:F.z0-0.5, color:0xffd8a0, intensity:0.45, dist:6, decay:1.6, mothy:true});
+      B(0.80, 0.012, 0.50, 86.0, BF+0.006, LZ+0.75+0.20, "#2e2a26");
+      // and the sign at the top for anybody looking for it
+      B(0.06, 1.05, 0.06, 84.40, Y+0.555, Z-43.4, "#f4f2ec"); addCol(84.36, 84.44, Z-43.44, Z-43.36, Y-0.5, Y+1.1);
+      B(0.62, 0.36, 0.04, 84.40, Y+1.05, Z-43.35, "#f4f2ec");
+      sign(0.56, 0.30, (c,W,Hh)=>{ c.fillStyle="#f6f4ec"; c.fillRect(0,0,W,Hh); c.strokeStyle="#24402e"; c.lineWidth=5; c.strokeRect(5,5,W-10,Hh-10);
+          const L=["FELLOWSHIP HALL","DOWNSTAIRS · ALL WELCOME"], s=sizeAll(c, L, W*0.78, Hh*0.20, "700", "Georgia, serif");
+          L.forEach((t,k)=>say(c, t, W/2, Hh*(0.36+k*0.32), W*0.78, s, "#24402e", "700", "Georgia, serif")); },
+        84.40, Y+1.05, Z-43.318, 0, false, 300);
+      // crushed stone along the foundation either side, where the mown ground stops short of it
+      // (a box of its own, not the polygon-offset flat layer: that offset pulls a side face seen edge-on in front of the wall)
+      bucketOf("kirk_gravel", ()=>new T.MeshStandardMaterial({map:TEX.crushed, roughness:1.0}));
+      for(const [a,b] of [[F.x0-1.0, F.x0],[F.x1, F.x1+1.0]]){ bx("kirk_gravel", b-a, 0.225, F.z1-F.z0, (a+b)/2, Y+0.025-0.1125, (F.z0+F.z1)/2, 0.5, 0, "#a29d92");
+        addFlat(a, b, F.z0, F.z1, Y+0.025); } }
+  }
 
   /* ---- the lot, the car, the sign at the road ---- */
   // (back off the road behind the I-79 SOUTH sign, 08b, a drive out to the road west of it)

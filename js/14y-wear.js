@@ -212,7 +212,16 @@ const WEAR={leaves:[], autumn:null};
     const wire=(a,b,sag,rad)=>{ const n=10; let p=a.clone();
       for(let k=1;k<=n;k++){ const t=k/n, q=new T.Vector3().lerpVectors(a,b,t); q.y-=sag*4*t*(1-t); tubeE(p, q, rad||0.010, WIRE, 5); p=q; } };
     const zN=Z-8.2, tops=[];
-    for(let x=40; x<=585; x+=45){ const top=pole(x, zN, 10.5, true); tops.push([x, top]); }
+    // (on east along the road to the street's end, each moved clear of a lot's mouth or a drive, EAST.noPole)
+    for(let x0=40; x0<=EAST.x1-24; x0+=45){ let x=x0;
+      for(const [a,b] of EAST.noPole) if(x>a && x<b) x=(x-a<b-x) ? a : b;
+      if(tops.length && x-tops[tops.length-1][0]<8) continue;                        // (two moved to the same gap's edge: one pole)
+      const top=pole(x, zN, 10.5, true); tops.push([x, top]); }
+    // along the street, a light out over the road from each pole
+    for(const [x,t] of tops){ if(x<EAST.town.x0 || x>EAST.town.x1) continue;
+      tubeE(V3(x, t-2.7, zN+0.1), V3(x, t-2.2, zN+2.8), 0.04, "#8a8d90"); B(0.30, 0.14, 0.62, x, t-2.24, zN+3.05, "#7a7d80");
+      push("lk_porch", boxGeo(0.22, 0.012, 0.46, 0), x, t-2.317, zN+3.05, 0, "#ffffff");
+      LAMPS.push({x:x, y:t-2.6, z:zN+3.05, color:0xffe0b0, intensity:0.9, dist:22, decay:1.3, mothy:true}); }
     for(let i=1;i<tops.length;i++){ const [x0,t0]=tops[i-1], [x1,t1]=tops[i];
       for(const dz of [-1.05,0,1.05]) wire(V3(x0, t0-0.18, zN+dz), V3(x1, t1-0.18, zN+dz), 0.75);
       wire(V3(x0, t0-1.6, zN), V3(x1, t1-1.6, zN), 0.9, 0.012); }

@@ -42,12 +42,12 @@ const RAMP_ENTRY=smoothPath([
    northbound off-ramp leaves the right lane, climbs along the cut and
    merges into US 6N eastbound; its mirror on the west side takes you from
    US 6N back down onto southbound. North of the road the other two, on to
-   northbound and off southbound. US 6N runs out east and west to where
-   the fields end, for now (08b). */
+   northbound and off southbound. US 6N runs out west to where the fields
+   end, and east on past them toward the lake (EAST, below; 08b). */
 const EDIN=(function(){
   const z=-1200, y=roadY(z)+7.0;                 // the crossroad, level, 7 m over the interstate
   // (the bridge's ends, bw0 and bw1, are on the 8 m ground's lattice past the top of the cut, where it is level)
-  const E={z:z, y:y, hw:5.2, rw:2.45, x0:-330, x1:610, bw0:-192, bw1:-80, piers:[-167.0, -135.0, -103.2],
+  const E={z:z, y:y, hw:5.2, rw:2.45, x0:-330, x1:1420, bw0:-192, bw1:-80, piers:[-167.0, -135.0, -103.2],      // (x1: on east to the lake, EAST below)
            plain:{x0:-330, x1:610, z0:z-260, z1:z+340}};
   // the northbound off-ramp's centre line, from the highway to the crossroad (x, z from the crossroad)
   const nb=[[-106.4,560],[-104.2,470],[-100.0,380],[-94.0,290],[-87.5,200],[-81.0,120],[-74.0,60],[-63.0,22],
@@ -82,6 +82,29 @@ const EDIN=(function(){
   E.farm={x0:104, x1:258, z0:z+E.hw+1, z1:z+130};                      // the farmstead, south of it
   E.chapel={x0:50, x1:128, z0:z-96, z1:z-E.hw};                        // the chapel, its lot and its graveyard, north of it
   return E;
+})();
+/* ---- east along US 6N ---------------------------------------------------
+   Past the last field the road goes on east through the woods, past a
+   fireworks outlet in its own clearing on the north side (14m), and out into
+   the lake country: a street of houses either side of the road, the
+   township's park on the shore, and Edinboro Lake opening out north of it,
+   most of a mile across to the far woods (14n). Every clearing is graded
+   level with the road; the lake's south shore runs straight along the
+   street's back lots and wanders everywhere else (Terrain.lakeSD). The
+   ground here is its own 4 m ring (RING_EAST), and the canopy its own 8 m
+   shell (EAST.can, 07); both land on the coarser lattices round them. */
+const EAST=(function(){
+  const z=EDIN.z, y=EDIN.y, hw=EDIN.hw;
+  return { x0:EDIN.plain.x1, x1:EDIN.x1,
+    corr:{x0:EDIN.plain.x1-24, x1:EDIN.x1, z0:z-13, z1:z+13},       // the road's clearing through the woods
+    store:{x0:872, x1:966, z0:z-84, z1:z-hw},                         // the fireworks outlet's: its lot and the building, north of the road
+    town:{x0:1062, x1:EDIN.x1, z0:z-98, z1:z+66},                     // the street: its houses either side, the park, down to the shore
+    park:{x0:1238, x1:1372, z0:z-98, z1:z-hw},                        // the lake park, north of the road
+    shore:z-96,                                                       // the lake's edge behind the street
+    wy:y-2.6,                                                         // the water
+    lake:{x0:980, x1:2260, z0:-2090, z1:z-96, r:190},                 // a rounded oblong, wandering off the street
+    can:{x0:640, x1:1600, z0:-1504, z1:-896},                         // the 8 m canopy over it all (on the 32 m lattice)
+    noPole:[] };                                                      // where the wires along the road keep out (14m, 14n; 14y)
 })();
 // the drive up to the substation: off the north end of the car lot, east
 // through the trees, climbing a couple of metres to the compound's gate
@@ -191,12 +214,33 @@ const Terrain=(function(){
 
   // pull h towards level y with full weight inside `half` and none past half+blend
   const toward=(h,y,d,half,blend)=>{ const t=smoothstep(half, half+blend, d); return y+(h-y)*t; };
+  // the lake's edge: a signed distance, negative over the water. Straight along the street's back lots (and round
+  // the corner at its west end); further off it wanders by thirty metres either way
+  function lakeSD(x,z){
+    const L=EAST.lake;
+    if(x<L.x0-420 || z>L.z1+420) return 1e9;
+    const cx=(L.x0+L.x1)/2, cz=(L.z0+L.z1)/2, hx=(L.x1-L.x0)/2-L.r, hz=(L.z1-L.z0)/2-L.r;
+    const qx=Math.abs(x-cx)-hx, qz=Math.abs(z-cz)-hz;
+    const d=Math.hypot(Math.max(qx,0), Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-L.r;
+    return d+(fbm(x*0.005+21, z*0.005+4, 3)-0.5)*110*smoothstep(20, 140, boxDist(EAST.town,x,z));
+  }
 
   function baseHeight(x,z){
     let h=natural(x,z);
     // Edinboro's farmland, graded level with the crossroad
     const pd=boxDist(EDIN.plain,x,z);
     if(pd<60) h=toward(h, EDIN.y, pd, 0, 60);
+    // east along US 6N: the country lies lower and flatter toward the lake, and every clearing is level with the road
+    { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z));
+      if(ed<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, ed));
+      if(ed<50) h=toward(h, EDIN.y, ed, 0, 46);
+      // the lake: its bed shelving off the shore to six metres; the banks brought down to the water, and never under it.
+      // Behind the street the yards and the park stay level for fifty metres, then run gently down to the water
+      const ls=lakeSD(x,z);
+      if(ls<0) h=Math.min(h, EAST.wy-0.45-Math.min(-ls*0.10, 5.5));
+      else if(ls<260){ const lo=EAST.wy+0.32, run=lerp(50, 70, smoothstep(0, 40, boxDist(EAST.town,x,z)));
+        if(h>lo && ls<90) h=lo+(h-lo)*smoothstep(0, run, ls);
+        h=Math.max(h, lo+Math.min(ls, 40)*0.02); } }                   // (so nowhere off the lake is under its water)
     // the interstate corridors, cut and filled to the road's own grade (a steep cut through the plain)
     const ry=roadY(z), wI=pd<40 ? 1-smoothstep(0,40,pd) : 0, hh=19-2*wI, hb=34-24*wI;
     h=toward(h, ry, Math.abs(x-HWY.nb), hh, hb);
@@ -314,6 +358,7 @@ const Terrain=(function(){
     if(x>DRIVE_B.x0 && x<DRIVE_B.x1 && z>DRIVE_B.z0 && z<DRIVE_B.z1) d=Math.min(d, distToPath(DRIVE,x,z).d-4.6);
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
+    d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3);
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
     d=Math.min(d, boxSD(GARAGE.yard,x,z)+2);
@@ -328,7 +373,7 @@ const Terrain=(function(){
   }
   function mask(x,z){ return smoothstep(0, 5, clearDist(x,z)); }
   return {heightAt:heightAt, natural:natural, SERV_B:SERV_B, fbm:fbm, clearDist:clearDist, siteDist:siteDist, pathDist:pathDist,
-          mask:mask, boxDist:boxDist, boxSD:boxSD};
+          mask:mask, boxDist:boxDist, boxSD:boxSD, lakeSD:lakeSD};
 })();
 
 /* ---- the rings ------------------------------------------------------
@@ -339,12 +384,16 @@ const Terrain=(function(){
      mid     8 m   x -512..640, z -1760..1600   the corridor and its cuts
      near    2 m   x -256..448, z -336..344     the site and its woods
      hwyN    2 m   x -272..-48, z -1752..-336   the interstate north: the entry ramp's merge, two crossovers, Edinboro
-     hwyS    2 m   x -272..-48, z 344..568      the interstate south: the exit ramp's diverge, the third crossover */
+     hwyS    2 m   x -272..-48, z 344..568      the interstate south: the exit ramp's diverge, the third crossover
+     kirk    2 m   x 80..96, z -1248..-1216      round the chapel at Edinboro, holed over its hall and the stair down (00)
+     east    4 m   x 640..1472, z -1344..-1056  US 6N east of the fields: the outlet, the street, the park, the shore */
 const RING_MID ={x0:-512, x1:640, z0:-1760, z1:1600};
 const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:344};
 // and two more at 2 m along the interstate, so the ground under every ramp's merge, the crossovers and
 // Edinboro's interchange follows the paving instead of an 8 m triangle cutting up through its edge
 const RING_HWYN={x0:-272, x1:-48, z0:-1752, z1:-336}, RING_HWYS={x0:-272, x1:-48, z0:344, z1:568};
+// and one at 4 m east along US 6N: the outlet, the street, the park and the lake's near shore (EAST)
+const RING_EAST={x0:640, x1:1472, z0:-1344, z1:-1056};
 const TERRAIN_RINGS=[];
 let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point, for whatever lies on it: 14y)
 (function buildTerrain(){
@@ -353,7 +402,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   const lawnC=new T.Color(0x506f38), mowC=new T.Color(0x5a713c), vergeC=new T.Color(0x67723f),
         dryC=new T.Color(0x7c7848), lushC=new T.Color(0x3f5a2e),
         litterC=new T.Color(0x5f4d35), mossC=new T.Color(0x4d5a30), deepC=new T.Color(0x3d3729),
-        gravelC=new T.Color(0x8e8a7e), rockC=new T.Color(0x6f6a5c), bedC=new T.Color(0x5a5446);
+        gravelC=new T.Color(0x8e8a7e), rockC=new T.Color(0x6f6a5c), bedC=new T.Color(0x5a5446), shoreC=new T.Color(0x857a60);
   const _c2=new T.Color();
   // the colour of the ground at (x,z): mown lawn, verge, or the forest floor
   function tint(x,z,y,slope,out){
@@ -393,6 +442,9 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     const ws=Terrain.boxSD(WWTP,x,z);
     if(ws<2) out.lerp(gravelC, (1-smoothstep(-0.5,1.8,ws))*0.7);
     if(x>155 && z>70 && z<275){ const cq=distToPath(CREEK,x,z).d; if(cq<3.4) out.lerp(bedC, (1-smoothstep(1.0,3.4,cq))*0.85); }
+    // the lake's edge: a band of wet sand and stones at the waterline
+    const ls=Terrain.lakeSD(x,z);
+    if(ls<4.5) out.lerp(shoreC, (1-smoothstep(0.4, 4.5, ls))*0.85);
     out.lerp(rockC, smoothstep(0.35,0.8,slope)*0.6);
   }
   /* how much of a point is lawn (the fine grain of TEX.lawn, 02, laid over the ground's map by the shader
@@ -408,7 +460,9 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     w*=1-smoothstep(0.35, 0.8, slope)*0.7;
     const F=EDIN.farm, farm=(x>F.x0+6 && x<F.x0+60 && z>F.z0+12 && z<F.z0+58) ? 0.6 : 0;
     const CH=EDIN.chapel, kirk=(x>CH.x0+2 && x<CH.x1-2 && z>CH.z0+4 && z<CH.z1-2) ? 0.7 : 0;      // (the churchyard is kept)
-    const mown=Math.max(1-smoothstep(0, 8, Terrain.boxDist(SITE.pad,x,z)), farm, kirk);
+    const TW=EAST.town, town=(x>TW.x0+2 && x<TW.x1 && z>TW.z0+6 && z<TW.z1-2) ? 0.75 : 0;        // (and the street's yards and the park)
+    if(Terrain.lakeSD(x,z)<3) w*=smoothstep(0.5, 3, Terrain.lakeSD(x,z));
+    const mown=Math.max(1-smoothstep(0, 8, Terrain.boxDist(SITE.pad,x,z)), farm, kirk, town);
     return [w, w*mown*(hd<22 ? smoothstep(12, 22, hd) : 1)];
   }
   function grid(R,cell,holes,name,skirt){
@@ -512,11 +566,13 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     scene.add(mesh); return mesh;
   }
   TERRAIN_TINT=tint;
-  grid({x0:-2400,x1:2400,z0:-2400,z1:2400}, 16, [RING_MID], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
-  grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS], "ground-mid", 24);
+  grid({x0:-2400,x1:2400,z0:-2400,z1:2400}, 16, [RING_MID, RING_EAST], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
+  grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS, KIRK_RING], "ground-mid", 24);
   grid(RING_NEAR, 2, [GEN_HOLE], "ground-near", 6);
   grid(RING_HWYN, 2, [], "ground-hwyn", 6);
   grid(RING_HWYS, 2, [], "ground-hwys", 6);
+  grid(RING_EAST, 4, [], "ground-east", 6);
+  grid(KIRK_RING, 2, KIRK_HOLES, "ground-kirk", 0);              // (no apron: it meets the 8 m ground on the flat, and one would hang through the hall)
   TERRAIN_RINGS.sort((a,b)=>a.cell-b.cell);        // finest ring wins
 })();
 

@@ -29,12 +29,8 @@ const frX=(c, t, a, b, y0, head, col)=>{ for(const x of [a-0.031, b+0.031]) bx("
   bx("paintm", b-a+0.15, 0.07, t+0.13, (a+b)/2, head+0.031, c, 0, 0, col); };
 const frZ=(c, t, a, b, y0, head, col)=>{ for(const z of [a-0.031, b+0.031]) bx("paintm", t+0.12, head-y0, 0.07, c, y0+(head-y0)/2, z, 0, 0, col);
   bx("paintm", t+0.13, 0.07, b-a+0.15, c, head+0.031, (a+b)/2, 0, 0, col); };
-// a car parked, its wheels on the pool, its body a collider
-const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint, "#e8e7e2", 0);
-  m.g.position.set(x, y+PAVE_T, z); m.g.rotation.y=yaw; scene.add(m.g);
-  WHEEL_POOL.register({g:m.g, lod:m.lod, spin:0}, m.spec);
-  const S=m.spec, mid=(S.nose+S.tail)/2;
-  addColOB(x+Math.sin(yaw)*mid, z+Math.cos(yaw)*mid, yaw, S.hw+0.03, (S.nose-S.tail)/2, y, y+S.ht); return m; };
+// a car parked, as drivable as the lot's (10's parkCar): E gets you in. y is the ground's height less PAVE_T
+const parked=(kind, paint, x, z, yaw, y)=>parkCar(x, z, yaw, kind, paint, y+PAVE_T);
 (function edinboroPlaces(){
   const E=EDIN, Z=E.z, Y=E.y, HW=E.hw, r=_trng(6611);
   const ME=[];                                                     // the small stuff, vertex-coloured, one mesh
@@ -231,7 +227,7 @@ const parked=(kind, paint, x, z, yaw, y)=>{ const m=buildVehicleMesh(kind, paint
         for(let k=0;k<3;k++){ const nx=px+0.22+k*0.11; B(0.07, 0.20, 0.06, nx, Y+0.21+0.95, iz+sd*0.29, ["#141414","#f2c418","#2f7a3c"][k]);
           tube("rubber", V3(nx, Y+0.21+0.85, iz+sd*0.31), V3(nx+0.05, Y+0.40, iz+sd*0.45), 0.018, 6, "#141414"); } }
       addCol(px-0.55, px+0.55, iz-0.30, iz+0.30, Y-0.5, Y+2.2); }
-    addZone(CN.x0, CN.x1, CN.z0, CN.z1, Y-2, CY, "THE PUMPS"); }
+    addZone(CN.x0, CN.x1, CN.z0, CN.z1, Y-2, CY, "THE PUMPS"); addRoof(CN.x0, CN.x1, CN.z0, CN.z1, CY); }
   addUse(-26.0, Z-30.0, Y, "PUMP SOME GAS", ()=>toast(["PREPAY INSIDE, IT SAYS. ON A STICKY NOTE. ON EVERY PUMP","THE NOZZLE CLICKS OFF AT NINE-FIFTY. EVERY TIME","YOU DON'T HAVE A CAR HERE. YOU WALKED A MILE FOR THIS"][(Math.random()*3)|0],"#cfe0d4"), 2.0);
   // somebody filling up, and a pickup nosed in by the store
   parked(0, CAR_PAINTS[4%CAR_PAINTS.length], -26.0, Z-30.0, Math.PI/2, LY-PAVE_T);
@@ -497,6 +493,46 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
   const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*400), Math.round((cw||w*400)*h/w), draw), px,py,pz,ry,lit);
   const slab=(bk, pts, t, color)=>push(bk, new FaceGeo().slab(pts, t, 0.5).geo(), 0,0,0, 0, color);
   const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s; addCol(x-rr, x+rr, z-rr, z+rr, Y-0.5, Y+6); };
+  /* the furniture is rounded off and textured: wood takes a grain, upholstery a weave, both tinted by the piece's
+     colour; enamel and iron are rounded but plain. RW / RF / RP are B with the edges eased (01's rboxGeo) */
+  bucketOf("fh_grain", ()=>new T.MeshStandardMaterial({map:(()=>{ const t=signTex(256,256,(c,W,Hh)=>{ const q=_trng(515);
+      c.fillStyle="#f2ece4"; c.fillRect(0,0,W,Hh);
+      for(let k=0;k<70;k++){ const x0=q()*W, a=0.10+q()*0.22, w=1+q()*3.5; c.strokeStyle="rgba(70,40,20,"+a.toFixed(2)+")"; c.lineWidth=w;
+        c.beginPath(); for(let y=0;y<=Hh;y+=16){ const x=x0+Math.sin(y*0.025+k)*4+Math.sin(y*0.07+k*2)*1.5; y?c.lineTo(x,y):c.moveTo(x,y); } c.stroke();
+        c.beginPath(); for(let y=0;y<=Hh;y+=16){ const x=x0-W+Math.sin(y*0.025+k)*4; y?c.lineTo(x,y):c.moveTo(x,y); } c.stroke(); }
+      for(let k=0;k<5;k++){ const cx=q()*W, cy=q()*Hh; c.strokeStyle="rgba(60,30,10,0.35)"; c.lineWidth=1.5; for(let r2=2;r2<14;r2+=3){ c.beginPath(); c.ellipse(cx,cy,r2*0.6,r2*1.6,0,0,7); c.stroke(); } } });
+    t.wrapS=t.wrapT=T.RepeatWrapping; t.repeat.set(1.6,1.6); return t; })(), roughness:0.55}));
+  bucketOf("fh_fabric", ()=>new T.MeshStandardMaterial({map:(()=>{ const t=signTex(128,128,(c,W,Hh)=>{ const q=_trng(733);
+      c.fillStyle="#ece6dc"; c.fillRect(0,0,W,Hh);
+      for(let y=0;y<Hh;y+=4) for(let x=0;x<W;x+=4){ c.fillStyle=((x+y)/4)%2 ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.10)"; c.fillRect(x,y,4,2); }
+      for(let k=0;k<400;k++){ c.fillStyle="rgba(0,0,0,0.06)"; c.fillRect(q()*W, q()*Hh, 2, 1); } });
+    t.wrapS=t.wrapT=T.RepeatWrapping; t.repeat.set(5,5); return t; })(), roughness:0.95}));
+  const _rr=(w,h,d,r)=>{ const lo=Math.min(w,h,d); return Math.min(r||0.03, lo*0.32); };
+  const RW=(w,h,d,x,y,z,c,ry,r)=>Math.min(w,h,d)<0.03 ? B(w,h,d,x,y,z,c,ry) : push("fh_grain", rboxGeo(w,h,d,_rr(w,h,d,r),Math.min(w,h,d)<0.12?1:2), x,y,z, ry||0, c);
+  const RF=(w,h,d,x,y,z,c,ry,r)=>push("fh_fabric", rboxGeo(w,h,d,_rr(w,h,d,r||0.06),2), x,y,z, ry||0, c);
+  const RP=(w,h,d,x,y,z,c,ry,r)=>ent(rboxGeo(w,h,d,_rr(w,h,d,r),2), x,y,z, c, 0, ry||0, 0);
+  // a turned leg from y0 to y1: tapering, a bead near the top
+  const LEG=(x,z,y0,y1,rad,c)=>{ const h=y1-y0; ent(new T.CylinderGeometry(rad*0.72, rad, h, 12), x, y0+h/2, z, c);
+    ent(new T.TorusGeometry(rad*0.95, rad*0.35, 6, 14), x, y1-h*0.16, z, c, Math.PI/2); };
+  /* a rocking chair: seat, a spindle back leaning a little, arms on posts, turned legs down to two curved rockers
+     (arcs of a metre circle) that stand a few millimetres clear of the floor. Its back is to +z when ry is 0 */
+  const rocker=(x, y, z, ry, col)=>{
+    const M=new T.Matrix4().compose(V3(x,y,z), new T.Quaternion().setFromEuler(new T.Euler(0,ry,0)), V3(1,1,1));
+    const L=(geo, lx,ly,lz, rx,c, bk)=>{ const e={geo:geo, matrix:M.clone().multiply(new T.Matrix4().compose(V3(lx,ly,lz), new T.Quaternion().setFromEuler(new T.Euler(rx||0,0,0)), V3(1,1,1))), color:new T.Color(c||col)};
+      if(bk) bucketOf(bk).entries.push(e); else ME.push(e); };
+    const R=1.0, arc=0.98/R, ZR=0.04, yr=lz=>R+0.026-Math.sqrt(R*R-(lz-ZR)*(lz-ZR));         // the rocker's top... its centreline's height at lz
+    for(const sd of [-1,1]){ const g=new T.TorusGeometry(R, 0.02, 6, 24, arc); g.rotateZ(-Math.PI/2-arc/2); g.rotateY(Math.PI/2);
+      L(g, sd*0.22, R+0.026, ZR);
+      for(const lz of [-0.19, 0.19]) L(new T.CylinderGeometry(0.016, 0.021, 0.43-yr(lz), 10), sd*0.22, (0.43+yr(lz))/2, lz); }
+    L(rboxGeo(0.52, 0.045, 0.46, 0.015, 1), 0, 0.44, 0, 0, null, "fh_grain");
+    const th=0.14, back=(t)=>[0.46+t*Math.cos(th), 0.21+t*Math.sin(th)];
+    for(const sd of [-1,1]){ const [yy,zz]=back(0.32); L(new T.CylinderGeometry(0.018, 0.022, 0.64, 10), sd*0.22, yy, zz, th);
+      const [ty,tz]=back(0.66); L(new T.SphereGeometry(0.026, 10, 8), sd*0.22, ty, tz); }
+    { const [yy,zz]=back(0.58); L(rboxGeo(0.48, 0.09, 0.035, 0.012, 1), 0, yy, zz, th, null, "fh_grain"); }
+    { const [yy,zz]=back(0.08); L(rboxGeo(0.44, 0.04, 0.03, 0.01, 1), 0, yy, zz, th, null, "fh_grain"); }
+    for(let k=0;k<5;k++){ const [yy,zz]=back(0.32); L(new T.CylinderGeometry(0.009, 0.009, 0.46, 8), -0.16+k*0.08, yy, zz, th); }
+    for(const sd of [-1,1]){ L(rboxGeo(0.06, 0.03, 0.46, 0.012, 1), sd*0.25, 0.665, -0.01, 0, null, "fh_grain");
+      L(new T.CylinderGeometry(0.014, 0.018, 0.21, 8), sd*0.25, 0.56, -0.18); } };
   /* a Holstein. The hide is a tiling texture (COW_HIDE, below) laid over lofted shapes: the barrel of the
      body from the pin bones to the brisket, with the hooks standing out at the hips and the spine narrowing
      to a ridge; legs jointed at the elbow and knee, the stifle and the hock, white below the knee, on dark
@@ -936,9 +972,7 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
       for(const dx of [-0.62,0.62]) tubeE(V3(sx+dx, PY+0.50, sz), V3(sx+dx, PY+2.40, sz), 0.008, "#6a6a66");
       addSeat(sx, sz, PY+0.04, 0, "THE PORCH SWING"); addCol(sx-0.7, sx+0.7, sz-0.3, sz+0.3, PY-0.5, PY+0.9); }
     for(const x of [121.4, 125.6]){ const z=PZ0+0.9;
-      B(0.50, 0.05, 0.46, x, PY+0.44, z, "#5a3a22"); B(0.50, 0.55, 0.05, x, PY+0.74, z+0.22, "#5a3a22");
-      for(const dx of [-0.22,0.22]) for(const dz of [-0.2,0.2]) B(0.04, 0.42, 0.04, x+dx, PY+0.21, z+dz, "#5a3a22");
-      for(const dx of [-0.22,0.22]) ent(new T.TorusGeometry(0.40, 0.02, 6, 24, 1.2), x+dx, PY+0.30, z-0.02, "#5a3a22", 0, Math.PI/2, -0.6);
+      rocker(x, PY, z, 0, "#5a3a22");
       addSeat(x, z, PY+0.04, 0, "A ROCKER"); addCol(x-0.28, x+0.28, z-0.26, z+0.26, PY-0.5, PY+0.6); }
     { const x=xb-1.0, z=PZ0+0.6; C(0.16, 0.62, x, PY+0.31, z, "#5a3a22", 16);
       for(let k=0;k<9;k++){ const a=k*0.7; ent(new T.SphereGeometry(0.16, 12, 8).scale(1.6, 0.5, 0.7), x+Math.cos(a)*0.16, PY+0.78+(k%3)*0.05, z+Math.sin(a)*0.16, k%2?"#4a6a2a":"#557a30", 0, -a, 0.5); }
@@ -953,7 +987,7 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
       ent(new T.SphereGeometry(s, 18, 12).scale(1, 0.78, 1), x, PY+s*0.78, z, col); C(0.018, 0.06, x, PY+s*1.56+0.02, z, "#4a5a2a", 8); }
     C(0.17, 0.20, SA.b+0.75, PY+0.10, PZ0+0.32, "#7a4a2a", 16); ent(new T.SphereGeometry(0.22, 14, 10).scale(1, 0.7, 1), SA.b+0.75, PY+0.28, PZ0+0.32, "#c84a7a");
     addCol(SA.a-0.85, SA.a-0.08, PZ0+0.10, PZ0+0.58, PY-0.5, PY+0.4); addCol(SA.b+0.12, SA.b+0.98, PZ0+0.10, PZ0+0.56, PY-0.5, PY+0.4);
-    addZone(xa, xb, PZ0, H.z0, PY-1, PY+3, "THE PORCH");
+    addZone(xa, xb, PZ0, H.z0, PY-1, PY+3, "THE PORCH"); addRoof(xa-0.3, xb+0.3, PZ0-0.35, H.z0, PY+2.42);
     // a row of shrubs along the front of the porch either side of the steps, and down the house's ends
     for(let x=xa+0.5; x<xb-0.3; x+=1.25) if(x<SA.a-0.7 || x>SA.b+0.7)
       FOREST.plant("bush", x, PZ0-0.75, {y:Y, scale:0.55+hash2(x, PZ0)*0.25, solid:false, lean:false});
@@ -964,7 +998,8 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
   { // the stove on its hearth against the west wall, its pipe into the chimney's thimble, a box of splits
     { const wz=Z+38.4, wx=IX0+0.48;
       B(0.92, 0.04, 1.30, IX0+0.48, FF+0.03, wz, "#8a4a36");
-      B(0.56, 0.62, 0.62, wx, FF+0.44, wz, "#1d1d1e"); for(const dx of [-0.23,0.23]) for(const dz of [-0.25,0.25]) B(0.05, 0.13, 0.05, wx+dx, FF+0.11, wz+dz, "#1d1d1e");
+      RP(0.56, 0.62, 0.62, wx, FF+0.44, wz, "#1d1d1e", 0, 0.04); RP(0.62, 0.05, 0.68, wx, FF+0.775, wz, "#2a2a2c", 0, 0.02);
+      for(const dx of [-0.23,0.23]) for(const dz of [-0.25,0.25]) ent(new T.CylinderGeometry(0.03, 0.04, 0.13, 10), wx+dx, FF+0.11, wz+dz, "#1d1d1e");
       B(0.02, 0.26, 0.34, wx+0.29, FF+0.46, wz, "#ff7a2a"); B(0.04, 0.03, 0.46, wx+0.30, FF+0.62, wz, "#3a3a3a");
       C(0.08, 0.70, wx, FF+1.10, wz, "#1d1d1e", 16); ent(new T.TorusGeometry(0.10, 0.08, 12, 16, Math.PI/2), wx-0.10, FF+1.45, wz, "#1d1d1e");
       C(0.08, 0.42, IX0+0.18, FF+1.55, wz, "#1d1d1e", 16, 0, 0, Math.PI/2); C(0.13, 0.03, IX0+0.017, FF+1.55, wz, "#c9c6be", 18, 0, 0, Math.PI/2);
@@ -973,53 +1008,70 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
       LAMPS.push({x:wx+0.4, y:FF+0.5, z:wz, color:0xff8a3a, intensity:0.35, dist:4, decay:2, fire:true, vol:[IX0, PA, IZ0, IZ1, FF-0.5, CL]}); }
     // the couch facing the set, the afghan over its back, two pillows; a coffee table on a braided rug; the recliner
     const cx=118.4, cz=Z+41.4;
-    B(0.86, 0.42, 2.10, cx, FF+0.21, cz, "#6a4a3a"); B(0.22, 0.48, 2.10, cx-0.32, FF+0.66, cz, "#6a4a3a");
-    for(const dz of [-1.0,1.0]) B(0.86, 0.26, 0.20, cx, FF+0.55, cz+dz*1.08, "#6a4a3a");
-    for(const dz of [-0.5,0.5]) B(0.62, 0.12, 0.96, cx+0.08, FF+0.48, cz+dz, "#7a5a48");
+    RF(0.86, 0.36, 2.10, cx, FF+0.24, cz, "#6a4a3a", 0, 0.06); RF(0.24, 0.50, 2.06, cx-0.31, FF+0.66, cz, "#6a4a3a", 0, 0.09);
+    for(const dz of [-1.0,1.0]){ RF(0.86, 0.22, 0.20, cx, FF+0.52, cz+dz*1.08, "#6a4a3a", 0, 0.06);
+      push("fh_fabric", new T.CylinderGeometry(0.115, 0.115, 0.90, 20), cx+0.01, FF+0.64, cz+dz*1.10, 0, "#6a4a3a", 0, Math.PI/2); }
+    for(const dz of [-0.5,0.5]) RF(0.64, 0.14, 0.97, cx+0.08, FF+0.48, cz+dz, "#7a5a48", 0, 0.06);
+    for(const dz of [-0.5,0.5]) RF(0.16, 0.40, 0.92, cx-0.15, FF+0.73, cz+dz, "#7a5a48", 0, 0.07);
+    for(const dz of [-0.92,0.92]) for(const dx of [-0.34,0.34]) ent(new T.CylinderGeometry(0.025, 0.018, 0.06, 10), cx+dx, FF+0.03, cz+dz, "#3a2418");
     for(const dz of [-0.66,0.66]) ent(new T.CylinderGeometry(0.11, 0.11, 0.16, 16), cx-0.13, FF+0.66, cz+dz, "#c8a86a", 0, 0, 0.35);
     { const af=signTex(256,128,(c,W,Hh)=>{ const cols=["#c9662a","#e0b24a","#6b8f3a","#8a3a22","#e8dcc0"]; for(let i=0;i<10;i++){ c.fillStyle=cols[i%5]; c.fillRect(i*26,0,26,Hh); } c.fillStyle="rgba(255,255,255,0.15)"; for(let y=0;y<Hh;y+=8) c.fillRect(0,y,W,2); });
       const am=new T.MeshStandardMaterial({map:af, roughness:1.0});
-      const hang=new T.Mesh(boxGeo(0.02, 0.34, 0.92), am); hang.position.set(cx-0.194, FF+0.73, cz-0.30); scene.add(hang);
-      const top=new T.Mesh(boxGeo(0.27, 0.02, 0.92), am); top.position.set(cx-0.32, FF+0.916, cz-0.30); scene.add(top); }
+      const hang=new T.Mesh(boxGeo(0.02, 0.34, 0.92), am); hang.position.set(cx-0.055, FF+0.73, cz-0.30); scene.add(hang);
+      const top=new T.Mesh(boxGeo(0.27, 0.02, 0.92), am); top.position.set(cx-0.32, FF+0.935, cz-0.30); scene.add(top); }
     addCol(cx-0.45, cx+0.45, cz-1.20, cz+1.20, FF-0.5, FF+0.6);
     for(const dz of [-0.6, 0.6]) addSeat(cx+0.12, cz+dz, FF, -Math.PI/2, "THE COUCH");
+    // the cat, asleep on the far cushion, curled nose to tail
+    { const kx=cx+0.10, kz=cz+0.62, ky=FF+0.56, O="#d8843a";
+      ent(new T.SphereGeometry(0.17, 18, 12).scale(1.0, 0.50, 0.80), kx, ky+0.075, kz, O);
+      ent(new T.SphereGeometry(0.075, 16, 12), kx+0.11, ky+0.085, kz-0.10, O);
+      for(const sd of [-1,1]) ent(new T.ConeGeometry(0.025, 0.05, 8), kx+0.11+sd*0.035, ky+0.15, kz-0.11, O, 0.3, 0, sd*0.4);
+      ent(new T.TorusGeometry(0.15, 0.022, 8, 20, 2.2), kx, ky+0.04, kz, O, Math.PI/2, 0, 1.4);
+      for(let k=0;k<4;k++) ent(new T.BoxGeometry(0.02, 0.005, 0.10), kx-0.08+k*0.05, ky+0.159, kz, "#b8642a", 0, 0.2, 0);
+      addUse(kx+0.6, kz, FF, "THE CAT", ()=>toast(["SHE OPENS ONE EYE, CLOSES IT AGAIN","PURRING. SHE DOES NOT MOVE OVER","A TAG ON HER COLLAR: “BISCUIT”. SHE IS NOT INTERESTED IN YOU"][(Math.random()*3)|0],"#e8c46a"), 0.9); }
     { const rt=signTex(256,256,(x,W,Hh)=>{ const cols=["#6a2a1e","#3d4a2e","#8a6a3e","#5a3e2a","#2e3a5a"]; for(let i=0;i<24;i++){ x.fillStyle=cols[i%5]; x.beginPath(); x.arc(W/2,Hh/2,W/2-i*5.2,0,7); x.fill(); } });
       const g=new T.CircleGeometry(1, 48); g.scale(1.5, 1.1, 1);
       const m=new T.Mesh(g, new T.MeshStandardMaterial({map:rt, roughness:1.0, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-2}));
       m.position.set(120.0, FF+0.012, cz); m.rotation.set(-Math.PI/2, 0, Math.PI/2); scene.add(m); }
-    B(0.60, 0.05, 1.10, 119.9, FF+0.43, cz, "#7a5434"); for(const dx of [-0.25,0.25]) for(const dz of [-0.48,0.48]) B(0.05, 0.40, 0.05, 119.9+dx, FF+0.20, cz+dz, "#6a4428");
+    RW(0.60, 0.05, 1.10, 119.9, FF+0.43, cz, "#7a5434", 0, 0.02); RW(0.54, 0.06, 1.02, 119.9, FF+0.375, cz, "#6a4428", 0, 0.01);
+    for(const dx of [-0.25,0.25]) for(const dz of [-0.48,0.48]) LEG(119.9+dx, cz+dz, FF, FF+0.41, 0.024, "#6a4428");
     B(0.30, 0.02, 0.22, 119.85, FF+0.465, cz-0.2, "#c8b88a"); C(0.04, 0.10, 120.0, FF+0.509, cz+0.25, "#e8e2d2", 14); B(0.16, 0.025, 0.06, 119.8, FF+0.4685, cz+0.05, "#1a1a1c");
     addCol(119.55, 120.25, cz-0.58, cz+0.58, FF-0.5, FF+0.48);
     { const rx=120.9, rz=Z+43.3, ry=-0.6, s=Math.sin(ry), c=Math.cos(ry), P=(lx,lz)=>[rx+lx*c+lz*s, rz-lx*s+lz*c];
-      const q=(w,h,d,lx,ly,lz)=>{ const p=P(lx,lz); B(w,h,d,p[0],FF+ly,p[1],"#4a5a3a",ry); };
-      q(0.82,0.40,0.84,0,0.20,0); q(0.82,0.70,0.22,0,0.75,0.32); q(0.12,0.30,0.84,-0.36,0.55,0); q(0.12,0.30,0.84,0.36,0.55,0);
+      const q=(w,h,d,lx,ly,lz,r)=>{ const p=P(lx,lz); RF(w,h,d,p[0],FF+ly,p[1],"#4a5a3a",ry,r); };
+      q(0.82,0.36,0.84,0,0.22,0,0.07); q(0.80,0.72,0.24,0,0.74,0.31,0.11); q(0.13,0.30,0.84,-0.355,0.55,0,0.06); q(0.13,0.30,0.84,0.355,0.55,0,0.06);
+      q(0.56,0.12,0.60,0,0.46,-0.06,0.05); q(0.56,0.30,0.12,0,0.80,0.17,0.05);
       addColOB(rx, rz, ry, 0.43, 0.44, FF-0.5, FF+0.6); addSeat(rx-s*0.08, rz-c*0.08, FF, ry, "THE RECLINER"); }
     // the set on its stand against the hall wall, the rabbit ears on it
     { const tz=Z+41.4;
-      B(0.42, 0.62, 1.10, PA-0.24, FF+0.31, tz, "#5a3a22"); B(0.46, 0.62, 0.96, PA-0.30, FF+0.93, tz, "#2a2420");
+      RW(0.42, 0.62, 1.10, PA-0.24, FF+0.31, tz, "#5a3a22", 0, 0.02); RP(0.46, 0.62, 0.96, PA-0.30, FF+0.93, tz, "#2a2420", 0, 0.05);
       push("pic:vend:soda", planeGeo(0.80, 0.50, 0), PA-0.537, FF+0.95, tz, -Math.PI/2, "#3a5a7a");
       for(const sd of [-1,1]) tubeE(V3(PA-0.30, FF+1.24, tz), V3(PA-0.20, FF+1.60, tz+sd*0.25), 0.004, "#c9cbcc");
       addCol(PA-0.54, PA, tz-0.58, tz+0.58, FF-0.5, FF+1.3); }
     // the piano against the west wall at the front, its stool, the hymnal open on it
     { const pz=Z+35.8, px=IX0+0.32;
-      B(0.58, 1.26, 1.50, px, FF+0.63, pz, "#3a2418"); B(0.30, 0.04, 1.46, px+0.40, FF+0.74, pz, "#3a2418");
+      RW(0.58, 1.26, 1.50, px, FF+0.63, pz, "#3a2418", 0, 0.025); RW(0.30, 0.04, 1.46, px+0.40, FF+0.74, pz, "#3a2418", 0, 0.012);
+      RW(0.62, 0.05, 1.54, px, FF+1.285, pz, "#3a2418", 0, 0.02);
+      for(const dz of [-0.66,0.66]) LEG(px+0.47, pz+dz, FF, FF+0.72, 0.035, "#3a2418");
       B(0.16, 0.02, 1.22, px+0.36, FF+0.765, pz, "#f4f0e2"); for(let k=0;k<26;k++) if(k%7!==2 && k%7!==6) B(0.10, 0.02, 0.012, px+0.33, FF+0.782, pz-0.58+k*0.046, "#141414");
       B(0.02, 0.24, 0.40, px+0.305, FF+1.08, pz, "#f0e8d4");
       C(0.17, 0.48, px+0.85, FF+0.24, pz, "#3a2418", 18); addCol(IX0, px+0.42, pz-0.76, pz+0.76, FF-0.5, FF+1.3);
       addSeat(px+0.85, pz, FF, Math.PI/2, "THE PIANO STOOL");
       addUse(px+1.1, pz, FF, "PLAY THE PIANO", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("rim", px, pz); toast(["“HEART AND SOUL”, THE TOP HALF, WRONG","THE MIDDLE C STICKS. IT HAS SINCE 1987","A HYMN FROM THE OPEN BOOK, SLOWLY"][(Math.random()*3)|0],"#e8c46a"); }, 0.9); }
     // a rocker by the front window, the grandfather clock by the hall, a floor lamp, the bookcase in the back corner
-    { const rx=121.3, rz=Z+35.3; B(0.50, 0.05, 0.46, rx, FF+0.44, rz, "#6a4428"); B(0.50, 0.70, 0.05, rx, FF+0.82, rz-0.22, "#6a4428");
-      for(const dx of [-0.22,0.22]) ent(new T.TorusGeometry(0.40, 0.02, 6, 24, 1.2), rx+dx, FF+0.30, rz+0.02, "#6a4428", 0, Math.PI/2, -0.6);
+    { const rx=121.3, rz=Z+35.3; rocker(rx, FF, rz, Math.PI, "#6a4428");
+      RF(0.42, 0.06, 0.40, rx, FF+0.495, rz, "#8a3a2a", 0, 0.03);                                              // a cushion tied on
       addSeat(rx, rz, FF, Math.PI, "A ROCKING CHAIR"); addCol(rx-0.28, rx+0.28, rz-0.26, rz+0.26, FF-0.5, FF+0.6); }
     { const gx=PA-0.24, gz=Z+38.4;
-      B(0.40, 2.05, 0.52, gx, FF+1.025, gz, "#4a2a18"); B(0.44, 0.08, 0.56, gx, FF+2.09, gz, "#4a2a18");
+      RW(0.40, 2.05, 0.52, gx, FF+1.025, gz, "#4a2a18", 0, 0.02); RW(0.44, 0.08, 0.56, gx, FF+2.09, gz, "#4a2a18", 0, 0.02);
+      RW(0.46, 0.10, 0.58, gx, FF+0.05, gz, "#4a2a18", 0, 0.02);
+      for(const dz of [-0.20,0,0.20]) ent(new T.SphereGeometry(0.035, 10, 8), gx, FF+2.17+(dz?0:0.03), gz+dz, "#c8a24a");
       C(0.15, 0.03, gx-0.215, FF+1.72, gz, "#f4ecd8", 28, 0, 0, Math.PI/2); B(0.02, 0.50, 0.30, gx-0.21, FF+0.95, gz, "#c8a24a");
       addCol(gx-0.22, PA, gz-0.28, gz+0.28, FF-0.5, FF+2.1); }
     C(0.14, 0.03, IX0+0.40, FF+0.019, Z+43.4, "#3a3a3c", 18); C(0.012, 1.45, IX0+0.40, FF+0.75, Z+43.4, "#3a3a3c", 10);
     ent(new T.CylinderGeometry(0.13, 0.21, 0.26, 20, 1, true), IX0+0.40, FF+1.55, Z+43.4, "#e8dcc0");
     LAMPS.push({x:IX0+0.45, y:FF+1.45, z:Z+43.3, color:0xffd29a, intensity:0.55, dist:7, decay:1.5, indoor:true, vol:[IX0, PA, IZ0, IZ1, FF-0.5, CL]});
-    B(1.00, 1.80, 0.30, 117.2, FF+0.90, IZ1-0.17, "#6a4428");
+    RW(1.00, 1.80, 0.30, 117.2, FF+0.90, IZ1-0.17, "#6a4428", 0, 0.02);
     for(let s2=0;s2<4;s2++) for(let k=0;k<9;k++) B(0.04+((k+s2)%3)*0.01, 0.20+((k*7+s2*3)%4)*0.02, 0.20, 117.2-0.40+k*0.095, FF+0.25+s2*0.42, IZ1-0.24, ["#7a1a12","#1f3f6a","#2f5a2a","#c8a23a","#5a3a22"][(k+s2)%5]);
     addCol(116.68, 117.72, IZ1-0.36, IZ1, FF-0.5, FF+1.8);
     // pictures: a barn in a field over the piano, the family at the fair, the farm from the air (every farm has that one)
@@ -1043,7 +1095,9 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
     for(let k=0;k<4;k++){ C(0.012, 0.10, HA+PIN+0.09, FF+1.70, Z+34.65+k*0.24, "#3a3a3a", 8, 0, 0, Math.PI/2);
       if(k!==2) B(0.20+k*0.012, 0.70, 0.21, HA+PIN+0.16+k*0.006, FF+1.30, Z+34.65+k*0.24, ["#3a4a6a","#6a3a22","","#c4a43a"][k]); }
     for(const [dx,c] of [[0,"#2a2a24"],[0.18,"#3a2a1a"]]) B(0.14, 0.36, 0.28, HA+PIN+0.11+dx, FF+0.18, Z+35.65, c);
-    B(0.36, 0.72, 0.60, HA+PIN+0.20, FF+0.36, Z+42.6, "#6a4428"); B(0.20, 0.08, 0.12, HA+PIN+0.20, FF+0.76, Z+42.5, "#1a1a1c");
+    RW(0.36, 0.04, 0.60, HA+PIN+0.20, FF+0.70, Z+42.6, "#6a4428", 0, 0.012); RW(0.32, 0.12, 0.56, HA+PIN+0.20, FF+0.62, Z+42.6, "#6a4428", 0, 0.01);
+    for(const dx of [-0.14,0.14]) for(const dz of [-0.26,0.26]) LEG(HA+PIN+0.20+dx, Z+42.6+dz, FF, FF+0.68, 0.018, "#6a4428");
+    RP(0.20, 0.08, 0.12, HA+PIN+0.20, FF+0.76, Z+42.5, "#1a1a1c", 0, 0.025);
     C(0.05, 0.22, HA+PIN+0.20, FF+0.83, Z+42.85, "#c8b88a", 14);
     addCol(HA, HA+0.42, Z+42.28, Z+42.92, FF-0.5, FF+0.8);
     tubeE(V3(hx, CL, Z+37.0), V3(hx, CL-0.25, Z+37.0), 0.006, "#8a7a5a"); ent(new T.SphereGeometry(0.13, 18, 12), hx, CL-0.38, Z+37.0, "#f4ecd8");
@@ -1074,17 +1128,19 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
       tubeE(V3(IX1-0.05, o.head-0.02, o.a-0.08), V3(IX1-0.05, o.head-0.02, o.b+0.08), 0.008, "#c9cbcc"); }
     // the range under its hood, and the fridge, on the back wall
     const RX=130.4, RZ=IZ1-0.345;
-    B(0.76, 0.92, 0.66, RX, FF+0.46, RZ, "#f2f0ea"); B(0.76, 0.06, 0.66, RX, FF+0.95, RZ, "#1d1d1e");
+    RP(0.76, 0.92, 0.66, RX, FF+0.46, RZ, "#f2f0ea", 0, 0.03); RP(0.76, 0.06, 0.66, RX, FF+0.95, RZ, "#1d1d1e", 0, 0.012);
     for(const [dx,dz] of [[-0.2,-0.15],[0.2,-0.15],[-0.2,0.15],[0.2,0.15]]) C(0.09, 0.012, RX+dx, FF+0.986, RZ+dz, "#3a3a3a", 20);
     B(0.76, 0.22, 0.06, RX, FF+1.07, IZ1-0.045, "#f2f0ea"); B(0.60, 0.30, 0.04, RX, FF+0.45, RZ-0.35, "#2a2a2c");
     C(0.10, 0.12, RX-0.2, FF+1.058, RZ-0.15, "#5a5a5c", 18); C(0.13, 0.025, RX+0.2, FF+1.01, RZ+0.15, "#1a1a1c", 20);
     B(0.80, 0.30, 0.50, RX, FF+1.80, IZ1-0.265, "#d8d4c8");
-    B(0.80, 1.72, 0.72, IX1-0.42, FF+0.86, IZ1-0.38, "#9a9a6a"); B(0.04, 0.50, 0.04, IX1-0.76, FF+1.20, IZ1-0.76, "#c9cbcc"); B(0.04, 0.30, 0.04, IX1-0.76, FF+0.55, IZ1-0.76, "#c9cbcc");
+    RP(0.80, 1.72, 0.72, IX1-0.42, FF+0.86, IZ1-0.38, "#9a9a6a", 0, 0.09); B(0.04, 0.50, 0.04, IX1-0.76, FF+1.20, IZ1-0.76, "#c9cbcc"); B(0.04, 0.30, 0.04, IX1-0.76, FF+0.55, IZ1-0.76, "#c9cbcc");
     for(let k=0;k<5;k++) B(0.10, 0.08, 0.006, IX1-0.42+(k%3-1)*0.2, FF+1.30+((k/3)|0)*0.12, IZ1-0.745, ["#c41a1a","#f2c418","#1f4fd8","#2f9a3c","#f2f0ea"][k]);
     addCol(RX-0.40, IX1, IZ1-0.75, IZ1, FF-0.5, FF+1.75);
     // the hutch between the front windows, the good plates stood up in it
     { const hx=128.9, hz=IZ0+0.24;
-      B(1.20, 0.86, 0.46, hx, FF+0.43, hz, "#7a5434"); B(1.20, 0.04, 0.50, hx, FF+0.88, hz, "#8a6444"); B(1.12, 1.10, 0.30, hx, FF+1.45, hz-0.06, "#7a5434");
+      RW(1.20, 0.86, 0.46, hx, FF+0.43, hz, "#7a5434", 0, 0.02); RW(1.24, 0.04, 0.50, hx, FF+0.88, hz, "#8a6444", 0, 0.012); RW(1.12, 1.10, 0.30, hx, FF+1.45, hz-0.06, "#7a5434", 0, 0.02);
+      RW(1.20, 0.10, 0.36, hx, FF+2.05, hz-0.06, "#7a5434", 0, 0.025);
+      for(let k=0;k<2;k++) for(const dx of [-0.29,0.29]){ B(0.52, 0.30, 0.02, hx+dx, FF+0.50, hz+0.235, "#8a6444"); ent(new T.SphereGeometry(0.018, 10, 8), hx+dx+(dx<0?0.20:-0.20), FF+0.55, hz+0.255, "#c8a24a"); }
       for(let k=0;k<4;k++) C(0.12, 0.012, hx-0.39+k*0.26, FF+1.25, hz+0.06, "#f2f0ea", 20, Math.PI/2-0.25, 0, 0);
       for(let k=0;k<5;k++) C(0.04, 0.09, hx-0.44+k*0.22, FF+1.62, hz+0.02, "#e8e2d2", 12);
       addCol(hx-0.61, hx+0.61, IZ0, hz+0.26, FF-0.5, FF+2.0); }
@@ -1099,18 +1155,25 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
       C(0.09, 0.05, 126.9, FF+0.032, Z+42.9, "#9a9da0", 18); C(0.09, 0.05, 127.12, FF+0.032, Z+42.9, "#9a9da0", 18); }
     // the table, four chairs, oilcloth on it, a pie under a towel, the coffee
     { const tx=128.4, tz=Z+38.2;
-      B(0.92, 0.05, 1.40, tx, FF+0.76, tz, "#8a6a48"); for(const dx of [-0.40,0.40]) for(const dz of [-0.62,0.62]) B(0.06, 0.74, 0.06, tx+dx, FF+0.37, tz+dz, "#7a5a3a");
+      RW(0.92, 0.05, 1.40, tx, FF+0.76, tz, "#8a6a48", 0, 0.02); RW(0.80, 0.09, 1.28, tx, FF+0.69, tz, "#7a5a3a", 0, 0.01);
+      for(const dx of [-0.40,0.40]) for(const dz of [-0.62,0.62]) LEG(tx+dx, tz+dz, FF, FF+0.74, 0.035, "#7a5a3a");
       { const t=signTex(64,64,(c,W,Hh)=>{ c.fillStyle="#f4f0e8"; c.fillRect(0,0,W,Hh); c.fillStyle="rgba(42,90,160,0.55)"; for(let k=0;k<W;k+=16){ c.fillRect(k,0,8,Hh); c.fillRect(0,k,W,8); } }); t.wrapS=t.wrapT=T.RepeatWrapping; t.repeat.set(3,4);
         const m=new T.Mesh(boxGeo(1.00, 0.008, 1.48), new T.MeshStandardMaterial({map:t, roughness:0.6})); m.position.set(tx, FF+0.789, tz); scene.add(m); }
       C(0.135, 0.01, tx+0.1, FF+0.800, tz-0.2, "#e8e2d2", 24); C(0.13, 0.05, tx+0.1, FF+0.825, tz-0.2, "#c8843a", 24);
       ent(new T.SphereGeometry(0.15, 16, 8, 0, Math.PI*2, 0, Math.PI/2).scale(1, 0.4, 1), tx+0.1, FF+0.848, tz-0.2, "#f4f0e8");      // (the towel over it)
       C(0.045, 0.10, tx-0.2, FF+0.848, tz+0.35, "#e8e2d2", 16); C(0.06, 0.16, tx-0.25, FF+0.875, tz-0.4, "#3a3a3c", 16);
+      ent(new T.CylinderGeometry(0.13, 0.07, 0.07, 22), tx+0.18, FF+0.833, tz+0.38, "#e8dcc0");
+      for(const [ax,az,ay,col] of [[0.05,0.0,0.885,"#b8241a"],[-0.05,0.03,0.885,"#c43a1a"],[0.0,-0.06,0.885,"#9a2a1a"],[0.01,0.01,0.935,"#d8a01a"],[-0.06,-0.05,0.89,"#7a9a2a"]])
+        ent(new T.SphereGeometry(0.042, 12, 10), tx+0.18+ax, FF+ay, tz+0.38+az, col);
       addCol(tx-0.48, tx+0.48, tz-0.72, tz+0.72, FF-0.5, FF+0.8);
       for(const [dx,dz,ry] of [[0,-0.95,0],[0,0.95,Math.PI],[-0.72,-0.3,Math.PI/2],[0.72,0.3,-Math.PI/2]]){
         const cx=tx+dx, cz=tz+dz, s=Math.sin(ry), c=Math.cos(ry);
-        B(0.42, 0.04, 0.40, cx, FF+0.46, cz, "#7a5a3a");
-        for(const [a,b] of [[-0.18,-0.17],[0.18,-0.17],[-0.18,0.17],[0.18,0.17]]) B(0.035, 0.44, 0.035, cx+a*c+b*s, FF+0.22, cz-a*s+b*c, "#6a4a2a");
-        B(0.40, 0.48, 0.035, cx-0.19*s, FF+0.74, cz-0.19*c, "#7a5a3a", ry);
+        RW(0.42, 0.04, 0.40, cx, FF+0.46, cz, "#7a5a3a", ry, 0.012);
+        for(const [a,b] of [[-0.18,0.17],[0.18,0.17]]) LEG(cx+a*c+b*s, cz-a*s+b*c, FF, FF+0.45, 0.018, "#6a4a2a");
+        // the back legs run on up as the ladder's posts, three slats across them
+        for(const a of [-0.18,0.18]){ const px=cx+a*c-0.18*s, pz=cz-a*s-0.18*c; ent(new T.CylinderGeometry(0.016, 0.019, 1.0, 10), px, FF+0.50, pz, "#6a4a2a");
+          ent(new T.SphereGeometry(0.022, 10, 8), px, FF+1.01, pz, "#6a4a2a"); }
+        for(const y of [0.62, 0.77, 0.92]) RW(0.36, 0.07, 0.02, cx-0.18*s, FF+y, cz-0.18*c, "#7a5a3a", ry, 0.008);
         addSeat(cx, cz, FF, ry+Math.PI, "A KITCHEN CHAIR"); }
       addUse(tx, tz-1.4, FF, "HAVE SOME PIE", ()=>toast(["APPLE, STILL WARM. A NOTE: “FOR AFTER SUPPER. MEANS YOU, DALE”","YOU CUT A SLIVER. NOBODY WILL NOTICE A SLIVER","A FORK'S ALREADY IN IT"][(Math.random()*3)|0],"#e8c46a"), 1.0);
       tubeE(V3(tx, CL, tz), V3(tx, CL-0.45, tz), 0.006, "#2a2a2a");
@@ -1123,6 +1186,12 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
         for(let r2=0;r2<5;r2++) for(let k=0;k<7;k++){ c.strokeStyle="#bbb"; c.strokeRect(W*0.06+k*W*0.126, Hh*0.46+r2*Hh*0.085, W*0.126, Hh*0.085); }
         say(c,"MILLER FEED & SEED · EDINBORO",W/2,Hh*0.94,W*0.84,Hh*0.06,"#2a2a2a","700","Arial"); }, KA+PIN+0.008, FF+1.55, Z+38.2, Math.PI/2, false, 180);
     C(0.16, 0.03, 127.46, FF+2.36, IZ1-0.032, "#f2f0ea", 28, Math.PI/2, 0, 0);
+    // a cross-stitch sampler in its frame, between the calendar and the door
+    B(0.03, 0.40, 0.48, KA+PIN+0.022, FF+1.62, Z+39.3, "#6a4428");
+    sign(0.40, 0.32, (c,W,Hh)=>{ c.fillStyle="#efe6cf"; c.fillRect(0,0,W,Hh);
+        c.strokeStyle="#9a2a2a"; c.lineWidth=3; c.setLineDash([4,3]); c.strokeRect(8,8,W-16,Hh-16); c.setLineDash([]);
+        say(c,"BLESS",W/2,Hh*0.36,W*0.70,Hh*0.22,"#2a5a3a","700","Georgia, serif"); say(c,"THIS HOME",W/2,Hh*0.62,W*0.70,Hh*0.20,"#2a5a3a","700","Georgia, serif");
+        c.fillStyle="#c8483a"; for(const px of [0.2,0.8]){ c.beginPath(); c.arc(W*px,Hh*0.84,4,0,7); c.fill(); } }, KA+PIN+0.0475, FF+1.62, Z+39.3, Math.PI/2, false, 200);
     B(0.10, 0.22, 0.08, KA+PIN+0.05, FF+1.45, Z+42.4, "#c8b88a");
     for(let k=0;k<6;k++) tubeE(V3(KA+PIN+0.06, FF+1.34-k*0.10, Z+42.4+(k%2?0.03:-0.03)), V3(KA+PIN+0.06, FF+1.24-k*0.10, Z+42.4+(k%2?-0.03:0.03)), 0.004, "#c8b88a");
     addZone(KA, IX1, IZ0, IZ1, FF-0.5, CL, "THE WEIRS' KITCHEN", true); }
@@ -1143,23 +1212,24 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
     // a bed: rails and posts, a mattress, a quilt in squares over it, the pillows, a headboard against the wall it backs on
     const quilt=(cols)=>{ const t=signTex(128,128,(c,W,Hh)=>{ for(let i=0;i<8;i++) for(let j=0;j<8;j++){ c.fillStyle=cols[(i*3+j*5)%cols.length]; c.fillRect(i*16,j*16,16,16); c.strokeStyle="rgba(255,255,255,0.35)"; c.strokeRect(i*16+1,j*16+1,14,14); } }); return new T.MeshStandardMaterial({map:t, roughness:1}); };
     const bed=(x, z, w, L, ry, cols, wood)=>{ const s=Math.sin(ry), c=Math.cos(ry), P=(lx,lz)=>[x+lx*c+lz*s, z-lx*s+lz*c];
-      const q=(bw,bh,bd,lx,ly,lz,col)=>{ const p=P(lx,lz); B(bw,bh,bd,p[0],FF2+ly,p[1],col,ry); };
-      q(w+0.06, 0.22, L+0.06, 0, 0.20, 0, wood);
-      for(const [lx,lz] of [[-w/2,-L/2],[w/2,-L/2],[-w/2,L/2],[w/2,L/2]]) q(0.07, 0.30, 0.07, lx, 0.15, lz, wood);
-      q(w, 0.20, L, 0, 0.41, 0, "#f4f2ea");
-      q(w*0.36, 0.10, 0.32, -w*0.24, 0.565, -L/2+0.24, "#f4f2ec"); if(w>1.2) q(w*0.36, 0.10, 0.32, w*0.24, 0.565, -L/2+0.24, "#f4f2ec");
-      q(w+0.10, 1.05, 0.06, 0, 0.52, -L/2-0.06, wood);
+      const q=(bw,bh,bd,lx,ly,lz,col,R)=>{ const p=P(lx,lz); R(bw,bh,bd,p[0],FF2+ly,p[1],col,ry); };
+      q(w+0.06, 0.22, L+0.06, 0, 0.20, 0, wood, RW);
+      for(const [lx,lz,hgt] of [[-w/2,-L/2,1.12],[w/2,-L/2,1.12],[-w/2,L/2,0.72],[w/2,L/2,0.72]]){ const p=P(lx,lz);
+        LEG(p[0], p[1], FF2, FF2+hgt, 0.038, wood); ent(new T.SphereGeometry(0.048, 12, 10), p[0], FF2+hgt+0.03, p[1], wood); }
+      q(w, 0.22, L, 0, 0.42, 0, "#f4f2ea", (a,b2,c2,x2,y2,z2,cl,r2)=>RF(a,b2,c2,x2,y2,z2,cl,r2,0.06));
+      q(w*0.36, 0.12, 0.34, -w*0.24, 0.575, -L/2+0.24, "#f4f2ec", (a,b2,c2,x2,y2,z2,cl,r2)=>RF(a,b2,c2,x2,y2,z2,cl,r2,0.05)); if(w>1.2) q(w*0.36, 0.12, 0.34, w*0.24, 0.575, -L/2+0.24, "#f4f2ec", (a,b2,c2,x2,y2,z2,cl,r2)=>RF(a,b2,c2,x2,y2,z2,cl,r2,0.05));
+      q(w-0.02, 0.90, 0.05, 0, 0.60, -L/2-0.04, wood, RW); q(w-0.02, 0.42, 0.05, 0, 0.42, L/2+0.04, wood, RW);
       const p=P(0, 0.14), m=new T.Mesh(boxGeo(w+0.12, 0.03, L*0.80), quilt(cols)); m.position.set(p[0], FF2+0.525, p[1]); m.rotation.y=ry; scene.add(m);
       addColOB(x-0.03*s, z-0.03*c, ry, w/2+0.06, L/2+0.07, FF2-0.5, FF2+0.6); };
     // the front west room, theirs: the bed against the cross wall, nightstands and lamps, the dresser and its mirror, the cedar chest
     { const bx2=119.3, bz=ZM-1.20;
       bed(bx2, bz, 1.52, 2.0, Math.PI, ["#8a2a22","#e8dcc0","#3a5a8a","#c8a23a","#5a7a3a"], "#6a4428");
       addSeat(bx2-0.50, bz-0.3, FF2+0.08, Math.PI/2, "THE BED");
-      for(const dx of [-1.15, 1.15]){ B(0.46, 0.60, 0.40, bx2+dx, FF2+0.30, ZM-HT/2-0.24, "#6a4428"); C(0.07, 0.26, bx2+dx, FF2+0.73, ZM-HT/2-0.24, "#c8b88a", 16);
+      for(const dx of [-1.15, 1.15]){ RW(0.46, 0.60, 0.40, bx2+dx, FF2+0.30, ZM-HT/2-0.24, "#6a4428", 0, 0.02); C(0.07, 0.26, bx2+dx, FF2+0.73, ZM-HT/2-0.24, "#c8b88a", 16);
         ent(new T.CylinderGeometry(0.10, 0.15, 0.17, 20, 1, true), bx2+dx, FF2+0.95, ZM-HT/2-0.24, "#f0e8d4"); addCol(bx2+dx-0.24, bx2+dx+0.24, ZM-HT/2-0.45, ZM-HT/2, FF2-0.5, FF2+0.62); }
-      B(1.10, 0.46, 0.50, bx2, FF2+0.23, bz-1.30, "#8a5a3a"); B(1.12, 0.03, 0.52, bx2, FF2+0.475, bz-1.30, "#7a4a2a");
+      RW(1.10, 0.46, 0.50, bx2, FF2+0.23, bz-1.30, "#8a5a3a", 0, 0.025); RW(1.14, 0.04, 0.54, bx2, FF2+0.475, bz-1.30, "#7a4a2a", 0, 0.015);
       addCol(bx2-0.56, bx2+0.56, bz-1.56, bz-1.04, FF2-0.5, FF2+0.5);
-      { const dx=PA-PIN-0.26; B(0.50, 0.90, 1.30, dx, FF2+0.45, Z+35.6, "#6a4428"); for(let k=0;k<3;k++) for(const dz of [-0.32,0.32]) B(0.02, 0.24, 0.56, dx-0.255, FF2+0.17+k*0.28, Z+35.6+dz, "#7a5434");
+      { const dx=PA-PIN-0.26; RW(0.50, 0.90, 1.30, dx, FF2+0.45, Z+35.6, "#6a4428", 0, 0.02); for(let k=0;k<3;k++) for(const dz of [-0.32,0.32]) B(0.02, 0.24, 0.56, dx-0.255, FF2+0.17+k*0.28, Z+35.6+dz, "#7a5434");
         B(0.04, 0.80, 0.70, PA-PIN-0.05, FF2+1.40, Z+35.6, "#6a4428"); push("glass", planeGeo(0.62, 0.72, 0), PA-PIN-0.077, FF2+1.40, Z+35.6, -Math.PI/2, "#ffffff");
         addCol(PA-0.54, PA, Z+34.95, Z+36.25, FF2-0.5, FF2+0.92); }
       { const rt=signTex(128,128,(x,W,Hh)=>{ const cols=["#6a4a8a","#c8a86a","#3a6a5a","#8a3a3a"]; for(let i=0;i<10;i++){ x.fillStyle=cols[i%4]; x.fillRect(0,i*13,W,13); } });
@@ -1170,9 +1240,9 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
     { const bz=ZM+HT/2+PIN+0.04+1.035+0.03;
       for(const [bx2,cols,sy] of [[117.25,["#2a4a8a","#c41a1a","#f2f0ea","#3a6a3a"],-Math.PI/2],[120.7,["#c86a8a","#f2e2a0","#6a8ac8","#f2f0ea"],Math.PI/2]]){
         bed(bx2, bz, 0.98, 1.95, 0, cols, "#c8a878"); addSeat(bx2-0.42*Math.sin(sy), bz+0.2, FF2+0.08, sy, "A BED"); }
-      B(0.90, 0.48, 0.48, 118.95, FF2+0.24, IZ1-0.30, "#5a7aa8"); B(0.92, 0.04, 0.50, 118.95, FF2+0.50, IZ1-0.30, "#4a6a98");
+      RP(0.90, 0.48, 0.48, 118.95, FF2+0.24, IZ1-0.30, "#5a7aa8", 0, 0.03); RP(0.94, 0.05, 0.52, 118.95, FF2+0.50, IZ1-0.30, "#4a6a98", 0, 0.02);
       addCol(118.48, 119.42, IZ1-0.56, IZ1, FF2-0.5, FF2+0.52);
-      { const dz=ZM+HT/2+PIN+0.30; B(1.00, 0.04, 0.55, 119.0, FF2+0.74, dz, "#c8a878"); for(const dx of [-0.46,0.46]) B(0.04, 0.72, 0.50, 119.0+dx, FF2+0.37, dz, "#c8a878");
+      { const dz=ZM+HT/2+PIN+0.30; RW(1.00, 0.04, 0.55, 119.0, FF2+0.74, dz, "#c8a878", 0, 0.012); for(const dx of [-0.46,0.46]) RW(0.04, 0.72, 0.50, 119.0+dx, FF2+0.37, dz, "#c8a878", 0, 0.01);
         addCol(118.48, 119.52, ZM+HT/2, dz+0.30, FF2-0.5, FF2+0.78);
         C(0.05, 0.18, 118.75, FF2+0.852, dz+0.05, "#c41a1a", 14); B(0.30, 0.02, 0.22, 119.2, FF2+0.772, dz, "#f4f0e2"); }
       sign(0.60, 0.42, (c,W,Hh)=>{ c.fillStyle="#f2e8c8"; c.fillRect(0,0,W,Hh); c.fillStyle="#2f6a2a"; c.fillRect(W*0.2,Hh*0.35,W*0.4,Hh*0.28); c.fillRect(W*0.5,Hh*0.22,W*0.16,Hh*0.20);
@@ -1232,7 +1302,8 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
         for(const dx of [-0.26,0.26]) B(0.03, 0.03, 1.00, cx+dx, FF2+0.95, ZM+HT/2+1.1, "#e8e2d4");
         for(const dz of [-0.48,0.48]) for(const dx of [-0.26,0.26]) B(0.04, 0.45, 0.04, cx+dx, FF2+0.225, ZM+HT/2+1.1+dz, "#e8e2d4");
         addCol(cx-0.30, cx+0.30, ZM+HT/2+0.58, ZM+HT/2+1.62, FF2-0.5, FF2+1.0); }
-      B(0.90, 0.48, 0.48, IX1-0.50, FF2+0.24, Z+41.02, "#5a3a22"); B(0.92, 0.04, 0.50, IX1-0.50, FF2+0.50, Z+41.02, "#4a2a18");
+      RW(0.90, 0.48, 0.48, IX1-0.50, FF2+0.24, Z+41.02, "#5a3a22", 0, 0.03); RW(0.94, 0.05, 0.52, IX1-0.50, FF2+0.50, Z+41.02, "#4a2a18", 0, 0.02);
+      for(const dx of [-0.30,0.30]) for(const y of [0.12, 0.38]) B(0.05, 0.03, 0.012, IX1-0.50+dx, FF2+y, Z+41.02-0.245, "#b8963a");
       addCol(IX1-0.96, IX1, Z+40.76, Z+41.28, FF2-0.5, FF2+0.75);
       tubeE(V3(130.3, UC, Z+41.6), V3(130.3, UC-0.20, Z+41.6), 0.005, "#3a3a3a"); push("tube", new T.SphereGeometry(0.035, 12, 10), 130.3, UC-0.24, Z+41.6, 0, "#ffffff");
       LAMPS.push({x:130.3, y:UC-0.35, z:Z+41.6, color:0xffe0b0, intensity:0.4, dist:5, decay:1.6, indoor:true, vol:[BW, IX1, ZM, IZ1, FF2-0.5, UC]});
@@ -1419,7 +1490,7 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
     B(1.4, 0.06, 1.1, tx, Y+3.03, tz+0.7, G); C(0.05, 0.9, tx+0.35, Y+2.15, tz-1.2, "#1d1d1e", 8);
     ent(new T.TorusGeometry(0.16, 0.015, 6, 16), tx, Y+2.05, tz+0.3, "#1d1d1e", -0.9, 0, 0);
     addCol(tx-1.3, tx+1.3, tz-1.9, tz+1.6, Y-0.5, Y+3.1);
-    addZone(SX0, SX1, SZ0, SZ1, Y-1, SH, "THE MACHINE SHED"); }
+    addZone(SX0, SX1, SZ0, SZ1, Y-1, SH, "THE MACHINE SHED"); addRoof(SX0-0.3, SX1+0.3, SZ0-0.6, SZ1+0.3, SH-0.1); }
 
   // the cows, out in the pasture behind
   for(const [x,z,ry,gz] of [[150,Z+178,0.4,1],[158,Z+184,2.0,1],[171,Z+176,-1.2,0],[186,Z+192,0.9,1],[197,Z+181,2.6,1],[214,Z+200,-0.4,0],[176,Z+206,1.5,1],[205,Z+222,-2.2,1]]) cow(x, z, ry, gz);
