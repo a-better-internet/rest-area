@@ -1494,10 +1494,12 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
     bx("concrete", PX-(SX0+0.06), 0.16, SZ1-0.08-(SZ0+0.6), (SX0+0.06+PX)/2, PF-0.08, (SZ0+0.6+SZ1-0.08)/2, 0.5, 0, "#a8a49a");
     addFlat(SX0+0.06, PX, SZ0+0.6, SZ1-0.08, PF);
     // the siding: the back, the two ends, and the gables over them (standing a few millimetres outside the ends below)
-    wallBox("roofmetal", SX0, SX1, SZ1-0.06, SZ1, Y-0.05, EV+0.24, SID, 0.5, Y);
-    for(const [x0,x1] of [[SX0, SX0+0.06],[SX1-0.06, SX1]]) wallBox("roofmetal", x0, x1, SZ0, SZ1-0.06, Y-0.05, EV+0.03, SID, 0.5, Y);
-    for(const [x, w] of [[SX0-0.005, true],[SX1+0.005, false]]){ const P=[V3(x, EV, SZ0-0.005), V3(x, RF-0.07, SZ0-0.005), V3(x, RG-0.07, ZM), V3(x, RF-0.07, SZ1-0.03), V3(x, EV, SZ1-0.03)];
-      slab("roofmetal", w ? P.slice().reverse() : P, 0.07, SID); }
+    // (the back's ends a centimetre inside the ends' outer faces, the ends 3 cm into the back: grown at the bake, neither meets the other flush)
+    wallBox("roofmetal", SX0+0.01, SX1-0.01, SZ1-0.06, SZ1, Y-0.05, EV+0.24, SID, 0.5, Y);
+    for(const [x0,x1] of [[SX0, SX0+0.06],[SX1-0.06, SX1]]) wallBox("roofmetal", x0, x1, SZ0, SZ1-0.03, Y-0.06, EV+0.03, SID, 0.5, Y);
+    // (the gables' faces stand 5 mm and more off the ends' as the bake grows them, and 1.2 cm out past their fronts)
+    for(const [x, w] of [[SX0-0.012, true],[SX1+0.012, false]]){ const P=[V3(x, EV, SZ0-0.012), V3(x, RF-0.07, SZ0-0.012), V3(x, RG-0.07, ZM), V3(x, RF-0.07, SZ1-0.03), V3(x, EV, SZ1-0.03)];
+      slab("roofmetal", w ? P.slice().reverse() : P, 0.09, SID); }
     addCol(SX0, SX1, SZ1-0.08, SZ1, Y-0.5, EV); addCol(SX0, SX0+0.08, SZ0, SZ1, Y-0.5, EV); addCol(SX1-0.08, SX1, SZ0, SZ1, Y-0.5, EV);
     // the posts: along the front under the header, inside the back wall, and one in the middle of each end
     const XS=[]; for(let x=SX0+0.14; x<SX1; x+=4.0) XS.push(Math.min(x, SX1-0.14)); if(XS[XS.length-1]<SX1-0.2) XS.push(SX1-0.14);
@@ -1521,7 +1523,7 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
       B(SX1-SX0+0.50, 0.09, 0.05, (SX0+SX1)/2, top(z)-0.05-0.045, z, "#9a8462"); }
     const ov=0.35;
     slab("roofmetal", [V3(SX0-0.3, RF-ov*K, SZ0-ov), V3(SX1+0.3, RF-ov*K, SZ0-ov), V3(SX1+0.3, RG, ZM), V3(SX0-0.3, RG, ZM)], 0.05, "#8a9096");
-    slab("roofmetal", [V3(SX0-0.3, RG, ZM), V3(SX1+0.3, RG, ZM), V3(SX1+0.3, RF-ov*K, SZ1+ov), V3(SX0-0.3, RF-ov*K, SZ1+ov)], 0.05, "#8a9096");
+    slab("roofmetal", [V3(SX0-0.29, RG, ZM), V3(SX1+0.29, RG, ZM), V3(SX1+0.29, RF-ov*K, SZ1+ov), V3(SX0-0.29, RF-ov*K, SZ1+ov)], 0.05, "#8a9096");     // (a centimetre short at the ends, where the two overlap at the ridge)
     B(SX1-SX0+0.64, 0.05, 0.42, (SX0+SX1)/2, RG+0.02, ZM, "#9aa0a4");                   // (the ridge cap)
     // the light: a shop light under the chord in each bay, a lamp in the shop and in the bays, a barn light over the front
     for(let k=0;k<XS.length-1;k++){ const x=(XS[k]+XS[k+1])/2;

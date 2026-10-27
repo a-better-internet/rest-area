@@ -80,10 +80,11 @@ const HUM_POS=[];                                   // transformers that hum and
     for(let s=0;s<3;s++){ const h=Y+FH+0.12+s*0.14, o=0.10+s*0.13; tube("paintm", V3(x0+ox*o,h,z0+oz*o), V3(x1+ox*o,h,z1+oz*o), 0.006, 4, "#5c6062"); }
     addCol(Math.min(x0,x1)-0.06, Math.max(x0,x1)+0.06, Math.min(z0,z1)-0.06, Math.max(z0,z1)+0.06, Y-0.5, Y+FH+0.5); };
   // clockwise from above (x east, z south), so the arms lean out
-  fenceRun(F.x0, F.z0, F.x1, F.z0);
+  // (each run leaves its last post to the next; the gate's own posts stand at the ends of the south runs)
+  fenceRun(F.x0, F.z0, F.x1, F.z0, true);
   fenceRun(F.x1, F.z0, F.x1, F.z1, true);
   fenceRun(F.x1, F.z1, GX+GW, F.z1, true);
-  fenceRun(GX-GW, F.z1, F.x0, F.z1);
+  fenceRun(GX-GW, F.z1, F.x0, F.z1, true);
   fenceRun(F.x0, F.z1, F.x0, F.z0, true);
   for(const x of [GX-GW, GX+GW]) cyl("metal", 0.06,0.06, FH+0.5, 10, x, Y+FH/2, F.z1, GAL);
   makeDoor(XF(GX-GW+0.02, F.z1, 0), 0, Y+0.09, 0, "THE GATE", false, 0, "gate");
@@ -249,7 +250,7 @@ const HUM_POS=[];                                   // transformers that hum and
     ceilAt("plaster", IX0, IX1, IZ0, IZ1, CL, "#f2f0ea");
     bx("concrete", H.x1-H.x0+0.50, 0.20, H.z1-H.z0+0.50, (H.x0+H.x1)/2, TOPW-0.02+0.10, (H.z0+H.z1)/2, 0.5, 0, "#6a6a68");     // the roof, the walls a couple of centimetres up into it
     B(H.x1-H.x0+0.56, 0.12, 0.03, (H.x0+H.x1)/2, TOPW+0.10, H.z1+0.26, "#8a6a48"); B(H.x1-H.x0+0.56, 0.12, 0.03, (H.x0+H.x1)/2, TOPW+0.10, H.z0-0.26, "#8a6a48");
-    B(0.03, 0.11, H.z1-H.z0+0.50, H.x0-0.26, TOPW+0.095, (H.z0+H.z1)/2, "#8a6a48"); B(0.03, 0.11, H.z1-H.z0+0.50, H.x1+0.26, TOPW+0.095, (H.z0+H.z1)/2, "#8a6a48");
+    B(0.03, 0.11, H.z1-H.z0+0.52, H.x0-0.26, TOPW+0.095, (H.z0+H.z1)/2, "#8a6a48"); B(0.03, 0.11, H.z1-H.z0+0.52, H.x1+0.26, TOPW+0.095, (H.z0+H.z1)/2, "#8a6a48");
     frZ(H.x1-WT/2, WT, DOOR.a, DOOR.b, FF-0.03, DOOR.head, "#5a5d60");
     makeDoor(XF(H.x1-WT/2, DOOR.a+0.02, -Math.PI/2), 0, FF+0.01, 0, "THE CONTROL HOUSE", true, 0, "steel", 0x7d8286);
     for(const [x0,x1,z0,z1] of [[H.x0, H.x1, H.z0, IZ0],[H.x0, H.x1, IZ1, H.z1],[H.x0, IX0, IZ0, IZ1],[IX1, H.x1, IZ0, DOOR.a],[IX1, H.x1, DOOR.b, IZ1]]) addCol(x0, x1, z0, z1, FF-0.5, TOPW);

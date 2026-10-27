@@ -642,10 +642,11 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
       const mw=G(4.3, 7.7, 0, -1); mw.p(0.52, 0.30, 0.70, 0, 0.30, 0, "#2a6a3a", 0.04); mw.b(0.04, 0.04, 0.9, 0, 0.70, -0.70, "#2a2a2a");
       for(const sx of [-1,1]) for(const sz of [-1,1]) mw.g(new T.CylinderGeometry(0.10, 0.10, 0.06, 12), sx*0.26, 0.10, sz*0.26, "#1a1a1a", 0, 0, Math.PI/2); mw.col(0.6, 0.8, 0, 0, 0.8);
       // (no car in it: the car lives on the drive. A bicycle against the wall, a stain where a car used to stand)
-      const bk=G(7.8-0.30, 6.4, -1, 0); for(const dz of [-0.52, 0.52]) bk.g(new T.TorusGeometry(0.33, 0.025, 6, 20), 0, 0.36, dz, "#1a1a1a", 0, Math.PI/2, 0);
-      bk.b(0.04, 0.04, 1.0, 0, 0.62, 0, "#2a6aa8"); bk.b(0.04, 0.50, 0.04, 0, 0.62, -0.18, "#2a6aa8"); bk.b(0.24, 0.05, 0.10, 0, 0.90, -0.22, "#1a1a1a"); bk.b(0.46, 0.03, 0.03, 0, 0.92, 0.42, "#8a8d90");
-      bk.col(0.25, 1.4, 0, 0, 1.0);
-      { const [ox, oz]=G(5.0, 4.6, 0, -1).at(0, 0); push("oilspot", new T.CircleGeometry(0.55, 20), ox, GY+0.006, oz, 0, "#ffffff", -Math.PI/2, 0); } }
+      // (its frame faces off the wall, so the bike's length runs along it: the wheels either side in its local x)
+      const bk=G(7.8-0.30, 6.4, -1, 0); for(const dx of [-0.52, 0.52]) bk.g(new T.TorusGeometry(0.33, 0.025, 6, 20), dx, 0.36, 0, "#1a1a1a");
+      bk.b(1.0, 0.04, 0.04, 0, 0.62, 0, "#2a6aa8"); bk.b(0.04, 0.50, 0.04, -0.18, 0.62, 0, "#2a6aa8"); bk.b(0.24, 0.05, 0.10, -0.22, 0.90, 0, "#1a1a1a"); bk.b(0.03, 0.03, 0.46, 0.42, 0.92, 0, "#8a8d90");
+      bk.col(1.4, 0.25, 0, 0, 1.0);
+      { const [ox, oz]=G(5.0, 4.6, 0, -1).at(0, 0); push("oilspot", new T.CircleGeometry(0.55, 20), ox, GY+0.012, oz, 0, "#ffffff", -Math.PI/2, 0); } }
     // the walks: in at the door, to each room, through to the garage
     const IN=[[-0.6,-11],[-0.6,-2.4],[-0.6,-1.0],[-0.6,-0.1],[-0.6,0.25],[-0.6,0.9]];
     route(h, pl, "in at the door", IN);

@@ -72,7 +72,7 @@ examples, and so is anything dug later. For anything underground:
   fixed `UNDER_LIGHT`, and the glow materials and lamps run as though it
   were night. A seventh argument, when it is not 0, holds that fill at a
   fraction of `UNDER_LIGHT` (12d's sub-basement uses 0.22, the stair down
-  to it 0.5).
+  to it 0.5). An eighth tints it (12e's boiler hall is red).
 - Give its lamps `under:true` (12b's `lamp()` does this). Under lamps run at
   full strength regardless of the hour. They are only considered while the
   camera is underground, and lamps above ground are dropped while it is.
@@ -184,6 +184,24 @@ No lettering touches or runs past the edge of its board or its border.
   the lake it lies on the water (14c).
 - `zoneAt` names the last zone added that holds you, so add the general
   zone first and the particular ones (a dock, a pavilion) after it.
+- An overhead door (a house's garage, a bay, a roll-up) is 01's
+  `makeLiftDoor(xf, y0, w, h, col, label, colBox, kind)`: sections that
+  run up their tracks and back under the ceiling, or with `kind` "roll" a
+  curtain that winds into its drum. It is a `DOORS` entry with `lift`
+  (what draws it at an opening), `onUse` (what `E` does instead of a swing)
+  and a `blockCol` that is solid while it is down. A door can also carry
+  `promptFn` for its prompt (12e's wheel door does both).
+- People out of doors are a crowd (14q): `crowdGroup(name, cx, cz, reach)`
+  and `crowdAdd(G, {look, x, z, yaw, mode, job, path, held, prop, ...})`.
+  A walker's `path` may be rounded with `crowdRound`; `yAt` gives it its
+  own floors, `tick` runs each frame, `yield` holds it (the baler stops for
+  you), `onShow` hears when it is shown or hidden. Props are `crowdProp`.
+  They are not solid: give anything big that moves its own `COL_DYN` box.
+- A transformer that hums but has no standby set by it goes in `HUM_POS`
+  (14s), not `GEN_POS`, which also carries the diesel.
+- The lake's shore is a wall (14n) a step short of the water, open where a
+  dock goes out. Anything else built out over the water opens it the way
+  14r's deck does.
 - A door that slides (the arcade's pair, 12c) is a `DOORS` entry with
   `slide` (each leaf's group, its shut `x0` and how far it runs, `dx`) and
   a `rate`. `updateDoors` moves the leaves along x instead of swinging
@@ -199,7 +217,9 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   game itself (see its header for the shot format).
 - `tools/walk.js` walks every route and seat with keys held at walk, run and
   sprint, and fails if you get stuck anywhere. Add a route for any new place
-  you can walk to. It also takes routes and stairs from the page:
+  you can walk to. `ONLY=regex` walks just the routes, seats and stair
+  tests whose names match. A route with `gate:true` has every manual door
+  open (the gates, the garage doors) and the rest shut. It also takes routes and stairs from the page:
   `LAKE_HOUSES.routes` and `.stairs` (14o) are laid out by each house
   through its own plan as it builds. The walker is a square ±0.34 m across,
   not a circle, so give corners room.

@@ -86,7 +86,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
                                                         : bx(bk, t+proud, y1-y0, u1-u0, (c0+c1)/2, (y0+y1)/2, (u0+u1)/2, 0.5, 0, col);
     let u=a;
     for(const o of ops){ if(o.a>u) put(u, o.a, FF-0.10, EAVE, 0);
-      put(o.a-0.02, o.b+0.02, o.head, EAVE-0.004, 0.008); if(o.sill>FF+0.01) put(o.a-0.02, o.b+0.02, FF-0.10, o.sill, 0.008); u=o.b; }
+      put(o.a-0.02, o.b+0.02, o.head, EAVE-0.004, 0.008); if(o.sill>FF+0.01) put(o.a-0.02, o.b+0.02, FF-0.095, o.sill, 0.008); u=o.b; }
     if(b>u) put(u, b, FF-0.10, EAVE, 0); };
   const winS=(a,b)=>({a:a, b:b, sill:FF+0.9, head:FF+2.4});
   const southOps=[winS(1433.4,1436.6), winS(1438.8,1442.0), {a:1444.0, b:1446.0, sill:FF, head:FF+2.3, door:true}, winS(1448.2,1451.4), winS(1453.4,1456.6)];
@@ -95,7 +95,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   wall("x", BL.z1-WT, BL.z1, BL.x0, BL.x1, southOps, "brw_cedar", "#ffffff");
   wall("x", BL.z0, BL.z0+WT, BL.x0, BL.x1, northOps, "brw_cedar", "#ffffff");
   // (the ends between the long walls, 2 cm into them, 4 mm short of their outer faces and their tops)
-  for(const [a,b] of [[BL.x0+0.004, BL.x0+WT],[BL.x1-WT, BL.x1-0.004]]) bx("brw_cedar", b-a, EAVE-0.006-(FF-0.10), BL.z1-BL.z0-2*WT+0.04, (a+b)/2, (EAVE-0.006+FF-0.10)/2, (BL.z0+BL.z1)/2, 0.5, 0, "#f2ece4");
+  for(const [a,b] of [[BL.x0+0.004, BL.x0+WT],[BL.x1-WT, BL.x1-0.004]]) bx("brw_cedar", b-a, EAVE-0.006-(FF-0.11), BL.z1-BL.z0-2*WT+0.04, (a+b)/2, (EAVE-0.006+FF-0.11)/2, (BL.z0+BL.z1)/2, 0.5, 0, "#f2ece4");
   bx("concrete", BL.x1-BL.x0+0.4, 0.62, BL.z1-BL.z0+0.4, (BL.x0+BL.x1)/2, FF-0.31-0.004, (BL.z0+BL.z1)/2, 0.6, 0, "#a8a49a");
   // the colliders: round the openings that are open, the closed doors and the windows solid
   const colWall=(ax, c0, c1, a, b, gaps)=>{ let u=a; for(const [g0,g1] of gaps){ if(g0>u) (ax==="x" ? addCol(u, g0, c0, c1, FF-1, EAVE) : addCol(c0, c1, u, g0, FF-1, EAVE)); u=g1; }
@@ -108,7 +108,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   addFlat(BL.x0+WT, BL.x1-WT, BL.z0+WT-0.01, BL.z1-WT+0.01, FF);
   addFlat(1444.0, 1446.0, BL.z1-WT-0.02, BL.z1+0.02, FF); for(const o of GD) if(o.open) addFlat(o.a, o.b, BL.z0-0.02, BL.z0+WT+0.02, FF);
   ceilAt("brw_pine", BL.x0+WT, BL.x1-WT, BL.z0+WT, BL.z1-WT, CEIL, "#ffffff", 0.5);
-  for(let x=BL.x0+2.5; x<BL.x1-1; x+=3.0) B(0.16, 0.26, BL.z1-BL.z0-2*WT-0.02, x, CEIL-0.13, (BL.z0+BL.z1)/2, "#1e1c1a");
+  for(let x=BL.x0+2.5; x<BL.x1-1; x+=3.0) B(0.16, 0.26, BL.z1-BL.z0-2*WT+0.04, x, CEIL-0.13, (BL.z0+BL.z1)/2, "#1e1c1a");          // (2 cm into the walls)
   addZone(BL.x0, BL.x1, BL.z0, BL.z1, FF-0.5, CEIL, "LAKESHORE BREWING CO.", true);
   // the windows: glass in a black frame; the front door, glass in a black frame too
   const glassPane=(ax, c, a, b, y0, y1)=>{ const mid=(a+b)/2, w=b-a, h=y1-y0;
@@ -135,9 +135,10 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     push("roofmetal", new FaceGeo().slab([V3(xb+0.005, ye, za), V3(xa-0.005, ye, za), V3(xa-0.005, RIDGE-0.004, zr), V3(xb+0.005, RIDGE-0.004, zr)], 0.12, 0.6).geo(), 0,0,0, 0, "#8a2a22");
     for(const [x, sgn] of [[BL.x0, 1], [BL.x1, -1]]){
       // (a standing slab goes back against its winding: the west one in, toward +x, the east one in, toward -x)
-      const pts=sgn>0 ? [V3(x, EAVE-0.02, BL.z0), V3(x, EAVE-0.02, BL.z1), V3(x, RIDGE-0.14, zr)] : [V3(x, EAVE-0.02, BL.z1), V3(x, EAVE-0.02, BL.z0), V3(x, RIDGE-0.14, zr)];
+      // (on the end walls' tops and in their plane, 4 mm inside the long walls' ends)
+      const xg=x+sgn*0.004, pts=sgn>0 ? [V3(xg, EAVE-0.006, BL.z0), V3(xg, EAVE-0.006, BL.z1), V3(xg, RIDGE-0.14, zr)] : [V3(xg, EAVE-0.006, BL.z1), V3(xg, EAVE-0.006, BL.z0), V3(xg, RIDGE-0.14, zr)];
       push("brw_cedar", new FaceGeo().slab(pts, WT, 0.5).geo(), 0,0,0, 0, "#f2ece4"); }
-    B(xb-xa, 0.12, 0.10, (xa+xb)/2, RIDGE+0.02, zr, "#6a2a22");
+    B(xb-xa+0.02, 0.12, 0.10, (xa+xb)/2, RIDGE+0.02, zr, "#6a2a22");
     addRoof(xa, xb, za, zb, EAVE-0.2); }
   // the names: over the front door, and on the lake end's gable
   sign(7.0, 0.9, (c,W,H)=>{ c.fillStyle="#1e2a24"; c.fillRect(0,0,W,H); c.strokeStyle="#d8b880"; c.lineWidth=6; c.strokeRect(8,8,W-16,H-16);
@@ -214,7 +215,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     LAMPS.push({x:x, y:FF+2.3, z:z, color:0xffd2a0, intensity:i, dist:8, decay:1.6, indoor:true, vol:[BL.x0, BL.x1, BL.z0-3, BL.z1, FF-1, CEIL+0.5]});
   for(const [x,z] of [[1445.6,-1234.9],[1451.4,-1234.9]]){ C(0.02, 0.35, x, CEIL-0.18, z, "#1a1a1a", 6); C(0.11, 0.12, x, CEIL-0.40, z, "#1a1a1a", 12);
     const g=new T.Group(); g.position.set(x, CEIL-0.43, z); scene.add(g); BREWERY.fans.push(g);
-    for(let k=0;k<5;k++){ const m=new T.Mesh(boxGeo(0.62, 0.012, 0.13), _heldMat("#4a3020")); m.position.set(Math.cos(k*1.2566)*0.38, 0, Math.sin(k*1.2566)*0.38); m.rotation.y=-k*1.2566; g.add(m); } }
+    for(let k=0;k<5;k++){ const m=new T.Mesh(boxGeo(0.62, 0.012, 0.13), _heldMat("#4a3020")); m.position.set(Math.cos(k*1.2566)*0.38, k*0.003, Math.sin(k*1.2566)*0.38); m.rotation.y=-k*1.2566; g.add(m); } }
   // a chalkboard by the door: today's taps
   sign(0.9, 1.3, (c,W,H)=>{ c.fillStyle="#1e2420"; c.fillRect(0,0,W,H); c.strokeStyle="#8a6a44"; c.lineWidth=10; c.strokeRect(5,5,W-10,H-10);
       const L=["ON TAP","LAKE EFFECT IPA","FRENCH CREEK PILS","WEIR FARM HEFE","CONEAUT STOUT","BREAKWALL RED","CIDER · SELTZER"];
@@ -260,9 +261,9 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     BREWERY.hut={x0:hx0, x1:hx1, z0:hz0, z1:hz1, y:hg};
     bx("concrete", hx1-hx0+0.4, 1.0, hz1-hz0+0.4, (hx0+hx1)/2, hg-0.5, mz, 0.6, 0, "#a8a49a");
     for(const [a,b] of [[hz0, mz-1.3],[mz+1.3, hz1]]) bx("brw_cedar", 0.18, top-hg, b-a, hx0+0.09, (hg+top)/2, (a+b)/2, 0.5, 0, "#ffffff");
-    bx("brw_cedar", 0.19, 1.0, 2.62, hx0+0.09, hg+0.5, mz, 0.5, 0, "#ffffff"); bx("brw_cedar", 0.19, 0.5, 2.62, hx0+0.09, top-0.25, mz, 0.5, 0, "#ffffff");
+    bx("brw_cedar", 0.19, 0.996, 2.62, hx0+0.09, hg+0.502, mz, 0.5, 0, "#ffffff"); bx("brw_cedar", 0.19, 0.496, 2.62, hx0+0.09, top-0.25, mz, 0.5, 0, "#ffffff");      // (4 mm inside the piers' top and foot)
     B(0.45, 0.05, 2.7, hx0-0.05, hg+1.05, mz, "#2a2018");
-    for(const z of [hz0, hz1]) bx("brw_cedar", hx1-hx0-0.008, top-hg-0.004, 0.18, (hx0+hx1)/2, (hg+top-0.004)/2, z+(z===hz0 ? 0.09 : -0.09), 0.5, 0, "#ffffff");
+    for(const z of [hz0, hz1]) bx("brw_cedar", hx1-hx0-0.008, top-hg+0.006, 0.18, (hx0+hx1)/2, (hg-0.01+top-0.004)/2, z+(z===hz0 ? 0.094 : -0.094), 0.5, 0, "#ffffff");     // (a centimetre into the pad, 4 mm inside the west piers' ends)
     bx("brw_cedar", 0.18, top-hg, hz1-hz0-0.36, hx1-0.09, (hg+top)/2, mz, 0.5, 0, "#ffffff");
     push("shingle", new FaceGeo().slab([V3(hx0-0.5, top-0.1, hz1+0.5), V3(hx1+0.5, top-0.1, hz1+0.5), V3(hx1+0.5, hr, mz), V3(hx0-0.5, hr, mz)], 0.10, 0.5).geo(), 0,0,0, 0, "#8a3a2a");
     push("shingle", new FaceGeo().slab([V3(hx1+0.505, top-0.1, hz0-0.5), V3(hx0-0.505, top-0.1, hz0-0.5), V3(hx0-0.505, hr-0.004, mz), V3(hx1+0.505, hr-0.004, mz)], 0.10, 0.5).geo(), 0,0,0, 0, "#8a3a2a");

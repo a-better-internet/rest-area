@@ -118,6 +118,8 @@ If the scene runs hot on your machine, start there (see below).
     building, and the leaves go up in front of it. Both are loud, and Terry
     wears ear defenders for them.
   - In between are the bench, the coffee, the folding chair and the radio.
+  - `E` at a bay door's switch inside, or at the door outside, runs it up
+    or down, and Terry leaves it as you left it for a while.
   - At night Terry brings the roll-up doors down, puts the lights out,
     turns the radio low and sleeps on the cot. At ten to five Terry sits up
     on the edge of it a while, pulls the boots on, stands and stretches, gets
@@ -355,9 +357,36 @@ If the scene runs hot on your machine, start there (see below).
     hocks that swishes at the flies. Out in the pasture they graze, and now
     and then one lifts her head to look round. There are milk cans, the barn radio on its shelf (`E`, the farm
     report), pitchforks, a wheelbarrow, a workbench across the east end,
-    and bulbs on cords. There is also a hay wagon, a pole shed with the
-    green tractor in it, the clothesline, the woodpile, and cows grazing in
-    the pasture behind.
+    and bulbs on cords. There is also a hay wagon, the clothesline, the
+    woodpile, and cows grazing in the pasture behind.
+  - **The machine shed** stands across the south of the yard: a pole
+    building of eight bays, open along the front under a doubled header,
+    green steel siding on the back and ends, trusses on the posts with the
+    purlins over them, and shop lights on chains. A barn light hangs over
+    the front. From the west end:
+    - the shop, on a concrete pad: the bench under a pegboard of tools,
+      with a vise, the grinder, a coffee can of bolts and a radio (`E`), and
+      the co-op's calendar on the wall; a red rolling tool chest, the
+      compressor, three drums with a pump in one, steel shelving of oil,
+      filters and baler twine, and the lawn tractor;
+    - a tractor tyre stood against the back wall and a wheelbarrow;
+    - the farm truck, backed in (`E` drives it);
+    - the green tractor with a loader on it, the bucket down on the gravel;
+    - the manure spreader with its tongue on a block, and the disc harrow
+      out front.
+    Outside the east end is the gas tank on its stand, its hose hung on a
+    bent nail (`E`).
+  - **People about Edinboro.** At the fuel stop a man fills up at the
+    pumps with the hose run back to the pump, a woman walks back out to
+    her pickup with a coffee, and another man is on his phone out front.
+    At the Weir place Mrs Weir hangs out the wash. In the old graveyard a
+    woman kneels at a stone with flowers while her husband stands by. Out
+    in the hay field north of the road a red tractor and a round baler go
+    up and down the windrows, turning on the headlands. Every so often it
+    stops, the gate on the back of the baler goes up, a fresh bale rolls
+    out and lies where it fell, and the tractor goes on with smoke puffing
+    from its stack. The farmer looks back at the baler now and then, and
+    stops for you if you walk up to it.
   - **French Creek Union Chapel**, north of the road past the fuel stop,
     set back in its own mown yard with the corn behind it. A gravel lot
     with a car in it, and a sign at the road with this week's letters
@@ -406,6 +435,29 @@ If the scene runs hot on your machine, start there (see below).
     the back weathered dark and leaning. A few have a flag by them. There
     are three old maples and a bench under one of them. `E` at the gate
     reads the stones.
+  - **French Creek Substation**, off in the field behind the fuel stop
+    and the chapel, up a gravel lane from the back of the store's lot. A
+    tap off the line up the power cut comes west across the corn on two
+    wood poles to a steel dead-end frame at the yard's east end. Under
+    that are the air-break switch with its padlocked handle, then the fuses
+    on their stand. Next comes the transformer in its oil curb, with
+    radiators and fans down both sides, the conservator on top, brown
+    porcelain bushings, arresters and its nameplate. West of it is the
+    low-side frame, with the bus along the top and three regulators under
+    it on their platform. Last are three feeder breakers, one each for the
+    village, Route 6N and the lake, their cables going down into the
+    ground at the riser frame. It is all on crushed stone inside
+    chain-link with barbed wire on top, with DANGER signs and the
+    utility's sign by a double gate that opens on `E`. The transformer
+    hums. Two floodlights light the yard at night, a white pickup is
+    parked inside, and by day a lineman in a vest stands by the
+    transformer with his clipboard. In the corner is the control house,
+    block with a flat roof and a light over its steel door. Inside are the
+    relay panels across the north wall with their meters, lamps and
+    switches, the battery rack and its charger, the RTU with its lamps
+    blinking, a desk with the laptop open and the log beside it (`E`),
+    the one-line diagram on the wall, a hard hat on its hook, a hot stick
+    and the window unit.
   - A pole line runs along US 6N on the north side, and a tap crosses the
     road and goes up the Weirs' lane, with a transformer on its last pole
     and drops to the house and the barn. The poles and wires go on east
@@ -421,7 +473,7 @@ If the scene runs hot on your machine, start there (see below).
     is a long white block building with a red band round the top on an
     asphalt lot. Three roll-up doors stand at its west end with yellow
     bollards in front of them and an OPEN 7 DAYS · ALL YEAR banner over
-    them. At its east end are the glass doors (you walk in) and a display
+    them; `E` at one winds its curtain up into the drum over it (and down). At its east end are the glass doors (you walk in) and a display
     window with posters in it (BUY 1 GET 2 FREE), under the lit name. At
     the road stands the red pole sign (FIREWORKS · WHOLESALE PRICES · OPEN
     7 DAYS), lit at night, and a big yew on its bed of mulch. There are lot
@@ -452,6 +504,16 @@ If the scene runs hot on your machine, start there (see below).
     a basketball hoop over a garage, the AC and the propane tank, and two
     pink flamingos. Two cars are parked on the shoulder for a cookout. The
     woods close round the back of the lots and both ends of the street.
+  - **People out on Lake Street**, on a fine day: a man mowing his front
+    lawn in stripes, a woman watering her beds and another on her knees
+    weeding, two neighbours talking over the property line, a man washing
+    his car in the drive with a bucket by him, somebody walking down to
+    the mailbox and back, a jogger going up and down the street, a woman
+    walking her dog the other way, and a man in a lawn chair with a can and
+    a radio. In the park an old couple walk the shore path, a man reads the
+    paper on a bench, a fisherman stands at the end of the dock, and a kid
+    runs round and round the slide while his mother watches. After dark
+    the yards empty; the walkers and the fisherman stay out a while.
   - **Inside every house on Lake Street.** The front doors open as you come
     up to them, and the rooms behind agree with what the outside shows.
     Every window is a real opening with glass in it: from inside you see
@@ -476,9 +538,12 @@ If the scene runs hot on your machine, start there (see below).
       the dining room a door, a landing and two steps go down into the
       garage. Inside it are the back of the big door with its tracks, the
       opener on the ceiling, the bench and pegboard under the back window,
-      steel shelves, a freezer, the water heater, the mower, and a car
-      under a cover. The back windows now sit the same way round the
-      house whichever end its garage is at.
+      steel shelves, a freezer, the water heater, the mower, a bicycle, and
+      an oil stain where the car stands when it isn't out in the drive.
+      `E` at the big door, inside or out, runs it up its tracks, round the
+      bend and back under the ceiling in four sections, and down again. The
+      back windows now sit the same way round the house whichever end its
+      garage is at.
     - The **bungalow**: off the porch into a living room across the front.
       A hall runs back the middle, with the stair to the attic up its side,
       two bedrooms on one side, the dining room and kitchen on the other,
@@ -502,13 +567,49 @@ If the scene runs hot on your machine, start there (see below).
     waterline. Two docks go out into the lake, one with a T at its end and
     one with a finger off it and a bench (sit). Pontoon boats are tied up
     at them, with a ladder and a life ring. You can walk out on the docks.
+  - **The pontoon.** The one nearest the shore end of the first dock's T
+    isn't tied up, and it has an outboard on its transom. `E` alongside it
+    takes the helm: you pull the cord and the motor catches, and the view
+    goes out behind the boat (the mouse swings it round). `W` opens the
+    throttle, `S` puts it in reverse, `A` and `D` swing the motor, and `E`
+    alongside a dock or the shore steps you off. It goes the way a boat
+    does: it comes up to speed and coasts down, turns by the prop's push
+    when slow and the water past the motor when fast, skids a little in a
+    hard turn, comes up onto the plane with the stern squatting, leans in
+    the turn and rocks on the chop at rest. Spray comes off the bow and a
+    wake spreads behind. It bumps off the shore, the docks, the pilings and
+    the other boats.
     Geese graze on the lawn and paddle about between the docks.
   - **Edinboro Lake** opens out north and east of the park, most of a mile
     across to the far woods, with cottages along the far shore whose
     windows light up at night. A sailboat sits out in the middle, a
     fisherman sits very still in a jon boat nearer in, and a NO WAKE buoy
     floats past the docks. The water ripples and has the sky in it, and
-    the boats ride a little on it.
+    the boats ride a little on it. Beyond the far woods the hills stand up
+    into mountains all round the horizon, ridged and gullied, bluer and
+    paler the further off they are.
+  - **Lakeshore Brewing Co.**, past the last house at the end of the road,
+    on the shore. Its lot has cars in it and its sign at the mouth. The
+    building is a long timber taproom with a red standing-seam roof, its
+    door, windows and name toward the road. The lake side is five glass
+    garage doors, three of them rolled up under the ceiling so the room
+    opens onto the grass. Inside there is pine on the walls and ceiling,
+    with black beams, fans turning and pendant bulbs. The brewhouse is
+    behind a glass wall at the west end (three fermenters, the kettle,
+    kegs). The bar runs along the east wall with a marble top, stools,
+    the taps on grey barnwood, bottles on the shelves and two TVs over
+    them. There are tables, high-tops by the open doors, and a chalkboard.
+    Out of the garage doors is the beer garden: turf going down to the
+    water, a big maple in a ring of stones, sofas round a fire pit, a
+    cornhole game, and the deck bar, a little timber hut with a window to
+    order at. Below it the deck runs out over the water on posts. It has
+    black slatted tables, aluminium chairs and red market umbrellas,
+    mostly furled, with a black cable rail along the water and strings of
+    bulbs on poles over it all, lit at dusk. Two bartenders work the
+    taproom and one the hut, and two servers go round the tables with
+    trays. Customers sit at the bar, at the tables and on the sofas, stand
+    at the rail looking at the lake, and play cornhole. Sit in any empty
+    chair.
 - **The picnic grove** spreads across the lawn south of the building. Paths
   run to it off curb ramps at the plaza's corners: north to the shelter's
   slab and its ramp, south to a round pad by the pet area's bag dispenser,
@@ -596,10 +697,31 @@ If the scene runs hot on your machine, start there (see below).
       bunk room the shelter never needed, with four cots, a table with a
       radio that plays only static (`E`), and an October 1962 calendar
       crossed off to the 27th; a passage with a chair at its end, facing
-      the wall under rows of tally marks (`E`); and at the far end, under a
-      red bulb, a steel door with a wheel on it marked LEVEL 3 that does not
-      turn (`E`, and something knocks back). It is the darkest place in the
-      world: bring the flashlight (`L`).
+      the wall under rows of tally marks (`E`); and at the far end what looks
+      like a janitor's closet. It isn't one. Past the mop sink and the shelves
+      it goes on round a corner, through an old wooden door, along a passage
+      of crates, through a steel door marked DANGER, to a red bulb (the chalk
+      calls it THE RED LIGHT) and under it a steel door with a wheel on it
+      marked LEVEL 3. It is the darkest place in the world: bring the
+      flashlight (`L`).
+    - **The boiler hall.** `E` at the wheel door puts your hands on the
+      wheel. It gives, and you watch it spin round three times as the dogs
+      draw back out of the frame, then something clunks and the door swings
+      slowly in, red light coming round it. Behind it is a hall the size of
+      a church dug out of the hill, three storeys of it, lit red. You come
+      out on a grating catwalk high up the wall, and a steel stair goes down
+      to a landing and turns to the floor. Down there three Scotch marine
+      boilers stand side by side on their saddles, burners roaring, the fire
+      showing round their doors and in their sight glasses, gauges quivering,
+      each with its steam stop and a red handwheel. The header they feed runs
+      the width of the hall under the ceiling, and their stacks go up into
+      the breeching. Against the east wall are the deaerator on its platform
+      and the two feed pumps under it. On the west wall is the control
+      panel with its dials lit and a red beacon going round on top, and at
+      the desk in front of it a logbook somebody is still keeping (`E`). One
+      stop valve weeps steam, and now and then a safety valve lifts with a
+      shriek. `E` at the door again swings it shut and the wheel spins home.
+      It is underground and red at any hour.
     - **Astro Raiders.** Every cabinet plays. `E` at the first stands you at it,
       looking at its screen in the cabinet, with the room still round you.
       It is a space invaders game after yojoecool's MIT-licensed
@@ -909,6 +1031,7 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Run · sprint | `Shift` · `Q` |
 | Door · drive · use | `E` |
 | Handbrake (driving) | `Space` |
+| Throttle · reverse · steer (the boat) | `W` · `S` · `A` `D` |
 | Sit / stand | `C` |
 | Drone · fly up / down | `F` · `Space` / `Shift` |
 | Flashlight | `L` |
@@ -983,13 +1106,17 @@ centred on the origin.
 | The dug-out (darts, couch) | x 70.25 … 77, z −183.4 … −176, off the cellar's west side |
 | The corridor and the arcade | corridor x 71 … 73 from z −184 to −211; arcade x 67.5 … 76.5, z −219.5 … −211 |
 | MECH 2 · the stores and the stair | x 73.25 … 78.25, z −193.75 … −188.25 · x 73.25 … 80.2, z −205.4 … −201.6 |
-| The sub-basement | x 58.4 … 100.8, z −242 … −183.4, its floor 3.42 m under the corridor's |
+| The sub-basement | x 58.4 … 100.8, z −258.6 … −183.4, its floor 3.42 m under the corridor's; the closet and passages to the wheel door x 91.2 … 101.2, z −259.4 … −242 |
+| The boiler hall | x 86 … 112, z −280.6 … −258.6, its floor 5 m under the sub-basement's |
 | Median crossovers | z −250, −520 and +470 |
 | Edinboro (US 6N bridge) | z −1200; ramps from z −640 (south) and −1630 (north); the fields x −330 … 610, z −1460 … −860 |
+| French Creek Substation | x −16 … 36, z −1416 … −1376 (gate x 10 … 13 on the south side); the control house x −14 … −6, z −1388 … −1381 |
+| The Weirs' machine shed | x 136 … 168, z −1120 … −1107 |
 | The chapel and its graveyard | x 50 … 128, z −1296 … −1205; the chapel x 84 … 93, z −1238 … −1222; the hall under it, the stair down x 85.2 … 86.8, z −1242.3 … −1238 |
 | US 6N east through the woods | x 586 … 1062, z −1213 … −1187 |
 | French Creek Fireworks | x 872 … 966, z −1284 … −1205; the building x 893 … 925, z −1274 … −1258 |
 | Lake Street and Lakeside Park | x 1062 … 1420, z −1298 … −1134; the park x 1238 … 1372 north of the road; the shore at z −1296 |
+| Lakeshore Brewing Co. | lot x 1422 … 1468 from the road to z −1226; the taproom x 1430 … 1460, z −1243 … −1229; the deck x 1423 … 1467, z −1299 … −1266 |
 | Edinboro Lake | x 980 … 2260, z −2090 … −1296, a rounded oblong, wandering off the street |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
 | Well house · water tank | x 65.6 … 68.8, z 97.6 … 101.2 · x 70, z 140 |
@@ -1032,7 +1159,8 @@ js/11-driving.js    driving a parked car
 js/12-substation.js the drive, the fenced compound, generators, pole line
 js/12b-hangout.js   the stair down from the generator house, the crew's rooms under it, the darts lane
 js/12c-arcade.js    the shelter corridor on down from the dug-out, its two steel doors, and the arcade at the end of it behind its sliding doors
-js/12d-subbasement.js MECH 2, the stores and the stair behind the other door, and the sub-basement's hallways and rooms
+js/12d-subbasement.js MECH 2, the stores and the stair behind the other door, and the sub-basement's hallways and rooms, the closet and passages to the wheel door
+js/12e-boilers.js   the boiler hall behind the wheel door: the wheel, the catwalk and stair, the boilers, their fires, steam and sounds
 js/13-grounds.js    picnic grove, shelter, grills, flags, memorial, pet area
 js/13b-vendhut.js   the vending room on the island: machines, phone, board, lights, crosswalk
 js/13c-wastewater.js the well house, the tank on its tower, the treatment plant, the outfall and the creek
@@ -1051,6 +1179,10 @@ js/14l-chapel.js    at exit 166: French Creek Union Chapel, inside and out, the 
 js/14m-fireworks.js US 6N on east through the woods, and French Creek Fireworks, which you can walk into
 js/14n-lakeside.js  the end of the road east: Lake Street's houses (their outsides), Lakeside Park and its docks, and Edinboro Lake
 js/14o-houses.js    the houses on Lake Street from inside: their walls round real openings, glazed and with doors hung, and the rooms of each kind
+js/14p-boat.js      the pontoon you can take out on the lake: its outboard, how it handles, getting on and off, the camera behind it
+js/14q-townsfolk.js people out of doors (Lake Street, the park, Edinboro, the baler in the hay field) and the crowd runtime the brewery uses too
+js/14r-brewery.js   Lakeshore Brewing Co.: its lot, the taproom, the beer garden, the deck over the water, its staff and customers
+js/14s-edinsub.js   French Creek Substation behind the fuel stop: the tap line, the yard and its equipment, the control house
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -1148,7 +1280,10 @@ the generator house's cellar and the trailer's step. The routes are:
 - in at MECH 2's door; in at the other, down the stair to the sub-basement
   (and the stair, keys held, at all three speeds), along the hallways to
   the bunk room, to the chair, round to the boiler room, and up to the
-  door at the end;
+  door at the end; through the closet and the passages to the wheel door;
+  and through it (opened first) along the catwalk and down the boiler
+  hall's stair to the floor (the stair also with the keys held, at all
+  three speeds);
 - across each of the three median crossovers on foot;
 - up Edinboro's off-ramp, along US 6N and over the bridge, and down the
   on-ramp to southbound; and the other two, down onto northbound and up
@@ -1161,9 +1296,16 @@ the generator house's cellar and the trailer's step. The routes are:
   at all three speeds), in at the white door and through the fellowship
   hall to the kitchen counter;
 - east along US 6N through the woods, in at the fireworks outlet's glass
-  doors and down an aisle;
+  doors and down an aisle; and in under its middle roll-up door (raised
+  first);
 - along Lake Street into the park, through its lot, down the path to the
   shore and out to the end of a dock;
+- past the car in a ranch's drive and in under its garage door (raised
+  first);
+- across the brewery's lot, in at its door and through the taproom to the
+  bar; out a garage door to the beer garden; and round the east end of the
+  building, down the path to the deck, between its tables and along the
+  rail;
 - into every house on Lake Street and to every room in it. Each house
   lays out its own routes as it builds (`LAKE_HOUSES.routes` in 14o, so
   they move with the plans): in at the front door, round the ground floor,
@@ -1175,6 +1317,11 @@ the generator house's cellar and the trailer's step. The routes are:
   held, at all three speeds) into each room upstairs, the storeroom
   through the sewing room;
 - up the bank into the barn, round the threshing floor and the stalls;
+- from the yard into the machine shed and past the lawn tractor to the
+  bench; and along the front of the bays to the fuel tank;
+- up the lane from the fuel stop's lot to the substation, in at its gate
+  (opened first), across the stone, in at the control house's door and
+  up to its desk; and round the inside of the fence;
 - down the spur to the treatment plant, through its gate (opened first)
   and into the control building; up the stair and along the aeration
   tank's catwalk, out the clarifier's bridge, and onto the sand filter;
