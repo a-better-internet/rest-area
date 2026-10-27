@@ -295,10 +295,9 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     const gx=x+gSide*5.0;                                          // the garage's middle
     h.kind="ranch"; h.gSide=gSide; h.gx=gx;
     h.ops.F.push({a:gx-2.45, b:gx+2.45, sill:Y-0.03, head:Y+2.27, garage:true});
-    // the garage door: white panels in its opening, the light over it
-    { const [px, pz, ry]=h.fp("F", gx, 0.03); B(4.9, 2.25, 0.06, px, Y+1.125+0.02, pz, "#f4f2ec", ry);
-      for(let k=1;k<4;k++) B(4.9, 0.02, 0.012, px, Y+0.02+k*0.5625, pz+f*0.035, "#d8d6d0", ry);
-      for(let i=0;i<4;i++) for(let j=0;j<4;j++) B(1.08, 0.42, 0.012, px-1.83+i*1.22, Y+0.30+j*0.5625, pz+f*0.036, "#ecebe6", ry);
+    // the garage door: four white sections that go up their tracks and back under the ceiling (01's makeLiftDoor); the trim over it
+    { const [px, pz, ry]=h.fp("F", gx, 0.03), za=zf-f*0.30, zb=zf+f*0.06;
+      h.liftDoor=makeLiftDoor(XF(px, pz, ry), Y+0.02, 4.9, 2.25, "#f4f2ec", "THE GARAGE DOOR", {x0:gx-2.45, x1:gx+2.45, z0:Math.min(za,zb), z1:Math.max(za,zb), y0:Y-0.5, y1:Y+2.27});
       B(5.2, 0.12, 0.08, px, Y+2.33, pz+f*0.02, col.t, ry); }
     const lx=x-gSide*1.0;
     h.win("F", lx-gSide*0.2+(-gSide)*2.6, h.FF+0.75, 2.6, 1.5, undefined, false);          // the picture window
@@ -536,7 +535,8 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     addCol(x-0.12, x+0.12, z-0.12, z+0.12, DY-1, DY+0.6); };
   const cleat=(x, z, ry)=>{ B(0.30, 0.04, 0.06, x, DY+0.06, z, "#8a8d90", ry); for(const sd of [-1,1]) B(0.05, 0.05, 0.05, x+Math.cos(ry)*sd*0.08, DY+0.025, z-Math.sin(ry)*sd*0.08, "#8a8d90", ry); };
   // the pontoon boats: two aluminium logs, a deck, the fence round it, the seats, the helm, a bimini top, the motor
-  const pontoon=(x, z, ry, seat)=>{ const BM=[], be=(geo,lx,ly,lz,c,rx,rz)=>BM.push({geo:geo, matrix:new T.Matrix4().compose(V3(lx,ly,lz), new T.Quaternion().setFromEuler(new T.Euler(rx||0,0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
+  // (the one given `ride` is yours to take out: its outboard and its collider are 14p's, which moves it)
+  const pontoon=(x, z, ry, seat, ride)=>{ const BM=[], be=(geo,lx,ly,lz,c,rx,rz)=>BM.push({geo:geo, matrix:new T.Matrix4().compose(V3(lx,ly,lz), new T.Quaternion().setFromEuler(new T.Euler(rx||0,0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
     const bb=(w,h,d,lx,ly,lz,c,rx,rz)=>be(boxGeo(w,h,d),lx,ly,lz,c,rx,rz), rb=(w,h,d,lx,ly,lz,c)=>be(rboxGeo(w,h,d,0.05,2),lx,ly,lz,c), L=7.2;
     for(const sd of [-0.85, 0.85]){ be(new T.CylinderGeometry(0.30, 0.30, L-0.8, 18), sd, 0.02, 0, "#c8ccd0", Math.PI/2); be(new T.ConeGeometry(0.30, 0.8, 18), sd, 0.02, L/2, "#c8ccd0", Math.PI/2);
       be(new T.SphereGeometry(0.30, 14, 8, 0, Math.PI*2, 0, Math.PI/2), sd, 0.02, -(L-0.8)/2, "#c8ccd0", -Math.PI/2); }
@@ -554,9 +554,11 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     for(const sd of [-1,1]) for(const dz of [-1.6, 0.4]) be(new T.CylinderGeometry(0.015, 0.015, 1.3, 6), sd*1.18, 1.95, dz, "#c8ccd0");
     bb(2.5, 0.05, 2.3, 0, 2.6, -0.6, "#2a4a6a");
     // the outboard on its transom
-    bb(0.40, 0.55, 0.45, 0, 0.95, -L/2-0.15, "#1a1a1a"); bb(0.14, 0.75, 0.18, 0, 0.30, -L/2-0.22, "#2a2a2a"); bb(0.30, 0.10, 0.12, 0, -0.08, -L/2-0.20, "#2a2a2a");
+    if(!ride){ bb(0.40, 0.55, 0.45, 0, 0.95, -L/2-0.15, "#1a1a1a"); bb(0.14, 0.75, 0.18, 0, 0.30, -L/2-0.22, "#2a2a2a"); bb(0.30, 0.10, 0.12, 0, -0.08, -L/2-0.20, "#2a2a2a"); }
+    else bb(2.36, 0.40, 0.10, 0, 0.62, -L/2+0.06, "#5a5e62");                                     // (the transom the outboard clamps to)
     const m=new T.Mesh(mergeEntries(BM), new T.MeshStandardMaterial({vertexColors:true, roughness:0.45, metalness:0.35}));
     m.position.set(x, WY, z); m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m);
+    if(ride){ LAKESIDE.ride={m:m, x:x, z:z, ry:ry, L:L, wy:WY, dy:DY}; return; }
     LAKESIDE.boats.push({m:m, y0:WY, ph:r()*6.28, ry:ry});
     const hx=Math.abs(Math.cos(ry))*1.3+Math.abs(Math.sin(ry))*(L/2+0.5), hz=Math.abs(Math.sin(ry))*1.3+Math.abs(Math.cos(ry))*(L/2+0.5);
     addCol(x-hx, x+hx, z-hz, z+hz, WY-1, WY+2.7); };
@@ -583,9 +585,9 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     for(const sd of [-0.7, 0.7]) B(0.08, 0.45, 0.40, bx2+sd, DY+0.225, bz2, "#5a4a36"); addCol(bx2-0.82, bx2+0.82, bz2-0.24, bz2+0.24, DY-0.5, DY+0.5);
     addSeat(bx2, bz2, DY, Math.PI, "THE BENCH ON THE DOCK"); }
   // the boats: two at dock A's T, one along dock B
-  pontoon(1286.0, SH-26.4, 0.0, "#e8e2d2"); pontoon(1293.6, SH-26.4, 0.04, "#d8e2ec");
+  pontoon(1286.0, SH-27.0, 0.0, "#e8e2d2", true); pontoon(1293.6, SH-26.4, 0.04, "#d8e2ec");
   pontoon(1333.0, SH-9.0, Math.PI, "#e8e2d2");
-  for(const [x,z] of [[1286.0, SH-22.6],[1293.6, SH-22.6]]) tubeE(V3(x, DY+0.06, z), V3(x, WY+0.6, z-0.8), 0.012, "#e8e2c8");
+  for(const [x,z] of [[1293.6, SH-22.6]]) tubeE(V3(x, DY+0.06, z), V3(x, WY+0.6, z-0.8), 0.012, "#e8e2c8");          // (the one you can take is not tied up)
   // the shore along the park: big stones at the water's edge, both sides of each dock
   for(let x=PK.x0+1.0; x<PK.x1-1.0; x+=0.85){ if(docks.some(d=>x>d.x0-0.6 && x<d.x1+0.6)) continue;
     const s=0.28+r()*0.25; ent(new T.DodecahedronGeometry(s, 0), x+(r()-0.5)*0.3, WY+0.16+s*0.2, SH+0.2+(r()-0.5)*0.5, ["#8a847a","#7a7468","#9a948a","#6a665e"][(r()*4)|0], r()*3, r()*3); }

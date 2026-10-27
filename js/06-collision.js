@@ -111,7 +111,7 @@ function indoorsAt(x,z,y){
 }
 // underground: the basement under the generator house (12b), where the loop turns the sky down
 const BURIED=[];
-function addBuried(x0,x1,z0,z1,y0,y1,amb){ BURIED.push({x0,x1,z0,z1,y0,y1,amb}); }
+function addBuried(x0,x1,z0,z1,y0,y1,amb,tint){ BURIED.push({x0,x1,z0,z1,y0,y1,amb,tint:tint ? new T.Color(tint) : null}); }
 function buriedVolAt(x,z,y){
   for(let i=0;i<BURIED.length;i++){
     const q=BURIED[i];

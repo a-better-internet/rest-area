@@ -105,13 +105,30 @@ const EMBERS=[];
     push("beam", planeGeo(W+2*ov, Math.hypot(D/2+ov, RH+0.3), 0.8), SX, RY+RH/2-0.25, SZ+sg*(D/2+ov)/2, 0, "#8a6a4a",
          Math.PI/2+sg*Math.atan2(RH+0.3, D/2+ov), 0);
   }
-  for(const gx of [-W/2-ov, W/2+ov]){                    // gable ends, open, with a king post
-    bx("beam", 0.14, RH, 0.14, SX+gx*0.98, RY+RH/2-0.1, SZ, 0.6, 0, "#6e5038");
-  }
+  /* the frame under the roof: a king-post truss over each pair of posts (a tie beam across on the plates, the king
+     post up from it to the ridge beam, a strut each side up to the rafters, the rafters under the boards); the
+     ridge beam the length of the roof, and barge boards along the open gables' edges. Every piece is laid under the
+     roof boards' underside, which falls from RY+1.80 at the ridge at the roof's pitch */
+  const TAN=(RH+0.3)/(D/2+ov), COS=Math.cos(Math.atan(TAN)), TIM="#6e5038";
+  const under=dz=>RY+0.70+(1.9-Math.abs(dz))*TAN;                   // the boards' underside, |dz| from the ridge
+  const slope=(x, za, zb, top, deep, w)=>{                          // a timber along the pitch, its top a hair under the boards
+    const ya=under(za)-0.012-deep/(2*COS), yb=under(zb)-0.012-deep/(2*COS), L=Math.hypot(zb-za, yb-ya);
+    push("beam", boxGeo(w, deep, L, 0.6), x, (ya+yb)/2, SZ+(za+zb)/2, 0, TIM, Math.atan2(ya-yb, zb-za), 0); };
+  for(const px of [-W/2+0.2, 0, W/2-0.2]){
+    const x=SX+px;
+    bx("beam", 0.20, 0.22, D-0.4+0.26, x, RY+0.11, SZ, 0.6, 0, TIM);                                   // the tie, 3 cm past the plates
+    bx("beam", 0.14, under(0)-0.012-0.24-(RY+0.22)+0.03, 0.14, x, (RY+0.22+under(0)-0.252+0.03)/2, SZ, 0.6, 0, TIM);
+    for(const sg of [-1,1]){
+      slope(x, sg*(D/2-0.2+0.30), sg*0.08, 0, 0.20, 0.12);                                            // the rafter, tail out over the plate
+      const a=V3(x, RY+0.30, SZ+sg*0.07), b=V3(x, under(1.7)-0.012-0.20/COS-0.02, SZ+sg*1.7), d=b.clone().sub(a);
+      push("beam", boxGeo(0.10, 0.12, d.length(), 0.6), x, (a.y+b.y)/2, (a.z+b.z)/2, 0, TIM, Math.atan2(-d.y, d.z), 0); } }
+  bx("beam", W+2*ov-0.06, 0.24, 0.16, SX, under(0)-0.012-0.12, SZ, 0.6, 0, TIM);                       // the ridge beam
+  for(const gx of [-1,1]) for(const sg of [-1,1]) slope(SX+gx*(W/2+ov-0.05-(sg>0 ? 0.006 : 0)), sg*(D/2+ov-0.02), 0, 0, 0.24, 0.04);   // barge boards (the pair 6 mm apart where they cross at the ridge)
   picnicTable(SX-2.3, SZ, 0, "#94573a", y+0.15);
   picnicTable(SX+2.3, SZ, 0, "#94573a", y+0.15);
-  LAMPS.push({x:SX, y:RY-0.2, z:SZ, color:0xffdcb0, intensity:0.6, dist:9, decay:1.5, mothy:true, circ:"site"});
-  push("lamplens", new T.SphereGeometry(0.10,10,8), SX, RY-0.05, SZ, 0, "#ffffff");
+  LAMPS.push({x:SX, y:RY-0.25, z:SZ+0.5, color:0xffdcb0, intensity:0.6, dist:9, decay:1.5, mothy:true, circ:"site"});
+  bx("paintm", 0.16, 0.05, 0.16, SX, RY-0.025, SZ+0.5, 0, 0, "#3a3a38");
+  push("lamplens", new T.SphereGeometry(0.10,10,8), SX, RY-0.10, SZ+0.5, 0, "#ffffff");
 })();
 
 /* ---- the flagpole: the national flag over the commonwealth's ------------- */

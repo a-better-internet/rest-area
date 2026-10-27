@@ -17,8 +17,10 @@
    them out and one going. Pipes along the ceiling, water standing on the
    floor, chalk on the walls. Off them the old boiler room, a bunk room the
    shelter never needed, a chair at the end of a passage facing the wall,
-   and at the far end, under a red light, a steel door with a wheel on it
-   that does not turn.
+   and at the far end what looks like a janitor's door. Past it the closet
+   keeps going: round a corner, through an old wooden door, through a steel
+   one marked DANGER, to a red light and under it a steel door with a wheel
+   on it. Turn the wheel (E) and it opens on the boiler hall (12e).
    All of it BURIED (06). Down here the fill light is a fraction of the rest
    of underground's (19, the volume's dimming), so bring a light (L). The
    walls are worked out from the hallways' rectangles on a 20 cm grid: a
@@ -171,13 +173,27 @@ const SUBBASE={drip:2.5, vols:[]};
     {x0:62.0, x1:91.2, z0:-232.8, z1:-231.2},                         // west along the north
     {x0:74.4, x1:76.0, z0:-231.2, z1:-226.0},                         // the passage with the chair at the end
     {x0:62.0, x1:63.6, z0:-231.2, z1:-214.0},                         // south to the bunks
-    {x0:58.4, x1:66.4, z0:-214.0, z1:-207.2, name:"THE BUNK ROOM"}];
-  const GS=0.2, GX=56.0, GZ=-246.0, NXg=Math.round((102.0-GX)/GS), NZg=Math.round((-182.0-GZ)/GS);
+    {x0:58.4, x1:66.4, z0:-214.0, z1:-207.2, name:"THE BUNK ROOM"},
+    // past the end of the hallway north: the doors in front of the wheel, each a doorway 60 cm through the rock
+    {x0:91.4, x1:92.6, z0:-242.6, z1:-242.0, door:1},                 // JANITOR
+    {x0:91.2, x1:92.8, z0:-247.6, z1:-242.6},                         // a closet that keeps going
+    {x0:92.8, x1:95.0, z0:-247.6, z1:-246.0},                         // round the corner, east
+    {x0:95.0, x1:95.6, z0:-247.4, z1:-246.2, door:2},                 // the old wooden door
+    {x0:95.6, x1:99.4, z0:-247.6, z1:-246.0},
+    {x0:97.8, x1:99.4, z0:-254.0, z1:-247.6},                         // north again
+    {x0:98.0, x1:99.2, z0:-254.6, z1:-254.0, door:3},                 // DANGER
+    {x0:97.8, x1:99.4, z0:-258.0, z1:-254.6, name:"THE RED LIGHT"},
+    {x0:98.0, x1:99.2, z0:-258.6, z1:-258.0, door:4},                 // the wheel
+    {x0:96.0, x1:101.2, z0:-259.4, z1:-258.6, hall:true}];            // (the boiler hall's edge: open, but its walls are 12e's)
+  const GS=0.2, GX=56.0, GZ=-262.0, NXg=Math.round((102.0-GX)/GS), NZg=Math.round((-182.0-GZ)/GS);
   const open=new Uint8Array(NXg*NZg), ci=x=>Math.round((x-GX)/GS), cj=z=>Math.round((z-GZ)/GS);
   for(const r of RECTS) for(let i=ci(r.x0); i<ci(r.x1); i++) for(let j=cj(r.z0); j<cj(r.z1); j++) open[j*NXg+i]=1;
   const O=(i,j)=>i>=0 && j>=0 && i<NXg && j<NZg && open[j*NXg+i]===1;
   const WC="#5e5c55", y0=SB-0.1, y1=SB+SH+0.12;
-  const st=(i,j)=>i>=ci(S.x0) && i<ci(S.x1) && j>=cj(S.z0) && j<cj(S.z1);       // the stair's walls are its own (above)
+  // the stair's walls are its own (above), and the boiler hall's are 12e's
+  const own=(i,j)=>RECTS.some(r=>(r.stair || r.hall) && i>=ci(r.x0) && i<ci(r.x1) && j>=cj(r.z0) && j<cj(r.z1));
+  const ownC=new Uint8Array(NXg*NZg); for(let j=0;j<NZg;j++) for(let i=0;i<NXg;i++) ownC[j*NXg+i]=own(i,j)?1:0;
+  const st=(i,j)=>ownC[j*NXg+i]===1;
   // walls along x, on the north (s=-1) or south (s=1) side of a run of open cells with rock beside them. Round an
   // outside corner one runs on to 5 mm inside the wall along z there; at an opening it stops where that wall begins
   for(let j=0;j<NZg;j++) for(const s of [-1,1]){
@@ -199,11 +215,11 @@ const SUBBASE={drip:2.5, vols:[]};
       wallBox("block", s<0 ? xf-WT : xf, s<0 ? xf : xf+WT, za, zb, y0, y1, WC, 0.6, SB);
       j=j2+1; } }
   // the floor and the ceiling: east of the stair's foot, and the west part beyond the stair, each one plane
-  for(const [x0,x1,z0,z1] of [[S.x1, 100.8, -242.0, -183.4], [58.4, S.x1, -232.8, -207.2]]){
+  for(const [x0,x1,z0,z1] of [[S.x1, 100.8, -242.0, -183.4], [58.4, S.x1, -232.8, -207.2], [91.2, 99.4, -258.6, -242.0]]){
     floorAt("concrete", x0, x1, z0, z1, SB+0.004, "#4e4c47", 0.5);
     ceilAt("plaster", x0, x1, z0, z1, SB+SH, "#45433e", 0.5); }
   // (each one's volumes lapping its neighbours' by 5 cm, so the seam between two is never in neither)
-  for(const r of RECTS){ if(r.stair) continue;
+  for(const r of RECTS){ if(r.stair || r.hall) continue;
     const a=r.x0-0.05, b=r.x1+0.05, c=r.z0-0.05, d=r.z1+0.05;
     addFlat(r.x0, r.x1, r.z0, r.z1, SB);
     addVoid(a, b, c, d, SB-3, SB+SH+0.3, SB);
@@ -212,7 +228,7 @@ const SUBBASE={drip:2.5, vols:[]};
     SUBBASE.vols.push(r);
     // pipes along the ceiling of every hallway, a big one and a small near one wall, down out of the ceiling at one
     // end and back up into it at the other
-    if(!r.name){ const along=r.x1-r.x0>r.z1-r.z0;
+    if(!r.name && !r.door){ const along=r.x1-r.x0>r.z1-r.z0;
       for(const [o,rad,col] of [[0.48,0.055,"#5a4a3a"],[0.62,0.028,"#7a5a3a"]]){
         const y=SB+SH-(rad>0.04?0.14:0.26), m=0.12+rad;
         const a=along ? V3(r.x0+m, y, (r.z0+r.z1)/2-o) : V3((r.x0+r.x1)/2+o, y, r.z0+m);
@@ -225,8 +241,8 @@ const SUBBASE={drip:2.5, vols:[]};
   // the bulbs: lit (1), out (0), going (2); a red one over the door at the end
   for(const [x,z,st] of [[81.0,-203.6,1],[86.0,-203.6,0],[92.0,-203.6,1],[92.0,-212.0,1],[92.0,-220.0,0],[92.0,-227.0,2],[92.0,-232.0,1],
                          [100.0,-196.0,1],[100.0,-190.0,0],[92.0,-186.0,1],[82.6,-185.4,1],[84.0,-232.0,0],[75.2,-232.0,1],[68.0,-232.0,0],
-                         [62.8,-232.0,1],[62.8,-222.0,1],[62.4,-210.6,3]]) bulb(x, z, SB+SH, st);
-  bulb(92.0, -240.6, SB+SH, 1, 0xff3a2a);
+                         [62.8,-232.0,1],[62.8,-222.0,1],[62.4,-210.6,3],[92.0,-239.4,0],[92.0,-245.6,2],[97.2,-246.8,0],[98.6,-250.6,1]]) bulb(x, z, SB+SH, st);
+  bulb(98.6, -256.4, SB+SH, 1, 0xff3a2a);
 
   // water standing on the floor, a few millimetres proud of it
   bucketOf("puddle", ()=>new T.MeshStandardMaterial({color:0x0c0e10, roughness:0.05, metalness:0.65, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-2}));
@@ -294,20 +310,48 @@ const SUBBASE={drip:2.5, vols:[]};
     for(const [x,z] of [[65.8,-213.4],[65.2,-213.4],[65.8,-212.8]]){ C(0.27, 0.86, x, SB+0.43, z, "#5a6a4a", 20); C(0.275, 0.03, x, SB+0.30, z, "#4a5a3a", 20); }
     addCol(64.9, R0.x1, R0.z0, -212.5, SB-0.5, SB+0.9); }
 
-  // the door at the end: a heavy steel leaf with a wheel on it in the north wall, LEVEL 3 stencilled over it
-  { const x=92.0, zf=-242.0;
-    B(1.30, 2.10, 0.06, x, SB+1.05, zf+0.025, "#4a4e50");
-    B(1.14, 1.94, 0.03, x, SB+1.05, zf+0.065, "#5a6062");
-    for(const dy of [0.5, 1.6]) for(const sd of [-1,1]) B(0.12, 0.22, 0.05, x+sd*0.62, SB+dy, zf+0.075, "#3a3c3e");
-    ent(new T.TorusGeometry(0.22, 0.025, 8, 24), x, SB+1.20, zf+0.16, "#8a8d90");
-    for(let k=0;k<3;k++) B(0.44, 0.03, 0.03, x, SB+1.20, zf+0.16, "#8a8d90", 0, 0, k*Math.PI/3);
-    C(0.04, 0.10, x, SB+1.20, zf+0.11, "#6a6d70", 12, Math.PI/2, 0, 0);
-    sign(0.70, 0.16, (c,W,Hh)=>{ c.fillStyle="#4a4e50"; c.fillRect(0,0,W,Hh); say(c, "LEVEL 3 · NO ADMITTANCE", W/2, Hh/2, W*0.86, Hh*0.60, "#d8d2c0", "700", "'Arial Black', Arial"); },
-      x, SB+2.25, zf+0.012, 0, false, 360);
-    addCol(x-0.66, x+0.66, zf, zf+0.20, SB-0.5, SB+2.3);
-    addUse(x, zf+1.0, SB, "TRY THE WHEEL", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("knock", x, zf);
-      toast(["IT WON'T TURN. FROM THE OTHER SIDE, THREE KNOCKS","IT WON'T BUDGE. SOMETHING ON THE OTHER SIDE KNOCKS BACK","LOCKED FROM THE OTHER SIDE. YOU HEAR THE WHEEL THERE TURN, A LITTLE, AND STOP"][(Math.random()*3)|0], "#e0c0c0"); }, 1.2); }
-
+  /* ---- the doors in front of the wheel -------------------------------------------- */
+  // each doorway a 60 cm cut through the rock: steel jambs and a head of block in it, 2 cm proud of the
+  // walls either side, a sill plate across it, and its leaf hung to swing away from you as you go in
+  const door=(r, style, tint, label, sg, signFn)=>{
+    const ax=r.x1-r.x0>r.z1-r.z0 ? "x" : "z", jw=style==="closet" ? 0.13 : 0.09, HD=SB+2.10, J=style==="wheel" ? "#4a4e50" : "#3a3c3e";
+    const a=ax==="x" ? r.x0 : r.z0, b=ax==="x" ? r.x1 : r.z1, d0=(ax==="x" ? r.z0 : r.x0)-0.02, d1=(ax==="x" ? r.z1 : r.x1)+0.02, c=(d0+d1)/2;
+    // (a box across the opening from u0 to u1, through it from d0 to d1, in world terms)
+    const box=(u0,u1,y0,y1,col)=>ax==="x" ? B(u1-u0, y1-y0, d1-d0, (u0+u1)/2, (y0+y1)/2, c, col) : B(d1-d0, y1-y0, u1-u0, c, (y0+y1)/2, (u0+u1)/2, col);
+    box(a-0.01, a+jw, SB+0.012, HD, J); box(b-jw, b+0.01, SB+0.012, HD, J);
+    box(a-0.01, b+0.01, SB-0.03, SB+0.012, "#5a5c5e");
+    const top=SB+SH+(style==="wheel" ? 0.14 : 0.05);                       // (the wheel's head runs up into the hall's wall, 12e)
+    if(ax==="x") wallBox("block", a-0.01, b+0.01, d0, d1, HD, top, WC, 0.6, SB);
+    else wallBox("block", d0, d1, a-0.01, b+0.01, HD, top, WC, 0.6, SB);
+    if(sg) sign(0.56, 0.15, signFn, ax==="x" ? (a+b)/2 : sg.at+0.012*sg.s, SB+2.25, ax==="x" ? sg.at+0.012*sg.s : (a+b)/2, sg.ry, false, 300);
+    if(style==="wheel") return {a:a, b:b, jw:jw, c:c, HD:HD};
+    const h=b-jw-0.04;
+    return makeDoor(ax==="x" ? XF(h, c, Math.PI) : XF(c, h, Math.PI/2), 0, SB+0.02, 0, label, true, 0, style, tint); };
+  const DR=RECTS.filter(r=>r.door).sort((p,q)=>p.door-q.door);
+  const sgn=(txt, bg, fg, font)=>(c,W,Hh)=>{ c.fillStyle=bg; c.fillRect(0,0,W,Hh); say(c, txt, W/2, Hh/2, W*0.80, Hh*0.60, fg, "700", font||"'Arial Black', Arial"); };
+  door(DR[0], "closet", 0x6f7a72, "JANITOR", {at:DR[0].z1+0.02, s:1, ry:0}, sgn("JANITOR", "#c8c4b4", "#2a2a28", "Arial"));
+  door(DR[1], "closet", 0x5a3f2a, "THE OLD DOOR", {at:DR[1].x0-0.02, s:-1, ry:-Math.PI/2}, sgn("STORAGE", "#6a5a44", "#d8ccb0", "Georgia, serif"));
+  door(DR[2], "steel", 0x7a2622, "THE RED DOOR", {at:DR[2].z1+0.02, s:1, ry:0}, sgn("DANGER · KEEP OUT", "#b8201a", "#f4efe2"));
+  SUBBASE.wheelDoor=Object.assign({r:DR[3]}, door(DR[3], "wheel", 0, "", {at:DR[3].z1+0.02, s:1, ry:0}, sgn("LEVEL 3 · NO ADMITTANCE", "#4a4e50", "#d8d2c0")));
+  // the closet that keeps going: a mop sink by the door, a shelf of paint and cleaner further in, a bucket and a
+  // broom in the corner (a way through them all, 68 cm wide)
+  { const P={x0:91.2, x1:92.8, z0:-247.6, z1:-242.6}, sx=92.56, sz=-243.4;
+    B(0.46, 0.30, 0.52, sx, SB+0.15, sz, "#d8d6ce"); B(0.40, 0.03, 0.46, sx, SB+0.31, sz, "#e8e6de");
+    tubeE(V3(P.x1-0.06, SB+0.30, sz), V3(P.x1-0.06, SB+1.10, sz), 0.012, "#b8bcbc");
+    tubeE(V3(P.x1-0.06, SB+1.06, sz), V3(P.x1-0.24, SB+1.06, sz), 0.012, "#b8bcbc");
+    addCol(sx-0.24, P.x1, sz-0.28, sz+0.28, SB-0.5, SB+0.4);
+    for(const y of [0.30, 0.80, 1.30, 1.80]) B(0.36, 0.025, 1.40, P.x0+0.19, SB+y, -245.4, "#6e7275");
+    for(const zz of [-246.08, -244.72]) for(const xx of [P.x0+0.02, P.x0+0.35]) B(0.025, 1.84, 0.025, xx, SB+0.92, zz, "#4a4e50");
+    for(let k=0;k<9;k++){ const y=[0.30,0.80,1.30][k%3], h=0.18+(k%3)*0.04, zz=-246.0+((k*0.37)%1.2);
+      C(0.07+(k%2)*0.02, h, P.x0+0.19, SB+y+0.0125+h/2, zz, ["#8a8e6a","#c42a1a","#d8d4c8","#3a5a8a"][k%4], 12); }
+    addCol(P.x0, P.x0+0.40, -246.12, -244.68, SB-0.5, SB+1.9);
+    C(0.16, 0.30, 91.42, SB+0.15, -247.40, "#e2b31c", 16); tubeE(V3(91.42, SB+0.30, -247.40), V3(91.30, SB+1.30, -247.50), 0.013, "#8a6a44");
+    addCol(91.22, 91.60, -247.58, -247.22, SB-0.5, SB+0.5);
+    chalk(["NO"], 0.40, 0.30, 94.3, SB+1.40, -247.588, 0, "#d8c8c0"); }
+  // crates in the passage beyond the old door, and the tallies of somebody counting days
+  for(const [x,y,w,h] of [[96.4,0.30,0.70,0.60],[97.1,0.25,0.60,0.50],[96.5,0.80,0.50,0.40]]) B(w, h, 0.42, x, SB+y, -247.37, "#6a5a40");
+  addCol(96.0, 97.45, -247.6, -247.14, SB-0.5, SB+1.1);
+  chalk(["IIII IIII IIII IIII", "IIII IIII IIII II"], 0.9, 0.36, 99.388, SB+1.45, -251.0, -Math.PI/2);
   const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.12}));
   mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
 })();

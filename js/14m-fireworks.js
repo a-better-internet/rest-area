@@ -167,14 +167,12 @@ const FIREWORKS={};
   for(const [x,z] of [[899, IZ0+4.5],[911, IZ0+4.5],[899, IZ1-4.0],[911, IZ1-4.0],[920.5, (IZ0+IZ1)/2]])
     LAMPS.push({x:x, y:CEIL-1.3, z:z, color:0xf4f6f0, intensity:0.85, dist:11, decay:1.4, indoor:true, vol:[IX0, IX1, IZ0, IZ1, FLS-0.5, CEIL]});
 
-  // the roll-up doors: ribbed steel, white, down; a track up each side inside, the coil's hood over the head
+  // the roll-up doors: ribbed steel, white, down until you raise one (E: 01's makeLiftDoor, its curtain winding up into the
+  // drum); a track up each side inside, the coil's hood over the head
   for(const o of ROLL){ const w=o.b-o.a, xc=(o.a+o.b)/2, zc=BZ1-WT/2;
-    B(w+0.04, o.head-FLS, 0.05, xc, (FLS+o.head)/2, zc, "#eeeee8");
-    for(let y=FLS+0.18; y<o.head-0.05; y+=0.19) for(const sd of [-1,1]) B(w, 0.018, 0.012, xc, y, zc+sd*0.031, "#d6d6d0");
-    for(const sd of [-1,1]) B(0.12, 0.06, 0.012, xc+0.6, FLS+0.12, zc+sd*0.031, "#2a2a2c");
+    makeLiftDoor(XF(xc, zc, 0), FLS-0.002, w, o.head-FLS, "#eeeee8", "THE ROLL-UP DOOR", {x0:o.a, x1:o.b, z0:BZ1-WT, z1:BZ1, y0:FLS-0.5, y1:o.head}, "roll");
     for(const x of [o.a-0.04, o.b+0.04]) B(0.06, o.head-FLS+0.3, 0.10, x, (FLS+o.head+0.3)/2, IZ1-0.06, "#9a9da0");
     B(w+0.3, 0.42, 0.42, xc, o.head+0.26, IZ1-0.22, "#b8bab8");
-    addCol(o.a, o.b, BZ1-WT, BZ1, FLS-0.5, o.head);
     // the bollards in front of it outside: yellow pipe, capped
     for(const x of [o.a+0.3, o.b-0.3]){ C(0.08, 1.05, x, LY+0.52, BZ1+0.9, "#e6c21c", 14); ent(new T.SphereGeometry(0.08, 12, 6, 0, Math.PI*2, 0, Math.PI/2), x, LY+1.045, BZ1+0.9, "#e6c21c");
       addCol(x-0.09, x+0.09, BZ1+0.81, BZ1+0.99, Y-0.5, LY+1.1); } }

@@ -687,3 +687,47 @@ function makeDoor(xf, lx, ly, lz, label, opensIn, ajar, style, tint){
               reach: (style==="stall"||style==="stallw") ? 1.1 : 2.5});
   return g;
 }
+/* AN OVERHEAD DOOR, the kind a house's garage has: four sections that run up
+   the tracks either side, round the bend under the head and back along the
+   ceiling. xf's origin is the middle of the opening's foot, its +z out of the
+   building; w and h are the opening's. E raises it and lowers it (a DOORS
+   entry, manual and sticky, solid while it is down: col is the box to block,
+   in world terms). kind "roll" is a commercial roll-up instead, whose
+   curtain winds up into its drum over the head. */
+function makeLiftDoor(xf, y0, w, h, col, label, colBox, kind){
+  const g=new T.Group(); g.position.set(xf.x(0,0), y0, xf.z(0,0)); g.rotation.y=xf.ry; scene.add(g);
+  const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.5, metalness:kind==="roll" ? 0.35 : 0.1});
+  const D={g:g, open:0, target:0, x:xf.x(0,0), z:xf.z(0,0), y:y0, base:xf.ry, manual:0, ajar:0, swing:0, label:label||"THE GARAGE DOOR",
+           reach:2.5, manualOnly:true, sticky:true, rate:0.45, openMsg:kind==="roll" ? "THE MOTOR WINDS IT UP" : "THE OPENER HUMS AND THE DOOR GOES UP"};
+  if(kind==="roll"){
+    // the curtain: ribbed slats, one box scaled to however much of it is down, the bottom bar under it
+    const E2=[], c=new T.Color(col||"#eeeee8"), dk=new T.Color(col||"#eeeee8").multiplyScalar(0.86);
+    E2.push({geo:boxGeo(w+0.04, 1, 0.05), matrix:new T.Matrix4().makeTranslation(0, -0.5, 0), color:c});
+    const cur=new T.Mesh(mergeEntries(E2), mat); g.add(cur);
+    const rib=new T.Group(); g.add(rib);
+    const n=Math.round(h/0.19); for(let k=0;k<n;k++) for(const sd of [-1,1]){ const m=new T.Mesh(boxGeo(w, 0.018, 0.012), new T.MeshStandardMaterial({color:dk, roughness:0.5})); m.position.set(0, -(k+0.5)*0.19, sd*0.031); rib.add(m); }
+    const bar=new T.Mesh(boxGeo(w+0.02, 0.06, 0.07), new T.MeshStandardMaterial({color:0x3a3a3a, roughness:0.7})); g.add(bar);
+    D.lift=(t)=>{ const down=Math.max(0.12, h*(1-t)); cur.position.y=h; cur.scale.y=down; bar.position.y=h-down;
+      rib.position.y=h; rib.children.forEach((m)=>{ m.visible=-m.position.y<down-0.04; }); };
+  }else{
+    // four sections, raised panels on their outer faces; the track's bend a quarter circle under the head
+    const n=4, sh=h/n, E2=[], c=new T.Color(col||"#f4f2ec"), pc=new T.Color(col||"#f4f2ec").multiplyScalar(0.94);
+    E2.push({geo:boxGeo(w, sh-0.006, 0.045), matrix:new T.Matrix4(), color:c});
+    for(let i=0;i<4;i++) E2.push({geo:boxGeo(w/4-0.14, sh-0.17, 0.012), matrix:new T.Matrix4().makeTranslation(-w/2+w/8+i*w/4, 0, 0.028), color:pc});
+    const geo=mergeEntries(E2), secs=[];
+    for(let k=0;k<n;k++){ const m=new T.Mesh(geo, mat); m.castShadow=true; g.add(m); secs.push(m); }
+    const R=0.16, u0=h-0.05-R, arc=Math.PI*R/2;
+    D.lift=(t)=>{ const s=t*(h+0.04);
+      for(let k=0;k<n;k++){ const c2=k*sh+sh/2+s; let y, z, a;
+        if(c2<=u0){ y=c2; z=0; a=0; }
+        else if(c2<=u0+arc){ a=(c2-u0)/R; y=u0+R*Math.sin(a); z=-(R-R*Math.cos(a)); }
+        else { a=Math.PI/2; y=u0+R; z=-(R+(c2-u0-arc)); }
+        secs[k].position.set(0, y, z); secs[k].rotation.x=-a; } };
+  }
+  D.lift(0);
+  if(colBox){ const bc=Object.assign({}, colBox); COL_DYN.push(bc); D.blockCol=bc; D.blockTop=bc.y1; }
+  D.onUse=(d)=>{ d.manual=d.target>0.5 ? -1 : 1; if(typeof AUDIO!=="undefined") AUDIO.blip("whirr", d.x, d.z);
+    if(d.manual>0 && !d.told){ d.told=true; toast(d.openMsg, "#cfe0d4"); } };
+  DOORS.push(D);
+  return D;
+}

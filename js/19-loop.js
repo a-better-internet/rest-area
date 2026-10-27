@@ -75,6 +75,8 @@ function frame(){
     droneLook.lerp(droneShown, 1-Math.exp(-16*delta));
     camera.up.set(0,1,0);
     camera.lookAt(droneLook.x, droneLook.y+0.25, droneLook.z);
+  }else if(typeof BOAT!=="undefined" && BOAT.on){
+    boatCamera(delta);
   }else if(driving){
     showCar(driving);
     const cp=driving.g.position;
@@ -94,6 +96,7 @@ function frame(){
   }else{
     droneLook.set(0,0,0);
     _carLook.set(0,0,0);
+    if(typeof _boatLook!=="undefined") _boatLook.set(0,0,0);
     const eyeY=player.feetY+EYE+player.bob-player.sit*sitDrop;
     camera.position.set(player.pos.x, eyeY, player.pos.z);
     const cp=Math.cos(player.pitch);
@@ -194,11 +197,15 @@ function frame(){
   const _bv=buriedVolAt(camera.position.x, camera.position.z, camera.position.y);
   _buriedMix += ((_bv?1:0)-_buriedMix)*Math.min(1, delta*2.5);
   _buriedDim += (((_bv && _bv.amb) || 1)-_buriedDim)*Math.min(1, delta*1.2);
+  // (and one given a colour, its eighth, has its fill that colour: 12e's boiler hall is red)
+  _buriedTint += ((_bv && _bv.tint ? 1 : 0)-_buriedTint)*Math.min(1, delta*1.2);
+  if(_bv && _bv.tint){ _tintSky.copy(_bv.tint); _tintGnd.copy(_bv.tint).multiplyScalar(0.4); }
   const under=_buriedMix>0.002 ? _buriedMix : 0;
   if(under){
     hemi.intensity=lerp(hemi.intensity, UNDER_LIGHT.hemi*_buriedDim, under);
     hemi.color.lerp(UNDER_LIGHT.sky, under); hemi.groundColor.lerp(UNDER_LIGHT.ground, under);
     key.intensity*=1-under; amb.intensity=lerp(amb.intensity, UNDER_LIGHT.amb*_buriedDim, under);
+    if(_buriedTint>0.002){ hemi.color.lerp(_tintSky, _buriedTint*under); hemi.groundColor.lerp(_tintGnd, _buriedTint*under); }
   }
   const darkL=dark+(1-dark)*under;
   // a short draw distance brings the haze in to meet it
@@ -347,7 +354,8 @@ function frame(){
     renderer.render(scene, camera);
   }
 }
-let _indoorMix=0, _buriedMix=0, _buriedDim=1;
+let _indoorMix=0, _buriedMix=0, _buriedDim=1, _buriedTint=0;
+const _tintSky=new T.Color(), _tintGnd=new T.Color();
 const UNDER_LIGHT={hemi:0.12, amb:0.09, sky:new T.Color(0xd9d4ca), ground:new T.Color(0x857f74)};
 const _sunCel=new T.Vector3(), _camX=new T.Vector3(), _camY=new T.Vector3();
 const _INDOOR_BOUNCE=new THREE.Color(0x9c9a94);

@@ -60,7 +60,7 @@ addEventListener("keydown",e=>{
   if(e.code==="KeyX" && !held){ CRASH.toggle(); toast(CRASH.on?"I-79 NORTH · CLEARED":"WRECK ON I-79 NORTH","#ff9a5a"); }
   // Space is the handbrake once you are in a car, so it must not also be
   // the key that gets you out of it
-  if((e.code==="KeyE" || (e.code==="Space" && !driving)) && !droneMode) interact();
+  if((e.code==="KeyE" || (e.code==="Space" && !driving && !(typeof BOAT!=="undefined" && BOAT.on))) && !droneMode) interact();
 });
 addEventListener("keyup",e=>{ keys[e.code]=false; });
 // Alt-tab away mid-stride and the keyup for whatever you were holding never
@@ -86,7 +86,7 @@ function look(dx,dy){
   if(typeof RAIDERS!=="undefined" && RAIDERS.on) return;                          // your eyes stay on the screen
   if(typeof CABS!=="undefined" && CABS.on){ CABS.mouse(dx,dy); return; }           // (the bat, at Brickyard Breakout)
   if(typeof DOZER!=="undefined" && DOZER.on){ DOZER.mouse(dx,dy); return; }         // (the chute, at the coin dozer)
-  if(driving){                       // orbit the car rather than turn a head
+  if(driving || (typeof BOAT!=="undefined" && BOAT.on)){   // orbit the car (or the boat, 14p) rather than turn a head
     carCamYaw   -= dx*0.0042;
     carCamPitch  = clamp(carCamPitch - dy*0.0032, -0.18, 1.05);
     return;
@@ -193,7 +193,7 @@ function updateSeats(){
 // the front door are both in reach, so E swung the door instead. It has its
 // own key now, and nothing else is bound to it.
 function sitToggle(){
-  if(!started) return;
+  if(!started || (typeof BOAT!=="undefined" && BOAT.on)) return;
   if(seated){ standUp(); toast("ON YOUR FEET","#ffb324"); return; }
   updateSeats();
   if(!nearestSeat){ toast("NOTHING TO SIT ON","#8fa0ad"); return; }
@@ -210,6 +210,7 @@ function sitToggle(){
 }
 function interact(){
   if(!started) return;
+  if(typeof BOAT!=="undefined" && BOAT.on){ BOAT.leave(); return; }
   if(driving){ exitCar(); return; }
   { const c=nearestCar(); if(c){ enterCar(c); return; } }
   { const u=nearestUse(); if(u && u.pri){ u.fn(); return; } }
@@ -217,6 +218,8 @@ function interact(){
     toast(["\u201cGIVE ME A MINUTE ON THIS ONE.\u201d","\u201cYOU DON'T WANT THIS ONE. TRY THE NEXT.\u201d"][(Math.random()*2)|0],"#cfe0d4"); return; }
   if(nearestDoor && nearestDoor.occ){
     toast(["OCCUPIED","SOMEBODY CLEARS THEIR THROAT","\u201cSOMEONE'S IN HERE\u201d"][(Math.random()*3)|0],"#cfe0d4"); return; }
+  // a door that does something of its own first (12e's wheel) is handed the press
+  if(nearestDoor && nearestDoor.onUse){ nearestDoor.onUse(nearestDoor); return; }
   if(nearestDoor){
     nearestDoor.manual = (nearestDoor.target>0.5) ? -1 : 1;
     if(nearestDoor.partner) nearestDoor.partner.manual=nearestDoor.manual;
@@ -264,6 +267,7 @@ function updateDoors(dt){
     d.open += (d.target-d.open)*Math.min(1, dt*(d.rate || (d.manualOnly?1.6:5.2)));
     // a sliding pair runs its leaves apart; anything else swings on its hinge
     if(d.slide) for(const s of d.slide) s.g.position.x=s.x0+s.dx*d.open;
+    else if(d.lift) d.lift(d.open);                                   // (an overhead door, 01's makeLiftDoor)
     else d.g.rotation.y = d.base + d.swing*d.open;
     // and while it is shut it is solid, which a leaf on its own never is
     if(d.blockCol){
@@ -281,6 +285,7 @@ function updateDoors(dt){
      (typeof RAIDERS!=="undefined" && RAIDERS.on) || (typeof CABS!=="undefined" && CABS.on) || (typeof DOZER!=="undefined" && DOZER.on)){ el.classList.remove("show"); return; }
   const bits=[];
   if(driving) bits.push("E  ·  GET OUT");
+  else if(typeof BOAT!=="undefined" && BOAT.on) bits.push("E  ·  STEP OFF");
   else if(seated) bits.push("C  ·  "+(seated.lie?"GET UP":"STAND UP"));
   else{
     const nc=nearestCar();
@@ -288,7 +293,7 @@ function updateDoors(dt){
     if(nearestSeat) bits.push("C  ·  "+(nearestSeat.lie?"LIE DOWN":"SIT")+"  ·  "+nearestSeat.label);
     const u=nc ? null : nearestUse();
     if(u && u.pri) bits.push("E  ·  "+u.label);                      // cleaning up beats the stall door
-    else if(best && !nc) bits.push(best.occ ? "OCCUPIED" : "E  ·  "+(best.manualOnly ? (best.target>0.5?"CLOSE ":"OPEN ")+best.label : best.label));
+    else if(best && !nc) bits.push(best.occ ? "OCCUPIED" : best.promptFn ? best.promptFn(best) : "E  ·  "+(best.manualOnly ? (best.target>0.5?"CLOSE ":"OPEN ")+best.label : best.label));
     else if(u) bits.push("E  ·  "+u.label);
   }
   if(bits.length){ el.textContent=bits.join("      "); el.classList.add("show"); }
@@ -304,6 +309,8 @@ function nearEdge(x,z){
          ((z<Z.z0 || z>Z.z1) && Math.min(Math.abs(Math.abs(x-HWY.nb)-19.5),Math.abs(Math.abs(x-HWY.sb)-19.5))<1.4);
 }
 function fixedUpdate(dt){
+  // the boat (14p) goes on whether you have it or not, adrift; with you at the helm it is all you do
+  if(typeof BOAT!=="undefined" && BOAT.g){ updateBoat(dt); if(BOAT.on){ player.sit+=(0-player.sit)*Math.min(1,dt*6); player.bob+=(0-player.bob)*Math.min(1,dt*6); return; } }
   if(driving){                       // you are in the car; the car is driving
     updateCars(dt);
     const b=driving.veh.body;

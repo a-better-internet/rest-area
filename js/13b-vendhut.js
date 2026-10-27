@@ -21,7 +21,7 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
 (function vendHut(){
   const V=VENDHUT, WT=0.2, FLV=0.17, CEIL=FLV+2.90, ROOF=3.35;
   const IX0=V.x0+WT, IX1=V.x1-WT, IZ0=V.z0+WT, IZ1=V.z1-WT, DZ0=-0.05, DZ1=1.05;
-  const BRK="#a8624a", INW="#e4e2da", BRZ="#3e332b";
+  const BRK="#a8624a", INW="#cdc8bd", BRZ="#3e332b";             // (the block inside painted a dull cream, not white: under two tubes a metre and a half off it, white glared)
   const E=[];
   const ent=(geo,x,y,z,c,rx,ry,rz)=>E.push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
     new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
@@ -37,7 +37,7 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   addFlat(Is.x0-0.02, Is.x1+0.02, A.z0, A.z1, 0.15);
   bx("concrete", V.x1-V.x0-0.02, FLV-0.01, V.z1-V.z0-0.02, (V.x0+V.x1)/2, (FLV-0.01)/2, (V.z0+V.z1)/2, 0.5, 0, "#a9a59c");
   addFlat(V.x0, V.x1, V.z0, V.z1, FLV);
-  floorAt("quarry", IX0, IX1, IZ0, IZ1, FLV+0.003, "#b06a4e", 0.6);
+  floorAt("quarry", IX0, IX1, IZ0, IZ1, FLV+0.003, "#9a6452", 0.6);
   // the front, west, to the trucks: a brick knee wall under a storefront, the door in the middle of it
   const GL={sill:FLV+0.45, head:FLV+2.45};
   runZ("brick", V.x0+WT/2, WT, IZ0, IZ1, 0, ROOF, [{a:IZ0+0.35, b:DZ0, sill:GL.sill, head:GL.head}, {a:DZ0, b:DZ1, sill:FLV-0.004, head:FLV+2.22},
@@ -96,14 +96,18 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   addZone(IX0, IX1, IZ0, IZ1, FLV-0.5, CEIL, "VENDING", true);
 
   /* ---- the light: two flat fixtures, cold, and one tube in them going ---- */
+  // (behind prismatic lenses, and no brighter than a room this size wants: at full strength a metre and a half
+  // over a pale floor they burned the walls and the tile out to flat white and orange)
   for(const z of [-1.3, 2.3]){
     B(0.64, 0.06, 1.24, (IX0+IX1)/2, CEIL-0.03, z, "#d9dbd8");
-    push("tube", planeGeo(0.56, 1.16, 0), (IX0+IX1)/2, CEIL-0.062, z, 0, "#ffffff", Math.PI/2, 0);
-    LAMPS.push({x:(IX0+IX1)/2, y:CEIL-0.3, z:z, color:0xeaf4ff, intensity:0.95, dist:8, decay:1.3, indoor:true, circ:"bldg",
+    push("vendlens", planeGeo(0.56, 1.16, 0), (IX0+IX1)/2, CEIL-0.062, z, 0, "#ffffff", Math.PI/2, 0);
+    LAMPS.push({x:(IX0+IX1)/2, y:CEIL-0.3, z:z, color:0xf2f0e8, intensity:0.52, dist:7, decay:1.7, indoor:true, circ:"bldg",
                 vol:[IX0-0.2, IX1+0.2, IZ0-0.2, IZ1+0.2, FLV-1, CEIL+0.5]});
   }
-  // and at night the glass throws it out over the walk, the way a lit room does
-  LAMPS.push({x:IX0+0.25, y:FLV+2.3, z:0.5, color:0xeaf4ff, intensity:0.65, dist:7, decay:1.8, circ:"bldg"});
+  bucketOf("vendlens", ()=>emitMat(0xe8ecea, 0.52, "indoor"));
+  // and at night the glass throws it out over the walk, the way a lit room does (from just outside the glass,
+  // so that it lights the walk and not the room a second time)
+  LAMPS.push({x:IX0-0.9, y:FLV+2.0, z:0.5, color:0xeaf0f4, intensity:0.40, dist:6, decay:1.8, circ:"bldg"});
   // the one with the bad ballast: a tube of its own that the update flickers
   { const m=new T.MeshBasicMaterial({color:0xeaf2ff, toneMapped:false});
     const t=new T.Mesh(new T.PlaneGeometry(0.12, 1.12), m); t.position.set((IX0+IX1)/2+0.20, CEIL-0.064, 2.3); t.rotation.x=Math.PI/2; scene.add(t);
@@ -277,7 +281,7 @@ function updateVendHut(dt, now){
   RT.t+=dt;
   // the bad tube: mostly on, now and then a stutter, off in a power cut
   const k=Math.sin(RT.t*1.7)*Math.sin(RT.t*0.37);
-  RT.flick.color.setHex(0xeaf2ff).multiplyScalar(on ? (k>0.92 ? (Math.random()<0.5?0.15:0.9) : 1) : 0.03);
+  RT.flick.color.setHex(0xeaf2ff).multiplyScalar(0.72*(on ? (k>0.92 ? (Math.random()<0.5?0.15:0.9) : 1) : 0.03));
   // the coffee: BREWING while it runs, the stream for the pour, the mug if somebody brought one
   if(RT.brew>0) RT.brew=Math.max(0, RT.brew-dt);
   if(RT.pour>0) RT.pour=Math.max(0, RT.pour-dt);

@@ -600,7 +600,7 @@ function _custUpdate(p, dt0, now, dark, cd){
   if(p.pushing){ C.yaw=p.yaw; const f=_fwd(p.yaw, 1.0); C.x=p.x+f.x; C.z=p.z+f.z; C.y=surfaceY(C.x, C.z, p.y+0.3); _cartPlace(C); }
   // the garage: doors up while Terry is up, lights on while there or dark out
   const inG=p.x>GARAGE.x0 && p.x<GARAGE.x1 && p.z>GARAGE.z0 && p.z<GARAGE.z1;
-  for(const D of G.doors) D.want = p.doorsUp ? 0.14 : D.top-FL;
+  for(const D of G.doors){ if(D.userT>0){ D.userT-=dt; continue; } D.want = p.doorsUp ? 0.14 : D.top-FL; }
   G.lightsWant = p.lit && (inG || dark>0.4);
   if(G.radio) G.radio.low = !!p.radioLow;
   _leavesUpdate(dt);

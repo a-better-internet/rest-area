@@ -122,15 +122,24 @@ const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
   const rc=cvs(512,64), rtex=setSRGB(new T.CanvasTexture(rc));
   { const m=new T.Mesh(new T.PlaneGeometry(0.86, 0.10), new T.MeshBasicMaterial({map:rtex, toneMapped:false, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
     m.position.set(0, TOP+0.045, DP/2+0.007); G.add(m); }
-  // the coins: one instanced mesh of brass tokens, a star struck on each face
+  // the coins: one mesh of brass tokens, a star struck on each face. Not an InstancedMesh: some
+  // graphics cards drew nothing of one here, so each frame the tokens on the deck are written
+  // straight into one plain mesh's buffers, the way every other thing in the world is drawn
   const face=signTex(128,128,(c,Wc,Hc)=>{ const g=c.createRadialGradient(Wc/2,Hc/2,8,Wc/2,Hc/2,Wc/2); g.addColorStop(0,"#ffe08a"); g.addColorStop(0.8,"#d99516"); g.addColorStop(1,"#8a5a0e");
     c.fillStyle=g; c.fillRect(0,0,Wc,Hc); c.strokeStyle="#7a4a0a"; c.lineWidth=5; c.beginPath(); c.arc(Wc/2,Hc/2,Wc/2-10,0,7); c.stroke();
     c.fillStyle="#b87a10"; c.beginPath(); for(let k=0;k<10;k++){ const a=k*Math.PI/5-Math.PI/2, r=k%2?14:32; c.lineTo(Wc/2+Math.cos(a)*r, Hc/2+Math.sin(a)*r); } c.closePath(); c.fill(); });
   const RC=0.024, TH=0.007, MAXC=260;
-  const coinM=new T.MeshStandardMaterial({map:face, metalness:0.2, roughness:0.42, emissive:0xffffff, emissiveMap:face, emissiveIntensity:0.5});      // (brass under the glass: lit a little from within, or the pile reads as dark beans)
-  const coins=new T.InstancedMesh(new T.CylinderGeometry(RC, RC, TH, 20), coinM, MAXC);
-  coins.instanceMatrix.setUsage(T.DynamicDrawUsage); coins.count=0; coins.frustumCulled=false; G.add(coins);
-  coins.setColorAt(0, new T.Color(0xffffff)); coins.instanceColor.setUsage(T.DynamicDrawUsage);
+  const coinM=new T.MeshStandardMaterial({map:face, vertexColors:true, metalness:0.2, roughness:0.42, emissive:0xffffff, emissiveMap:face, emissiveIntensity:0.5});      // (brass under the glass: lit a little from within, or the pile reads as dark beans)
+  const one=new T.CylinderGeometry(RC, RC, TH, 18), oP=one.attributes.position.array, oN=one.attributes.normal.array, oU=one.attributes.uv.array, oI=one.index.array;
+  const nv=oP.length/3, ni=oI.length, cg=new T.BufferGeometry();
+  const aP=new T.BufferAttribute(new Float32Array(MAXC*nv*3), 3), aN=new T.BufferAttribute(new Float32Array(MAXC*nv*3), 3), aC=new T.BufferAttribute(new Float32Array(MAXC*nv*3), 3);
+  const uv=new Float32Array(MAXC*nv*2), ix=new Uint16Array(MAXC*ni);
+  for(let k=0;k<MAXC;k++){ uv.set(oU, k*nv*2); for(let i=0;i<ni;i++) ix[k*ni+i]=oI[i]+k*nv; }
+  for(const a of [aP,aN,aC]) a.setUsage(T.DynamicDrawUsage);
+  cg.setAttribute("position", aP); cg.setAttribute("normal", aN); cg.setAttribute("color", aC); cg.setAttribute("uv", new T.BufferAttribute(uv, 2)); cg.setIndex(new T.BufferAttribute(ix, 1));
+  cg.setDrawRange(0, 0); cg.boundingSphere=new T.Sphere(V3(0, DECK, 0), 1.2);
+  const coins=new T.Mesh(cg, coinM); coins.frustumCulled=false; G.add(coins);
+  coins.userData={nv:nv, ni:ni, oP:oP, oN:oN, aP:aP, aN:aN, aC:aC};
   // the prizes, a mesh each, made as they drop
   const prizeMesh=(type)=>{
     if(type==="gem") return new T.Mesh(new T.OctahedronGeometry(0.028), new T.MeshStandardMaterial({color:0x3ae8ff, metalness:0.5, roughness:0.1, emissive:0x0a3a44, emissiveIntensity:0.8}));
@@ -270,6 +279,13 @@ function _dzStep(g, dt, live){
 }
 // where everything is drawn: the tokens' instances, the prizes, the pusher, the chute, the bulbs, the readout
 const _dzM=new T.Matrix4(), _dzQ=new T.Quaternion(), _dzE=new T.Euler(), _dzV=new T.Vector3(), _dzS=new T.Vector3(1,1,1), _dzC=new T.Color();
+// one token into the coins' buffers, at slot n: the disc's points and normals turned and moved by m
+function _dzPut(C, n, m, col){
+  const U=C.coins.userData, e=m.elements, nv=U.nv, P=U.aP.array, N=U.aN.array, K=U.aC.array, oP=U.oP, oN=U.oN;
+  for(let i=0, o=n*nv*3; i<nv*3; i+=3, o+=3){ const x=oP[i], y=oP[i+1], z=oP[i+2], a=oN[i], b=oN[i+1], c=oN[i+2];
+    P[o]=e[0]*x+e[4]*y+e[8]*z+e[12]; P[o+1]=e[1]*x+e[5]*y+e[9]*z+e[13]; P[o+2]=e[2]*x+e[6]*y+e[10]*z+e[14];
+    N[o]=e[0]*a+e[4]*b+e[8]*c; N[o+1]=e[1]*a+e[5]*b+e[9]*c; N[o+2]=e[2]*a+e[6]*b+e[10]*c;
+    K[o]=col.r; K[o+1]=col.g; K[o+2]=col.b; } }
 function _dzDraw(g){
   const C=DOZER.cab; let n=0;
   for(const it of g.items){
@@ -279,11 +295,12 @@ function _dzDraw(g){
     if(it.fall>=0){ z=it.z+it.fall*0.10; y=C.DECK+0.004-it.fall*it.fall*1.4; tilt=Math.min(1.2, it.fall*4); }
     if(it.type==="coin"){ if(n>=C.MAXC) continue;
       _dzE.set(tilt, it.rot, 0, "YXZ"); _dzQ.setFromEuler(_dzE); _dzV.set(x, y, z); _dzM.compose(_dzV, _dzQ, _dzS);
-      C.coins.setMatrixAt(n, _dzM); _dzC.setRGB(1, 0.94+((it.rot*7)%1)*0.06, 0.88+((it.rot*3)%1)*0.12); C.coins.setColorAt(n, _dzC); n++; }
+      _dzC.setRGB(1, 0.94+((it.rot*7)%1)*0.06, 0.88+((it.rot*3)%1)*0.12); _dzPut(C, n, _dzM, _dzC); n++; }
     else if(it.mesh){ const h=it.type==="big" ? 0.005 : it.type==="car" ? 0.0 : 0.02;
       it.mesh.position.set(x, y-C.TH/2+h+(it.type==="die"?0.0:0), z); it.mesh.rotation.set(tilt, it.rot, 0); }
   }
-  C.coins.count=n; C.coins.instanceMatrix.needsUpdate=true; if(C.coins.instanceColor) C.coins.instanceColor.needsUpdate=true;
+  { const U=C.coins.userData; C.coins.geometry.setDrawRange(0, n*U.ni);
+    for(const a of [U.aP, U.aN, U.aC]){ a.updateRange.offset=0; a.updateRange.count=n*U.nv*3; a.needsUpdate=true; } }
   C.pusher.position.z=g.pz-0.0;
   C.chute.position.x=g.aim; C.bucket.position.x=g.bonusX;
   C.trayGlow.material.opacity=0.25+0.6*g.flash;
@@ -358,8 +375,11 @@ function updateDozer(dt){
   else { // nobody at it: the chute wanders and drops one now and then, so the deck keeps moving
     DOZER.demoT-=dt; g.aim=Math.sin(DOZER.t*0.4)*(C.HX-0.08);
     if(DOZER.demoT<=0){ DOZER.demoT=2.2+Math.random()*1.5; if(g.items.length<170) _dzDrop(g, "coin"); } }
-  const n=Math.max(1, Math.min(6, Math.ceil(dt*90))), h=Math.min(dt, 0.1)/n;
-  for(let k=0;k<n;k++) _dzStep(g, h, live);
+  if(dt>0){ const n=Math.max(1, Math.min(6, Math.ceil(dt*90))), h=Math.min(dt, 0.1)/n;
+    for(let k=0;k<n;k++) _dzStep(g, h, live);
+    // nothing on the deck is ever lost to a bad number: anything that went wrong goes back in the hopper
+    g.items=g.items.filter(it=>{ if(isFinite(it.x) && isFinite(it.z) && isFinite(it.vx) && isFinite(it.vz) && isFinite(it.y)) return true;
+      if(it.mesh){ C.G.remove(it.mesh); it.mesh=null; } g.hop=Math.min(_DZ.HOP, g.hop+1); return false; }); }
   if(live) DOZER.hi=Math.max(DOZER.hi, g.won);
   _dzDraw(g);
   DOZER.acc+=dt; if(DOZER.acc>1/10){ DOZER.acc=0; _dzReadout(g, live); }

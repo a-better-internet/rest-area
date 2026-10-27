@@ -26,6 +26,8 @@ const AUDIO=(function(){
   let camp={}, crackT=0, voiceT=3, song=0, beat=null;
   // the garage (14g): the radio on the bench, and the mower or the blower out on the grounds
   let radio={}, eng={}, rBeat=null, rTalkT=1, rSwellT=8;
+  // the boiler hall (12e): the burners' roar and the room's rumble; the boat's outboard (14p)
+  let boil={}, obd={};
   function noise(sec, color){
     const n=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(1,n,ctx.sampleRate), d=b.getChannelData(0);
     let l=0, b0=0,b1=0,b2=0;
@@ -93,6 +95,18 @@ const AUDIO=(function(){
       tl.connect(tlg); tlg.connect(tam.gain); tl.start(); const tbias=bias(0.5); if(tbias) tbias.connect(tam.gain);
       const tg=ctx.createGain(); tg.gain.value=0.55; loop(nz).connect(tb); tb.connect(tam); tam.connect(tg); tg.connect(night.lp);
       night.kat=ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain(); night.kat.connect(night.lp); }
+    // the boiler hall: a low rumble of brown noise, the burners' roar over it, and the 60-cycle of the pumps
+    boil.g=ctx.createGain(); boil.g.gain.value=0; boil.g.connect(master);
+    { const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=140; loop(noise(5,"brown")).connect(lp); const g=ctx.createGain(); g.gain.value=1.4; lp.connect(g); g.connect(boil.g);
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=520; bp.Q.value=0.6; loop(noise(4,"pink")).connect(bp); const g2=ctx.createGain(); g2.gain.value=0.35; bp.connect(g2); g2.connect(boil.g);
+      for(const [f,a] of [[60,0.20],[120,0.10]]){ const o=ctx.createOscillator(); o.frequency.value=f; const og=ctx.createGain(); og.gain.value=a; o.connect(og); og.connect(boil.g); o.start(); } }
+    // the outboard: a firing buzz at its revs through a low-pass, and the hull's slap and hiss on the water
+    obd.g=ctx.createGain(); obd.g.gain.value=0; obd.g.connect(outLP);
+    { obd.lp=ctx.createBiquadFilter(); obd.lp.type="lowpass"; obd.lp.frequency.value=600; obd.lp.connect(obd.g); obd.osc=[];
+      for(const [f,a,ty] of [[42,0.5,"sawtooth"],[84,0.3,"square"],[126,0.12,"sawtooth"]]){ const o=ctx.createOscillator(); o.type=ty; o.frequency.value=f;
+        const g=ctx.createGain(); g.gain.value=a; o.connect(g); g.connect(obd.lp); o.start(); obd.osc.push({o:o, f:f}); }
+      obd.w=ctx.createGain(); obd.w.gain.value=0; obd.w.connect(outLP);
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=900; bp.Q.value=0.5; loop(noise(4,"pink")).connect(bp); bp.connect(obd.w); }
     // the hum indoors, and the transformer's out at the substation
     hum.g=ctx.createGain(); hum.g.gain.value=0; hum.g.connect(master);
     gen.g=ctx.createGain(); gen.g.gain.value=0; gen.g.connect(outLP);
@@ -215,11 +229,19 @@ const AUDIO=(function(){
         for(let k=0;k<n;k++) burst(at+k*0.15, 0.06, f, 2.2, pk, night.kat); }
     }
     hum.g.gain.setTargetAtTime(inside?0.010*GRID.bldg:0, t, 0.2);
+    boil.g.gain.setTargetAtTime(typeof BOILERS!=="undefined" ? 0.11*BOILERS.roar : 0, t, 0.25);
+    { const B=typeof BOAT!=="undefined" && BOAT ? BOAT : {x:0, z:0, running:false, rpm:0, speed:0}, bd=Math.hypot(cam.x-B.x, cam.z-B.z), on=B.running ? 1 : 0;
+      obd.g.gain.setTargetAtTime(on*(0.05+0.10*B.rpm)/(1+bd*bd/400), t, 0.15);
+      for(const q of obd.osc) q.o.frequency.setTargetAtTime(q.f*(1+B.rpm*2.2), t, 0.25);
+      obd.lp.frequency.setTargetAtTime(380+B.rpm*900, t, 0.25);
+      obd.w.gain.setTargetAtTime(Math.min(1, B.speed/8)*0.05/(1+bd*bd/300), t, 0.3); }
     let gd=1e9; for(const p of GEN_POS) gd=Math.min(gd, Math.hypot(cam.x-p.x, cam.z-p.z));
+    // (and the transformers with no set by them: Edinboro's substation, 14s)
+    let xd=gd; if(typeof HUM_POS!=="undefined") for(const p of HUM_POS) xd=Math.min(xd, Math.hypot(cam.x-p.x, cam.z-p.z));
     // the transformer's hum, and when the set is running, the set: loud close
     // to, and carrying across the site on a still night
     const rpm=Math.max(GRID.rpm, GRID.rpm2*0.8);
-    gen.g.gain.setTargetAtTime(0.03*(1+rpm*2.5)/(1+gd*gd/300), t, 0.3);
+    gen.g.gain.setTargetAtTime(gd<=xd ? 0.03*(1+rpm*2.5)/(1+gd*gd/300) : 0.03/(1+xd*xd/300), t, 0.3);
     dsl.g.gain.setTargetAtTime(rpm*(GRID.rpm2>0.5?1.35:1)*0.30/(1+gd*gd/1600), t, 0.25);
     for(const q of dsl.osc) q.o.frequency.setTargetAtTime(q.f*(0.2+0.8*rpm), t, 0.4);
     dsl.lp.frequency.setTargetAtTime(220+rpm*260, t, 0.4);
@@ -591,6 +613,21 @@ const AUDIO=(function(){
       tone("sine", 620, 600, 1.4, 0.006*vol, t+0.6, 0, master);
     }else if(kind==="bell"){                      // the chapel's bell (14l): a strike, its partials dying slowly, and again
       for(const at of [t, t+2.2]) [[1,0.10],[2.0,0.05],[2.4,0.04],[3.0,0.025],[4.2,0.012]].forEach(([m,a])=>tone("sine", 196*m, 196*m*0.998, 4.5/Math.sqrt(m), a*Math.max(vol,0.25), at, 0, master));
+    }else if(kind==="wheel"){                     // 12e's wheel: the dogs' ratchet clicking back, a dry grind under it
+      for(let k=0;k<22;k++){ const at=t+0.12+k*0.11+Math.random()*0.02; tone("square", 1400+Math.random()*300, 900, 0.025, 0.018*vol, at, 0, master); }
+      const s=ctx.createBufferSource(); s.buffer=noise(2.6,"brown"); const f=ctx.createBiquadFilter(); f.type="bandpass"; f.frequency.value=240; f.Q.value=0.8;
+      const g=ctx.createGain(); env(g,t,0.3,0.25*vol,1.8,0.5); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="vault"){                     //  and the leaf going over on its hinges, slow and heavy
+      tone("sawtooth", 62, 41, 2.6, 0.05*vol, t, 0, master); tone("triangle", 230, 180, 1.8, 0.02*vol, t+0.3, 0, master);
+      const s=ctx.createBufferSource(); s.buffer=noise(2.8,"pink"); const f=ctx.createBiquadFilter(); f.type="bandpass"; f.frequency.value=380; f.Q.value=3.5;
+      const g=ctx.createGain(); env(g,t,0.4,0.08*vol,1.9,0.5); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="hiss"){                      //  a safety valve lifting: a roar of steam, high and hard
+      const s=ctx.createBufferSource(); s.buffer=noise(3.2,"white"); const f=ctx.createBiquadFilter(); f.type="highpass"; f.frequency.value=1800;
+      const g=ctx.createGain(); env(g,t,0.08,0.20*Math.max(vol,0.3),2.4,0.7); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="pull"){                      // a pull-cord: the rope's whirr, the motor catching or not
+      const s=ctx.createBufferSource(); s.buffer=noise(0.5,"pink"); const f=ctx.createBiquadFilter(); f.type="bandpass"; f.frequency.value=700; f.Q.value=1.2;
+      const g=ctx.createGain(); env(g,t,0.02,0.10*vol,0.25,0.15); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+      tone("sawtooth", 30, 70, 0.4, 0.05*vol, t+0.05, 0, master);
     }else if(kind==="tick"){
       tone("square", 900, null, 0.03, 0.02*vol, t, 0, master);
     }else if(kind==="airhorn"){

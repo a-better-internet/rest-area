@@ -510,8 +510,6 @@ const PLAZA_Y=0.15;
     push("concrete", g, 0,0,0, 0, "#bdb9b0");
     addRamp(W.x0, W.x0+1.25, za, zb, "x", W.x0, W.x0+1.2, PAVE_T, PLAZA_Y);
     slab(W.x0+1.2, W.x1, za, zb);
-    // truncated domes, the yellow warning pad at the foot of every cut
-    push("paint", planeGeo(0.6, zb-za-0.3, 0), W.x0+0.45, PAVE_T+0.06, (za+zb)/2, 0, "#c99a2a", -Math.PI/2+0.12, 0);
   }
   slab(W.x0, W.x1, -13, 13);
   slab(P.x0, P.x1, P.z0, P.z1, "#c9c6be");

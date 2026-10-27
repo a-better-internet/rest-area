@@ -47,7 +47,7 @@ const RAMP_ENTRY=smoothPath([
 const EDIN=(function(){
   const z=-1200, y=roadY(z)+7.0;                 // the crossroad, level, 7 m over the interstate
   // (the bridge's ends, bw0 and bw1, are on the 8 m ground's lattice past the top of the cut, where it is level)
-  const E={z:z, y:y, hw:5.2, rw:2.45, x0:-330, x1:1420, bw0:-192, bw1:-80, piers:[-167.0, -135.0, -103.2],      // (x1: on east to the lake, EAST below)
+  const E={z:z, y:y, hw:5.2, rw:2.45, x0:-330, x1:1470, bw0:-192, bw1:-80, piers:[-167.0, -135.0, -103.2],      // (x1: on east to the lake, EAST below)
            plain:{x0:-330, x1:610, z0:z-260, z1:z+340}};
   // the northbound off-ramp's centre line, from the highway to the crossroad (x, z from the crossroad)
   const nb=[[-106.4,560],[-104.2,470],[-100.0,380],[-94.0,290],[-87.5,200],[-81.0,120],[-74.0,60],[-63.0,22],
@@ -186,6 +186,16 @@ const Terrain=(function(){
     // the plateau's grain: long ridges trending north-east
     const rq=(x*0.62+z*0.78)*0.0042 + fbm(x*0.0021+4, z*0.0021+2, 3)*2.2;
     h += Math.sin(rq*6.283)*17*smoothstep(160,760,d);
+    // and out past a mile or so the plateau's ridges stand up into the hills that close the horizon all round: from
+    // the lake, mountains across the water; from Edinboro's fields, hills behind the woods. Ridged noise gives them
+    // crests and gullies. The interstate goes out through them in a valley of its own, and none of them comes up
+    // within a couple of hundred metres of the lake's shore. At the very edge they come down again, so that the last
+    // crests, faded all the way to the horizon's colour, do not stand up pale over the blue ones in front like snow
+    const e=Math.max(Math.abs(x+30), Math.abs(z+20));
+    let rim=smoothstep(1300, 2150, e)*(1-0.6*smoothstep(2230, 2420, e));
+    if(rim>0){ rim*=smoothstep(110, 520, Math.abs(x-(HWY.nb+HWY.sb)/2))*smoothstep(10, 240, lakeSD(x,z));
+      const rr=1-Math.abs(2*fbm(x*0.0016+31, z*0.0016+17, 4)-1), gl=1-Math.abs(2*fbm(x*0.0062+5, z*0.0062+13, 3)-1), sp=fbm(x*0.013+9, z*0.013+1, 2);
+      h+=rim*(55+100*rr*rr+(gl-0.55)*62+(sp-0.5)*18)/Math.max(amp, 0.3); }
     return h*amp;
   }
   const NAT0=natural0(-30,-20);

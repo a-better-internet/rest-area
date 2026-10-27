@@ -106,7 +106,14 @@ T.ShaderChunk.fog_fragment = [
   "}",
   "#endif",
   T.ShaderChunk.fog_fragment.replace("gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );",
-    "vec3 hazeC = fogColor*mix(vec3(1.0), mix(uHaze.rgb, vec3(0.84,0.89,0.96), fogFactor*fogFactor), uHaze.w);\n"+
+    // (on a clear day a long way off is never all haze: the far hills keep a fifth of their own light and shade,
+    // which is what tells a ridge from a flat cut-out; but the world's last couple of hundred metres go wholly into
+    // it, so its edge is never seen)
+    "float edgeK = smoothstep(2270.0, 2395.0, max(abs(vFogWorld.x+30.0), abs(vFogWorld.z+20.0)));\n"+
+    "fogFactor = min(fogFactor, mix(1.0-0.34*uHaze.w, 1.0, edgeK));\n"+
+    // (and a long way off the haze is a blue-grey a shade under the sky's, the colour far ridges are, easing to the
+    // sky's own only at the world's very edge)
+    "vec3 hazeC = fogColor*mix(vec3(1.0), mix(uHaze.rgb, vec3(0.74,0.81,0.93), fogFactor*fogFactor), uHaze.w*(1.0-edgeK));\n"+
     "\tgl_FragColor.rgb = mix( gl_FragColor.rgb, hazeC, fogFactor );")].join("\n");
 if(T.ShaderChunk.fog_fragment.indexOf("hazeC")<0) console.warn("fog: the haze tint did not take");
 renderer.toneMapping=T.CustomToneMapping;

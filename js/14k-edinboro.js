@@ -18,9 +18,10 @@
    THE FARM. South of the road (EDIN.farm), up a gravel lane: a white
    two-storey farmhouse with a porch along the front, the living room and
    the kitchen downstairs (the stairs are behind a door; nobody asked you
-   up). Across the yard the red bank barn and its two silos, a pole shed
-   with the tractor in it, a farm stand at the road on the honour system,
-   and the cows out in the pasture behind.
+   up). Across the yard the red bank barn and its two silos, the machine
+   shed (the shop at one end, the farm truck, the tractor with its loader,
+   the spreader and the harrow) with the fuel tank by it, a farm stand at
+   the road on the honour system, and the cows out in the pasture behind.
    ---------------------------------------------------------------------- */
 const EDIN_PLACES={clerk:null, cows:[]};
 // a door frame on a wall along x (frX) or along z (frZ), proud of both faces, head longer and deeper than the posts;
@@ -1475,13 +1476,118 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
       for(let row=0;row<3;row++) for(let k=0;k<(row===2?4:6);k++) bx("fh_bale", 1.0, 0.40, 0.48, wx-0.55+(k%2)*1.1, Y+1.21+row*0.41, wz-1.9+((k/2)|0)*0.98+(row===2?0.49:0), 1.0, 0, "#ffffff");
       addCol(wx-1.25, wx+1.25, wz-2.45, wz+2.45, Y-0.5, Y+2.4); } }
 
-  /* ---- the pole shed and the tractor in it ---- */
-  { const SX0=140, SX1=164, SZ0=Z+80, SZ1=Z+92, SH=Y+4.6;
-    for(const [x0,x1,z0,z1] of [[SX0-0.02,SX1+0.02,SZ1-0.08,SZ1],[SX0,SX0+0.08,SZ0,SZ1-0.08],[SX1-0.08,SX1,SZ0,SZ1-0.08]]) wallBox("roofmetal", x0, x1, z0, z1, Y, SH-(z0>SZ0+1?0.5:0.52), "#6a7e6a", 0.5, Y);
-    for(let x=SX0+0.2; x<SX1; x+=4.0){ B(0.18, SH-Y, 0.18, x, Y+(SH-Y)/2, SZ0+0.12, "#7a6448"); addCol(x-0.1, x+0.1, SZ0+0.02, SZ0+0.22, Y-0.5, SH); }
-    slab("roofmetal", [V3(SX0-0.3, SH+0.02, SZ0-0.6), V3(SX1+0.3, SH+0.02, SZ0-0.6), V3(SX1+0.3, SH-0.48, SZ1+0.3), V3(SX0-0.3, SH-0.48, SZ1+0.3)], 0.06, "#6a7076");
-    // the tractor: green, yellow wheels, the big tyres behind, a cab frame
-    const tx=148, tz=Z+86, G="#2f6a2a";
+  /* ---- the machine shed ----
+     A pole building across the south of the yard, eight bays of four metres, open along the front (north) under a
+     doubled header, steel siding on the back and the ends, trusses on the posts and purlins over them, a gable roof.
+       x 136..168, z Z+80..Z+93; the eave EV, the ridge over z ZM
+     West to east: the shop (a concrete pad, the bench and the pegboard, the tool chest, the compressor, drums,
+     shelving, the lawn tractor), the farm truck, the tractor, the manure spreader with the disc harrow out front.
+     The fuel tank on its stand outside the east end. */
+  { const SX0=136, SX1=168, SZ0=Z+80, SZ1=Z+93, EV=Y+4.6, ZM=(SZ0+SZ1)/2, K=0.33, RF=EV+0.30, RG=RF+K*(ZM-SZ0), PF=Y+0.10, PX=144;
+    const SID="#a8b8a2", WD="#8a7254", PT="#6e5a40", DK="#2a2a2c";
+    const beam=(a, b, w, h, c)=>{ const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z, hz=Math.hypot(dx, dz);
+      ent(boxGeo(w, h, Math.hypot(hz, dy)), (a.x+b.x)/2, (a.y+b.y)/2, (a.z+b.z)/2, c, -Math.atan2(dy, hz), Math.atan2(dx, dz), 0); };
+    const top=(z)=>RF+K*(z<ZM ? z-SZ0 : SZ1-z);                       // the roof's top over z
+    // the floor: gravel out to the yard's, a pad under the shop
+    { const g=new T.PlaneGeometry(SX1-SX0, SZ1-0.06-(Z+74)), U=g.attributes.uv; for(let k=0;k<U.count;k++) U.setXY(k, U.getX(k)*(SX1-SX0)*0.5, U.getY(k)*(SZ1-0.06-(Z+74))*0.5);
+      push("gravelbed", g, (SX0+SX1)/2, Y+0.032, (Z+74+SZ1-0.06)/2, 0, "#a29d92", -Math.PI/2, 0); }
+    bx("concrete", PX-(SX0+0.06), 0.16, SZ1-0.08-(SZ0+0.6), (SX0+0.06+PX)/2, PF-0.08, (SZ0+0.6+SZ1-0.08)/2, 0.5, 0, "#a8a49a");
+    addFlat(SX0+0.06, PX, SZ0+0.6, SZ1-0.08, PF);
+    // the siding: the back, the two ends, and the gables over them (standing a few millimetres outside the ends below)
+    wallBox("roofmetal", SX0, SX1, SZ1-0.06, SZ1, Y-0.05, EV+0.24, SID, 0.5, Y);
+    for(const [x0,x1] of [[SX0, SX0+0.06],[SX1-0.06, SX1]]) wallBox("roofmetal", x0, x1, SZ0, SZ1-0.06, Y-0.05, EV+0.03, SID, 0.5, Y);
+    for(const [x, w] of [[SX0-0.005, true],[SX1+0.005, false]]){ const P=[V3(x, EV, SZ0-0.005), V3(x, RF-0.07, SZ0-0.005), V3(x, RG-0.07, ZM), V3(x, RF-0.07, SZ1-0.03), V3(x, EV, SZ1-0.03)];
+      slab("roofmetal", w ? P.slice().reverse() : P, 0.07, SID); }
+    addCol(SX0, SX1, SZ1-0.08, SZ1, Y-0.5, EV); addCol(SX0, SX0+0.08, SZ0, SZ1, Y-0.5, EV); addCol(SX1-0.08, SX1, SZ0, SZ1, Y-0.5, EV);
+    // the posts: along the front under the header, inside the back wall, and one in the middle of each end
+    const XS=[]; for(let x=SX0+0.14; x<SX1; x+=4.0) XS.push(Math.min(x, SX1-0.14)); if(XS[XS.length-1]<SX1-0.2) XS.push(SX1-0.14);
+    const PH=EV-Y+0.02;                                                // (up two centimetres into the chords)
+    for(const x of XS){ B(0.16, PH, 0.16, x, Y+PH/2, SZ0+0.10, PT); addCol(x-0.09, x+0.09, SZ0+0.01, SZ0+0.19, Y-0.5, EV);
+      B(0.16, PH, 0.16, x, Y+PH/2, SZ1-0.16, PT); addCol(x-0.09, x+0.09, SZ1-0.25, SZ1, Y-0.5, EV); C(0.14, 0.10, x, Y+0.05, SZ0+0.10, "#9a968c", 10); }
+    for(const x of [SX0+0.16, SX1-0.16]){ B(0.16, PH, 0.16, x, Y+PH/2, ZM, PT); addCol(x-0.09, x+0.09, ZM-0.09, ZM+0.09, Y-0.5, EV); }
+    B(SX1-SX0+0.10, 0.30, 0.09, (SX0+SX1)/2, EV-0.15, SZ0-0.02, WD);                      // (the header, 5 mm into the posts)
+    B(SX1-SX0+0.66, 0.20, 0.03, (SX0+SX1)/2, RF-0.17-0.35*K, SZ0-0.335, "#eeece4");           // the fascia along the front eave
+    // a truss on each post: the bottom chord, the top chords to the ridge, a king post and two webs a side
+    for(const x of XS){
+      B(0.10, 0.16, SZ1-SZ0-0.12, x, EV+0.08, ZM, WD);
+      // (the top chords' centre lines 0.215 under the roof's top: the purlins on them sunk a few millimetres in)
+      for(const [za, zb] of [[SZ0+0.02, ZM],[SZ1-0.08, ZM]]){ const ya=top(za)-0.215, yb=top(zb)-0.215;
+        beam(V3(x, ya, za), V3(x, yb, zb), 0.11, 0.16, WD);
+        const m=(t)=>V3(x, lerp(ya, yb, t)-0.06, lerp(za, zb, t));
+        beam(V3(x, EV+0.16, lerp(za, zb, 0.5)), m(0.5), 0.07, 0.10, WD); beam(V3(x, EV+0.16, lerp(za, zb, 0.5)), m(0.25), 0.07, 0.10, WD); beam(V3(x, EV+0.16, lerp(za, zb, 0.5)), m(0.80), 0.07, 0.10, WD); }
+      B(0.09, RG-0.30-(EV+0.16), 0.10, x, (EV+0.16+RG-0.30)/2, ZM, WD); }
+    // the purlins across them, sunk a few millimetres into the top chords, and the roof on them
+    for(let k=0;k<11;k++) for(const sd of [-1,1]){ const z=ZM+sd*(0.30+k*0.60); if((sd<0 && z<SZ0-0.1) || (sd>0 && z>SZ1+0.1)) continue;
+      B(SX1-SX0+0.50, 0.09, 0.05, (SX0+SX1)/2, top(z)-0.05-0.045, z, "#9a8462"); }
+    const ov=0.35;
+    slab("roofmetal", [V3(SX0-0.3, RF-ov*K, SZ0-ov), V3(SX1+0.3, RF-ov*K, SZ0-ov), V3(SX1+0.3, RG, ZM), V3(SX0-0.3, RG, ZM)], 0.05, "#8a9096");
+    slab("roofmetal", [V3(SX0-0.3, RG, ZM), V3(SX1+0.3, RG, ZM), V3(SX1+0.3, RF-ov*K, SZ1+ov), V3(SX0-0.3, RF-ov*K, SZ1+ov)], 0.05, "#8a9096");
+    B(SX1-SX0+0.64, 0.05, 0.42, (SX0+SX1)/2, RG+0.02, ZM, "#9aa0a4");                   // (the ridge cap)
+    // the light: a shop light under the chord in each bay, a lamp in the shop and in the bays, a barn light over the front
+    for(let k=0;k<XS.length-1;k++){ const x=(XS[k]+XS[k+1])/2;
+      B(1.22, 0.06, 0.16, x, EV-0.20, ZM-0.9, "#e8e8e4"); push("tube", planeGeo(1.12, 0.10, 0), x, EV-0.236, ZM-0.9, 0, "#ffffff", Math.PI/2, 0);
+      for(const dx of [-0.5, 0.5]) tubeE(V3(x+dx, EV-0.17, ZM-0.9), V3(x+dx, top(ZM-0.9)-0.14, ZM-0.9), 0.004, DK); }      // (on chains from a purlin)
+    for(const x of [140, 152, 164]) LAMPS.push({x:x, y:EV-0.5, z:ZM-1.0, color:0xeef4ff, intensity:0.7, dist:12, decay:1.4, vol:[SX0, SX1, SZ0-4, SZ1, Y-0.5, RG]});
+    { const lx=150; tubeE(V3(lx, EV-0.22, SZ0-0.06), V3(lx, EV-0.08, SZ0-0.68), 0.02, "#2f4a3a");          // (under the fascia, out past the eave)
+      ent(new T.CylinderGeometry(0.06, 0.24, 0.16, 16, 1, true), lx, EV-0.16, SZ0-0.68, "#2f4a3a"); push("tube", new T.CircleGeometry(0.2, 16), lx, EV-0.235, SZ0-0.68, 0, "#ffffff", Math.PI/2, 0);
+      LAMPS.push({x:lx, y:EV-0.4, z:SZ0-0.9, color:0xffd9a0, intensity:0.9, dist:16, decay:1.4, mothy:true}); }
+
+    /* the shop: the bench along the back wall, the pegboard over it, the vise, the grinder, a calendar */
+    { const bz=SZ1-0.64, bx0=137.4, bx1=141.8, xm=(bx0+bx1)/2, PZ=SZ1-0.26;            // (the pegboard on the posts' faces)
+      B(bx1-bx0, 0.06, 0.70, xm, PF+0.90, bz, "#8a6a48"); B(bx1-bx0-0.1, 0.03, 0.62, xm, PF+0.25, bz, "#7a6448");
+      for(const x of [bx0+0.06, xm, bx1-0.06]) for(const dz of [-0.29, 0.29]) B(0.08, 0.87, 0.08, x, PF+0.435, bz+dz, "#6a5438");
+      B(bx1-bx0, 1.20, 0.025, xm, PF+1.65, PZ, "#b08a5a");
+      const TL=[["#8a8d90",0.03,0.32],["#8a8d90",0.03,0.28],["#c41a1a",0.05,0.30],["#8a8d90",0.03,0.24],["#2a4a8a",0.05,0.26],["#6a5038",0.04,0.38],["#8a8d90",0.03,0.20],["#e6c21c",0.06,0.22],["#8a8d90",0.12,0.30],["#c41a1a",0.04,0.18]];
+      TL.forEach(([c, w, h], k)=>B(w, h, 0.02, bx0+0.35+k*0.38, PF+1.75+((k%3)-1)*0.12, PZ-0.03, c));
+      B(0.30, 0.04, 0.03, bx0+0.9, PF+2.05, PZ-0.035, "#8a8d90"); B(0.30, 0.04, 0.03, bx0+2.4, PF+2.05, PZ-0.035, "#8a8d90");
+      // the vise on the west end, the grinder, a coffee can of bolts, a radio
+      B(0.16, 0.10, 0.24, bx0+0.25, PF+0.98, bz-0.30, "#3a4a6a"); B(0.12, 0.08, 0.06, bx0+0.25, PF+1.06, bz-0.45, "#3a4a6a");
+      C(0.08, 0.025, bx1-0.55, PF+1.05, bz, "#5a5a58", 16, 0, 0, Math.PI/2); C(0.08, 0.025, bx1-0.25, PF+1.05, bz, "#5a5a58", 16, 0, 0, Math.PI/2); B(0.18, 0.12, 0.12, bx1-0.40, PF+0.99, bz, "#2a5a8a");
+      C(0.07, 0.14, xm, PF+1.00, bz-0.1, "#9a7a3a", 16); B(0.30, 0.16, 0.10, xm+0.6, PF+1.01, bz+0.15, "#2a2a2c");
+      sign(0.40, 0.56, (c,W,H)=>{ c.fillStyle="#f4f2ec"; c.fillRect(0,0,W,H); c.fillStyle="#2a6a2a"; c.fillRect(0,0,W,H*0.42);
+          say(c,"CRAWFORD CO. CO-OP",W/2,H*0.21,W*0.80,H*0.22,"#f4f2ec","900","Arial");
+          c.strokeStyle="#9a9a96"; c.lineWidth=2; for(let i=0;i<=7;i++){ c.beginPath(); c.moveTo(W*0.08+i*W*0.12, H*0.50); c.lineTo(W*0.08+i*W*0.12, H*0.92); c.stroke(); }
+          for(let j=0;j<=5;j++){ c.beginPath(); c.moveTo(W*0.08, H*0.50+j*H*0.084); c.lineTo(W*0.92, H*0.50+j*H*0.084); c.stroke(); } },
+        bx1+0.45, PF+1.75, SZ1-0.075, Math.PI, false, 200);
+      addCol(bx0-0.02, bx1+0.02, bz-0.38, SZ1, PF-0.5, PF+0.95);
+      addUse(xm, bz-0.9, PF, "THE WORKBENCH", ()=>toast(["A HALF-TAKEN-APART CARBURETOR ON A RAG. IT'S BEEN HALF TAKEN APART A WHILE","THE RADIO'S ON THE FARM REPORT. CORN'S UP A NICKEL","EVERY WRENCH HAS ITS OUTLINE PAINTED ON THE PEGBOARD. TWO ARE MISSING"][(Math.random()*3)|0],"#cfe0d4"), 1.4); }
+    // the tool chest, red, its drawers; the compressor; the drums by the west wall with a pump in one
+    { const cx=137.0, cz=SZ1-1.35; B(0.72, 1.02, 0.46, cx, PF+0.51+0.06, cz, "#b8221a", Math.PI/2);
+      for(let k=0;k<6;k++) B(0.48, 0.012, 0.012, cx+0.236, PF+0.25+k*0.14, cz, "#2a2a2c", Math.PI/2);
+      for(const dz of [-0.28, 0.28]) for(const dx of [-0.16, 0.16]) C(0.04, 0.05, cx+dx, PF+0.03, cz+dz, DK, 8, 0, 0, Math.PI/2);
+      addCol(cx-0.25, cx+0.25, cz-0.38, cz+0.38, PF-0.5, PF+1.1); }
+    { const cx=143.0, cz=SZ1-0.55; C(0.24, 1.00, cx, PF+0.36, cz, "#c41a1a", 18, 0, 0, Math.PI/2); B(0.30, 0.26, 0.26, cx-0.2, PF+0.72, cz, "#2a2a2c"); C(0.10, 0.04, cx+0.2, PF+0.74, cz-0.04, "#8a8d90", 14);
+      for(const dx of [-0.38, 0.38]) B(0.06, 0.13, 0.30, cx+dx, PF+0.065, cz, DK);
+      addCol(cx-0.55, cx+0.55, cz-0.28, SZ1, PF-0.5, PF+0.9); }
+    for(const [z, c] of [[SZ0+3.4, "#2a4a8a"],[SZ0+4.05, "#a82a1e"],[SZ0+4.7, "#2a4a8a"]]){
+      C(0.29, 0.88, SX0+0.42, PF+0.44, z, c, 20); for(const y of [0.29, 0.59]) C(0.295, 0.025, SX0+0.42, PF+y, z, c, 20); }
+    tubeE(V3(SX0+0.42, PF+0.88, SZ0+4.05), V3(SX0+0.42, PF+1.25, SZ0+4.05), 0.02, "#8a8d90"); tubeE(V3(SX0+0.42, PF+1.22, SZ0+4.05), V3(SX0+0.70, PF+1.12, SZ0+4.05), 0.012, "#8a8d90");
+    addCol(SX0+0.06, SX0+0.75, SZ0+3.05, SZ0+5.05, PF-0.5, PF+1.0);
+    // steel shelving on the west wall: oil, filters, a box of baler twine, coffee cans
+    { const sx=SX0+0.36, z0=SZ0+7.0, z1=SZ0+9.0;
+      for(const z of [z0, z1]) for(const dx of [-0.22, 0.22]) B(0.04, 1.85, 0.04, sx+dx, PF+0.925, z, "#7d8286");
+      for(const y of [0.10, 0.62, 1.14, 1.66]){ B(0.50, 0.025, z1-z0+0.04, sx, PF+y, (z0+z1)/2, "#8a8d90");
+        for(let k=0;k<5;k++){ const z=z0+0.25+k*0.38, kind=(k+((y*10)|0))%4;
+          if(kind===0) for(let j=0;j<3;j++) C(0.045, 0.22, sx-0.1+j*0.1, PF+y+0.125, z, ["#e6c21c","#1f4fd8","#2a6a2a"][j], 10);
+          else if(kind===1) B(0.40, 0.30, 0.30, sx, PF+y+0.165, z, "#b8a07a");
+          else if(kind===2) C(0.08, 0.16, sx, PF+y+0.095, z, "#9a7a3a", 14);
+          else B(0.36, 0.20, 0.24, sx, PF+y+0.115, z, "#c86a1a"); } }
+      addCol(SX0+0.06, sx+0.28, z0-0.05, z1+0.05, PF-0.5, PF+1.9); }
+    // a tractor tyre stood against the back wall, and the lawn tractor parked on the pad's edge
+    ent(new T.TorusGeometry(0.56, 0.21, 10, 24), 145.3, Y+0.78, SZ1-0.42, "#1d1d1e", -0.12, 0, 0); addCol(144.45, 146.15, SZ1-0.7, SZ1, Y-0.5, Y+1.6);
+    // and a wheelbarrow, tipped up on its wheel
+    { const wx=146.9, wz=SZ1-0.9; ent(new T.CylinderGeometry(0.34, 0.24, 0.30, 14, 1, true), wx, Y+0.62, wz, "#2f5a8a", -1.15, 0, 0);
+      for(const sd of [-1,1]) beam(V3(wx+sd*0.22, Y+0.05, wz-0.75), V3(wx+sd*0.28, Y+1.20, wz+0.25), 0.04, 0.04, "#6a5438");
+      C(0.17, 0.08, wx, Y+0.17, wz-0.72, DK, 14, 0, 0, Math.PI/2); addCol(wx-0.4, wx+0.4, wz-0.95, wz+0.45, Y-0.5, Y+1.2); }
+    { const mx=141.6, mz=SZ0+2.6; B(0.80, 0.30, 1.35, mx, PF+0.42, mz, "#2f6a2a"); B(0.78, 0.30, 0.55, mx, PF+0.62, mz-0.40, "#2f6a2a"); B(0.42, 0.08, 0.40, mx, PF+0.70, mz+0.25, DK);
+      B(0.42, 0.30, 0.06, mx, PF+0.86, mz+0.47, DK); B(1.10, 0.10, 0.80, mx, PF+0.20, mz+0.05, "#2f6a2a");
+      for(const [dx, dz, r] of [[-0.38, -0.50, 0.20],[0.38, -0.50, 0.20],[-0.40, 0.48, 0.28],[0.40, 0.48, 0.28]]) C(r, 0.16, mx+dx, PF+r, mz+dz, DK, 14, 0, 0, Math.PI/2);
+      C(0.02, 0.40, mx, PF+0.88, mz-0.02, DK, 6, -0.5); ent(new T.TorusGeometry(0.13, 0.014, 6, 14), mx, PF+1.06, mz-0.12, DK, -1.07);
+      addCol(mx-0.58, mx+0.58, mz-0.75, mz+0.78, PF-0.5, PF+1.0); }
+
+    /* the farm truck, backed into its bay; the tractor in the next */
+    parked(2, "#4a5a3e", XS[3]+2.0, Z+87.2, Math.PI, Y+0.005);
+    const tx=XS[5]+2.0, tz=Z+86, G="#2f6a2a";
     B(1.0, 0.80, 2.2, tx, Y+1.25, tz-0.6, G); B(0.9, 0.12, 2.0, tx, Y+1.70, tz-0.6, "#3a7a32");
     for(const sd of [-1,1]){ C(0.80, 0.42, tx+sd*0.85, Y+0.80, tz+0.7, "#1d1d1e", 22, 0, 0, Math.PI/2); C(0.46, 0.44, tx+sd*0.85, Y+0.80, tz+0.7, "#f2c418", 16, 0, 0, Math.PI/2);
       C(0.42, 0.26, tx+sd*0.62, Y+0.42, tz-1.5, "#1d1d1e", 18, 0, 0, Math.PI/2); C(0.24, 0.28, tx+sd*0.62, Y+0.42, tz-1.5, "#f2c418", 14, 0, 0, Math.PI/2); }
@@ -1489,8 +1595,38 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
     for(const [dx,dz] of [[-0.6,0.25],[0.6,0.25],[-0.6,1.15],[0.6,1.15]]) B(0.06, 1.3, 0.06, tx+dx, Y+2.35, tz+dz, "#1d1d1e");
     B(1.4, 0.06, 1.1, tx, Y+3.03, tz+0.7, G); C(0.05, 0.9, tx+0.35, Y+2.15, tz-1.2, "#1d1d1e", 8);
     ent(new T.TorusGeometry(0.16, 0.015, 6, 16), tx, Y+2.05, tz+0.3, "#1d1d1e", -0.9, 0, 0);
-    addCol(tx-1.3, tx+1.3, tz-1.9, tz+1.6, Y-0.5, Y+3.1);
-    addZone(SX0, SX1, SZ0, SZ1, Y-1, SH, "THE MACHINE SHED"); addRoof(SX0-0.3, SX1+0.3, SZ0-0.6, SZ1+0.3, SH-0.1); }
+    // a loader on it: the arms down either side to the bucket resting on the gravel in front
+    for(const sd of [-1,1]){ beam(V3(tx+sd*0.58, Y+1.85, tz+0.2), V3(tx+sd*0.58, Y+0.75, tz-2.6), 0.10, 0.16, G); B(0.12, 0.60, 0.12, tx+sd*0.55, Y+1.55, tz+0.2, G); }
+    B(2.0, 0.06, 0.80, tx, Y+0.08, tz-3.05, "#3a3a3c"); B(2.0, 0.70, 0.06, tx, Y+0.42, tz-2.68, "#3a3a3c"); for(const sd of [-1,1]) B(0.05, 0.70, 0.80, tx+sd*0.975, Y+0.42, tz-3.05, "#3a3a3c");
+    addCol(tx-1.3, tx+1.3, tz-3.5, tz+1.6, Y-0.5, Y+3.1);
+    // the manure spreader at the east end, its tongue on a block; the disc harrow out front of it on the gravel
+    { const sx=XS[6]+2.0, sz=Z+88.0;
+      B(1.60, 0.08, 4.2, sx, Y+0.95, sz, "#8a2a1e"); for(const sd of [-1,1]) B(0.05, 0.70, 4.2, sx+sd*0.80, Y+1.34, sz, "#8a2a1e");
+      B(1.65, 0.70, 0.05, sx, Y+1.34, sz-2.1, "#8a2a1e"); C(0.20, 1.55, sx, Y+1.25, sz+2.22, "#3a3a3c", 10, 0, 0, Math.PI/2);
+      for(let k=0;k<4;k++) B(0.06, 0.08, 4.1, sx-0.6+k*0.4, Y+1.03, sz, "#5a3a20");
+      for(const sd of [-1,1]){ C(0.48, 0.24, sx+sd*0.98, Y+0.48, sz+0.9, "#1d1d1e", 18, 0, 0, Math.PI/2); C(0.28, 0.26, sx+sd*0.98, Y+0.48, sz+0.9, "#d8d4c8", 12, 0, 0, Math.PI/2); }
+      beam(V3(sx, Y+0.95, sz-2.1), V3(sx, Y+0.40, sz-3.9), 0.12, 0.12, "#3a3a3c"); B(0.30, 0.30, 0.30, sx, Y+0.15, sz-3.9, "#7a6448");
+      addCol(sx-1.25, sx+1.25, sz-2.2, sz+2.4, Y-0.5, Y+1.8); addCol(sx-0.2, sx+0.2, sz-4.1, sz-2.2, Y-0.5, Y+0.8);
+      const hx=163.0, hz=Z+78.0;
+      for(const sd of [-1,1]){ beam(V3(hx-1.8, Y+0.62, hz+sd*0.55), V3(hx+1.8, Y+0.62, hz+sd*0.55), 0.10, 0.10, "#c41a1a");
+        for(let k=0;k<9;k++) ent(new T.CylinderGeometry(0.26, 0.26, 0.02, 16), hx-1.6+k*0.40, Y+0.27, hz+sd*0.55, "#8a8d90", 0, sd*0.25, Math.PI/2);
+        C(0.025, 3.4, hx, Y+0.27, hz+sd*0.55, "#5a5a58", 6, 0, 0, Math.PI/2); }
+      for(const dx of [-1.6, 0, 1.6]) B(0.10, 0.10, 1.20, hx+dx, Y+0.66, hz, "#c41a1a");
+      beam(V3(hx, Y+0.62, hz-0.6), V3(hx, Y+0.45, hz-2.6), 0.10, 0.10, "#c41a1a");
+      addCol(hx-1.9, hx+1.9, hz-0.85, hz+0.85, Y-0.5, Y+0.75); addCol(hx-0.1, hx+0.1, hz-2.7, hz-0.85, Y-0.5, Y+0.6); }
+    // the fuel tank on its stand outside the east end, the hose and nozzle hung on the stand
+    { const fx=171.6, fz=Z+86.5, fy=Y+1.95;
+      C(0.58, 2.10, fx, fy, fz, "#b8221a", 22, Math.PI/2); for(const e of [-1,1]) C(0.60, 0.04, fx, fy, fz+e*1.0, "#9a1a14", 22, Math.PI/2);
+      for(const e of [-1,1]) for(const sd of [-1,1]) beam(V3(fx+sd*0.75, Y, fz+e*0.75), V3(fx+sd*0.18, fy-0.52, fz+e*0.75), 0.06, 0.06, "#5a5a58");
+      for(const e of [-1,1]) B(0.60, 0.06, 0.06, fx, fy-0.53, fz+e*0.75, "#5a5a58");
+      C(0.05, 0.25, fx, fy+0.66, fz-0.6, "#5a5a58", 10); B(0.10, 0.18, 0.10, fx+0.25, fy-0.45, fz+1.08, "#2a2a2c");
+      tubeE(V3(fx+0.25, fy-0.55, fz+1.08), V3(fx+0.62, Y+0.95, fz+1.05), 0.018, "#141414"); tubeE(V3(fx+0.62, Y+0.95, fz+1.05), V3(fx+0.74, Y+1.25, fz+0.70), 0.018, "#141414");
+      B(0.06, 0.14, 0.24, fx+0.76, Y+1.30, fz+0.62, "#1d1d1e");
+      sign(0.90, 0.32, (c,W,H)=>{ c.fillStyle="#b8221a"; c.fillRect(0,0,W,H); say(c,"GASOLINE",W/2,H/2,W*0.80,H*0.62,"#f4f2ec","900","'Arial Black', Arial"); }, fx-0.588, fy, fz, -Math.PI/2, false, 360);
+      sign(0.90, 0.32, (c,W,H)=>{ c.fillStyle="#b8221a"; c.fillRect(0,0,W,H); say(c,"GASOLINE",W/2,H/2,W*0.80,H*0.62,"#f4f2ec","900","'Arial Black', Arial"); }, fx+0.588, fy, fz, Math.PI/2, false, 360);
+      addCol(fx-0.85, fx+0.85, fz-1.1, fz+1.1, Y-0.5, Y+2.6);
+      addUse(fx-1.2, fz, Y, "THE FUEL TANK", ()=>toast(["FARM GAS. RED-DYED DIESEL'S IN THE OTHER ONE, THEY SAY. THERE ISN'T ANOTHER ONE","THE NOZZLE'S HUNG ON A BENT NAIL. IT DRIPS","A PADLOCK ON THE VALVE, AND THE KEY ON A STRING NEXT TO IT"][(Math.random()*3)|0],"#cfe0d4"), 1.6); }
+    addZone(SX0, SX1, SZ0, SZ1, Y-1, RG, "THE MACHINE SHED"); addRoof(SX0-0.3, SX1+0.3, SZ0-0.35, SZ1+0.35, EV+0.1); }
 
   // the cows, out in the pasture behind
   for(const [x,z,ry,gz] of [[150,Z+178,0.4,1],[158,Z+184,2.0,1],[171,Z+176,-1.2,0],[186,Z+192,0.9,1],[197,Z+181,2.6,1],[214,Z+200,-0.4,0],[176,Z+206,1.5,1],[205,Z+222,-2.2,1]]) cow(x, z, ry, gz);

@@ -248,6 +248,10 @@ function blowerParts(){
       tex.repeat.set(1, h/0.075); col.y0=top-h; col.y1=top+0.1; };
     D.set(0.14);
     GARAGE_RT.doors.push(D);
+    // the switch by it works for you as well; whatever you leave it at, Terry leaves alone for a few minutes (14h)
+    addUse(X0+T2+0.6, o.b+0.25, GF, "THE BAY DOOR'S SWITCH", ()=>{ const up=D.want<(top-GF)/2; D.want=up ? top-GF : 0.14; D.userT=240;
+      toast(up ? "DOWN IT COMES" : "UP IT GOES", "#cfe0d4"); }, 1.0);
+    addUse(X0-1.0, (o.a+o.b)/2, GF, "THE BAY DOOR", ()=>{ const up=D.want<(top-GF)/2; D.want=up ? top-GF : 0.14; D.userT=240; if(typeof AUDIO!=="undefined") AUDIO.blip("whirr", D.x, (o.a+o.b)/2); }, 1.6);
   }
   // the man door, steel, opening out, and its frame
   frameZ(X0+T2/2, T2, MAN.a, MAN.b, MAN.head, TRIM);
