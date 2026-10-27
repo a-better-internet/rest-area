@@ -23,6 +23,19 @@
    in; too hard and it clangs off. In the lake it is a stroke, and you
    throw again from where it went in. Walk up to it to pick it up. The card
    at the top keeps the hole, the throws and the round.
+   The chains are twenty strands on each basket, one instanced mesh for the
+   course, and they swing when a disc goes into them. A step of the flight
+   is swept against the basket, not tested where it ends, so a fast disc
+   cannot pass through between two frames: through the chains (caught more
+   often slow and dead centre, else knocked back out of them), off the band,
+   or down into the tray from above.
+   To aim by: the basket you are playing has its band lit and breathing and
+   its mark over it in the view (or at the side of the view, pointing, when
+   it is off it), with how far it is. Ready to throw, the card works out the
+   power that takes the disc nearest the chains at the angle you look (the
+   white mark on the meter) and says whether that throw is on line, or
+   which side it passes and by how much. Winding up, the arc shows dotted
+   and a ring lies where it will come down.
    ---------------------------------------------------------------------- */
 const DGOLF={on:false, hole:0, throws:0, card:[], state:"hand", lie:null, at:null, disc:null, hand:null,
              p:null, v:null, th:0, spin:0, bounce:0, slide:false, ft:0, charge:-1, power:0, lastLand:null,
@@ -36,9 +49,6 @@ const DGOLF={on:false, hole:0, throws:0, card:[], state:"hand", lie:null, at:nul
     new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
   const B=(w,h,d,x,y,z,c,ry)=>ent(boxGeo(w,h,d),x,y,z,c,0,ry||0,0);
   const C=(rad,h,x,y,z,c,seg,rx,ry,rz)=>ent(new T.CylinderGeometry(rad,rad,h,seg||12),x,y,z,c,rx,ry,rz);
-  const tubeE=(a,b,rad,c)=>{ const d=new T.Vector3().subVectors(b,a), L=d.length();
-    ME.push({geo:new T.CylinderGeometry(rad,rad,L,5), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5),
-      new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color(c)}); };
   const say=(x,s,cx,cy,w,h,col,weight,family)=>{ x.fillStyle=col; fitText(x,s,w,h,cx,cy,weight||"700",family); };
   const sign=(w,h,draw,px,py,pz,ry,cw)=>signPanel(w,h, signTex(cw||Math.round(w*400), Math.round((cw||w*400)*h/w), draw), px,py,pz,ry,false);
   // the holes: the tee, the basket, the par (the lake to the north, the lot along the road to the south)
@@ -72,12 +82,26 @@ const DGOLF={on:false, hole:0, throws:0, card:[], state:"hand", lie:null, at:nul
     ent(new T.CylinderGeometry(0.31, 0.29, 0.20, 24, 1, true), bxx, g0+0.73, bzz, STEEL); C(0.29, 0.012, bxx, g0+0.635, bzz, STEEL, 24);
     ent(new T.TorusGeometry(0.31, 0.012, 6, 28), bxx, g0+0.83, bzz, STEEL, Math.PI/2);
     ent(new T.CylinderGeometry(0.31, 0.31, 0.08, 24, 1, true), bxx, g0+1.44, bzz, COL); ent(new T.TorusGeometry(0.31, 0.01, 6, 28), bxx, g0+1.48, bzz, COL, Math.PI/2);
-    for(let k=0;k<12;k++){ const a=k*Math.PI/6; tubeE(P(a, 1.40, 0.29), P(a+0.15, 0.90, 0.16), 0.004, "#c8ccd0"); }
-    for(let k=0;k<8;k++){ const a=k*Math.PI/4+0.2; tubeE(P(a, 1.40, 0.13), P(a, 0.92, 0.035), 0.004, "#c8ccd0"); }
+    // (the chains are their own, below: they swing when a disc goes into them)
+    h.chains=[]; for(let k=0;k<12;k++){ const a=k*Math.PI/6; h.chains.push([P(a, 1.40, 0.29), P(a+0.15, 0.90, 0.16)]); }
+    for(let k=0;k<8;k++){ const a=k*Math.PI/4+0.2; h.chains.push([P(a, 1.40, 0.13), P(a, 0.92, 0.035)]); }
     C(0.05, 0.04, bxx, g0+0.92, bzz, STEEL, 10);
-    addCol(bxx-0.30, bxx+0.30, bzz-0.30, bzz+0.30, g0-0.5, g0+1.55);
+    h.col=addCol(bxx-0.30, bxx+0.30, bzz-0.30, bzz+0.30, g0-0.5, g0+1.55);
   });
   DGOLF.holes=H;
+  /* the chains, every basket's, as one instanced mesh: each a link hung from the band to the collar, turned on its top.
+     A disc into them sets that basket's swinging (DGOLF.swing), and they settle. */
+  { const n=H.length*20, cm=new T.InstancedMesh(new T.CylinderGeometry(0.0045, 0.0045, 1, 5).translate(0, -0.5, 0),
+      new T.MeshStandardMaterial({color:0xc8ccd0, metalness:0.75, roughness:0.32}), n);
+    const down=V3(0, -1, 0), q=new T.Quaternion(), m=new T.Matrix4(), sc=new T.Vector3();
+    H.forEach((h, i)=>{ h.ci=i*20; h.sw={amp:0, t:0, k:V3(1, 0, 0)};
+      h.rest=h.chains.map(([a, b])=>{ const d=new T.Vector3().subVectors(b, a), L=d.length(); return {a:a, L:L, q:new T.Quaternion().setFromUnitVectors(down, d.normalize())}; });
+      h.rest.forEach((c, k)=>cm.setMatrixAt(h.ci+k, m.compose(c.a, c.q, sc.set(1, c.L, 1)))); });
+    cm.castShadow=true; cm.name="disc golf chains"; scene.add(cm); DGOLF.chainMesh=cm; }
+  /* the basket you are playing, from anywhere on the course: a lit ring round its band, breathing, and (in the HUD) a
+     mark over it with how far it is, or at the edge of the screen pointing the way when it is not in view */
+  { const g=new T.Mesh(new T.TorusGeometry(0.34, 0.022, 8, 32), new T.MeshStandardMaterial({color:0xf4c430, emissive:0xf4c430, emissiveIntensity:0.6, roughness:0.4}));
+    g.rotation.x=Math.PI/2; g.visible=false; scene.add(g); DGOLF.glow=g; }
   // the course sign by the first tee, the map of it on the board; the box of loaners beside it
   { const sx=1243.2, sz=-1222.6, sg=gy(sx, sz), ry=Math.PI*0.80;
     for(const d of [-0.89, 0.89]){ const x=sx+Math.cos(ry)*d, z=sz-Math.sin(ry)*d; B(0.12, 2.0, 0.12, x, sg+1.0, z, "#5a4430", ry); addCol(x-0.1, x+0.1, z-0.1, z+0.1, sg-0.5, sg+2.0); }
@@ -117,12 +141,24 @@ const DGOLF={on:false, hole:0, throws:0, card:[], state:"hand", lie:null, at:nul
     "#dgolf .card span.now{outline:1px solid #f4c430}#dgolf .card span.u{color:#7aff9a}#dgolf .card span.o{color:#ff9a7a}"+
     "#dgolf .msg{margin-top:6px;font-size:13px;color:#cfe0d4;min-height:18px}#dgolf .bar{margin-top:6px;height:8px;background:#2a302c;border-radius:4px;overflow:hidden}"+
     "#dgolf .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7aff9a,#f4c430,#ff6a4a)}"+
+    "#dgolf .bar{position:relative;overflow:visible}#dgolf .bar u{position:absolute;top:-3px;width:3px;height:14px;margin-left:-1px;background:#fff;border-radius:1px;display:none;box-shadow:0 0 4px #000}"+
+    "#dgolf .msg b{color:#7aff9a;font-weight:500}#dgolf .msg em{color:#ff9a7a;font-style:normal}"+
+    "#dgmark{position:fixed;z-index:13;display:none;pointer-events:none;transform:translate(-50%,-100%);font-family:'JetBrains Mono',monospace;font-size:12px;"+
+    "color:#f4c430;text-align:center;text-shadow:0 1px 3px #000,0 0 6px #000;white-space:nowrap;font-weight:700;font-size:13px}#dgmark .ar{display:block;font-size:16px;line-height:14px}"+
     "#dgolf .keys{margin-top:6px;font-size:10px;color:#9aa1ab}#dgolf .keys b{color:#f4c430;font-weight:500}";
   document.head.appendChild(st);
   const d=document.createElement("div"); d.id="dgolf";
-  d.innerHTML='<div class="hd"><span class="t">DISC GOLF</span><span class="sc"></span></div><div class="card"></div><div class="msg"></div><div class="bar"><i></i></div>'+
-    '<div class="keys"><b>LOOK</b> aim (up is higher) · hold <b>Z</b> or the <b>RIGHT</b> button to zoom · hold <b>SPACE</b> or the <b>MOUSE</b>, let go to throw · the view goes after the disc (<b>SPACE</b> brings it back) · walk to your disc · <b>E</b> at the sign ends the round</div>';
+  d.innerHTML='<div class="hd"><span class="t">DISC GOLF</span><span class="sc"></span></div><div class="card"></div><div class="msg"></div><div class="bar"><i></i><u></u></div>'+
+    '<div class="keys"><b>LOOK</b> aim (up is higher) · hold <b>Z</b> or the <b>RIGHT</b> button to zoom · hold <b>SPACE</b> or the <b>MOUSE</b>, let go at the white mark to throw · the view goes after the disc (<b>SPACE</b> brings it back) · walk to your disc · <b>E</b> at the sign ends the round</div>';
   document.body.appendChild(d); DGOLF.panel=d;
+  const mk=document.createElement("div"); mk.id="dgmark"; document.body.appendChild(mk); DGOLF.mark=mk;
+  // the throw as it would go, while you wind up: a dotted line along it, and a ring where it would come down
+  { const N=60, g=new T.BufferGeometry(); g.setAttribute("position", new T.BufferAttribute(new Float32Array(N*3), 3).setUsage(T.DynamicDrawUsage)); g.setDrawRange(0, 0);
+    const pm=new T.PointsMaterial({color:0xf4e04a, size:4, sizeAttenuation:false, transparent:true, opacity:0.9, depthWrite:false});
+    const pts=new T.Points(g, pm); pts.frustumCulled=false; pts.visible=false; pts.renderOrder=4; scene.add(pts); DGOLF.arc=pts;
+    const ring=new T.Mesh(new T.RingGeometry(0.30, 0.42, 28), new T.MeshBasicMaterial({color:0xf4e04a, transparent:true, opacity:0.75, depthWrite:false,
+      polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-8}));
+    ring.rotation.x=-Math.PI/2; ring.visible=false; scene.add(ring); DGOLF.landRing=ring; }
   try{ const b=localStorage.getItem("restarea.discgolf.best"); if(b) DGOLF.best=+b; }catch(e){}
 })();
 
@@ -170,31 +206,48 @@ DGOLF.release=function(){
   if(typeof AUDIO!=="undefined") AUDIO.blip("whoosh", player.pos.x, player.pos.z); G.draw(); };
 // one step of the flight: lift and drag with the angle the disc meets the air at, the turn and the fade; then the
 // ground, the water, the trees and poles, the chains
+// the air on a disc for one step h: lift and drag with the angle it meets the air at (th, its nose), the turn and the
+// fade. v is changed; the nose's new angle is returned. (The flight, and the preview of one, both go by this.)
+DGOLF.aero=function(v, th, h){
+  const hz=Math.hypot(v.x, v.z)||1e-6, sp=Math.hypot(hz, v.y), gam=Math.atan2(v.y, hz), a=th-gam;
+  const CL=clamp(0.15+1.4*a, -0.3, 1.0), CD=0.08+2.72*(a+0.04)*(a+0.04), k=0.195, Lf=k*CL*sp*sp, Df=k*CD*sp*sp;
+  const ux=v.x/hz, uz=v.z/hz;                                                   // along, flat
+  const side=1.8*(1-smoothstep(5, 14, sp))-0.5*smoothstep(19, 26, sp);         // fade left slow, turn right fast
+  v.x+=(-Df*Math.cos(gam)*ux-Lf*Math.sin(gam)*ux+side*uz)*h;
+  v.z+=(-Df*Math.cos(gam)*uz-Lf*Math.sin(gam)*uz-side*ux)*h;
+  v.y+=(-Df*Math.sin(gam)+Lf*Math.cos(gam)-9.8)*h;
+  return th+(-0.10-th)*h*0.25; };                                             // (the nose comes down a little as it goes)
+// the chains of basket H set swinging, pushed the way (dx,dz) the disc came in, as hard as it came
+DGOLF.swing=function(H, dx, dz, sp){ const d=Math.hypot(dx, dz)||1; H.sw.k.set(-dz/d, 0, dx/d); H.sw.amp=Math.min(0.55, 0.08+sp*0.035); H.sw.t=0;
+  if(typeof AUDIO!=="undefined") AUDIO.blip(sp>3 ? "chains" : "chainsoft", H.b[0], H.b[1]); };
 const _dgUp=new T.Vector3();
 DGOLF.step=function(h){
   const G=DGOLF, p=G.p, v=G.v, H=G.holes[G.hole];
-  if(!G.slide){
-    const hz=Math.hypot(v.x, v.z)||1e-6, sp=Math.hypot(hz, v.y), gam=Math.atan2(v.y, hz), a=G.th-gam;
-    const CL=clamp(0.15+1.4*a, -0.3, 1.0), CD=0.08+2.72*(a+0.04)*(a+0.04), k=0.195, Lf=k*CL*sp*sp, Df=k*CD*sp*sp;
-    const ux=v.x/hz, uz=v.z/hz;                                                   // along, flat
-    const side=1.8*(1-smoothstep(5, 14, sp))-0.5*smoothstep(19, 26, sp);         // fade left slow, turn right fast
-    v.x+=(-Df*Math.cos(gam)*ux-Lf*Math.sin(gam)*ux+side*uz)*h;
-    v.z+=(-Df*Math.cos(gam)*uz-Lf*Math.sin(gam)*uz-side*ux)*h;
-    v.y+=(-Df*Math.sin(gam)+Lf*Math.cos(gam)-9.8)*h;
-    G.th+=(-0.10-G.th)*h*0.25;                                                   // (the nose comes down a little as it goes)
-  }
+  if(!G.slide) G.th=DGOLF.aero(v, G.th, h);
   const ox=p.x, oz=p.z, oy=p.y; p.x+=v.x*h; p.y+=v.y*h; p.z+=v.z*h; G.ft+=h;
-  // the basket you are playing: in through the chains, or off the band and the pole
-  { const bx2=H.b[0], bz2=H.b[1], r=Math.hypot(p.x-bx2, p.z-bz2), y=p.y-H.by;
-    // (how near the middle it comes is how near its line passes the pole: where it crosses into the chains is always their edge)
-    if(r<0.30 && y>0.84 && y<1.40 && !G.slide){ const sp=Math.hypot(v.x, v.y, v.z), hz=Math.hypot(v.x, v.z)||1e-6, off=Math.min(0.30, Math.abs(((bx2-p.x)*v.z-(bz2-p.z)*v.x)/hz));
-      const pc=clamp(1.3-sp/12, 0, 1)*(1-0.5*(off/0.30)*(off/0.30));
+  /* the basket you are playing, tested along the whole step (a fast disc goes a dozen centimetres a step): the cage of
+     chains (in to 0.36 of the pole, the disc's own rim and the chains' give, from the collar at 0.86 to the band at
+     1.40); the band over it; the tray under it, which a disc dropping in from above stays in. Into the chains, how near
+     its line runs to the pole and how fast it is going say whether they hold it: a putt into the middle nearly always,
+     a drive's worth off the edge hardly ever. What they do not hold they take most of the way out of, and drop. */
+  if(!G.slide){ const bx2=H.b[0], bz2=H.b[1], sx=p.x-ox, sz=p.z-oz, L2=sx*sx+sz*sz;
+    const t=L2>1e-10 ? clamp(((bx2-ox)*sx+(bz2-oz)*sz)/L2, 0, 1) : 0, cx=ox+sx*t, cz=oz+sz*t, cy=oy+(p.y-oy)*t-H.by, rc=Math.hypot(cx-bx2, cz-bz2);
+    const sp=Math.hypot(v.x, v.y, v.z), hz=Math.hypot(v.x, v.z)||1e-6, rNow=Math.hypot(p.x-bx2, p.z-bz2), yNow=p.y-H.by, yOld=oy-H.by;
+    if(rc<0.36 && cy>0.86 && cy<1.40){
+      const off=Math.min(0.36, Math.abs(((bx2-ox)*v.z-(bz2-oz)*v.x)/hz)), pc=clamp(1.35-sp/15, 0, 1)*(1-0.6*(off/0.36)*(off/0.36));
+      DGOLF.swing(H, v.x, v.z, sp);
       if(Math.random()<pc){ G.holed(); return; }
-      if(typeof AUDIO!=="undefined") AUDIO.blip("rim", p.x, p.z); v.multiplyScalar(-0.25); v.y=Math.min(v.y, 0); p.x=ox; p.z=oz; }
-    else if(r<0.33 && y>1.38 && y<1.50){ if(typeof AUDIO!=="undefined") AUDIO.blip("rim", p.x, p.z); v.x*=-0.4; v.z*=-0.4; v.y=Math.abs(v.y)*0.3; p.x=ox; p.z=oz; } }
-  // anything solid: back out of it and drop
+      // (spat out: back out to the cage's edge, turned off it, most of its way gone)
+      const nx=(cx-bx2)/(rc||1), nz=(cz-bz2)/(rc||1), vn=v.x*nx+v.z*nz;
+      p.set(bx2+nx*0.37, cy+H.by, bz2+nz*0.37); v.x=(v.x-1.6*vn*nx)*0.28; v.z=(v.z-1.6*vn*nz)*0.28; v.y=Math.min(v.y, 0)*0.3-0.4; return; }
+    if(rc<0.35 && cy>=1.40 && cy<1.52){ if(typeof AUDIO!=="undefined") AUDIO.blip("rim", p.x, p.z);
+      v.x*=-0.4; v.z*=-0.4; v.y=Math.abs(v.y)*0.3; p.set(ox, oy, oz); return; }
+    if(yOld>=0.83 && yNow<0.83 && rNow<0.29){ DGOLF.swing(H, v.x, v.z, 1.5); G.holed(); return; }               // (down into the tray)
+    if(rNow<0.34 && yNow>0.60 && yNow<0.84){ if(typeof AUDIO!=="undefined") AUDIO.blip("rim", p.x, p.z);          // (off the tray's side)
+      const nx=(p.x-bx2)/(rNow||1), nz=(p.z-bz2)/(rNow||1), vn=v.x*nx+v.z*nz; if(vn<0){ v.x-=1.5*vn*nx; v.z-=1.5*vn*nz; } v.x*=0.4; v.z*=0.4; p.set(ox, oy, oz); return; } }
+  // anything solid: back out of it and drop (the basket being played is the cage above, not its box)
   { const lo=p.y-0.02, hi=p.y+0.02;
-    const hit=c=>p.x>c.x0 && p.x<c.x1 && p.z>c.z0 && p.z<c.z1 && hi>c.y0 && lo<c.y1 && c.y1<200;
+    const hit=c=>c!==H.col && p.x>c.x0 && p.x<c.x1 && p.z>c.z0 && p.z<c.z1 && hi>c.y0 && lo<c.y1 && c.y1<200;
     let H2=null; for(const c of colsNear(p.x, p.z)) if(hit(c)){ H2=c; break; } if(!H2) for(const c of COL_DYN) if(hit(c)){ H2=c; break; }
     // (already inside where it was, off the rim into the basket's own box: out by its nearest side, and let it fall)
     if(H2 && ox>H2.x0 && ox<H2.x1 && oz>H2.z0 && oz<H2.z1 && oy+0.02>H2.y0 && oy-0.02<H2.y1){
@@ -236,15 +289,43 @@ DGOLF.holed=function(){ const G=DGOLF, H=G.holes[G.hole];
   G.card.push(G.throws); const rel=G.throws-H.par, words={"-2":"EAGLE","-1":"BIRDIE","0":"PAR","1":"BOGEY","2":"DOUBLE BOGEY"};
   const w=G.throws===1 ? "ACE!" : words[String(rel)] || (rel>0 ? "+"+rel : String(rel));
   toast("CHAINS! "+w+" · "+G.throws, "#f4c430"); G.msg("IN THE CHAINS: "+w); G.wait=2.2; G.draw(); };
-DGOLF.msg=function(s){ DGOLF.panel.querySelector(".msg").textContent=s; };
+DGOLF.msg=function(s){ DGOLF.panel.querySelector(".msg").innerHTML=s; };
 DGOLF.draw=function(){ const G=DGOLF; if(!G.panel) return; const H=G.holes[Math.min(G.hole, G.holes.length-1)];
   const tot=G.card.reduce((a,b)=>a+b, 0), par=G.holes.slice(0, G.card.length).reduce((a,h)=>a+h.par, 0), rel=tot-par;
   G.panel.querySelector(".sc").innerHTML="HOLE <b>"+(G.hole+1)+"</b> · PAR <b>"+H.par+"</b> · "+H.len+" M · THROW <b>"+(G.throws+(G.state==="hand" ? 1 : 0))+"</b> · ROUND <b>"+(rel===0 ? "E" : rel>0 ? "+"+rel : rel)+"</b>";
   G.panel.querySelector(".card").innerHTML=G.holes.map((h,i)=>{ const s=G.card[i], cls=i===G.hole && G.state!=="in" ? "now" : s===undefined ? "" : s<h.par ? "u" : s>h.par ? "o" : "";
     return '<span class="'+cls+'">'+(s===undefined ? (i+1) : s)+'</span>'; }).join(""); };
+// the throw from where you stand at power pw, as you are looking: the air alone (nothing it might hit) until it comes
+// down. Puts a point every fifteenth of a second in pts if given. Measured along the line from you to the basket: how
+// near it comes to the chains' middle in range and height (height counting more, the cage being short), and how far
+// to one side of them it is there (lat, right of the line positive); and where it lands
+const _pp=new T.Vector3(), _pv=new T.Vector3();
+DGOLF.predict=function(pw, pts){
+  const G=DGOLF, H=G.holes[G.hole], yaw=player.yaw, pitch=clamp(player.pitch+0.06, -0.12, 0.55), v0=3+23*pw, fx=-Math.sin(yaw), fz=-Math.cos(yaw);
+  const bx=H.b[0]-player.pos.x, bz=H.b[1]-player.pos.z, D=Math.hypot(bx, bz)||1, ux=bx/D, uz=bz/D;
+  _pp.set(player.pos.x+fx*0.5, player.feetY+1.25, player.pos.z+fz*0.5); _pv.set(fx*Math.cos(pitch)*v0, Math.sin(pitch)*v0, fz*Math.cos(pitch)*v0);
+  let th=pitch+0.05, near=1e9, lat=0, n=0; const cy=H.by+1.13, h=1/60;
+  for(let i=0;i<600;i++){ th=DGOLF.aero(_pv, th, h); _pp.addScaledVector(_pv, h);
+    const rx=_pp.x-player.pos.x, rz=_pp.z-player.pos.z, along=rx*ux+rz*uz-D, dy=(_pp.y-cy)*1.6, d=Math.sqrt(along*along+dy*dy);
+    if(d<near){ near=d; lat=-rx*uz+rz*ux; }
+    if(pts && i%4===0 && n<60){ pts[n*3]=_pp.x; pts[n*3+1]=_pp.y; pts[n*3+2]=_pp.z; n++; }
+    if(_pp.y<Terrain.groundAt(_pp.x, _pp.z)+0.02) break; }
+  return {near:near, lat:lat, n:n, lx:_pp.x, lz:_pp.z}; };
+// the power, at the angle you are looking, that takes it nearest the chains: a sweep of the meter, then closer in
+DGOLF.ideal=function(){ let best=1e9, bp=0;
+  for(let k=0;k<=24;k++){ const r=DGOLF.predict(k/24).near; if(r<best){ best=r; bp=k/24; } }
+  for(let st=1/48; st>0.003; st/=2) for(const pw of [bp-st, bp+st]){ if(pw<0 || pw>1) continue; const r=DGOLF.predict(pw).near; if(r<best){ best=r; bp=pw; } }
+  const r=DGOLF.predict(bp); return {pw:bp, near:best, lat:r.lat}; };
+const _sq=new T.Quaternion(), _sm=new T.Matrix4(), _ss=new T.Vector3(), _mk=new T.Vector3();
 function updateDiscGolf(dt){
   const G=DGOLF; if(!G.disc) return;
-  if(!G.on){ G.hand.visible=false; G.cam.k=0; G.cam.seen=false; G.cam.init=false; G.zoomHeld=false;
+  // the chains that were hit swing and settle, round or no round
+  for(const h of G.holes){ const S=h.sw; if(S.amp<=0) continue; S.t+=dt; let a=S.amp*Math.exp(-S.t*1.5); if(a<0.003){ a=0; S.amp=0; }
+    h.rest.forEach((c, k)=>{ _sq.setFromAxisAngle(S.k, a*Math.sin(S.t*8.5+k*0.9)*(k<12 ? 1 : 0.6)).multiply(c.q);
+      G.chainMesh.setMatrixAt(h.ci+k, _sm.compose(c.a, _sq, _ss.set(1, c.L, 1))); });
+    G.chainMesh.instanceMatrix.needsUpdate=true; }
+  if(!G.on){ G.hand.visible=false; G.cam.k=0; G.cam.seen=false; G.cam.init=false; G.zoomHeld=false; G.glow.visible=false; G.mark.style.display="none";
+    G.arc.visible=false; G.landRing.visible=false; G.panel.querySelector(".bar u").style.display="none";
     if(G.zk>0){ G.zk=0; applyFov(); } return; }
   if(G.wait>0){ G.wait-=dt; if(G.wait<=0 && G.state==="in"){ G.hole++; G.disc.visible=false;
       if(G.hole>=G.holes.length){ G.end(false); return; }
@@ -279,8 +360,31 @@ function updateDiscGolf(dt){
   G.panel.querySelector(".bar i").style.width=(G.power*100).toFixed(1)+"%";
   if(G.state==="hand" && !ready && !G.wait){ const d=Math.hypot(player.pos.x-G.lie.x, player.pos.z-G.lie.z), m=G.lie.tee ? "THE TEE OF HOLE "+(G.hole+1)+" IS "+Math.round(d)+" M OFF" : "YOUR DISC IS "+Math.round(d)+" M OFF";
     if(G._m!==m && (G._mt=(G._mt||0)-dt)<=0){ G._mt=0.5; G._m=m; G.msg(m); } }
-  else if(G.state==="hand" && ready && G._m!=="ready"){ G._m="ready"; const H=G.holes[G.hole], d=Math.hypot(H.b[0]-G.lie.x, H.b[1]-G.lie.z);
-    G.msg((G.lie.tee ? "ON THE TEE. " : "")+Math.round(d)+" M TO THE BASKET: LOOK AT IT, HOLD SPACE AND LET GO"); }
+  /* ready to throw: every quarter second, the power that would take it nearest the chains at the angle you are looking
+     (the white tick on the meter) and where that throw would pass them: on line, or how far to one side, so you know
+     which way to turn. Winding up, the throw as it stands: the dotted line and the ring where it comes down. */
+  const H=G.holes[G.hole], tick=G.panel.querySelector(".bar u");
+  if(G.state==="hand" && ready){ G._m="ready";
+    if((G._it=(G._it||0)-dt)<=0){ G._it=0.25; const I=DGOLF.ideal(), d=Math.hypot(H.b[0]-player.pos.x, H.b[1]-player.pos.z), lat=I.lat;
+      G.idealPw=I.pw; tick.style.display="block"; tick.style.left=(I.pw*100).toFixed(1)+"%";
+      const pre=(G.lie.tee ? "ON THE TEE · " : "")+Math.round(d)+" M · ";
+      G.msg(pre+(I.near>1.2 ? "<em>LOOK HIGHER: AT THIS ANGLE IT WILL NOT GET THERE</em>" : Math.abs(lat)<0.25 ? "<b>ON LINE</b>: WIND UP TO THE WHITE MARK"
+        : "PASSES "+Math.abs(lat).toFixed(1)+" M "+(lat>0 ? "RIGHT · <em>TURN LEFT</em>" : "LEFT · <em>TURN RIGHT</em>"))); } }
+  else { tick.style.display="none"; G._it=0; }
+  if(G.charge>=0 && ready){ const A=G.arc.geometry.attributes.position, r=DGOLF.predict(G.power, A.array);
+    A.needsUpdate=true; G.arc.geometry.setDrawRange(0, r.n); G.arc.visible=true;
+    G.landRing.position.set(r.lx, Terrain.groundAt(r.lx, r.lz)+0.03, r.lz); G.landRing.visible=true; }
+  else { G.arc.visible=false; G.landRing.visible=false; }
+  // the basket you are playing: its band lit and breathing, and its mark in the view (or at the edge, pointing)
+  G.glow.visible=true; G.glow.position.set(H.b[0], H.by+1.44, H.b[1]); G.glow.material.emissiveIntensity=0.45+0.35*Math.sin(CROWD.t*2.4);
+  { const mk=G.mark, d=Math.hypot(H.b[0]-player.pos.x, H.b[1]-player.pos.z);
+    if(G.cam.k>0.05 || d<4 || view!=="fp"){ mk.style.display="none"; }
+    else { _mk.set(H.b[0], H.by+1.85, H.b[1]).applyMatrix4(camera.matrixWorldInverse); const behind=_mk.z>0, vx=_mk.x;
+      _mk.set(H.b[0], H.by+1.85, H.b[1]).project(camera); const W=innerWidth, Hh=innerHeight;
+      let x=(_mk.x+1)/2*W, y=behind ? Hh/2 : (1-_mk.y)/2*Hh; const edge=behind || x<24 || x>W-24 || y<60 || y>Hh-20, lbl=Math.round(d)+" M";
+      if(edge){ const left=vx<0; x=left ? 34 : W-34; y=clamp(y, Hh*0.3, Hh*0.7); mk.innerHTML=(left ? "◀ " : "")+"HOLE "+(G.hole+1)+" · "+lbl+(left ? "" : " ▶"); mk.style.transform="translate("+(left ? "0" : "-100%")+",-50%)"; }
+      else { mk.innerHTML="HOLE "+(G.hole+1)+" · "+lbl+'<span class="ar">▼</span>'; mk.style.transform="translate(-50%,-100%)"; }
+      mk.style.left=x.toFixed(0)+"px"; mk.style.top=y.toFixed(0)+"px"; mk.style.display="block"; } }
   // the disc in your hand, low in the view, drawn back as you wind up
   G.hand.visible=G.state==="hand" && ready && !droneMode;
   if(G.hand.visible){ const pw=G.power, o=V3(0.20-pw*0.28, -0.24+pw*0.04, -0.46+pw*0.10); camera.updateMatrixWorld(); o.applyMatrix4(camera.matrixWorld);

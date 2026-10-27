@@ -34,6 +34,7 @@ addEventListener("keydown",e=>{
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
   // on the disc golf course with the disc in your hand, Space winds up the throw (18i)
   if(typeof DGOLF!=="undefined" && DGOLF.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
+  if(typeof CORN!=="undefined" && CORN.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
   if(e.code==="KeyG" && !e.repeat && window.GFXMENU){ GFXMENU.show(); return; }
   const held=keys[e.code];                  // keydown repeats while a key is down
@@ -64,7 +65,7 @@ addEventListener("keydown",e=>{
   // the key that gets you out of it
   if((e.code==="KeyE" || (e.code==="Space" && !driving && !(typeof BOAT!=="undefined" && BOAT.on))) && !droneMode) interact();
 });
-addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); });
+addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); if(typeof CORN!=="undefined") CORN.keyup(e); });
 // Alt-tab away mid-stride and the keyup for whatever you were holding never
 // arrives, so the key stays down for good. Drop everything when the window
 // stops listening.

@@ -233,13 +233,29 @@ No lettering touches or runs past the edge of its board or its border.
   cupboards and hoods on the wall that have no collider of their own. Add
   anything like that with `wallx` (or `upper`) so no picture goes behind
   it. A lamp with `mod` (a TV that is on) is as bright as `mod.v` (16).
-- The radio you hear is the nearest one (20's `nearRadio`): the garage's
-  or a kitchen's (`LAKE_HOUSES.radios`, station −1 for off). A house's
+- The radio you hear is the nearest one (20's `nearRadio`): the garage's,
+  a kitchen's (`LAKE_HOUSES.radios`, station −1 for off) or the brewery's
+  speakers (`BREWERY.radio`). One with `open` is out of doors and heard
+  without a wall in the way; `vol` and `reach` set how loud and how far. A house's
   rooms are zones named `No. n · ROOM`; inside one the tubes' hum is off
   and its fridges and clock are heard instead.
 - A game played out in the world (18i's disc golf) takes keys through the
   early-return chain in 17-player's keydown and its frame through
   `updateGames` (18e), the way the darts and the cabinets do.
+  Its aids use the same flight as the throw (18i's `DGOLF.aero` and
+  `DGOLF.predict`), so what the card says is what the disc does.
+- The lake's wakes are in the water's shader (14n), not meshes laid on it.
+  `LAKESIDE.wakeDrop(x, z, s)` starts a ring of waves at a point, of
+  strength 0–1. The newest 40 are kept, and the boat (14p) drops one
+  every metre or so behind its stern. Anything else that should leave a
+  wake calls it as it goes. Nothing flat and pale goes on the water: it
+  would not be lit like it and shows up white at night.
+- The brewery's cornhole boards (`BREWERY.boards`, 14r) each carry their
+  own frame: `O` the face's middle, `ex` across, `ez` up the slope, `n`
+  out of the face, and `hy` how far up it the hole is. 18j's bags work in
+  it. A person tossing (14q's `toss` job) runs its swing on its own clock
+  unless `cornSwing` (0–1 through the swing) is set, which 18j does for
+  Danny while you play.
 
 ## Tools
 

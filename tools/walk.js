@@ -129,6 +129,8 @@ const ROUTES={
   // the brewery (14r): in the front door to the bar, out a garage door to the garden; round the east end down to the deck
   "into the brewery":       [[1447,-1215],[1447,-1224],[1446.0,-1225.0],[1446.0,-1227.6],[1445,-1228.2],[1445,-1229.0],[1445,-1231.5],[1446.0,-1234.9],[1452.6,-1234.9]],
   "out to the beer garden": [[1445,-1231.5],[1446.0,-1234.9],[1446.2,-1239.5],[1448.2,-1240.5],[1448.2,-1243.0],[1448.2,-1245.0],[1462.0,-1246.0]],
+  // the cornhole court (14r, 18j): from the garden to where you throw, beside the near board, and down the side to the far one
+  "to the cornhole boards": [[1448.2,-1243.0],[1448.2,-1245.0],[1443.8,-1246.8],[1443.8,-1249.4],[1443.0,-1253.0],[1443.0,-1258.6]],
   // the disc golf course (18i) in the park: past the course sign, over the first tee's pad, down the fairway to the second tee
   "the disc golf course":   [[1246,-1201],[1246,-1212],[1245.6,-1221],[1247,-1226],[1262,-1241],[1272.6,-1251.2],[1290,-1232]],
   "down to the deck":       [[1461,-1228.4],[1461.8,-1243.5],[1462.6,-1252],[1460.5,-1262],[1459,-1266.5],[1457.5,-1268.5],[1457.5,-1276.5],[1428,-1276.5],[1424.6,-1278],[1424.6,-1294.2],[1445,-1294.2]],

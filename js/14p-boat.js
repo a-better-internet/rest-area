@@ -28,7 +28,7 @@
    other boats, and comes off them with a bump.
    ---------------------------------------------------------------------- */
 const BOAT={on:false, g:null, x:0, z:0, yaw:0, u:0, v:0, r:0, thr:0, steer:0, rpm:0, speed:0, running:false, t:0,
-            pitch:0, roll:0, bumpT:0, wakeT:0, use:null, col:null, cap:null, prop:null, motor:null, wake:null, told:false};
+            pitch:0, roll:0, bumpT:0, wakeT:0, wakeD:0, use:null, col:null, cap:null, prop:null, motor:null, told:false};
 (function boat(){
   const R=LAKESIDE.ride; if(!R) return;
   const WY=R.wy, L=R.L;
@@ -61,24 +61,8 @@ const BOAT={on:false, g:null, x:0, z:0, yaw:0, u:0, v:0, r:0, thr:0, steer:0, rp
   // you, at the helm when you have the boat: hands on the wheel
   const cap=buildPerson({h:1.0, skin:SKINS[0], hair:HAIRS[2], shirt:"#3a6a8a", pants:"#c8b890", shoes:"#f2f0ea", shorts:true, cap:"#1f3b6e", shades:true});
   scene.remove(cap.g); cap.g.position.set(0.72, 0.51, 0.60); G.add(cap.g); cap.g.visible=false; cap.seed=0.3; BOAT.cap=cap;
-  // the wake: a fan of foam spreading back from the bow and churned water behind the motor, laid on the water
-  { const wt=signTex(128, 256, (c,W,H)=>{ c.clearRect(0,0,W,H);
-      const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,"rgba(255,255,255,0.0)"); g.addColorStop(0.15,"rgba(255,255,255,0.75)"); g.addColorStop(1,"rgba(255,255,255,0)");
-      for(let i=0;i<260;i++){ c.fillStyle=g; c.globalAlpha=0.15+Math.random()*0.45; const w=2+Math.random()*9, x0=Math.random()*W, y0=Math.random()*H*0.5;
-        c.beginPath(); c.ellipse(x0, y0+H*0.25, w, 6+Math.random()*30, 0, 0, 7); c.fill(); } });
-    const wm=new T.MeshBasicMaterial({map:wt, transparent:true, opacity:0, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-8});
-    const W=new T.Group(); scene.add(W);
-    // (two arms of a V from the stern's corners, opening at twenty degrees and widening as they go; the churn between
-    // them straight back from the motor. v runs down the texture from the stern, so each starts strong and fades out)
-    const arm=(x0, z0, ang, len, w0, w1)=>{ const N=12, P=[], U=[], I=[], dx=Math.sin(ang), dz=-Math.cos(ang), nx=-dz, nz=dx;
-      for(let k=0;k<=N;k++){ const t=k/N, cx=x0+dx*len*t, cz=z0+dz*len*t, w=lerp(w0, w1, t);
-        P.push(cx-nx*w, 0, cz-nz*w, cx+nx*w, 0, cz+nz*w); U.push(0, 0.95-0.95*t, 1, 0.95-0.95*t);
-        if(k) I.push(2*k-2, 2*k, 2*k-1, 2*k-1, 2*k, 2*k+1); }
-      const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(P, 3)); g.setAttribute("uv", new T.Float32BufferAttribute(U, 2)); g.setIndex(I);
-      const m=new T.Mesh(g, wm); m.material.side=T.DoubleSide; W.add(m); };
-    for(const sd of [-1,1]) arm(sd*1.05, -L/2-0.15, sd*0.35, 15, 0.25, 1.6);
-    arm(0, -L/2-0.15, 0, 11, 0.55, 1.2);
-    BOAT.wake={g:W, m:wm}; }
+  // (the wake is the water's own (14n): the boat drops a point behind its stern as it goes, below, and the lake's
+  // surface spreads a ring of waves from each)
   // getting on: E from the dock, the shore or the water's edge, anywhere along it
   BOAT.use=addUse(R.x, R.z, R.dy, "TAKE THE BOAT", ()=>BOAT.board(), 2.9, ()=>!BOAT.on);
   // and while nobody has it, it is a thing you walk round
@@ -171,8 +155,10 @@ function updateBoat(dt){
   g.rotation.set(B.pitch+Math.sin(t*0.6)*0.008, B.yaw, B.roll+Math.sin(t*0.8)*0.012);
   B.motor.rotation.y=-B.steer*0.5; B.motor.rotation.x=0.05*plane;
   B.prop.rotation.z+=(B.running ? 4+B.rpm*60 : 0)*Math.sign(B.thr||1)*dt;
-  // the wake: along the water, as wide as the speed makes it
-  const W=B.wake; W.g.position.set(B.x, B.wy+0.035, B.z); W.g.rotation.y=B.yaw; W.m.opacity=0.30*smoothstep(1.0, 6.0, Math.abs(B.u));
+  // the wake: a point behind the stern every few metres of way made (or every half second slower), as strong as the speed
+  if(typeof LAKESIDE!=="undefined" && LAKESIDE.wakeDrop && Math.abs(B.u)>0.6){ B.wakeD-=Math.abs(B.u)*dt;
+    if(B.wakeD<=0){ B.wakeD=clamp(Math.abs(B.u)*0.12, 0.35, 1.2); const [wx, wz]=B.at(0, B.u>0 ? -B.L/2-0.25 : B.L/2+0.25);
+      LAKESIDE.wakeDrop(wx, wz, Math.min(1, Math.abs(B.u)/8.5)); } }
   // and spray off the stern and the bows at speed
   if(Math.abs(B.u)>1.5 && typeof PUFFS!=="undefined"){ B.wakeT-=dt*Math.min(1, Math.abs(B.u)/6);
     while(B.wakeT<=0){ B.wakeT+=0.06; const k=Math.random()<0.5 ? -1 : 1, [px,pz]=B.at(k*(0.6+Math.random()*0.6), -B.L/2-0.6);

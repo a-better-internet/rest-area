@@ -30,6 +30,8 @@ const AUDIO=(function(){
   let boil={}, obd={};
   // a house on Lake Street (14o): the fridge's compressor, cycling; the kitchen clock
   let fr={}, frOn=true, frT=20, tickT=1, tk=false;
+  // the brewery (14r): its crowd talking
+  let mur={}, murT=0;
   function noise(sec, color){
     const n=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(1,n,ctx.sampleRate), d=b.getChannelData(0);
     let l=0, b0=0,b1=0,b2=0;
@@ -179,6 +181,8 @@ const AUDIO=(function(){
       const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1200;
       const g=ctx.createGain(); g.gain.value=0.6; loop(noise(4,"pink")).connect(hp); hp.connect(g); g.connect(eng.b); }
     fr.g=ctx.createGain(); fr.g.gain.value=0; fr.g.connect(master);
+    mur.g=ctx.createGain(); mur.g.gain.value=0; mur.pan=ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain();
+    { const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=2600; mur.pan.connect(lp); lp.connect(mur.g); mur.g.connect(master); }
     { const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=160; const g=ctx.createGain(); g.gain.value=0.5;
       loop(brown).connect(lp); lp.connect(g); g.connect(fr.g); }
     for(const [f,a,dst] of [[120,0.5,hum.g],[240,0.18,hum.g],[60,0.6,gen.g],[120,0.35,gen.g],[180,0.15,gen.g],[98,0.45,fr.g],[196,0.20,fr.g],[294,0.06,fr.g]]){
@@ -237,6 +241,7 @@ const AUDIO=(function(){
     const zn=zoneAt(cam.x, cam.z, cam.y), home=!!zn && /^No\. \d+ · /.test(zn);
     hum.g.gain.setTargetAtTime(inside && !home ? 0.010*GRID.bldg : 0, t, 0.2);
     if(fr.g) houseSound(dt, cam, home ? zn.slice(0, zn.indexOf("·")+2) : null);
+    if(mur.g && typeof BREWERY!=="undefined" && BREWERY.deck) brewSound(dt, cam);
     boil.g.gain.setTargetAtTime(typeof BOILERS!=="undefined" ? 0.11*BOILERS.roar : 0, t, 0.25);
     { const B=typeof BOAT!=="undefined" && BOAT ? BOAT : {x:0, z:0, running:false, rpm:0, speed:0}, bd=Math.hypot(cam.x-B.x, cam.z-B.z), on=B.running ? 1 : 0;
       obd.g.gain.setTargetAtTime(on*(0.05+0.10*B.rpm)/(1+bd*bd/400), t, 0.15);
@@ -306,6 +311,16 @@ const AUDIO=(function(){
     tickT-=dt;
     if(tickT<=0){ tickT=Math.max(0.2, tickT+1); tk=!tk;
       if(cd<6) burst(t+0.02, 0.005, tk ? 4200 : 3400, 6, 0.10/(1+cd*cd/1.2), master); } }
+  // the brewery's crowd: a phrase here and a phrase there from every side, never words, more of them toward evening;
+  // under the speakers' music, and quieter inside the taproom's walls than out on the deck
+  function brewSound(dt, cam){
+    const t=ctx.currentTime, d=Math.hypot(cam.x-1446, cam.z+1262), hr=DayNight.state.hour, busy=0.55+0.45*smoothstep(15.5, 19.5, hr)*(1-smoothstep(23.2, 24, hr));
+    mur.g.gain.setTargetAtTime(d<80 ? 0.10*busy/(1+d*d/400) : 0, t, 0.6);
+    if(d>80) return;
+    murT-=dt;
+    if(murT<=0){ murT=(0.10+Math.random()*0.30)/busy;
+      if(mur.pan.pan) mur.pan.pan.setValueAtTime(Math.random()*1.6-0.8, t);
+      phrase(t+0.02, mur.pan, undefined, 1.05+Math.random()*0.35); } }
   /* ---- the camp ----------------------------------------------------------
      The fire is its roar and hiss, crackles (a few milliseconds of noise at
      a random pitch, a dozen a second) and now and then a pop. The music is
@@ -350,20 +365,23 @@ const AUDIO=(function(){
      has it turned down. The mower and the blower are where they are. */
   const RCHORD=[[43,[55,59,62]],[48,[55,60,64]],[50,[57,62,66]],[43,[55,59,62]]];
   // the radio that plays is the nearest: the garage's, or one on a kitchen counter on Lake Street (14o)
+  // (and the brewery's speakers over its garden, 14r, playing out of doors)
   function nearRadio(cam){ let R=GARAGE_RT.radio, bd=R ? Math.hypot(R.x-cam.x, R.z-cam.z) : 1e9;
     if(typeof LAKE_HOUSES!=="undefined") for(const q of LAKE_HOUSES.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z); if(d<bd){ bd=d; R=q; } }
+    if(typeof BREWERY!=="undefined" && BREWERY.radio){ const q=BREWERY.radio, d=Math.hypot(q.x-cam.x, q.z-cam.z); if(d<bd){ bd=d; R=q; } }
     return R; }
   function garageSound(dt, cam, rx, rz, zn){
     const t=ctx.currentTime, R=nearRadio(cam);
     if(R && radio.g){
       const dx=R.x-cam.x, dz=R.z-cam.z, d=Math.hypot(dx, dz, R.y-cam.y);
       let wall, lp;
-      if(R.house){ const inR=zn===R.zone, inH=!!zn && zn.startsWith(R.house); wall=inR ? 1 : (inH ? 0.5 : 0.12); lp=inR ? 6000 : (inH ? 1500 : 450); }
+      if(R.open){ wall=1; lp=4200; }
+      else if(R.house){ const inR=zn===R.zone, inH=!!zn && zn.startsWith(R.house); wall=inR ? 1 : (inH ? 0.5 : 0.12); lp=inR ? 6000 : (inH ? 1500 : 450); }
       else { const inG=cam.x>GARAGE.x0 && cam.x<GARAGE.x1 && cam.z>GARAGE.z0 && cam.z<GARAGE.z1 && cam.y<(GARAGE.EV||4)+1.5;
         const open=!GARAGE_RT.doors.length || GARAGE_RT.doors[0].h<1.2;
         wall=inG ? 1 : (open ? 0.6 : 0.2); lp=inG ? 6000 : (open ? 1900 : 650); }
       // (a kitchen radio is turned down low, and one that is off is off)
-      radio.g.gain.setTargetAtTime(R.station<0 ? 0 : (R.low?0.4:1)*(R.house ? 0.45 : 1)*0.075*wall/(1+d*d/22), t, 0.3);
+      radio.g.gain.setTargetAtTime(R.station<0 ? 0 : (R.low?0.4:1)*(R.vol || (R.house ? 0.45 : 1))*0.075*wall/(1+d*d/(R.reach||22)), t, 0.3);
       radio.wall.frequency.setTargetAtTime(lp, t, 0.3);
       if(radio.pan.pan) radio.pan.pan.setTargetAtTime(clamp((dx*rx+dz*rz)/Math.max(d,1), -0.7, 0.7)*smoothstep(1,4,d), t, 0.2);
       radio.crowd.gain.setTargetAtTime(R.station===2 ? 0.10 : 0, t, 0.6);
@@ -589,6 +607,23 @@ const AUDIO=(function(){
       const s=ctx.createBufferSource(); s.buffer=noise(0.4,"white"); const f=ctx.createBiquadFilter(); f.type="bandpass";
       f.frequency.setValueAtTime(3200,t); f.frequency.exponentialRampToValueAtTime(1100,t+0.28); f.Q.value=1.6;
       const g=ctx.createGain(); env(g,t,0.015,0.11*vol,0.08,0.22); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="chains" || kind==="chainsoft"){  // a disc into a basket's chains (18i): a shower of little links ringing
+      const k=kind==="chains" ? 1 : 0.45;
+      for(let i=0;i<14;i++){ const at=t+Math.random()*0.35*k+i*0.012, f=2200+Math.random()*3600;
+        tone(Math.random()<0.5 ? "triangle" : "sine", f, f*0.985, 0.10+Math.random()*0.12, (0.010+Math.random()*0.014)*vol*k, at, (Math.random()-0.5)*0.6, master); }
+      const s=ctx.createBufferSource(); s.buffer=noise(0.6,"white"); const f=ctx.createBiquadFilter();
+      f.type="bandpass"; f.frequency.value=6200; f.Q.value=1.4; const g=ctx.createGain(); env(g,t,0.004,0.05*vol*k,0.08,0.35);
+      s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="bagboard"){                  // a cornhole bag onto the board (14r): a flat thud with the plywood's knock
+      tone("sine", 110, 70, 0.16, 0.20*vol, t, 0, master); tone("triangle", 330, 240, 0.07, 0.05*vol, t, 0, master);
+      const s=ctx.createBufferSource(); s.buffer=noise(0.2,"pink"); const f=ctx.createBiquadFilter();
+      f.type="lowpass"; f.frequency.value=1400; const g=ctx.createGain(); env(g,t,0.002,0.14*vol,0.02,0.10);
+      s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="baghole"){                   // and through the hole: a soft drop into the box, and the crowd's cheer is the player's own
+      tone("sine", 160, 60, 0.22, 0.16*vol, t+0.06, 0, master);
+      const s=ctx.createBufferSource(); s.buffer=noise(0.4,"pink"); const f=ctx.createBiquadFilter();
+      f.type="lowpass"; f.frequency.value=600; const g=ctx.createGain(); env(g,t+0.05,0.004,0.16*vol,0.05,0.25);
+      s.connect(f); f.connect(g); g.connect(master); s.start(t);
     }else if(kind==="rim"){                       // off the steel of a rim: a short clang with a ring to it
       tone("triangle", 610, 590, 0.35, 0.07*vol, t, 0, master); tone("sine", 1480, 1440, 0.22, 0.03*vol, t, 0, master);
       tone("sine", 140, 90, 0.10, 0.10*vol, t, 0, master);

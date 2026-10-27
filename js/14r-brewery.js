@@ -249,12 +249,59 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
       for(const lx of [-0.45, 0.45]) addSeat(f.x(lx, 0.05), f.z(lx, 0.05), g, ry+Math.PI, "THE SOFA BY THE FIRE"); };
     sofa(fx, fz+2.0, Math.PI); sofa(fx-2.1, fz, Math.PI/2); sofa(fx+2.1, fz, -Math.PI/2);
     BREWERY.sofas=[[fx, fz+2.0, Math.PI],[fx-2.1, fz, Math.PI/2],[fx+2.1, fz, -Math.PI/2]]; }
-  { const cz0=-1249.4, cz1=-1258.6, cx=1444.6;
-    for(const [z, ry] of [[cz0, 0],[cz1, Math.PI]]){ const g=gy(cx, z), f=XF(cx, z, ry);
-      const a=V3(f.x(0,-0.6), g+0.05, f.z(0,-0.6)), b=V3(f.x(0,0.6), g+0.30, f.z(0,0.6)), d=b.clone().sub(a);
-      E_board(a, b, d, ry); addCol(cx-0.32, cx+0.32, Math.min(a.z,b.z)-0.05, Math.max(a.z,b.z)+0.05, g-0.5, g+0.35); }
-    function E_board(a, b, d, ry){ const L=d.length(); ME.push({geo:boxGeo(0.61, 0.04, L), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5),
-        new T.Quaternion().setFromEuler(new T.Euler(Math.atan2(-d.y, Math.hypot(d.x,d.z))*(1), ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color("#d8c098")}); } }
+  /* the cornhole boards (18j plays on them): two foot by four, the front edge four inches off the grass and the back a
+     foot, the six-inch hole nine inches from the top. A painted top with the hole cut through it, over rails a few
+     millimetres in from its edges, two legs at the back, the hole lined dark. Each board's frame (its middle, the way
+     across, the way up the slope, its face's normal, the hole) is kept for the game. */
+  BREWERY.boards=[];
+  { const cz0=-1249.4, cz1=-1258.6, cx=1444.6, TL=1.22, TW=0.61, Y0=0.10, Y1=0.31, A=Math.asin((Y1-Y0)/TL), HD=0.229;
+    const top=tileT(256, 512, (c,W,H)=>{ c.fillStyle="#d6be94"; c.fillRect(0,0,W,H); const q=_trng(4141);
+      for(let k=0;k<70;k++){ c.strokeStyle="rgba(130,92,52,"+(0.05+q()*0.09).toFixed(3)+")"; c.lineWidth=0.6+q()*1.6; c.beginPath(); let x=q()*W; c.moveTo(x, 0);
+        for(let y=0;y<=H;y+=32){ x+=(q()-0.5)*5; c.lineTo(x, y); } c.stroke(); }
+      // (the front, where you stand, is the canvas's top: two red stripes across it, and a red ring round the hole)
+      c.fillStyle="#a8261c"; c.fillRect(0, H*0.10, W, H*0.05); c.fillRect(0, H*0.17, W, H*0.018);
+      c.strokeStyle="#a8261c"; c.lineWidth=10; c.beginPath(); c.arc(W/2, H*(0.5+(TL/2-HD)/TL), W*0.17, 0, Math.PI*2); c.stroke(); });
+    top.wrapS=top.wrapT=T.ClampToEdgeWrapping; top.repeat.set(1/TW, 1/TL); top.offset.set(0.5, 0.5);
+    const topMat=[new T.MeshStandardMaterial({map:top, roughness:0.62}), new T.MeshStandardMaterial({color:0xb89a70, roughness:0.7})];
+    const lining=new T.MeshStandardMaterial({color:0x14110e, roughness:1, side:T.BackSide}), dark=new T.MeshStandardMaterial({color:0x14110e, roughness:1});
+    // the top's outline less its hole, in its own plane (x across, y toward its FRONT, so the face it is cut from faces up)
+    const shp=new T.Shape(); shp.moveTo(-TW/2, -TL/2); shp.lineTo(TW/2, -TL/2); shp.lineTo(TW/2, TL/2); shp.lineTo(-TW/2, TL/2); shp.lineTo(-TW/2, -TL/2);
+    const hp=new T.Path(); hp.absarc(0, -(TL/2-HD), 0.076, 0, Math.PI*2, true); shp.holes.push(hp);
+    const topGeo=new T.ExtrudeGeometry(shp, {depth:0.018, bevelEnabled:false, curveSegments:28});
+    for(const [z, ry] of [[cz0, 0],[cz1, Math.PI]]){
+      const g=gy(cx, z), ex=V3(Math.cos(ry), 0, -Math.sin(ry)), fh=V3(Math.sin(ry), 0, Math.cos(ry));        // across; back, level
+      const ez=fh.clone().multiplyScalar(Math.cos(A)).add(V3(0, Math.sin(A), 0)), n=new T.Vector3().crossVectors(ez, ex).normalize();
+      const O=V3(cx, g+(Y0+Y1)/2, z);                                   // the middle of the playing face
+      const basis=(o)=>new T.Matrix4().makeBasis(ex, ez.clone().negate(), n).setPosition(o);
+      const m=new T.Mesh(topGeo, topMat); m.matrixAutoUpdate=false; m.matrix.copy(basis(O.clone().addScaledVector(n, -0.018))); m.castShadow=true; m.receiveShadow=true; scene.add(m);
+      // the rails and the ends under it, in from its edges; two legs at the back down to the grass
+      const R=(w, h, d, lx, ly, lz)=>{ const M=basis(O.clone().addScaledVector(ex, lx).addScaledVector(ez, ly).addScaledVector(n, lz)); ME.push({geo:boxGeo(w, h, d), matrix:M, color:new T.Color("#9a7c54")}); };
+      for(const sd of [-1,1]) R(0.04, TL-0.012, 0.085, sd*(TW/2-0.025), 0, -0.0585);            // (2 mm up into the top's underside)
+      for(const sd of [-1,1]) R(TW-0.10, 0.04, 0.085, 0, sd*(TL/2-0.025), -0.0585);
+      for(const sd of [-1,1]){ const top0=O.clone().addScaledVector(ex, sd*(TW/2-0.06)).addScaledVector(ez, TL/2-0.10).addScaledVector(n, -0.05), lh=top0.y-g+0.02;
+        B(0.045, lh, 0.045, top0.x, g+lh/2-0.02, top0.z, "#9a7c54", ry); }
+      // the hole: lined dark, a floor under it
+      const hole=O.clone().addScaledVector(ez, TL/2-HD), hm=new T.Mesh(new T.CylinderGeometry(0.074, 0.074, 0.09, 20, 1, true), lining);
+      hm.quaternion.setFromUnitVectors(V3(0,1,0), n); hm.position.copy(hole).addScaledVector(n, -0.046); scene.add(hm);
+      const fl=new T.Mesh(new T.CircleGeometry(0.074, 20), dark); fl.quaternion.setFromUnitVectors(V3(0,0,1), n); fl.position.copy(hole).addScaledVector(n, -0.088); scene.add(fl);
+      addCol(cx-0.32, cx+0.32, z-0.66, z+0.66, g-0.5, g+0.34);
+      BREWERY.boards.push({cx:cx, z:z, ry:ry, g:g, O:O, ex:ex, ez:ez, n:n, A:A, TL:TL, TW:TW, hole:hole, hy:TL/2-HD}); }
+    // the scoreboard by the far board: two columns of numbers on a post, turned to the throwing end (18j keeps it)
+    { const sx=cx+1.35, sz=cz1+0.2, sg=gy(sx, sz);
+      B(0.08, 1.35, 0.08, sx, sg+0.675, sz, "#3a3028"); B(0.74, 0.50, 0.05, sx, sg+1.30, sz, "#1d1f22");
+      const can=document.createElement("canvas"); can.width=384; can.height=256; const tex=new T.CanvasTexture(can);
+      BREWERY.scoreboard=(a, b, inn, nb)=>{ const c=can.getContext("2d"), W=384, H=256;
+        c.fillStyle="#1d1f22"; c.fillRect(0,0,W,H); c.strokeStyle="#e8e2d0"; c.lineWidth=4; c.strokeRect(10,10,W-20,H-20);
+        c.fillStyle="#b3261c"; c.fillRect(24, 24, W/2-34, 44); c.fillStyle="#1f4e8c"; c.fillRect(W/2+10, 24, W/2-34, 44);
+        say(c, "YOU", W/4+3, 46, W/2-60, 34, "#f2efe6", "800", "Arial"); say(c, nb||"DANNY", W*3/4-3, 46, W/2-60, 34, "#f2efe6", "800", "Arial");
+        say(c, String(a), W/4+3, 140, W/2-70, 120, "#f4c430", "900", "Arial"); say(c, String(b), W*3/4-3, 140, W/2-70, 120, "#f4c430", "900", "Arial");
+        say(c, inn ? "INNING "+inn+" · TO 21" : "CORNHOLE · TO 21", W/2, 222, W*0.78, 26, "#c8c4b8", "700", "Arial"); tex.needsUpdate=true; };
+      BREWERY.scoreboard(0, 0, 0);
+      signPanel(0.70, 0.466, tex, sx, sg+1.30, sz+0.035, 0, false); addCol(sx-0.06, sx+0.06, sz-0.06, sz+0.06, sg-0.5, sg+1.6); } }
+  // the speakers under the eave over the garden, the taproom's music out to the deck (20 plays it as a radio)
+  // (clear of the window and the garage doors, whose heads are at 3.0, and under the eave at 3.6)
+  for(const x of [1437.6, 1459.6]){ B(0.26, 0.38, 0.20, x, FF+3.25, BL.z0-0.16, "#1a1a1c"); B(0.06, 0.06, 0.10, x, FF+3.25, BL.z0-0.03, "#2a2a2c"); }
+  BREWERY.radio={x:1445, y:FF+2.8, z:-1262, station:0, open:true, vol:0.55, reach:160};
 
   /* ---- the deck bar: a timber hut on the grass with a window to order at ----------- */
   { const hx0=1452.2, hx1=1459.6, hz0=-1253.4, hz1=-1247.6, hg=Math.max(gy(hx0,hz0), gy(hx1,hz1), gy(hx0,hz1), gy(hx1,hz0))+0.15, top=hg+2.6, hr=hg+3.9, mz=(hz0+hz1)/2;
@@ -393,9 +440,9 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     bowl.position.set(dx-0.15, D+0.04, dz-0.55); scene.add(bowl);
     addCol(dx-0.42, dx+0.42, dz-0.25, dz+0.25, D-0.5, D+0.4);
     BREWERY.dog={D:dog, t:0, x:dx, z:dz}; }
-  // cornhole, two at it
-  crowdAdd(G, {look:guest({}), x:1445.4, z:-1248.6, yaw:Math.PI, mode:"stand", job:"toss"});
-  crowdAdd(G, {look:guest({female:true, h:0.95}), x:1443.8, z:-1259.4, yaw:0, mode:"stand", job:"toss"});
+  // cornhole, two at it: Danny at the near board, who will take you on (18j), and Jess at the far one
+  BREWERY.corn={opp:crowdAdd(G, {look:guest({cap:"#1f3b6e", shirt:"#2b3d63"}), x:1445.4, z:-1248.6, yaw:Math.PI, mode:"stand", job:"toss"}),
+                far:crowdAdd(G, {look:guest({female:true, h:0.95}), x:1443.8, z:-1259.4, yaw:0, mode:"stand", job:"toss"})};
   // the servers, round the tables with a tray, from the hut's window and back
   const hut=BREWERY.hut;
   crowdAdd(G, {look:staff({female:true, h:0.95, hair:HAIRS[0]}), mode:"walk", job:"tray", held:"tray", heldL:true, loop:true, speed:1.05, yAt:yAt,

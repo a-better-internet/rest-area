@@ -603,43 +603,59 @@ If the scene runs hot on your machine, start there (see below).
     does: it comes up to speed and coasts down, turns by the prop's push
     when slow and the water past the motor when fast, skids a little in a
     hard turn, comes up onto the plane with the stern squatting, leans in
-    the turn and rocks on the chop at rest. Spray comes off the stern and a
-    wake opens behind it in a V from the transom's corners, the churn
-    straight back from the motor. It bumps off the shore, the docks, the pilings and
-    the other boats.
+    the turn and rocks on the chop at rest. Spray comes off the stern, and
+    the wake is in the water itself: rings of waves spread out from behind
+    the boat as it goes and add up into a V, with foam on their crests
+    and churned white water straight back from the motor, all of it fading
+    as it spreads. It is lit like the rest of the lake, so it goes dark
+    with the water at night. It bumps off the shore, the docks, the
+    pilings and the other boats.
     Geese graze on the lawn and paddle about between the docks.
   - **Disc golf.** Six holes are laid out over the park's lawn between the
     lot and the shore, par 19, from 34 to 52 m. Each has a concrete tee
-    pad with its sign (the hole, the par, the distance) and a steel
-    basket with chains and its number on the band. The course sign by the
-    first tee, off the west end of the lot, has the map on it, with the
-    loaner box of discs beside it. `E` at the sign starts a round and puts
-    a disc in your hand; `E` there again ends it. On a tee, or standing by
-    your disc where it lies, look where you want it to go (up throws it
-    higher) and hold `Space` or the mouse button: the meter on the card
-    climbs and falls back, and you let go at the power you want. A drive
-    goes fifty-odd metres, a putt a few. The disc flies as a disc does:
-    lift from its speed and the angle it meets the air at, a little turn
-    to the right while it is fast and a fade to the left as it slows. It
-    skips and slides when it comes down, and comes off trees and poles.
-    Into the chains slowly enough and it drops; too hard and it clangs off
-    the rim. In the lake it costs a stroke and you throw again from where
-    it went in, and out of the park the same from where it went out. Walk
-    up to it to pick it up. The card across the top keeps the hole, the
-    throws and the round, and your best round is kept for next time.
-    When you let go, the view goes after the disc, from behind and above
-    it, to see it come down; it waits a moment on where it lies (`Space`
-    brings it back sooner) and comes back to you, turned to face it. Hold
-    `Z` or the right mouse button to close the view in on the basket from
-    the tee; the mouse turns you slower while you do.
+    pad with its sign (the hole, the par, the distance) and a steel basket
+    with chains and its number on the band. The course sign by the first
+    tee, off the west end of the lot, has the map on it, with the loaner
+    box of discs beside it. `E` at the sign starts a round and puts a disc
+    in your hand; `E` there again ends it. On a tee, or standing by your
+    disc where it lies, look where you want it to go (up throws it higher)
+    and hold `Space` or the mouse button: the meter on the card climbs and
+    falls back, and you let go at the power you want. A drive goes
+    fifty-odd metres, a putt a few. The disc flies as a disc does: lift
+    from its speed and the angle it meets the air at, a little turn to the
+    right while it is fast and a fade to the left as it slows. It skips
+    and slides when it comes down, and comes off trees and poles. Into the
+    chains slowly enough and it drops (more often dead centre than at the
+    edge of them); too hard and it is knocked back out, and the chains
+    swing and rattle either way. It can drop in over the rim from above,
+    and clang off the band. In the lake it costs a stroke and you throw
+    again from where it went in, and out of the park the same from where
+    it went out. Walk up to it to pick it up. The card across the top
+    keeps the hole, the throws and the round, and your best round is kept
+    for next time. When you let go, the view goes after the disc, from
+    behind and above it, to see it come down; it waits a moment on where
+    it lies (`Space` brings it back sooner) and comes back to you, turned
+    to face it. Hold `Z` or the right mouse button to close the view in on
+    the basket from the tee; the mouse turns you slower while you do. The
+    basket you are playing has its band lit gold and breathing, and a mark
+    over it in the view with the hole and the distance; when it is out of
+    the view the mark sits at the side of it, pointing the way to turn.
+    Ready to throw, the card says whether the throw is on line or how far
+    left or right it will pass, and a white mark on the meter shows the
+    power that takes it to the chains at the angle you are looking (or
+    tells you to look higher when no power will). While you wind up, a
+    dotted arc shows the throw and a ring lies on the ground where it will
+    come down.
   - **Edinboro Lake** opens out north and east of the park, most of a mile
     across to the far woods, with cottages along the far shore whose
     windows light up at night. A sailboat sits out in the middle, a
     fisherman sits very still in a jon boat nearer in, and a NO WAKE buoy
-    floats past the docks. The water ripples and has the sky in it, and
-    the boats ride a little on it. Beyond the far woods the hills stand up
-    into mountains all round the horizon, ridged and gullied, bluer and
-    paler the further off they are.
+    floats past the docks. The water has the sky in it, and ripples in two
+    layers of small waves drifting different ways, worked into how it
+    catches the light rather than painted on, so they darken with it at
+    night. The boats ride a little on it. Beyond the far woods the hills
+    stand up into mountains all round the horizon, ridged and gullied,
+    bluer and paler the further off they are.
   - **Lakeshore Brewing Co.**, past the last house at the end of the road,
     on the shore. Its lot has cars in it and its sign at the mouth. The
     building is a long timber taproom with a red standing-seam roof, its
@@ -653,14 +669,17 @@ If the scene runs hot on your machine, start there (see below).
     them. There are tables, high-tops by the open doors, and a chalkboard.
     Out of the garage doors is the beer garden: turf going down to the
     water, a big maple in a ring of stones, sofas round a fire pit, a
-    cornhole game, and the deck bar, a little timber hut with a window to
+    pair of cornhole boards with a scoreboard on a post by the far one,
+    and the deck bar, a little timber hut with a window to
     order at. Below it the deck runs out over the water on posts. It has
     black slatted tables, aluminium chairs and red market umbrellas,
     mostly furled, with a black cable rail along the water and strings of
     bulbs on poles over it all, lit at dusk. Two bartenders work the
     taproom and one the hut, and two servers go round the tables with
     trays held level. Customers sit at the bar, at the tables and on the
-    sofas, stand at the rail looking at the lake, and play cornhole. A fifth
+    sofas, stand at the rail looking at the lake, and play cornhole. Two
+    speakers under the eaves play the radio out over the garden, and the
+    customers' talk is a murmur that is louder the busier it is. A fifth
     table stands at the east end of the middle row, high-tops with stools
     stand along the rail, and two picnic tables sit out on the grass west of
     the fire. Somebody's dog lies on the boards by their table with her
@@ -672,6 +691,23 @@ If the scene runs hot on your machine, start there (see below).
     of a hit, the crowd, the line score between innings and the ads, with
     the count, the outs, the bases and the score in the corner going on
     from pitch to pitch.
+  - **Cornhole.** Danny plays at the brewery's boards. `E` at the near
+    board, on its left, asks him for a game: singles to 21, your four red
+    bags against his four blue, both of you throwing from the near end at
+    the far board while Jess steps out of the way beside it. Look where you
+    want the bag to go (up is a higher lob) and hold `Space` or the mouse
+    button: the meter climbs and falls back, the first of the bag's arc
+    shows dotted, and you let go at the power you want. The bag flies
+    through the same air as his. Down on the board it slides on up the
+    slope, slowing on the cloth, and stops, unless it goes off the side or
+    the back, or over the hole and through. Bags knock one another along
+    the board: up, off, and in. In the hole is three and on the board one;
+    the inning goes to whoever scored more, by the difference, and whoever
+    took it throws first in the next. Danny aims short of the hole so his
+    bags slide on into it, and gets it right more often than not. The
+    scoreboard on its post keeps the count, and the card at the top shows
+    the score, the bags left and whose throw it is. `E` at the board again
+    stops, and so does walking off.
 - **The picnic grove** spreads across the lawn south of the building. Paths
   run to it off curb ramps at the plaza's corners: north to the shelter's
   slab and its ramp, south to a round pad by the pet area's bag dispenser,
@@ -1140,6 +1176,10 @@ ends a round. On the tee or by your disc, aim with the view and hold
 right mouse button to zoom in on the basket. While the view follows the
 disc, `Space` brings it back.
 
+At the brewery's cornhole boards, `E` at the near board starts or stops a
+game against Danny. Aim with the view (up lobs it higher) and hold `Space`
+or the mouse button to wind up; let go to throw.
+
 ## Graphics settings
 
 `G` opens the menu. Use the arrows (or `WASD`) or the mouse to change a
@@ -1191,7 +1231,7 @@ centred on the origin.
 | French Creek Fireworks | x 872 … 966, z −1284 … −1205; the building x 893 … 925, z −1274 … −1258 |
 | Lake Street and Lakeside Park | x 1062 … 1420, z −1298 … −1134; the park x 1238 … 1372 north of the road; the shore at z −1296 |
 | Lakeside Park disc golf | the course sign x 1243, z −1223; tees and baskets over x 1247 … 1364, z −1281 … −1226 |
-| Lakeshore Brewing Co. | lot x 1422 … 1468 from the road to z −1226; the taproom x 1430 … 1460, z −1243 … −1229; the deck x 1423 … 1467, z −1299 … −1266 |
+| Lakeshore Brewing Co. | lot x 1422 … 1468 from the road to z −1226; the taproom x 1430 … 1460, z −1243 … −1229; the deck x 1423 … 1467, z −1299 … −1266; the cornhole boards x 1444.6, z −1249.4 (where you throw from) and −1258.6 |
 | Edinboro Lake | x 980 … 2260, z −2090 … −1296, a rounded oblong, wandering off the street |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
 | Well house · water tank | x 65.6 … 68.8, z 97.6 … 101.2 · x 70, z 140 |
@@ -1271,7 +1311,8 @@ js/18e-games.js     the arcade's games: air hockey against the table, and hoops 
 js/18f-raiders.js   Astro Raiders, the space invaders game on the first cabinet
 js/18g-cabinets.js  the other three cabinets: Maze Muncher, Brickyard Breakout, Block Drop
 js/18h-dozer.js     the coin dozer on the arcade's east wall: its cabinet, and the game
-js/18i-discgolf.js  the disc golf course in Lakeside Park: its tees, baskets, sign and loaner box, and the game (the throw, the flight, the card)
+js/18i-discgolf.js  the disc golf course in Lakeside Park: its tees, baskets, sign and loaner box, and the game (the throw, the flight, the chains, the aim, the card)
+js/18j-cornhole.js  cornhole at the brewery's boards against Danny: the bags, the throw, the slide on the board, the score
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience

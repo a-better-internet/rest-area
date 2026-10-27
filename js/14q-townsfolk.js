@@ -141,7 +141,7 @@ function _crowdPose(p, now, moving){
   else if(k==="tray"){ B[J.shL].rotation.set(-0.35, 0, -0.25); B[J.elL].rotation.set(-1.5, 0, 0); }
   else if(k==="mow"){ B[J.shL].rotation.x=B[J.shR].rotation.x=-0.55; B[J.elL].rotation.x=B[J.elR].rotation.x=-0.55; B[J.spine].rotation.x=0.12; }
   else if(k==="talk"){ B[J.head].rotation.y=Math.sin(t*0.5+P.seed)*0.15; const g=Math.max(0, Math.sin(t*1.3+P.seed*3)); B[J.shR].rotation.set(-0.3-g*0.5, 0, 0.25); B[J.elR].rotation.x=-0.9-g*0.6; }
-  else if(k==="toss"){ const c=(t*0.16+P.seed)%1, sw=smoothstep(0.0,0.25,c)*(1-smoothstep(0.3,0.42,c)); B[J.shR].rotation.set(0.6-sw*1.9, 0, 0.12); B[J.elR].rotation.x=-0.2-sw*0.2; B[J.spine].rotation.x=0.1*sw; B[J.knL].rotation.x=0.25*sw; }
+  else if(k==="toss"){ const c=p.cornSwing!==undefined ? p.cornSwing : (t*0.16+P.seed)%1, sw=smoothstep(0.0,0.25,c)*(1-smoothstep(0.3,0.42,c)); B[J.shR].rotation.set(0.6-sw*1.9, 0, 0.12); B[J.elR].rotation.x=-0.2-sw*0.2; B[J.spine].rotation.x=0.1*sw; B[J.knL].rotation.x=0.25*sw; }
   else if(k==="watch"){ B[J.shL].rotation.set(0.15, 0, -0.35); B[J.shR].rotation.set(0.15, 0, 0.35); B[J.elL].rotation.x=B[J.elR].rotation.x=-1.9; }
   else if(k==="pump"){ B[J.shR].rotation.set(-0.95, 0, 0.18); B[J.elR].rotation.x=-0.35; B[J.head].rotation.x=0.22; B[J.head].rotation.y=Math.sin(t*0.3+P.seed)*0.5;
     B[J.shL].rotation.set(0.05, 0, -0.12); }
