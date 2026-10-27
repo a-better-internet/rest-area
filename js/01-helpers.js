@@ -687,6 +687,12 @@ function makeDoor(xf, lx, ly, lz, label, opensIn, ajar, style, tint){
               reach: (style==="stall"||style==="stallw") ? 1.1 : 2.5});
   return g;
 }
+// The door just hung (the last in DOORS) made one you open and shut yourself with E: it stays as you leave it, and
+// while it is shut it is solid (col: the box across its opening, in world terms). Returns its DOORS entry
+function latchDoor(col){
+  const D=DOORS[DOORS.length-1], bc=Object.assign({}, col); COL_DYN.push(bc);
+  return Object.assign(D, {manualOnly:true, sticky:true, blockCol:bc, blockTop:bc.y1});
+}
 /* AN OVERHEAD DOOR, the kind a house's garage has: four sections that run up
    the tracks either side, round the bend under the head and back along the
    ceiling. xf's origin is the middle of the opening's foot, its +z out of the

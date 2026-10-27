@@ -68,8 +68,16 @@ const BOAT={on:false, g:null, x:0, z:0, yaw:0, u:0, v:0, r:0, thr:0, steer:0, rp
         c.beginPath(); c.ellipse(x0, y0+H*0.25, w, 6+Math.random()*30, 0, 0, 7); c.fill(); } });
     const wm=new T.MeshBasicMaterial({map:wt, transparent:true, opacity:0, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-8});
     const W=new T.Group(); scene.add(W);
-    for(const sd of [-1,1]){ const m=new T.Mesh(new T.PlaneGeometry(1.4, 16), wm); m.rotation.x=-Math.PI/2; m.rotation.z=sd*0.30; m.position.set(sd*2.6, 0, -4.2); W.add(m); }
-    const ch=new T.Mesh(new T.PlaneGeometry(2.0, 12), wm); ch.rotation.x=-Math.PI/2; ch.position.set(0, 0, -L/2-6.4); W.add(ch);
+    // (two arms of a V from the stern's corners, opening at twenty degrees and widening as they go; the churn between
+    // them straight back from the motor. v runs down the texture from the stern, so each starts strong and fades out)
+    const arm=(x0, z0, ang, len, w0, w1)=>{ const N=12, P=[], U=[], I=[], dx=Math.sin(ang), dz=-Math.cos(ang), nx=-dz, nz=dx;
+      for(let k=0;k<=N;k++){ const t=k/N, cx=x0+dx*len*t, cz=z0+dz*len*t, w=lerp(w0, w1, t);
+        P.push(cx-nx*w, 0, cz-nz*w, cx+nx*w, 0, cz+nz*w); U.push(0, 0.95-0.95*t, 1, 0.95-0.95*t);
+        if(k) I.push(2*k-2, 2*k, 2*k-1, 2*k-1, 2*k, 2*k+1); }
+      const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(P, 3)); g.setAttribute("uv", new T.Float32BufferAttribute(U, 2)); g.setIndex(I);
+      const m=new T.Mesh(g, wm); m.material.side=T.DoubleSide; W.add(m); };
+    for(const sd of [-1,1]) arm(sd*1.05, -L/2-0.15, sd*0.35, 15, 0.25, 1.6);
+    arm(0, -L/2-0.15, 0, 11, 0.55, 1.2);
     BOAT.wake={g:W, m:wm}; }
   // getting on: E from the dock, the shore or the water's edge, anywhere along it
   BOAT.use=addUse(R.x, R.z, R.dy, "TAKE THE BOAT", ()=>BOAT.board(), 2.9, ()=>!BOAT.on);

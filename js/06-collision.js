@@ -52,9 +52,20 @@ const SURF=[];   // flat {x0,x1,z0,z1,y} | ramp {axis,a0,a1,y0,y1}
 const ZONES=[];  // {x0,x1,z0,z1,y0,y1,name,indoor}
 
 function addCol(x0,x1,z0,z1,y0,y1){
-  COL.push({x0:Math.min(x0,x1), x1:Math.max(x0,x1),
-            z0:Math.min(z0,z1), z1:Math.max(z0,z1),
-            y0:(y0===undefined?-2:y0), y1:(y1===undefined?60:y1)});
+  const c={x0:Math.min(x0,x1), x1:Math.max(x0,x1),
+           z0:Math.min(z0,z1), z1:Math.max(z0,z1),
+           y0:(y0===undefined?-2:y0), y1:(y1===undefined?60:y1)};
+  COL.push(c); return c;
+}
+// What stopped you, if it was the edge of the world: one of the walls that stand from far under the ground to far over
+// the trees (07's round the site and the fields, 14m's and 14n's round the woods, the town and the shore). Never a
+// chair, a car or a house. A wall may carry its own `msg`.
+function edgeWall(x,z,feetY){
+  const r=PLAYER_R, lo=feetY+0.12, hi=feetY+1.72;
+  const t=c=>c.y0<=-39 && c.y1>=299 && x>c.x0-r && x<c.x1+r && z>c.z0-r && z<c.z1+r && hi>c.y0 && lo<c.y1;
+  for(const c of colsNear(x,z)) if(t(c)) return c;
+  for(const c of COL_BIG) if(t(c)) return c;
+  return null;
 }
 function addFlat(x0,x1,z0,z1,y){ SURF.push({flat:true,x0:x0,x1:x1,z0:z0,z1:z1,y:y}); }
 /* A BOX TURNED ABOUT THE VERTICAL, for the one place a wall stands at an

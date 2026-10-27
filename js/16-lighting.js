@@ -37,6 +37,7 @@ function updateLights(dark, camPos){
     if(!!l.under!==down) continue;
     // on a circuit that is off (a power cut) it is not a light at all
     if(l.circ && GRID[l.circ]<0.02) continue;
+    if(l.mod && l.mod.v<0.02) continue;
     // (and one inside a turned box, 10b's trailer, only when you are in that)
     if(l.ob && !(obIn(l.ob, camPos.x, camPos.z) && camPos.y<l.y+0.5)) continue;
     // a lamp with a volume is behind a wall unless you are inside that volume
@@ -51,7 +52,8 @@ function updateLights(dark, camPos){
     const L=LIGHT_POOL[i], e=_lampSort[i];
     // indoors the tubes are on all day; the lot lights only after dusk
     // and a fire is a fire by day too, if a weak one
-    const mult=e ? (e.l.under ? 1 : e.l.indoor ? Math.max(dark,0.80) : e.l.fire ? Math.max(dark,0.30) : dark)*(e.l.circ ? GRID[e.l.circ] : 1) : 0;
+    // (a lamp with a mod, a TV that is on, 14o, is as bright as its mod's v says)
+    const mult=e ? (e.l.under ? 1 : e.l.indoor ? Math.max(dark,0.80) : e.l.fire ? Math.max(dark,0.30) : dark)*(e.l.circ ? GRID[e.l.circ] : 1)*(e.l.mod ? e.l.mod.v : 1) : 0;
     if(!e || mult<0.02){ L.intensity=0; continue; }
     L.position.set(e.l.x, e.l.y, e.l.z);
     L.color.setHex(e.l.color);

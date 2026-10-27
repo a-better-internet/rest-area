@@ -225,6 +225,11 @@ If the scene runs hot on your machine, start there (see below).
     stalls are taken.
   - The car then backs out, finishing pointed down the one-way aisle, drives
     to the entrance ramp and times its merge against lane-0 traffic.
+  - Nobody anywhere stands or sits stock still. Everyone breathes, looks
+    about and nods now and then; whoever is standing shifts their weight
+    from one foot to the other, and now and then a hand comes up as if
+    they were saying something; whoever is sitting leans in and sits back.
+    Each does it in their own time, so no two move together.
   - Visitors keep a speed-dependent gap to whatever is in front: cars,
     people and you. If you stand in the aisle they honk, then edge round you
     at a crawl, and pull back to the middle once past.
@@ -379,9 +384,7 @@ If the scene runs hot on your machine, start there (see below).
   - **People about Edinboro.** At the fuel stop a man fills up at the
     pumps with the hose run back to the pump, a woman walks back out to
     her pickup with a coffee, and another man is on his phone out front.
-    At the Weir place Mrs Weir hangs out the wash. In the old graveyard a
-    woman kneels at a stone with flowers while her husband stands by. Out
-    in the hay field north of the road a red tractor and a round baler go
+    At the Weir place Mrs Weir hangs out the wash. Out in the hay field north of the road a red tractor and a round baler go
     up and down the windrows, turning on the headlands. Every so often it
     stops, the gate on the back of the baler goes up, a fresh bale rolls
     out and lies where it fell, and the tractor goes on with smoke puffing
@@ -500,7 +503,8 @@ If the scene runs hot on your machine, start there (see below).
     front, a porch light and its house number, and windows lit at night
     behind the curtains. In the yards are what people keep in yards: swing
     sets, sheds, kayaks on a rack, a bass boat on its trailer, a fire ring
-    with chairs round it looking at the water, a vegetable garden, a flag,
+    with chairs round it looking at the water, a vegetable garden, a flag
+    flying off its pole,
     a basketball hoop over a garage, the AC and the propane tank, and two
     pink flamingos. Two cars are parked on the shoulder for a cookout. The
     woods close round the back of the lots and both ends of the street.
@@ -521,6 +525,22 @@ If the scene runs hot on your machine, start there (see below).
     the lamp behind them look as they always did. Every room has its own
     paint, its floor (boards, carpet, lino, tile, or the garage's slab),
     a light in the ceiling, furniture, and its name on the screen.
+    - **Lived in.** Pictures hang in the living rooms, the dining rooms and
+      the bedrooms (the lake at sundown, a red barn, a sail on the lake,
+      flowers in a jug, the ridges going blue, two fields of colour, a
+      family long ago, the light at Presque Isle), each in its frame and
+      mat, over the sofa, over the bed or the sideboard, above the set or
+      the fireplace, never behind a bookcase or across a window. Every
+      kitchen has a clock on the wall keeping the game's time, and a radio
+      on the counter: `E` changes the station (country, talk, the Pirates
+      game, off), and whichever radio is nearest is the one you hear, quiet
+      from the next room and hardly at all from the yard. The fridge hums
+      and cuts out and the clock ticks when you are near it. Low tables
+      have books, a mug and the remote on them; dining tables a runner and a
+      bowl of fruit or flowers in a vase; every other sofa a throw over its
+      arm. In some houses the set comes on of an evening and lights the room
+      blue, flickering with the cuts. In every third house a cat is asleep
+      at the foot of a bed, breathing, an ear going now and then.
     - The **cape cod** has a hall from the door with the stair up its side.
       The living room runs the length of one side, with the fireplace on
       its end wall where the chimney stands outside, a set, a loveseat and
@@ -576,10 +596,30 @@ If the scene runs hot on your machine, start there (see below).
     does: it comes up to speed and coasts down, turns by the prop's push
     when slow and the water past the motor when fast, skids a little in a
     hard turn, comes up onto the plane with the stern squatting, leans in
-    the turn and rocks on the chop at rest. Spray comes off the bow and a
-    wake spreads behind. It bumps off the shore, the docks, the pilings and
+    the turn and rocks on the chop at rest. Spray comes off the stern and a
+    wake opens behind it in a V from the transom's corners, the churn
+    straight back from the motor. It bumps off the shore, the docks, the pilings and
     the other boats.
     Geese graze on the lawn and paddle about between the docks.
+  - **Disc golf.** Six holes are laid out over the park's lawn between the
+    lot and the shore, par 19, from 34 to 52 m. Each has a concrete tee
+    pad with its sign (the hole, the par, the distance) and a steel
+    basket with chains and its number on the band. The course sign by the
+    first tee, off the west end of the lot, has the map on it, with the
+    loaner box of discs beside it. `E` at the sign starts a round and puts
+    a disc in your hand; `E` there again ends it. On a tee, or standing by
+    your disc where it lies, look where you want it to go (up throws it
+    higher) and hold `Space` or the mouse button: the meter on the card
+    climbs and falls back, and you let go at the power you want. A drive
+    goes fifty-odd metres, a putt a few. The disc flies as a disc does:
+    lift from its speed and the angle it meets the air at, a little turn
+    to the right while it is fast and a fade to the left as it slows. It
+    skips and slides when it comes down, and comes off trees and poles.
+    Into the chains slowly enough and it drops; too hard and it clangs off
+    the rim. In the lake it costs a stroke and you throw again from where
+    it went in, and out of the park the same from where it went out. Walk
+    up to it to pick it up. The card across the top keeps the hole, the
+    throws and the round, and your best round is kept for next time.
   - **Edinboro Lake** opens out north and east of the park, most of a mile
     across to the far woods, with cottages along the far shore whose
     windows light up at night. A sailboat sits out in the middle, a
@@ -607,15 +647,27 @@ If the scene runs hot on your machine, start there (see below).
     mostly furled, with a black cable rail along the water and strings of
     bulbs on poles over it all, lit at dusk. Two bartenders work the
     taproom and one the hut, and two servers go round the tables with
-    trays. Customers sit at the bar, at the tables and on the sofas, stand
-    at the rail looking at the lake, and play cornhole. Sit in any empty
-    chair.
+    trays held level. Customers sit at the bar, at the tables and on the
+    sofas, stand at the rail looking at the lake, and play cornhole. A fifth
+    table stands at the east end of the middle row, high-tops with stools
+    stand along the rail, and two picnic tables sit out on the grass west of
+    the fire. Somebody's dog lies on the boards by their table with her
+    water bowl, head up and panting, watching whoever goes by, now and then
+    down on her paws, her tail going slow. Sit in any empty chair or stool.
+    The TVs over the bar have the ballgame on: a director cutting between
+    the centre-field camera for each pitch, the batter close up with his
+    name and average, the wide shot when the ball is in play, a slow replay
+    of a hit, the crowd, the line score between innings and the ads, with
+    the count, the outs, the bases and the score in the corner going on
+    from pitch to pitch.
 - **The picnic grove** spreads across the lawn south of the building. Paths
   run to it off curb ramps at the plaza's corners: north to the shelter's
   slab and its ramp, south to a round pad by the pet area's bag dispenser,
   round the back of the building from one side of the plaza to the other,
   and off each end of the raised walk by the car lot. Every one meets
-  another walk, a slab or a pad, and none of them ends in the grass. The grove has tables on concrete pads, charcoal grills (some
+  another walk, a slab or a pad, and none of them ends in the grass. Each
+  leaves its ramp straight and just as wide, and only then bends away, so
+  no edge steps or notches where the two meet. The grove has tables on concrete pads, charcoal grills (some
   lit, with smoke and embers), a picnic shelter and shade trees. Nearby are
   the flagpole with the US and Pennsylvania flags, a Blue Star Memorial
   Highway marker and a pet area, and on the lawn north of the plaza a blue
@@ -668,7 +720,9 @@ If the scene runs hot on your machine, start there (see below).
       steps down to a fallout-shelter corridor from 1962. It has block
       walls painted green and cream, a yellow stripe, conduit and a cable
       tray, vapour-tight tubes (one going), two steel doors in its east wall
-      (MECH 2, and STORAGE · NO ENTRY) and the yellow shelter sign.
+      (MECH 2, and STORAGE · NO ENTRY) and the yellow shelter sign. Those
+      two, and the doors down in the sub-basement, stay shut until you open
+      them (`E`), and stay as you leave them.
       Twenty-five metres on, under the hill, a pair of sliding glass doors
       parts as you come up to them, each leaf running into a pocket in the
       wall, onto a small arcade with a cosmic carpet, black walls with pink
@@ -834,7 +888,9 @@ If the scene runs hot on your machine, start there (see below).
     and hemlock you cannot get through. The same belt of thicket runs
     along the north, south and west edges of the woods, just past where
     you have to stop, and walking into it tells you that you can't go any
-    further that way.
+    further that way. Only the edge says so: walking into a wall, a fence
+    or a building anywhere else says nothing, and the lake's bank says it
+    drops straight in, and to go out a dock or take the boat.
   - **The creek.** The treated water goes out a pipe to a concrete headwall
     on the bank of a creek (OUTFALL 001, with its permit sign). The creek
     comes down off the hills to the south, runs past the plant through the
@@ -1066,6 +1122,10 @@ dozer `A` and `D` (or the arrows, or the mouse) move the chute, `Space` or
 a click drops a token, `X` shakes the machine, `N` empties it and starts
 again, and `Esc` or `E` steps away.
 
+On the disc golf course (Lakeside Park), `E` at the course sign starts or
+ends a round. On the tee or by your disc, aim with the view and hold
+`Space` or the mouse button to wind up; let go to throw.
+
 ## Graphics settings
 
 `G` opens the menu. Use the arrows (or `WASD`) or the mouse to change a
@@ -1116,6 +1176,7 @@ centred on the origin.
 | US 6N east through the woods | x 586 … 1062, z −1213 … −1187 |
 | French Creek Fireworks | x 872 … 966, z −1284 … −1205; the building x 893 … 925, z −1274 … −1258 |
 | Lake Street and Lakeside Park | x 1062 … 1420, z −1298 … −1134; the park x 1238 … 1372 north of the road; the shore at z −1296 |
+| Lakeside Park disc golf | the course sign x 1243, z −1223; tees and baskets over x 1247 … 1364, z −1281 … −1226 |
 | Lakeshore Brewing Co. | lot x 1422 … 1468 from the road to z −1226; the taproom x 1430 … 1460, z −1243 … −1229; the deck x 1423 … 1467, z −1299 … −1266 |
 | Edinboro Lake | x 980 … 2260, z −2090 … −1296, a rounded oblong, wandering off the street |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
@@ -1196,6 +1257,7 @@ js/18e-games.js     the arcade's games: air hockey against the table, and hoops 
 js/18f-raiders.js   Astro Raiders, the space invaders game on the first cabinet
 js/18g-cabinets.js  the other three cabinets: Maze Muncher, Brickyard Breakout, Block Drop
 js/18h-dozer.js     the coin dozer on the arcade's east wall: its cabinet, and the game
+js/18i-discgolf.js  the disc golf course in Lakeside Park: its tees, baskets, sign and loaner box, and the game (the throw, the flight, the card)
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
@@ -1306,6 +1368,8 @@ the generator house's cellar and the trailer's step. The routes are:
   bar; out a garage door to the beer garden; and round the east end of the
   building, down the path to the deck, between its tables and along the
   rail;
+- past the disc golf course's sign, over the first tee's pad and down its
+  fairway past the basket to the second tee;
 - into every house on Lake Street and to every room in it. Each house
   lays out its own routes as it builds (`LAKE_HOUSES.routes` in 14o, so
   they move with the plans): in at the front door, round the ground floor,

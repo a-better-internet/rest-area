@@ -111,6 +111,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
     B(WT+0.03, 0.016, o.b-o.a, xc, FH+0.006, zc, "#6a6d70");
     addFlat(CX1-0.02, CX1+WT+0.02, o.a, o.b, FH);
     makeDoor(XF(xc, o.a+0.02, -Math.PI/2), 0, FH+0.01, 0, name, false, 0, "steel", tint);
+    latchDoor({x0:CX1, x1:CX1+WT, z0:o.a, z1:o.b, y0:FH, y1:o.head});                  // (shut until you open it, and left as you leave it)
     sign(0.40, 0.12, (x,W,Hh)=>{ x.fillStyle="#f2f0e8"; x.fillRect(0,0,W,Hh); say(x, name, W/2, Hh/2, W*0.86, Hh*0.6, "#1a1a1a", "700", "Arial"); },
       CX1-0.03, o.head+0.20, zc, -Math.PI/2, false, 240); }
   // the shelter sign at the top of the stair, and the way on painted on the wall

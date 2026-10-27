@@ -233,12 +233,17 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     ent(boxGeo(0.5, 0.7, 0.4), f.x(0,3.2), Y+1.30, f.z(0,3.2), "#1a1a1a", 0, ry, 0);
     const hx=Math.abs(Math.cos(ry))*1.1+Math.abs(Math.sin(ry))*3.6, hz=Math.abs(Math.sin(ry))*1.1+Math.abs(Math.cos(ry))*3.6, cx=f.x(0,0.6), cz=f.z(0,0.6);
     addCol(cx-hx, cx+hx, cz-hz, cz+hz, Y-0.5, Y+1.6); };
+  // a flag on a pole in the yard: the cloth off the pole's side, the canton at the hoist, waving the way the rest
+  // area's do (13's FLAGS: a plane that streams downwind, the free edge doing the most)
+  let yardFlag=null;
   const flagpole=(x, z)=>{ C(0.05, 7.0, x, Y+3.5, z, "#c8ccd0", 12); ent(new T.SphereGeometry(0.08, 10, 8), x, Y+7.05, z, "#c9a34a");
-    sign(1.5, 0.9, (c,Wc,H)=>{ for(let k=0;k<13;k++){ c.fillStyle=k%2 ? "#f4f2ec" : "#b22234"; c.fillRect(0, k*H/13, Wc, H/13+1); }
-        c.fillStyle="#2a3a6a"; c.fillRect(0,0,Wc*0.42,H*0.54); c.fillStyle="#f4f2ec"; for(let i=0;i<6;i++) for(let j=0;j<5;j++) c.fillRect(Wc*0.03+i*Wc*0.065, H*0.05+j*H*0.10, 3, 3); },
-      x+0.78, Y+6.4, z, Math.PI/2, false, 240);
-    sign(1.5, 0.9, (c,Wc,H)=>{ for(let k=0;k<13;k++){ c.fillStyle=k%2 ? "#f4f2ec" : "#b22234"; c.fillRect(0, k*H/13, Wc, H/13+1); }
-        c.fillStyle="#2a3a6a"; c.fillRect(Wc*0.58,0,Wc*0.42,H*0.54); }, x+0.78, Y+6.4, z-0.004, -Math.PI/2, false, 240);
+    yardFlag=yardFlag||signTex(380, 200, (c,Wc,H)=>{ for(let k=0;k<13;k++){ c.fillStyle=k%2 ? "#f4f2ec" : "#b22234"; c.fillRect(0, k*H/13, Wc, H/13+1); }
+      c.fillStyle="#3c3b6e"; c.fillRect(0, 0, Wc*0.4, H*7/13); c.fillStyle="#f4f2ec";
+      for(let r2=0;r2<9;r2++) for(let k=0;k<(r2%2?5:6);k++){ const sx=Wc*0.4*((k+(r2%2?1:0.5))/6), sy=H*7/13*((r2+0.5)/9);
+        c.beginPath(); for(let p=0;p<5;p++){ const a=-Math.PI/2+p*4*Math.PI/5; c.lineTo(sx+Math.cos(a)*4, sy+Math.sin(a)*4); } c.fill(); } });
+    const g=new T.PlaneGeometry(1.52, 0.86, 18, 8), m=new T.Mesh(g, new T.MeshStandardMaterial({map:yardFlag, side:T.DoubleSide, roughness:0.85}));
+    m.position.set(x+0.82, Y+6.55, z); m.castShadow=true; scene.add(m);
+    FLAGS.push({m:m, base:g.attributes.position.array.slice(), ph:FLAGS.length*1.3});
     addCol(x-0.08, x+0.08, z-0.08, z+0.08, Y-0.5, Y+7); };
   // a five-pointed star, a thin plate of it, standing in a vertical plane facing (sin ry, cos ry)
   const starGeo=(rad)=>{ const sh=new T.Shape(); for(let i=0;i<10;i++){ const a=i*Math.PI/5+Math.PI/2, rr=i%2 ? rad*0.42 : rad; i ? sh.lineTo(Math.cos(a)*rr, Math.sin(a)*rr) : sh.moveTo(Math.cos(a)*rr, Math.sin(a)*rr); }
@@ -611,8 +616,9 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     W(TW.x0, TW.x1, TW.z1-0.4, TW.z1+0.4); W(TW.x1-0.4, TW.x1+0.4, TW.z0, TW.z1);
     // the shore: a step short of the water, open where a dock goes out
     let x=TW.x0;
-    for(const d of docks.slice().sort((p,q)=>p.x0-q.x0)){ W(x, d.x0, SH+0.35, SH+0.75); x=d.x1; }
-    W(x, TW.x1, SH+0.35, SH+0.75); }
+    const BANK="THE BANK DROPS STRAIGHT INTO THE LAKE HERE. GO OUT A DOCK, OR TAKE THE BOAT";
+    for(const d of docks.slice().sort((p,q)=>p.x0-q.x0)){ W(x, d.x0, SH+0.35, SH+0.75).msg=BANK; x=d.x1; }
+    W(x, TW.x1, SH+0.35, SH+0.75).msg=BANK; }
 
   /* ======================================================================
      THE LAKE

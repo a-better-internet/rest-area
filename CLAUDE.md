@@ -208,6 +208,30 @@ No lettering touches or runs past the edge of its board or its border.
   them. Its `blockCol` makes it solid while shut, and `tools/walk.js`
   opens any door that opens itself before walking a route.
 
+- A door that should stay shut until you open it (a corridor's steel door,
+  a door down in the sub-basement) is `makeDoor` then `latchDoor(col)` (01):
+  manual only, sticky, and solid across `col` while it is shut.
+- The world's edge is walls of colliders from y −40 to 300. Only walking
+  into one of those puts up the edge toast (`edgeWall`, 06). A wall that
+  should say something else carries it as `.msg` (14n's lake bank does),
+  and a piece cut from it keeps the `.msg`.
+- Every person's pose ends in `_idle` (14b) for `sit` and `stand`: breath,
+  a look round, the weight going from foot to foot, a hand now and then.
+  A job that sets its own bones does it after `poseP`, so it wins.
+- 14o dresses each house after building it. Every room's walls are noted
+  as `storey()` lines them (`h.walls`), and pictures hang on the stretches
+  clear of the openings, of this house's tall colliders and of `WALLX`:
+  cupboards and hoods on the wall that have no collider of their own. Add
+  anything like that with `wallx` (or `upper`) so no picture goes behind
+  it. A lamp with `mod` (a TV that is on) is as bright as `mod.v` (16).
+- The radio you hear is the nearest one (20's `nearRadio`): the garage's
+  or a kitchen's (`LAKE_HOUSES.radios`, station −1 for off). A house's
+  rooms are zones named `No. n · ROOM`; inside one the tubes' hum is off
+  and its fridges and clock are heard instead.
+- A game played out in the world (18i's disc golf) takes keys through the
+  early-return chain in 17-player's keydown and its frame through
+  `updateGames` (18e), the way the darts and the cabinets do.
+
 ## Tools
 
 Run them with `NODE_PATH` pointing at a global Playwright, for example

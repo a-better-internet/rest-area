@@ -39,8 +39,13 @@ function crowdHold(P, kind, right){
   if(kind==="pint"){ add(new T.CylinderGeometry(0.036, 0.030, 0.15, 12), "#c88a2a", 0, 0.03, 0.02); add(new T.CylinderGeometry(0.037, 0.037, 0.025, 12), "#f4efe0", 0, 0.115, 0.02); }
   else if(kind==="can") add(new T.CylinderGeometry(0.033, 0.033, 0.12, 10), "#3a6aa8", 0, 0.03, 0.02);
   else if(kind==="cup") add(new T.CylinderGeometry(0.04, 0.032, 0.10, 10), "#f2efe6", 0, 0.03, 0.02);
-  else if(kind==="tray"){ add(new T.CylinderGeometry(0.20, 0.20, 0.015, 18), "#2a2a2c", 0, 0.02, 0.10);
-    for(const [dx,dz] of [[-0.07,0.05],[0.07,0.08],[0,0.16]]) add(new T.CylinderGeometry(0.035, 0.030, 0.14, 10), "#d89a2e", dx, 0.095, 0.10+dz); }
+  else if(kind==="tray"){
+    // level on the flat of the hand: a frame turned back by the arm's own pose (the "tray" job's shoulder and elbow,
+    // below), so up in it is up in the world whatever the forearm is doing
+    const lv=new T.Group(); lv.quaternion.copy(new T.Quaternion().setFromEuler(new T.Euler(-0.35, 0, -0.25)).multiply(new T.Quaternion().setFromEuler(new T.Euler(-1.5, 0, 0))).invert());
+    g.add(lv); const add2=(geo, c, x, y, z)=>{ const m=new T.Mesh(geo, _heldMat(c)); m.position.set(x,y,z); lv.add(m); };
+    add2(new T.CylinderGeometry(0.20, 0.20, 0.015, 18), "#2a2a2c", 0, 0.03, 0.04);
+    for(const [dx,dz] of [[-0.07,-0.04],[0.07,0.02],[0,0.10]]) add2(new T.CylinderGeometry(0.035, 0.030, 0.14, 10), "#d89a2e", dx, 0.03+0.0075+0.07, 0.04+dz); }
   else if(kind==="rod"){ const r=add(new T.CylinderGeometry(0.006, 0.012, 2.6, 6), "#2a2a2c", 0, 0.0, 1.25, Math.PI/2+0.5); r.position.y=0.62; }
   else if(kind==="can_w"){ add(new T.CylinderGeometry(0.09, 0.10, 0.22, 12), "#3a8a4a", 0, -0.12, 0.05); add(new T.CylinderGeometry(0.015, 0.015, 0.30, 6), "#3a8a4a", 0, -0.02, 0.22, 1.0); }
   else if(kind==="sponge") add(new T.BoxGeometry(0.12, 0.06, 0.08), "#e6c21c", 0, 0, 0.03);
@@ -211,8 +216,7 @@ function crowdRound(pts, R, closed){
 /* ---- Edinboro, at the exit ----------------------------------------------------
    At the fuel stop a man filling up at the pumps, a woman back out to her
    pickup with a coffee, another on his phone out front; at the Weir place
-   Mrs Weir hanging out the wash; in the old graveyard a woman on her knees
-   with flowers at a stone and her husband standing by. Out in the hay
+   Mrs Weir hanging out the wash. Out in the hay
    field north of the road a tractor and a round baler go up and down the
    windrows, stopping every so often to open the gate and drop a bale. */
 (function edinboroFolk(){
@@ -231,10 +235,6 @@ function crowdRound(pts, R, closed){
     crowdAdd(G, {look:look({female:true, h:0.95, skin:SKINS[0], hair:HAIRS[4], shirt:"#7a9ac8", pants:"#5c5a52", long:true}), x:124.8, z:Z+53.05, yaw:Math.PI, mode:"stand", job:"hang", held:"shirt", dayOnly:true});
     const basket=crowdProp((ent, B, C)=>{ B(0.56, 0.26, 0.40, 0, 0.13, 0, "#c8b08a"); B(0.50, 0.04, 0.34, 0, 0.27, 0, "#f2f0ea"); B(0.20, 0.06, 0.30, 0.08, 0.30, 0.02, "#3a5a8a"); });
     basket.position.set(125.65, Y+0.002, Z+53.45); basket.rotation.y=0.3; scene.add(basket); }
-  // the graveyard: in from the gate along the front row (14l's stones face the road; she faces them)
-  { const G=crowdGroup("the old graveyard", 106, Z-30, 150);
-    crowdAdd(G, {look:look({female:true, h:0.93, skin:SKINS[0], hair:HAIRS[4], shirt:"#3a3a5a", pants:"#2c2c34", long:true}), x:106.35, z:Z-23.35, yaw:Math.PI, mode:"stand", job:"kneel", held:"flowers", dayOnly:true});
-    crowdAdd(G, {look:look({h:1.02, skin:SKINS[0], hair:HAIRS[4], shirt:"#5a5a5c", pants:"#2c2c34", long:true}), x:107.45, z:Z-22.85, yaw:Math.PI-0.25, mode:"stand", job:"mourn", dayOnly:true}); }
 
   /* the hay field (EDIN.fields[2]): its windrows run east and west, 5.5 m apart (08b's texture, from the field's south
      edge); the baler takes those clear of the bales already lying in the field, turning on the headlands */

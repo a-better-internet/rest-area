@@ -54,15 +54,15 @@ const ROUTES={
   "down to the arcade":    [[72.9,-179.6],[72.0,-182.6],[72.0,-183.5],[72.0,-184.2],[72.0,-186.5],[72.0,-210.0],[72.0,-212.0],[74.6,-212.8],[75.4,-215.0],[74.4,-216.0],[72.0,-216.2],[69.2,-216.0],[69.8,-217.7],[71.7,-217.7]],
   // the two steel doors in its east wall (12d): MECH 2; and the stores, the stair and the sub-basement under them,
   // the hallways out to the bunk room, the chair, the boiler room and the door at the end
-  "into mech 2":           [[72.0,-191.0],[72.6,-191.0],[73.1,-191.0],[73.6,-191.0],[75.0,-190.6],[75.6,-190.0]],
-  "down to the sub-basement": [[72.0,-203.5],[72.6,-203.5],[73.1,-203.5],[73.6,-203.5],[74.2,-203.5],[75.0,-203.6],[78.0,-203.6],[80.6,-203.6],[92.0,-203.6],[92.0,-205.0],
-                           [92.0,-231.9],[84.0,-232.0],[63.0,-232.0],[62.8,-230.0],[62.8,-214.6],[62.8,-213.0],[63.0,-212.0],[63.0,-210.6]],
+  "into mech 2":           {gate:true, pts:[[72.0,-191.0],[72.6,-191.0],[73.1,-191.0],[73.6,-191.0],[75.0,-190.6],[75.6,-190.0]]},
+  "down to the sub-basement": {gate:true, pts:[[72.0,-203.5],[72.6,-203.5],[73.1,-203.5],[73.6,-203.5],[74.2,-203.5],[75.0,-203.6],[78.0,-203.6],[80.6,-203.6],[92.0,-203.6],[92.0,-205.0],
+                           [92.0,-231.9],[84.0,-232.0],[63.0,-232.0],[62.8,-230.0],[62.8,-214.6],[62.8,-213.0],[63.0,-212.0],[63.0,-210.6]]},
   "sub-basement, the chair": {y0:-4.2, pts:[[80.0,-232.0],[75.2,-232.0],[75.2,-229.0],[75.2,-227.4]]},
   "sub-basement, the boiler room": {y0:-4.2, pts:[[92.0,-203.6],[100.0,-203.6],[100.0,-195.0],[100.0,-186.0],[86.0,-186.0],[84.4,-185.6],[82.0,-184.6]]},
   "sub-basement, the door at the end": {y0:-4.2, pts:[[92.0,-230.0],[92.0,-236.0],[92.0,-241.0]]},
   // past the end: through JANITOR, round the corner, the old door, DANGER, to the wheel; and through it (open, as
   // the gate's route leaves every manual door) on to the catwalk, down the stair and along the boilers' fronts
-  "sub-basement, the doors to the wheel": {y0:-4.2, pts:[[92.0,-236.0],[92.0,-241.0],[92.0,-242.3],[91.96,-243.0],[91.96,-246.7],[94.0,-246.7],[95.3,-246.7],[97.0,-246.7],
+  "sub-basement, the doors to the wheel": {gate:true, y0:-4.2, pts:[[92.0,-236.0],[92.0,-241.0],[92.0,-242.3],[91.96,-243.0],[91.96,-246.7],[94.0,-246.7],[95.3,-246.7],[97.0,-246.7],
                            [98.6,-246.7],[98.6,-250.0],[98.6,-254.3],[98.6,-257.4]]},
   "the boiler hall":       {gate:true, y0:-4.2, pts:[[98.6,-254.0],[98.6,-257.4],[98.6,-258.3],[98.6,-259.3],[96.2,-259.26],[94.8,-259.26],[93.0,-259.26],[91.0,-259.26],
                            [90.6,-259.6],[90.6,-261.2],[90.6,-263.0],[90.6,-264.9],[94.0,-264.9],[99.0,-264.9],[104.0,-264.9],[108.4,-264.9],[108.4,-262.0],[95.0,-262.0]]},
@@ -129,7 +129,9 @@ const ROUTES={
   // the brewery (14r): in the front door to the bar, out a garage door to the garden; round the east end down to the deck
   "into the brewery":       [[1447,-1215],[1447,-1224],[1446.0,-1225.0],[1446.0,-1227.6],[1445,-1228.2],[1445,-1229.0],[1445,-1231.5],[1446.0,-1234.9],[1452.6,-1234.9]],
   "out to the beer garden": [[1445,-1231.5],[1446.0,-1234.9],[1446.2,-1239.5],[1448.2,-1240.5],[1448.2,-1243.0],[1448.2,-1245.0],[1462.0,-1246.0]],
-  "down to the deck":       [[1461,-1228.4],[1461.8,-1243.5],[1462.6,-1252],[1460.5,-1262],[1459,-1266.5],[1457.5,-1268.5],[1457.5,-1276.5],[1428,-1276.5],[1424.6,-1278],[1424.6,-1296],[1445,-1296.5]],
+  // the disc golf course (18i) in the park: past the course sign, over the first tee's pad, down the fairway to the second tee
+  "the disc golf course":   [[1246,-1201],[1246,-1212],[1245.6,-1221],[1247,-1226],[1262,-1241],[1272.6,-1251.2],[1290,-1232]],
+  "down to the deck":       [[1461,-1228.4],[1461.8,-1243.5],[1462.6,-1252],[1460.5,-1262],[1459,-1266.5],[1457.5,-1268.5],[1457.5,-1276.5],[1428,-1276.5],[1424.6,-1278],[1424.6,-1294.2],[1445,-1294.2]],
 };
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
@@ -219,6 +221,8 @@ const ROUTES={
       const u=drive(UP,m,0.2), d=drive(DOWN,m,upF+0.05);
       res["stairs, keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : u<upF-0.2 ? "up: never reached the hall ("+u.toFixed(2)+")"
                                      : typeof d==="string" ? "down: "+d : "ok"; }
+    // (the stairs are tested with every door that you open yourself standing open)
+    for(const d of REST.doors) if(d.manualOnly){ d.manual=1; d.open=1; if(d.blockCol) d.blockCol.y1=d.blockCol.y0-1; }
     // the basement stair the same way, down and back up
     { const TOP=[[82.6,-176.8],[83.0,-176.8],[85.5,-176.8],[86.3,-176.8]], BOT=TOP.slice().reverse(), fy=REST.surf(82.6,-176.8,3.0);
       for(const [m,lab] of PACES("basement stair, keys held")){

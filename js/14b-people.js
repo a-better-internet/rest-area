@@ -138,6 +138,33 @@ function randomPerson(r){
 const _smokeCyc=(t,seed)=>(t*0.12+seed)%1;
 const _smokeUp=c=>smoothstep(0,0.15,c)*(1-smoothstep(0.25,0.4,c));
 // poses: everything is a bone rotation off the rest pose
+// smooth noise in [-1,1] along one axis: a value at each whole step, eased between (for the idle below)
+function _noise1(x){ const i=Math.floor(x), f=x-i, u=f*f*(3-2*f), h=n=>{ const q=Math.sin(n*127.1+311.7)*43758.5453; return q-Math.floor(q); };
+  return (h(i)*(1-u)+h(i+1)*u)*2-1; }
+/* Nobody stands or sits stock still. Over whatever the pose is, as long as they are not walking: breathing in the
+   chest and shoulders; the weight going from one foot to the other now and then, the hip and the free knee with
+   it; the head looking about and resting, nodding a little; now and then a hand up (to the face, the hair, a
+   gesture) and back down. Sitting, they lean in and back, shift their legs, put a hand out to the table. Each on
+   their own clock (p.seed). A job (14q) or a task (14b's visitors) that poses an arm or the head after this has
+   the last word on it. */
+function _idle(p, mode, t){
+  const B=p.B, J=p.j, sd=p.seed||0;
+  const br=Math.sin(t*1.55+sd*3.1);                                                    // breathing, about 15 a minute
+  B[J.spine].rotation.x+=br*0.014; B[J.shL].rotation.z-=br*0.012; B[J.shR].rotation.z+=br*0.012;
+  const look=_noise1(t*0.21+sd*7.3), nod=_noise1(t*0.16+sd*4.1);
+  B[J.head].rotation.y=B[J.head].rotation.y*0.5+look*0.42; B[J.head].rotation.x+=nod*0.10;
+  const g=smoothstep(0.55, 0.85, _noise1(t*0.11+sd*11.7)), hand=_noise1(sd*3.3)>0 ? J.shR : J.shL, el=hand===J.shR ? J.elR : J.elL;
+  if(mode==="sit"){
+    B[J.spine].rotation.x+=0.07*_noise1(t*0.09+sd*2.2);
+    B[J.knL].rotation.x+=0.12*_noise1(t*0.07+sd*5.5); B[J.knR].rotation.x+=0.12*_noise1(t*0.07+sd*6.6);
+    B[hand].rotation.x-=g*0.45; B[el].rotation.x-=g*0.55;
+  }else if(mode==="stand"){
+    const w=_noise1(t*0.08+sd*5.1);                                                   // the weight from foot to foot
+    B[J.root].position.x+=w*0.022; B[J.hpL].rotation.z+=w*0.04; B[J.hpR].rotation.z+=w*0.04; B[J.spine].rotation.z-=w*0.03;
+    if(w>0) B[J.knR].rotation.x+=w*0.16; else B[J.knL].rotation.x-=w*0.16;
+    B[hand].rotation.x-=g*0.9; B[hand].rotation.z+=(hand===J.shR ? 0.1 : -0.1)*g; B[el].rotation.x-=g*1.25;
+  }
+}
 function poseP(p, mode, ph, t){
   const B=p.B, J=p.j, s=Math.sin(ph*Math.PI*2), c=Math.cos(ph*Math.PI*2);
   for(const b of B) b.rotation.set(0,0,0);
@@ -172,6 +199,8 @@ function poseP(p, mode, ph, t){
       B[J.elR].rotation.set(-0.9-up*1.30, up*0.875, 0);
       B[J.head].rotation.y*=1-up; B[J.head].rotation.x=-0.04*up; }
   }
+  if(mode==="sit" || mode==="stand") _idle(p, mode, t);
+  else if(mode!=="walk"){ const br=Math.sin(t*1.55+(p.seed||0)*3.1); B[J.spine].rotation.x+=br*0.012; }   // (phone, read, smoke: breathing at least)
 }
 /* ---- a lit cigarette, held in the right hand ------------------------------
    Filter, paper, and a coal at the end that brightens on the drag. It

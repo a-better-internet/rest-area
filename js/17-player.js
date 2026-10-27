@@ -32,6 +32,8 @@ addEventListener("keydown",e=>{
   if(typeof DOZER!=="undefined" && DOZER.on){ e.preventDefault(); DOZER.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
+  // on the disc golf course with the disc in your hand, Space winds up the throw (18i)
+  if(typeof DGOLF!=="undefined" && DGOLF.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
   if(e.code==="KeyG" && !e.repeat && window.GFXMENU){ GFXMENU.show(); return; }
   const held=keys[e.code];                  // keydown repeats while a key is down
@@ -62,7 +64,7 @@ addEventListener("keydown",e=>{
   // the key that gets you out of it
   if((e.code==="KeyE" || (e.code==="Space" && !driving && !(typeof BOAT!=="undefined" && BOAT.on))) && !droneMode) interact();
 });
-addEventListener("keyup",e=>{ keys[e.code]=false; });
+addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); });
 // Alt-tab away mid-stride and the keyup for whatever you were holding never
 // arrives, so the key stays down for good. Drop everything when the window
 // stops listening.
@@ -367,10 +369,12 @@ function fixedUpdate(dt){
     if(!bx1) player.pos.x=nx;                                        // slide on X…
     const bz1=blocked(player.pos.x, nz, player.feetY);
     if(!bz1) player.pos.z=nz;                                        // …then on Z
-    if((bx1||bz1) && nearEdge(nx,nz) && performance.now()-_edgeToast>6000){
+    // (only when it is the world's edge that stops you: bumping a table or a wall in town says nothing)
+    const ew=(bx1||bz1) && performance.now()-_edgeToast>6000 ? (bx1 && edgeWall(nx, player.pos.z, player.feetY)) || (bz1 && edgeWall(player.pos.x, nz, player.feetY)) : null;
+    if(ew){
       _edgeToast=performance.now();
       // out back, the edge is somebody's line, and they have said so
-      toast(nx>SITE.zone.x1-(SITE.walkInsetE||0)-6 ? "POSTED. THIS IS AS FAR AS YOU GO" : "THE WOODS ARE TOO THICK TO GO ON. YOU CAN'T WALK ANY FURTHER THIS WAY","#cfe0d4");
+      toast(ew.msg || (nearEdge(nx,nz) && nx>SITE.zone.x1-(SITE.walkInsetE||0)-6 ? "POSTED. THIS IS AS FAR AS YOU GO" : "THE WOODS ARE TOO THICK TO GO ON. YOU CAN'T WALK ANY FURTHER THIS WAY"),"#cfe0d4");
     }
     player.step += sp*dt;
     player.bob   = Math.sin(player.step*3.1)*0.025;

@@ -326,7 +326,8 @@ const SUBBASE={drip:2.5, vols:[]};
     if(sg) sign(0.56, 0.15, signFn, ax==="x" ? (a+b)/2 : sg.at+0.012*sg.s, SB+2.25, ax==="x" ? sg.at+0.012*sg.s : (a+b)/2, sg.ry, false, 300);
     if(style==="wheel") return {a:a, b:b, jw:jw, c:c, HD:HD};
     const h=b-jw-0.04;
-    return makeDoor(ax==="x" ? XF(h, c, Math.PI) : XF(c, h, Math.PI/2), 0, SB+0.02, 0, label, true, 0, style, tint); };
+    makeDoor(ax==="x" ? XF(h, c, Math.PI) : XF(c, h, Math.PI/2), 0, SB+0.02, 0, label, true, 0, style, tint);
+    return latchDoor({x0:r.x0, x1:r.x1, z0:r.z0, z1:r.z1, y0:SB, y1:HD}); };              // (shut until you open it)
   const DR=RECTS.filter(r=>r.door).sort((p,q)=>p.door-q.door);
   const sgn=(txt, bg, fg, font)=>(c,W,Hh)=>{ c.fillStyle=bg; c.fillRect(0,0,W,Hh); say(c, txt, W/2, Hh/2, W*0.80, Hh*0.60, fg, "700", font||"'Arial Black', Arial"); };
   door(DR[0], "closet", 0x6f7a72, "JANITOR", {at:DR[0].z1+0.02, s:1, ry:0}, sgn("JANITOR", "#c8c4b4", "#2a2a28", "Arial"));

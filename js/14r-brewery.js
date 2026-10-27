@@ -182,7 +182,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     for(const zc of [-1239.0, -1233.0]) for(let k=0;k<11;k++){ const hh=0.24+(k%3)*0.04; C(0.032, hh, BL.x1-WT-0.16, FF+y+0.015+hh/2, zc-1.0+k*0.2, ["#2a5a2a","#6a3a1a","#c8c8b8","#1a1a2a","#8a6a2a"][(k+y*10|0)%5], 8); } }
   // the TVs: a ball game on each, the scoreboard in the corner
   { const c=cvs(256,144), x=c.getContext("2d"), tex=setSRGB(new T.CanvasTexture(c));
-    BREWERY.screens={c:c, x:x, tex:tex, inn:7, sc:[3,2]};
+    BREWERY.screens={c:c, x:x, tex:tex};
     for(const zc of [-1238.8, -1233.2]){ B(0.06, 0.74, 1.26, BL.x1-WT-0.07, FF+2.70, zc, "#111111");
       const m=new T.Mesh(new T.PlaneGeometry(1.18, 0.66), new T.MeshBasicMaterial({map:tex, toneMapped:false})); m.position.set(BL.x1-WT-0.105, FF+2.70, zc); m.rotation.y=-Math.PI/2; scene.add(m); } }
   // the stools along the bar
@@ -233,7 +233,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     const tf=new T.PlaneGeometry(9.0, 8.0, 18, 16), P=tf.attributes.position;
     for(let i=0;i<P.count;i++){ const x=fx+P.getX(i), z=fz-P.getY(i); P.setZ(i, gy(x,z)+0.035); } tf.computeVertexNormals();
     { const U=tf.attributes.uv; for(let i=0;i<U.count;i++) U.setXY(i, U.getX(i)*9*0.5, U.getY(i)*8*0.5); }
-    push("brw_turf", tf.rotateX(-Math.PI/2), fx, 0, fz, 0, "#ffffff");
+    push("brw_turf", tf.rotateX(-Math.PI/2), fx, 0, fz, 0, "#9aae8a");
     for(let k=0;k<14;k++){ const a=k/14*6.283; ent(new T.DodecahedronGeometry(0.16, 0), fx+Math.cos(a)*0.62, g0+0.12, fz+Math.sin(a)*0.62, "#6a665e", a, a*2); }
     C(0.5, 0.06, fx, g0+0.04, fz, "#2a2624", 18);
     addCol(fx-0.8, fx+0.8, fz-0.8, fz+0.8, g0-0.5, g0+0.4);
@@ -298,7 +298,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   addZone(DK.x0, DK.x1, DK.z0, DK.z1, D-1, D+4, "THE DECK AT LAKESHORE");
   // the shore's wall (14n's, a step short of the water) opens where the deck goes out over it
   { const w=COL.find(c=>c.y0===-40 && c.y1===300 && Math.abs(c.z0-(SH+0.35))<0.01 && c.x0<DK.x0 && c.x1>DK.x1);
-    if(w){ const x1=w.x1; w.x1=DK.x0+0.05; addCol(DK.x1-0.05, x1, w.z0, w.z1, -40, 300); } }
+    if(w){ const x1=w.x1; w.x1=DK.x0+0.05; addCol(DK.x1-0.05, x1, w.z0, w.z1, -40, 300).msg=w.msg; } }
   addZone(1422, 1468, DK.z1, BL.z0, Y-3, Y+5, "THE BEER GARDEN");
   // the tables: three rows, the umbrellas (furled but three)
   BREWERY.tables=[];
@@ -311,6 +311,26 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     seats.forEach(([sx,sz,ry],j)=>chair(sx, sz, D, ry));
     BREWERY.tables.push({x:x, z:z, seats:seats});
     if(ri<2) umbrella(x, z, (ri*5+k)%3===1); }));
+  // and a fifth in the middle row at its east end, under an umbrella of its own
+  { const x=1464.0, z=-1281.6; table(x, z, D, 1.5, 0.82, "#1e1e20");
+    const seats=[[x-0.38, z+0.68, Math.PI],[x+0.38, z+0.68, Math.PI],[x-0.38, z-0.68, 0],[x+0.38, z-0.68, 0]];
+    seats.forEach(([sx,sz,ry])=>chair(sx, sz, D, ry)); BREWERY.tables.push({x:x, z:z, seats:seats}); umbrella(x, z, true); }
+  // high-tops along the rail, two stools at each looking out over the water
+  BREWERY.highTops=[];
+  for(const x of [1431.0, 1444.5, 1458.0]){ const z=DK.z0+2.3;
+    B(0.78, 0.04, 0.62, x, D+1.04, z, "#1e1e20"); C(0.045, 1.02, x, D+0.52, z, "#2a2a2c", 8); C(0.26, 0.02, x, D+0.012, z, "#2a2a2c", 18);
+    addCol(x-0.40, x+0.40, z-0.32, z+0.32, D-0.5, D+1.06);
+    for(const dx of [-0.42, 0.42]){ const sx=x+dx, sz=z+0.62;
+      C(0.18, 0.05, sx, D+0.76, sz, "#1e1e20", 16); C(0.022, 0.73, sx, D+0.37, sz, "#9a9ea2", 8); ent(new T.TorusGeometry(0.15, 0.011, 6, 16), sx, D+0.28, sz, "#9a9ea2", Math.PI/2); C(0.19, 0.02, sx, D+0.012, sz, "#9a9ea2", 16);
+      addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, D-0.5, D+0.78); BREWERY.highTops.push([sx, sz]); } }
+  // and two picnic tables out on the grass west of the fire, their benches either side
+  for(const [x, z, ry] of [[1427.4, -1256.2, 0.08],[1426.8, -1262.8, -0.05]]){ const y=gy(x, z), f=XF(x, z, ry);
+    for(let k=0;k<5;k++){ const lz=-0.36+k*0.18; B(1.80, 0.04, 0.16, f.x(0, lz), y+0.75, f.z(0, lz), "#8a6a48", ry); }
+    for(const sd of [-1,1]){ B(1.80, 0.04, 0.26, f.x(0, sd*0.64), y+0.45, f.z(0, sd*0.64), "#8a6a48", ry);
+      for(const lx of [-0.70, 0.70]) ent(boxGeo(0.06, 0.92, 0.08), f.x(lx, sd*0.32), y+0.40, f.z(lx, sd*0.32), "#6a5038", -sd*0.62, ry, 0); }   // (feet out, tops in)
+    for(const lx of [-0.70, 0.70]) ent(boxGeo(0.05, 0.05, 1.62), f.x(lx, 0), y+0.40, f.z(lx, 0), "#6a5038", 0, ry, 0);
+    addCol(x-1.0, x+1.0, z-0.85, z+0.85, y-0.5, y+0.78);
+    for(const sd of [-1,1]) addSeat(f.x(0, sd*0.64), f.z(0, sd*0.64), y, ry+(sd>0 ? 0 : Math.PI), "A PICNIC BENCH"); }
   // the strings of bulbs: poles along the rail and at the lawn's foot, the strings zig-zagging between them over the deck
   { const tops=[], H=4.3;
     for(const x of [DK.x0+0.4, 1434.0, 1445.0, 1456.0, DK.x1-0.4]){ tops.push([x, DK.z0+0.25]); }
@@ -361,6 +381,15 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   for(const [tbls, y] of [[BREWERY.inTables, FF],[BREWERY.tables, D]]) for(const t of tbls) for(const s of t.seats) if(!taken.has(s)) addSeat(s[0], s[1], y, s[2]+Math.PI, "A CHAIR");
   for(const [x,z,ry] of BREWERY.sofas.slice(0,2)){ const f=XF(x, z, ry); at(f.x(0.45, 0.05), f.z(0.45, 0.05), ry, Terrain.groundAt(x,z)); }
   for(const [x,dz] of [[1437.6,0],[1438.4,0.1],[1451.0,0]]) crowdAdd(G, {look:guest({}), x:x, z:DK.z0+0.55+dz, y:D, yaw:Math.PI, mode:"stand", held:"pint", drink:true, sway:0.5});
+  // two on the stools at the rail's high-tops, looking out at the lake
+  for(const k of [0, 3]){ const [sx, sz]=BREWERY.highTops[k]; crowdAdd(G, {look:guest({}), x:sx, z:sz, y:D+0.30, yaw:Math.PI, mode:"sit", sitY:0.46, held:"pint", drink:true}); }
+  // and somebody's dog, lying on the boards by their table with her water bowl, watching the servers go by
+  { const t=BREWERY.tables[3], dx=t.x+1.25, dz=t.z+0.95, dog=buildDog("#c8a060");
+    dog.g.position.set(dx, D, dz); dog.g.rotation.y=-Math.PI/2-0.3;
+    const bowl=new T.Mesh(new T.CylinderGeometry(0.11, 0.08, 0.07, 16), new T.MeshStandardMaterial({color:0xb8bcc0, metalness:0.7, roughness:0.3}));
+    bowl.position.set(dx-0.15, D+0.04, dz-0.55); scene.add(bowl);
+    addCol(dx-0.42, dx+0.42, dz-0.25, dz+0.25, D-0.5, D+0.4);
+    BREWERY.dog={D:dog, t:0, x:dx, z:dz}; }
   // cornhole, two at it
   crowdAdd(G, {look:guest({}), x:1445.4, z:-1248.6, yaw:Math.PI, mode:"stand", job:"toss"});
   crowdAdd(G, {look:guest({female:true, h:0.95}), x:1443.8, z:-1259.4, yaw:0, mode:"stand", job:"toss"});
@@ -377,16 +406,135 @@ function updateBrewery(dt, dark){
   const c=camera.position; if(Math.hypot(c.x-1445, c.z+1258)>220) return;
   for(const f of B.fans) f.rotation.y+=dt*3.2;
   B.bulbs.color.setHex(0xffd9a0).multiplyScalar(0.72+0.48*smoothstep(0.2, 0.7, dark));                 // (glass by day, lit by dusk)
+  // the dog: lying down, front legs out, the hind ones folded; the head up, panting, turning to whatever goes past,
+  // now and then down on the paws for a bit; the tail going slow on the boards
+  if(B.dog){ const g=B.dog, Dg=g.D, Bn=Dg.B, t=(g.t+=dt);
+    Bn[0].position.y=0.18; Bn[0].rotation.set(0, 0, 0);
+    // (the hind legs folded forward along her sides: shortened to the haunch, all that shows of a folded leg)
+    Dg.legs.forEach((b,k)=>{ Bn[b].rotation.set(k<2 ? -1.38 : -1.42, 0, k<2 ? 0 : (k===2 ? -0.22 : 0.22)); Bn[b].scale.set(1, k<2 ? 1 : 0.55, k<2 ? 1 : 1.25); });
+    const rest=smoothstep(0.6, 0.85, _noise1(t*0.05+3.1)), look=_noise1(t*0.18+1.7);
+    Bn[Dg.head].rotation.set(0.35*rest+Math.sin(t*9)*0.015*(1-rest), look*0.9*(1-rest*0.6), 0);
+    Bn[Dg.tail].rotation.set(-0.62, Math.sin(t*(1.6+1.4*Math.max(0, _noise1(t*0.3))))*0.40, 0); }       // (laid out behind her, sweeping the boards)
   if(B.fire){ const n=0.8+0.2*Math.sin(CROWD.t*11)*Math.sin(CROWD.t*4.3); B.fire.m.scale.set(1, n, 1); B.fire.m.material.opacity=0.55+0.3*n;
     B.fire.l.intensity=0.9*n*smoothstep(0.15, 0.6, dark); B.fire.m.visible=true;
     if(dark>0.2 && typeof PUFFS!=="undefined" && Math.random()<dt*6) PUFFS.emit(B.fire.l.x+(Math.random()-0.5)*0.2, B.fire.l.y-0.3, B.fire.l.z+(Math.random()-0.5)*0.2, 0, 0.5, 0, 0.12, 0.7, 2.2, 0.35, 0.55, 0.7); }
-  B.scrT+=dt; if(B.scrT<0.5) return; B.scrT=0;
-  const S=B.screens, x=S.x, W=256, H=144, t=CROWD.t;
-  x.fillStyle="#2f7a34"; x.fillRect(0,0,W,H); x.fillStyle="#a8784a"; x.beginPath(); x.moveTo(W/2,H*0.95); x.lineTo(W*0.15,H*0.55); x.lineTo(W/2,H*0.25); x.lineTo(W*0.85,H*0.55); x.closePath(); x.fill();
-  x.fillStyle="#3a8a3c"; x.beginPath(); x.moveTo(W/2,H*0.82); x.lineTo(W*0.32,H*0.56); x.lineTo(W/2,H*0.36); x.lineTo(W*0.68,H*0.56); x.closePath(); x.fill();
-  x.fillStyle="#f2efe6"; for(const [px,py] of [[0.5,0.82],[0.32,0.56],[0.5,0.36],[0.68,0.56]]) x.fillRect(W*px-3, H*py-3, 6, 6);
-  for(let k=0;k<6;k++){ const a=t*0.3+k; x.fillStyle=k<3 ? "#f2efe6" : "#c42a1a"; x.beginPath(); x.arc(W*(0.25+0.5*((Math.sin(a)+1)/2)), H*(0.4+0.4*((Math.cos(a*1.3)+1)/2)), 3, 0, 7); x.fill(); }
-  x.fillStyle="rgba(10,10,20,0.85)"; x.fillRect(6, 6, 96, 30); x.fillStyle="#f2efe6"; x.font="bold 12px Arial"; x.textAlign="left"; x.textBaseline="middle";
-  x.fillText("ERI  "+S.sc[0], 12, 15); x.fillText("PIT  "+S.sc[1], 12, 29); x.fillStyle="#e6c21c"; x.fillText("BOT "+S.inn, 62, 22);
-  S.tex.needsUpdate=true;
+  // the game on the TVs: a dozen frames a second while you are near enough to watch, a couple from further off
+  const near=Math.hypot(c.x-1452, c.z+1236)<26;
+  bbTick(B.screens, dt);
+  B.scrT+=dt; if(B.scrT<(near ? 0.08 : 0.5)) return; B.scrT=0;
+  bbDraw(B.screens); B.screens.tex.needsUpdate=true;
+}
+
+/* ---- the ball game on the TVs ---------------------------------------------------------------------------------
+   A director cutting between shots as the game goes: the centre-field camera on each pitch (the windup, the
+   ball to the plate, the swing), the batter close up with his name across the bottom, the wide shot when the
+   ball is put in play (its arc, an outfielder running it down or the runner going), a replay of a hit in slow
+   motion, the crowd, the line score between innings and an ad. The count, the outs, the bases and the score
+   go on from pitch to pitch; the bug in the corner keeps them. */
+const BB={TEAMS:["ERI","ALT"], NAMES:[["R. KOWALSKI",".281"],["D. MARSH",".246"],["J. OKAFOR",".305"],["T. BRENNAN",".219"],["M. SATO",".268"],
+  ["L. ESPINAL",".292"],["C. WEAVER",".233"],["A. ROWE",".254"],["B. DUFRESNE",".198"]]};
+function bbTick(S, dt){
+  if(!S.g) S.g={inn:6, top:false, outs:1, b:0, s:1, bases:[false,true,false], sc:[3,2], line:[[0,1,0,0,2,0],[1,0,0,1,0]], bat:2,
+                shot:"cf", t:0, cyc:0, out:null, arc:null, msg:null, msgT:0};
+  const g=S.g; g.t+=dt; g.msgT=Math.max(0, g.msgT-dt);
+  const next=(shot)=>{ g.shot=shot; g.t=0; };
+  const nextBatter=()=>{ g.b=0; g.s=0; g.bat=(g.bat+1)%9; };
+  const run=(n)=>{ const k=g.top ? 0 : 1; g.sc[k]+=n; const L=g.line[k]; L[L.length-1]+=n; if(n){ g.msg=n>1 ? n+" RUNS SCORE" : "RUN SCORES"; g.msgT=3; } };
+  const sideOut=()=>{ g.outs=0; g.bases=[false,false,false]; nextBatter(); if(g.top){ g.top=false; g.line[1].push(0); } else { g.top=true; g.inn++; g.line[0].push(0); } next("line"); };
+  // each pitch decided as it is thrown (so the batter swings when he does and the banner is right), its outcome
+  // put on the board after
+  if(g.shot==="cf" && !g.res){ const r=Math.random(), arc={hit:Math.random()<0.38, far:0.55+Math.random()*0.45, dir:(Math.random()-0.5)*1.4};
+    arc.hr=arc.hit && arc.far>0.97;
+    g.res=r<0.34 ? {k:"ball", lab:g.b>=3 ? "BALL FOUR" : "BALL"}
+         : r<0.62 ? (Math.random()<0.5 ? {k:"strike", lab:g.s>=2 ? "STRIKE THREE" : "STRIKE"} : {k:"strike", swing:true, lab:g.s>=2 ? "STRIKE THREE" : "SWING AND A MISS"})
+         : r<0.78 ? {k:"foul", swing:true, lab:"FOUL"}
+         : {k:"play", swing:true, arc:arc, lab:arc.hr ? "GONE! HOME RUN" : arc.hit ? (arc.far>0.8 ? "INTO THE GAP" : "BASE HIT") : (arc.far>0.7 ? "FLY BALL" : "GROUND BALL")}; }
+  const pitchOver=()=>{ const R=g.res; g.res=null; g.out=R.lab;
+    if(R.k==="ball"){ g.b++; if(g.b>=4){ const B=g.bases; if(B[0]&&B[1]&&B[2]) run(1); B[2]=B[2]||(B[0]&&B[1]); B[1]=B[1]||B[0]; B[0]=true; nextBatter(); } }
+    else if(R.k==="strike"){ g.s++; if(g.s>=3){ g.outs++; nextBatter(); } }
+    else if(R.k==="foul"){ if(g.s<2) g.s++; }
+    else { g.arc=R.arc; const hit=R.arc.hit, far=R.arc.far;
+      if(hit){ const B=g.bases, n=g.arc.hr ? 4 : far>0.8 ? 2 : 1; let runs=0;
+        for(let k=0;k<n;k++){ if(B[2]) runs++; B[2]=B[1]; B[1]=B[0]; B[0]=k===0; } if(g.arc.hr){ runs+=B.filter(v=>v).length; B[0]=B[1]=B[2]=false; } run(runs); }
+      else g.outs++;
+      nextBatter(); return next("wide"); }
+    if(g.outs>=3) return sideOut();
+    next(Math.random()<0.3 ? "batter" : Math.random()<0.15 ? "crowd" : "cf"); };
+  if(g.shot==="cf" && g.t>3.6) pitchOver();
+  else if(g.shot==="batter" && g.t>2.6) next("cf");
+  else if(g.shot==="crowd" && g.t>2.2) next("cf");
+  else if(g.shot==="wide" && g.t>4.2){ if(g.outs>=3) sideOut(); else next(g.arc && g.arc.hit ? "replay" : "batter"); }
+  else if(g.shot==="replay" && g.t>3.6) next("batter");
+  else if(g.shot==="line" && g.t>3.2) next("ad");
+  else if(g.shot==="ad" && g.t>4.5){ g.ad=((g.ad||0)+1)%3; next("batter"); }
+}
+function bbDraw(S){
+  const g=S.g, x=S.x, W=256, H=144, t=g.t, fe=(c)=>x.fillStyle=c;
+  const txt=(s, px, py, size, col, align)=>{ x.font="bold "+size+"px Arial"; x.textAlign=align||"left"; x.textBaseline="middle"; fe(col); x.fillText(s, px, py); };
+  // a ballplayer, from behind or in front: legs, body, arms, head with its cap; s his size, home team in white
+  const man=(px, py, sz, home, armA, legA, bat)=>{ const sh=home ? "#f2efe6" : "#7a7a84", tr=home ? "#1f3b6e" : "#7a1a1a";
+    fe(home ? "#e8e4da" : "#6a6a74"); x.fillRect(px-sz*0.22, py-sz*0.45, sz*0.16, sz*0.45); x.fillRect(px+sz*0.06+legA*sz*0.1, py-sz*0.45, sz*0.16, sz*0.45);
+    fe(sh); x.fillRect(px-sz*0.26, py-sz, sz*0.52, sz*0.58); fe(tr); x.fillRect(px-sz*0.26, py-sz*0.5, sz*0.52, sz*0.06);
+    x.save(); x.translate(px+sz*0.22, py-sz*0.92); x.rotate(armA); fe(sh); x.fillRect(-sz*0.06, 0, sz*0.12, sz*0.42); x.restore();
+    fe("#c8946a"); x.beginPath(); x.arc(px, py-sz*1.12, sz*0.15, 0, 7); x.fill(); fe(tr); x.fillRect(px-sz*0.16, py-sz*1.28, sz*0.32, sz*0.09);
+    if(bat!==undefined){ x.save(); x.translate(px+sz*0.18, py-sz*0.8); x.rotate(bat); fe("#c89a5a"); x.fillRect(-sz*0.03, -sz*0.75, sz*0.06, sz*0.75); x.restore(); } };
+  const grass=(y0)=>{ const gr=x.createLinearGradient(0, y0, 0, H); gr.addColorStop(0, "#3c8a3e"); gr.addColorStop(1, "#2a6a2e"); fe(gr); x.fillRect(0, y0, W, H-y0);
+    for(let k=0;k<8;k++){ x.fillStyle="rgba(255,255,255,0.05)"; if(k%2) x.fillRect(0, y0+(H-y0)*k/8, W, (H-y0)/8); } };
+  const crowd=(y0, y1, bob)=>{ fe("#2a2a34"); x.fillRect(0, y0, W, y1-y0);
+    for(let r=0;r<6;r++) for(let k=0;k<34;k++){ const h=Math.sin(k*12.9898+r*78.233)*43758.5453, f=h-Math.floor(h), up=bob ? Math.max(0, Math.sin(g.t*6+k+r))*2 : 0;
+      fe(["#c42a1a","#f2efe6","#1f3b6e","#e6c21c","#3a6a3a","#8a6a4a"][(f*6)|0]); x.fillRect(k*7.6+(r%2)*3.8, y0+3+r*(y1-y0-6)/6-up, 4, 4); } };
+  const sh=g.shot;
+  if(sh==="cf"){
+    // the centre-field camera: the pitcher's back big in front, the batter, catcher and ump at the plate beyond
+    fe("#6a8aa8"); x.fillRect(0, 0, W, 30); crowd(10, 34, false); grass(34);
+    fe("#b08458"); x.beginPath(); x.ellipse(W/2, 66, 46, 14, 0, 0, 7); x.fill(); x.beginPath(); x.ellipse(W/2, 124, 30, 16, 0, 0, 7); x.fill();
+    fe("#f2efe6"); x.fillRect(W/2-3, 64, 6, 3);
+    const wind=smoothstep(0.4, 1.6, t)*(1-smoothstep(1.6, 1.85, t)), rel=smoothstep(1.6, 1.85, t), fly=smoothstep(1.75, 2.15, t);
+    const swing=g.res && g.res.swing ? smoothstep(2.0, 2.25, t) : 0;
+    man(W/2-8, 62, 15, g.top, -0.3, 0, -0.6-swing*2.4);                                    // the batter
+    fe("#3a3a40"); x.fillRect(W/2-4, 56, 10, 7); fe("#1f1f24"); x.fillRect(W/2+4, 50, 8, 13);   // the catcher, the ump
+    man(W/2, 140, 46, !g.top, -2.6*wind+rel*1.4, wind*0.6);                                  // the pitcher, his back to us
+    if(t>1.75 && t<2.25){ fe("#ffffff"); x.beginPath(); x.arc(lerp(W/2+6, W/2-2, fly), lerp(92, 60, fly), lerp(3, 1.4, fly), 0, 7); x.fill(); }
+  }else if(sh==="batter" || sh==="replay"){
+    const sl=sh==="replay" ? 0.35 : 1, tt=t*sl;
+    crowd(0, 70, false); fe("rgba(40,40,50,0.5)"); x.fillRect(0, 0, W, 70); grass(70);
+    const wag=Math.sin(tt*3)*0.25, sw=sh==="replay" ? smoothstep(0.4, 1.0, tt) : 0;
+    man(W/2+10, 150, 70, g.top, -0.9-sw*1.0, 0, -0.9+wag-sw*2.6);
+    if(sh==="batter"){ const nm=BB.NAMES[g.bat]; fe("rgba(10,20,40,0.85)"); x.fillRect(20, H-30, W-40, 20); fe("#e6c21c"); x.fillRect(20, H-30, 6, 20);
+      txt("#"+(10+g.bat*3)+"  "+nm[0], 32, H-20, 11, "#f2efe6"); txt("AVG "+nm[1], W-28, H-20, 11, "#e6c21c", "right"); }
+    else { fe("#c42a1a"); x.fillRect(W-74, 10, 64, 18); txt("REPLAY", W-42, 19, 12, "#ffffff", "center"); }
+  }else if(sh==="wide"){
+    // the ball in the air off the bat, the outfielder after it; the fence and the stands behind
+    fe("#6a8aa8"); x.fillRect(0, 0, W, 24); crowd(6, 40, true); fe("#1f4a2a"); x.fillRect(0, 40, W, 10); grass(50);
+    const A=g.arc||{far:0.6, dir:0, hit:false}, u=smoothstep(0, 2.6, t), bx=W/2+A.dir*90*u, by=136-u*(86*A.far)-Math.sin(u*Math.PI)*60;
+    const fx=lerp(W/2+A.dir*40, W/2+A.dir*86*A.far, smoothstep(0.2, 2.6, t)), fy=lerp(70, 140-86*A.far, smoothstep(0.2, 2.6, t));
+    man(fx, Math.max(fy, 58), 14, !g.top, -1.0-Math.sin(t*10)*0.6, Math.sin(t*12));
+    if(!(A.hr && u>0.95)){ fe("#ffffff"); x.beginPath(); x.arc(bx, by, 2.2, 0, 7); x.fill(); }
+  }else if(sh==="crowd"){ crowd(0, H, true); fe("rgba(255,255,255,0.08)"); x.fillRect(0, 0, W, H); }
+  else if(sh==="line"){
+    // the line score between half-innings
+    fe("#0e1a2e"); x.fillRect(0, 0, W, H); txt("END OF "+(g.top ? g.inn-1 : g.inn)+(g.top ? "" : " ½"), W/2, 22, 13, "#e6c21c", "center");
+    for(let r=0;r<2;r++){ const y=56+r*28; txt(BB.TEAMS[r], 18, y, 13, "#f2efe6");
+      for(let k=0;k<9;k++) txt(g.line[r][k]!==undefined ? String(g.line[r][k]) : "", 62+k*16, y, 12, "#c8d0e0", "center");
+      txt(String(g.sc[r]), W-26, y, 14, "#e6c21c", "center"); }
+    for(let k=0;k<9;k++) txt(String(k+1), 62+k*16, 38, 10, "#7a8aa8", "center"); txt("R", W-26, 38, 10, "#7a8aa8", "center");
+  }else if(sh==="ad"){
+    const ad=g.ad||0;
+    if(ad===0){ fe("#c8a03a"); x.fillRect(0, 0, W, H); fe("#7a4a1a"); x.fillRect(W*0.62, 30+Math.sin(t*2)*3, 34, 80); fe("#f4f2ec"); x.fillRect(W*0.62, 30+Math.sin(t*2)*3, 34, 14);
+      txt("LAKESHORE", 20, 52, 18, "#2a1a0a"); txt("PALE ALE", 20, 74, 18, "#2a1a0a"); txt("ON TAP HERE", 20, 104, 11, "#5a3a1a"); }
+    else if(ad===1){ fe("#1f3b6e"); x.fillRect(0, 0, W, H); fe("#c42a1a"); x.fillRect((t*90)%(W+120)-120, 80, 110, 32); fe("#1a1a1a"); for(const dx of [20, 90]){ x.beginPath(); x.arc((t*90)%(W+120)-120+dx, 114, 8, 0, 7); x.fill(); }
+      txt("FRENCH CREEK FORD", W/2, 30, 15, "#f2efe6", "center"); txt("0% FOR 60 MONTHS", W/2, 52, 11, "#e6c21c", "center"); }
+    else { fe("#2a6a3a"); x.fillRect(0, 0, W, H); txt("WEIR FARM STAND", W/2, 40, 15, "#f4f2ec", "center"); txt("SWEET CORN · ROUTE 6N", W/2, 66, 11, "#e6c21c", "center"); txt("HONOR SYSTEM", W/2, 92, 11, "#f4f2ec", "center"); }
+  }
+  // the bug: the score, the inning, the count, the outs and the bases (not over the ads and the line score)
+  if(sh!=="ad" && sh!=="line"){
+    fe("rgba(10,12,22,0.85)"); x.fillRect(6, 6, 104, 32);
+    for(let r=0;r<2;r++){ txt(BB.TEAMS[r], 12, 15+r*14, 10, "#f2efe6"); txt(String(g.sc[r]), 48, 15+r*14, 11, "#ffffff", "center"); }
+    txt((g.top ? "▲" : "▼")+g.inn, 66, 15, 10, "#e6c21c"); txt(g.b+"-"+g.s, 66, 29, 10, "#f2efe6");
+    for(let k=0;k<2;k++){ fe(k<g.outs ? "#e6c21c" : "#4a4e5a"); x.beginPath(); x.arc(88+k*7, 29, 2.5, 0, 7); x.fill(); }
+    for(const [k, dx, dy] of [[0, 7, 0],[1, 0, -6],[2, -7, 0]]){ x.save(); x.translate(94+dx, 16+dy); x.rotate(Math.PI/4); fe(g.bases[k] ? "#e6c21c" : "#4a4e5a"); x.fillRect(-2.5, -2.5, 5, 5); x.restore(); }
+    const lab=sh==="cf" ? (t>2.1 && g.res ? g.res.lab : null) : sh==="wide" ? g.out : null;
+    if(lab){ fe("rgba(196,42,26,0.9)"); x.fillRect(W/2-60, H-26, 120, 18); txt(lab, W/2, H-17, 11, "#ffffff", "center"); }
+    if(g.msgT>0){ fe("rgba(230,194,28,0.92)"); x.fillRect(W-110, 8, 100, 18); txt(g.msg, W-60, 17, 10, "#1a1a1a", "center"); }
+  }
 }

@@ -49,11 +49,13 @@
    floor (boards, carpet, lino, tile or the garage's slab) and furniture;
    the doors open as you come to them.
    ---------------------------------------------------------------------- */
-const LAKE_HOUSES={routes:{}, stairs:[]};
+const LAKE_HOUSES={routes:{}, stairs:[], fridges:[], clocks:[], radios:[], cats:[], pics:[], tick:null};
 (function lakeHouses(){
   const Hs=(typeof LAKESIDE!=="undefined" && LAKESIDE.houses) || []; if(!Hs.length) return;
   const Y=EDIN.y, Z=EDIN.z, HW=EDIN.hw, r=_trng(4343);
   const ME=[];
+  // the house being built (its TV, its beds), and counters that vary the throws, the tables' things
+  let cur=null, _sk=0, _dk=0; const TVGLOW={v:0};
   const ent=(geo,x,y,z,c,rx,ry,rz)=>ME.push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
     new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
   const B=(w,h,d,x,y,z,c,ry,rx,rz)=>ent(boxGeo(w,h,d),x,y,z,c,rx,ry,rz);
@@ -74,6 +76,51 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
     t.wrapS=t.wrapT=T.RepeatWrapping; return t; })()}));
   bucketOf("lk_fixture", ()=>emitMat(0xfff0d8, 0.9, "indoor", null));
   bucketOf("lk_tv", ()=>new T.MeshStandardMaterial({color:0x0c0e10, roughness:0.18, metalness:0.4}));
+  // a set that is on (LAKE_HOUSES.tick sets its colour every frame: dark by day, a flickering blue of an evening)
+  const TVON=new T.MeshBasicMaterial({color:0x0c0e10}); bucketOf("lk_tvon", ()=>TVON);
+  // the pictures, eight to a sheet, each in its own mat; the kitchen clock's face
+  bucketOf("lk_art", ()=>new T.MeshStandardMaterial({roughness:0.7, map:signTex(1024, 384, (c)=>{
+    const tw=256, th=192, q=_trng(808);
+    const sky=(x0,y0,h,a,b)=>{ const g=c.createLinearGradient(0,y0,0,y0+h); g.addColorStop(0,a); g.addColorStop(1,b); c.fillStyle=g; c.fillRect(x0,y0,tw,h); };
+    const poly=(pts,col)=>{ c.fillStyle=col; c.beginPath(); c.moveTo(pts[0][0],pts[0][1]); for(const p of pts.slice(1)) c.lineTo(p[0],p[1]); c.closePath(); c.fill(); };
+    const ridge=(x0,y0,base,amp,seed,col)=>{ const qq=_trng(seed), pts=[[x0,y0+th]]; let y=base;
+      for(let x=0;x<=tw;x+=8){ y=Math.max(base-amp, Math.min(base+amp*0.4, y+(qq()-0.5)*amp*0.5)); pts.push([x0+x, y0+y]); } pts.push([x0+tw, y0+th]); poly(pts, col); };
+    for(let k=0;k<8;k++){ const x0=(k%4)*tw, y0=Math.floor(k/4)*th; c.save(); c.beginPath(); c.rect(x0,y0,tw,th); c.clip();
+      if(k===0){ sky(x0,y0,th*0.62,"#5a3a7a","#f4a860"); c.fillStyle="#ffe2a8"; c.beginPath(); c.arc(x0+tw*0.64, y0+th*0.56, 22, 0, 7); c.fill();         // the lake at sundown
+        ridge(x0,y0,th*0.58,18,11,"#3a2a4a"); c.fillStyle="#3a3a6a"; c.fillRect(x0,y0+th*0.62,tw,th);
+        for(let i=0;i<26;i++){ c.fillStyle="rgba(255,200,140,"+(0.2+q()*0.5).toFixed(2)+")"; c.fillRect(x0+tw*0.64-30+q()*60-q()*20, y0+th*0.64+i*2.6, 10+q()*30, 1.5); } }
+      else if(k===1){ sky(x0,y0,th*0.55,"#6a9ad0","#cfe2ee"); c.fillStyle="#6a9a3a"; c.fillRect(x0,y0+th*0.55,tw,th);                                     // the red barn
+        for(let i=0;i<9;i++){ c.strokeStyle="rgba(60,90,30,0.6)"; c.lineWidth=2; c.beginPath(); c.moveTo(x0+tw*0.5, y0+th*0.55); c.lineTo(x0+i*36-20, y0+th); c.stroke(); }
+        poly([[x0+70,y0+110],[x0+70,y0+70],[x0+105,y0+48],[x0+140,y0+70],[x0+140,y0+110]], "#a8261c"); poly([[x0+64,y0+72],[x0+105,y0+44],[x0+146,y0+72],[x0+140,y0+74],[x0+105,y0+50],[x0+70,y0+74]], "#3a3634");
+        c.strokeStyle="#f4efe6"; c.lineWidth=3; c.strokeRect(x0+93,y0+82,24,28); c.beginPath(); c.moveTo(x0+93,y0+82); c.lineTo(x0+117,y0+110); c.moveTo(x0+117,y0+82); c.lineTo(x0+93,y0+110); c.stroke();
+        c.fillStyle="#d8d4cc"; c.fillRect(x0+150,y0+56,16,54); c.beginPath(); c.arc(x0+158,y0+56,8,Math.PI,0); c.fill(); }
+      else if(k===2){ sky(x0,y0,th*0.6,"#9cc8ec","#e8f0f4"); c.fillStyle="#2a6a9a"; c.fillRect(x0,y0+th*0.6,tw,th);                                      // a sail on the lake
+        for(let i=0;i<40;i++){ c.fillStyle="rgba(255,255,255,0.45)"; c.fillRect(x0+q()*tw, y0+th*0.62+q()*th*0.38, 6+q()*14, 1.5); }
+        poly([[x0+96,y0+128],[x0+168,y0+128],[x0+158,y0+140],[x0+104,y0+140]], "#7a3a22"); poly([[x0+130,y0+36],[x0+130,y0+124],[x0+90,y0+124]], "#f8f6f0"); poly([[x0+134,y0+44],[x0+134,y0+124],[x0+166,y0+124]], "#ece8de");
+        ridge(x0,y0,th*0.58,6,23,"#5a7a6a"); c.fillStyle="#2a6a9a"; c.fillRect(x0,y0+th*0.6,tw,4); }
+      else if(k===3){ c.fillStyle="#2e2a22"; c.fillRect(x0,y0,tw,th); c.fillStyle="#5a4a3a"; c.fillRect(x0,y0+th*0.78,tw,th);                           // flowers in a jug
+        poly([[x0+110,y0+150],[x0+104,y0+110],[x0+116,y0+96],[x0+140,y0+96],[x0+152,y0+110],[x0+146,y0+150]], "#c8d0d8");
+        for(let i=0;i<22;i++){ const a=q()*Math.PI, rr=20+q()*44; c.fillStyle=["#e85a6a","#f4c838","#f4f0f0","#c84a8a","#e88a3a"][i%5];
+          c.beginPath(); c.arc(x0+128+Math.cos(a)*rr*1.1, y0+92-Math.sin(a)*rr*0.9, 7+q()*7, 0, 7); c.fill(); }
+        for(let i=0;i<14;i++){ c.fillStyle="rgba(60,110,50,0.8)"; c.beginPath(); c.ellipse(x0+90+q()*76, y0+60+q()*40, 9, 4, q()*3, 0, 7); c.fill(); } }
+      else if(k===4){ sky(x0,y0,th,"#a8c0d8","#e8e4dc");                                                                                             // the ridges, fading
+        for(const [b,a,col,sd] of [[0.42,30,"#8aa0b8",31],[0.55,26,"#6a849c",37],[0.68,22,"#4e6a7e",41],[0.82,18,"#344e5a",43]]) ridge(x0,y0,th*b,a,sd,col); }
+      else if(k===5){ c.fillStyle="#5a1e1e"; c.fillRect(x0,y0,tw,th);                                                                                  // two fields of colour
+        for(const [y,h,col] of [[18,86,"#d86a2a"],[112,62,"#2a1414"]]){ c.fillStyle=col; c.shadowColor=col; c.shadowBlur=14; c.fillRect(x0+26,y0+y,tw-52,h); } c.shadowBlur=0; }
+      else if(k===6){ const g=c.createRadialGradient(x0+tw/2,y0+th/2,20,x0+tw/2,y0+th/2,160); g.addColorStop(0,"#d8c4a0"); g.addColorStop(1,"#6a5232"); c.fillStyle=g; c.fillRect(x0,y0,tw,th);   // a family, long ago
+        for(const [px,py,s,col] of [[78,76,1.0,"#3a2a1a"],[128,70,1.1,"#2a1e14"],[174,84,0.9,"#4a3624"],[112,108,0.7,"#3a2a1a"]]){ c.fillStyle=col;
+          c.beginPath(); c.arc(x0+px, y0+py, 13*s, 0, 7); c.fill(); c.beginPath(); c.ellipse(x0+px, y0+py+46*s, 24*s, 34*s, 0, 0, 7); c.fill(); } }
+      else { sky(x0,y0,th*0.62,"#7ab0dc","#d8e8f0"); c.fillStyle="#3a7aa8"; c.fillRect(x0,y0+th*0.62,tw,th);                                          // the light at Presque Isle
+        poly([[x0+60,y0+th*0.66],[x0+200,y0+th*0.66],[x0+230,y0+th*0.74],[x0+40,y0+th*0.74]], "#5a8a3a");
+        c.fillStyle="#f2efe6"; c.fillRect(x0+112,y0+44,22,76); c.fillStyle="#2a2a2a"; c.fillRect(x0+108,y0+36,30,10); c.fillStyle="#fff2b0"; c.fillRect(x0+114,y0+26,18,10);
+        poly([[x0+106,y0+26],[x0+123,y0+14],[x0+140,y0+26]], "#a8261c"); c.fillStyle="#e8e0d0"; c.fillRect(x0+134,y0+92,52,30); poly([[x0+130,y0+92],[x0+160,y0+78],[x0+190,y0+92]], "#a8261c"); }
+      // the mat round it, and the paint's sheen
+      c.restore(); c.strokeStyle="#f2ede2"; c.lineWidth=22; c.strokeRect(x0+11, y0+11, tw-22, th-22);
+      c.strokeStyle="rgba(0,0,0,0.25)"; c.lineWidth=1.5; c.strokeRect(x0+22, y0+22, tw-44, th-44); } })}));
+  bucketOf("lk_clock", ()=>new T.MeshStandardMaterial({roughness:0.5, map:signTex(128, 128, (c,W,H)=>{
+    c.fillStyle="#f6f3ec"; c.fillRect(0,0,W,H); c.strokeStyle="#1a1a1a";
+    for(let k=0;k<60;k++){ const a=k/60*Math.PI*2, big=k%5===0, r0=big ? 42 : 49, r1=54; c.lineWidth=big ? 4 : 1.2;
+      c.beginPath(); c.moveTo(64+Math.sin(a)*r0, 64-Math.cos(a)*r0); c.lineTo(64+Math.sin(a)*r1, 64-Math.cos(a)*r1); c.stroke(); } })}));
 
   /* ---- geometry: convex polygons in a wall's plane, with holes cut for its openings --------------------------
      A wall's outline (s along it, y up) less its openings, as convex pieces: cut in bands at every corner's and
@@ -169,12 +216,18 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
     const n=L>1.6 ? 3 : 2, cw=(L-0.44)/n; for(let i=0;i<n;i++) o.f(cw-0.02, 0.14, 0.62, -L/2+0.22+cw*(i+0.5), 0.52, 0.08, col, 0.06);
     for(const sd of [-1,1]) o.f(0.40, 0.36, 0.12, sd*(L/2-0.45), 0.72, -0.18, "#e8dcc0", 0.05);
     for(const sx of [-1,1]) for(const sz of [-1,1]) LEG(o, sx*(L/2-0.08), sz*0.36, 0.05, 0.025, "#3a2418");
-    o.col(L, 0.86, 0, 0, 0.9); for(let i=0;i<n;i++) o.seat(-L/2+0.22+cw*(i+0.5), 0.08, "THE SOFA"); };
+    o.col(L, 0.86, 0, 0, 0.9); for(let i=0;i<n;i++) o.seat(-L/2+0.22+cw*(i+0.5), 0.08, "THE SOFA");
+    if(_sk++%2===0){ const tc=["#c8b088","#8a3a3a","#5a7a8a","#e0d8c8"][_sk%4];        // (a throw over one arm, down its outer side)
+      o.f(0.24, 0.022, 0.52, L/2-0.09, 0.68+0.006+0.011, 0.10, tc, 0.01); o.f(0.022, 0.36, 0.50, L/2+0.01+0.006+0.011, 0.51, 0.10, tc, 0.01); } };
   const chair=(o, col, label)=>{ o.f(0.82, 0.40, 0.84, 0, 0.24, 0, col, 0.06); o.f(0.82, 0.50, 0.20, 0, 0.66, -0.32, col, 0.09);
     for(const sd of [-1,1]) o.f(0.16, 0.24, 0.85, sd*0.34, 0.56, 0.013, col, 0.07); o.f(0.50, 0.12, 0.60, 0, 0.50, 0.08, col, 0.05);
     o.col(0.82, 0.84, 0, 0, 0.9); o.seat(0, 0.08, label||"THE ARMCHAIR"); };
   const table=(o, w, d, h, col, legC)=>{ o.w(w, 0.04, d, 0, h-0.02, 0, col, 0.012);
     for(const sx of [-1,1]) for(const sz of [-1,1]) LEG(o, sx*(w/2-0.07), sz*(d/2-0.07), h-0.04, 0.025, legC||col); o.col(w, d, 0, 0, h); };
+  const coffee=(o, w, d, h, col)=>{ table(o, w, d, h, col); const y=h+0.006, q=_trng(_sk*13+5);
+    o.b(0.24, 0.035, 0.17, -w*0.26, y+0.0175, 0.02, ["#2a4a6a","#7a2a22","#3a5a2a"][(q()*3)|0]); o.b(0.20, 0.03, 0.15, -w*0.26+0.012, y+0.035+0.006+0.015, 0.01, ["#c9a34a","#e8dcc0","#5a3a6a"][(q()*3)|0]);
+    o.g(new T.CylinderGeometry(0.040, 0.036, 0.09, 14), w*0.24, y+0.045, -0.06, ["#e8e4da","#2a4a6a","#c42a1a"][(q()*3)|0]); o.g(new T.TorusGeometry(0.024, 0.007, 6, 12), w*0.24+0.046, y+0.048, -0.06, "#e8e4da");
+    o.b(0.05, 0.02, 0.17, w*0.04, y+0.01, 0.10, "#1a1a1c"); };
   const rug=(o, w, d, col, edge)=>{ o.k("lk_carpet", w, 0.010, d, 0, 0.0155, 0, col); o.k("lk_carpet", w+0.06, 0.008, d+0.06, 0, 0.009, 0, edge||"#5a3a2a"); };
   const lampStand=(o, lx, lz, base, col)=>{ o.g(new T.CylinderGeometry(0.07, 0.09, 0.04, 14), lx, base+0.02, lz, "#2a2a2a");
     o.g(new T.CylinderGeometry(0.012, 0.012, 0.36, 8), lx, base+0.22, lz, "#c9b26a");
@@ -183,8 +236,12 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
     for(const sx of [-1,1]) for(const sz of [-1,1]) LEG(o, sx*0.21, sz*0.21, 0.57, 0.018, col);
     if(lamp) lampStand(o, 0, 0, 0.595, lamp); o.col(0.5, 0.5, 0, 0, 0.6); };
   const tvStand=(o, col)=>{ o.w(1.40, 0.50, 0.42, 0, 0.27, 0, col, 0.02); for(const sd of [-1,1]) o.b(0.62, 0.40, 0.012, sd*0.34, 0.27, 0.212, "#5a4030");
-    o.b(1.10, 0.64, 0.05, 0, 0.88, -0.04, "#141618"); const [px,pz]=o.at(0, -0.012); push("lk_tv", planeGeo(1.04, 0.58, 0), px, o.y+0.88, pz, o.ry, "#ffffff");
-    o.b(0.30, 0.03, 0.18, 0, 0.535, -0.04, "#141618"); o.col(1.4, 0.42, 0, 0, 1.2); };
+    o.b(1.10, 0.64, 0.05, 0, 0.88, -0.04, "#141618"); const [px,pz]=o.at(0, -0.009); push(cur.tvOn ? "lk_tvon" : "lk_tv", planeGeo(1.04, 0.58, 0), px, o.y+0.88, pz, o.ry, "#ffffff");
+    o.b(0.30, 0.03, 0.18, 0, 0.535, -0.04, "#141618"); o.col(1.4, 0.42, 0, 0, 1.2);
+    // (one that is on lights the room it is in, blue and flickering, when you are in there with it)
+    if(cur.tvOn){ const [lx,lz]=o.at(0, 0.9), R=roomAt(cur, lx, lz, o.y);
+      if(R) LAMPS.push({x:lx, y:o.y+1.0, z:lz, color:0x9ab4ff, intensity:0.55, dist:5.5, decay:1.6, indoor:true, mod:TVGLOW,
+                        vol:[R.W.x0-0.15, R.W.x1+0.15, R.W.z0-0.15, R.W.z1+0.15, R.fy-0.5, R.cl+0.2]}); } };
   const shelves=(o, w, h, col, books)=>{ const t=0.022, D=0.32, n=Math.max(2, Math.round(h/0.36)), gap=(h-0.08)/n;
     for(const sd of [-1,1]) o.w(t, h, D, sd*(w/2-t/2), h/2, 0, col, 0.006);
     o.w(w+0.01, t, D+0.01, 0, h-t/2+0.002, 0.004, col, 0.006); o.b(w-2*t, 0.06, D-0.02, 0, 0.03, 0.005, col);
@@ -196,31 +253,46 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
   const bed=(o, w, L, quilt, frame)=>{ o.w(w+0.08, 0.30, L+0.06, 0, 0.17, 0, frame, 0.02); o.w(w+0.10, 0.95, 0.06, 0, 0.48, -L/2-0.02, frame, 0.02);
     o.f(w, 0.22, L-0.04, 0, 0.42, 0.01, "#f2f0ea", 0.06); o.f(w+0.04, 0.06, L*0.70, 0, 0.55, L*0.15, quilt, 0.03);
     for(const sd of (w>1.2 ? [-1,1] : [0])) o.f(w>1.2 ? w/2-0.10 : w-0.16, 0.13, 0.36, sd*(w/4), 0.60, -L/2+0.26, "#f4f2ec", 0.05);
-    o.col(w+0.1, L+0.08, 0, 0, 0.7); o.seat(0, 0.10, "THE BED", 0.12); };
+    o.col(w+0.1, L+0.08, 0, 0, 0.7); o.seat(0, 0.10, "THE BED", 0.12); cur.beds.push({o:o, w:w, L:L}); };
   const nightstand=(o, col, lamp)=>{ o.w(0.46, 0.56, 0.40, 0, 0.28, 0, col, 0.02); o.b(0.40, 0.16, 0.012, 0, 0.40, 0.202, "#5a4030");
     o.b(0.08, 0.02, 0.02, 0, 0.40, 0.215, "#c9b26a"); if(lamp) lampStand(o, 0, -0.02, 0.56, lamp); o.col(0.46, 0.40, 0, 0, 0.6); };
   const dresser=(o, w, col)=>{ o.w(w, 0.84, 0.48, 0, 0.42, 0, col, 0.02);
     for(let i=0;i<3;i++) for(const sd of (w>1.0 ? [-1,1] : [0])){ o.b(w>1.0 ? w/2-0.06 : w-0.08, 0.22, 0.012, sd*w/4, 0.14+i*0.25, 0.242, "#5a4030"); o.b(0.10, 0.02, 0.025, sd*w/4, 0.16+i*0.25, 0.255, "#c9b26a"); }
     o.col(w, 0.48, 0, 0, 0.9); };
+  // what hangs on a wall with no collider to show it: the cupboards, the hood (no picture goes behind them)
+  const WALLX=[], wallx=(o, w, lx, lz, d, y0, y1)=>{ const [ax2,az2]=o.at(lx-w/2, lz-d/2), [bx2,bz2]=o.at(lx+w/2, lz+d/2);
+    WALLX.push({x0:Math.min(ax2,bx2), x1:Math.max(ax2,bx2), z0:Math.min(az2,bz2), z1:Math.max(az2,bz2), y0:o.y+y0, y1:o.y+y1}); };
+  const upper=(o, w, lx)=>{ o.w(w, 0.72, 0.34, lx, 1.86, -0.13, "#e8e2d0", 0.01); wallx(o, w, lx, -0.13, 0.34, 1.50, 2.22); };
   // the kitchen: base cabinets with the counter on them, the uppers, the sink, the range, the fridge
   const counterRun=(o, len, opts)=>{ const c=opts.cab||"#e8e2d0", top=opts.top||"#5a5450";
     o.w(len, 0.86, 0.60, 0, 0.43, 0, c, 0.01); o.b(len+0.02, 0.04, 0.63, 0, 0.88, 0.01, top);
     for(let x=-len/2+0.30; x<len/2-0.1; x+=0.60){ o.b(0.56, 0.62, 0.012, x, 0.42, 0.302, opts.door||c); o.b(0.10, 0.015, 0.025, x+0.18, 0.66, 0.315, "#8a8d90"); }
-    if(opts.uppers!==false) o.w(len, 0.72, 0.34, 0, 1.86, -0.13, c, 0.01);
+    if(opts.uppers!==false){ o.w(len, 0.72, 0.34, 0, 1.86, -0.13, c, 0.01); wallx(o, len, 0, -0.13, 0.34, 1.50, 2.22); }
     if(opts.sink!==undefined){ const sx=opts.sink; o.b(0.62, 0.006, 0.42, sx, 0.902, 0.04, "#c8ccd0"); o.b(0.56, 0.004, 0.36, sx, 0.906, 0.04, "#7a7e82");
       o.g(new T.CylinderGeometry(0.015, 0.015, 0.26, 8), sx, 1.03, -0.20, "#c8ccd0"); o.g(new T.CylinderGeometry(0.012, 0.012, 0.20, 8), sx, 1.15, -0.10, "#c8ccd0", Math.PI/2); }
     if(opts.range!==undefined){ const rx=opts.range; o.p(0.76, 0.92, 0.60, rx, 0.464, 0.02, "#ece9e2", 0.01); o.b(0.70, 0.012, 0.56, rx, 0.926, 0.01, "#1a1a1c");
       for(const [dx,dz] of [[-0.18,-0.12],[0.18,-0.12],[-0.18,0.14],[0.18,0.14]]) o.g(new T.CylinderGeometry(0.09, 0.09, 0.012, 16), rx+dx, 0.938, dz, "#2a2a2c");
-      o.b(0.60, 0.40, 0.012, rx, 0.42, 0.322, "#1e1e20"); o.b(0.72, 0.16, 0.10, rx, 1.02, -0.27, "#ece9e2"); o.b(0.76, 0.30, 0.32, rx, 1.58, -0.10, "#ece9e2"); }
+      o.b(0.60, 0.40, 0.012, rx, 0.42, 0.322, "#1e1e20"); o.b(0.72, 0.16, 0.10, rx, 1.02, -0.27, "#ece9e2"); o.b(0.76, 0.30, 0.32, rx, 1.58, -0.10, "#ece9e2");
+      wallx(o, 0.76, rx, -0.10, 0.32, 0.94, 1.73); }
+    if(opts.radio!==undefined) radio(o, opts.radio);
     o.col(len, 0.63, 0, 0.01, 0.95); };
   const fridge=(o, col)=>{ o.p(0.80, 1.76, 0.72, 0, 0.88, 0, col||"#ece9e2", 0.03); o.b(0.76, 0.012, 0.012, 0, 1.18, 0.365, "#c8c4ba");
-    for(const y of [0.70, 1.45]) o.b(0.03, 0.30, 0.04, 0.32, y, 0.38, "#b8bab6"); o.col(0.8, 0.72, 0, 0, 1.8); };
+    for(const y of [0.70, 1.45]) o.b(0.03, 0.30, 0.04, 0.32, y, 0.38, "#b8bab6"); o.col(0.8, 0.72, 0, 0, 1.8);
+    LAKE_HOUSES.fridges.push({x:o.x, z:o.z, y:o.y, house:"No. "+cur.no+" · "}); };
   const diningSet=(o, w, d, col, n)=>{ table(o, w, d, 0.76, col);
     const ch=(lx, lz, ry)=>{ const xf=XF(0,0,ry), q=(ww,hh,dd,ax,ay,az,c)=>o.w(ww,hh,dd, lx+xf.x(ax,az), ay, lz+xf.z(ax,az), c, 0.012);
       q(0.44, 0.04, 0.42, 0, 0.45, 0, col); q(0.42, 0.50, 0.04, 0, 0.72, -0.20, col);
       for(const sx of [-1,1]) for(const sz of [-1,1]) q(0.035, 0.45, 0.035, sx*0.19, 0.225, sz*0.18, col); };
     const side=n>4 ? [-w/4, w/4] : [0];
     for(const x of side){ ch(x, d/2+0.30, Math.PI); ch(x, -d/2-0.30, 0); }
+    o.b(w*0.62, 0.004, 0.30, 0, 0.768, 0, ["#e8dcc0","#8a3a3a","#4a6a8a","#c8b088"][_dk%4]);
+    if(_dk++%2===0){ o.g(new T.CylinderGeometry(0.14, 0.08, 0.07, 18), 0, 0.811, 0, "#e8e4da");             // the bowl, the fruit heaped in it
+      for(const [fx,fz,fc] of [[-0.05,-0.03,"#b8221a"],[0.05,-0.02,"#e88a1a"],[0.0,0.05,"#7aa832"],[-0.04,0.05,"#b8221a"]]) o.g(new T.SphereGeometry(0.045, 12, 8), fx, 0.897, fz, fc);
+      o.g(new T.SphereGeometry(0.045, 12, 8).scale(2.2, 0.55, 0.7), 0.01, 0.955, 0.0, "#e8c832", 0, 0.4); }
+    else { o.g(new T.CylinderGeometry(0.05, 0.07, 0.22, 14), 0, 0.886, 0, "#4a6a8a");                         // the vase, its flowers
+      for(let k=0;k<6;k++){ const a=k*1.05, rr=0.03+(k%2)*0.03, tx=Math.cos(a)*rr, tz=Math.sin(a)*rr, top=1.12+(k%3)*0.05;
+        o.g(new T.CylinderGeometry(0.004, 0.004, top-0.98, 5), tx*0.6, (top+0.98)/2, tz*0.6, "#3e6a2e");
+        o.g(new T.SphereGeometry(0.034, 10, 6), tx, top, tz, ["#e8e0f0","#e85a7a","#f0c830"][k%3]); } }
     if(n!==4 || w>1.4){ ch(w/2+0.30, 0, -Math.PI/2); ch(-w/2-0.30, 0, Math.PI/2); } };
   // the bathroom: a tub along the wall, the toilet, the vanity with its basin and the mirror over it
   const tub=(o, L)=>{ o.p(L, 0.52, 0.76, 0, 0.26, 0, "#f4f2ee", 0.04); o.b(L-0.16, 0.02, 0.56, 0, 0.515, 0.02, "#d8dde0");
@@ -339,7 +411,7 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
     const ext=[{ax:"x", c:h.zf-h.f*T0, ops:mine(h.ops.F)}, {ax:"x", c:h.zb+h.f*T0, ops:mine(h.ops.K)},
                {ax:"z", c:h.x0+T0, ops:mine(h.ops.L)}, {ax:"z", c:h.x1-T0, ops:mine(h.ops.R)}];
     for(const R of S.rooms){ const W=pl.rectW(R.p[0], R.p[1], R.d[0], R.d[1]), fy=R.y===undefined ? y : R.y, rcl=R.cl||cl;
-      R.W=W; R.fy=fy;
+      R.W=W; R.fy=fy; R.cl=rcl; h.rooms.push(R);
       if(!S.custom){
         for(const [ax, s, dir] of [["x", W.z0, 1],["x", W.z1, -1],["z", W.x0, 1],["z", W.x1, -1]]){
           const lo=ax==="x" ? W.x0 : W.z0, hi=ax==="x" ? W.x1 : W.z1;
@@ -347,7 +419,9 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
           if(!e && !p){ console.warn("14o: no wall for "+house+R.n+" at "+ax+"="+s.toFixed(2)); continue; }
           const fc=e ? e.c : p.c+dir*PT/2, ops=(e ? e.ops : p.ops).filter(o=>o.b>lo && o.a<hi);
           for(const o of ops) if(!o.dr && (o.a<lo+0.02 || o.b>hi-0.02)) console.warn("14o: "+house+R.n+": an opening runs into a corner");
-          liner(ax, fc, dir, lo, hi, fy, rcl+0.01, ops, R.wall||"#ece6da"); }
+          liner(ax, fc, dir, lo, hi, fy, rcl+0.01, ops, R.wall||"#ece6da");
+          // (and the wall as somewhere to hang a picture: its liner's face, its openings, the room's floor and ceiling)
+          h.walls.push({ax:ax, fc:fc+dir*0.006, dir:dir, lo:lo, hi:hi, ops:ops, fy:fy, cl:rcl, room:R.n, well:!!(R.hole||R.well)}); }
         if(!R.noFloor){ const [bk, col, uv]=FLOOR[R.fl||"wood"];
           for(const q of cutWell(W, R.well)) floorAt(bk, q.x0, q.x1, q.z0, q.z1, fy+0.006, col||R.carpet||"#c8bca8", uv); }
         for(const q of cutWell(W, R.well)) addFlat(q.x0-0.01, q.x1+0.01, q.z0-0.01, q.z1+0.01, fy);         // (each a centimetre into the next)
@@ -549,15 +623,15 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
     const A=(p,d,dp,dd,y)=>pl.at(p, d, dp, dd, y===undefined ? FF : y);
     fireplace(A(-5.2+0.006, 6.0, 1, 0));
     rug(A(-3.1, 6.0, 1, 0), 2.0, 2.4, "#8a4a3a", "#5a2a22");
-    sofa(A(-1.56, 6.0, -1, 0), 2.0, P.sofa); table(A(-2.75, 6.0, -1, 0), 1.10, 0.55, 0.44, P.wood);
+    sofa(A(-1.56, 6.0, -1, 0), 2.0, P.sofa); coffee(A(-2.75, 6.0, -1, 0), 1.10, 0.55, 0.44, P.wood);
     chair(A(-3.4, 4.45, 0, 1), P.sofa); chair(A(-3.4, 7.55, 0, -1), P.sofa);
     endTable(A(-1.55, 4.65, -1, 0), P.wood, "#f4e6c8");
     tvStand(A(-4.96, 2.55, 1, 0), P.wood); sofa(A(-2.35, 2.55, -1, 0), 1.6, P.sofa);
     shelves(A(-5.2+0.17, 0.95, 1, 0), 0.9, 1.9, P.wood); plant(A(-4.6, 0.55, 0, 1), 1.1);
     // the kitchen: the table by the front windows, the counters along the back under its window, the fridge
     diningSet(A(3.3, 2.1, 0, 1), 1.5, 0.9, P.wood, 6);
-    { const o=A(2.75, 8.2-0.31, 0, -1); counterRun(o, 3.1, {sink:o.u(-0.15), range:o.u(1.15), uppers:false, cab:"#e8e2d0"});
-      o.w(0.9, 0.72, 0.34, o.u(1.15), 1.86, -0.13, "#e8e2d0", 0.01); }
+    { const o=A(2.75, 8.2-0.31, 0, -1); counterRun(o, 3.1, {sink:o.u(-0.15), range:o.u(1.15), radio:o.u(-1.15), uppers:false, cab:"#e8e2d0"});
+      upper(o, 0.9, o.u(1.15)); }
     fridge(A(4.75, 8.2-0.37, 0, -1)); dresser(A(5.2-0.25, 6.2, -1, 0), 1.2, P.wood);
     rug(A(2.75, 6.6, 0, 1), 1.6, 0.8, "#4a6a8a", "#2a3a5a");
     // the hall: a runner up the passage; the half bath at its end: the toilet under the window, the basin beside it
@@ -604,11 +678,11 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
              {ax:"p", at:2.2, from:0.2, to:8.8, doors:[{c:6.6, leaf:true, into:-1, ajar:0, label:"THE GARAGE"}]}]});
     const A=(p,d,dp,dd,y)=>pl.at(p, d, dp, dd, y===undefined ? FF : y), m=h.f*pl.sx;
     // the living room: the set on the bedroom wall, the sofa facing it, the armchair at the back
-    tvStand(A(-5.4+0.098+0.24, 2.3, 1, 0), P.wood); sofa(A(-2.75, 2.3, -1, 0), 2.0, P.sofa); table(A(-3.9, 2.3, -1, 0), 1.0, 0.5, 0.44, P.wood);
+    tvStand(A(-5.4+0.098+0.24, 2.3, 1, 0), P.wood); sofa(A(-2.75, 2.3, -1, 0), 2.0, P.sofa); coffee(A(-3.9, 2.3, -1, 0), 1.0, 0.5, 0.44, P.wood);
     rug(A(-3.9, 2.3, 1, 0), 2.2, 1.8, "#6a5a4a", "#3a2a1e"); endTable(A(-2.9, 3.75, -1, 0), P.wood, "#f4e6c8"); chair(A(-4.1, 3.85, 0, -1), P.sofa);
     plant(A(-4.9, 0.6, 0, 1), 1.0);
     // the kitchen: counters under the front window and down the garage wall, the range, the fridge
-    { const o=A(1.1, 0.2+0.31, 0, 1); counterRun(o, 2.0, {sink:o.u(0.3), uppers:false}); o.w(0.8, 0.72, 0.34, o.u(-0.6), 1.86, -0.13, "#e8e2d0", 0.01); }
+    { const o=A(1.1, 0.2+0.31, 0, 1); counterRun(o, 2.0, {sink:o.u(0.3), radio:o.u(-0.62), uppers:false}); upper(o, 0.8, o.u(-0.6)); }
     { const o=A(2.2-0.098-0.31, 2.15, -1, 0); counterRun(o, 2.5, {range:0}); }
     fridge(A(2.2-0.098-0.37, 3.9, -1, 0));
     // the dining room: the table, the hutch on the back wall
@@ -685,7 +759,7 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
       parts:[{ax:"d", at:5.2, doors:[{c:-0.54, leaf:true, into:-1, ajar:0.5, label:"THE ATTIC BEDROOM"}]}]}, "p");
     const A=(p,d,dp,dd,y)=>pl.at(p, d, dp, dd, y===undefined ? FF : y);
     // the living room: the set on the hall wall, the sofa with its back to the front windows, a reading chair by the other
-    tvStand(A(-2.6, 4.4-0.098-0.24, 0, -1), P.wood); sofa(A(-2.6, 1.35, 0, 1), 2.1, P.sofa); table(A(-2.6, 2.55, 0, 1), 1.1, 0.55, 0.44, P.wood);
+    tvStand(A(-2.6, 4.4-0.098-0.24, 0, -1), P.wood); sofa(A(-2.6, 1.35, 0, 1), 2.1, P.sofa); coffee(A(-2.6, 2.55, 0, 1), 1.1, 0.55, 0.44, P.wood);
     rug(A(-2.6, 2.6, 0, 1), 2.6, 2.0, "#7a5a3a", "#4a3020"); chair(A(-1.2, 2.6, -1, 0), P.sofa);
     chair(A(3.5, 1.2, -1, 0), P.sofa); endTable(A(3.6, 2.1, -1, 0), P.wood, "#f4e6c8"); shelves(A(4.3-0.17, 3.5, -1, 0), 1.0, 1.8, P.wood);
     plant(A(0.95, 0.6, 0, 1), 1.0);
@@ -696,7 +770,7 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
     bed(A(-3.4, 10.8-1.062, 0, -1), 1.0, 2.0, "#a8c8a0", P.wood); nightstand(A(-2.55, 10.8-0.23, 0, -1), P.wood, null); dresser(A(-3.2, 7.4+0.098+0.25, 0, 1), 0.9, P.wood);
     // the dining room, the kitchen
     diningSet(A(3.4, 5.7, 0, 1), 1.2, 0.8, P.wood, 4); dresser(A(4.3-0.25, 6.5, -1, 0), 0.8, P.wood);
-    { const o=A(2.3, 10.8-0.31, 0, -1); counterRun(o, 2.3, {sink:o.u(-0.3), uppers:false}); o.w(0.85, 0.72, 0.34, o.u(0.725), 1.86, -0.13, "#e8e2d0", 0.01); }
+    { const o=A(2.3, 10.8-0.31, 0, -1); counterRun(o, 2.3, {sink:o.u(-0.3), radio:o.u(0.72), uppers:false}); upper(o, 0.85, o.u(0.725)); }
     fridge(A(3.88, 10.8-0.37, 0, -1)); counterRun(A(4.3-0.31, 7.8, -1, 0), 1.0, {range:0, uppers:false});
     // the bathroom
     toilet(A(-0.45, 10.8-0.36, 0, -1)); vanity(A(0.5, 10.8-0.27, 0, -1), 0.7, "#ece6d8");
@@ -744,12 +818,12 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
     stair(h, pl, st, FF, FF2, CL1, false);
     const A=(p,d,dp,dd,y)=>pl.at(p, d, dp, dd, y===undefined ? FF : y);
     // the living room: the sofa between the side windows, the set on the hall wall, a piano at the front
-    sofa(A(-4.5+0.03+0.43, 4.1, 1, 0), 2.0, P.sofa); tvStand(A(-1.0-0.098-0.24, 4.1, -1, 0), P.wood); table(A(-2.6, 4.1, 1, 0), 1.0, 0.5, 0.44, P.wood);
+    sofa(A(-4.5+0.03+0.43, 4.1, 1, 0), 2.0, P.sofa); tvStand(A(-1.0-0.098-0.24, 4.1, -1, 0), P.wood); coffee(A(-2.6, 4.1, 1, 0), 1.0, 0.5, 0.44, P.wood);
     rug(A(-2.8, 4.1, 1, 0), 2.4, 1.9, "#5a4a6a", "#3a2a4a"); chair(A(-2.6, 2.3, 0, 1), P.sofa); chair(A(-2.6, 6.2, 0, -1), P.sofa);
     piano(A(-4.5+0.03+0.29, 1.1, 1, 0), "#2a1a12"); plant(A(-1.5, 0.6, 0, 1), 1.0); shelves(A(-3.6, 8.0-0.17, 0, -1), 1.1, 1.9, P.wood);
     // the dining room; the kitchen with its side door out to the carport
     diningSet(A(2.75, 1.6, 0, 1), 1.1, 0.8, P.wood, 4); dresser(A(4.5-0.25, 1.0, -1, 0), 1.0, P.wood);
-    { const o=A(2.35, 8.0-0.31, 0, -1); counterRun(o, 2.4, {sink:o.u(0.05), uppers:false}); o.w(0.6, 0.72, 0.34, o.u(0.9), 1.86, -0.13, "#e8e2d0", 0.01); o.w(0.7, 0.72, 0.34, o.u(-0.85), 1.86, -0.13, "#e8e2d0", 0.01); }
+    { const o=A(2.35, 8.0-0.31, 0, -1); counterRun(o, 2.4, {sink:o.u(0.05), radio:o.u(-0.85), uppers:false}); upper(o, 0.6, o.u(0.9)); upper(o, 0.7, o.u(-0.85)); }
     fridge(A(4.05, 8.0-0.37, 0, -1)); counterRun(A(4.5-0.31, 6.75, -1, 0), 0.9, {range:0, uppers:false});
     rug(A(4.0, 4.36, -1, 0), 0.9, 0.6, "#8a6a3a", "#5a4020");
     // upstairs: the bedrooms, the kids' room, the bathroom
@@ -773,7 +847,110 @@ const LAKE_HOUSES={routes:{}, stairs:[]};
     route(h, pl, "upstairs, the bathroom", UP.concat([[0.45,6.0],[1.0,6.0],[1.6,6.0]]));
     LAKE_HOUSES.stairs.push({name:"No. "+h.no+" stair", up:[[0.45,1.0],[0.45,1.6],[0.45,3.0],[0.45,5.3]].map(([p,d])=>[pl.X(p), pl.Zd(d)]), lo:FF, hi:FF2}); }
 
-  for(const h of Hs){ if(h.kind==="cape") cape(h); else if(h.kind==="ranch") ranch(h); else if(h.kind==="bungalow") bungalow(h); else if(h.kind==="twoStorey") twoStorey(h); }
+  /* ---- lived in: a radio on the counter, pictures on the walls, a clock in the kitchen, a cat asleep on a bed ----
+     Every room a picture goes in keeps a note of its walls as storey() lines them (h.walls). Each wall is cut
+     into the stretches clear of its openings (and a hand's width either side of their trim), of the furniture
+     tall enough to stand in front of a picture (a bookcase, the fridge: its collider, 14o's own, from this
+     house), and of the cupboards and hoods on the wall (WALLX); a lower piece in front (the set, the piano,
+     the fireplace) lifts the picture to clear it. The longest stretches get the pictures, a wall apiece. */
+  function roomAt(h, x, z, y){ for(const R of h.rooms) if(x>R.W.x0 && x<R.W.x1 && z>R.W.z0 && z<R.W.z1 && Math.abs(y-R.fy)<0.6) return R; return null; }
+  function radio(o, lx){
+    const lz=-0.14, y=0.906, col=["#8a2a22","#e8dcc0","#2a4a3a","#c8a060"][cur.no%4];
+    o.p(0.30, 0.16, 0.12, lx, y+0.08, lz, col, 0.03);
+    o.b(0.13, 0.11, 0.008, lx-0.06, y+0.08, lz+0.06+0.006+0.004, "#3a3430");
+    o.g(new T.CylinderGeometry(0.025, 0.025, 0.012, 14), lx+0.08, y+0.08, lz+0.06+0.006+0.006, "#e8dcc0", Math.PI/2);
+    o.b(0.20, 0.015, 0.02, lx, y+0.16+0.006+0.0075, lz, "#2a2a2a");
+    o.g(new T.CylinderGeometry(0.003, 0.003, 0.36, 5), lx+0.12, y+0.16+0.17, lz-0.03, "#c8ccd0", 0, 0.35);
+    const [px,pz]=o.at(lx, lz), house="No. "+cur.no+" · ", R={x:px, z:pz, y:o.y+y+0.1, station:[2,0,-1,1][cur.no%4], house:house, zone:house+"THE KITCHEN"};
+    LAKE_HOUSES.radios.push(R);
+    addUse(px, pz, o.y+0.95, "THE RADIO: CHANGE THE STATION", ()=>{ R.station=R.station>=2 ? -1 : R.station+1;
+      if(typeof toast==="function") toast(["THE RADIO OFF","COUNTRY, ON 104.9","TALK RADIO","THE PIRATES GAME"][R.station+1], "#e8dcc0"); }, 1.3); }
+  function clearRuns(h, w, c0){
+    const Y0=w.fy+1.1, Y1=w.cl-0.1;
+    let iv=[[w.lo+0.35, w.hi-0.35, w.fy+1.30]];
+    const cut=(a,b)=>{ const o=[]; for(const [p,q,y] of iv){ if(b<=p || a>=q){ o.push([p,q,y]); continue; } if(a>p+0.01) o.push([p,a,y]); if(b<q-0.01) o.push([b,q,y]); } iv=o; };
+    const lift=(a,b,yb)=>{ const o=[]; for(const [p,q,y] of iv){ if(b<=p || a>=q){ o.push([p,q,y]); continue; }
+      if(a>p+0.01) o.push([p,a,y]); o.push([Math.max(p,a), Math.min(q,b), Math.max(y,yb)]); if(b<q-0.01) o.push([b,q,y]); } iv=o; };
+    for(const o of w.ops) if(o.head>Y0 && o.sill<Y1) cut(o.a-0.25, o.b+0.25);
+    const anchors=[];
+    const test=(b, onWall)=>{ const u=((w.ax==="x" ? b.z0 : b.x0)-w.fc)*w.dir, v=((w.ax==="x" ? b.z1 : b.x1)-w.fc)*w.dir;
+      if(Math.max(u,v)<0.004 || Math.min(u,v)>0.75 || b.y1<w.fy+0.3 || b.y0>w.cl) return;
+      const a0=w.ax==="x" ? b.x0 : b.z0, a1=w.ax==="x" ? b.x1 : b.z1; if(a1<w.lo || a0>w.hi) return;
+      if(onWall || b.y1>w.fy+1.42){ cut(a0-0.10, a1+0.10); return; } if(b.y1>w.fy+0.96) lift(a0-0.10, a1+0.10, b.y1+0.42);
+      if(b.y1>w.fy+0.45 && a1-a0>0.9 && Math.min(u,v)<0.2) anchors.push((a0+a1)/2); };   // (a sofa, a bed, a dresser, the set, the fireplace: a picture goes over it)
+    for(let i=c0;i<COL.length;i++) test(COL[i], false);
+    for(const b of WALLX) if(b.y1>Y0 && b.y0<Y1) test(b, true);
+    return iv.map(([a,b,y])=>({w:w, a:a, b:b, len:b-a, bottom:y, over:anchors.filter(c=>c>a+0.3 && c<b-0.3)})); }
+  // a picture: a frame of four sides 1 cm off the wall, the print set in it a centimetre and a bit behind their front
+  function hang(w, s, yc, W, H, tile){
+    const ry=w.ax==="x" ? (w.dir>0 ? 0 : Math.PI) : (w.dir>0 ? Math.PI/2 : -Math.PI/2), D=0.035, fw=0.040, off=0.010+D/2;
+    const cx=w.ax==="x" ? s : w.fc+w.dir*off, cz=w.ax==="x" ? w.fc+w.dir*off : s, o=F(cx, cz, ry, yc), col=["#3a2a1a","#c9a34a","#1a1a1a","#8a6a44"][tile%4];
+    o.b(W, fw, D, 0, H/2-fw/2, 0, col); o.b(W, fw, D, 0, -H/2+fw/2, 0, col);
+    for(const sd of [-1,1]) o.b(fw, H-2*fw+0.004, D-0.004, sd*(W/2-fw/2), 0, 0, col);
+    const g=new T.PlaneGeometry(W-2*fw+0.012, H-2*fw+0.012), U=g.attributes.uv, u0=(tile%4)/4, v0=1-(Math.floor(tile/4)+1)/2;
+    for(let i=0;i<U.count;i++) U.setXY(i, u0+U.getX(i)*0.25, v0+U.getY(i)*0.5);
+    const [px,pz]=o.at(0, -D/2+0.012); push("lk_art", g, px, yc, pz, ry, "#ffffff");
+    LAKE_HOUSES.pics.push({x:px, y:yc, z:pz, nx:w.ax==="z" ? w.dir : 0, nz:w.ax==="x" ? w.dir : 0, room:"No. "+cur.no+" · "+w.room}); }
+  // the kitchen clock: a rim, a back, the face 6 mm proud of the back; its hands are LAKE_HOUSES.tick's
+  function clock(w, s, yc){
+    const ry=w.ax==="x" ? (w.dir>0 ? 0 : Math.PI) : (w.dir>0 ? Math.PI/2 : -Math.PI/2), at=off=>w.ax==="x" ? [s, w.fc+w.dir*off] : [w.fc+w.dir*off, s];
+    let [x,z]=at(0.020); ent(new T.CylinderGeometry(0.15, 0.15, 0.02, 32), x, yc, z, "#e8e4da", Math.PI/2, ry, 0);
+    [x,z]=at(0.030); ent(new T.TorusGeometry(0.155, 0.02, 8, 32), x, yc, z, ["#a8261c","#1a1a1a","#2a4a6a","#c9a34a"][cur.no%4], 0, ry, 0);
+    [x,z]=at(0.036); push("lk_clock", new T.CircleGeometry(0.15, 32), x, yc, z, ry, "#ffffff");
+    LAKE_HOUSES.clocks.push({x:x, y:yc, z:z, ry:ry, nx:w.ax==="z" ? w.dir : 0, nz:w.ax==="x" ? w.dir : 0, house:"No. "+cur.no+" · "}); }
+  function dress(h, c0){
+    const by={}, q=_trng(h.no*31+7);
+    for(const w of h.walls){ if(w.well || /BATH|GARAGE|HALL|ATTIC/.test(w.room)) continue; const k=w.room+"|"+w.fy.toFixed(2); (by[k]=by[k]||[]).push(w); }
+    let tile=(h.no*3)%8;
+    for(const k in by){ const ws=by[k], room=ws[0].room, kit=/KITCHEN/.test(room), n=/LIVING/.test(room) ? 2 : 1;
+      const runs=[]; for(const w of ws) for(const s of clearRuns(h, w, c0)) if(s.len>0.5) runs.push(s);
+      runs.sort((a,b)=>(b.len+(b.over.length ? 2 : 0))-(a.len+(a.over.length ? 2 : 0))); const used=new Set();
+      if(kit){ const s=runs.find(s=>s.len>0.6 && s.bottom<s.w.fy+1.35 && s.w.cl-s.w.fy>2.3); if(s){ clock(s.w, (s.a+s.b)/2, s.w.fy+1.95); used.add(s.w); } }
+      let placed=0;
+      for(const s of runs){ if(placed>=n) break; if(used.has(s.w) || s.len<(kit ? 0.9 : 0.8)) continue;
+        const top=s.w.cl-0.20, wMax=kit ? 0.6 : (/LIVING/.test(room) ? 1.10 : 0.90);
+        let W=Math.min(wMax, s.len-0.3), H=W*0.75; if(s.bottom+H>top){ H=top-s.bottom; W=H/0.75; } if(H<0.30) continue;
+        const yc=Math.min(top-H/2, Math.max(s.w.fy+1.62, s.bottom+H/2));
+        // over the piece in front of it if it has room there, else in the middle of the stretch
+        const c=s.over.find(c=>c-W/2>s.a-0.001 && c+W/2<s.b+0.001);
+        hang(s.w, c!==undefined ? c : (s.a+s.b)/2, yc, W, H, tile); tile=(tile+3)%8; used.add(s.w); placed++; } }
+    // a cat asleep at the foot of a bed, in every third house
+    if(h.no%3===0 && h.beds.length){ const b=h.beds[h.no%h.beds.length], o=b.o, col=["#d8862e","#2a2a2a","#9a9a96","#e8e0d0"][(h.no/3|0)%4];
+      const m=new T.MeshStandardMaterial({color:col, roughness:0.95}), g=new T.Group();
+      const body=new T.Mesh(new T.SphereGeometry(1, 16, 12), m); body.scale.set(0.19, 0.085, 0.14); body.position.y=0.085; g.add(body);
+      const head=new T.Group(); head.position.set(0.15, 0.07, 0.08); g.add(head);
+      const hm=new T.Mesh(new T.SphereGeometry(0.062, 12, 10), m); hm.scale.set(1.1, 0.88, 1.0); head.add(hm);
+      for(const sd of [-1,1]){ const e=new T.Mesh(new T.ConeGeometry(0.022, 0.045, 6), m); e.position.set(sd*0.032, 0.055, -0.005); e.rotation.z=-sd*0.3; head.add(e); }
+      const tail=new T.Mesh(new T.TorusGeometry(0.17, 0.022, 6, 18, Math.PI*0.85), m); tail.rotation.x=Math.PI/2; tail.position.y=0.03; g.add(tail);
+      const [px,pz]=o.at(b.w*0.18, b.L*0.30); g.position.set(px, o.y+0.586, pz); g.rotation.y=o.ry+0.7; scene.add(g);
+      LAKE_HOUSES.cats.push({g:g, body:body, head:head, ph:q()*6}); } }
+
+  for(const h of Hs){ cur=h; h.walls=[]; h.rooms=[]; h.beds=[]; h.tvOn=h.no%3===1; const c0=COL.length;
+    if(h.kind==="cape") cape(h); else if(h.kind==="ranch") ranch(h); else if(h.kind==="bungalow") bungalow(h); else if(h.kind==="twoStorey") twoStorey(h);
+    dress(h, c0); }
   const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.06}));
   mesh.castShadow=true; mesh.receiveShadow=true; mesh.name="lake-houses"; scene.add(mesh);
+  // the clocks' hands, all in one: an hour and a minute hand each, on the game's clock
+  const NC=LAKE_HOUSES.clocks.length, HANDS=new T.InstancedMesh(new T.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), new T.MeshStandardMaterial({color:0x1a1a1a, roughness:0.5}), Math.max(1, NC*2));
+  HANDS.count=NC*2; HANDS.frustumCulled=false; HANDS.name="clock-hands"; scene.add(HANDS);
+  const _m=new T.Matrix4(), _q=new T.Quaternion(), _qz=new T.Quaternion(), _p=new T.Vector3(), _s=new T.Vector3(), _Y=new T.Vector3(0,1,0), _Z=new T.Vector3(0,0,1);
+  let _hr=-1, _tv=0;
+  LAKE_HOUSES.tick=function(dt){
+    const cam=camera.position, hr=DayNight.state.hour, t=performance.now()/1000;
+    // the hands, when the game's clock has moved on a minute
+    if(NC && Math.abs(hr-_hr)>1/60){ _hr=hr;
+      for(let i=0;i<NC;i++){ const C=LAKE_HOUSES.clocks[i];
+        for(const [k, ang, len, wd, off] of [[0, (hr%12)/12, 0.085, 0.012, 0.040], [1, hr%1, 0.125, 0.008, 0.046]]){
+          _q.setFromAxisAngle(_Y, C.ry).multiply(_qz.setFromAxisAngle(_Z, -ang*Math.PI*2));
+          _p.set(C.x+C.nx*(off-0.036), C.y, C.z+C.nz*(off-0.036)); _s.set(wd, len, 0.003);
+          HANDS.setMatrixAt(i*2+k, _m.compose(_p, _q, _s)); } }
+      HANDS.instanceMatrix.needsUpdate=true; }
+    // the sets that are on, from half past six till midnight: a blue that jumps with the cuts
+    const on=hr>18.5 || hr<0.1;
+    _tv-=dt; if(_tv<=0){ _tv=0.12+Math.random()*0.9; TVGLOW.tgt=0.55+Math.random()*0.45; }
+    TVGLOW.v=on ? TVGLOW.v+((TVGLOW.tgt||0.8)-TVGLOW.v)*Math.min(1, dt*14) : 0;
+    TVON.color.setRGB(0.05+0.42*TVGLOW.v, 0.06+0.50*TVGLOW.v, 0.07+0.66*TVGLOW.v);
+    // the cats breathe, and now and then an ear goes
+    for(const C of LAKE_HOUSES.cats){ const near=Math.abs(C.g.position.x-cam.x)+Math.abs(C.g.position.z-cam.z)<30; C.g.visible=near; if(!near) continue;
+      C.body.scale.y=0.085*(1+0.05*Math.sin(t*1.7+C.ph)); C.head.rotation.z=Math.max(0, Math.sin(t*0.37+C.ph*3)-0.96)*6; } };
 })();

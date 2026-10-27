@@ -552,15 +552,17 @@ const PLAZA_Y=0.15;
   // a round pad by the bag dispenser, the loop back at the plaza; and each
   // end of the walk by the lot runs on, the north to the shelter through the
   // grove, the south to the pet area)
-  curbRamp(-14, P.z0, 0, -1, 2.5, PLAZA_Y, 1.3);  path([{x:-14,z:-20.1},{x:-13,z:-26},{x:-9,z:-36},{x:-1,z:-46},{x:7,z:-54},{x:11.3,z:-57.0}], 2.2);
-  curbRamp(12.6, -57.0, -1, 0, 2.5, 0.15, 1.3);
-  curbRamp(-14, P.z1, 0, 1, 2.3, PLAZA_Y, 1.3);   path([{x:-14,z:20.1},{x:-12,z:28},{x:-6,z:40},{x:2,z:52},{x:7.5,z:62},{x:10.8,z:65.4}], 2.0);
+  // (each path leaves a ramp square to its foot and as wide as it, a metre or so straight before it bends: a path
+  // that set off already turning met the ramp's foot askew, a wedge and a notch at each side)
+  curbRamp(-14, P.z0, 0, -1, 2.2, PLAZA_Y, 1.3);  path([{x:-14,z:-20.1},{x:-14,z:-21.5},{x:-13,z:-26},{x:-9,z:-36},{x:-1,z:-46},{x:7,z:-54},{x:10.0,z:-57.0},{x:11.3,z:-57.0}], 2.2);
+  curbRamp(12.6, -57.0, -1, 0, 2.2, 0.15, 1.3);
+  curbRamp(-14, P.z1, 0, 1, 2.0, PLAZA_Y, 1.3);   path([{x:-14,z:20.1},{x:-14,z:21.5},{x:-12,z:28},{x:-6,z:40},{x:2,z:52},{x:7.5,z:62},{x:10.8,z:65.4}], 2.0);
   push("walkflat", discGeo(1.45, 32, 0.66), 12.6, 0.041, 66.6, 0, "#c3c0b8");
-  curbRamp(-5.0, -17.8, 1, 0, 2.1, PLAZA_Y, 1.3); curbRamp(-5.0, 17.8, 1, 0, 2.1, PLAZA_Y, 1.3);
-  path([{x:-3.9,z:-17.8},{x:4,z:-20.6},{x:12,z:-20},{x:16,z:-10},{x:17,z:0},{x:16,z:10},{x:12,z:20},{x:4,z:20.6},{x:-3.9,z:17.8}], 1.8);
-  path([{x:-23.75,z:W.z0-1.55},{x:-22.6,z:-111.6},{x:-18,z:-112.6},{x:-11,z:-109.5},{x:-4,z:-104},{x:6,z:-98.5},{x:13.5,z:-90},{x:18.6,z:-79},{x:19.2,z:-70},{x:15.4,z:-63.3}], 2.0);
-  curbRamp(15.4, -62.1, 0, -1, 2.3, 0.15, 1.3);
-  path([{x:-23.75,z:W.z1+1.55},{x:-21,z:78.5},{x:-12,z:79.5},{x:-1,z:76},{x:7,z:70.5},{x:11.2,z:67.9}], 2.0);
+  curbRamp(-5.0, -17.8, 1, 0, 1.8, PLAZA_Y, 1.3); curbRamp(-5.0, 17.8, 1, 0, 1.8, PLAZA_Y, 1.3);
+  path([{x:-3.9,z:-17.8},{x:-2.7,z:-17.8},{x:4,z:-20.6},{x:12,z:-20},{x:16,z:-10},{x:17,z:0},{x:16,z:10},{x:12,z:20},{x:4,z:20.6},{x:-2.7,z:17.8},{x:-3.9,z:17.8}], 1.8);
+  path([{x:-23.75,z:W.z0-1.55},{x:-23.75,z:W.z0-2.15},{x:-22.6,z:-111.6},{x:-18,z:-112.6},{x:-11,z:-109.5},{x:-4,z:-104},{x:6,z:-98.5},{x:13.5,z:-90},{x:18.6,z:-79},{x:19.2,z:-70},{x:15.4,z:-64.6},{x:15.4,z:-63.3}], 2.0);
+  curbRamp(15.4, -62.1, 0, -1, 2.0, 0.15, 1.3);
+  path([{x:-23.75,z:W.z1+1.55},{x:-23.75,z:W.z1+2.15},{x:-21,z:78.5},{x:-12,z:79.5},{x:-1,z:76},{x:7,z:70.5},{x:11.2,z:67.9}], 2.0);
 })();
 
 /* ---- lights: the mushroom posts round the walks, taller poles in the lots --
