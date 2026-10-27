@@ -103,6 +103,8 @@ function frame(){
     camera.lookAt(player.pos.x - Math.sin(player.yaw)*cp,
                   eyeY + Math.sin(player.pitch),
                   player.pos.z - Math.cos(player.yaw)*cp);
+    // a disc in the air (18i): the view goes after it, and comes back
+    if(typeof DGOLF!=="undefined" && DGOLF.cam.k>0) DGOLF.applyCam(delta);
     // shoving a vending machine shakes you as much as it
     if(VEND.shake>0){ const k=VEND.shake*VEND.shake;
       camera.position.x+=(Math.random()-0.5)*0.05*k; camera.position.y+=(Math.random()-0.5)*0.03*k; camera.position.z+=(Math.random()-0.5)*0.05*k; }

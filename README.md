@@ -229,7 +229,14 @@ If the scene runs hot on your machine, start there (see below).
     about and nods now and then; whoever is standing shifts their weight
     from one foot to the other, and now and then a hand comes up as if
     they were saying something; whoever is sitting leans in and sits back.
-    Each does it in their own time, so no two move together.
+    Each does it in their own time, so no two move together, and nobody
+    sways off the spot they stand on.
+  - Out of doors (Lake Street, the park, the fuel stop, the brewery) the
+    walkers go as the visitors do: they stop for you, step round tables,
+    posts, parked cars and each other, stand on whatever floor is under
+    them, and never set foot in the lake. The brewery's servers keep to
+    its lot, its taproom, its garden and its deck. Whoever is sitting sits
+    on the seat: on a chair, a stool, a bench or a cushion, not in it.
   - Visitors keep a speed-dependent gap to whatever is in front: cars,
     people and you. If you stand in the aisle they honk, then edge round you
     at a crawl, and pull back to the middle once past.
@@ -620,6 +627,11 @@ If the scene runs hot on your machine, start there (see below).
     it went in, and out of the park the same from where it went out. Walk
     up to it to pick it up. The card across the top keeps the hole, the
     throws and the round, and your best round is kept for next time.
+    When you let go, the view goes after the disc, from behind and above
+    it, to see it come down; it waits a moment on where it lies (`Space`
+    brings it back sooner) and comes back to you, turned to face it. Hold
+    `Z` or the right mouse button to close the view in on the basket from
+    the tee; the mouse turns you slower while you do.
   - **Edinboro Lake** opens out north and east of the park, most of a mile
     across to the far woods, with cottages along the far shore whose
     windows light up at night. A sailboat sits out in the middle, a
@@ -1124,7 +1136,9 @@ again, and `Esc` or `E` steps away.
 
 On the disc golf course (Lakeside Park), `E` at the course sign starts or
 ends a round. On the tee or by your disc, aim with the view and hold
-`Space` or the mouse button to wind up; let go to throw.
+`Space` or the mouse button to wind up; let go to throw. Hold `Z` or the
+right mouse button to zoom in on the basket. While the view follows the
+disc, `Space` brings it back.
 
 ## Graphics settings
 

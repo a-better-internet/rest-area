@@ -68,19 +68,52 @@ function crowdAdd(G, o){
   if(p.prop){ p.prop.position.set(0,0,0); P.g.add(p.prop); }
   P.g.position.set(p.x, p.y, p.z); P.g.rotation.y=p.yaw||0;
   G.people.push(p); return p; }
-// one step of a walker along its path; true while it is moving
-function _crowdWalk(p, dt){
+/* one step of a walker along its path; true while it is moving. A walker goes as 14b's do: it stops for you, bends
+   its line round anything solid in its way (14b's _hitAt: a table, a post, a parked car, one of 14b's people) and round
+   the rest of its crowd, never sets foot in the lake or out of its group's bounds, and stands on whatever floor is
+   under it. Held up too long short of a point, it gives the point up and makes for the next. (Something that drives,
+   the baler, keeps its own: it yields, and its rig is its own collider.) */
+function _crowdHit(p, G, x, z, k){
+  const r=BODY_R*(k||1), y=p.y;
+  if(G.bounds && (x<G.bounds.x0 || x>G.bounds.x1 || z<G.bounds.z0 || z>G.bounds.z1)) return true;
+  if(typeof EAST!=="undefined" && Terrain.lakeSD(x, z)<0.8 && (p.yAt ? p.yAt(x, z) : surfaceY(x, z, y+0.45))<EAST.wy+0.15) return true;
+  if(_hitAt(x, z, y, r, null)) return true;
+  for(const o of G.people) if(o!==p && o.P.g.visible && Math.abs(o.y-y)<1.2 && (o.x-x)*(o.x-x)+(o.z-z)*(o.z-z)<(r+BODY_R*0.8)*(r+BODY_R*0.8)) return true;
+  return false; }
+function _crowdNext(p){ const P=p.path, n=P.length, q=P[p.i];
+  if(q[3]) p.wait=q[3];
+  if(p.loop) p.i=(p.i+1)%n;
+  else { if(p.i+p.dir<0 || p.i+p.dir>=n) p.dir=-p.dir; p.i+=p.dir; }
+  p.stuck=0; p.wpT=0; }
+function _crowdWalk(p, dt, G){
   if(p.wait>0){ p.wait-=dt; return false; }
-  const P=p.path, n=P.length, q=P[p.i];
-  const dx=q[0]-p.x, dz=q[1]-p.z, d=Math.hypot(dx,dz), sp=p.speed||1.25;
-  if(d<0.05){
-    if(q[3]) p.wait=q[3];
-    if(p.loop) p.i=(p.i+1)%n;
-    else { if(p.i+p.dir<0 || p.i+p.dir>=n) p.dir=-p.dir; p.i+=p.dir; }
-    return false; }
-  const s=Math.min(d, sp*dt); p.x+=dx/d*s; p.z+=dz/d*s;
-  const want=Math.atan2(dx, dz); let dy=want-p.yawS; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; p.yawS+=dy*Math.min(1, dt*6);
-  p.y=p.yAt ? p.yAt(p.x, p.z) : q[2]!==undefined ? q[2] : Terrain.groundAt(p.x, p.z);          // (yAt: a crowd's own floors, a deck, a lawn)
+  const q=p.path[p.i], dx=q[0]-p.x, dz=q[1]-p.z, d=Math.hypot(dx,dz);
+  let sp=p.speed||1.25;
+  const floor=(x, z)=>p.yAt ? p.yAt(x, z) : q[2]!==undefined ? q[2] : surfaceY(x, z, p.y+0.45);
+  if(p.job==="drive"){                                           // (the baler: straight on its line, as it always went)
+    if(d<0.05){ _crowdNext(p); return false; }
+    const s=Math.min(d, sp*dt); p.x+=dx/d*s; p.z+=dz/d*s; p.y=floor(p.x, p.z);
+    let dy=Math.atan2(dx, dz)-p.yawS; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; p.yawS+=dy*Math.min(1, dt*6);
+    p.ph=(p.ph+dt*sp/(p.run ? 2.2 : 1.35))%1; return true; }
+  p.wpT=(p.wpT||0)+dt;
+  if(d<0.08 || (d<0.9 && (p.stuck||0)>0.8) || (d<2.5 && p.wpT>14)){ _crowdNext(p); return false; }
+  // you, in the way: they stop for you
+  if(!driving && !droneMode){ const px=player.pos.x-p.x, pz=player.pos.z-p.z;
+    if(px*px+pz*pz<1.25*1.25 && px*dx+pz*dz>0 && Math.abs(player.feetY-p.y)<1.2) sp=0; }
+  // look a stride ahead; if that is blocked, bend toward the side already chosen, then the other
+  let want=Math.atan2(dx, dz); const look=Math.min(0.7, d);
+  const free=a=>!_crowdHit(p, G, p.x+Math.sin(a)*look, p.z+Math.cos(a)*look) && !_crowdHit(p, G, p.x+Math.sin(a)*look*0.5, p.z+Math.cos(a)*look*0.5);
+  const loose=(p.stuck||0)>1.5 || _crowdHit(p, G, p.x, p.z, 0.8);
+  if(sp>0 && !loose && !free(want)){ const side=p.side||1; let found=false;
+    bend: for(const k of [1,2,3,4,5,6]) for(const sd of [side,-side]){ const a=want+sd*k*0.28; if(free(a)){ want=a; p.side=sd; found=true; break bend; } }
+    if(!found){ sp=0; p.stuck=(p.stuck||0)+dt; } }
+  else if(p.side && Math.random()<dt*0.5) p.side=0;
+  let dy=want-p.yawS; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; p.yawS+=dy*Math.min(1, dt*6);
+  const s=Math.min(d, sp*dt); if(s<=0) return false;
+  const nx=p.x+Math.sin(want)*s, nz=p.z+Math.cos(want)*s;
+  if(!loose && _crowdHit(p, G, nx, nz, 0.9)){ p.stuck=(p.stuck||0)+dt; return false; }          // (never into anything: wait instead)
+  p.stuck=Math.max(0, (p.stuck||0)-dt*0.5);
+  p.x=nx; p.z=nz; p.y=floor(p.x, p.z);
   p.ph=(p.ph+dt*sp/(p.run ? 2.2 : 1.35))%1;
   return true; }
 const _dZ=new T.Vector3();
@@ -137,7 +170,7 @@ function updateCrowd(dt, now, dark){
       const out=!p.dayOnly || dark<0.6; if(p.P.g.visible!==out){ p.P.g.visible=out; if(p.D) p.D.g.visible=out; if(p.onShow) p.onShow(p, out); }
       if(!out) continue;
       p.t+=dt; let moving=false;
-      if(p.path && !(p.yield && p.yield(p))) moving=_crowdWalk(p, dt);          // (yield: something that drives stops for you)
+      if(p.path && !(p.yield && p.yield(p))) moving=_crowdWalk(p, dt, G);          // (yield: something that drives stops for you)
       if(d<70 || (CROWD.t*7+p.P.seed)%1<0.34){                 // (past seventy metres, a third of the frames)
         p.P.g.position.set(p.x, p.y, p.z); p.P.g.rotation.y=p.path ? p.yawS : (p.yaw||0)+(p.sway ? Math.sin(p.t*0.3)*p.sway : 0);
         _crowdPose(p, now, moving);
@@ -206,7 +239,7 @@ function crowdRound(pts, R, closed){
   { const SPZ=SH+5.5;
     crowdAdd(PK, {look:look({h:0.98, skin:SKINS[0], hair:HAIRS[4], shirt:"#8a7a6a", pants:"#5c5a52", long:true}), mode:"walk", path:[[1246, SPZ+0.35],[1366, SPZ+0.35]], speed:0.8});
     crowdAdd(PK, {look:look({female:true, h:0.92, skin:SKINS[0], hair:HAIRS[4], shirt:"#9a6a8a", pants:"#6f7b86", long:true}), mode:"walk", path:[[1246, SPZ-0.35],[1366, SPZ-0.35]], speed:0.8});
-    crowdAdd(PK, {look:look({skin:SKINS[3], hair:HAIRS[5], shirt:"#5d6a73", pants:"#24272c", long:true}), x:1276, z:SPZ-1.9+0.02, y:Terrain.groundAt(1276, SPZ-1.9), yaw:Math.PI, mode:"sit", sitY:0.47, held:"paper", heldL:true});
+    crowdAdd(PK, {look:look({skin:SKINS[3], hair:HAIRS[5], shirt:"#5d6a73", pants:"#24272c", long:true}), x:1276, z:SPZ-1.9+0.02, y:Terrain.groundAt(1276, SPZ-1.9), yaw:Math.PI, mode:"sit", sitY:0.515, held:"paper", heldL:true});
     crowdAdd(PK, {look:look({skin:SKINS[1], hair:HAIRS[2], shirt:"#7a8a5a", pants:"#5c5a52", long:true, cap:"#7a6a3a", beard:"#6b4a2b"}), x:1341.2, z:SH-16.7, y:WY+0.55, yaw:Math.PI, mode:"stand", job:"fish", held:"rod"});
     const sx=1348+3.2, sz=Z-HW-27, kid={h:0.62, skin:SKINS[2], hair:HAIRS[0], shirt:"#e6c21c", pants:"#2b3d63", shorts:true, shoes:"#c42a1a"};
     crowdAdd(PK, {look:look(kid), mode:"walk", run:true, loop:true, path:[[sx-1.0, sz-1.2],[sx+1.2, sz-1.0],[sx+1.2, sz+3.8],[sx-1.2, sz+3.8, undefined, 1.5],[sx-1.4, sz+0.4]], speed:1.9, dayOnly:true});

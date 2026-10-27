@@ -168,7 +168,7 @@ function _idle(p, mode, t){
 function poseP(p, mode, ph, t){
   const B=p.B, J=p.j, s=Math.sin(ph*Math.PI*2), c=Math.cos(ph*Math.PI*2);
   for(const b of B) b.rotation.set(0,0,0);
-  B[J.root].position.y=p.HIP;
+  B[J.root].position.set(0, p.HIP, 0);           // (all of it, every frame: _idle's weight shift moves it sideways, and must not add up)
   if(mode==="walk"){
     const sL=s, sR=-s;
     B[J.hpL].rotation.x=-sL*0.42; B[J.hpR].rotation.x=-sR*0.42;

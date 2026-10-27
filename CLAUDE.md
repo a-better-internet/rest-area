@@ -218,6 +218,15 @@ No lettering touches or runs past the edge of its board or its border.
 - Every person's pose ends in `_idle` (14b) for `sit` and `stand`: breath,
   a look round, the weight going from foot to foot, a hand now and then.
   A job that sets its own bones does it after `poseP`, so it wins.
+  `poseP` sets the root's whole position every frame. Anything that adds
+  to a bone's position, not only its rotation, must start from there, or
+  it adds up frame on frame and the body walks off its feet.
+- A crowd's walkers (14q `_crowdWalk`) steer as 14b's do: `_crowdHit`
+  is `_hitAt` plus the rest of the crowd, the lake and the group's
+  `bounds` (14r sets the brewery's). Give a group that must keep to its
+  ground a `bounds`. A seated person's `sitY` is the seat's top plus
+  about 5.5 cm (a chair's 0.46 takes 0.515, a stool's 0.79 from 0.30 up
+  takes 0.545).
 - 14o dresses each house after building it. Every room's walls are noted
   as `storey()` lines them (`h.walls`), and pictures hang on the stretches
   clear of the openings, of this house's tall colliders and of `WALLX`:

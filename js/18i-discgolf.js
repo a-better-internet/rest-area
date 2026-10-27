@@ -26,7 +26,9 @@
    ---------------------------------------------------------------------- */
 const DGOLF={on:false, hole:0, throws:0, card:[], state:"hand", lie:null, at:null, disc:null, hand:null,
              p:null, v:null, th:0, spin:0, bounce:0, slide:false, ft:0, charge:-1, power:0, lastLand:null,
-             holes:[], panel:null, best:null, follow:0, wait:0, sign:null};
+             holes:[], panel:null, best:null, wait:0, sign:null,
+             // the camera that goes after the disc (k: how far the view has gone from your eyes to it), and the sight's zoom
+             cam:{k:0, hold:0, seen:false, skip:false, init:false, dir:[0,-1], tgt:new T.Vector3(), pos:new T.Vector3()}, zoomHeld:false, zk:0};
 (function discGolf(){
   const Y=EDIN.y, gy=(x,z)=>Terrain.groundAt(x,z);
   const ME=[];
@@ -119,7 +121,7 @@ const DGOLF={on:false, hole:0, throws:0, card:[], state:"hand", lie:null, at:nul
   document.head.appendChild(st);
   const d=document.createElement("div"); d.id="dgolf";
   d.innerHTML='<div class="hd"><span class="t">DISC GOLF</span><span class="sc"></span></div><div class="card"></div><div class="msg"></div><div class="bar"><i></i></div>'+
-    '<div class="keys"><b>LOOK</b> aim (up is higher) · hold <b>SPACE</b> or the <b>MOUSE</b>, let go to throw · walk to your disc · <b>E</b> at the sign ends the round</div>';
+    '<div class="keys"><b>LOOK</b> aim (up is higher) · hold <b>Z</b> or the <b>RIGHT</b> button to zoom · hold <b>SPACE</b> or the <b>MOUSE</b>, let go to throw · the view goes after the disc (<b>SPACE</b> brings it back) · walk to your disc · <b>E</b> at the sign ends the round</div>';
   document.body.appendChild(d); DGOLF.panel=d;
   try{ const b=localStorage.getItem("restarea.discgolf.best"); if(b) DGOLF.best=+b; }catch(e){}
 })();
@@ -142,9 +144,17 @@ DGOLF.ready=function(){ const G=DGOLF; if(!G.on || G.state!=="hand" || G.wait>0 
   return Math.hypot(player.pos.x-G.lie.x, player.pos.z-G.lie.z)<(G.lie.tee ? 1.9 : 2.2); };
 // Space (or the mouse) held: winding up; let go: the throw. Returns true when the key was the game's
 DGOLF.key=function(e){ const G=DGOLF; if(!G.on) return false;
+  if(e.code==="KeyZ"){ G.zoomHeld=true; return true; }
+  if(e.code==="Space" && G.cam.k>0 && G.state!=="fly"){ G.cam.skip=true; return true; }
   if(e.code==="Space" && G.ready()){ if(!e.repeat && G.charge<0) G.charge=0; return true; }
   return false; };
-DGOLF.keyup=function(e){ const G=DGOLF; if(e.code==="Space" && G.charge>=0) G.release(); };
+DGOLF.keyup=function(e){ const G=DGOLF; if(e.code==="KeyZ") G.zoomHeld=false; if(e.code==="Space" && G.charge>=0) G.release(); };
+// the right button is the sight, too (and in a round brings up no menu)
+renderer.domElement.addEventListener("mousedown", e=>{ if(DGOLF.on && e.button===2) DGOLF.zoomHeld=true; });
+addEventListener("mouseup", e=>{ if(e.button===2) DGOLF.zoomHeld=false; });
+renderer.domElement.addEventListener("contextmenu", e=>{ if(DGOLF.on) e.preventDefault(); });
+// how much slower the mouse turns you while the sight is closed in (17-player's look)
+DGOLF.lookScale=function(){ return DGOLF.zk>0.01 ? camera.fov/fov : 1; };
 renderer.domElement.addEventListener("mousedown", e=>{ const G=DGOLF; if(G.on && e.button===0 && G.ready() && G.charge<0 && document.pointerLockElement===renderer.domElement) G.charge=0; });
 addEventListener("mouseup", e=>{ const G=DGOLF; if(e.button===0 && G.charge>=0) G.release(); });
 DGOLF.release=function(){
@@ -154,7 +164,8 @@ DGOLF.release=function(){
   const fx=-Math.sin(yaw), fz=-Math.cos(yaw);
   G.p=V3(player.pos.x+fx*0.5, player.feetY+1.25, player.pos.z+fz*0.5);
   G.v=V3(fx*Math.cos(pitch)*v0, Math.sin(pitch)*v0, fz*Math.cos(pitch)*v0);
-  G.th=pitch+0.05; G.state="fly"; G.ft=0; G.lastIn={x:G.lie.x, z:G.lie.z}; G.bounce=0; G.slide=false; G.throws++; G.follow=3.5; G.lastLand={x:G.lie.x, z:G.lie.z};
+  G.th=pitch+0.05; G.state="fly"; G.ft=0; G.lastIn={x:G.lie.x, z:G.lie.z}; G.bounce=0; G.slide=false; G.throws++; G.lastLand={x:G.lie.x, z:G.lie.z};
+  G.cam.seen=true; G.cam.skip=false; G.cam.hold=0; G.cam.tgt.copy(G.p);
   G.disc.visible=true; G.hand.visible=false;
   if(typeof AUDIO!=="undefined") AUDIO.blip("whoosh", player.pos.x, player.pos.z); G.draw(); };
 // one step of the flight: lift and drag with the angle the disc meets the air at, the turn and the fade; then the
@@ -208,19 +219,19 @@ DGOLF.step=function(h){
 };
 // out of bounds (the course's own ground: the park, the lot and the road's edge) is a stroke, from where it went out
 const DG_IN=(x,z)=>x>1230 && x<1380 && z>-1300 && z<-1203;
-DGOLF.landed=function(){ const G=DGOLF;
+DGOLF.landed=function(){ const G=DGOLF; G.cam.tgt.copy(G.p);                         // (the view stays where it came down, in bounds or out)
   if(!DG_IN(G.p.x, G.p.z)){ const L=G.lastIn||G.lie, g=Terrain.groundAt(L.x, L.z); G.throws++; G.p.set(L.x, g+0.012, L.z);
     toast("OUT OF BOUNDS · +1", "#ff9a7a"); G.state="down"; G.at={x:L.x, z:L.z, y:g+0.012}; G.msg("OUT OF BOUNDS. A STROKE: THROW AGAIN FROM WHERE IT WENT OUT"); G.draw(); return; }
   G.state="down"; G.at={x:G.p.x, z:G.p.z, y:G.p.y};
   const H=G.holes[G.hole], d=Math.hypot(G.p.x-H.b[0], G.p.z-H.b[1]);
   G.msg(d<10 ? d.toFixed(1)+" M FROM THE BASKET. A PUTT" : Math.round(d)+" M FROM THE BASKET"); G.draw(); };
-DGOLF.inLake=function(){ const G=DGOLF; G.throws++;
+DGOLF.inLake=function(){ const G=DGOLF; G.throws++; G.cam.tgt.set(G.p.x, EAST.wy, G.p.z);          // (and on the splash)
   if(typeof PUFFS!=="undefined") for(let k=0;k<14;k++) PUFFS.emit(G.p.x+(Math.random()-0.5)*0.3, EAST.wy+0.05, G.p.z+(Math.random()-0.5)*0.3, (Math.random()-0.5)*1.2, 1.0+Math.random(), (Math.random()-0.5)*1.2, 0.10, 0.5, 0.8, 0.5, 1.0, 0);
   if(typeof AUDIO!=="undefined") AUDIO.blip("drip", G.p.x, G.p.z);
   const L=G.lastLand, g=Terrain.groundAt(L.x, L.z); G.state="down"; G.at={x:L.x, z:L.z, y:g+0.012}; G.p.set(L.x, g+0.012, L.z);
   G.msg("IN THE LAKE. A STROKE: THROW AGAIN FROM WHERE IT WENT IN"); toast("IN THE LAKE · +1", "#8fb4ff"); G.draw(); };
 DGOLF.holed=function(){ const G=DGOLF, H=G.holes[G.hole];
-  G.state="in"; G.p.set(H.b[0]+0.08, H.by+0.70, H.b[1]-0.05); G.v.set(0,0,0);
+  G.state="in"; G.p.set(H.b[0]+0.08, H.by+0.70, H.b[1]-0.05); G.v.set(0,0,0); G.cam.tgt.copy(G.p);
   if(typeof AUDIO!=="undefined"){ AUDIO.blip("jingle", H.b[0], H.b[1]); AUDIO.blip("coins", H.b[0], H.b[1]); }
   G.card.push(G.throws); const rel=G.throws-H.par, words={"-2":"EAGLE","-1":"BIRDIE","0":"PAR","1":"BOGEY","2":"DOUBLE BOGEY"};
   const w=G.throws===1 ? "ACE!" : words[String(rel)] || (rel>0 ? "+"+rel : String(rel));
@@ -233,16 +244,27 @@ DGOLF.draw=function(){ const G=DGOLF; if(!G.panel) return; const H=G.holes[Math.
     return '<span class="'+cls+'">'+(s===undefined ? (i+1) : s)+'</span>'; }).join(""); };
 function updateDiscGolf(dt){
   const G=DGOLF; if(!G.disc) return;
-  if(!G.on){ G.hand.visible=false; return; }
+  if(!G.on){ G.hand.visible=false; G.cam.k=0; G.cam.seen=false; G.cam.init=false; G.zoomHeld=false;
+    if(G.zk>0){ G.zk=0; applyFov(); } return; }
   if(G.wait>0){ G.wait-=dt; if(G.wait<=0 && G.state==="in"){ G.hole++; G.disc.visible=false;
       if(G.hole>=G.holes.length){ G.end(false); return; }
       G.toTee(); const h=G.holes[G.hole]; G.msg("ON TO HOLE "+(G.hole+1)+": THE TEE IS "+Math.round(Math.hypot(h.t[0]-player.pos.x, h.t[1]-player.pos.z))+" M OFF"); G.draw(); } }
   // the flight, in small steps
   if(G.state==="fly"){ let n=Math.ceil(dt*240); const h=dt/n; while(n-- && G.state==="fly") G.step(h);
-    // your eyes go with it for a while, unless you look away yourself
-    if(G.follow>0){ G.follow-=dt; const dx=G.p.x-player.pos.x, dz=G.p.z-player.pos.z, want=Math.atan2(-dx, -dz);
-      let dy=want-player.yaw; while(dy>Math.PI) dy-=2*Math.PI; while(dy<-Math.PI) dy+=2*Math.PI; player.yaw+=dy*Math.min(1, dt*3.5);
-      const pw=Math.atan2(G.p.y-(player.feetY+1.6), Math.hypot(dx, dz)); player.pitch+=(clamp(pw, -0.6, 0.6)-player.pitch)*Math.min(1, dt*2.5); } }
+  }
+  // the view goes with it, then waits on where it came down (Space brings it back sooner), then comes back to you,
+  // turned to face your disc; 19-loop hands applyCam the frame while k is over nothing
+  { const C=G.cam;
+    if(G.state==="fly"){ C.k=Math.min(1, C.k+dt*2.5); C.tgt.copy(G.p); C.hold=2.0; }
+    else if(C.seen){
+      if(C.hold>0 && !C.skip){ C.hold-=dt; C.k=Math.min(1, C.k+dt*2.5); }
+      else { if(C.hold>-1){ C.hold=-1; const dx=C.tgt.x-player.pos.x, dz=C.tgt.z-player.pos.z;
+          player.yaw=Math.atan2(-dx, -dz); player.pitch=clamp(-Math.atan2(player.feetY+1.6-C.tgt.y, Math.hypot(dx, dz)), -0.6, 0.2); }
+        C.k=Math.max(0, C.k-dt*1.8); if(C.k===0){ C.seen=false; C.skip=false; C.init=false; } } } }
+  // the sight: Z or the right button held closes the view in on what you are looking at
+  { const zt=G.zoomHeld && G.cam.k===0 && !seated && !driving && !droneMode ? 1 : 0, was=G.zk;
+    G.zk+=(zt-G.zk)*Math.min(1, dt*9); if(G.zk<0.002) G.zk=0;
+    if(G.zk>0 || was>0){ camera.fov=fov+(12-fov)*G.zk; camera.updateProjectionMatrix(); } }
   // the disc where it is: flying flat and spinning, lying on the grass, in the basket
   if(G.state!=="hand"){ G.disc.visible=true; G.disc.position.copy(G.p);
     if(G.state==="fly"){ G.spin+=dt*24; G.disc.rotation.set(0, G.spin, 0); }
@@ -264,3 +286,18 @@ function updateDiscGolf(dt){
   if(G.hand.visible){ const pw=G.power, o=V3(0.20-pw*0.28, -0.24+pw*0.04, -0.46+pw*0.10); camera.updateMatrixWorld(); o.applyMatrix4(camera.matrixWorld);
     G.hand.position.copy(o); G.hand.quaternion.copy(camera.quaternion); G.hand.rotateX(Math.PI/2-0.25); }
 }
+// the view after the disc: from behind it along its way and above it while it flies, from back and above where it lies
+// after; blended from your eyes by k, so it goes out and comes back without a cut
+const _dgCw=new T.Vector3(), _dgD=new T.Vector3(), _dgL=new T.Vector3();
+DGOLF.applyCam=function(dt){ const G=DGOLF, C=G.cam; if(C.k<=0) return;
+  const v=G.v, hz=v ? Math.hypot(v.x, v.z) : 0;
+  if(G.state==="fly" && hz>0.6) C.dir=[v.x/hz, v.z/hz];
+  const fly=G.state==="fly", back=fly ? 5.0 : 4.6, up=fly ? 1.5 : 2.6;
+  _dgCw.set(C.tgt.x-C.dir[0]*back, C.tgt.y+up, C.tgt.z-C.dir[1]*back);
+  const g=surfaceY(_dgCw.x, _dgCw.z, _dgCw.y+3)+0.9; if(_dgCw.y<g) _dgCw.y=g;
+  if(typeof EAST!=="undefined" && _dgCw.y<EAST.wy+1.2) _dgCw.y=EAST.wy+1.2;
+  if(!C.init){ C.pos.copy(camera.position); C.init=true; }
+  C.pos.lerp(_dgCw, 1-Math.exp(-(fly ? 7 : 3)*dt));
+  const e=C.k*C.k*(3-2*C.k);
+  camera.getWorldDirection(_dgD); _dgL.copy(camera.position).addScaledVector(_dgD, 8).lerp(C.tgt, e);
+  camera.position.lerp(C.pos, e); camera.lookAt(_dgL); };

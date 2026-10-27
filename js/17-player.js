@@ -98,8 +98,9 @@ function look(dx,dy){
     dronePitch = clamp(dronePitch - dy*0.0026, -0.15, 1.35);
     return;
   }
-  player.yaw   -= dx*0.0026;
-  player.pitch  = clamp(player.pitch - dy*0.0024, -1.15, 1.15);
+  const ls=typeof DGOLF!=="undefined" ? DGOLF.lookScale() : 1;        // (slower through the disc golf sight, 18i)
+  player.yaw   -= dx*0.0026*ls;
+  player.pitch  = clamp(player.pitch - dy*0.0024*ls, -1.15, 1.15);
 }
 dom.addEventListener("click",()=>{ if(document.pointerLockElement!==dom && dom.requestPointerLock) dom.requestPointerLock(); });
 // the wheel zooms in (to 24° tighter) or opens the view a little (6° wider)

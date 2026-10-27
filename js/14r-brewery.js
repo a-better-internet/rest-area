@@ -361,6 +361,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
 (function breweryFolk(){
   if(typeof crowdGroup!=="function" || !BREWERY.deck) return;
   const G=crowdGroup("the brewery", 1445, -1258, 175), D=BREWERY.D, FF=BREWERY.FF, DK=BREWERY.deck, q=_trng(7171);
+  G.bounds={x0:DK.x0+0.3, x1:DK.x1-0.3, z0:DK.z0+0.3, z1:-1206};          // (its staff keep to its ground: the lot, the taproom, the garden, the deck)
   const yAt=(x,z)=>(x>DK.x0 && x<DK.x1 && z>DK.z0 && z<DK.z1) ? D : (x>BREWERY.bl.x0 && x<BREWERY.bl.x1 && z>BREWERY.bl.z0 && z<BREWERY.bl.z1) ? FF : Terrain.groundAt(x,z);
   const pick=a=>a[(q()*a.length)|0];
   const guest=(o)=>Object.assign({h:0.96+q()*0.1, skin:pick(SKINS), hair:pick(HAIRS), shirt:pick(["#2f5f8f","#b33a3a","#e8e4d8","#3d6e44","#1d1f22","#c99a2a","#7a4f8a","#5d6a73","#d77a3a","#2b3d63","#8aa8c8","#e8c8a0"]),
@@ -371,18 +372,20 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   crowdAdd(G, {look:staff({beard:"#4a3020"}), x:1457.1, z:-1233.6, y:FF, yaw:-Math.PI/2, mode:"stand", job:"pour"});
   { const h=BREWERY.hut; crowdAdd(G, {look:staff({female:true, h:0.95, hair:HAIRS[3]}), x:h.bar.x, z:h.bar.z, y:h.y, yaw:-Math.PI/2, mode:"stand", job:"pour"}); }
   // at the bar, on the stools
-  for(const z of [-1239.85, -1236.75, -1235.2]) crowdAdd(G, {look:guest({}), x:1453.98, z:z, y:FF+0.30, yaw:Math.PI/2, mode:"sit", sitY:0.46, held:"pint", drink:true});
+  // (each sits on top of the seat: the hips five or six centimetres over it, the stools' tops at 0.79, the chairs' 0.46,
+  // the sofas' cushions 0.52)
+  for(const z of [-1239.85, -1236.75, -1235.2]) crowdAdd(G, {look:guest({}), x:1453.98, z:z, y:FF+0.30, yaw:Math.PI/2, mode:"sit", sitY:0.545, held:"pint", drink:true});
   // at the tables inside, and out on the deck, round the fire, at the rail
-  const at=(x, z, ry, y)=>crowdAdd(G, {look:guest({}), x:x, z:z, y:y, yaw:ry, mode:"sit", sitY:0.47, held:q()<0.8 ? "pint" : "can", drink:true});
+  const at=(x, z, ry, y, sy)=>crowdAdd(G, {look:guest({}), x:x, z:z, y:y, yaw:ry, mode:"sit", sitY:sy||0.515, held:q()<0.8 ? "pint" : "can", drink:true});
   // (a chair faces its table, and whoever is in it faces the same way; every chair left empty is one you can sit in)
   const taken=new Set(), sitAt=(tbls, ti, sj, y)=>{ const t=tbls[ti]; if(!t) return; const [x,z,ry]=t.seats[sj]; at(x, z, ry, y); taken.add(t.seats[sj]); };
   sitAt(BREWERY.inTables, 0, 0, FF); sitAt(BREWERY.inTables, 0, 1, FF); sitAt(BREWERY.inTables, 3, 0, FF);
   for(const [ti, sj] of [[0,0],[0,3],[1,1],[3,0],[3,1],[3,2],[5,2],[6,0],[6,3],[8,1],[10,0],[10,1],[12,2],[13,3]]) sitAt(BREWERY.tables, ti, sj, D);
   for(const [tbls, y] of [[BREWERY.inTables, FF],[BREWERY.tables, D]]) for(const t of tbls) for(const s of t.seats) if(!taken.has(s)) addSeat(s[0], s[1], y, s[2]+Math.PI, "A CHAIR");
-  for(const [x,z,ry] of BREWERY.sofas.slice(0,2)){ const f=XF(x, z, ry); at(f.x(0.45, 0.05), f.z(0.45, 0.05), ry, Terrain.groundAt(x,z)); }
+  for(const [x,z,ry] of BREWERY.sofas.slice(0,2)){ const f=XF(x, z, ry); at(f.x(0.45, 0.05), f.z(0.45, 0.05), ry, Terrain.groundAt(x,z), 0.575); }
   for(const [x,dz] of [[1437.6,0],[1438.4,0.1],[1451.0,0]]) crowdAdd(G, {look:guest({}), x:x, z:DK.z0+0.55+dz, y:D, yaw:Math.PI, mode:"stand", held:"pint", drink:true, sway:0.5});
   // two on the stools at the rail's high-tops, looking out at the lake
-  for(const k of [0, 3]){ const [sx, sz]=BREWERY.highTops[k]; crowdAdd(G, {look:guest({}), x:sx, z:sz, y:D+0.30, yaw:Math.PI, mode:"sit", sitY:0.46, held:"pint", drink:true}); }
+  for(const k of [0, 3]){ const [sx, sz]=BREWERY.highTops[k]; crowdAdd(G, {look:guest({}), x:sx, z:sz, y:D+0.30, yaw:Math.PI, mode:"sit", sitY:0.54, held:"pint", drink:true}); }
   // and somebody's dog, lying on the boards by their table with her water bowl, watching the servers go by
   { const t=BREWERY.tables[3], dx=t.x+1.25, dz=t.z+0.95, dog=buildDog("#c8a060");
     dog.g.position.set(dx, D, dz); dog.g.rotation.y=-Math.PI/2-0.3;
