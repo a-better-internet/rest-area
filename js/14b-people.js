@@ -239,6 +239,17 @@ function holdCigarette(C, P, up){
   P.B[P.j.elR].getWorldQuaternion(_cq); _cd.applyQuaternion(_cq.invert());
   C.g.quaternion.setFromUnitVectors(_cZ, _cd);
 }
+/* A drink in the hand stands up in it. A glass, a can or a mug rides on the forearm's bone, and a forearm brought
+   up level would lay it on its side, so each frame, after the pose, it is turned back to stand as the body stands:
+   up in the world, facing the way they face, then turned `ax` radians about the body's own x. A little the
+   negative way tips its top back toward the face, for the sip (DRINK_TIP at the lips); a fishing rod is held
+   the positive way, out and up over the water. */
+const _lvQ=new T.Quaternion(), _lvB=new T.Quaternion(), _lvT=new T.Quaternion(), _lvX=V3(1,0,0), DRINK_TIP=-1.25;
+function levelHeld(obj, P, ax){
+  obj.parent.getWorldQuaternion(_lvQ);                                   // (brings the bones up to this frame's pose)
+  P.g.getWorldQuaternion(_lvB);
+  _lvT.setFromAxisAngle(_lvX, ax||0);
+  obj.quaternion.copy(_lvQ.invert().multiply(_lvB).multiply(_lvT)); }
 const _tipW=new T.Vector3(), _mouthW=new T.Vector3();
 function updateCigarette(p, dt, now, dark){
   const C=p.cig, P=p.P, cyc=_smokeCyc(now,P.seed), up=_smokeUp(cyc);

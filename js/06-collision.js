@@ -41,8 +41,11 @@ function colsNear(x,z){
   return COLG.get(Math.floor(x/CG)*131071+Math.floor(z/CG)) || _noCols;
 }
 const SEATS=[];
-function addSeat(x,z,y,yaw,label,lie){
-  SEATS.push({x:x, z:z, y:y, yaw:yaw, label:label, lie:!!lie});
+// y is the floor under it; drop is how far your eyes come down as you sit (a chair's 0.66 unless it says; a bar
+// stool, its seat at 0.79 and not 0.46, takes 0.34)
+function addSeat(x,z,y,yaw,label,lie,drop){
+  const s={x:x, z:z, y:y, yaw:yaw, label:label, lie:!!lie, drop:drop};
+  SEATS.push(s); return s;
 }
 // things you can press E at that are neither a door nor a car
 const USES=[];

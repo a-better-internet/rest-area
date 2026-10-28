@@ -624,6 +624,12 @@ const AUDIO=(function(){
       const s=ctx.createBufferSource(); s.buffer=noise(0.4,"pink"); const f=ctx.createBiquadFilter();
       f.type="lowpass"; f.frequency.value=600; const g=ctx.createGain(); env(g,t+0.05,0.004,0.16*vol,0.05,0.25);
       s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    }else if(kind==="bark"||kind==="yip"){        // a dog at the dog park (14t): a woof or two, a little one's yip
+      const big=kind==="bark", n=1+(Math.random()<0.6 ? 1 : 0), f0=(big ? 340 : 820)*(0.9+Math.random()*0.2);
+      for(let i=0;i<n;i++){ const at=t+i*(big ? 0.26 : 0.16);
+        tone("sawtooth", f0*1.25, f0*0.72, big ? 0.13 : 0.08, (big ? 0.045 : 0.03)*vol, at, 0, master); tone("sine", f0*0.5, f0*0.35, big ? 0.12 : 0.06, 0.07*vol, at, 0, master);
+        const s=ctx.createBufferSource(); s.buffer=noise(0.15,"white"); const f=ctx.createBiquadFilter(); f.type="bandpass"; f.frequency.value=f0*2; f.Q.value=1.4;
+        const g=ctx.createGain(); env(g,at,0.004,0.10*vol,0.03,0.07); s.connect(f); f.connect(g); g.connect(master); s.start(at); }
     }else if(kind==="rim"){                       // off the steel of a rim: a short clang with a ring to it
       tone("triangle", 610, 590, 0.35, 0.07*vol, t, 0, master); tone("sine", 1480, 1440, 0.22, 0.03*vol, t, 0, master);
       tone("sine", 140, 90, 0.10, 0.10*vol, t, 0, master);

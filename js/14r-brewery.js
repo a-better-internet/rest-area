@@ -185,8 +185,9 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     BREWERY.screens={c:c, x:x, tex:tex};
     for(const zc of [-1238.8, -1233.2]){ B(0.06, 0.74, 1.26, BL.x1-WT-0.07, FF+2.70, zc, "#111111");
       const m=new T.Mesh(new T.PlaneGeometry(1.18, 0.66), new T.MeshBasicMaterial({map:tex, toneMapped:false})); m.position.set(BL.x1-WT-0.105, FF+2.70, zc); m.rotation.y=-Math.PI/2; scene.add(m); } }
-  // the stools along the bar
-  for(let k=0;k<6;k++){ const z=BZ0+0.75+k*1.55, x=BX-1.32;
+  // the stools along the bar (those nobody is on are yours to take: breweryFolk, below)
+  BREWERY.barStools=[];
+  for(let k=0;k<6;k++){ const z=BZ0+0.75+k*1.55, x=BX-1.32; BREWERY.barStools.push([x, z]);
     C(0.19, 0.06, x, FF+0.76, z, "#1a1a1a", 18); C(0.025, 0.73, x, FF+0.37, z, "#2a2a2c", 8); ent(new T.TorusGeometry(0.17, 0.012, 6, 18), x, FF+0.28, z, "#2a2a2c", Math.PI/2); C(0.20, 0.02, x, FF+0.01, z, "#2a2a2c", 18); }
   // the tables in the room, and the pendant bulbs over the bar; the fans
   const table=(x, z, y, w, d, top, ry)=>{ const f=XF(x, z, ry||0);
@@ -320,7 +321,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     B(0.5, 0.95, 3.0, hx0+0.9, hg+0.47, mz, "#3a2a20"); for(let k=0;k<5;k++) C(0.012, 0.10, hx0+0.75, hg+1.0, mz-0.6+k*0.3, "#c8ccd0", 6, 0, 0, Math.PI/2);
     LAMPS.push({x:hx0+1.2, y:top-0.4, z:mz, color:0xffd2a0, intensity:0.5, dist:6, decay:1.6, indoor:true});
     push("brw_bulb", new T.SphereGeometry(0.06, 12, 10), hx0+1.2, top-0.15, mz, 0, "#ffffff");
-    sign(1.2, 0.36, (c,W,H)=>{ c.fillStyle="#1e2a24"; c.fillRect(0,0,W,H); say(c, "DECK BAR", W/2, H/2, W*0.78, H*0.58, "#e8d8b0", "900", "Georgia, serif"); }, hx0-0.012, top+0.3, mz, -Math.PI/2, false, 480);
+    sign(1.2, 0.36, (c,W,H)=>{ c.fillStyle="#1e2a24"; c.fillRect(0,0,W,H); say(c, "DECK BAR", W/2, H/2, W*0.78, H*0.58, "#e8d8b0", "900", "Georgia, serif"); }, hx0-0.032, top+0.3, mz, -Math.PI/2, false, 480);      // (1.2 cm proud of its board)
     B(0.04, 0.42, 1.28, hx0+0.0, top+0.3, mz, "#2a2018");
     sign(0.7, 1.0, (c,W,H)=>{ c.fillStyle="#1e2420"; c.fillRect(0,0,W,H); c.strokeStyle="#8a6a44"; c.lineWidth=8; c.strokeRect(4,4,W-8,H-8);
         ["ORDER HERE","PINTS 7","FLIGHTS 12","PRETZEL 9","FRIES 6","DOGS ON THE DECK OK"].forEach((s,k)=>say(c, s, W/2, H*(0.13+k*0.15), W*0.78, H*(k?0.065:0.09), k ? "#f2efe6" : "#e6c21c", "700", "'Comic Sans MS', 'Marker Felt', cursive")); },
@@ -400,6 +401,189 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     path([[BL.x0-1.0, LOTZ-2.4],[BL.x0-1.6, BL.z0-0.5],[BL.x0-0.6, -1252.0],[1432.0, -1262.0],[1433.0, DK.z1+0.2]], 1.8);
     path([[BL.x1+1.0, LOTZ-2.4],[BL.x1+1.8, BL.z0-0.5],[1462.6, -1252.0],[1460.5, -1262.0],[1459.0, DK.z1+0.2]], 1.8); }
 
+  /* ---- the deck bar, dressed: an awning over its window, the taps, the cooler and the glasses behind the bartender,
+     a neon in the back, stools at the ledge, the tip jar; kegs and crates round the side, a half barrel of flowers ------ */
+  { const h=BREWERY.hut, hx0=h.x0, hg=h.y, mz=(h.z0+h.z1)/2;
+    // the awning: green and cream stripes sloping out from over the window, a scalloped valance, two braces under it
+    // (each stripe 3 cm into the wall above the window's head)
+    const AW=1.2, AS=0.25, ax=hx0-0.55, ay=hg+2.2, nS=8, sw=3.4/nS;
+    for(let k=0;k<nS;k++){ const z=mz-1.7+sw*(k+0.5), col=k%2 ? "#efe6cc" : "#2e5a3a";
+      B(AW, 0.03, sw, ax, ay, z, col, 0, 0, AS);
+      B(0.02, 0.16, sw, ax-AW/2*Math.cos(AS)-0.012, ay-AW/2*Math.sin(AS)-0.09, z, col);
+      ent(new T.CylinderGeometry(sw/2-0.004, sw/2-0.004, 0.016, 12, 1, false, 0, Math.PI), ax-AW/2*Math.cos(AS)-0.012, ay-AW/2*Math.sin(AS)-0.165, z, col, 0, 0, -Math.PI/2); }
+    for(const sd of [-1,1]) tubeE(V3(hx0+0.01, hg+1.62, mz+sd*1.55), V3(hx0-0.92, ay-0.10, mz+sd*1.55), 0.025, "#3a2a1c", 6);
+    addRoof(hx0-1.15, hx0, mz-1.7, mz+1.7, ay-0.16);
+    // bulbs along the valance, lit at dusk with the deck's
+    tubeE(V3(ax-0.68, ay-0.29, mz-1.66), V3(ax-0.68, ay-0.29, mz+1.66), 0.004, "#1a1a1a", 3);
+    for(let k=0;k<7;k++) push("brw_bulb", new T.SphereGeometry(0.04, 10, 8), ax-0.68, ay-0.35, mz-1.5+k*0.5, 0, "#ffffff");
+    LAMPS.push({x:hx0-0.8, y:hg+1.85, z:mz, color:0xffd2a0, intensity:0.45, dist:5.5, decay:1.6, mothy:true});
+    // the taps: a black tower behind them on the counter, a handle over each, the drip tray under
+    B(0.06, 0.36, 1.45, hx0+0.88, hg+1.115, mz, "#1d1d1e"); B(0.13, 0.02, 1.40, hx0+0.73, hg+0.96, mz, "#2a2a2c");
+    for(let k=0;k<5;k++){ const z=mz-0.6+k*0.3; C(0.016, 0.07, hx0+0.83, hg+1.0, z, "#c8ccd0", 8, 0, 0, Math.PI/2);
+      B(0.032, 0.15, 0.032, hx0+0.79, hg+1.085, z, ["#c42a1a","#e6c21c","#2a6a3a","#1f3b6e","#d8d4c8"][k]); }
+    // the back bar: a cooler with its glass door lit, the rest a cabinet; a board over it with the glasses on a shelf,
+    // the menu chalked up and a neon
+    B(0.5, 0.92, 2.6, hx0+2.1, hg+0.455, mz, "#3a2a20"); B(0.56, 0.04, 2.66, hx0+2.1, hg+0.93, mz, "#2a2018");
+    bucketOf("brw_fridge", ()=>{ const t=signTex(256, 256, (c,W,H)=>{ c.fillStyle="#e8f0f4"; c.fillRect(0,0,W,H);
+        for(let r=0;r<4;r++){ c.fillStyle="#b8c4c8"; c.fillRect(0, r*64+58, W, 6);
+          for(let k=0;k<9;k++){ c.fillStyle=["#c42a1a","#2a6a3a","#e6c21c","#1f3b6e","#d8d4c8","#b87333","#7a4f8a"][(k*3+r)%7]; c.fillRect(6+k*27, r*64+14, 20, 42);
+            c.fillStyle="rgba(255,255,255,0.35)"; c.fillRect(9+k*27, r*64+18, 4, 34); } }
+        c.strokeStyle="#2a2a2c"; c.lineWidth=10; c.strokeRect(0,0,W,H); });
+      return glowMat({color:0xffffff, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.32, roughness:0.15, metalness:0.1}, "indoor", null); });
+    push("brw_fridge", new T.PlaneGeometry(1.0, 0.78), hx0+1.84, hg+0.47, mz+0.6, -Math.PI/2, "#ffffff");
+    B(0.04, 1.2, 2.6, hx0+2.37, hg+1.54, mz, "#5a4430"); B(0.25, 0.03, 2.5, hx0+2.22, hg+1.25, mz, "#2a2018");
+    for(let k=0;k<9;k++){ C(0.034, 0.15, hx0+2.22, hg+1.345, mz-1.15+k*0.18, "#dfe6e4", 10); }
+    sign(1.0, 0.46, (c,W,H)=>{ c.fillStyle="#1e2420"; c.fillRect(0,0,W,H); c.strokeStyle="#8a6a44"; c.lineWidth=8; c.strokeRect(4,4,W-8,H-8);
+        ["DECK POURS","LAKE EFFECT IPA · 7","FRENCH CREEK PILS · 6","CONEAUT STOUT · 7"].forEach((s,k)=>say(c, s, W/2, H*(0.2+k*0.2), W*0.78, H*(k?0.12:0.15), k ? "#f2efe6" : "#e6c21c", "700", "'Comic Sans MS', 'Marker Felt', cursive")); },
+      hx0+2.335, hg+1.78, mz-0.6, -Math.PI/2, false, 400);
+    BREWERY.neon=BREWERY.neon||[];
+    const neon=(w, hh, draw, x, y, z, ry)=>{ const t=signTex(Math.round(w*320), Math.round(hh*320), draw);
+      const m=new T.Mesh(new T.PlaneGeometry(w, hh), new T.MeshBasicMaterial({map:t, transparent:true, depthWrite:false, toneMapped:false}));
+      m.position.set(x, y, z); m.rotation.y=ry; scene.add(m); BREWERY.neon.push(m); return m; };
+    const glowText=(c, s, x, y, maxW, size, col, family)=>{ c.save(); c.shadowColor=col; c.shadowBlur=size*0.45; c.fillStyle="#fff8ec"; fitText(c, s, maxW, size, x, y, "700", family); c.shadowBlur=size*0.2; c.fillStyle=col; fitText(c, s, maxW, size, x, y, "700", family); c.restore(); };
+    neon(0.9, 0.36, (c,W,H)=>{ glowText(c, "COLD BEER", W/2, H/2, W*0.80, H*0.55, "#ff4a7a", "'Brush Script MT', 'Segoe Script', cursive"); }, hx0+2.33, hg+1.80, mz+0.62, -Math.PI/2);
+    // the ledge outside the window: a tip jar, the napkins, two pints waiting to be taken out
+    push("glass", new T.CylinderGeometry(0.055, 0.05, 0.15, 14), hx0-0.1, hg+1.155, mz+1.0, 0, "#ffffff");
+    B(0.07, 0.05, 0.03, hx0-0.1, hg+1.11, mz+1.0, "#4a8a4a"); B(0.05, 0.03, 0.05, hx0-0.09, hg+1.14, mz+0.99, "#6aa86a");
+    B(0.10, 0.10, 0.05, hx0-0.12, hg+1.13, mz-0.95, "#c8ccd0"); B(0.09, 0.06, 0.03, hx0-0.12, hg+1.18, mz-0.95, "#f4f2ec");
+    for(const dz of [-0.45, -0.32]){ C(0.036, 0.13, hx0-0.08, hg+1.145, mz+dz, "#d89a2e", 12); C(0.037, 0.022, hx0-0.08, hg+1.218, mz+dz, "#f4efe0", 12); }
+    // two stools at the ledge, at the south end of the window (the servers fetch from the north end); yours to sit on
+    BREWERY.hutStools=[];
+    for(const dz of [0.25, 0.95]){ const sx=hx0-0.74, sz=mz+dz, g=gy(sx, sz);
+      C(0.18, 0.05, sx, g+0.83, sz, "#1e1e20", 16); C(0.022, 0.81, sx, g+0.405, sz, "#9a9ea2", 8); ent(new T.TorusGeometry(0.15, 0.011, 6, 16), sx, g+0.30, sz, "#9a9ea2", Math.PI/2); C(0.19, 0.02, sx, g+0.012, sz, "#9a9ea2", 16);
+      addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, g-0.5, g+0.85); BREWERY.hutStools.push([sx, sz, g]); }
+    // kegs round the side (one up on another), two crates of empties, the bins; a half barrel of flowers by the window
+    const keg=(x, y, z)=>{ C(0.2, 0.58, x, y+0.295, z, "#c8ccd0", 20); for(const yy of [0.035, 0.555]) C(0.206, 0.04, x, y+yy, z, "#a8acb0", 20);
+      for(const yy of [0.2, 0.39]) C(0.204, 0.025, x, y+yy, z, "#b8bcc0", 20); C(0.04, 0.03, x, y+0.603, z, "#2a2a2c", 10); };
+    { const kz=h.z1+0.55, g0=gy(1457.0, kz);
+      keg(1456.4, gy(1456.4, kz)+0.004, kz); keg(1457.0, g0+0.004, kz); keg(1457.6, gy(1457.6, kz)+0.004, kz); keg(1457.0, g0+0.62, kz);
+      for(const [cy, cdx] of [[0, 0], [0.285, 0.03]]){ const cx=1458.45+cdx, g=gy(1458.45, kz)+0.004+cy;
+        B(0.45, 0.28, 0.32, cx, g+0.14, kz, "#2a5a9a"); for(let k=0;k<12;k++) C(0.012, 0.03, cx-0.17+(k%4)*0.113, g+0.29, kz-0.1+((k/4)|0)*0.1, "#5a3a1a", 6); }
+      addCol(1456.15, 1458.72, kz-0.25, kz+0.25, g0-0.5, g0+1.2);
+      for(const [bxx, col] of [[1454.35, "#2f5a35"], [1455.0, "#1f4e8c"]]){ const g=gy(bxx, kz); RB(0.56, 0.92, 0.56, bxx, g+0.465, kz, col, 0, 0.04); B(0.6, 0.05, 0.6, bxx, g+0.945, kz, col);
+        addCol(bxx-0.3, bxx+0.3, kz-0.3, kz+0.3, g-0.5, g+0.98); }
+      sign(0.36, 0.16, (c,W,H)=>{ c.fillStyle="#1f4e8c"; c.fillRect(0,0,W,H); say(c, "CANS · GLASS", W/2, H/2, W*0.8, H*0.5, "#f4f2ec", "800", "Arial"); }, 1455.0, gy(1455.0, kz)+0.72, kz+0.29, 0, false, 200); }
+    { const px=hx0-0.45, pz=h.z1-0.75, g=gy(px, pz);
+      C(0.32, 0.42, px, g+0.215, pz, "#7a5030", 18); for(const yy of [0.06, 0.36]) C(0.326, 0.035, px, g+yy, pz, "#2a2a2c", 18); C(0.30, 0.02, px, g+0.442, pz, "#3a2a1a", 18);
+      for(let k=0;k<14;k++){ const a=k*2.4, rr=0.08+(k%3)*0.07; ent(new T.DodecahedronGeometry(0.07, 0), px+Math.cos(a)*rr, g+0.48+(k%4)*0.03, pz+Math.sin(a)*rr, "#3a6a2a", a, a);
+        ent(new T.SphereGeometry(0.035, 6, 5), px+Math.cos(a+1)*rr, g+0.53+(k%3)*0.03, pz+Math.sin(a+1)*rr, ["#e8483a","#f4c430","#f4f2ec","#c86ab8"][k%4]); }
+      addCol(px-0.33, px+0.33, pz-0.33, pz+0.33, g-0.5, g+0.6); } }
+
+  /* ---- the little things ----------------------------------------------------------------------------------------- */
+  // on every table a candle in a jar (lit at dusk); here and there a flight, a basket of fries, a pretzel on its board
+  bucketOf("brw_candle", ()=>emitMat(0xffa040, 1.1, "night", null));
+  { const q=_trng(6262), flame=new T.SphereGeometry(0.011, 8, 6).scale(1, 1.9, 1);
+    const dress=(x, z, y, w, umb)=>{ const top=y+0.7575, cx=x+(umb ? 0.22 : 0);
+      C(0.034, 0.075, cx, top+0.043, z, "#c8b48a", 12); C(0.03, 0.02, cx, top+0.068, z, "#f2ece0", 12); push("brw_candle", flame, cx, top+0.105, z, 0, "#ffffff");
+      const r=q(), sz=(q()<0.5 ? -1 : 1)*0.16;
+      if(r<0.35){ const fx=x-w*0.22; B(0.44, 0.02, 0.10, fx, top+0.015, z+sz, "#8a6a48");                       // a flight: four on a paddle
+        ["#e8b84a","#c8781a","#5a2a14","#a8321c"].forEach((cc,k)=>C(0.024, 0.085, fx-0.15+k*0.1, top+0.073, z+sz, cc, 10)); }
+      else if(r<0.6){ const fx=x-w*0.2; B(0.17, 0.06, 0.12, fx, top+0.035, z+sz, "#c42a1a"); B(0.15, 0.012, 0.10, fx, top+0.07, z+sz, "#f4f2ec");
+        for(let k=0;k<7;k++) B(0.012, 0.012, 0.09, fx-0.06+k*0.02, top+0.08+(k%2)*0.006, z+sz+(k%3-1)*0.01, "#e8c050", 0.3*(k%3-1)); }
+      else if(r<0.8){ const fx=x-w*0.22; B(0.24, 0.02, 0.18, fx, top+0.015, z+sz, "#b08a5a");
+        ent(new T.TorusGeometry(0.055, 0.02, 8, 16), fx, top+0.05, z+sz, "#8a4a1a", Math.PI/2); C(0.02, 0.03, fx+0.08, top+0.045, z+sz+0.04, "#e6c21c", 8); }
+      if(q()<0.6) B(0.09, 0.006, 0.09, x+(q()-0.5)*w*0.5, top+0.008, z-sz, "#f4f2ec", q()*1.5); };
+    BREWERY.tables.forEach((t, i)=>dress(t.x, t.z, D, 1.5, i<9 || i===BREWERY.tables.length-1));
+    BREWERY.inTables.forEach(t=>dress(t.x, t.z, FF, 0.9, false)); }
+  // the neon on the barnwood behind the bar, between the shelves: the name in script over a wave
+  { const BN=BREWERY.neon=BREWERY.neon||[], t=signTex(512, 200, (c,W,H)=>{
+      c.save(); c.shadowColor="#ffb04a"; c.shadowBlur=26; c.fillStyle="#fff1d8"; fitText(c, "Lakeshore", W*0.84, H*0.5, W/2, H*0.38, "700", "'Brush Script MT', 'Segoe Script', cursive");
+      c.shadowBlur=10; c.fillStyle="#ffb04a"; fitText(c, "Lakeshore", W*0.84, H*0.5, W/2, H*0.38, "700", "'Brush Script MT', 'Segoe Script', cursive");
+      c.strokeStyle="#5ad8ff"; c.shadowColor="#5ad8ff"; c.shadowBlur=18; c.lineWidth=7; c.lineCap="round"; c.beginPath();
+      for(let x=W*0.16; x<=W*0.84; x+=4){ const y=H*0.76+Math.sin((x-W*0.16)/(W*0.68)*Math.PI*4)*H*0.06; x===W*0.16 ? c.moveTo(x,y) : c.lineTo(x,y); } c.stroke(); c.restore(); });
+    const m=new T.Mesh(new T.PlaneGeometry(1.6, 0.625), new T.MeshBasicMaterial({map:t, transparent:true, depthWrite:false, toneMapped:false}));
+    m.position.set(BL.x1-WT-0.05, FF+2.42, -1236.0); m.rotation.y=-Math.PI/2; scene.add(m); BN.push(m); }
+  // the mug club: a board of pegs on the pier by the door, the regulars' mugs on them, every one different
+  { const z=BL.z1-WT-0.035, x=1447.1;
+    B(1.9, 0.62, 0.03, x, FF+1.75, z, "#5a4430");
+    for(let r=0;r<2;r++) for(let k=0;k<7;k++){ const mx=x-0.78+k*0.26, my=FF+1.92-r*0.32;
+      C(0.006, 0.05, mx, my+0.02, z-0.035, "#2a2a2c", 6, Math.PI/2);
+      C(0.045, 0.12, mx, my-0.08, z-0.07, ["#2e5a3a","#c42a1a","#e8e2d0","#1f3b6e","#b87333","#7a4f8a","#3a3a3c","#e6c21c"][(k*3+r*5)%8], 12);
+      ent(new T.TorusGeometry(0.03, 0.009, 6, 10), mx+0.05, my-0.08, z-0.07, "#e8e2d0"); }
+    B(0.74, 0.2, 0.02, x, FF+2.17, z, "#2a2018");
+    sign(0.7, 0.16, (c,W,H)=>{ c.fillStyle="#1e2a24"; c.fillRect(0,0,W,H); say(c, "MUG CLUB", W/2, H/2, W*0.8, H*0.6, "#e8d8b0", "900", "Georgia, serif"); }, x, FF+2.17, z-0.035, Math.PI, false, 320); }
+  // trivia night on the chalkboard by the door, inside
+  { const z=BL.z1-WT-0.035, x=1443.0;
+    B(0.94, 1.14, 0.03, x, FF+1.55, z, "#8a6a44");
+    sign(0.86, 1.06, (c,W,H)=>{ c.fillStyle="#1e2420"; c.fillRect(0,0,W,H);
+        say(c, "TRIVIA", W/2, H*0.16, W*0.78, H*0.13, "#e6c21c", "700", "'Comic Sans MS', 'Marker Felt', cursive");
+        ["THURSDAYS · 7 PM","TEAMS OF SIX","WINNERS DRINK FREE","(ONE ROUND, GARY)"].forEach((s,k)=>say(c, s, W/2, H*(0.38+k*0.14), W*0.78, H*0.075, "#f2efe6", "700", "'Comic Sans MS', 'Marker Felt', cursive"));
+        c.strokeStyle="#f2efe6"; c.lineWidth=3; c.beginPath(); c.moveTo(W*0.25, H*0.26); c.lineTo(W*0.75, H*0.26); c.stroke(); }, x, FF+1.55, z-0.03, Math.PI, false, 300); }
+  // the brewery's cat, asleep on a barrel by the brewhouse glass (updateBrewery breathes her)
+  { const x=1439.15, z=-1241.95, LP=[[0,0],[0.27,0],[0.30,0.12],[0.31,0.45],[0.30,0.78],[0.27,0.90],[0,0.90]].map(([r,y])=>new T.Vector2(r,y));
+    ent(new T.LatheGeometry(LP, 20), x, FF+0.006, z, "#8a5a32"); for(const yy of [0.10, 0.32, 0.58, 0.80]) C(yy>0.2 && yy<0.7 ? 0.313 : 0.304, 0.04, x, FF+yy, z, "#2a2a2c", 20);
+    C(0.268, 0.01, x, FF+0.905, z, "#6a4022", 20);
+    addCol(x-0.32, x+0.32, z-0.32, z+0.32, FF-0.5, FF+1.1);
+    const cat=new T.Group(); cat.position.set(x, FF+0.912, z); cat.rotation.y=0.6; scene.add(cat);
+    const fur=_heldMat("#d8823a"), wht=_heldMat("#f2ece0");
+    const body=new T.Mesh(new T.SphereGeometry(1, 16, 10), fur); body.scale.set(0.15, 0.085, 0.11); body.position.y=0.08; cat.add(body);
+    const head=new T.Group(); head.position.set(0.13, 0.07, 0.05); cat.add(head);
+    const hm=new T.Mesh(new T.SphereGeometry(0.06, 14, 10), fur); hm.scale.set(1, 0.85, 0.95); head.add(hm);
+    const muz=new T.Mesh(new T.SphereGeometry(0.03, 10, 8), wht); muz.position.set(0.045, -0.015, 0.0); head.add(muz);
+    const ears=[]; for(const sd of [-1,1]){ const e=new T.Mesh(new T.ConeGeometry(0.022, 0.045, 4), fur); e.position.set(0.01, 0.05, sd*0.03); e.rotation.x=sd*0.35; head.add(e); ears.push(e); }
+    const tail=new T.Mesh(new T.TorusGeometry(0.12, 0.022, 8, 18, Math.PI*1.1), fur); tail.rotation.x=Math.PI/2; tail.rotation.z=0.4; tail.position.set(-0.01, 0.025, 0); cat.add(tail);
+    const paw=new T.Mesh(new T.SphereGeometry(0.025, 8, 6), wht); paw.scale.set(1.4, 0.7, 1); paw.position.set(0.15, 0.02, 0.07); cat.add(paw);
+    cat.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
+    BREWERY.cat={g:cat, body:body, head:head, ears:ears, tail:tail, t:0}; }
+  // the steam stack off the brewhouse roof: on a brew day it puffs (updateBrewery)
+  { const k=(RIDGE-EAVE)/((BL.z1-BL.z0)/2), sx=1434.6, sz=-1238.2, ry=RIDGE-Math.abs(sz-(BL.z0+BL.z1)/2)*k;
+    C(0.11, 1.5, sx, ry+0.55, sz, "#c8ccd0", 16); ent(new T.ConeGeometry(0.2, 0.14, 16), sx, ry+1.42, sz, "#a8acb0"); C(0.012, 0.16, sx, ry+1.3, sz, "#a8acb0", 6);
+    BREWERY.steam={x:sx, y:ry+1.3, z:sz, t:0}; }
+  // hops up twine either end of the front, out of long planters on the walk: bines, leaves, the papery cones
+  { const q=_trng(9393);
+    for(const px of [1431.7, 1458.3]){ const pz=BL.z1+0.22, py=Y+0.125;
+      B(2.4, 0.42, 0.40, px, py+0.21, pz, "#4a3a2c"); B(2.32, 0.02, 0.32, px, py+0.40, pz, "#3a2a1a");
+      addCol(px-1.2, px+1.2, pz-0.2, pz+0.2, Y-0.5, py+0.45);
+      for(let s=0;s<5;s++){ const x0=px-0.9+s*0.45, a=V3(x0, py+0.42, pz), b=V3(x0+(q()-0.5)*0.3, EAVE-0.25, BL.z1+0.5);
+        tubeE(a, b, 0.003, "#c8b890", 3);
+        const n=26-s%2*4;
+        for(let k=0;k<n;k++){ const t=Math.pow(k/n, 0.8)*(0.82+q()*0.12), p=a.clone().lerp(b, t), sp=0.07+0.06*(1-t);
+          ent(new T.DodecahedronGeometry(sp+q()*0.04, 0), p.x+(q()-0.5)*0.22, p.y+(q()-0.5)*0.1, p.z+(q()-0.5)*0.14, q()<0.5 ? "#3e7a2a" : "#2f6a24", q()*3, q()*3);
+          if(t>0.25 && q()<0.55) ent(new T.ConeGeometry(0.022, 0.055, 6), p.x+(q()-0.5)*0.26, p.y-0.06, p.z+(q()-0.5)*0.16, "#b8d07a", Math.PI); } } } }
+  // a sandwich board at the lot's mouth: what's on tonight
+  { const sx=X1-4.2, sz=Z-HW-2.6, g=gy(sx, sz);
+    for(const sd of [-1,1]){ ent(boxGeo(0.62, 0.92, 0.03), sx, g+0.44, sz+sd*0.12, "#3a2a1c", -sd*0.13);
+      sign(0.54, 0.80, (c,W,H)=>{ c.fillStyle="#1e2420"; c.fillRect(0,0,W,H);
+          say(c, "TONIGHT", W/2, H*0.13, W*0.78, H*0.1, "#e6c21c", "700", "'Comic Sans MS', 'Marker Felt', cursive");
+          ["LIVE MUSIC","ON THE DECK","6 TO 9","·","NEW ON TAP:","WEIR FARM","HEFE"].forEach((s,k)=>say(c, s, W/2, H*(0.28+k*0.1), W*0.78, H*0.07, k===3 ? "#e6c21c" : "#f2efe6", "700", "'Comic Sans MS', 'Marker Felt', cursive")); },
+        sx, g+0.46, sz+sd*0.142, sd>0 ? 0 : Math.PI, false, 220).rotation.x=-0.13; }
+    addCol(sx-0.34, sx+0.34, sz-0.3, sz+0.3, g-0.5, g+0.95); }
+  // two Adirondack chairs on the grass by the maple, looking down to the lake, a stump between them for the glasses
+  { const ad=(x, z, ry, col)=>{ const f=XF(x, z, ry), g=gy(x, z), q=(w,h,d,lx,ly,lz,rx)=>ent(boxGeo(w,h,d), f.x(lx,lz), g+ly, f.z(lx,lz), col, rx||0, ry, 0);
+      for(let k=0;k<5;k++) q(0.62, 0.025, 0.08, 0, 0.36-k*0.012, 0.22-k*0.11, 0.12);
+      for(let k=0;k<5;k++) q(0.10, 0.82, 0.025, -0.24+k*0.12, 0.72, -0.36, -0.38);
+      for(const sd of [-1,1]){ q(0.11, 0.025, 0.72, sd*0.36, 0.58, 0.02); q(0.05, 0.56, 0.05, sd*0.36, 0.28, 0.32); q(0.05, 0.40, 0.05, sd*0.31, 0.2, -0.2); q(0.04, 0.10, 0.62, sd*0.31, 0.33, 0.02); }
+      addCol(x-0.42, x+0.42, z-0.42, z+0.42, g-0.5, g+0.6); addSeat(x, z, g, ry+Math.PI, "AN ADIRONDACK CHAIR", false, 0.76); };
+    ad(1423.6, -1252.4, Math.PI+0.25, "#b0221c"); ad(1425.9, -1252.6, Math.PI-0.15, "#2a7a8a");
+    const sx=1424.75, sz=-1252.3, g=gy(sx, sz); C(0.2, 0.42, sx, g+0.21, sz, "#6a4a2e", 14); C(0.19, 0.01, sx, g+0.42, sz, "#c8a878", 14);
+    for(const dx of [-0.06, 0.07]){ C(0.034, 0.13, sx+dx, g+0.495, sz, "#d89a2e", 12); C(0.035, 0.02, sx+dx, g+0.57, sz, "#f4efe0", 12); }
+    addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, g-0.5, g+0.45); }
+  // the corner of the deck the music plays from: a low stage, a rug, the amp, the mic, a speaker on a stand,
+  // a chalkboard on an easel; somebody on the stool with a guitar (breweryFolk)
+  { const x0=1462.8, x1=DK.x1-0.12, z0=-1275.6, z1=-1268.6, cx=(x0+x1)/2, cz=(z0+z1)/2, top=D+0.2;
+    B(x1-x0, 0.22, z1-z0, cx, D+0.09, cz, "#3a2e24"); B(x1-x0+0.02, 0.06, z1-z0+0.02, cx, D+0.165, cz, "#2a2018");
+    addFlat(x0, x1, z0, z1, top); BREWERY.stage={x:cx-0.05, z:cz, y:top+0.018};
+    { const sx=cx-0.05, sy=top+0.018; C(0.18, 0.05, sx, sy+0.76, cz, "#1e1e20", 16); C(0.022, 0.73, sx, sy+0.37, cz, "#9a9ea2", 8);
+      ent(new T.TorusGeometry(0.15, 0.011, 6, 16), sx, sy+0.28, cz, "#9a9ea2", Math.PI/2); C(0.19, 0.02, sx, sy+0.012, cz, "#9a9ea2", 16); }
+    B(2.2, 0.01, 1.7, cx-0.2, top+0.008, cz, "#8a2a2a"); B(1.9, 0.012, 1.4, cx-0.2, top+0.012, cz, "#c88a3a");
+    B(0.28, 0.42, 0.48, cx+1.1, top+0.215, cz+1.2, "#1d1d1e"); B(0.01, 0.26, 0.40, cx+0.952, top+0.24, cz+1.2, "#4a4238");
+    B(0.22, 0.03, 0.40, cx+1.1, top+0.443, cz+1.2, "#c8b48a");
+    tubeE(V3(cx-0.85, top, cz+0.25), V3(cx-0.85, top+1.2, cz+0.25), 0.012, "#2a2a2c", 6); C(0.14, 0.02, cx-0.85, top+0.025, cz+0.25, "#2a2a2c", 14);
+    tubeE(V3(cx-0.85, top+1.2, cz+0.25), V3(cx-0.44, top+1.33, cz+0.05), 0.008, "#2a2a2c", 6); ent(new T.SphereGeometry(0.03, 10, 8).scale(1.6, 1, 1), cx-0.41, top+1.335, cz+0.04, "#5a5e62", 0, 0.45);
+    tubeE(V3(cx+1.2, top, cz-2.4), V3(cx+1.2, top+1.75, cz-2.4), 0.022, "#1d1d1e", 8);
+    for(let k=0;k<3;k++){ const a=k*2.09; tubeE(V3(cx+1.2, top+0.6, cz-2.4), V3(cx+1.2+Math.cos(a)*0.45, top+0.005, cz-2.4+Math.sin(a)*0.45), 0.012, "#1d1d1e", 5); }
+    B(0.3, 0.55, 0.36, cx+1.2, top+2.02, cz-2.4, "#1d1d1e"); B(0.01, 0.48, 0.30, cx+1.044, top+2.02, cz-2.4, "#3a3a3c");
+    C(0.12, 0.22, cx+0.7, top+0.115, cz-1.2, "#c8ccd0", 14); sign(0.2, 0.08, (c,W,H)=>{ c.fillStyle="#f4f2ec"; c.fillRect(0,0,W,H); say(c, "TIPS", W/2, H/2, W*0.8, H*0.6, "#1d1d1e", "800", "Arial"); }, cx+0.7-0.132, top+0.13, cz-1.2, -Math.PI/2, false, 120);
+    addCol(cx+0.94, cx+1.26, cz+0.94, cz+1.46, top-0.2, top+0.5); addCol(cx+1.0, cx+1.4, cz-2.6, cz-2.2, top-0.2, top+2.3);
+    const ex=x0-0.55, ez=z0+0.9;
+    for(const [dx, dz] of [[-0.15, -0.25], [-0.15, 0.25], [0.35, 0]]) tubeE(V3(ex+dx, D+0.004, ez+dz), V3(ex, D+1.42, ez), 0.015, "#6a4a2e", 5);
+    B(0.06, 0.04, 0.62, ex-0.09, D+0.70, ez, "#6a4a2e");
+    sign(0.56, 0.72, (c,W,H)=>{ c.fillStyle="#1e2420"; c.fillRect(0,0,W,H); c.strokeStyle="#8a6a44"; c.lineWidth=8; c.strokeRect(4,4,W-8,H-8);
+        say(c, "ON THE DECK", W/2, H*0.18, W*0.78, H*0.1, "#e6c21c", "700", "'Comic Sans MS', 'Marker Felt', cursive");
+        ["DAVE PETRUCCI","SONGS ABOUT","LAKES & TRUCKS","6 — 9 PM"].forEach((s,k)=>say(c, s, W/2, H*(0.38+k*0.15), W*0.78, H*0.085, "#f2efe6", "700", "'Comic Sans MS', 'Marker Felt', cursive")); },
+      ex-0.11, D+1.08, ez, -Math.PI/2, false, 220);
+    addCol(ex-0.3, ex+0.4, ez-0.35, ez+0.35, D-0.5, D+1.4); }
+
   const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.15}));
   mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
 })();
@@ -421,7 +605,9 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   // at the bar, on the stools
   // (each sits on top of the seat: the hips five or six centimetres over it, the stools' tops at 0.79, the chairs' 0.46,
   // the sofas' cushions 0.52)
-  for(const z of [-1239.85, -1236.75, -1235.2]) crowdAdd(G, {look:guest({}), x:1453.98, z:z, y:FF+0.30, yaw:Math.PI/2, mode:"sit", sitY:0.545, held:"pint", drink:true});
+  // (the first, third and fourth; you can have the others: on a stool you sit a third of a metre higher than in a chair)
+  BREWERY.barStools.forEach(([x, z], k)=>{ if(k===0 || k===2 || k===3) crowdAdd(G, {look:guest({}), x:x, z:z, y:FF+0.30, yaw:Math.PI/2, mode:"sit", sitY:0.545, held:"pint", drink:true});
+    else addSeat(x, z, FF, -Math.PI/2, "A STOOL AT THE BAR", false, 0.34); });
   // at the tables inside, and out on the deck, round the fire, at the rail
   const at=(x, z, ry, y, sy)=>crowdAdd(G, {look:guest({}), x:x, z:z, y:y, yaw:ry, mode:"sit", sitY:sy||0.515, held:q()<0.8 ? "pint" : "can", drink:true});
   // (a chair faces its table, and whoever is in it faces the same way; every chair left empty is one you can sit in)
@@ -432,7 +618,29 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   for(const [x,z,ry] of BREWERY.sofas.slice(0,2)){ const f=XF(x, z, ry); at(f.x(0.45, 0.05), f.z(0.45, 0.05), ry, Terrain.groundAt(x,z), 0.575); }
   for(const [x,dz] of [[1437.6,0],[1438.4,0.1],[1451.0,0]]) crowdAdd(G, {look:guest({}), x:x, z:DK.z0+0.55+dz, y:D, yaw:Math.PI, mode:"stand", held:"pint", drink:true, sway:0.5});
   // two on the stools at the rail's high-tops, looking out at the lake
-  for(const k of [0, 3]){ const [sx, sz]=BREWERY.highTops[k]; crowdAdd(G, {look:guest({}), x:sx, z:sz, y:D+0.30, yaw:Math.PI, mode:"sit", sitY:0.54, held:"pint", drink:true}); }
+  BREWERY.highTops.forEach(([sx, sz], k)=>{ if(k===0 || k===3) crowdAdd(G, {look:guest({}), x:sx, z:sz, y:D+0.30, yaw:Math.PI, mode:"sit", sitY:0.54, held:"pint", drink:true});
+    else addSeat(sx, sz, D, 0, "A STOOL AT THE RAIL", false, 0.34); });
+  // one at the deck bar's ledge, the other stool there yours (it stands taller than the taproom's: 0.85 to the seat)
+  if(BREWERY.hutStools){ const [ax, az, ag]=BREWERY.hutStools[0], [sx, sz, sg]=BREWERY.hutStools[1];
+    addSeat(ax, az, ag, -Math.PI/2, "A STOOL AT THE DECK BAR", false, 0.265);
+    crowdAdd(G, {look:guest({}), x:sx, z:sz, y:sg+0.30, yaw:Math.PI/2, mode:"sit", sitY:0.61, held:"pint", drink:true}); }
+  // Dave on the stage in the corner of the deck, on his stool with his guitar, playing to the tables
+  if(BREWERY.stage){ const S=BREWERY.stage;
+    const dave=crowdAdd(G, {look:guest({h:1.02, beard:"#5a3a1e", shirt:"#8a2a22", pants:"#2c3446", shoes:"#6b4a2b", beanie:"#3a5a7a", cap:null, shades:false, shorts:false, long:true}),
+      x:S.x, z:S.z, y:S.y+0.30, yaw:-Math.PI/2, mode:"sit", sitY:0.545, job:"strum"});
+    // an acoustic, built on its side, the neck along -x, the top facing +z: on his right thigh against him, the neck up
+    // to his left hand (it rides on his spine, so it goes with him as he leans and breathes)
+    const gtr=crowdProp((ent, B, C)=>{ const SP="#c8873a", NK="#5a3a1e", EB="#1d1410";
+      ent(new T.CylinderGeometry(0.19, 0.19, 0.10, 28), 0.09, 0, 0, SP, Math.PI/2); ent(new T.CylinderGeometry(0.15, 0.15, 0.10, 24), -0.13, 0, 0, SP, Math.PI/2);
+      B(0.12, 0.24, 0.099, -0.02, 0, 0, SP);
+      ent(new T.CylinderGeometry(0.192, 0.192, 0.02, 28), 0.09, 0, -0.04, "#6a3a1a", Math.PI/2); ent(new T.CylinderGeometry(0.152, 0.152, 0.02, 24), -0.13, 0, -0.04, "#6a3a1a", Math.PI/2);
+      ent(new T.CylinderGeometry(0.045, 0.045, 0.004, 18), -0.05, 0, 0.0505, EB, Math.PI/2); ent(new T.TorusGeometry(0.052, 0.004, 4, 20), -0.05, 0, 0.051, "#e8d8b0");
+      B(0.03, 0.11, 0.012, 0.15, 0, 0.055, EB);
+      B(0.50, 0.05, 0.03, -0.47, 0, 0.03, NK); B(0.48, 0.046, 0.006, -0.47, 0, 0.048, EB);
+      B(0.17, 0.075, 0.025, -0.80, 0, 0.022, EB); for(const sd of [-1,1]) for(let k=0;k<3;k++) C(0.007, 0.03, -0.75-k*0.045, sd*0.05, 0.022, "#c8ccd0", 6);
+      for(let k=0;k<6;k++) B(0.86, 0.0018, 0.0018, -0.33, -0.0175+k*0.007, 0.053, "#d8d8d0"); });
+    gtr.scale.setScalar(0.9); gtr.position.set(0.02, 0.17, 0.215); gtr.rotation.set(-0.18, 0, -0.36);
+    dave.P.B[dave.P.j.spine].add(gtr); }
   // and somebody's dog, lying on the boards by their table with her water bowl, watching the servers go by
   { const t=BREWERY.tables[3], dx=t.x+1.25, dz=t.z+0.95, dog=buildDog("#c8a060");
     dog.g.position.set(dx, D, dz); dog.g.rotation.y=-Math.PI/2-0.3;
@@ -468,6 +676,16 @@ function updateBrewery(dt, dark){
   if(B.fire){ const n=0.8+0.2*Math.sin(CROWD.t*11)*Math.sin(CROWD.t*4.3); B.fire.m.scale.set(1, n, 1); B.fire.m.material.opacity=0.55+0.3*n;
     B.fire.l.intensity=0.9*n*smoothstep(0.15, 0.6, dark); B.fire.m.visible=true;
     if(dark>0.2 && typeof PUFFS!=="undefined" && Math.random()<dt*6) PUFFS.emit(B.fire.l.x+(Math.random()-0.5)*0.2, B.fire.l.y-0.3, B.fire.l.z+(Math.random()-0.5)*0.2, 0, 0.5, 0, 0.12, 0.7, 2.2, 0.35, 0.55, 0.7); }
+  // the neons: a little brighter as the light goes
+  if(B.neon) for(const m of B.neon) m.material.color.setScalar(0.72+0.28*smoothstep(0.1, 0.6, dark));
+  // the cat on her barrel: breathing slow, an ear going now and then, the end of her tail
+  if(B.cat){ const k=B.cat, t=(k.t+=dt);
+    k.body.scale.y=0.085*(1+0.045*Math.sin(t*2.3)); k.body.position.y=0.08+0.003*Math.sin(t*2.3);
+    const tw=(t*0.23)%1, flick=tw<0.03 ? Math.sin(tw/0.03*Math.PI*3)*0.35 : 0;
+    k.ears[1].rotation.z=flick; k.head.rotation.z=0.04*Math.sin(t*0.13); k.tail.rotation.z=0.4+0.08*Math.sin(t*0.6)*Math.max(0, _noise1(t*0.2)); }
+  // the steam off the stack: a brew on most of the day, the boil a minute or so in every two and a half
+  if(B.steam && typeof PUFFS!=="undefined" && dark<0.55){ const S=B.steam; S.t+=dt; const on=((S.t/150)%1)<0.45;
+    if(on && Math.random()<dt*5) PUFFS.emit(S.x+(Math.random()-0.5)*0.08, S.y+0.22, S.z+(Math.random()-0.5)*0.08, 0.15, 0.75+Math.random()*0.3, 0.05, 0.16, 1.5, 3.6, 0.20, 0.97, 0); }
   // the game on the TVs: a dozen frames a second while you are near enough to watch, a couple from further off
   const near=Math.hypot(c.x-1452, c.z+1236)<26;
   bbTick(B.screens, dt);

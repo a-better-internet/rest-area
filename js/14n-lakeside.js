@@ -416,7 +416,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     lot(H.n4, 1205.4, {car:[2, "#e8e4da", 1209.0, zr(9.5), Math.PI], trees:[["hard", 1199, zr(52), 1.35],["hemlock", 1233, zr(5), 1.05]]});
     lot(H.n5, 1402.0, {gravel:[1402.6, 1405.8], car:[0, "#3a5a8a", 1404.2, zr(10), Math.PI], trees:[["hard", 1385, zr(5), 1.2],["pine", 1416, zr(42), 1.1]]});
     // out back, toward the water: a fire ring with chairs round it, kayaks, a picnic table and the grill, a shed
-    fire(1084, zr(66)); kayaks(1072, zr(70), Math.PI/2);
+    fire(1090, zr(58)); kayaks(1079, zr(52), Math.PI/2);             // (the corner down by the water is the dog park's, 14t)
     shed(1122, zr(45), Math.PI, "#8a2418", "#3e4246"); swingSet(1134, zr(52), 0.3);
     fire(1175, zr(70)); kayaks(1185, zr(76), Math.PI/2+0.2);
     picnic(1212, zr(48), 0.1, "#8a6a44"); picnic(1218, zr(53), -0.2, "#c42a1a"); grill(1222.5, zr(46.5)); flagpole(1227, zr(42));

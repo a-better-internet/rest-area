@@ -134,6 +134,11 @@ const ROUTES={
   // the disc golf course (18i) in the park: past the course sign, over the first tee's pad, down the fairway to the second tee
   "the disc golf course":   [[1246,-1201],[1246,-1212],[1245.6,-1221],[1247,-1226],[1262,-1241],[1272.6,-1251.2],[1290,-1232]],
   "down to the deck":       [[1461,-1228.4],[1461.8,-1243.5],[1462.6,-1252],[1460.5,-1262],[1459,-1266.5],[1457.5,-1268.5],[1457.5,-1276.5],[1428,-1276.5],[1424.6,-1278],[1424.6,-1294.2],[1445,-1294.2]],
+  // the dog park (14t): up the gravel path off the street, through both gates (they open themselves), down the run
+  "into the dog park":      [[1068.4,-1203],[1068.4,-1232],[1069.4,-1251],[1073.2,-1263.0],[1079.6,-1267.4],[1082,-1268.2],[1082,-1270.4],[1082,-1273.5],[1082,-1290]],
+  // the Perky Loon (14u): in at the patio's gate, up the step and over the porch, in the door to the counter; round behind it
+  "into the perky loon":    [[1437.5,-1197],[1437.5,-1193.6],[1437.5,-1190],[1437.5,-1188.6],[1437.5,-1187.5],[1437.5,-1186.0],[1437.5,-1184.0],[1436.2,-1182.6]],
+  "behind the coffee counter": [[1436.2,-1182.6],[1435.4,-1182.6],[1435.4,-1180.85],[1437.5,-1180.85],[1440.8,-1180.85]],
 };
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});

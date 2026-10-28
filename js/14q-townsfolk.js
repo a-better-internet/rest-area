@@ -31,7 +31,7 @@
 const CROWD={groups:[], t:0};
 function crowdGroup(name, cx, cz, reach){ const g={name:name, cx:cx, cz:cz, r:reach||170, people:[], shown:true, day:true}; CROWD.groups.push(g); return g; }
 // a glass, a can, a cup, a rod, a tray: something held, on a forearm's bone, the way 14b holds a cigarette
-const _HELD={};
+const _HELD={}, _HELD_UP={pint:1, can:1, cup:1};                       // (_HELD_UP: drinks, kept standing in the hand)
 function _heldMat(c){ return _HELD[c]||(_HELD[c]=new T.MeshStandardMaterial({color:c, roughness:0.4, metalness:0.1})); }
 function crowdHold(P, kind, right){
   const h=P.h, g=new T.Group(), bone=P.B[right===false ? P.j.elL : P.j.elR];
@@ -46,7 +46,19 @@ function crowdHold(P, kind, right){
     g.add(lv); const add2=(geo, c, x, y, z)=>{ const m=new T.Mesh(geo, _heldMat(c)); m.position.set(x,y,z); lv.add(m); };
     add2(new T.CylinderGeometry(0.20, 0.20, 0.015, 18), "#2a2a2c", 0, 0.03, 0.04);
     for(const [dx,dz] of [[-0.07,-0.04],[0.07,0.02],[0,0.10]]) add2(new T.CylinderGeometry(0.035, 0.030, 0.14, 10), "#d89a2e", dx, 0.03+0.0075+0.07, 0.04+dz); }
-  else if(kind==="rod"){ const r=add(new T.CylinderGeometry(0.006, 0.012, 2.6, 6), "#2a2a2c", 0, 0.0, 1.25, Math.PI/2+0.5); r.position.y=0.62; }
+  else if(kind==="rod"){
+    /* a spinning rod, laid along +y with its reel hung on the +z side (the tick turns it out over the water, the reel
+       under it): the hand round the reel's seat at the origin, the cork grip back toward the body, the blank tapering
+       away to the tip, its guides under it; g.tip is the tip, for the line */
+    add(new T.CylinderGeometry(0.015, 0.017, 0.38, 10), "#b48a58", 0, -0.21, 0); add(new T.CylinderGeometry(0.019, 0.019, 0.03, 10), "#1d1d1e", 0, -0.415, 0);
+    add(new T.CylinderGeometry(0.013, 0.014, 0.10, 10), "#b48a58", 0, 0.08, 0); add(new T.CylinderGeometry(0.010, 0.012, 0.06, 8), "#4a4c50", 0, 0.0, 0);
+    add(new T.CylinderGeometry(0.0035, 0.009, 2.10, 6), "#2a1e1a", 0, 1.18, 0);
+    add(new T.BoxGeometry(0.008, 0.012, 0.055), "#8a8d90", 0, 0.0, 0.032);                           // (the reel's stem, between the fingers)
+    add(new T.CylinderGeometry(0.030, 0.026, 0.05, 14), "#2a2a2e", 0, -0.005, 0.075); add(new T.CylinderGeometry(0.024, 0.024, 0.018, 14), "#c8ccd0", 0, 0.028, 0.075);
+    add(new T.BoxGeometry(0.06, 0.006, 0.008), "#8a8d90", 0.035, -0.01, 0.075); add(new T.CylinderGeometry(0.007, 0.007, 0.02, 6), "#1d1d1e", 0.066, -0.01, 0.075, Math.PI/2);
+    for(const [y, s] of [[0.42, 0.016],[0.78, 0.012],[1.14, 0.010],[1.50, 0.008],[1.86, 0.007],[2.20, 0.006]])
+      add(new T.TorusGeometry(s, 0.0018, 4, 10), "#c8ccd0", 0, y, 0.008+s, Math.PI/2);
+    g.tip=new T.Object3D(); g.tip.position.set(0, 2.235, 0.004); g.add(g.tip); }
   else if(kind==="can_w"){ add(new T.CylinderGeometry(0.09, 0.10, 0.22, 12), "#3a8a4a", 0, -0.12, 0.05); add(new T.CylinderGeometry(0.015, 0.015, 0.30, 6), "#3a8a4a", 0, -0.02, 0.22, 1.0); }
   else if(kind==="sponge") add(new T.BoxGeometry(0.12, 0.06, 0.08), "#e6c21c", 0, 0, 0.03);
   else if(kind==="paper") add(new T.BoxGeometry(0.30, 0.40, 0.01), "#e8e4d8", -0.12, 0.05, 0.12, -0.3);
@@ -127,16 +139,18 @@ function _crowdPose(p, now, moving){
     B[J.knL].rotation.x*=1.4; B[J.knR].rotation.x*=1.4; B[J.root].position.y+=Math.abs(Math.cos(p.ph*Math.PI*2))*0.03; }
   if(p.sitY!==undefined && m==="sit") B[J.root].position.y=p.sitY;
   // a drink: up to the mouth for a moment every so often
+  p.sip=0;
   if(p.drink){ const c=(t*0.09+P.seed)%1, up=smoothstep(0,0.08,c)*(1-smoothstep(0.16,0.24,c));
     B[J.shR].rotation.set(-0.45-up*0.95, -up*0.55, 0.12-up*0.10); B[J.elR].rotation.set(-1.15-up*0.95, up*0.6, 0);
-    B[J.head].rotation.x=-0.12*up; }
+    B[J.head].rotation.x=-0.12*up; p.sip=up; }
   const k=p.job;
   if(k==="wash"){ const a=t*2.6; B[J.shR].rotation.set(-1.15+Math.sin(a)*0.25, 0, 0.25+Math.cos(a)*0.25); B[J.elR].rotation.x=-0.5; B[J.spine].rotation.x=0.28; B[J.head].rotation.x=0.2; }
   else if(k==="water"){ B[J.shR].rotation.set(-0.85, 0.2, 0); B[J.elR].rotation.x=-0.25+Math.sin(t*0.7)*0.08; B[J.head].rotation.x=0.35; B[J.spine].rotation.y=Math.sin(t*0.4)*0.25; }
   else if(k==="kneel"){ B[J.root].position.y=0.34; B[J.hpL].rotation.x=B[J.hpR].rotation.x=-0.25; B[J.knL].rotation.x=B[J.knR].rotation.x=2.0;
     B[J.spine].rotation.x=0.55; B[J.shL].rotation.x=-0.9+Math.sin(t*2.1)*0.2; B[J.shR].rotation.x=-0.8+Math.sin(t*1.7+1)*0.25; B[J.elL].rotation.x=B[J.elR].rotation.x=-0.3; B[J.head].rotation.x=0.3; }
-  else if(k==="fish"){ B[J.shL].rotation.set(-0.75, 0, -0.2); B[J.shR].rotation.set(-0.85, 0, 0.15); B[J.elL].rotation.x=B[J.elR].rotation.x=-0.8;
-    const jig=Math.max(0, Math.sin(t*0.6))>0.97 ? 0.25 : 0; B[J.shR].rotation.x-=jig; }
+  else if(k==="fish"){ const jig=p.jig||0;                                // (the rod hand at his belt, the other resting on the grip by it)
+    B[J.shR].rotation.set(-0.42-jig*0.9, 0, 0.10); B[J.elR].rotation.set(-0.95-jig*0.5, 0, 0);
+    B[J.shL].rotation.set(-0.48-jig*0.6, 0.35, -0.05); B[J.elL].rotation.set(-1.25-jig*0.4, 0, 0); B[J.head].rotation.y*=0.25; B[J.head].rotation.x=0.18; }
   else if(k==="pour"){ const c=(t*0.12+P.seed)%1, up=smoothstep(0.0,0.1,c)*(1-smoothstep(0.35,0.45,c)); B[J.shR].rotation.set(-0.35-up*0.7, 0, 0.1); B[J.elR].rotation.x=-0.6-up*0.4; B[J.head].rotation.x=0.18*up; B[J.head].rotation.y*=1-up; }
   else if(k==="tray"){ B[J.shL].rotation.set(-0.35, 0, -0.25); B[J.elL].rotation.set(-1.5, 0, 0); }
   else if(k==="mow"){ B[J.shL].rotation.x=B[J.shR].rotation.x=-0.55; B[J.elL].rotation.x=B[J.elR].rotation.x=-0.55; B[J.spine].rotation.x=0.12; }
@@ -149,6 +163,19 @@ function _crowdPose(p, now, moving){
     B[J.shL].rotation.set(-1.05, 0, -0.15); B[J.shR].rotation.set(-1.05+look*0.6, 0, 0.15); B[J.elL].rotation.x=-0.75; B[J.elR].rotation.x=-0.75+look*0.5;
     B[J.head].rotation.y=look*1.35; B[J.spine].rotation.y=look*0.35; }
   else if(k==="mourn"){ B[J.head].rotation.x=0.42; B[J.shL].rotation.set(-0.35, 0, 0.35); B[J.shR].rotation.set(-0.35, 0, -0.35); B[J.elL].rotation.x=B[J.elR].rotation.x=-1.05; }
+  else if(k==="throw"){                                         // (the dog park's, 14t: throwK through the throw, bendK down for the ball)
+    const c=p.throwK, b=p.bendK||0;
+    if(c!==undefined){ let sx, el, tw;
+      if(c<0.45){ const u=smoothstep(0, 0.45, c); sx=-0.1-2.6*u; el=-0.2-1.3*u; tw=-0.35*u; }
+      else if(c<0.6){ const u=smoothstep(0.45, 0.6, c); sx=-2.7+1.8*u; el=-1.5+1.4*u; tw=-0.35+0.65*u; }
+      else { const u=smoothstep(0.6, 1.0, c); sx=-0.9+0.8*u; el=-0.1-0.1*u; tw=0.3*(1-u); }
+      B[J.shR].rotation.set(sx, 0, 0.15); B[J.elR].rotation.set(el, 0, 0); B[J.spine].rotation.y=tw; B[J.head].rotation.y=0; B[J.head].rotation.x=-0.1; }
+    if(b>0){ B[J.spine].rotation.x=0.95*b; B[J.head].rotation.x=0.2*b; B[J.hpL].rotation.x=B[J.hpR].rotation.x=-0.35*b; B[J.knL].rotation.x=B[J.knR].rotation.x=0.45*b;
+      B[J.root].position.y-=0.10*b; B[J.shR].rotation.set(-0.9*b, 0, 0.05); B[J.elR].rotation.x=-0.2*b; } }
+  else if(k==="strum"){ const s=Math.sin(t*9.5+P.seed)*(0.6+0.4*Math.sin(t*0.7));          // (the guitar on his knee, 14r)
+    B[J.shR].rotation.set(-0.42+s*0.08, 0.2, 0.28); B[J.elR].rotation.set(-1.25+s*0.18, 0.35, 0);
+    B[J.shL].rotation.set(-1.0, 0.5, -0.45); B[J.elL].rotation.set(-1.0, 0, 0);
+    B[J.head].rotation.x=0.25; B[J.head].rotation.y=-0.30+Math.sin(t*0.4+P.seed)*0.12; }
   else if(k==="hang"){ const c=(t*0.11+P.seed)%1, up=smoothstep(0.08, 0.22, c)*(1-smoothstep(0.62, 0.78, c)), dn=smoothstep(0.82, 0.9, c)*(1-smoothstep(0.94, 1.0, c));
     B[J.shL].rotation.set(-0.3-up*2.35, 0, -0.1); B[J.shR].rotation.set(-0.3-up*2.35, 0, 0.1); B[J.elL].rotation.x=B[J.elR].rotation.x=-0.4+up*0.25;
     B[J.head].rotation.x=-0.35*up+0.5*dn; B[J.spine].rotation.x=0.7*dn; if(p.heldG) p.heldG.visible=c<0.7; }
@@ -172,8 +199,12 @@ function updateCrowd(dt, now, dark){
       p.t+=dt; let moving=false;
       if(p.path && !(p.yield && p.yield(p))) moving=_crowdWalk(p, dt, G);          // (yield: something that drives stops for you)
       if(d<70 || (CROWD.t*7+p.P.seed)%1<0.34){                 // (past seventy metres, a third of the frames)
-        p.P.g.position.set(p.x, p.y, p.z); p.P.g.rotation.y=p.path ? p.yawS : (p.yaw||0)+(p.sway ? Math.sin(p.t*0.3)*p.sway : 0);
+        p.P.g.position.set(p.x, p.y, p.z); p.P.g.rotation.y=p.path ? p.yawS : (p.yaw||0);
         _crowdPose(p, now, moving);
+        // (sway: they turn to look about from the waist, their feet and their chair staying where they are)
+        if(p.sway && !p.path){ const s=Math.sin(p.t*0.3+p.P.seed)*p.sway; p.P.B[p.P.j.spine].rotation.y+=s*0.45; p.P.B[p.P.j.head].rotation.y+=s*0.55; }
+        if(p.heldG && _HELD_UP[p.held]) levelHeld(p.heldG, p.P, DRINK_TIP*p.sip);    // (a drink stands up in the hand, 14b)
+        else if(p.held==="rod") levelHeld(p.heldG, p.P, 0.86-(p.jig||0));             // (the rod out and up over the water)
         if(p.D) _crowdDog(p, dt, moving); }
       if(p.tick) p.tick(p, dt, moving); } }
 }
@@ -240,7 +271,36 @@ function crowdRound(pts, R, closed){
     crowdAdd(PK, {look:look({h:0.98, skin:SKINS[0], hair:HAIRS[4], shirt:"#8a7a6a", pants:"#5c5a52", long:true}), mode:"walk", path:[[1246, SPZ+0.35],[1366, SPZ+0.35]], speed:0.8});
     crowdAdd(PK, {look:look({female:true, h:0.92, skin:SKINS[0], hair:HAIRS[4], shirt:"#9a6a8a", pants:"#6f7b86", long:true}), mode:"walk", path:[[1246, SPZ-0.35],[1366, SPZ-0.35]], speed:0.8});
     crowdAdd(PK, {look:look({skin:SKINS[3], hair:HAIRS[5], shirt:"#5d6a73", pants:"#24272c", long:true}), x:1276, z:SPZ-1.9+0.02, y:Terrain.groundAt(1276, SPZ-1.9), yaw:Math.PI, mode:"sit", sitY:0.515, held:"paper", heldL:true});
-    crowdAdd(PK, {look:look({skin:SKINS[1], hair:HAIRS[2], shirt:"#7a8a5a", pants:"#5c5a52", long:true, cap:"#7a6a3a", beard:"#6b4a2b"}), x:1341.2, z:SH-16.7, y:WY+0.55, yaw:Math.PI, mode:"stand", job:"fish", held:"rod"});
+    /* the fisherman at the end of dock B: his rod out over the water, the line from its tip down to a bobber riding the
+       ripples a few metres out. Every half minute or so something has a go at the bait: the bobber dips, dips again,
+       goes under, and he strikes, the rod tip up; then he settles again. His bucket, his tackle box and a cooler by him. */
+    { const fx=1341.2, fz=SH-16.7, DY=WY+0.55;
+      const lineM=new T.Mesh(new T.CylinderGeometry(0.0022, 0.0022, 1, 4), new T.MeshBasicMaterial({color:0xd8d8cc, transparent:true, opacity:0.75}));
+      const bob=crowdProp((ent, B, C)=>{ ent(new T.SphereGeometry(0.035, 12, 8, 0, Math.PI*2, 0, Math.PI/2), 0, 0, 0, "#d8261c");
+        ent(new T.SphereGeometry(0.035, 12, 8, 0, Math.PI*2, Math.PI/2, Math.PI/2), 0, 0, 0, "#f4f2ec"); C(0.004, 0.05, 0, 0.055, 0, "#1d1d1e", 6); });
+      const bx=fx-0.5, bz=fz-7.2, _tw=new T.Vector3();
+      lineM.frustumCulled=false; lineM.position.set(bx, WY, bz); bob.position.set(bx, WY, bz); scene.add(lineM); scene.add(bob);
+      crowdAdd(PK, {look:look({skin:SKINS[1], hair:HAIRS[2], shirt:"#7a8a5a", pants:"#5c5a52", long:true, cap:"#7a6a3a", beard:"#6b4a2b"}), x:fx, z:fz, y:DY, yaw:Math.PI, mode:"stand", job:"fish", held:"rod",
+        onShow:(p, on)=>{ lineM.visible=bob.visible=on; },
+        tick:(p, dt)=>{
+          // the bite: two dips, under, the strike, and back (on its own clock, every 34 s)
+          const c=(p.t/34+0.37)%1, dip=Math.max(0, Math.sin((c-0.70)*Math.PI*80))*(c>0.70 && c<0.75 ? 1 : 0)*0.035+smoothstep(0.76, 0.78, c)*(1-smoothstep(0.80, 0.83, c))*0.09;
+          p.jig=0.42*smoothstep(0.79, 0.805, c)*(1-smoothstep(0.86, 0.95, c));
+          const by=WY+0.012+Math.sin(p.t*1.9)*0.012+Math.sin(p.t*0.7+1)*0.008-dip, drift=Math.sin(p.t*0.11)*0.35;
+          bob.position.set(bx+drift, by, bz-p.jig*1.2); bob.rotation.z=Math.sin(p.t*1.3)*0.12;
+          if(dip>0.06 && Math.random()<dt*6) LAKESIDE.wakeDrop(bob.position.x, bob.position.z, 0.25);
+          // the line: from the rod's tip to the bobber
+          p.heldG.tip.getWorldPosition(_tw); const dx=bob.position.x-_tw.x, dy=bob.position.y+0.03-_tw.y, dz=bob.position.z-_tw.z, L=Math.hypot(dx, dy, dz);
+          lineM.position.set(_tw.x+dx/2, _tw.y+dy/2, _tw.z+dz/2); lineM.scale.set(1, L, 1);
+          lineM.quaternion.setFromUnitVectors(_UPV, _tw.set(dx/L, dy/L, dz/L)); } });
+      // the bucket, the tackle box, the cooler, along the dock's edge by him
+      const kit=crowdProp((ent, B, C)=>{
+        ent(new T.CylinderGeometry(0.15, 0.12, 0.32, 14), 0.95, 0.165, 0.25, "#f2f0ea"); ent(new T.TorusGeometry(0.14, 0.006, 4, 16, Math.PI), 0.95, 0.33, 0.25, "#8a8d90", 0, 0.4);
+        B(0.40, 0.18, 0.22, -1.05, 0.095, 0.35, "#2e6a3a"); B(0.41, 0.04, 0.23, -1.05, 0.205, 0.35, "#245a30"); B(0.16, 0.03, 0.03, -1.05, 0.24, 0.35, "#1d1d1e");
+        for(const sd of [-1,1]) B(0.012, 0.02, 0.02, -1.05+sd*0.08, 0.225, 0.35, "#1d1d1e");
+        B(0.50, 0.32, 0.32, -1.55, 0.165, 0.62, "#2a5a9a"); B(0.51, 0.06, 0.33, -1.55, 0.35, 0.62, "#f2f0ea"); B(0.18, 0.025, 0.04, -1.55, 0.395, 0.62, "#c8ccd0"); });
+      kit.position.set(fx, DY+0.01, fz); scene.add(kit);
+      addCol(fx+0.78, fx+1.12, fz+0.08, fz+0.42, DY-0.5, DY+0.34); addCol(fx-1.82, fx-0.83, fz+0.22, fz+0.80, DY-0.5, DY+0.4); }
     const sx=1348+3.2, sz=Z-HW-27, kid={h:0.62, skin:SKINS[2], hair:HAIRS[0], shirt:"#e6c21c", pants:"#2b3d63", shorts:true, shoes:"#c42a1a"};
     crowdAdd(PK, {look:look(kid), mode:"walk", run:true, loop:true, path:[[sx-1.0, sz-1.2],[sx+1.2, sz-1.0],[sx+1.2, sz+3.8],[sx-1.2, sz+3.8, undefined, 1.5],[sx-1.4, sz+0.4]], speed:1.9, dayOnly:true});
     crowdAdd(PK, {look:look({female:true, h:0.96, skin:SKINS[2], hair:HAIRS[0], shirt:"#2f5f8f", pants:"#3b4a66"}), x:sx-4.0, z:sz+5.5, yaw:Math.PI*0.75, mode:"stand", job:"watch", dayOnly:true}); }

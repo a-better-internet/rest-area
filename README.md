@@ -522,9 +522,13 @@ If the scene runs hot on your machine, start there (see below).
     the mailbox and back, a jogger going up and down the street, a woman
     walking her dog the other way, and a man in a lawn chair with a can and
     a radio. In the park an old couple walk the shore path, a man reads the
-    paper on a bench, a fisherman stands at the end of the dock, and a kid
-    runs round and round the slide while his mother watches. After dark
-    the yards empty; the walkers and the fisherman stay out a while.
+    paper on a bench, a fisherman stands at the end of the dock with his
+    line out to a bobber riding the ripples (every half minute or so it
+    dips, dips again and goes under, and he strikes, the rod tip up), his
+    bucket, tackle box and cooler by him, and a kid runs round and round
+    the slide while his mother watches. After dark the yards empty; the
+    walkers and the fisherman stay out a while. Anyone with a drink holds
+    it upright, and tips it up to drink.
   - **Inside every house on Lake Street.** The front doors open as you come
     up to them, and the rooms behind agree with what the outside shows.
     Every window is a real opening with glass in it: from inside you see
@@ -617,7 +621,8 @@ If the scene runs hot on your machine, start there (see below).
     with chains and its number on the band. The course sign by the first
     tee, off the west end of the lot, has the map on it, with the loaner
     box of discs beside it. `E` at the sign starts a round and puts a disc
-    in your hand; `E` there again ends it. On a tee, or standing by your
+    in your hand; `Tab` ends it wherever you are, and so does walking (or
+    driving) off the course. On a tee, or standing by your
     disc where it lies, look where you want it to go (up throws it higher)
     and hold `Space` or the mouse button: the meter on the card climbs and
     falls back, and you let go at the power you want. A drive goes
@@ -691,6 +696,57 @@ If the scene runs hot on your machine, start there (see below).
     of a hit, the crowd, the line score between innings and the ads, with
     the count, the outs, the bases and the score in the corner going on
     from pitch to pitch.
+    The deck bar has a striped awning over its window with bulbs along
+    the valance, the taps, a lit cooler, glasses, the chalked menu and a
+    COLD BEER neon behind the bartender, a tip jar and two pints waiting on
+    the ledge, two stools at the ledge (one of them yours), kegs and
+    crates round the side, the bins, and a half barrel of flowers. Each
+    table has a candle in a jar, lit at dusk, and here and there a flight,
+    a basket of fries, a pretzel on its board. Behind the bar a neon of
+    the name glows over a wave; by the door hang the mug club's mugs and
+    the trivia chalkboard. The brewery's cat sleeps on a barrel by the
+    brewhouse glass, breathing slow, an ear going now and then. Hops climb
+    twine either end of the front, a steam stack on the brewhouse roof
+    puffs on a brew day, a sandwich board at the lot's mouth says what's on
+    tonight, and two Adirondack chairs sit by the maple. In the corner of
+    the deck Dave plays his guitar on a little stage (a rug, an amp, the
+    mic, a speaker on a stand, the tip bucket, his chalkboard on an easel).
+    The bar's free stools, the rail's and the deck bar's can be sat on.
+  - **Lake Street Bark Park.** The fenced corner of the lawn at the west
+    end of the street, on the slope down to the water behind No. 1. A
+    gravel path in off the street between the woods and the first house,
+    the park's sign and its rules, and a double gate (each swings open as
+    you come up to it and falls shut behind you). Inside: chain-link on
+    galvanised posts, wood chips by the gate, a fountain with a bowl at its
+    foot, the bag dispenser and a can, a bucket of balls to borrow, the
+    agility things along the west side (an A-frame, a tunnel, two jumps, a
+    tyre, the weave poles), benches, and a maple in the east corner. A man
+    throws a ball down the middle for his yellow lab, over and over: she is
+    off before it leaves his hand, runs it down, brings it back and drops
+    it at his feet, and he bends for it. A black lab and a brindle chase
+    each other round the east end, swapping who leads and stopping to
+    square up. A little white one noses about, and trots over to see you
+    when you come in, tail going, and yips. A husky lies flat out in the
+    shade. Two people talk at the fence with coffees, another sits on the
+    bench. By day; after dark the park is empty.
+  - **The Perky Loon**, a coffee shop across the street from the brewery:
+    a little house built the way the others are (lap siding, a shingled
+    gable, white trim) but painted sea green, with a coral door and
+    window boxes, a porthole in the gable, the name on a board with a loon
+    on it, and a giant coffee cup on the ridge with steam coming off it.
+    A porch across the front with two rockers; down a step, a brick patio
+    inside a white picket fence with four bistro tables and chairs that do
+    not match, strings of bulbs over it, a chalkboard by the gate, a blue
+    cruiser in the bike rack, and three spaces of gravel to the east.
+    Inside: the counter across the back with the pastry case lit at its
+    end, the espresso machine, the grinder, the syrups and the mugs that
+    do not match, the menu chalked on the wall and a loon painted beside
+    it, two little tables by the window, a bar along the front window with
+    stools, an old armchair in the back corner with a lamp and a shelf of
+    paperbacks, a fern, pendant bulbs, OPEN in the window, the radio on.
+    Nana is behind the counter; somebody reads in the armchair, somebody
+    watches the street from the window, and people sit out on the patio.
+    Sit in any empty chair, stool or rocker.
   - **Cornhole.** Danny plays at the brewery's boards. `E` at the near
     board, on its left, asks him for a game: singles to 21, your four red
     bags against his four blue, both of you throwing from the near end at
@@ -1170,8 +1226,9 @@ dozer `A` and `D` (or the arrows, or the mouse) move the chute, `Space` or
 a click drops a token, `X` shakes the machine, `N` empties it and starts
 again, and `Esc` or `E` steps away.
 
-On the disc golf course (Lakeside Park), `E` at the course sign starts or
-ends a round. On the tee or by your disc, aim with the view and hold
+On the disc golf course (Lakeside Park), `E` at the course sign starts a
+round, and `Tab` ends it from anywhere (walking off the course ends it
+too). On the tee or by your disc, aim with the view and hold
 `Space` or the mouse button to wind up; let go to throw. Hold `Z` or the
 right mouse button to zoom in on the basket. While the view follows the
 disc, `Space` brings it back.
@@ -1232,6 +1289,8 @@ centred on the origin.
 | Lake Street and Lakeside Park | x 1062 … 1420, z −1298 … −1134; the park x 1238 … 1372 north of the road; the shore at z −1296 |
 | Lakeside Park disc golf | the course sign x 1243, z −1223; tees and baskets over x 1247 … 1364, z −1281 … −1226 |
 | Lakeshore Brewing Co. | lot x 1422 … 1468 from the road to z −1226; the taproom x 1430 … 1460, z −1243 … −1229; the deck x 1423 … 1467, z −1299 … −1266; the cornhole boards x 1444.6, z −1249.4 (where you throw from) and −1258.6 |
+| Lake Street Bark Park | x 1063.6 … 1101, z −1293.4 … −1272; its gates at x 1082, z −1272 and −1268.8; the path in off the street at x 1068 |
+| The Perky Loon | the house x 1433.5 … 1441.5, z −1186.5 … −1179.5; the porch to z −1188.4; the patio x 1431.8 … 1443.8 to z −1193.2; its lot x 1445 … 1462.5 |
 | Edinboro Lake | x 980 … 2260, z −2090 … −1296, a rounded oblong, wandering off the street |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
 | Well house · water tank | x 65.6 … 68.8, z 97.6 … 101.2 · x 70, z 140 |
@@ -1298,6 +1357,8 @@ js/14p-boat.js      the pontoon you can take out on the lake: its outboard, how 
 js/14q-townsfolk.js people out of doors (Lake Street, the park, Edinboro, the baler in the hay field) and the crowd runtime the brewery uses too
 js/14r-brewery.js   Lakeshore Brewing Co.: its lot, the taproom, the beer garden, the deck over the water, its staff and customers
 js/14s-edinsub.js   French Creek Substation behind the fuel stop: the tap line, the yard and its equipment, the control house
+js/14t-dogpark.js   Lake Street Bark Park: its fence and double gate, the path in, the agility things; the dogs (fetch, the chase, the little one, the husky) and their people
+js/14u-coffee.js    The Perky Loon, the coffee shop across from the brewery: the house, porch, patio and lot, the room inside, and its people
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -1425,6 +1486,10 @@ the generator house's cellar and the trailer's step. The routes are:
   rail;
 - past the disc golf course's sign, over the first tee's pad and down its
   fairway past the basket to the second tee;
+- up the gravel path into the dog park, through both its gates and down
+  the run;
+- in at the Perky Loon's patio gate, up the step, over the porch and in
+  at the door to the counter; and round behind it;
 - into every house on Lake Street and to every room in it. Each house
   lays out its own routes as it builds (`LAKE_HOUSES.routes` in 14o, so
   they move with the plans): in at the front door, round the ground floor,

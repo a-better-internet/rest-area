@@ -250,6 +250,22 @@ No lettering touches or runs past the edge of its board or its border.
   every metre or so behind its stern. Anything else that should leave a
   wake calls it as it goes. Nothing flat and pale goes on the water: it
   would not be lit like it and shows up white at night.
+- Anything a person holds that must stand as it would in a hand (a glass,
+  a can, a mug, a rod) rides on the forearm's bone and is turned back each
+  frame, after the pose, by 14b's `levelHeld(obj, P, ax)`: up in the world
+  and facing the way the body faces, then `ax` about the body's x
+  (`DRINK_TIP*sip` tips a drink to the lips). 14q does it for the crowd's
+  drinks (`_HELD_UP`) and the fisherman's rod. Never leave a drink to the
+  forearm's own angle: a forearm brought up level lays it on its side.
+- `addSeat(x, z, y, yaw, label, lie, drop)` (06): `y` is the floor under
+  the seat and `drop` how far your eyes come down as you sit, a chair's
+  0.66 unless given. A stool's seat at 0.79 takes 0.34, one at 0.85 0.265,
+  a low Adirondack 0.76.
+- A crowd's `sway` turns them from the waist (their spine and head), never
+  the whole body: a person in a chair or on a stool stays square to it.
+- The dog park (14t) runs off its thrower's `tick` (14q), so its dogs are
+  only worked while the park's crowd is shown. Its gates are plain `DOORS`
+  entries that open as you come up and fall shut behind you, not latched.
 - The brewery's cornhole boards (`BREWERY.boards`, 14r) each carry their
   own frame: `O` the face's middle, `ex` across, `ez` up the slope, `n`
   out of the face, and `hy` how far up it the hole is. 18j's bags work in

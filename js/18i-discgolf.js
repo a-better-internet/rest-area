@@ -11,7 +11,8 @@
    par 19: concrete tee pads, each with its sign (the hole, the par, the
    distance), and steel baskets with chains, the number on the band. The
    course sign by the first tee has the map on it; `E` there starts a round
-   (and ends one), and a disc comes out of the loaner box.
+   and a disc comes out of the loaner box. Tab ends the round wherever you
+   are, and so does walking (or driving) off the course.
    On a tee, or standing by your disc where it lies, the disc is in your
    hand. Look where you want it to go (up is higher) and hold Space, or the
    mouse button, to wind up: the meter climbs and falls back, and you let
@@ -149,7 +150,7 @@ const DGOLF={on:false, hole:0, throws:0, card:[], state:"hand", lie:null, at:nul
   document.head.appendChild(st);
   const d=document.createElement("div"); d.id="dgolf";
   d.innerHTML='<div class="hd"><span class="t">DISC GOLF</span><span class="sc"></span></div><div class="card"></div><div class="msg"></div><div class="bar"><i></i><u></u></div>'+
-    '<div class="keys"><b>LOOK</b> aim (up is higher) · hold <b>Z</b> or the <b>RIGHT</b> button to zoom · hold <b>SPACE</b> or the <b>MOUSE</b>, let go at the white mark to throw · the view goes after the disc (<b>SPACE</b> brings it back) · walk to your disc · <b>E</b> at the sign ends the round</div>';
+    '<div class="keys"><b>LOOK</b> aim (up is higher) · hold <b>Z</b> or the <b>RIGHT</b> button to zoom · hold <b>SPACE</b> or the <b>MOUSE</b>, let go at the white mark to throw · the view goes after the disc (<b>SPACE</b> brings it back) · walk to your disc · <b>TAB</b> ends the round, anywhere</div>';
   document.body.appendChild(d); DGOLF.panel=d;
   const mk=document.createElement("div"); mk.id="dgmark"; document.body.appendChild(mk); DGOLF.mark=mk;
   // the throw as it would go, while you wind up: a dotted line along it, and a ring where it would come down
@@ -166,20 +167,22 @@ DGOLF.start=function(){
   const G=DGOLF; G.on=true; G.hole=0; G.card=[]; G.throws=0; G.toTee(); G.panel.classList.add("show");
   if(typeof AUDIO!=="undefined") AUDIO.blip("jingle", player.pos.x, player.pos.z);
   toast("A DISC OUT OF THE LOANER BOX. HOLE 1 IS RIGHT HERE", "#cfe0d4"); G.draw(); };
-DGOLF.end=function(early){
+DGOLF.end=function(early, why){
   const G=DGOLF, tot=G.card.reduce((a,b)=>a+b, 0), par=G.holes.slice(0, G.card.length).reduce((a,h)=>a+h.par, 0);
   G.on=false; G.state="hand"; G.disc.visible=false; G.hand.visible=false; G.charge=-1; G.panel.classList.remove("show");
   if(!early && G.card.length===G.holes.length){
     const rel=tot-par, txt=rel===0 ? "EVEN" : rel>0 ? "+"+rel : String(rel);
     if(G.best===null || tot<G.best){ G.best=tot; try{ localStorage.setItem("restarea.discgolf.best", String(tot)); }catch(e){} }
     toast("ROUND OVER · "+tot+" ("+txt+") · BEST "+G.best, "#f4c430"); if(typeof AUDIO!=="undefined") AUDIO.blip("jingle", player.pos.x, player.pos.z); }
-  else toast(G.card.length ? "YOU PUT THE DISC BACK IN THE BOX. "+G.card.length+" HOLES, "+tot : "YOU PUT THE DISC BACK IN THE BOX", "#cfe0d4"); };
+  else toast((why ? why+". " : "")+(G.card.length ? "THE DISC GOES BACK IN THE BOX. "+G.card.length+(G.card.length>1 ? " HOLES, " : " HOLE, ")+tot : "THE DISC GOES BACK IN THE BOX"), "#cfe0d4"); };
 // to the tee of the hole you are on: the disc in your hand, to be thrown from the pad
 DGOLF.toTee=function(){ const G=DGOLF, h=G.holes[G.hole]; G.throws=0; G.state="hand"; G.lie={x:h.t[0], z:h.t[1], y:h.ty, tee:true}; G.disc.visible=false; };
 DGOLF.ready=function(){ const G=DGOLF; if(!G.on || G.state!=="hand" || G.wait>0 || seated || driving) return false;
   return Math.hypot(player.pos.x-G.lie.x, player.pos.z-G.lie.z)<(G.lie.tee ? 1.9 : 2.2); };
 // Space (or the mouse) held: winding up; let go: the throw. Returns true when the key was the game's
 DGOLF.key=function(e){ const G=DGOLF; if(!G.on) return false;
+  // Tab (or Backspace) puts the disc away wherever you are, as Tab gets you up from the darts and the cabinets
+  if(e.code==="Tab" || e.code==="Backspace"){ if(!e.repeat){ G.end(true, "ROUND OVER"); } return true; }
   if(e.code==="KeyZ"){ G.zoomHeld=true; return true; }
   if(e.code==="Space" && G.cam.k>0 && G.state!=="fly"){ G.cam.skip=true; return true; }
   if(e.code==="Space" && G.ready()){ if(!e.repeat && G.charge<0) G.charge=0; return true; }
@@ -327,6 +330,9 @@ function updateDiscGolf(dt){
   if(!G.on){ G.hand.visible=false; G.cam.k=0; G.cam.seen=false; G.cam.init=false; G.zoomHeld=false; G.glow.visible=false; G.mark.style.display="none";
     G.arc.visible=false; G.landRing.visible=false; G.panel.querySelector(".bar u").style.display="none";
     if(G.zk>0){ G.zk=0; applyFov(); } return; }
+  // walk off the course (or drive, or take the boat) and the round is over: the disc goes back in the box
+  { const out=Math.max(1238-player.pos.x, player.pos.x-1372, -1288-player.pos.z, player.pos.z+1220, 0);
+    if(out>45 || driving || (typeof BOAT!=="undefined" && BOAT.on)){ G.end(true, "YOU LEAVE THE COURSE"); return; } }
   if(G.wait>0){ G.wait-=dt; if(G.wait<=0 && G.state==="in"){ G.hole++; G.disc.visible=false;
       if(G.hole>=G.holes.length){ G.end(false); return; }
       G.toTee(); const h=G.holes[G.hole]; G.msg("ON TO HOLE "+(G.hole+1)+": THE TEE IS "+Math.round(Math.hypot(h.t[0]-player.pos.x, h.t[1]-player.pos.z))+" M OFF"); G.draw(); } }

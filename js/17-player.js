@@ -202,7 +202,7 @@ function sitToggle(){
   updateSeats();
   if(!nearestSeat){ toast("NOTHING TO SIT ON","#8fa0ad"); return; }
   seated=nearestSeat; player.yaw=nearestSeat.yaw;
-  sitDrop = nearestSeat.lie ? 1.34 : 0.66;
+  sitDrop = nearestSeat.lie ? 1.34 : (nearestSeat.drop || 0.66);
   // on your back you are looking at the ceiling, not down the bed
   if(nearestSeat.lie) player.pitch=Math.max(player.pitch, 0.86);
   // You almost always arrive at a chair still holding W. Standing up is only

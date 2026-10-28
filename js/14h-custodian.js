@@ -614,9 +614,11 @@ function _custUpdate(p, dt0, now, dark, cd){
   else if(p.act==="situp"||p.act==="boots"){ const c=G.cot; P.g.position.set(c.x-0.25, FL, c.z-0.16); P.g.rotation.y=Math.PI; P.g.rotation.x=0; }
   else P.g.rotation.x=0;
   if(p.act!=="chair" && p.act!=="coffee" && p.act!=="pour" && !(p.mode==="morning" && p.poured)) p.mug.visible=false;
+  if(p.mug.visible && cd<70) levelHeld(p.mug, P, DRINK_TIP*(p.sip||0));  // (upright in his hand, tipped up for the sip)
 }
 function _custPose(p, now){
   const P=p.P, B=P.B, J=P.j, a=p.act, t=p.t;
+  p.sip=0;
   if(p.riding){ poseP(P, "sit", 0, now); B[J.root].position.y=0.50;
     B[J.knL].rotation.x=B[J.knR].rotation.x=1.1;
     B[J.shL].rotation.set(-0.75, 0, 0.12); B[J.shR].rotation.set(-0.75, 0, -0.12); B[J.elL].rotation.x=B[J.elR].rotation.x=-0.55;
@@ -637,7 +639,7 @@ function _custPose(p, now){
   if(a==="doze"||a==="chair"){ const st=p.step; p.x+=(st.x-p.x)*0.2; p.z+=(st.z-p.z)*0.2; p.y=FL;
     poseP(P, "sit", 0, now); B[J.root].position.y=0.47;
     if(a==="doze"){ B[J.head].rotation.set(0.55, 0.2, 0); B[J.shL].rotation.x=B[J.shR].rotation.x=-0.3; B[J.elL].rotation.x=B[J.elR].rotation.x=-1.2; }
-    else { p.mug.visible=true; const sip=smoothstep(0.75,0.95,Math.sin(now*0.35+p.seed));    // the mug: a sip now and then
+    else { p.mug.visible=true; const sip=smoothstep(0.75,0.95,Math.sin(now*0.35+p.seed)); p.sip=sip;    // the mug: a sip now and then
       B[J.shL].rotation.set(-0.55-sip*0.35, 0, 0.12); B[J.elL].rotation.x=-1.25-sip*0.75; B[J.head].rotation.x=0.08-sip*0.25; }
     return; }
   // the morning, on the edge of the cot: face in the hands, then the boots
@@ -664,7 +666,7 @@ function _custPose(p, now){
     return; }
   if(a==="bench"){ B[J.spine].rotation.x=0.22; B[J.head].rotation.x=0.40; const s=Math.sin(now*2.2)*0.12;
     B[J.shR].rotation.set(-0.7+s, 0, -0.1); B[J.elR].rotation.x=-0.9; B[J.shL].rotation.set(-0.6, 0, 0.1); B[J.elL].rotation.x=-0.8; return; }
-  if(a==="coffee"){ p.mug.visible=true; const sip=smoothstep(0.7,0.95,Math.sin(now*0.5+p.seed));
+  if(a==="coffee"){ p.mug.visible=true; const sip=smoothstep(0.7,0.95,Math.sin(now*0.5+p.seed)); p.sip=sip;
     B[J.shL].rotation.set(-0.55-sip*0.35, 0, 0.12); B[J.elL].rotation.x=-1.25-sip*0.75; B[J.head].rotation.y*=0.4; B[J.head].rotation.x=-sip*0.25; return; }
   if(a==="stretch"){ const k=Math.sin(Math.min(1,t/3.2)*Math.PI);
     B[J.shL].rotation.set(-2.85*k, 0, 0.35*k); B[J.shR].rotation.set(-2.85*k, 0, -0.35*k); B[J.elL].rotation.x=B[J.elR].rotation.x=-0.2*k;

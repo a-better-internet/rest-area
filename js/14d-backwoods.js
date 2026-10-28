@@ -371,7 +371,7 @@ void main(){
       const cyc=(now*0.075+p.seed)%1, up=smoothstep(0,0.08,cyc)*(1-smoothstep(0.16,0.24,cyc));
       B[J.spine].rotation.x=0.12-up*0.12;
       B[J.shR].rotation.x=-0.62-up*0.55; B[J.shR].rotation.z=0.10+up*0.2; B[J.elR].rotation.x=-1.05-up*1.25;
-      B[J.head].rotation.x=-up*0.32;
+      B[J.head].rotation.x=-up*0.32; p.sip=up;
     }else if(p.act==="warm"){
       B[J.shL].rotation.x=B[J.shR].rotation.x=-0.95+s1*0.06;
       B[J.shL].rotation.z=-0.18; B[J.shR].rotation.z=0.18;
@@ -391,6 +391,7 @@ void main(){
       B[J.head].rotation.y=B[J.head].rotation.y*(1-p.lk)+clamp(rel,-1.15,1.15)*p.lk;
       if(p.act!=="phone") B[J.head].rotation.x*=(1-p.lk*0.7);
     }
+    if(p.can) levelHeld(p.can, P, p.act==="can" ? DRINK_TIP*p.sip : 0);  // (the can upright in the hand, 14b)
   }
 
   /* ---- what else is out there --------------------------------------------- */
