@@ -9,11 +9,13 @@
 /* Every texture in the world gets the card's anisotropic filtering, not only
    the shared set 03 makes: boards, paving, siding and decks that each file
    draws for itself smear into streaks at a grazing angle without it. Once,
-   now that everything is built. */
+   now that everything is built. Not normal maps: the lake's ripples (14n)
+   tile hundreds of times across it, and they should fade to a calm, even
+   sheen toward the far shore, not stay sharp all the way out. */
 { const seen=new Set();
   scene.traverse(o=>{ if(!o.material) return;
     for(const m of (Array.isArray(o.material) ? o.material : [o.material]))
-      for(const k of ["map", "normalMap", "roughnessMap", "bumpMap", "emissiveMap", "alphaMap"]){
+      for(const k of ["map", "roughnessMap", "bumpMap", "emissiveMap", "alphaMap"]){
         const t=m[k]; if(!t || !t.isTexture || seen.has(t)) continue; seen.add(t);
         if(t.anisotropy<MAXANISO){ t.anisotropy=MAXANISO; t.needsUpdate=true; } } }); }
 
