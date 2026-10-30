@@ -277,8 +277,10 @@ No lettering touches or runs past the edge of its board or its border.
   `oilspot`), coloured by the vertex colour. A hard-edged flat ellipse or
   polygon in a dim room reads as a thing standing there, or a hole.
 - Every texture on a material in the scene gets the card's anisotropic
-  filtering once the world is built (19-loop). A texture made later, at
-  run time, sets its own `anisotropy`.
+  filtering once the world is built (19-loop), except normal maps. The
+  lake's ripples tile hundreds of times across it, and filtered they stay
+  sharp to the far shore and read as a busy, fractal-like pattern instead of
+  calm water. A texture made later, at run time, sets its own `anisotropy`.
 - A crowd walker's dog (14q `_crowdDog`) keeps to whichever heel position is
   clear of colliders and never steps into one, so a walker's path may run
   close to a fence.
