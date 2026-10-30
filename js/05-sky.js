@@ -521,10 +521,10 @@ const NIGHT_HAZE=new T.Color(0x0a1020);        // haze colour once the sun is go
 
 /* --- the cycle itself ---------------------------------------------------
    One number, the time of day, drives the sun, the sky, the fog, every lamp
-   and every lit sign. DUR is twenty minutes here, not the motel's seven: a
-   rest stop is somewhere you linger, and the afternoon should last. */
+   and every lit sign. DUR is twenty-two minutes here, not the motel's
+   seven: a rest stop is somewhere you linger, and the day should last. */
 const DayNight=(function(){
-  const DUR=1200;
+  const DUR=1320;
   const P={
     dayLight:new T.Color(0xfff3df), setLight:new T.Color(0xffa860), nightLight:new T.Color(0x8ea6d4),
     dayHemi:new T.Color(0xdfe8f2),  nightHemi:new T.Color(0x18243a),
@@ -545,8 +545,9 @@ const DayNight=(function(){
     return (t<0.5 ? r+day*t/0.5 : e+(24-day)*(t-0.5)/0.5)%24; }
   function hourToT(h){ const [r,e]=sunTimes(), day=e-r, d=((h-r)%24+24)%24;
     return d<day ? 0.5*d/day : 0.5+0.5*(d-day)/(24-day); }
-  // early afternoon: the lot half full, the shadows just starting east
-  const s={t:hourToT(13.4), sunHeight:0, hemiIntensity:1, sunIntensity:1,
+  // mid-morning: the sun low in the east-south-east behind the building, so
+  // the trees throw their shadows long across the lawn toward the lot
+  const s={t:hourToT(9.25), sunHeight:0, hemiIntensity:1, sunIntensity:1,
            nightAmount:0, sunsetAmount:0, dark:0, hour:0, paused:false, day:0};
   return {
     DUR:DUR, P:P, state:s,
@@ -563,8 +564,10 @@ const DayNight=(function(){
       s.sunsetAmount=set+tw*0.6;
       s.dark=1-smoothstep(-0.14,0.24,s.sunHeight);
       s.hour=tToHour(s.t);
-      s.sunIntensity=Math.max(0.04, day*1.10+set*0.66) + s.nightAmount*0.30;
-      s.hemiIntensity=Math.max(0.15, day*0.74+set*0.46+(1-s.nightAmount)*0.30);
+      // by day the sun carries more of the light than the sky does, so shade
+      // reads as shade and not as the same lawn a little dimmer
+      s.sunIntensity=Math.max(0.04, day*1.28+set*0.66) + s.nightAmount*0.30;
+      s.hemiIntensity=Math.max(0.15, day*0.60+set*0.46+(1-s.nightAmount)*0.30);
       return s;
     },
     paint(){

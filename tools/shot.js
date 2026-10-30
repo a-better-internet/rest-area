@@ -5,7 +5,10 @@
 
    shots.json is a list of
      {name, go:[x,z,yaw,y,pitch], hour, autumn, drone:[x,y,z,yaw,pitch],
-      view:"plan", frames, eval:"js to run first"}
+      showDrone, view:"plan", frames, eval:"js to run first"}
+   A drone shot is the drone's chase view: the camera sits about 4 m behind
+   the drone and above it by the pitch, looking at it, and the drone itself
+   is left out of the picture unless showDrone is set.
    three.js is loaded from THREE_JS (a local r128 three.min.js) instead of the
    CDN, and the web fonts are skipped; everything else is the page as shipped.
    Console errors and page errors are printed, and fail the run. */
@@ -47,7 +50,8 @@ fs.mkdirSync(OUT,{recursive:true});
       REST.season(!!s.autumn);
       if(s.hour!==undefined) REST.hour(s.hour);
       if(s.drone){ if(!document.__drone){ REST.drone(true); document.__drone=1; }
-        REST.droneSet(...s.drone); }
+        REST.droneSet(...s.drone);
+        if(!s.showDrone) drone.visible=false; }           // (the chase view looks at the drone: leave it out of the picture)
       else { if(document.__drone){ REST.drone(false); document.__drone=0; } }
       if(s.go) REST.go(...s.go);
       REST.view(s.view||"fp");
@@ -55,7 +59,7 @@ fs.mkdirSync(OUT,{recursive:true});
     // let a few frames draw: LOD, lights, the camera follow
     await page.evaluate((n)=>new Promise(res=>{ let k=0; const f=()=>{ if(++k>=n) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); }), s.frames||4);
     const stats=await page.evaluate(()=>{ const i=REST.renderer.info; return i.render.calls+" calls, "+(i.render.triangles/1000|0)+"k tris"; });
-    await page.screenshot({path:path.join(OUT, s.name+".png"), timeout:180000});
+    await page.screenshot({path:path.join(OUT, s.name+".png"), timeout:600000});
     console.log(s.name, stats, ((Date.now()-t1)/1000).toFixed(1)+"s");
   }
   await browser.close();

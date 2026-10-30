@@ -229,7 +229,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   // the maple in its ring of stones; turf round the fire pit; the sofas round it; the cornhole boards
   { const tx=1425.6, tz=-1248.0; FOREST.plant("hard", tx, tz, {scale:1.5}); addCol(tx-0.4, tx+0.4, tz-0.4, tz+0.4, gy(tx,tz)-0.5, gy(tx,tz)+6);
     for(let k=0;k<26;k++){ const a=k/26*6.283, rr=1.7+r()*0.3, x=tx+Math.cos(a)*rr, z=tz+Math.sin(a)*rr, s=0.18+r()*0.14;
-      ent(new T.DodecahedronGeometry(s, 0), x, gy(x,z)+s*0.45, z, ["#b8a088","#a89070","#c8b090","#9a8468"][(r()*4)|0], r()*3, r()*3); } }
+      push("rock", rockGeo(s, 60+k), x, gy(x,z)+s*0.32, z, r()*6, ["#a8a294","#9e988a","#b2ab9c","#948e80"][(r()*4)|0]); } }      // (the same fieldstone as the plaza's and the woods')
   { const fx=1434.5, fz=-1255.5, g0=gy(fx, fz);
     const tf=new T.PlaneGeometry(9.0, 8.0, 18, 16), P=tf.attributes.position;
     for(let i=0;i<P.count;i++){ const x=fx+P.getX(i), z=fz-P.getY(i); P.setZ(i, gy(x,z)+0.035); } tf.computeVertexNormals();

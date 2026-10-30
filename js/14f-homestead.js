@@ -295,10 +295,18 @@ bucketOf("wallpaper", ()=>{
   for(let k=0;k<12;k++){ const onW=k%2, z=z0+0.5+r()*(z1-z0-1), y=FF+0.6+r()*1.7, h=0.3+r()*0.6, o=k*0.003;
     if(onW){ const w=0.18+r()*0.3; if(clearOf(WEST, z, w, y, h)) push("paintm", planeGeo(w, h, 0), x0+T2+0.012+o, y, z, Math.PI/2, "#6a5c48"); }
     else if(!inDoor(z)) push("paintm", planeGeo(0.12, h, 0), PX-0.112-o, y, z, -Math.PI/2, "#7a6a52", 0, (r()-0.5)*0.12); }
-  // water stains down from the ceiling, and damp coming up the walls
+  // water stains down from the ceiling, and damp coming up the walls: soft-edged blotches, a darker tide line round
+  // the edge where the water stopped, laid over the wall and not cut out of card (a hard ellipse in a dim room reads as
+  // a thing standing there, not as damp). The floor's dirt below takes the same, without the line.
+  bucketOf("smudge", ()=>new T.MeshStandardMaterial({roughness:1.0, transparent:true, depthWrite:false, map:signTex(256, 256, (c, W, H)=>{
+    c.clearRect(0, 0, W, H); const q=_trng(4141);
+    for(let k=0;k<14;k++){ const a=q()*Math.PI*2, d=q()*W*0.16, bx2=W/2+Math.cos(a)*d, by=H/2+Math.sin(a)*d, rr=W*(0.16+q()*0.16),
+        g=c.createRadialGradient(bx2, by, 0, bx2, by, rr);
+      g.addColorStop(0, "rgba(255,255,255,0.30)"); g.addColorStop(0.7, "rgba(255,255,255,0.22)"); g.addColorStop(0.9, "rgba(255,255,255,0.34)"); g.addColorStop(1, "rgba(255,255,255,0)");
+      c.fillStyle=g; c.beginPath(); c.ellipse(bx2, by, rr, rr*(0.75+q()*0.4), q()*3, 0, 7); c.fill(); } })}));
   const _so=new Map();   // each stain on a wall a few mm proud of the last on it, so two that overlap never share a plane
   const stain=(x,z,ry,y,w,h,c)=>{ const key=ry.toFixed(2)+"|"+(Math.abs(Math.sin(ry))>0.5?x:z).toFixed(2), o=(_so.get(key)||0)+0.003; _so.set(key, o);
-    push("paintm", new T.CircleGeometry(0.5,10).scale(w,h,1), x+Math.sin(ry)*o, y, z+Math.cos(ry)*o, ry, c); };
+    push("smudge", new T.CircleGeometry(0.5,16).scale(w,h,1), x+Math.sin(ry)*o, y, z+Math.cos(ry)*o, ry, c); };
   for(let k=0;k<16;k++){ const side=(r()*4)|0, w=0.4+r()*0.9, h=0.5+r()*1.2, c=r()<0.6?"#6e604a":"#5a5444";
     const y=r()<0.5 ? FF+2.6-h*0.45 : FF+h*0.4;
     const xx=x0+0.4+r()*(x1-x0-0.8), zz=z0+0.5+r()*(z1-z0-1);
@@ -313,7 +321,7 @@ bucketOf("wallpaper", ()=>{
     for(let k=0;k<40;k++){ const x=x0+0.4+r()*(x1-x0-0.8), z=z0+0.4+r()*(z1-z0-0.8), rad=0.08+r()*0.35, dy=r()*0.002, col=["#4a3a28","#6a4a2a","#3e3428","#7a5a30"][(r()*4)|0];
       if(laid.some(q=>Math.hypot(q[0]-x, q[1]-z)<q[2]+rad)) continue;
       if(x+rad>HX+3.0 && x-rad<HX+3.7 && z+rad>HZ+2.6 && z-rad<HZ+3.4) continue;            // nor over the hole in the kitchen floor
-      laid.push([x, z, rad]); push("paintm", new T.CircleGeometry(rad, 7), x, FF+0.007+dy, z, 0, col, -Math.PI/2, 0); } }
+      laid.push([x, z, rad]); push("smudge", new T.CircleGeometry(rad, 12), x, FF+0.007+dy, z, 0, col, -Math.PI/2, 0); } }
   // the ceiling, down in one corner of the parlour: joists showing, the rest on the floor
   const ch={x0:HX-2.6, x1:HX-1.0, z0:HZ-2.4, z1:HZ-0.9};
   const STW={x0:SX0, x1:SX1, z0:SZO, z1:SZT+0.03};           // the stairwell, open to the hall above

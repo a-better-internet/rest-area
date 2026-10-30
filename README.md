@@ -514,7 +514,10 @@ If the scene runs hot on your machine, start there (see below).
     flying off its pole,
     a basketball hoop over a garage, the AC and the propane tank, and two
     pink flamingos. Two cars are parked on the shoulder for a cookout. The
-    woods close round the back of the lots and both ends of the street.
+    woods close round the back of the lots and both ends of the street, and
+    at either end they come right down to the water: past the dog park's
+    fence and beside the brewery's garden you look into trees standing
+    fifty metres deep, not at a green wall.
   - **People out on Lake Street**, on a fine day: a man mowing his front
     lawn in stripes, a woman watering her beds and another on her knees
     weeding, two neighbours talking over the property line, a man washing
@@ -1006,8 +1009,10 @@ If the scene runs hot on your machine, start there (see below).
   sway in the wind. Past the edge of the walkable zone a canopy shell
   carries the woods over the ridges to the horizon.
 - **Time and season.**
-  - A day lasts 20 minutes, with sunrise and sunset at Crawford County's
+  - A day lasts 22 minutes, with sunrise and sunset at Crawford County's
     real times: about 6:05 and 20:45 in July, 7:25 and 18:45 in October.
+    You arrive at a quarter past nine in the morning, the sun low in the
+    east-south-east and the trees' shadows long across the lawns.
   - `Y` switches between summer and autumn, which recolours the leaves, drops
     a few, and keeps the clock where it was, so the sun moves instead. In
     autumn the leaves are down on the lawns and walks under the hardwoods

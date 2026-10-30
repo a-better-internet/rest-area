@@ -448,7 +448,21 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
       if(row<2 && q<0.5) shrub(x+(hash2(z,x)-0.5)*2, z+(hash2(x,z*2)-0.5)*2, 0.9+q); };
     for(let x=TW.x0-12; x<TW.x1+12; x+=5.2) for(const row of [1.5, 6.0, 11.0]) edge(x+(hash2(x,row)-0.5)*3.4, TW.z1+row+(hash2(row,x)-0.5)*2.4, row);
     for(let z=TW.z0+6; z<TW.z1; z+=5.2) for(const row of [1.5, 6.0, 11.0]) edge(TW.x1+row+(hash2(z,row)-0.5)*2.4, z+(hash2(row,z)-0.5)*3.4, row);
-    for(let z=TW.z0+6; z<TW.z1; z+=5.2){ if(z>Z-30 && z<Z+28) continue; for(const row of [1.5, 6.0, 11.0]) edge(TW.x0-row+(hash2(z,row)-0.5)*2.4, z+(hash2(row,z)-0.5)*3.4, row); } }
+    for(let z=TW.z0+6; z<TW.z1; z+=5.2){ if(z>Z-30 && z<Z+28) continue; for(const row of [1.5, 6.0, 11.0]) edge(TW.x0-row+(hash2(z,row)-0.5)*2.4, z+(hash2(row,z)-0.5)*3.4, row); }
+    // the west end's rows carried on down to the water, and the woods along the shore going west: from the dog park
+    // (14t) and the back of No. 1 you look along the shore, and it is trees that should come down to it there, not
+    // the canopy's shell, which up close is only a smooth green hill
+    const dry=(x, z)=>Terrain.lakeSD(x, z)>2.2;
+    // (west of the town the land runs on north round the lake's corner: the first rows go down to the water there too)
+    for(let z=TW.z0-80; z<TW.z0+6; z+=5.2) for(const row of [1.5, 6.0, 11.0]){ const x=TW.x0-row+(hash2(z,row)-0.5)*2.4; if(dry(x, z)) edge(x, z, row); }
+    // (07 keeps the canopy's shell low under them over the same ground: 64 m out from either end, from the water to TW.z0+74)
+    for(const sd of [-1, 1]) for(let z=(sd<0 ? TW.z0-80 : TW.z0-16); z<TW.z0+72; z+=5.2) for(const row of [16.5, 22.0, 27.5, 33.0, 38.5, 44.0, 50.0, 56.0]){
+      const x=(sd<0 ? TW.x0 : TW.x1)+sd*row+(hash2(z+sd,row*1.3)-0.5)*3.4, zz=z+(hash2(row,z*0.7+sd)-0.5)*3.6; if(dry(x, zz)) edge(x, zz, row); }
+    // past the dog park's fence and the back of No. 1 the lake's corner leaves a strip of land out of the town: woods on it
+    for(let x=TW.x0+1.5; x<TW.x0+52; x+=5.4) for(let k=0, z=TW.z0-1.6; k<6; k++, z-=4.8){
+      const xx=x+(hash2(x,k)-0.5)*2.6, zz=z+(hash2(k,x)-0.5)*2.2; if(dry(xx, zz)) edge(xx, zz, k ? 6.0+k*4 : 1.5); }
+    // and the east end's first rows carried down to the water too
+    for(let z=TW.z0+0.8; z<TW.z0+6; z+=2.6) for(const row of [1.5, 6.0, 11.0]){ const x=TW.x1+row+(hash2(z,row)-0.5)*2.4; if(dry(x, z)) edge(x, z, row); } }
   // a few more cars on the street's shoulder, as there are on any street with a cookout on it
   car(0, "#4a6a5a", 1300, Z+HW-0.9, -Math.PI/2+0.01, Y+0.03); car(1, "#e8e4da", 1309, Z+HW-0.9, -Math.PI/2-0.01, Y+0.03);
   // ACs, propane, the odd lawn ornament

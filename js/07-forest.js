@@ -724,7 +724,17 @@ const FOREST=(function(){
   };
   function canopyY(x,z,fine){
     const cd=Terrain.clearDist(x,z);
-    const m=smoothstep(3, 11, cd);
+    let m=smoothstep(3, 11, cd);
+    // either end of Lake Street by the shore (behind the dog park, and beside the brewery's garden and deck) the woods
+    // are close to and real (14n plants them fifty-odd metres deep there): the shell climbs slowly under their crowns
+    // instead of standing up as a green wall
+    // (the west side runs on north to the water round the lake's corner, which leaves land there out to z −1350, and
+    //  a strip of it twenty metres deep past the dog park's fence)
+    if(fine && typeof EAST!=="undefined"){ const T0=EAST.town;
+      for(const [a0, a1, b0] of [[T0.x0-64, T0.x0+52, T0.z0-84], [T0.x1-2, T0.x1+64, T0.z0-20]]){      // (the west box takes in the
+                                                                                                    //  strip past the dog park's fence)
+        const ex=Math.max(0, x-a1, a0-x), ez=Math.max(0, z-(T0.z0+74), b0-z);
+        const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; } }
     const g=Terrain.heightAt(x,z);
     if(m<=0) return g-3;
     const base=15.5+Terrain.fbm(x*0.006+9, z*0.006+4, 3)*6;

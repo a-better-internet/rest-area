@@ -262,12 +262,15 @@ const LAKE_HOUSES={routes:{}, stairs:[], fridges:[], clocks:[], radios:[], cats:
   // what hangs on a wall with no collider to show it: the cupboards, the hood (no picture goes behind them)
   const WALLX=[], wallx=(o, w, lx, lz, d, y0, y1)=>{ const [ax2,az2]=o.at(lx-w/2, lz-d/2), [bx2,bz2]=o.at(lx+w/2, lz+d/2);
     WALLX.push({x0:Math.min(ax2,bx2), x1:Math.max(ax2,bx2), z0:Math.min(az2,bz2), z1:Math.max(az2,bz2), y0:o.y+y0, y1:o.y+y1}); };
-  const upper=(o, w, lx)=>{ o.w(w, 0.72, 0.34, lx, 1.86, -0.13, "#e8e2d0", 0.01); wallx(o, w, lx, -0.13, 0.34, 1.50, 2.22); };
+  // the doors on a run of uppers, a pull low on each (their face is at 0.04: the doors sink 4 mm into it and stand 8 proud)
+  const upperDoors=(o, w, lx, col)=>{ const n=Math.max(1, Math.round(w/0.6)), dw=w/n;
+    for(let i=0;i<n;i++){ const x=lx-w/2+dw*(i+0.5); o.b(dw-0.04, 0.66, 0.012, x, 1.86, 0.042, col); o.b(0.015, 0.10, 0.025, x+(i%2 ? -1 : 1)*(dw/2-0.07), 1.61, 0.056, "#8a8d90"); } };
+  const upper=(o, w, lx)=>{ o.w(w, 0.72, 0.34, lx, 1.86, -0.13, "#e8e2d0", 0.01); upperDoors(o, w, lx, "#e8e2d0"); wallx(o, w, lx, -0.13, 0.34, 1.50, 2.22); };
   // the kitchen: base cabinets with the counter on them, the uppers, the sink, the range, the fridge
   const counterRun=(o, len, opts)=>{ const c=opts.cab||"#e8e2d0", top=opts.top||"#5a5450";
     o.w(len, 0.86, 0.60, 0, 0.43, 0, c, 0.01); o.b(len+0.02, 0.04, 0.63, 0, 0.88, 0.01, top);
     for(let x=-len/2+0.30; x<len/2-0.1; x+=0.60){ o.b(0.56, 0.62, 0.012, x, 0.42, 0.302, opts.door||c); o.b(0.10, 0.015, 0.025, x+0.18, 0.66, 0.315, "#8a8d90"); }
-    if(opts.uppers!==false){ o.w(len, 0.72, 0.34, 0, 1.86, -0.13, c, 0.01); wallx(o, len, 0, -0.13, 0.34, 1.50, 2.22); }
+    if(opts.uppers!==false){ o.w(len, 0.72, 0.34, 0, 1.86, -0.13, c, 0.01); upperDoors(o, len, 0, opts.door||c); wallx(o, len, 0, -0.13, 0.34, 1.50, 2.22); }
     if(opts.sink!==undefined){ const sx=opts.sink; o.b(0.62, 0.006, 0.42, sx, 0.902, 0.04, "#c8ccd0"); o.b(0.56, 0.004, 0.36, sx, 0.906, 0.04, "#7a7e82");
       o.g(new T.CylinderGeometry(0.015, 0.015, 0.26, 8), sx, 1.03, -0.20, "#c8ccd0"); o.g(new T.CylinderGeometry(0.012, 0.012, 0.20, 8), sx, 1.15, -0.10, "#c8ccd0", Math.PI/2); }
     if(opts.range!==undefined){ const rx=opts.range; o.p(0.76, 0.92, 0.60, rx, 0.464, 0.02, "#ece9e2", 0.01); o.b(0.70, 0.012, 0.56, rx, 0.926, 0.01, "#1a1a1c");

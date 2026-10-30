@@ -181,8 +181,14 @@ function _crowdPose(p, now, moving){
     B[J.head].rotation.x=-0.35*up+0.5*dn; B[J.spine].rotation.x=0.7*dn; if(p.heldG) p.heldG.visible=c<0.7; }
 }
 function _crowdDog(p, dt, moving){
-  const D=p.D, ex=p.x+Math.sin(p.yawS+0.6)*1.4, ez=p.z+Math.cos(p.yawS+0.6)*1.4, dx=ex-p.dx, dz=ez-p.dz, d=Math.hypot(dx,dz);
-  if(d>0.05){ const s=Math.min(d, Math.max(0.6, d*2.2)*dt); p.dx+=dx/d*s; p.dz+=dz/d*s; D.g.rotation.y=Math.atan2(dx,dz); }
+  // out ahead on the lead to one side, or the other side, or at heel behind, whichever is clear: a dog goes round a
+  // fence or a mailbox, not through it, and never takes a step into anything solid (unless it is a long way behind)
+  const D=p.D; let ex=0, ez=0;
+  for(const [a, r] of [[0.6, 1.4], [-0.6, 1.4], [Math.PI, 0.9]]){ ex=p.x+Math.sin(p.yawS+a)*r; ez=p.z+Math.cos(p.yawS+a)*r; if(!_hitAt(ex, ez, p.y, 0.3, null)) break; }
+  const dx=ex-p.dx, dz=ez-p.dz, d=Math.hypot(dx,dz);
+  if(d>0.05){ const s=Math.min(d, Math.max(0.6, d*2.2)*dt), nx=p.dx+dx/d*s, nz=p.dz+dz/d*s;
+    if(d>4 || !_hitAt(nx, nz, p.y, 0.25, null)){ p.dx=nx; p.dz=nz; }
+    D.g.rotation.y=Math.atan2(dx,dz); }
   D.g.position.set(p.dx, Terrain.groundAt(p.dx, p.dz), p.dz);
   const a=CROWD.t*9; D.legs.forEach((b,k)=>{ D.B[b].rotation.x=moving ? Math.sin(a+(k===0||k===3 ? 0 : Math.PI))*0.5 : 0; });
   D.B[D.tail].rotation.z=Math.sin(CROWD.t*(moving?10:4))*0.4; }

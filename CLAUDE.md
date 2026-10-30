@@ -266,6 +266,22 @@ No lettering touches or runs past the edge of its board or its border.
 - The dog park (14t) runs off its thrower's `tick` (14q), so its dogs are
   only worked while the park's crowd is shown. Its gates are plain `DOORS`
   entries that open as you come up and fall shut behind you, not latched.
+- The canopy's shell (07) is only ever meant to be seen behind real trees.
+  It stands up to full height within 11 m of a clearing's edge, so wherever
+  you can stand within forty-odd metres of woods that are only shell, it
+  reads as a smooth green hill. Plant real trees there several rows deep
+  and keep the shell low under them, the way 07's `canopyY` and 14n do at
+  both ends of Lake Street by the shore.
+- A stain, damp, dirt or oil on a wall or floor is a soft-edged decal: a
+  transparent blotch texture in its own bucket (14f's `smudge`, 14y's
+  `oilspot`), coloured by the vertex colour. A hard-edged flat ellipse or
+  polygon in a dim room reads as a thing standing there, or a hole.
+- Every texture on a material in the scene gets the card's anisotropic
+  filtering once the world is built (19-loop). A texture made later, at
+  run time, sets its own `anisotropy`.
+- A crowd walker's dog (14q `_crowdDog`) keeps to whichever heel position is
+  clear of colliders and never steps into one, so a walker's path may run
+  close to a fence.
 - The brewery's cornhole boards (`BREWERY.boards`, 14r) each carry their
   own frame: `O` the face's middle, `ex` across, `ez` up the slope, `n`
   out of the face, and `hy` how far up it the hole is. 18j's bags work in
@@ -279,7 +295,9 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 `NODE_PATH=/opt/node22/lib/node_modules node tools/walk.js`.
 
 - `tools/shot.js shots.json outDir [w] [h]` renders screenshots from the
-  game itself (see its header for the shot format).
+  game itself (see its header for the shot format). A `drone` shot is the
+  drone's chase view, about 4 m behind the drone looking at it, with the
+  drone left out of the picture.
 - `tools/walk.js` walks every route and seat with keys held at walk, run and
   sprint, and fails if you get stuck anywhere. Add a route for any new place
   you can walk to. `ONLY=regex` walks just the routes, seats and stair

@@ -398,8 +398,9 @@ function wetFloor(x,z,ry){
     // inside: the restroom's east wall, and the wall between the small rooms
     runZ("block", 3.35, WT, lo, hi, Y0, CEIL+0.02, [], BLOCKC, 0.6);
     runX("block", sg*8.55, WT, 3.5, 6.7, Y0, CEIL+0.02, [], BLOCKC, 0.6);
-    // ceilings
-    ceilAt("plaster", -4.7, 6.7, lo+(sg<0?0.15:0), hi-(sg>0?0.15:0), CEIL, "#e9e9e4", 0.4);
+    // ceilings, out to the end wall's inner face (3 mm short, behind the block liner that stands 4 mm off it), so no
+    // strip of the brick above shows between them
+    ceilAt("plaster", -4.7, 6.7, lo+(sg<0?0.003:0), hi-(sg>0?0.003:0), CEIL, "#e9e9e4", 0.4);
   }
 
   /* --- the lobby's gable ends: siding round the great window --------------
@@ -571,6 +572,8 @@ const BOARD={};                       // where the bulletin board's cork is (16c
     const f=sg*R.z1;
     lineX("brick", f, -sg, R.x0, R.x1, FL, BR, [ENT,SMD], BRICK_IN, 0.83);
     lineX("plaster", f, -sg, R.x0, R.x1, BR, top, [ENT,SMD], CREAM, 0.5);
+    // and on up round the high windows: the piers at their ends and the head over them are brick outside, plaster in
+    lineX("plaster", f, -sg, R.x0, R.x1, top, BLD.eaveL, [{a:-4.9, b:5.5, sill:CL0, head:CL1}], CREAM, 0.5);
     bx("beam", R.x1-R.x0, 0.08, 0.05, 0, BR+0.02, f-sg*0.033, 0.6, 0, "#6a4a32");
     frameX(sg*BLD.lz, WT, ENT.a, ENT.b, ENT.head, "#6a4a32");
     frameX(sg*BLD.lz, WT, SMD.a, SMD.b, SMD.head);
