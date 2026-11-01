@@ -139,6 +139,11 @@ const ROUTES={
   // the Perky Loon (14u): in at the patio's gate, up the step and over the porch, in the door to the counter; round behind it
   "into the perky loon":    [[1437.5,-1197],[1437.5,-1193.6],[1437.5,-1190],[1437.5,-1188.6],[1437.5,-1187.5],[1437.5,-1186.0],[1437.5,-1184.0],[1436.2,-1182.6]],
   "behind the coffee counter": [[1436.2,-1182.6],[1435.4,-1182.6],[1435.4,-1180.85],[1437.5,-1180.85],[1440.8,-1180.85]],
+  // the weigh station (14w): across the apron from behind the rigs, up the step and in at the scale house's door
+  "into the weigh station": [[-42,-2970],[-50,-2955],[-56.5,-2941.9],[-57.4,-2941.9],[-58.3,-2941.9],[-59.2,-2941.9],[-60.4,-2941.9],[-61.2,-2938.2]],
+  // and its roastery (14u): from the gravel lot round the east side of the house, down the stair behind it, in at the coral
+  // door, round the packing table to the sacks by the roaster
+  "down to the roastery":   [[1445.8,-1182.5],[1442.6,-1181.0],[1442.4,-1176.0],[1441.6,-1174.4],[1439.7,-1174.4],[1439.7,-1175.6],[1439.7,-1177.0],[1439.7,-1178.8],[1439.7,-1179.6],[1439.7,-1180.5],[1439.8,-1182.6],[1439.8,-1183.8],[1438.0,-1183.9],[1436.8,-1184.4]],
 };
 (async()=>{
   const b=await chromium.launch({args:["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
@@ -265,6 +270,12 @@ const ROUTES={
       for(const [m,lab] of PACES("hall stair, keys held")){
         const d=drive(TOP4,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT4,m,lo); REST.sim(40);
         res["hall stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-2.0 ? "down: never reached the hall ("+lo.toFixed(2)+")"
+                                         : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
+    // and the Perky Loon's stair down to its roastery (14u), in at its door, and back up
+    { const TOP5=[[1439.7,-1174.3],[1439.7,-1175.4],[1439.7,-1178.0],[1439.7,-1179.0]], BOT5=TOP5.slice().reverse(), fy=REST.surf(1439.7,-1174.3,EDIN.y+0.5);
+      for(const [m,lab] of PACES("roastery stair, keys held")){
+        const d=drive(TOP5,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT5,m,lo); REST.sim(40);
+        res["roastery stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-2.0 ? "down: never reached the bottom ("+lo.toFixed(2)+")"
                                          : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
     // and each house's stair on Lake Street (14o), up from its hall and back down
     for(const S of (typeof LAKE_HOUSES!=="undefined" ? LAKE_HOUSES.stairs : [])){ const UPh=S.up, DNh=UPh.slice().reverse();

@@ -311,8 +311,11 @@ If the scene runs hot on your machine, start there (see below).
     and propane. Inside: the counter by the door with the clerk behind it,
     a candy rack along its front, a case of donuts by the register, the
     cigarettes and the lottery behind him, a roller grill; three aisles of
-    shelving with endcaps and a wet floor sign; the lit cooler wall across
-    the back; a coffee bar, and a fountain and slushie counter (blue
+    shelving with endcaps and a wet floor sign, stocked by department with
+    goods that have names on them (Hilltop chips, Lake Effect pretzel rods,
+    jerky, cereal, soup, peanut butter, motor oil, charcoal, bug spray,
+    phone chargers); the lit cooler wall across the back, its doors full of
+    named drinks (cola, root beer, sweet tea, sport drinks, Weir Farm milk); a coffee bar, and a fountain and slushie counter (blue
     raspberry, cherry); a magazine rack under the glass; a camera in the
     ceiling and a convex mirror in the corner. The grey door by the
     slushies opens on the restroom: one room with tile to the shoulder, a
@@ -616,7 +619,10 @@ If the scene runs hot on your machine, start there (see below).
     and churned white water straight back from the motor, all of it fading
     as it spreads. It is lit like the rest of the lake, so it goes dark
     with the water at night. It bumps off the shore, the docks, the
-    pilings and the other boats.
+    pilings and the other boats. At night it shows its running lights (red
+    and green at the bow, white at the stern) and two headlights on the bow
+    rail that throw their beams out over the water ahead; `L` at the helm
+    turns them off and on.
     Geese graze on the lawn and paddle about between the docks.
   - **Disc golf.** Six holes are laid out over the park's lawn between the
     lot and the shore, par 19, from 34 to 52 m. Each has a concrete tee
@@ -663,7 +669,9 @@ If the scene runs hot on your machine, start there (see below).
     catches the light rather than painted on, so they darken with it at
     night. The boats ride a little on it. Beyond the far woods the hills
     stand up into mountains all round the horizon, ridged and gullied,
-    bluer and paler the further off they are.
+    bluer and paler the further off they are. The ground runs on a long way
+    past the far shore before it does, so from out on the water the hills
+    and valleys go back unbroken to the skyline.
   - **Lakeshore Brewing Co.**, past the last house at the end of the road,
     on the shore. Its lot has cars in it and its sign at the mouth. The
     building is a long timber taproom with a red standing-seam roof, its
@@ -711,7 +719,7 @@ If the scene runs hot on your machine, start there (see below).
     twine either end of the front, a steam stack on the brewhouse roof
     puffs on a brew day, a sandwich board at the lot's mouth says what's on
     tonight, and two Adirondack chairs sit by the maple. In the corner of
-    the deck Dave plays his guitar on a little stage (a rug, an amp, the
+    the deck Dave plays his guitar (strumming over the sound hole, his other hand moving on the frets) on a little stage (a rug, an amp, the
     mic, a speaker on a stand, the tip bucket, his chalkboard on an easel).
     The bar's free stools, the rail's and the deck bar's can be sat on.
   - **Lake Street Bark Park.** The fenced corner of the lawn at the west
@@ -731,6 +739,10 @@ If the scene runs hot on your machine, start there (see below).
     when you come in, tail going, and yips. A husky lies flat out in the
     shade. Two people talk at the fence with coffees, another sits on the
     bench. By day; after dark the park is empty.
+    Take a ball from the bucket yourself (`E`) and throw it: the black lab
+    and the brindle leave off their chase and race for it, and the one that
+    gets it brings it back and drops it at your feet, the other trotting
+    beside, and they wait looking up at you. Walk over it to pick it up.
   - **The Perky Loon**, a coffee shop across the street from the brewery:
     a little house built the way the others are (lap siding, a shingled
     gable, white trim) but painted sea green, with a coral door and
@@ -746,9 +758,28 @@ If the scene runs hot on your machine, start there (see below).
     it, two little tables by the window, a bar along the front window with
     stools, an old armchair in the back corner with a lamp and a shelf of
     paperbacks, a fern, pendant bulbs, OPEN in the window, the radio on.
+    A shelf of the house's own beans in labelled bags by the counter (Loon
+    Roast, Lake Effect, Decaf Dock, Sunrise, Presque Isle), a board of
+    notices by the door, three photographs of the lake over the armchair,
+    a cake under a glass dome, the milk and sugar at the end of the counter,
+    a pour-over bar and the cold brew in its jar behind it, a ceiling fan
+    turning, ferns hanging in the front windows, the bin by the door.
     Nana is behind the counter; somebody reads in the armchair, somebody
-    watches the street from the window, and people sit out on the patio.
-    Sit in any empty chair, stool or rocker.
+    watches the street from the window, somebody picks out a bag of beans,
+    and people sit out on the patio. Sit in any empty chair, stool or rocker.
+    The roastery is under the house. Round the back, past a sign (LOON
+    ROASTING CO.), a concrete stair goes down to a coral door. Inside, under
+    the joists and a steel beam: the roaster against the west wall, black and
+    brass, green coffee in its hopper, the beans glowing in its window, the
+    curves of the roast on its screen, and the beans cooling in the tray in
+    front of it with the arm going round; the chaff cyclone beside it and
+    the duct away to the stack up the back wall, which smokes a little. Jute
+    sacks of green coffee from six countries on pallets, the roasted coffee
+    bagged at a steel table (the scale, the sealer, a bin of beans with its
+    scoop) and shelved, boxes of bags, a cupping table with its bowls and
+    spoons, the roast log chalked over a desk with the laptop, the radio,
+    the house's furnace and water heater, a sink. The roaster stands at the
+    tray. Like everything underground, it is lit the same at any hour.
   - **Cornhole.** Danny plays at the brewery's boards. `E` at the near
     board, on its left, asks him for a game: singles to 21, your four red
     bags against his four blue, both of you throwing from the near end at
@@ -766,6 +797,37 @@ If the scene runs hot on your machine, start there (see below).
     scoreboard on its post keeps the count, and the card at the top shows
     the score, the bags left and whose throw it is. `E` at the board again
     stops, and so does walking off.
+- **The weigh station.** A mile on from the Edinboro bridge, in the valley
+  bottom on the northbound side. I-79 runs on north past it (and south past
+  the rest area) a good way further now; the ground, the woods and the
+  traffic go with it, and walls across the corridor where it finally stops
+  say how far the map goes.
+  - Signs bring the trucks in: WEIGH STATION 1/2 MILE, NEXT RIGHT, one at
+    the gore, and back up the road WEIGH STATION · ALL TRUCKS MUST ENTER ·
+    WHEN FLASHING, with OPEN over it and two amber beacons that flash while
+    it is open (six in the morning to eleven at night; CLOSED otherwise).
+  - The off-ramp leaves the right lane on its own speed-change lane, with
+    the edge line dotted along it, a chevroned gore and the ramp's yellow
+    left line, the way the other ramps do; the on-ramp merges back the same
+    way. Between them the station's lanes part: BYPASS on the left (for the
+    trucks with a transponder) and the scale lane on the right, each with
+    its word and arrow on the paving and a sign where they split.
+  - The scale: two steel decks in a yellow frame in the scale lane, the
+    readout over the lane on an arm, the stop bar past it with STOP and STOP
+    ON RED, and the signal on its pole, red while a truck is on the scale,
+    then green and BYPASS. The scale house beside the lane is block with a
+    flat roof, a long window along the lane and the camera on a mast; inside,
+    the officer sits at the desk with the readout, the camera and the log on
+    his screens, with a filing cabinet, the printer, a coffee maker, a fridge,
+    the board of notices and a clock. Its door is on the east side, up a step.
+  - On the apron past the scale two rigs are pulled over. An inspector goes
+    round one with a clipboard, stopping to write, while its driver waits
+    by his cab with a coffee; cones round it, chocks under a wheel, a tool
+    cart. Tall lights over all of it, and woods round its clearing.
+  - While it is open, now and then a rig in the right lane comes in: down
+    the ramp, onto the scale and stopped while the number comes up on the
+    board, then out when the light goes green, down the on-ramp and back in.
+    About one in four takes the bypass lane past without stopping.
 - **The picnic grove** spreads across the lawn south of the building. Paths
   run to it off curb ramps at the plaza's corners: north to the shelter's
   slab and its ramp, south to a round pad by the pet area's bag dispenser,
@@ -1198,7 +1260,7 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Throttle · reverse · steer (the boat) | `W` · `S` · `A` `D` |
 | Sit / stand | `C` |
 | Drone · fly up / down | `F` · `Space` / `Shift` |
-| Flashlight | `L` |
+| Flashlight · the boat's lights | `L` |
 | Nightfall · midday | `N` · `M` |
 | Scrub time | `[` `]` |
 | Summer / autumn | `Y` |
@@ -1236,6 +1298,9 @@ too). On the tee or by your disc, aim with the view and hold
 `Space` or the mouse button to wind up; let go to throw. Hold `Z` or the
 right mouse button to zoom in on the basket. While the view follows the
 disc, `Space` brings it back.
+
+In the dog park, `E` at the bucket takes a ball (and puts it back); hold
+`Space` or the mouse button and let go to throw, higher the higher you look.
 
 At the brewery's cornhole boards, `E` at the near board starts or stops a
 game against Danny. Aim with the view (up lobs it higher) and hold `Space`
@@ -1295,6 +1360,9 @@ centred on the origin.
 | Lakeshore Brewing Co. | lot x 1422 … 1468 from the road to z −1226; the taproom x 1430 … 1460, z −1243 … −1229; the deck x 1423 … 1467, z −1299 … −1266; the cornhole boards x 1444.6, z −1249.4 (where you throw from) and −1258.6 |
 | Lake Street Bark Park | x 1063.6 … 1101, z −1293.4 … −1272; its gates at x 1082, z −1272 and −1268.8; the path in off the street at x 1068 |
 | The Perky Loon | the house x 1433.5 … 1441.5, z −1186.5 … −1179.5; the porch to z −1188.4; the patio x 1431.8 … 1443.8 to z −1193.2; its lot x 1445 … 1462.5 |
+| Its roastery | under the house, x 1433.7 … 1441.3, z −1186.3 … −1179.7, its floor 2.65 m below the ground; the stair down x 1439 … 1440.4 from z −1175.3 to the door at z −1179.5 |
+| The weigh station | its ramps leave I-79 at z −2560 and rejoin it at z −3352; the lanes x −75.75 … −66.75, z −3008 … −2900; the scale z −2950 … −2928; the scale house x −64.2 … −58.6, z −2946 … −2934; the apron x −66.5 … −38, z −3004 … −2962 |
+| The ends of I-79 | walls across the corridor at z −3700 (north) and +1720 (south) |
 | Edinboro Lake | x 980 … 2260, z −2090 … −1296, a rounded oblong, wandering off the street |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
 | Well house · water tank | x 65.6 … 68.8, z 97.6 … 101.2 · x 70, z 140 |
@@ -1329,6 +1397,7 @@ js/05-sky.js        sky, sun, clouds, birds, day/night, highway traffic
 js/06-collision.js  colliders, paving raster, seats, uses, zones
 js/07-forest.js     tree species, instanced LOD chunks, canopy shell, wind, seasons
 js/08-site.js       interstate, ramps, lots, striping, signs, walks, lamps, beds, the median crossovers
+js/08w-weigh.js     the weigh station's road: its ramps, lanes, apron and lines, the words on the paving, the signs on I-79
 js/08b-edinboro.js  exit 166: the ramps, US 6N and its bridge over I-79, the signs, the fields
 js/09-building.js   the rest area building, inside and out
 js/10-cars.js       parked cars and trucks
@@ -1362,7 +1431,8 @@ js/14q-townsfolk.js people out of doors (Lake Street, the park, Edinboro, the ba
 js/14r-brewery.js   Lakeshore Brewing Co.: its lot, the taproom, the beer garden, the deck over the water, its staff and customers
 js/14s-edinsub.js   French Creek Substation behind the fuel stop: the tap line, the yard and its equipment, the control house
 js/14t-dogpark.js   Lake Street Bark Park: its fence and double gate, the path in, the agility things; the dogs (fetch, the chase, the little one, the husky) and their people
-js/14u-coffee.js    The Perky Loon, the coffee shop across from the brewery: the house, porch, patio and lot, the room inside, and its people
+js/14u-coffee.js    The Perky Loon, the coffee shop across from the brewery: the house, porch, patio and lot, the room inside, the roastery under it, and its people
+js/14w-weigh.js     the weigh station: the scale, the scale house and its officer, the signal and readout, the OPEN sign, the apron and its rigs, the trucks that come in
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -1494,6 +1564,10 @@ the generator house's cellar and the trailer's step. The routes are:
   the run;
 - in at the Perky Loon's patio gate, up the step, over the porch and in
   at the door to the counter; and round behind it;
+- from the Perky Loon's lot round the house, down the stair behind it and
+  in at the coral door to the roaster (and the stair down and back up, keys
+  held, at each pace);
+- across the weigh station's apron, up the step and into the scale house;
 - into every house on Lake Street and to every room in it. Each house
   lays out its own routes as it builds (`LAKE_HOUSES.routes` in 14o, so
   they move with the plans): in at the front door, round the ground floor,

@@ -442,6 +442,11 @@ const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:344};
 const RING_HWYN={x0:-272, x1:-48, z0:-1752, z1:-336}, RING_HWYS={x0:-272, x1:-48, z0:344, z1:568};
 // and one at 4 m east along US 6N: the outlet, the street, the park and the lake's near shore (EAST)
 const RING_EAST={x0:640, x1:1472, z0:-1344, z1:-1056};
+// and let into that, a half-metre patch round the Perky Loon (14u), holed over its roastery under the house and over the
+// stair down to it behind (on RING_EAST's 4 m lattice; the holes on its own, so the house and the stair's walls and
+// apron cover their edges)
+const LOON_RING={x0:1428, x1:1448, z0:-1192, z1:-1168};
+const LOON_HOLES=[{x0:1433.5, x1:1441.5, z0:-1186.5, z1:-1179.5, bare:true}, {x0:1438.5, x1:1441.0, z0:-1179.5, z1:-1175.0, bare:true}];
 const TERRAIN_RINGS=[];
 let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point, for whatever lies on it: 14y)
 (function buildTerrain(){
@@ -622,7 +627,8 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   grid(RING_NEAR, 2, [GEN_HOLE], "ground-near", 6);
   grid(RING_HWYN, 2, [], "ground-hwyn", 6);
   grid(RING_HWYS, 2, [], "ground-hwys", 6);
-  grid(RING_EAST, 4, [], "ground-east", 6);
+  grid(RING_EAST, 4, [LOON_RING], "ground-east", 6);
+  grid(LOON_RING, 0.5, LOON_HOLES, "ground-loon", 0);       // (no apron: it meets the 4 m ground on the street's flat)
   grid(KIRK_RING, 2, KIRK_HOLES, "ground-kirk", 0);              // (no apron: it meets the 8 m ground on the flat, and one would hang through the hall)
   TERRAIN_RINGS.sort((a,b)=>a.cell-b.cell);        // finest ring wins
 })();

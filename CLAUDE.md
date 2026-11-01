@@ -290,6 +290,41 @@ No lettering touches or runs past the edge of its board or its border.
   it. A person tossing (14q's `toss` job) runs its swing on its own clock
   unless `cornSwing` (0–1 through the swing) is set, which 18j does for
   Danny while you play.
+- I-79 runs from `HWY.zN` to `HWY.zS` (00), with walls across the corridor
+  at `HWY.endN` / `HWY.endS` that carry the edge message. Anything laid
+  along the interstate (paint, rumble strips, mile markers, road edges)
+  runs between those, not fixed numbers. The traffic loop is
+  `2·HWY.wrap` long and centred on the camera (05's `trafficMid`), so the
+  traffic is wherever you are.
+- The ground's outer rings: 32 m out to `GROUND_EDGE` (04), 16 m inside
+  `RING_FAR`, 8 m in `RING_MIDN` up the interstate north, and 2 m in
+  `RING_WEIGH` round the weigh station. Each finer ring is a hole in the
+  one outside it, on that ring's lattice. The far terrain's rim fades
+  against `GROUND_EDGE`, so nothing near the edge looks cut off.
+- The weigh station is set out by `WEIGH` (04: its ramps `off` / `on`, the
+  lanes, the scale, the house, the apron, the graded pad). 08w lays its road
+  through `rampPave` like any ramp, before 08b's `interstateEdges`; 14w
+  builds the rest. Its trucks are 05's traffic: `updateWeighTrucks` (14w,
+  from 14's `updateVisitors`) flags a rig and gives it a route at the ramp,
+  and 14's `stepVisitor` drives it. A leg with `y` rides the road's grade
+  on a ramp and the station's paving off it. A route with `weigh` counts
+  against `WEIGH_RT.active`, not `VISIT.active`, and a truck stopped on the
+  scale holds up the one behind it.
+- The Perky Loon's roastery (14u) is under the house. The ground there is a
+  0.5 m patch (`LOON_RING`, 04) let into `RING_EAST`, holed (`LOON_HOLES`)
+  over the basement and its stair, so the house and the stair's walls and
+  apron cover the holes' edges.
+- A crowd person's arm can be set to reach a point with 14q's two-bone
+  `_armTo(P, sh, el, target, pole)` after the pose (Dave's guitar does).
+  The `R` bones are on the body's left.
+- The dog park's ball you throw is 14t's `DOGBALL`: keys through 17's
+  keydown chain, its frame through 18e's `updateGames`, the fetch in the
+  thrower's tick.
+- The boat's lights (14p) borrow 11's two `carBeams` spot lights whenever
+  you are not driving a car (`BOAT.beams`, from `updateCarLights`); `L` at
+  the helm sets `BOAT.lights`.
+- The fuel stop's shelves (14k) are one atlas of named products (`GOODS`,
+  its `L0` list); add a product to the list and put it with `put`.
 
 ## Tools
 
