@@ -457,9 +457,9 @@ const COFFEE={};
     addVoid(BX0, BX1, BZ0, BZ1, BF-3, Y-0.15, BF);
     addBuried(BX0, BX1, BZ0, BZ1, BF-0.5, BCL+0.05, 0);
     addZone(BX0, BX1, BZ0, BZ1, BF-0.5, BCL, "THE ROASTERY", true);
-    // the door in from the stair: coral steel, a white frame, a threshold
+    // the door in from the stair: coral, a light in it like the one at the front, a white frame, a threshold
     frX(CZ1-0.1, 0.2, BD.a, BD.b, BF, BD.head, TRIM);
-    makeDoor(XF(BD.b-0.02, CZ1-0.1, Math.PI), 0, BF+0.01, 0, "THE ROASTERY", true, 0, "steel", 0xd8604e);
+    makeDoor(XF(BD.b-0.02, CZ1-0.1, Math.PI), 0, BF+0.01, 0, "THE ROASTERY", true, 0, "vision", 0xd8604e);
     B(BD.b-BD.a+0.004, 0.016, 0.23, (BD.a+BD.b)/2, BF+0.008, CZ1-0.1, "#8a6a44");
     addFlat(BD.a, BD.b, CZ1-0.21, CZ1+0.01, BF); addVoid(BD.a, BD.b, CZ1-0.22, CZ1+0.02, BF-3, Y-0.15, BF);
     // the lights: caged bulbs on cords down from the joists
