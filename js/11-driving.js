@@ -427,6 +427,8 @@ function updateCarLights(dark, delta){
   }
   LENS_MAT.opacity=0.80*k;
   TAIL_MAT.opacity=0.78*k;
+  // out on the boat (14p) the two beams are its docking lights
+  if(!driving && typeof BOAT!=="undefined" && BOAT.beams) BOAT.beams(dark, delta, carBeams);
   if(!on) return;
   const b=driving.veh.body;
   const f=b.forward(), r=b.right(), u=b.up();

@@ -61,6 +61,8 @@ function crowdHold(P, kind, right){
     g.tip=new T.Object3D(); g.tip.position.set(0, 2.235, 0.004); g.add(g.tip); }
   else if(kind==="can_w"){ add(new T.CylinderGeometry(0.09, 0.10, 0.22, 12), "#3a8a4a", 0, -0.12, 0.05); add(new T.CylinderGeometry(0.015, 0.015, 0.30, 6), "#3a8a4a", 0, -0.02, 0.22, 1.0); }
   else if(kind==="sponge") add(new T.BoxGeometry(0.12, 0.06, 0.08), "#e6c21c", 0, 0, 0.03);
+  else if(kind==="clip"){ add(new T.BoxGeometry(0.23, 0.31, 0.008), "#8a6a48", -0.06, 0.04, 0.10, -0.6); add(new T.BoxGeometry(0.20, 0.25, 0.004), "#f2efe6", -0.06, 0.03, 0.104, -0.6);
+    add(new T.BoxGeometry(0.08, 0.025, 0.014), "#b8bcc0", -0.06, 0.18, 0.08, -0.6); }
   else if(kind==="paper") add(new T.BoxGeometry(0.30, 0.40, 0.01), "#e8e4d8", -0.12, 0.05, 0.12, -0.3);
   else if(kind==="nozzle"){ add(new T.BoxGeometry(0.05, 0.12, 0.10), "#1d1d1e", 0, 0.0, 0.03); add(new T.CylinderGeometry(0.012, 0.012, 0.22, 6), "#8a8d90", 0, 0.03, 0.15, Math.PI/2+0.4); }
   else if(kind==="flowers"){ add(new T.CylinderGeometry(0.035, 0.02, 0.26, 6), "#4a7a3a", 0, 0.02, 0.05);
@@ -129,6 +131,24 @@ function _crowdWalk(p, dt, G){
   p.ph=(p.ph+dt*sp/(p.run ? 2.2 : 1.35))%1;
   return true; }
 const _dZ=new T.Vector3();
+/* a hand to a point: a two-bone arm turned so the hand is at T (in the spine's frame, where anything a job holds on the
+   spine is too), the elbow toward pole. sh/el are the arm's bones; the upper arm is 0.28 h, the forearm to the middle
+   of the hand 0.275 h. (Mind the rig: the bones named R are at +x, which on a body facing +z is its left.) */
+const _ikT=new T.Vector3(), _ikE=new T.Vector3(), _ikP=new T.Vector3(), _ikX=new T.Vector3(), _ikY=new T.Vector3(), _ikZ=new T.Vector3(), _ikM=new T.Matrix4();
+function _armTo(P, sh, el, T3, pole){
+  const B=P.B, L1=0.28*P.h, L2=0.275*P.h;
+  _ikT.copy(T3).sub(B[sh].position); let d=_ikT.length(); _ikT.divideScalar(d||1);
+  d=clamp(d, Math.abs(L1-L2)+1e-3, L1+L2-1e-3);
+  const a=(L1*L1-L2*L2+d*d)/(2*d), hh=Math.sqrt(Math.max(0, L1*L1-a*a));
+  _ikP.copy(pole).addScaledVector(_ikT, -pole.dot(_ikT)).normalize();
+  _ikE.copy(_ikT).multiplyScalar(a).addScaledVector(_ikP, hh);                       // the elbow, from the shoulder
+  const bend=Math.PI-Math.acos(clamp((L1*L1+L2*L2-d*d)/(2*L1*L2), -1, 1));
+  _ikY.copy(_ikE).normalize().negate();                                              // the upper arm hangs down its own −y
+  _ikZ.copy(_ikT).multiplyScalar(d).sub(_ikE); _ikZ.addScaledVector(_ikY, -_ikZ.dot(_ikY)).normalize();   // and its +z is where the forearm bends
+  _ikX.crossVectors(_ikY, _ikZ);
+  B[sh].quaternion.setFromRotationMatrix(_ikM.makeBasis(_ikX, _ikY, _ikZ));
+  B[el].rotation.set(-bend, 0, 0); }
+const _gtS=new T.Vector3(), _gtF=new T.Vector3(), _gtPS=new T.Vector3(-1, 0.45, -0.45).normalize(), _gtPF=new T.Vector3(0.45, -1, -0.3).normalize();
 function _crowdPose(p, now, moving){
   const P=p.P, B=P.B, J=P.j, t=p.t, m=p.mode;
   if(m==="walk") poseP(P, moving ? "walk" : "stand", p.ph, now);
@@ -172,10 +192,19 @@ function _crowdPose(p, now, moving){
       B[J.shR].rotation.set(sx, 0, 0.15); B[J.elR].rotation.set(el, 0, 0); B[J.spine].rotation.y=tw; B[J.head].rotation.y=0; B[J.head].rotation.x=-0.1; }
     if(b>0){ B[J.spine].rotation.x=0.95*b; B[J.head].rotation.x=0.2*b; B[J.hpL].rotation.x=B[J.hpR].rotation.x=-0.35*b; B[J.knL].rotation.x=B[J.knR].rotation.x=0.45*b;
       B[J.root].position.y-=0.10*b; B[J.shR].rotation.set(-0.9*b, 0, 0.05); B[J.elR].rotation.x=-0.2*b; } }
-  else if(k==="strum"){ const s=Math.sin(t*9.5+P.seed)*(0.6+0.4*Math.sin(t*0.7));          // (the guitar on his knee, 14r)
-    B[J.shR].rotation.set(-0.42+s*0.08, 0.2, 0.28); B[J.elR].rotation.set(-1.25+s*0.18, 0.35, 0);
-    B[J.shL].rotation.set(-1.0, 0.5, -0.45); B[J.elL].rotation.set(-1.0, 0, 0);
-    B[J.head].rotation.x=0.25; B[J.head].rotation.y=-0.30+Math.sin(t*0.4+P.seed)*0.12; }
+  else if(k==="strum"){
+    /* playing it, right-handed (14r puts the guitar on his spine, across his right thigh, the neck up to his left): the
+       right hand sweeps down and up across the strings over the sound hole, two strokes to the beat, harder on the one;
+       the left hand holds the neck round the third fret and moves up it and back for the chord changes; he looks down
+       at the frets, nodding a little in time */
+    const G=p.guitar;
+    if(G){ G.updateMatrix();
+      const beat=t*1.7+P.seed, ph=beat%1, stroke=Math.cos(ph*Math.PI*2)*(ph<0.5 ? 0.062 : 0.048);
+      _gtS.set(-0.02, stroke, 0.11).applyMatrix4(G.matrix); _armTo(P, J.shL, J.elL, _gtS, _gtPS);
+      const bar=Math.floor(beat/4), slide=[0, 0.05, -0.03, 0.08][(bar+((P.seed*7)|0))%4], go=smoothstep(0, 0.12, (beat/4)%1);
+      const fx=-0.60-[0.08, 0, 0.05, -0.03][(bar+3+((P.seed*7)|0))%4]*(1-go)-slide*go;
+      _gtF.set(fx, 0.0, -0.035).applyMatrix4(G.matrix); _armTo(P, J.shR, J.elR, _gtF, _gtPF); }
+    B[J.head].rotation.set(0.32+Math.max(0, Math.sin(t*1.7*Math.PI*2+P.seed))*0.05, 0.38+Math.sin(t*0.4+P.seed)*0.06, 0.08); }
   else if(k==="hang"){ const c=(t*0.11+P.seed)%1, up=smoothstep(0.08, 0.22, c)*(1-smoothstep(0.62, 0.78, c)), dn=smoothstep(0.82, 0.9, c)*(1-smoothstep(0.94, 1.0, c));
     B[J.shL].rotation.set(-0.3-up*2.35, 0, -0.1); B[J.shR].rotation.set(-0.3-up*2.35, 0, 0.1); B[J.elL].rotation.x=B[J.elR].rotation.x=-0.4+up*0.25;
     B[J.head].rotation.x=-0.35*up+0.5*dn; B[J.spine].rotation.x=0.7*dn; if(p.heldG) p.heldG.visible=c<0.7; }

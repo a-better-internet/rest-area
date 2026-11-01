@@ -26,9 +26,16 @@
    turn, and rocks on the chop at rest. It runs into what it runs into:
    the shore (Terrain.lakeSD), the docks' edges, the pilings and the
    other boats, and comes off them with a bump.
+   After dark the lights come on when you take her out: two docking lights
+   in the front of the deck throwing their beams out over the water ahead
+   (the cars' two headlamp beams, 11, which are free while you are not
+   driving), the red and green bow light on the front rail and the white
+   all-round light on its pole at the stern. L at the helm puts them off,
+   and on again.
    ---------------------------------------------------------------------- */
 const BOAT={on:false, g:null, x:0, z:0, yaw:0, u:0, v:0, r:0, thr:0, steer:0, rpm:0, speed:0, running:false, t:0,
-            pitch:0, roll:0, bumpT:0, wakeT:0, wakeD:0, use:null, col:null, cap:null, prop:null, motor:null, told:false};
+            pitch:0, roll:0, bumpT:0, wakeT:0, wakeD:0, use:null, col:null, cap:null, prop:null, motor:null, told:false,
+            lights:true, lightK:0, lamps:null};
 (function boat(){
   const R=LAKESIDE.ride; if(!R) return;
   const WY=R.wy, L=R.L;
@@ -63,6 +70,21 @@ const BOAT={on:false, g:null, x:0, z:0, yaw:0, u:0, v:0, r:0, thr:0, steer:0, rp
   scene.remove(cap.g); cap.g.position.set(0.72, 0.51, 0.60); G.add(cap.g); cap.g.visible=false; cap.seed=0.3; BOAT.cap=cap;
   // (the wake is the water's own (14n): the boat drops a point behind its stern as it goes, below, and the lake's
   // surface spreads a ring of waves from each)
+  /* the lights. Docking lights: a chrome bezel in the deck's front fascia either side, the lens in it. The bow light on
+     the middle of the front rail: red to port, green to starboard. The stern light: white, all round, on a pole at the
+     stern bench's corner, clear of the bimini. Their lenses glow as the lights come up (BOAT.lightK) */
+  { const L2=L/2, FZ=L2+0.1+0.05, LE=[], le=(geo,x,y,z,c,rx,ry)=>LE.push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
+      new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
+    for(const sd of [-1,1]){ le(new T.CylinderGeometry(0.075, 0.075, 0.035, 18), sd*0.82, 0.42, FZ+0.012, "#c8ccd0", Math.PI/2); }
+    le(boxGeo(0.16, 0.06, 0.10), 0, 1.355, L2-0.15, "#c8ccd0"); le(boxGeo(0.02, 0.07, 0.11), 0, 1.36, L2-0.15, "#2a2a2c");
+    le(new T.CylinderGeometry(0.014, 0.018, 1.75, 8), -1.02, 1.37, -L2+0.55, "#c8ccd0"); le(new T.CylinderGeometry(0.04, 0.04, 0.03, 12), -1.02, 2.26, -L2+0.55, "#2a2a2c");
+    const fit=new T.Mesh(mergeEntries(LE), new T.MeshStandardMaterial({vertexColors:true, roughness:0.25, metalness:0.8})); G.add(fit);
+    const lens=(c)=>new T.MeshBasicMaterial({color:c, transparent:true, opacity:0.25, toneMapped:false, depthWrite:false});
+    const M={dock:lens(0xffe2a8), red:lens(0xff2a1a), grn:lens(0x2aff6a), wht:lens(0xfff4dc)};
+    for(const sd of [-1,1]){ const d=new T.Mesh(new T.CircleGeometry(0.058, 18), M.dock); d.position.set(sd*0.82, 0.42, FZ+0.032); G.add(d); }
+    for(const sd of [-1,1]){ const m=new T.Mesh(new T.BoxGeometry(0.004, 0.04, 0.085), sd<0 ? M.red : M.grn); m.position.set(sd*0.083, 1.36, L2-0.15); G.add(m); }
+    const st=new T.Mesh(new T.SphereGeometry(0.035, 12, 8), M.wht); st.position.set(-1.02, 2.30, -L2+0.55); G.add(st);
+    BOAT.lamps={M:M, beam:[V3(-0.82, 0.42, FZ+0.06), V3(0.82, 0.42, FZ+0.06)], aim:V3(0, -0.9, L2+28)}; }
   // getting on: E from the dock, the shore or the water's edge, anywhere along it
   BOAT.use=addUse(R.x, R.z, R.dy, "TAKE THE BOAT", ()=>BOAT.board(), 2.9, ()=>!BOAT.on);
   // and while nobody has it, it is a thing you walk round
@@ -86,9 +108,24 @@ BOAT.board=function(){
   carCamYaw=0; carCamPitch=0.30; _carLook.set(0,0,0);
   if(typeof AUDIO!=="undefined") AUDIO.blip("pull", B.x, B.z);
   B.running=false; B.startT=0.7;
-  toast(B.told ? "W · THROTTLE   S · REVERSE   A D · STEER   E · STEP OFF" :
-                 "YOU PULL THE CORD. IT CATCHES.   W · THROTTLE   S · REVERSE   A D · STEER   E · STEP OFF AT A DOCK", "#8fd6ff");
+  const nite=DayNight.state.dark>0.12 ? "   L · LIGHTS" : "";
+  toast(B.told ? "W · THROTTLE   S · REVERSE   A D · STEER   E · STEP OFF"+nite :
+                 "YOU PULL THE CORD. IT CATCHES.   W · THROTTLE   S · REVERSE   A D · STEER   E · STEP OFF AT A DOCK"+nite, "#8fd6ff");
   B.told=true; };
+// L at the helm: the lights off, or on again
+BOAT.toggleLights=function(){ BOAT.lights=!BOAT.lights; toast(BOAT.lights ? "BOAT LIGHTS ON" : "BOAT LIGHTS OFF", "#8fd6ff"); };
+// each frame (11's updateCarLights, while you are not driving a car): the lenses, and the two beams out over the water
+const _blP=new T.Vector3(), _blT=new T.Vector3();
+BOAT.beams=function(dark, delta, beams){
+  const B=BOAT, Lp=B.lamps; if(!Lp) return false;
+  const want=B.on && B.lights && dark>0.12 ? Math.min(1, (dark-0.12)*3) : 0;
+  B.lightK+=(want-B.lightK)*Math.min(1, delta*6);
+  const k=B.lightK<0.01 ? 0 : B.lightK;
+  Lp.M.dock.opacity=0.25+0.62*k; Lp.M.red.opacity=Lp.M.grn.opacity=0.30+0.65*k; Lp.M.wht.opacity=0.30+0.62*k;
+  if(k<=0 || !B.on) return false;
+  B.g.updateMatrixWorld(); _blT.copy(Lp.aim); B.g.localToWorld(_blT);
+  for(let i=0;i<2;i++){ _blP.copy(Lp.beam[i]); B.g.localToWorld(_blP); beams[i].position.copy(_blP); beams[i].target.position.copy(_blT); beams[i].intensity=1.9*k; }
+  return true; };
 // stepping off: the nearest place alongside to stand, on a dock or on the shore, and clear of everything
 BOAT.leave=function(){
   const B=BOAT; if(!B.on) return;

@@ -706,7 +706,15 @@ function buildVehicleMesh(kind, paint, trailer, livery, opts){
 const CRASH={on:false, dir:-1, lane:0, zt:64, zEnd:-60, virt:{speed:0, tail:0, nose:0}};
 // where a vehicle is along its own direction of travel
 const _trafProg=v=>v.z*v.dir;                 // distance travelled: z grows northbound-down, so sign by direction
+/* The loop the traffic runs is HWY.wrap either side of its middle, and that middle follows you along the road (kept far
+   enough from the road's drawn ends that the loop never runs off them): a car that drives off one end of it comes back
+   in at the other, far out in the haze either way, so wherever you are on the interstate (at the rest area, at
+   Edinboro, at the weigh station a mile on) the road round you has its traffic. The loop is the same length wherever
+   it is, so the gaps between cars and the wrap in the car-following below are unchanged. */
+let _trafMid=0;
+function trafficMid(){ const lo=HWY.zN+HWY.wrap+12, hi=HWY.zS-HWY.wrap-12; return clamp(camera.position.z, lo, hi); }
 function updateTraffic(dt, dark){
+  _trafMid+=(trafficMid()-_trafMid)*Math.min(1, dt*0.5);
   // car following and lane changes, per carriageway
   for(const v of TRAFFIC){
     if(v.route) continue;                       // on the ramps: 14-life drives it
@@ -775,8 +783,10 @@ function updateTraffic(dt, dark){
     if(v.slow<1) v.slow=Math.min(1, v.slow+dt*0.42);
     v.z += v.speed*v.dir*dt;
     v.spin=(v.spin+v.speed*dt/v.spec.wr)%(Math.PI*2);
-    if(v.z> HWY.wrap && v.dir>0){ v.z-=HWY.wrap*2; v.sway=0; v.swayV=0; }
-    if(v.z<-HWY.wrap && v.dir<0){ v.z+=HWY.wrap*2; v.sway=0; v.swayV=0; }
+    if(v.z>_trafMid+HWY.wrap && v.dir>0){ v.z-=HWY.wrap*2; v.sway=0; v.swayV=0; }
+    if(v.z<_trafMid-HWY.wrap && v.dir<0){ v.z+=HWY.wrap*2; v.sway=0; v.swayV=0; }
+    // (and if you went a long way fast, the loop has moved: anyone left outside it comes in at the far end)
+    if(v.z>_trafMid+HWY.wrap+40){ v.z-=HWY.wrap*2; } else if(v.z<_trafMid-HWY.wrap-40){ v.z+=HWY.wrap*2; }
     const e=v.laneT*v.laneT*(3-2*v.laneT);
     const lx=lerp(laneX(v.dir,v.fromLane), laneX(v.dir,v.lane), e);
     const latV=(laneX(v.dir,v.lane)-laneX(v.dir,v.fromLane))*(v.laneT<1 ? 6*v.laneT*(1-v.laneT)/3.6 : 0);

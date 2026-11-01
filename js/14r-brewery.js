@@ -568,8 +568,9 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     B(2.2, 0.01, 1.7, cx-0.2, top+0.008, cz, "#8a2a2a"); B(1.9, 0.012, 1.4, cx-0.2, top+0.012, cz, "#c88a3a");
     B(0.28, 0.42, 0.48, cx+1.1, top+0.215, cz+1.2, "#1d1d1e"); B(0.01, 0.26, 0.40, cx+0.952, top+0.24, cz+1.2, "#4a4238");
     B(0.22, 0.03, 0.40, cx+1.1, top+0.443, cz+1.2, "#c8b48a");
-    tubeE(V3(cx-0.85, top, cz+0.25), V3(cx-0.85, top+1.2, cz+0.25), 0.012, "#2a2a2c", 6); C(0.14, 0.02, cx-0.85, top+0.025, cz+0.25, "#2a2a2c", 14);
-    tubeE(V3(cx-0.85, top+1.2, cz+0.25), V3(cx-0.44, top+1.33, cz+0.05), 0.008, "#2a2a2c", 6); ent(new T.SphereGeometry(0.03, 10, 8).scale(1.6, 1, 1), cx-0.41, top+1.335, cz+0.04, "#5a5e62", 0, 0.45);
+    // the mic stand on his right, the side away from the neck, the boom up to his mouth
+    tubeE(V3(cx-0.85, top, cz-0.32), V3(cx-0.85, top+1.38, cz-0.32), 0.012, "#2a2a2c", 6); C(0.14, 0.02, cx-0.85, top+0.025, cz-0.32, "#2a2a2c", 14);
+    tubeE(V3(cx-0.85, top+1.38, cz-0.32), V3(cx-0.39, top+1.50, cz-0.04), 0.008, "#2a2a2c", 6); ent(new T.SphereGeometry(0.03, 10, 8).scale(1.6, 1, 1), cx-0.36, top+1.505, cz-0.03, "#5a5e62", 0, -0.55);
     tubeE(V3(cx+1.2, top, cz-2.4), V3(cx+1.2, top+1.75, cz-2.4), 0.022, "#1d1d1e", 8);
     for(let k=0;k<3;k++){ const a=k*2.09; tubeE(V3(cx+1.2, top+0.6, cz-2.4), V3(cx+1.2+Math.cos(a)*0.45, top+0.005, cz-2.4+Math.sin(a)*0.45), 0.012, "#1d1d1e", 5); }
     B(0.3, 0.55, 0.36, cx+1.2, top+2.02, cz-2.4, "#1d1d1e"); B(0.01, 0.48, 0.30, cx+1.044, top+2.02, cz-2.4, "#3a3a3c");
@@ -628,8 +629,9 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   if(BREWERY.stage){ const S=BREWERY.stage;
     const dave=crowdAdd(G, {look:guest({h:1.02, beard:"#5a3a1e", shirt:"#8a2a22", pants:"#2c3446", shoes:"#6b4a2b", beanie:"#3a5a7a", cap:null, shades:false, shorts:false, long:true}),
       x:S.x, z:S.z, y:S.y+0.30, yaw:-Math.PI/2, mode:"sit", sitY:0.545, job:"strum"});
-    // an acoustic, built on its side, the neck along -x, the top facing +z: on his right thigh against him, the neck up
-    // to his left hand (it rides on his spine, so it goes with him as he leans and breathes)
+    // an acoustic, built on its side, the neck along -x, the top facing +z: turned end for end so the neck goes up to his
+    // left, its waist on his right thigh and its back against him, the neck tilted up a quarter and a little forward
+    // (it rides on his spine, so it goes with him as he leans and breathes; the strum job, 14q, puts his hands on it)
     const gtr=crowdProp((ent, B, C)=>{ const SP="#c8873a", NK="#5a3a1e", EB="#1d1410";
       ent(new T.CylinderGeometry(0.19, 0.19, 0.10, 28), 0.09, 0, 0, SP, Math.PI/2); ent(new T.CylinderGeometry(0.15, 0.15, 0.10, 24), -0.13, 0, 0, SP, Math.PI/2);
       B(0.12, 0.24, 0.099, -0.02, 0, 0, SP);
@@ -639,8 +641,8 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
       B(0.50, 0.05, 0.03, -0.47, 0, 0.03, NK); B(0.48, 0.046, 0.006, -0.47, 0, 0.048, EB);
       B(0.17, 0.075, 0.025, -0.80, 0, 0.022, EB); for(const sd of [-1,1]) for(let k=0;k<3;k++) C(0.007, 0.03, -0.75-k*0.045, sd*0.05, 0.022, "#c8ccd0", 6);
       for(let k=0;k<6;k++) B(0.86, 0.0018, 0.0018, -0.33, -0.0175+k*0.007, 0.053, "#d8d8d0"); });
-    gtr.scale.setScalar(0.9); gtr.position.set(0.02, 0.17, 0.215); gtr.rotation.set(-0.18, 0, -0.36);
-    dave.P.B[dave.P.j.spine].add(gtr); }
+    gtr.scale.setScalar(0.9); gtr.position.set(-0.063, 0.21, 0.219); gtr.rotation.set(-0.22, -0.35, Math.PI+0.42);
+    dave.P.B[dave.P.j.spine].add(gtr); dave.guitar=gtr; }
   // and somebody's dog, lying on the boards by their table with her water bowl, watching the servers go by
   { const t=BREWERY.tables[3], dx=t.x+1.25, dz=t.z+0.95, dog=buildDog("#c8a060");
     dog.g.position.set(dx, D, dz); dog.g.rotation.y=-Math.PI/2-0.3;

@@ -666,7 +666,7 @@ const FOREST=(function(){
      against the canopy behind them, all the way to the haze. */
   (function roadEdges(){
     const Z=SITE.zone;
-    for(let z=-1600; z<1600; z+=5.2){
+    for(let z=HWY.zN+20; z<1600; z+=5.2){
       if(z>Z.z0-2 && z<Z.z1+2) continue;
       for(const [ex, side] of [[HWY.nb+19,1],[HWY.nb-19,-1],[HWY.sb+19,1],[HWY.sb-19,-1]]){
         for(const row of [2.8, 7.6, 12.5]){
@@ -735,6 +735,9 @@ const FOREST=(function(){
                                                                                                     //  strip past the dog park's fence)
         const ex=Math.max(0, x-a1, a0-x), ez=Math.max(0, z-(T0.z0+74), b0-z);
         const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; } }
+    // and round the weigh station's clearing, which 14w lines with real trees the same way
+    if(fine && typeof WEIGH!=="undefined"){ const P=WEIGH.pad, ex=Math.max(0, x-(P.x1+30), (P.x0-6)-x), ez=Math.max(0, z-(P.z1+120), (P.z0-150)-z);
+      const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
     const g=Terrain.heightAt(x,z);
     if(m<=0) return g-3;
     const base=15.5+Terrain.fbm(x*0.006+9, z*0.006+4, 3)*6;
@@ -806,7 +809,8 @@ const FOREST=(function(){
     }
     shell(RING_MID, 8, [Z], true);
     shell(EAST.can, 8, [], true);                                   // (east along US 6N: the woods the road goes through, close to)
-    shell({x0:-2400,x1:2400,z0:-2400,z1:2400}, 32, [RING_MID, EAST.can], false);
+    shell(RING_MIDN, 8, [], true);                                  // (north of Edinboro, up past the weigh station to the road's end)
+    shell(GROUND_EDGE, 32, [RING_MID, EAST.can, RING_MIDN], false);
     /* The curtain. From inside the zone, through a hundred metres of trunks,
        the edge of the canopy would be a lid with daylight under it. So the
        zone's boundary hangs a dark wall from the canopy down to the ground:
@@ -901,11 +905,23 @@ const FOREST=(function(){
         if(g[2]!==null) addCol(ex-0.4, ex+0.4, g[0], g[1], -40, g[2]);
         z=Math.max(z, g[1]); }
       if(z<b) addCol(ex-0.4, ex+0.4, z, b, -40, 300); };
+    // (the northbound side's east wall opens where the weigh station's ramps go through it, and the station's own clearing
+    //  is walled round behind; both carriageways' walls run to the far ends, HWY.endN and endS, where a wall goes across)
+    const WS=WEIGH, wGap=[WS.off.find(p=>p.x>HWY.nb+19.5).z+6, WS.on.slice().reverse().find(p=>p.x>HWY.nb+19.5).z-6];
     for(const ex of [HWY.nb+19.5, HWY.nb-19.5, HWY.sb+19.5, HWY.sb-19.5]){
       const med=ex===HWY.nb-19.5 || ex===HWY.sb+19.5;
-      wall(ex, -1700, Z.z0, med ? cut : [[EP.z0, EP.z1]], med ? deck : []);
-      wall(ex, Z.z1, 1700, med ? cut : [], []);
+      wall(ex, HWY.endN, Z.z0, med ? cut : ex===HWY.nb+19.5 ? [[EP.z0, EP.z1], [wGap[1], wGap[0]]] : [[EP.z0, EP.z1]], med ? deck : []);
+      wall(ex, Z.z1, HWY.endS, med ? cut : [], []);
     }
+    // round the weigh station: from the gap in the roadside wall out past the pad and back
+    { const P=WS.pad, ex=P.x1+16, zA=wGap[0], zB=wGap[1];
+      addCol(HWY.nb+19.1, ex, zA-0.4, zA+0.4, -40, 300); addCol(HWY.nb+19.1, ex, zB-0.4, zB+0.4, -40, 300);
+      addCol(ex-0.4, ex+0.4, zB, zA, -40, 300); }
+    // and across the corridor at each end: the interstate runs on, out of the map. (Out on the road it is the road that
+    // stops you, so it says so in the road's own terms.)
+    for(const [zz, msg] of [[HWY.endN, "I-79 RUNS ON NORTH TO ERIE FROM HERE. THIS IS AS FAR AS THE MAP GOES"],
+                            [HWY.endS, "I-79 RUNS ON SOUTH TO PITTSBURGH FROM HERE. THIS IS AS FAR AS THE MAP GOES"]])
+      addCol(HWY.sb-19.9, HWY.nb+19.9, zz-0.4, zz+0.4, -40, 300).msg=msg;
     for(const g of cut) for(const zz of g) addCol(HWY.sb+19.1, HWY.nb-19.1, zz-0.4, zz+0.4, -40, 300);
     // round the fields: north and south from the woods' edge to the cut, and the two far ends
     for(const zz of [EP.z0, EP.z1]){

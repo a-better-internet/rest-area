@@ -13,6 +13,9 @@
 
 // the road level along the corridor: dead flat past the rest area, then
 // riding the country's grain at a few per cent either way
+// the ground's outer edge (the outermost ring below, 32 m): west and south as far as it always went, east well past the
+// lake and north up the interstate past the road's drawn end
+const GROUND_EDGE={x0:-2400, x1:4096, z0:-4608, z1:2400};
 function roadY(z){
   const w=smoothstep(HWY.flat, HWY.flat+520, Math.abs(z));
   if(w<=0) return 0;
@@ -106,6 +109,27 @@ const EAST=(function(){
     can:{x0:640, x1:1600, z0:-1504, z1:-896},                         // the 8 m canopy over it all (on the 32 m lattice)
     noPole:[] };                                                      // where the wires along the road keep out (14m, 14n; 14y)
 })();
+/* ---- the weigh station ----------------------------------------------------
+   A mile north of the US 6N bridge, on the northbound side, where the road
+   runs level along the bottom of a long valley: the off-ramp parts from the
+   right lane and swings east to two lanes alongside, the scale lane past the
+   scale house and the bypass lane beside it; past the scale the two come
+   together and the on-ramp swings back to merge. East of the scale lane an
+   apron where trucks are pulled over for a look. All of it at the road's own
+   grade (roadY), level across. 08w paves it and signs it; 14w builds the
+   scale house and runs it. */
+const WEIGH=(function(){
+  const mk=(pts)=>{ const P=smoothPath(pts.map(p=>({x:p[0], z:p[1]})), 2.0); for(const p of P) p.y=roadY(p.z); return P; };
+  const W={lx:-71.25, lw:4.5,                                             // the lanes' middle; each lane's width
+           z0:-2900, z1:-3008,                                            // where the lanes begin and end
+           scale:{x:-69.0, z0:-2950, z1:-2928, w:3.6},                    // the scale deck in the scale lane
+           house:{x0:-64.2, x1:-58.6, z0:-2946, z1:-2934},                // the scale house beside it
+           apron:{x0:-66.5, x1:-38, z0:-3004, z1:-2962},                  // the inspection apron east of the lane
+           pad:{x0:-76.5, x1:-36, z0:-3012, z1:-2894}};                   // everything paved, for the ground and the woods
+  W.off=mk([[-106.4,-2560],[-106.0,-2620],[-104.6,-2680],[-101.8,-2735],[-97.2,-2780],[-90.6,-2816],[-83.4,-2843],[-77.2,-2865],[-73.2,-2884],[-71.25,-2902]]);
+  W.on=mk([[-71.25,-3006],[-71.8,-3036],[-74.6,-3072],[-80.2,-3104],[-87.4,-3132],[-94.6,-3160],[-100.2,-3192],[-103.8,-3228],[-105.8,-3268],[-106.4,-3310],[-106.4,-3352]]);
+  return W;
+})();
 // the drive up to the substation: off the north end of the car lot, east
 // through the trees, climbing a couple of metres to the compound's gate
 const DRIVE=smoothPath([
@@ -191,8 +215,10 @@ const Terrain=(function(){
     // crests and gullies. The interstate goes out through them in a valley of its own, and none of them comes up
     // within a couple of hundred metres of the lake's shore. At the very edge they come down again, so that the last
     // crests, faded all the way to the horizon's colour, do not stand up pale over the blue ones in front like snow
-    const e=Math.max(Math.abs(x+30), Math.abs(z+20));
-    let rim=smoothstep(1300, 2150, e)*(1-0.6*smoothstep(2230, 2420, e));
+    // (the last crests come down over the last two hundred metres before the ground's own edge, GROUND_EDGE: out past the
+    //  lake to the east and up the interstate to the north it runs on well past the square they used to close)
+    const e=Math.max(Math.abs(x+30), Math.abs(z+20)), G=GROUND_EDGE, ge=Math.min(x-G.x0, G.x1-x, z-G.z0, G.z1-z);
+    let rim=smoothstep(1300, 2150, e)*(1-0.6*(1-smoothstep(-20, 170, ge)));
     if(rim>0){ rim*=smoothstep(110, 520, Math.abs(x-(HWY.nb+HWY.sb)/2))*smoothstep(10, 240, lakeSD(x,z));
       const rr=1-Math.abs(2*fbm(x*0.0016+31, z*0.0016+17, 4)-1), gl=1-Math.abs(2*fbm(x*0.0062+5, z*0.0062+13, 3)-1), sp=fbm(x*0.013+9, z*0.013+1, 2);
       h+=rim*(55+100*rr*rr+(gl-0.55)*62+(sp-0.5)*18)/Math.max(amp, 0.3); }
@@ -220,6 +246,7 @@ const Terrain=(function(){
         SERV_B=pathBox(SERVICE,12);
   const SUBPAD={x0:SITE.sub.x0-8, x1:SITE.sub.x1+8, z0:SITE.sub.z0-8, z1:SITE.sub.z1+8};
   const EOFF_B=pathBox(EDIN.off,16), EON_B=pathBox(EDIN.on,16), EONN_B=pathBox(EDIN.onN,16), EOFFS_B=pathBox(EDIN.offS,16);
+  const WOFF_B=pathBox(WEIGH.off,16), WON_B=pathBox(WEIGH.on,16);
   const CREEK_B=pathBox(CREEK,12), PT_B=PLANT_TRACKS.map(P=>pathBox(P,8));
 
   // pull h towards level y with full weight inside `half` and none past half+blend
@@ -270,7 +297,11 @@ const Terrain=(function(){
     // Edinboro's ramps, a ledge up the side of the cut; and between a ramp and the interstate, where the ramp
     // has begun to climb, a bank from the one's paving up to the other's, each with a 2 m cell of level ground
     // past its edge, so the ground's grid never comes up through the shoulder in teeth
-    for(const [P,B,X,s] of [[EDIN.off,EOFF_B,NB_X1,1],[EDIN.on,EON_B,SB_X0,-1],[EDIN.onN,EONN_B,NB_X1,1],[EDIN.offS,EOFFS_B,SB_X0,-1]])
+    // the weigh station's pad, level across at the road's grade (it runs along the valley floor with it), and its ramps
+    // with the rest (they keep to the road's grade the whole way)
+    if(x>WEIGH.pad.x0-60 && x<WEIGH.pad.x1+60 && z>WEIGH.pad.z0-60 && z<WEIGH.pad.z1+60) h=toward(h, ry, boxDist(WEIGH.pad,x,z), 3.0, 22);
+    for(const [P,B,X,s] of [[EDIN.off,EOFF_B,NB_X1,1],[EDIN.on,EON_B,SB_X0,-1],[EDIN.onN,EONN_B,NB_X1,1],[EDIN.offS,EOFFS_B,SB_X0,-1],
+                            [WEIGH.off,WOFF_B,NB_X1,1],[WEIGH.on,WON_B,NB_X1,1]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1){ const q=distToPath(P,x,z); h=toward(h, q.y, q.d, 4.4, 10);
         const dr=s*(x-X), gp=s*(q.x-X)-EDIN.rw, a=2.2, b=Math.max(a, gp-a);       // past the road's edge; the ramp's near edge
         // (only while the two are close: farther apart, the cut's own slope stands between them as before)
@@ -369,8 +400,9 @@ const Terrain=(function(){
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
     d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3);
-    for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B]])
+    for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
+    d=Math.min(d, boxSD(WEIGH.pad,x,z)-6);
     d=Math.min(d, boxSD(GARAGE.yard,x,z)+2);
     // the power line's right of way, a straight cut north through everything
     {
@@ -396,7 +428,13 @@ const Terrain=(function(){
      hwyN    2 m   x -272..-48, z -1752..-336   the interstate north: the entry ramp's merge, two crossovers, Edinboro
      hwyS    2 m   x -272..-48, z 344..568      the interstate south: the exit ramp's diverge, the third crossover
      kirk    2 m   x 80..96, z -1248..-1216      round the chapel at Edinboro, holed over its hall and the stair down (00)
-     east    4 m   x 640..1472, z -1344..-1056  US 6N east of the fields: the outlet, the street, the park, the shore */
+     east    4 m   x 640..1472, z -1344..-1056  US 6N east of the fields: the outlet, the street, the park, the shore
+     outer  32 m   x -2400..4096, z -4608..2400 round the far one, north and east: the hills past the lake and up the road
+     midN    8 m   x -448..192, z -4224..-1760  the interstate north of Edinboro, out to the road's end
+     weigh   2 m   x -176..-16, z -3424..-2496  the weigh station and its ramps (WEIGH) */
+const RING_FAR ={x0:-2400, x1:2400, z0:-2400, z1:2400};
+const RING_MIDN={x0:-448, x1:192, z0:-4224, z1:-1760};
+const RING_WEIGH={x0:-176, x1:-16, z0:-3424, z1:-2496};
 const RING_MID ={x0:-512, x1:640, z0:-1760, z1:1600};
 const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:344};
 // and two more at 2 m along the interstate, so the ground under every ramp's merge, the crossovers and
@@ -576,7 +614,10 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     scene.add(mesh); return mesh;
   }
   TERRAIN_TINT=tint;
-  grid({x0:-2400,x1:2400,z0:-2400,z1:2400}, 16, [RING_MID, RING_EAST], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
+  grid(GROUND_EDGE, 32, [RING_FAR, RING_MIDN], "ground-outer", 60);
+  grid(RING_FAR, 16, [RING_MID, RING_EAST, RING_MIDN], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
+  grid(RING_MIDN, 8, [RING_WEIGH], "ground-midn", 24);
+  grid(RING_WEIGH, 2, [], "ground-weigh", 6);
   grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS, KIRK_RING], "ground-mid", 24);
   grid(RING_NEAR, 2, [GEN_HOLE], "ground-near", 6);
   grid(RING_HWYN, 2, [], "ground-hwyn", 6);

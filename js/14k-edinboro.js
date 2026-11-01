@@ -126,11 +126,54 @@ const parked=(kind, paint, x, z, yaw, y)=>parkCar(x, z, yaw, kind, paint, y+PAVE
     B(x1-x0+0.06, 0.12, d-0.06, (x0+x1)/2, FLS+0.06, IZ0+0.056+(d-0.06)/2-0.004, "#2a2c2e");
     B(x1-x0+0.06, 0.40, d-0.06, (x0+x1)/2, FLS+0.12+H+0.20, IZ0+0.056+(d-0.06)/2-0.004, "#2a2c2e");
     for(const xe of [x0-0.01, x1+0.01]) B(0.04, H+0.52, d-0.06, xe, FLS+(H+0.52)/2, IZ0+0.056+(d-0.06)/2-0.004, "#2a2c2e");
-    const drinks=signTex(1024,256,(c,W,Hh)=>{ c.fillStyle="#f4f6f8"; c.fillRect(0,0,W,Hh);
-      const cols=["#c41a1a","#1f4fd8","#f2c418","#2f9a3c","#e8e4d8","#ff7a1a","#7a2a8a","#141414","#3fc8e8"];
-      for(let row=0;row<5;row++){ const y=8+row*50; c.fillStyle="#b9bec2"; c.fillRect(0,y+42,W,4);
-        for(let x=4;x<W-10;x+=11){ const k=((x*7+row*13)/11|0)%cols.length; c.fillStyle=cols[k]; c.fillRect(x, y+(row%2?6:2), 8, 38-(row%2?4:0)); c.fillStyle="rgba(255,255,255,0.35)"; c.fillRect(x+1, y+8, 2, 22); } } });
-    drinks.wrapS=T.RepeatWrapping; drinks.repeat.set(2,1);
+    /* behind the glass: five shelves of drinks, a tile of them 1.25 m wide repeated along the case. Each kind in a run of
+       facings, as a cooler is stocked: two-litres and gallons on the bottom, twenty-ounce bottles and tall cans in the
+       middle, the milk and juice cartons on one shelf, the cans of soda up top; each with its cap, its label and its name */
+    const drinks=signTex(1024, 1760, (c, W, Hh)=>{
+      c.fillStyle="#eef1f3"; c.fillRect(0, 0, W, Hh);
+      const KINDS={                     // [name, line 2, label, lettering, body (the liquid through the bottle), cap]
+        cola:["COLA","CLASSIC","#c41a1a","#f4f2ec","#3a1a10","#c41a1a"], diet:["DIET COLA","ZERO SUGAR","#d8d8d8","#c41a1a","#3a1a10","#c8c8c8"],
+        lime:["LEMON·LIME","CRISP","#2f9a3c","#f2e840","#d8f0c8","#2f9a3c"], root:["ROOT BEER","OLD FASHIONED","#7a3a1a","#f2c418","#2a140a","#7a3a1a"],
+        orng:["ORANGE","SODA","#ff7a1a","#f4f2ec","#ff9a2a","#ff7a1a"], grap:["GRAPE","SODA","#6a2a8a","#f4f2ec","#4a1a5a","#6a2a8a"],
+        tea:["ICED TEA","LEMON","#e8a03a","#3a2418","#8a4a1a","#2a6a3a"], swt:["SWEET TEA","SOUTHERN","#1f4f8c","#f4f2ec","#7a3a10","#1f4f8c"],
+        wat:["SPRING","WATER","#3a8ac8","#f4f2ec","#d8ecf4","#3a8ac8"], spt:["SPORT","FRUIT PUNCH","#c41a3a","#f4f2ec","#d83a4a","#141414"],
+        spb:["SPORT","GLACIER","#2a5ac8","#f4f2ec","#4a8ae8","#141414"], nrg:["VOLT","ENERGY","#141414","#9aff3a","#141414","#9aff3a"],
+        lem:["LEMONADE","PINK","#f0a0b8","#c41a3a","#f8c8d0","#f4f2ec"], slt:["SELTZER","LIME","#d8f0e0","#2f7a3c","#e8f4ec","#d8d8d8"],
+        milk:["WHOLE MILK","WEIR FARM","#f4f2ec","#1f4f8c","#f4f2ec","#c41a1a"], mk2:["2% MILK","WEIR FARM","#f4f2ec","#c41a1a","#f4f2ec","#1f4f8c"],
+        choc:["CHOCOLATE","MILK","#5a3018","#f4f2ec","#5a3018","#5a3018"], oj:["ORANGE","JUICE","#ff9a2a","#2f7a3c","#ffb84a","#2f7a3c"],
+        cof:["ICED","COFFEE","#3a2418","#e8c890","#5a3018","#e8c890"]};
+      const draw=(kind, form, x, base, w, h)=>{ const K=KINDS[kind], cx=x+w/2;
+        if(form==="can"){ c.fillStyle="#b8bcc0"; c.fillRect(x, base-h, w, h); c.fillStyle=K[2]; c.fillRect(x, base-h+h*0.08, w, h*0.84);
+          c.fillStyle="rgba(255,255,255,0.28)"; c.fillRect(x+w*0.14, base-h+h*0.1, w*0.12, h*0.78);
+          c.save(); c.translate(cx, base-h/2); c.rotate(-Math.PI/2); c.fillStyle=K[3]; fitText(c, K[0], h*0.72, w*0.55, 0, 0, "900", "Arial"); c.restore(); return; }
+        if(form==="carton"){ c.fillStyle=K[2]; c.fillRect(x, base-h*0.82, w, h*0.82); c.beginPath(); c.moveTo(x, base-h*0.82); c.lineTo(cx, base-h); c.lineTo(x+w, base-h*0.82); c.fill();
+          c.fillStyle=K[5]; c.fillRect(x, base-h*0.82, w, h*0.06); c.fillStyle=K[3]; fitText(c, K[0], w*0.86, h*0.14, cx, base-h*0.52, "900", "Arial");
+          fitText(c, K[1], w*0.80, h*0.09, cx, base-h*0.32, "700", "Arial"); return; }
+        // a bottle or a jug: the liquid's colour through it, a neck, the cap, the label round the middle
+        const neck=form==="jug" ? 0.16 : 0.26, bw=w, nw=form==="jug" ? w*0.30 : w*0.34;
+        c.fillStyle=K[4]; c.beginPath(); c.moveTo(x, base); c.lineTo(x, base-h*(1-neck)); c.quadraticCurveTo(x, base-h*(1-neck*0.4), cx-nw/2, base-h*0.94);
+        c.lineTo(cx+nw/2, base-h*0.94); c.quadraticCurveTo(x+bw, base-h*(1-neck*0.4), x+bw, base-h*(1-neck)); c.lineTo(x+bw, base); c.fill();
+        c.fillStyle=K[5]; c.fillRect(cx-nw/2-1, base-h, nw+2, h*0.07);
+        if(form==="jug"){ c.strokeStyle=K[4]; c.lineWidth=w*0.08; c.beginPath(); c.arc(x+bw*0.78, base-h*0.70, w*0.14, -1.6, 1.6); c.stroke(); }
+        c.fillStyle=K[2]; c.fillRect(x, base-h*0.62, bw, h*0.34);
+        c.fillStyle="rgba(255,255,255,0.22)"; c.fillRect(x+bw*0.12, base-h*0.86, bw*0.10, h*0.80);
+        c.fillStyle=K[3]; fitText(c, K[0], bw*0.88, h*0.13, cx, base-h*0.50, "900", "Arial"); fitText(c, K[1], bw*0.82, h*0.07, cx, base-h*0.37, "700", "Arial"); };
+      // the shelves, top to bottom: [form, w, h (px), the kinds in runs]
+      // (cans stacked two high, the rest a row deep: a cooler is kept full to the shelf above)
+      const rows=[["can", 62, 128, ["cola","diet","lime","root","orng","grap","slt","nrg"], 2],
+                  ["bottle", 70, 280, ["cola","diet","lime","root","orng","tea","swt","lem"], 1],
+                  ["bottle", 66, 290, ["wat","spt","spb","nrg","cof","tea","wat"], 1],
+                  ["carton", 84, 270, ["milk","mk2","choc","oj","milk","choc"], 1],
+                  ["jug", 130, 300, ["milk","mk2","wat","oj","lem"], 1]];
+      const rh=Hh/5, qq=_trng(3131);
+      rows.forEach(([form, w, h, kinds, tiers], r)=>{ const base=rh*(r+1)-14;
+        c.fillStyle="#c4c9cc"; c.fillRect(0, base, W, 10); c.fillStyle="#8a9094"; c.fillRect(0, base+10, W, 4);
+        c.fillStyle="#f4f2ec"; c.fillRect(0, base+2, W, 7);                              // (the price strip)
+        let x=34, k=r*3; while(x+w<W-34){ const kind=kinds[k%kinds.length], n=2+((qq()*3)|0);      // (clear of the tile's edges)
+          for(let i=0;i<n && x+w<W-34;i++){ for(let tier=0;tier<tiers;tier++) draw(kind, form, x, base-tier*(h+3), w-4, h); x+=w; } k++; x+=6; } });
+      // a little frost at the top of the glass and the light on it
+      const fg=c.createLinearGradient(0, 0, 0, Hh); fg.addColorStop(0, "rgba(255,255,255,0.18)"); fg.addColorStop(0.15, "rgba(255,255,255,0)"); c.fillStyle=fg; c.fillRect(0, 0, W, Hh); });
+    drinks.wrapS=T.RepeatWrapping; drinks.repeat.set(Math.round((x1-x0-0.04)/1.25), 1); drinks.anisotropy=MAXANISO;
     const m=new T.Mesh(new T.PlaneGeometry(x1-x0-0.04, H-0.10), new T.MeshBasicMaterial({map:drinks, toneMapped:false}));
     m.position.set((x0+x1)/2, FLS+0.12+H/2, zf-0.12); scene.add(m);
     for(let k=0;k<nD;k++){ const xa=x0+(x1-x0)*k/nD, xb=x0+(x1-x0)*(k+1)/nD;
@@ -143,17 +186,106 @@ const parked=(kind, paint, x, z, yaw, y)=>parkCar(x, z, yaw, kind, paint, y+PAVE
     addCol(x0-0.05, x1+0.05, IZ0, zf+0.06, FLS-0.5, FLS+H+0.4);
     addUse((x0+x1)/2, zf+0.9, FLS, "GRAB A DRINK", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("clunk", (x0+x1)/2, zf);
       toast(["A COLD ONE, A SWEAT OF FROST ON IT","CHOCOLATE MILK, THE QUART. NOBODY'S WATCHING","A TALL CAN OF ICED TEA, THE ARIZONA PRICE STILL ON IT"][(Math.random()*3)|0],"#cfe0d4"); }, 2.4); }
-  // three aisles of shelving, double-sided, endcaps at the front
-  { const pal=["#c41a1a","#f2c418","#1f4fd8","#2f9a3c","#ff7a1a","#7a2a8a","#e8e4d8","#8a5a2a","#3fc8e8","#141414"];
+  /* ---- what is on the shelves: a sheet of package faces, each drawn to its own proportions (a can's is its whole label,
+     the name in the middle of it), and the goods built as boxes, bags, cans, jars, bottles and cards with that face out
+     to the aisle: one mesh, the sheet its map. The other faces of a box take its own ground colour off a corner of its
+     slot. The names are made up, and local where they can be. ---- */
+  const GOODS=(function(){
+    // [name, second line, ground, lettering, band, shape, across, high, deep]
+    const L0=[
+      ["HILLTOP","POTATO CHIPS","#f2c418","#b3261c","#b3261c","bag",0.20,0.28,0.07], ["HILLTOP","BARBECUE","#7a2a1a","#f2c418","#f2c418","bag",0.20,0.28,0.07],
+      ["LAKE EFFECT","PRETZEL RODS","#1f4f8c","#f4f2ec","#e8c43a","bag",0.18,0.27,0.07], ["CORN CURLS","CHEESE","#ff7a1a","#2a1a10","#ffd23a","bag",0.18,0.26,0.07],
+      ["KETTLE CORN","SWEET & SALTY","#f4f2ec","#c41a1a","#c41a1a","bag",0.18,0.26,0.07], ["TORTILLA","ROUNDS","#2f7a3c","#f4f2ec","#e8c43a","bag",0.20,0.28,0.07],
+      ["PORK RINDS","HOT","#c41a1a","#f4f2ec","#141414","bag",0.16,0.22,0.06], ["CHEESE PUFFS","BAKED","#e8641a","#f4f2ec","#2a5aa8","bag",0.18,0.26,0.07],
+      ["BEEF JERKY","PEPPERED","#1d1d1e","#e8c43a","#c41a1a","sbag",0.13,0.20,0.04], ["BEEF JERKY","ORIGINAL","#4a2a1a","#f4f2ec","#e8c43a","sbag",0.13,0.20,0.04],
+      ["TRAIL MIX","PEANUT & RAISIN","#3a6a2a","#f4f2ec","#e8a03a","sbag",0.13,0.20,0.04], ["SUNFLOWER","SEEDS","#2a4a8a","#f4f2ec","#f2c418","sbag",0.12,0.18,0.04],
+      ["CHOC-O-BAR","MILK CHOCOLATE","#5a3018","#f4f2ec","#c41a1a","bar",0.12,0.07,0.02], ["PEANUT","CLUSTER","#c41a1a","#f2c418","#f2c418","bar",0.12,0.07,0.02],
+      ["MINT PATTY","DARK","#1f6a4a","#f4f2ec","#f4f2ec","bar",0.12,0.07,0.02], ["CARAMEL","CHEW","#e8a03a","#5a3018","#5a3018","bar",0.12,0.07,0.02],
+      ["CRISPY","RICE BAR","#2a5aa8","#f2c418","#f4f2ec","bar",0.12,0.07,0.02], ["GUMMY","WORMS","#7a2a8a","#f2c418","#3ac87a","sbag",0.14,0.20,0.04],
+      ["OATY O'S","CEREAL","#f2c418","#1f4f8c","#1f4f8c","box",0.19,0.28,0.07], ["CORN","FLAKES","#f4f2ec","#2f7a3c","#c41a1a","box",0.19,0.28,0.07],
+      ["SALTINES","CRACKERS","#c41a1a","#f4f2ec","#f2c418","box",0.12,0.22,0.08], ["MAC & CHEESE","DINNER","#2a5aa8","#f2c418","#f2c418","box",0.14,0.18,0.05],
+      ["SPAGHETTI","No. 8","#1f4f8c","#f4f2ec","#f4f2ec","box",0.10,0.26,0.05], ["PANCAKE","MIX","#f2c418","#7a3a1a","#7a3a1a","box",0.15,0.22,0.07],
+      ["CHICKEN","NOODLE SOUP","#f4f2ec","#c41a1a","#c41a1a","can",0.067,0.10,0.067], ["TOMATO","SOUP","#c41a1a","#f4f2ec","#f4f2ec","can",0.067,0.10,0.067],
+      ["BAKED","BEANS","#5a3a1a","#f2c418","#f2c418","can",0.075,0.115,0.075], ["SWEET","CORN","#2f7a3c","#f2c418","#f2c418","can",0.075,0.115,0.075],
+      ["CHILI","WITH BEANS","#8a1a1a","#f2c418","#141414","can",0.075,0.115,0.075], ["PEACH","HALVES","#ff9a3a","#4a2a1a","#4a2a1a","can",0.075,0.115,0.075],
+      ["COFFEE","DARK ROAST","#3a2418","#e8c890","#c41a1a","can",0.10,0.15,0.10], ["TUNA","IN WATER","#2a6aa8","#f4f2ec","#f4f2ec","can",0.085,0.045,0.085],
+      ["PEANUT","BUTTER","#f4f2ec","#c41a1a","#c41a1a","jar",0.08,0.12,0.08], ["GRAPE","JELLY","#5a2a6a","#f4f2ec","#f4f2ec","jar",0.07,0.11,0.07],
+      ["DILL","PICKLES","#2f7a3c","#f4f2ec","#f2c418","jar",0.09,0.17,0.09], ["SALSA","MEDIUM","#c41a1a","#f4f2ec","#2f7a3c","jar",0.08,0.12,0.08],
+      ["MOTOR OIL","10W-30","#141414","#f2c418","#f2c418","bottle",0.10,0.22,0.065], ["MOTOR OIL","5W-20","#1f4f8c","#f4f2ec","#f2c418","bottle",0.10,0.22,0.065],
+      ["WASHER","FLUID","#3a8ac8","#f4f2ec","#1f4f8c","jug",0.16,0.28,0.10], ["PAPER","TOWELS","#f4f2ec","#2a5aa8","#2a5aa8","pack",0.22,0.26,0.22],
+      ["CHARCOAL","BRIQUETS","#1d1d1e","#ff7a1a","#ff7a1a","bag",0.30,0.30,0.12], ["BATTERIES","AA · 8 PACK","#141414","#f2c418","#c41a1a","card",0.12,0.18,0.03],
+      ["BUG SPRAY","DEEP WOODS","#2f5a2a","#f2c418","#f2c418","can",0.065,0.18,0.065], ["SUNSCREEN","SPF 30","#ff9a3a","#f4f2ec","#2a8ac8","bottle",0.07,0.17,0.04],
+      ["CHARGER","PHONE · CAR","#f4f2ec","#141414","#2a8ac8","card",0.12,0.20,0.03], ["AIR","FRESHENER","#2f7a3c","#f4f2ec","#f2c418","card",0.10,0.18,0.02],
+      ["BEEF STICKS","SMOKED","#7a1a1a","#f4f2ec","#f2c418","sbag",0.10,0.20,0.04], ["MIXED","NUTS","#c8a050","#3a2418","#3a2418","can",0.085,0.10,0.085],
+      ["ROOT BEER","BARREL CANDY","#7a3a1a","#f2c418","#f4f2ec","sbag",0.14,0.20,0.04], ["LICORICE","TWISTS","#c41a1a","#141414","#141414","sbag",0.12,0.24,0.03]];
+    const W2=2048, H2=1024, CS=192, MX=64, MY=32, NC=10, slots=[];
+    const tex=signTex(W2, H2, (x)=>{
+      x.fillStyle="#7a7c7e"; x.fillRect(0, 0, W2, H2);
+      L0.forEach((p, i)=>{ const [nm, sub, bg, fg, band, shape, w, h]=p, sx=MX+(i%NC)*CS, sy=MY+((i/NC)|0)*CS;
+        const round=shape==="can" || shape==="jar", fw=round ? Math.PI*w : w, a=fw/h;
+        const rw=a>=1 ? CS-8 : (CS-8)*a, rh=a>=1 ? (CS-8)/a : CS-8, rx=sx+(CS-rw)/2, ry=sy+(CS-rh)/2;
+        x.fillStyle=bg; x.fillRect(sx, sy, CS, CS);
+        // the label's readable width: a can's or a jar's middle, where it faces you
+        const tw=round ? rw*0.40 : rw*0.84, cx=rx+rw/2;
+        x.fillStyle=band;
+        if(shape==="bag" || shape==="sbag"){ x.fillRect(rx, ry, rw, rh*0.07); x.fillRect(rx, ry+rh*0.93, rw, rh*0.07);
+          x.beginPath(); x.moveTo(rx, ry+rh*0.72); x.quadraticCurveTo(cx, ry+rh*0.58, rx+rw, ry+rh*0.70); x.lineTo(rx+rw, ry+rh*0.80); x.quadraticCurveTo(cx, ry+rh*0.68, rx, ry+rh*0.82); x.fill(); }
+        else if(round){ x.fillRect(rx, ry, rw, rh*0.14); x.fillRect(rx, ry+rh*0.86, rw, rh*0.14); }
+        else if(shape==="bar"){ x.fillRect(rx, ry+rh*0.78, rw, rh*0.22); }
+        else if(shape==="card"){ x.fillRect(rx, ry, rw, rh*0.16); x.fillStyle="rgba(255,255,255,0.28)"; x.fillRect(rx+rw*0.18, ry+rh*0.52, rw*0.64, rh*0.34); }
+        else { x.fillRect(rx, ry, rw, rh*0.12); x.beginPath(); x.arc(cx, ry+rh*0.72, Math.min(rw, rh)*0.16, 0, 7); x.fill(); }
+        const lines=shape==="bar" ? [[nm, 0.38, 0.40], [sub, 0.89, 0.14]] : round ? [[nm, 0.40, 0.22], [sub, 0.62, 0.12]] : [[nm, 0.30, 0.16], [sub, 0.46, 0.08]];
+        lines.forEach(([t, cy, hh], k)=>{ x.fillStyle=shape==="bar" && k ? bg : fg;                  // (a bar's second line is on its band)
+          fitText(x, t, tw, rh*hh, cx, ry+rh*cy, k ? "700" : "900", "Arial"); });
+        slots.push({u0:rx/W2, u1:(rx+rw)/W2, v0:1-(ry+rh)/H2, v1:1-ry/H2, cu:(sx+3)/W2, cv:1-(sy+3)/H2, bu:(rx+rw*0.5)/W2, bv:1-(ry+rh*0.05)/H2, p:p}); }); });
+    const mat=new T.MeshStandardMaterial({map:tex, roughness:0.62});
+    const PR=[], _q=new T.Quaternion(), _y=V3(0,1,0), FACE={"+x":-Math.PI/2, "-x":Math.PI/2, "+z":Math.PI};
+    // one good, its bottom middle at (x, y, z), its face to "+x", "-x" or "+z"
+    const put=(i, x, y, z, face, flat)=>{ const S=slots[i], p=S.p, shape=p[5], w=p[6], h=p[7], d=p[8];
+      const round=shape==="can" || shape==="jar";
+      let geo;
+      if(round){ geo=new T.CylinderGeometry(w/2, w/2, h, 16, 1); const U=geo.attributes.uv, N=geo.attributes.normal;
+        for(let k=0;k<U.count;k++){ if(Math.abs(N.getY(k))>0.5) U.setXY(k, S.cu, S.cv); else U.setXY(k, S.u0+U.getX(k)*(S.u1-S.u0), S.v0+U.getY(k)*(S.v1-S.v0)); } }
+      else { const along=face==="+z"; geo=new T.BoxGeometry(along ? w : d, h, along ? d : w); const U=geo.attributes.uv, N=geo.attributes.normal, P=geo.attributes.position;
+        const fn=face==="+x" ? [1,0,0] : face==="-x" ? [-1,0,0] : [0,0,1];
+        for(let k=0;k<U.count;k++){ const f=N.getX(k)*fn[0]+N.getZ(k)*fn[2]>0.5;
+          if(!f){ U.setXY(k, S.cu, S.cv); continue; }
+          const u=face==="+x" ? (w/2-P.getZ(k))/w : face==="-x" ? (P.getZ(k)+w/2)/w : (P.getX(k)+w/2)/w;
+          U.setXY(k, S.u0+u*(S.u1-S.u0), S.v0+(P.getY(k)+h/2)/h*(S.v1-S.v0)); } }
+      _q.setFromAxisAngle(_y, round ? FACE[face] : 0);
+      PR.push({geo:geo, matrix:new T.Matrix4().compose(V3(x, y+h/2, z), _q.clone(), V3(1,1,1))});
+      // a jar's lid, a bottle's or a jug's cap, a spray can's top: in the band's colour
+      const capR=shape==="jar" ? w/2+0.003 : shape==="can" && h>0.15 ? w*0.36 : (shape==="bottle" || shape==="jug") ? 0.018 : 0;
+      if(capR){ const ch=shape==="jar" ? 0.022 : 0.03, cg=new T.CylinderGeometry(capR, capR, ch, 12), CU=cg.attributes.uv;
+        for(let k=0;k<CU.count;k++) CU.setXY(k, S.bu, S.bv);
+        const cx2=(shape==="bottle" || shape==="jug") ? x+(face==="+x" ? -d*0.2 : face==="-x" ? d*0.2 : 0) : x;
+        PR.push({geo:cg, matrix:new T.Matrix4().compose(V3(cx2, y+h+ch/2-0.001, z), new T.Quaternion(), V3(1,1,1))}); }
+      return w; };
+    return {L:L0, put:put, done:()=>{ const m=new T.Mesh(mergeEntries(PR), mat); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; },
+      ids:(...names)=>L0.map((p,i)=>names.some(n=>p[5]===n || p[0]===n) ? i : -1).filter(i=>i>=0)}; })();
+  // three aisles of shelving, double-sided, endcaps at the front. Each face of a gondola is a department, the goods in
+  // facings of two to four of a kind; the heavy and the big low down, the candy and the small things at eye height
+  { const gq=_trng(6161);
+    const DEP={
+      auto:[GOODS.ids("bottle","jug","pack","card","CHARCOAL","BUG SPRAY"), GOODS.ids("bottle","card","BUG SPRAY")],
+      cans:[GOODS.ids("can"), GOODS.ids("can","jar")],
+      boxes:[GOODS.ids("box"), GOODS.ids("box")],
+      candy:[GOODS.ids("sbag","bar"), GOODS.ids("bar","sbag")],
+      chips:[GOODS.ids("bag").filter(i=>GOODS.L[i][0]!=="CHARCOAL"), GOODS.ids("bag").filter(i=>GOODS.L[i][0]!=="CHARCOAL")],
+      jerky:[GOODS.ids("BEEF JERKY","BEEF STICKS","TRAIL MIX","SUNFLOWER","MIXED","sbag"), GOODS.ids("BEEF JERKY","BEEF STICKS","TRAIL MIX","SUNFLOWER","MIXED")] };
+    const plan={"-31.2":["auto","cans"], "-26.4":["boxes","candy"], "-21.6":["chips","jerky"]};
     for(const gx of [-31.2, -26.4, -21.6]){ const z0=Z-61.4, z1=Z-54.4, mz=(z0+z1)/2;
       B(0.62, 0.12, z1-z0, gx, FLS+0.06, mz, "#3a3c3e"); B(0.06, 1.48, z1-z0, gx, FLS+0.74, mz, "#c9cbcc");
       for(const sd of [-1,1]) for(const y of [0.40, 0.75, 1.10, 1.45]){
         B(0.30, 0.02, z1-z0, gx+sd*0.17, FLS+y, mz, "#d8dadc");
-        for(let z=z0+0.06; z<z1-0.10;){ const w=0.08+r()*0.14, h=0.12+r()*0.18, c=pal[(r()*pal.length)|0];
-          B(0.18+r()*0.06, h, w, gx+sd*0.20, FLS+y+0.015+h/2, z+w/2, c); z+=w+0.012; } }
+        const dep=DEP[plan[String(gx)][sd<0 ? 0 : 1]], pool=(y<0.5 ? dep[0] : dep[1]).filter(i=>GOODS.L[i][7]<=(y<1.4 ? 0.31 : 0.30));
+        for(let z=z0+0.06; z<z1-0.10;){ const i=pool[(gq()*pool.length)|0], p=GOODS.L[i], n=2+((gq()*3)|0), w=p[6];
+          for(let k=0;k<n && z+w<z1-0.06;k++){ GOODS.put(i, gx+sd*(0.315-p[8]/2), FLS+y+0.018, z+w/2, sd>0 ? "+x" : "-x"); z+=w+0.010; }
+          z+=0.02; } }
       // the endcap toward the door: a rack of chips
       B(0.62, 1.30, 0.42, gx, FLS+0.65, z1+0.22, "#c9cbcc");
-      for(let k=0;k<4;k++) for(let j=0;j<3;j++) B(0.17, 0.24, 0.05, gx-0.19+j*0.19, FLS+0.42+k*0.27, z1+0.455, pal[(k*3+j+((gx*7)|0))%pal.length]);
+      { const chips=DEP.chips[0]; for(let k=0;k<4;k++) for(let j=0;j<3;j++){ const n=chips.length, i=chips[(((k*3+j+((gx*7)|0))%n)+n)%n];
+          GOODS.put(i, gx-0.205+j*0.205, FLS+0.08+k*0.30, z1+0.43+GOODS.L[i][8]/2+0.005, "+z"); } }
       addCol(gx-0.36, gx+0.36, z0, z1+0.46, FLS-0.5, FLS+1.5); }
     addUse(-24.0, Z-57.8, FLS, "LOOK AT THE SNACKS", ()=>toast(["BEEF JERKY, TEN KINDS. THE GOOD KIND IS BEHIND THE COUNTER","CHIPS, THE LOCAL KIND, IN THE YELLOW BAG","MOTOR OIL, WINDSHIELD FLUID, A PHONE CHARGER THAT WON'T"][(Math.random()*3)|0],"#cfe0d4"), 2.2); }
   // the counter by the door: the register, the lottery, a roller grill; the clerk behind it
@@ -364,8 +496,9 @@ const parked=(kind, paint, x, z, yaw, y)=>parkCar(x, z, yaw, kind, paint, y+PAVE
     for(let k=0;k<8;k++) ent(new T.TorusGeometry(0.048, 0.022, 10, 20), cx-0.07+(k%2)*0.20, ty+0.067, zD-0.21+((k/2)|0)*0.14, ["#e8c890","#5a3018","#f0a0b8","#e8c890"][k%4], Math.PI/2, 0, 0);
     // the candy rack hung on the counter's customer side
     B(0.12, 0.62, 2.6, cx+0.43, FLS+0.42, cz-0.6, "#c9cbcc");
-    const cand=["#c41a1a","#f2c418","#5a3018","#1f4fd8","#ff7a1a","#2f9a3c","#e8e4d8","#7a2a8a"];
-    for(let row=0;row<4;row++) for(let k=0;k<18;k++) B(0.03, 0.10, 0.12, cx+0.505, FLS+0.20+row*0.14, cz-1.82+k*0.14, cand[(k*3+row*5)%cand.length]);
+    { const bars=GOODS.ids("bar"); for(let row=0;row<4;row++) for(let k=0;k<18;k++){ const i=bars[(((k/3)|0)+row*2)%bars.length];
+        GOODS.put(i, cx+0.505, FLS+0.15+row*0.14, cz-1.82+k*0.14, "+x"); } }
+    GOODS.done();
     addCol(cx+0.36, cx+0.53, cz-1.92, cz+0.72, FLS-0.5, FLS+0.75); }
 
   /* ---- along the front, inside: a magazine rack under the glass; a camera, a mirror, a wet floor sign ---- */

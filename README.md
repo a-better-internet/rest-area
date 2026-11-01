@@ -686,8 +686,7 @@ If the scene runs hot on your machine, start there (see below).
     taproom and one the hut, and two servers go round the tables with
     trays held level. Customers sit at the bar, at the tables and on the
     sofas, stand at the rail looking at the lake, and play cornhole. Two
-    speakers under the eaves play the radio out over the garden, and the
-    customers' talk is a murmur that is louder the busier it is. A fifth
+    speakers under the eaves play the radio out over the garden. A fifth
     table stands at the east end of the middle row, high-tops with stools
     stand along the rail, and two picnic tables sit out on the grass west of
     the fire. Somebody's dog lies on the boards by their table with her

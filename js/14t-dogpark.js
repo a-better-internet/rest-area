@@ -25,8 +25,18 @@
    one on the bench. By day; after dark the park is empty. The whole of it
    runs off the thrower's tick (14q), so it is only worked while you are
    near enough to see it.
+   Take a ball from the bucket (E) and throw it yourself: hold Space or the
+   mouse button and let go, harder the longer you hold, higher the higher
+   you look. The black lab and the brindle leave off chasing each other and
+   race for it; the one that gets it brings it back and drops it at your
+   feet, the other trotting along beside, and they wait there looking up
+   at you. Walk over it to pick it up. Leave them half a minute, or leave
+   the park, and they go back to their own game (and the ball to the
+   bucket).
    ---------------------------------------------------------------------- */
 const DOGPARK={x0:1063.6, x1:1101.0, z0:-1293.4, z1:-1272.0, gx0:1080.5, gx1:1083.5, vz:-1268.8};
+// your own ball (filled in below): 17-player hands it the keys, 18e's updateGames its frame
+const DOGBALL={held:false, key:()=>false, keyup:()=>{}, frame:()=>{}};
 (function dogPark(){
   const P=DOGPARK, Z=EDIN.z, HW=EDIN.hw, gy=(x,z)=>Terrain.groundAt(x,z), r=_trng(2828);
   const ME=[];
@@ -134,7 +144,7 @@ const DOGPARK={x0:1063.6, x1:1101.0, z0:-1293.4, z1:-1272.0, gx0:1080.5, gx1:108
     sign(0.2, 0.12, (c,W,H)=>{ c.fillStyle="#efe6cc"; c.fillRect(0,0,W,H); say(c, "BAGS", W/2, H/2, W*0.8, H*0.6, "#2e5a3a", "900", "Arial"); }, sx, g+1.25, sz-0.172, Math.PI, 120);
     C(0.24, 0.78, sx+0.6, g+0.395, sz-0.05, "#2e5a3a", 18); C(0.26, 0.05, sx+0.6, g+0.81, sz-0.05, "#245a30", 18);
     addCol(sx-0.08, sx+0.86, sz-0.32, sz+0.2, g-0.5, g+1.45); }
-  { const bx=gm+1.7, bz=z1-0.45, g=gy(bx, bz);
+  { const bx=gm+1.7, bz=z1-0.45, g=gy(bx, bz); P.bucket=[bx, bz, g];
     C(0.16, 0.30, bx, g+0.155, bz, "#e8642a", 16); C(0.165, 0.03, bx, g+0.30, bz, "#c8501e", 16);
     for(let k=0;k<6;k++){ const a=k*1.05, rr=k ? 0.09 : 0; ent(new T.SphereGeometry(0.033, 10, 8), bx+Math.cos(a)*rr, g+0.315+0.03+(k ? 0 : 0.03), bz+Math.sin(a)*rr, "#d8f040"); }
     B(0.06, 0.62, 0.06, bx+0.32, g+0.31, bz, "#5a4430");
@@ -299,7 +309,7 @@ const DOGPARK={x0:1063.6, x1:1101.0, z0:-1293.4, z1:-1272.0, gx0:1080.5, gx1:108
      and now and then they stop and square up, one down on her elbows (a play bow), tails going */
   const CZ={x0:1089.6, x1:P.x1-1.0, z0:P.z0+1.0, z1:-1279.6};
   const CH={lead:0, t:0, pause:0, tgt:[1095, -1286]};
-  const chase=(dt)=>{ const L=CH.lead ? brn : blk, Fo=CH.lead ? blk : brn;
+  const chase=(dt)=>{ if(PF.on) return; const L=CH.lead ? brn : blk, Fo=CH.lead ? blk : brn;
     if(CH.pause>0){ CH.pause-=dt; for(const D of [L, Fo]){ const O=D===L ? Fo : L; steer(D, D.x, D.z, 0, dt); D.yaw+=clamp(ang(Math.atan2(O.x-D.x, O.z-D.z)-D.yaw), -dt*4, dt*4); D.wf=14; D.wa=0.5; D.hx=-0.15; D.hy=0; }
       L.gait=CH.pause>0.6 ? "bow" : "stand"; Fo.gait="stand"; if(CH.pause<=0) bark(Fo); return; }
     CH.t+=dt;
@@ -326,9 +336,77 @@ const DOGPARK={x0:1063.6, x1:1101.0, z0:-1293.4, z1:-1272.0, gx0:1080.5, gx1:108
   const husky=(dt)=>{ hus.sp=0; const t=hus.t, rest=smoothstep(0.55, 0.85, _noise1(t*0.06+2.2));
     hus.hx=0.38*rest; hus.hy=_noise1(t*0.15+0.4)*0.8*(1-rest*0.6); hus.wf=1.6; hus.wa=0.18; hus.gait="lie"; };
 
-  thrower.onShow=(p, on)=>{ for(const D of DOGS) D.g.visible=on; ball.visible=on; };
+  /* ---- your ball ----------------------------------------------------------------------------------------------------
+     in your hand (drawn low in the view, drawn back as you wind up), in the air, rolling, in a dog's mouth, lying at your
+     feet. PF.st: "ready" (in your hand, the two by you waiting), "fly" (thrown: both after it), "carry" (one has it,
+     coming back, the other alongside), "drop" (on the grass at your feet, them waiting) */
+  const pball=new T.Mesh(new T.SphereGeometry(0.033, 12, 8), new T.MeshStandardMaterial({color:0xd8f040, roughness:0.85}));
+  pball.castShadow=true; pball.visible=false; scene.add(pball);
+  const PV=new T.Vector3(), _pw=new T.Vector3(), _po=new T.Vector3();
+  const PF={on:false, st:"none", t:0, idle:0, carrier:null, charge:-1, power:0, shown:false};
+  DOGBALL.PF=PF;
+  const pack=[blk, brn];
+  const stepP=(dt)=>{ const b=pball.position;                       // (the same air and grass as his: stepBall's)
+    PV.y-=9.8*dt; b.addScaledVector(PV, dt);
+    if(b.x<IN.x0-0.4 || b.x>IN.x1+0.4){ b.x=clamp(b.x, IN.x0-0.4, IN.x1+0.4); PV.x*=-0.35; }
+    if(b.z<IN.z0-0.4 || b.z>IN.z1+0.4){ b.z=clamp(b.z, IN.z0-0.4, IN.z1+0.4); PV.z*=-0.35; }
+    const g=gy(b.x, b.z)+0.033;
+    if(b.y<g){ b.y=g; if(PV.y<-1.0){ PV.y*=-0.42; PV.x*=0.72; PV.z*=0.72; } else { PV.y=0; const f=Math.max(0, 1-dt*2.6); PV.x*=f; PV.z*=f; } } };
+  const toBucket=()=>{ if(pball.parent!==scene) scene.add(pball); pball.visible=false; PF.st="none"; PF.on=false; PF.carrier=null; DOGBALL.held=false; PF.charge=-1; };
+  const take=()=>{ if(pball.parent!==scene) scene.add(pball); DOGBALL.held=true; PF.st="ready"; PF.on=true; PF.idle=0;
+    toast("A BALL · HOLD SPACE OR THE MOUSE AND LET GO TO THROW IT", "#d8f040"); };
+  const playerIn=()=>!driving && !seated && player.pos.x>P.x0 && player.pos.x<P.x1 && player.pos.z>P.z0-0.3 && player.pos.z<P.z1+0.3;
+  if(P.bucket){ const [bx, bz, bg]=P.bucket;
+    addUse(bx, bz, bg, "TAKE A BALL FROM THE BUCKET", take, 1.4, ()=>!DOGBALL.held && PF.st==="none" && PF.shown);
+    addUse(bx, bz, bg, "PUT THE BALL BACK", ()=>{ toBucket(); toast("BACK IN THE BUCKET", "#cfe0d4"); }, 1.4, ()=>DOGBALL.held); }
+  const canThrow=()=>DOGBALL.held && playerIn() && !droneMode && view==="fp";
+  const throwIt=()=>{ const pw=PF.power; PF.charge=-1; PF.power=0; if(!canThrow()) return;
+    const yaw=player.yaw, el=clamp(player.pitch+0.32, 0.06, 1.15), v=5.5+10*pw, fx=-Math.sin(yaw), fz=-Math.cos(yaw);
+    pball.position.copy(camera.position).add(_po.set(fx*0.45, -0.25, fz*0.45)); pball.visible=true;
+    PV.set(fx*Math.cos(el)*v, Math.sin(el)*v, fz*Math.cos(el)*v);
+    DOGBALL.held=false; PF.st="fly"; PF.on=true; PF.idle=0; PF.carrier=null; bark(blk); };
+  DOGBALL.take=take;
+  DOGBALL.key=(e)=>{ if(e.code==="Space" && canThrow()){ if(!e.repeat && PF.charge<0) PF.charge=0; return true; } return false; };
+  DOGBALL.keyup=(e)=>{ if(e.code==="Space" && PF.charge>=0) throwIt(); };
+  renderer.domElement.addEventListener("mousedown", e=>{ if(e.button===0 && canThrow() && PF.charge<0 && document.pointerLockElement===renderer.domElement) PF.charge=0; });
+  addEventListener("mouseup", e=>{ if(e.button===0 && PF.charge>=0) throwIt(); });
+  // every frame (18e): the ball in your hand, the wind-up, picking it up off the grass, walking off with it
+  DOGBALL.frame=(dt)=>{
+    if(PF.st==="none") return;
+    if(DOGBALL.held){
+      if(!playerIn()){ toBucket(); toast("YOU LEAVE THE BALL IN THE BUCKET", "#cfe0d4"); return; }
+      if(PF.charge>=0){ PF.charge+=dt; PF.power=Math.min(1, PF.charge/0.9); }
+      const k=PF.charge>=0 ? PF.power : 0; camera.updateMatrixWorld();
+      pball.position.set(0.26-k*0.08, -0.27+k*0.12, -0.62+k*0.20).applyMatrix4(camera.matrixWorld); pball.visible=!droneMode; }
+    if(PF.st==="drop") PF.t+=dt;
+    if(PF.st==="drop" && PF.t>0.6 && pball.parent===scene && Math.hypot(player.pos.x-pball.position.x, player.pos.z-pball.position.z)<1.0){
+      DOGBALL.held=true; PF.st="ready"; PF.idle=0; } };
+  // the two dogs at your game, in the tick
+  const playF=(dt)=>{
+    if(!PF.on) return;
+    PF.idle+=dt;
+    const px=player.pos.x, pz=player.pos.z, fyaw=player.yaw;
+    if((PF.st==="ready" || PF.st==="drop") && (PF.idle>30 || !playerIn())){                  // nobody is throwing: back to their own game
+      if(PF.st==="drop") toBucket(); else PF.on=false; return; }
+    if(PF.st==="fly" || PF.st==="carry" || PF.st==="drop") if(pball.parent===scene) stepP(dt);
+    const wait=(D, sd)=>{ const wx=px-Math.sin(fyaw)*1.3+Math.cos(fyaw)*sd*0.7, wz=pz-Math.cos(fyaw)*1.3-Math.sin(fyaw)*sd*0.7;       // in front of you, either side
+      steer(D, wx, wz, 3.2, dt, 0.08); D.gait=gaitOf(D); if(D.sp<0.3){ D.yaw+=clamp(ang(Math.atan2(px-D.x, pz-D.z)-D.yaw), -dt*4, dt*4); }
+      lookAt(D, px, pz, 0.45); D.wf=12; D.wa=0.55; if(Math.random()<dt*0.06) bark(D); };
+    if(PF.st==="ready"){ wait(blk, 1); wait(brn, -1); return; }
+    if(PF.st==="fly"){ const b=pball.position;
+      for(const D of pack){ steer(D, b.x, b.z, D===blk ? 7.4 : 7.0, dt); D.gait=gaitOf(D); D.hx=0.1; D.hy=0; D.wf=9; D.wa=0.3;
+        if(Math.hypot(b.x-D.x, b.z-D.z)<0.5 && b.y<gy(b.x, b.z)+0.12 && PV.length()<3.5){ PF.carrier=D; D.B[D.head].add(pball); pball.position.set(0, -0.012, 0.215); PF.st="carry"; break; } }
+      return; }
+    if(PF.st==="carry"){ const C=PF.carrier, O=C===blk ? brn : blk;
+      const d=steer(C, px-Math.sin(fyaw)*0.95, pz-Math.cos(fyaw)*0.95, 4.4, dt, 0.05); C.gait=gaitOf(C); C.hx=0.05; C.hy=0; C.wf=12; C.wa=0.45;
+      steer(O, C.x+Math.cos(C.yaw)*0.9-Math.sin(C.yaw)*0.4, C.z-Math.sin(C.yaw)*0.9-Math.cos(C.yaw)*0.4, 4.6, dt, 0.1); O.gait=gaitOf(O); lookAt(O, C.x, C.z, 0.1); O.wf=10; O.wa=0.4;
+      if(d<0.3){ pball.getWorldPosition(_pw); scene.add(pball); pball.position.copy(_pw); PV.set(0, 0, 0); PF.st="drop"; PF.idle=0; PF.t=0; bark(C); }
+      return; }
+    if(PF.st==="drop"){ wait(blk, 1); wait(brn, -1); } };
+
+  thrower.onShow=(p, on)=>{ for(const D of DOGS) D.g.visible=on; ball.visible=on; PF.shown=on; if(!on && PF.st!=="none") toBucket(); };
   thrower.tick=(p, dt)=>{
     for(const D of DOGS) D.t+=dt;
-    stepBall(dt); fetch(dt); chase(dt); wee_(dt); husky(dt);
+    stepBall(dt); fetch(dt); playF(dt); chase(dt); wee_(dt); husky(dt);
     for(const D of DOGS) poseDog(D, D.gait); };
 })();

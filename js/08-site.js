@@ -216,15 +216,15 @@ function stripe(x0,z0,x1,z1,w,color,y){
     // the shoulders, and between them the travel lanes a shade darker: that
     // is where the binder is still on the stone. Side by side, not stacked:
     // a millimetre between layers is nothing to the depth buffer at 200 m
-    roadRun("road", cx, -HWY.len/2, HWY.len/2, x0-cx, -HWY.lane+0.2, PAVE_T, 0.40, "#9c9c9a");
-    roadRun("road", cx, -HWY.len/2, HWY.len/2, HWY.lane-0.2, x1-cx, PAVE_T, 0.40, "#9c9c9a");
-    roadRun("road", cx, -HWY.len/2, HWY.len/2, -HWY.lane+0.2, HWY.lane-0.2, PAVE_T, 0.40, "#8a8a88");
+    roadRun("road", cx, HWY.zN, HWY.zS, x0-cx, -HWY.lane+0.2, PAVE_T, 0.40, "#9c9c9a");
+    roadRun("road", cx, HWY.zN, HWY.zS, HWY.lane-0.2, x1-cx, PAVE_T, 0.40, "#9c9c9a");
+    roadRun("road", cx, HWY.zN, HWY.zS, -HWY.lane+0.2, HWY.lane-0.2, PAVE_T, 0.40, "#8a8a88");
     // edge lines: yellow along the median; the white on the outside, and the rumble strips, wait for the
     // ramps (interstateEdges), which break them where they join
     const inner = dir<0 ? cx-HWY.lane : cx+HWY.lane;
-    roadRun("paint", inner, -HWY.len/2, HWY.len/2, -0.075, 0.075, PAVE_T+0.002, 1, YELLOW_LINE);
+    roadRun("paint", inner, HWY.zN, HWY.zS, -0.075, 0.075, PAVE_T+0.002, 1, YELLOW_LINE);
     // the lane line: ten-foot dashes on forty-foot centres
-    for(let z=-HWY.len/2; z<HWY.len/2; z+=12.2){
+    for(let z=HWY.zN; z<HWY.zS; z+=12.2){
       const P=[{x:cx,z:z,y:roadY(z),s:0},{x:cx,z:z+3.05,y:roadY(z+3.05),s:3.05}];
       layRibbon("paint", P, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
     }
@@ -247,7 +247,7 @@ function stripe(x0,z0,x1,z1,w,color,y){
     bx("metal", 0.28,0.84,0.02, x, y+1.22, z+(ry===0?-0.02:0.02), 0.5, 0, "#7e8486");
     signPanel(0.26,0.80,tex, x, y+1.22, z+(ry===0?0.002:-0.002), ry);
   };
-  for(let z=-1450; z<1450; z+=160.9){
+  for(let z=HWY.zN+60; z<1450; z+=160.9){
     if(Math.abs(z)<6) continue;
     mm(NB_X1+1.6, z, 0);
     mm(SB_X0-1.6, z+40, Math.PI);
@@ -362,7 +362,7 @@ function guideSign(x, z, w, h, ry, lines, opts){
 function interstateEdges(){
   for(const [cx, dir] of [[HWY.nb, -1], [HWY.sb, 1]]){
     const outer = dir<0 ? cx+HWY.lane : cx-HWY.lane, Z=MERGE_ZONES.filter(m=>Math.abs(m.outer-outer)<0.05);
-    let z=-HWY.len/2;
+    let z=HWY.zN;
     for(const m of Z.slice().sort((p,q)=>p.open[0]-q.open[0])){
       const [a,b]=m.open, [d0,d1]=m.dot;
       if(a>z+0.5) roadRun("paint", outer, z, a, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
@@ -370,9 +370,9 @@ function interstateEdges(){
       const n=Math.max(1, Math.round((d1-d0-0.9)/3.6)), st=(d1-d0-0.9)/n;
       for(let k=0;k<=n;k++){ const q=d0+k*st; paintRun(outer, q, outer, q+0.9, 0.20, WHITE_LINE); }
       z=Math.max(z, b); }
-    if(z<HWY.len/2-0.5) roadRun("paint", outer, z, HWY.len/2, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
+    if(z<HWY.zS-0.5) roadRun("paint", outer, z, HWY.zS, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
     // rumble strips cut into the outside shoulder, ghosted, but not where traffic crosses it to a ramp
-    for(let q=-HWY.len/2; q<HWY.len/2; q+=24){
+    for(let q=HWY.zN; q<HWY.zS; q+=24){
       if(Z.some(m=>q+16>m.quiet[0]-6 && q<m.quiet[1]+6)) continue;
       const xs = dir<0 ? outer+1.0 : outer-1.0;
       layRibbon("soot", [{x:xs,z:q,y:roadY(q),s:0},{x:xs,z:q+16,y:roadY(q+16),s:16}], -0.20, 0.20, PAVE_T+0.003, 1, "#30302e");

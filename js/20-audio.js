@@ -30,8 +30,6 @@ const AUDIO=(function(){
   let boil={}, obd={};
   // a house on Lake Street (14o): the fridge's compressor, cycling; the kitchen clock
   let fr={}, frOn=true, frT=20, tickT=1, tk=false;
-  // the brewery (14r): its crowd talking
-  let mur={}, murT=0;
   function noise(sec, color){
     const n=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(1,n,ctx.sampleRate), d=b.getChannelData(0);
     let l=0, b0=0,b1=0,b2=0;
@@ -181,8 +179,6 @@ const AUDIO=(function(){
       const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1200;
       const g=ctx.createGain(); g.gain.value=0.6; loop(noise(4,"pink")).connect(hp); hp.connect(g); g.connect(eng.b); }
     fr.g=ctx.createGain(); fr.g.gain.value=0; fr.g.connect(master);
-    mur.g=ctx.createGain(); mur.g.gain.value=0; mur.pan=ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain();
-    { const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=2600; mur.pan.connect(lp); lp.connect(mur.g); mur.g.connect(master); }
     { const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=160; const g=ctx.createGain(); g.gain.value=0.5;
       loop(brown).connect(lp); lp.connect(g); g.connect(fr.g); }
     for(const [f,a,dst] of [[120,0.5,hum.g],[240,0.18,hum.g],[60,0.6,gen.g],[120,0.35,gen.g],[180,0.15,gen.g],[98,0.45,fr.g],[196,0.20,fr.g],[294,0.06,fr.g]]){
@@ -241,7 +237,6 @@ const AUDIO=(function(){
     const zn=zoneAt(cam.x, cam.z, cam.y), home=!!zn && /^No\. \d+ · /.test(zn);
     hum.g.gain.setTargetAtTime(inside && !home ? 0.010*GRID.bldg : 0, t, 0.2);
     if(fr.g) houseSound(dt, cam, home ? zn.slice(0, zn.indexOf("·")+2) : null);
-    if(mur.g && typeof BREWERY!=="undefined" && BREWERY.deck) brewSound(dt, cam);
     boil.g.gain.setTargetAtTime(typeof BOILERS!=="undefined" ? 0.11*BOILERS.roar : 0, t, 0.25);
     { const B=typeof BOAT!=="undefined" && BOAT ? BOAT : {x:0, z:0, running:false, rpm:0, speed:0}, bd=Math.hypot(cam.x-B.x, cam.z-B.z), on=B.running ? 1 : 0;
       obd.g.gain.setTargetAtTime(on*(0.05+0.10*B.rpm)/(1+bd*bd/400), t, 0.15);
@@ -311,16 +306,6 @@ const AUDIO=(function(){
     tickT-=dt;
     if(tickT<=0){ tickT=Math.max(0.2, tickT+1); tk=!tk;
       if(cd<6) burst(t+0.02, 0.005, tk ? 4200 : 3400, 6, 0.10/(1+cd*cd/1.2), master); } }
-  // the brewery's crowd: a phrase here and a phrase there from every side, never words, more of them toward evening;
-  // under the speakers' music, and quieter inside the taproom's walls than out on the deck
-  function brewSound(dt, cam){
-    const t=ctx.currentTime, d=Math.hypot(cam.x-1446, cam.z+1262), hr=DayNight.state.hour, busy=0.55+0.45*smoothstep(15.5, 19.5, hr)*(1-smoothstep(23.2, 24, hr));
-    mur.g.gain.setTargetAtTime(d<80 ? 0.10*busy/(1+d*d/400) : 0, t, 0.6);
-    if(d>80) return;
-    murT-=dt;
-    if(murT<=0){ murT=(0.10+Math.random()*0.30)/busy;
-      if(mur.pan.pan) mur.pan.pan.setValueAtTime(Math.random()*1.6-0.8, t);
-      phrase(t+0.02, mur.pan, undefined, 1.05+Math.random()*0.35); } }
   /* ---- the camp ----------------------------------------------------------
      The fire is its roar and hiss, crackles (a few milliseconds of noise at
      a random pitch, a dozen a second) and now and then a pop. The music is

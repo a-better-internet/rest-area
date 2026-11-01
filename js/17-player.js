@@ -35,6 +35,7 @@ addEventListener("keydown",e=>{
   // on the disc golf course with the disc in your hand, Space winds up the throw (18i)
   if(typeof DGOLF!=="undefined" && DGOLF.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(typeof CORN!=="undefined" && CORN.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
+  if(typeof DOGBALL!=="undefined" && DOGBALL.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
   if(e.code==="KeyG" && !e.repeat && window.GFXMENU){ GFXMENU.show(); return; }
   const held=keys[e.code];                  // keydown repeats while a key is down
@@ -51,7 +52,8 @@ addEventListener("keydown",e=>{
   if(e.code==="BracketRight") DayNight.nudge( 0.02);
   if(e.code==="KeyC" && !droneMode && !driving) sitToggle();
   if(e.code==="KeyF" && !driving) setDrone(!droneMode);   // no driverless cars
-  if(e.code==="KeyL"){ torchOn=!torchOn; toast(torchOn?"FLASHLIGHT ON":"FLASHLIGHT OFF","#ffe9a8"); }
+  if(e.code==="KeyL"){ if(typeof BOAT!=="undefined" && BOAT.on) BOAT.toggleLights();             // (at the boat's helm: its lights)
+    else { torchOn=!torchOn; toast(torchOn?"FLASHLIGHT ON":"FLASHLIGHT OFF","#ffe9a8"); } }
   // the weather, for testing: it comes on its own, now and then, otherwise
   if(e.code==="KeyR" && !held){ const on=WEATHER.kind!=="rainfog"; WEATHER.set(on?"rainfog":"clear", true);
     toast(on?"RAIN AND FOG":"CLEARING","#9fb8d8"); }
@@ -65,7 +67,7 @@ addEventListener("keydown",e=>{
   // the key that gets you out of it
   if((e.code==="KeyE" || (e.code==="Space" && !driving && !(typeof BOAT!=="undefined" && BOAT.on))) && !droneMode) interact();
 });
-addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); if(typeof CORN!=="undefined") CORN.keyup(e); });
+addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); if(typeof CORN!=="undefined") CORN.keyup(e); if(typeof DOGBALL!=="undefined") DOGBALL.keyup(e); });
 // Alt-tab away mid-stride and the keyup for whatever you were holding never
 // arrives, so the key stays down for good. Drop everything when the window
 // stops listening.

@@ -37,9 +37,13 @@ const HWY = {
   lane:3.65,        // two lanes each way
   shR:3.0,          // right (outside) shoulder
   shL:1.2,          // left (median) shoulder
-  len:3600,         // drawn length, well past the far haze
-  wrap:1560,        // traffic wraps here
+  len:3600,         // (the old drawn length, ±1800: the road now runs from zN to zS)
+  zN:-4200,         // the drawn road's north end: past Edinboro, past the weigh station (14w), on into the haze
+  zS:1800,          // and its south end
+  wrap:1560,        // traffic runs a loop this far either side of you (clamped to the road's ends) and wraps round it
   flat:560,         // the road is level at y = 0 for |z| < flat
+  endN:-3700,       // where you can go no further north, and south (07's walls across the corridor)
+  endS:1720,
 };
 // emergency crossovers: a paved cut through the median, level with the road, where a trooper or a
 // plow turns round (and anybody else, if nobody is looking). All inside the level stretch. 04

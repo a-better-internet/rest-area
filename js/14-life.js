@@ -100,6 +100,7 @@ function _yieldsTo(v, o){
 }
 function updateVisitors(dt, dark){
   _visitT+=dt;
+  if(typeof updateWeighTrucks==="function"){ updateWeighTrucks(dt); updateWeighStation(dt, dark); }   // (14w: the weigh station's trucks)
   // flag one, now and then, well south of the exit
   if(VISIT.active<VISIT.max && _visitT>VISIT.wait){
     for(const v of TRAFFIC){
@@ -111,7 +112,7 @@ function updateVisitors(dt, dark){
     }
   }
   for(const v of TRAFFIC){
-    if(v.exiting && !v.route && v.dir<0 && v.z<=RAMP_EXIT[0].z+0.5){
+    if(v.exiting && !v.weigh && !v.route && v.dir<0 && v.z<=RAMP_EXIT[0].z+0.5){
       const R=v.big ? _truckRoute(v) : _carRoute(v);
       if(!R){ v.exiting=false; VISIT.active--; continue; }
       v.route=R; R.x0=v.x-RAMP_EXIT[0].x; R.seq=++_visitSeq; v.speed=Math.min(v.speed, 28);
@@ -121,6 +122,9 @@ function updateVisitors(dt, dark){
   }
 }
 const _vp={x:0,z:0};
+// how high it rides: the rest area's lots are flat at PAVE_T; a leg with its own y (the weigh station's) rides the road's
+// grade on its ramps and the station's paving, a lot layer over the road, on the rest
+const _legY=(L, at)=>L.y ? (L.ramp ? undefined : at.y+0.025) : PAVE_T;
 const _inAisle=x=>(x>CARLOT.aisle0+1.2 && x<CARLOT.aisle1-1.2) || (x>TRUCKLOT.aisle0+1.5 && x<TRUCKLOT.aisle1-1.5);
 function stepVisitor(v, dt, dark){
   const R=v.route, L=R.legs[R.li], P=L.P, len=P[P.length-1].s;
@@ -128,7 +132,7 @@ function stepVisitor(v, dt, dark){
     R.dwell-=dt; v.speed=0; v.braking=false;
     if(R.parked && R.ped && !R.ped.done) R.dwell=Math.max(R.dwell, 0.5);   // they are not back yet
     const at=pathAt(P, len), h=Math.atan2(at.hx, at.hz)+(L.rev?Math.PI:0);
-    placeVehicle(v, at.x, at.z, h, dark, PAVE_T);
+    placeVehicle(v, at.x, at.z, h, dark, _legY(L, at));
     R.blk=null;
     if(R.dwell<=0){
       const N=R.legs[R.li+1];
@@ -196,7 +200,7 @@ function stepVisitor(v, dt, dark){
     if((q.kind==="driver" || q.lot) && q.P.g.visible && consider(q.x, q.z, 0, 0.3, v.hw+0.9)) limBy="you";
   if(dodging) target=Math.min(target, 1.6);
   for(const o of TRAFFIC){
-    if(o===v || !o.route || o.route.dwell>0) continue;      // parked ones are in their stalls, not the aisle
+    if(o===v || !o.route || (o.route.dwell>0 && !(R.weigh && o.route.weigh))) continue;   // parked ones are in their stalls, not the aisle (one on the scale is in the lane)
     if(o.route.blk===v && !_yieldsTo(v, o)) continue;       // it is waiting on us: go
     if(R.waited>25 && (o.route.waited||0)>25 && R.seq<o.route.seq) continue;   // a knot: the first one in is waved through
     const OL=o.route.legs[o.route.li], h=o.g.rotation.y, sg=OL.rev?-1:1;
@@ -230,12 +234,13 @@ function stepVisitor(v, dt, dark){
     head+=Math.atan2((R.dodge-d0)/Math.max(dt,1e-3), Math.max(1.2, v.speed))*0.8;
   }
   v.x=x; v.z=z;
-  placeVehicle(v, x, z, head, dark, PAVE_T);
+  placeVehicle(v, x, z, head, dark, _legY(L, at));
   if(R.s>=len-0.02){
     R.dodge=0; R.dside=0;
     if(L.merge){                                           // back into the right lane, as traffic
       R.release && R.release();
-      v.route=null; v.exiting=false; VISIT.active--;
+      v.route=null; v.exiting=false;
+      if(R.weigh){ v.weigh=false; WEIGH_RT.active--; } else VISIT.active--;
       v.lane=0; v.fromLane=0; v.laneT=1; v.z=z;
       v.sway=x-laneX(-1,0); v.swayV=0; v.x=x;
       return;
