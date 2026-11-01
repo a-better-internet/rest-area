@@ -454,14 +454,14 @@ const COFFEE={};
     for(const x of [1436.9, 1439.1]){ C(0.055, BCL-0.402-BF, x, (BF+BCL-0.402)/2, -1183.0, "#5a5e62", 14); B(0.16, 0.012, 0.16, x, BF+0.012, -1183.0, "#5a5e62"); B(0.16, 0.012, 0.16, x, BCL-0.408, -1183.0, "#5a5e62");
       addCol(x-0.08, x+0.08, -1183.08, -1182.92, BF-0.5, BCL); }
     addFlat(BX0, BX1, BZ0, BZ1, BF);
-    addVoid(BX0, BX1, BZ0, BZ1, BF-3, Y-0.15, BF);
+    addVoid(BX0, BX1, BZ0, BZ1, BF-3, BF+1.2, BF);                 // (up to 1.2 m over its floor: a height asked for at the ground's level is the shop's, not the roastery's)
     addBuried(BX0, BX1, BZ0, BZ1, BF-0.5, BCL+0.05, 0);
     addZone(BX0, BX1, BZ0, BZ1, BF-0.5, BCL, "THE ROASTERY", true);
     // the door in from the stair: coral, a light in it like the one at the front, a white frame, a threshold
     frX(CZ1-0.1, 0.2, BD.a, BD.b, BF, BD.head, TRIM);
     makeDoor(XF(BD.b-0.02, CZ1-0.1, Math.PI), 0, BF+0.01, 0, "THE ROASTERY", true, 0, "vision", 0xd8604e);
     B(BD.b-BD.a+0.004, 0.016, 0.23, (BD.a+BD.b)/2, BF+0.008, CZ1-0.1, "#8a6a44");
-    addFlat(BD.a, BD.b, CZ1-0.21, CZ1+0.01, BF); addVoid(BD.a, BD.b, CZ1-0.22, CZ1+0.02, BF-3, Y-0.15, BF);
+    addFlat(BD.a, BD.b, CZ1-0.21, CZ1+0.01, BF); addVoid(BD.a, BD.b, CZ1-0.22, CZ1+0.02, BF-3, BF+1.2, BF);
     // the lights: caged bulbs on cords down from the joists
     for(const [x, z] of [[1435.7, -1182.4],[1438.1, -1181.9],[1437.4, -1185.0],[1440.3, -1184.2],[1438.9, -1180.4]]){
       tubeE(V3(x, BCL, z), V3(x, BCL-0.48, z), 0.005, "#1a1a1a", 4); CT(0.03, 0.03, 0.04, x, BCL-0.50, z, "#2a2a2c", 10); push("cafe_bulb", new T.SphereGeometry(0.04, 10, 8), x, BCL-0.56, z, 0, "#ffffff");
