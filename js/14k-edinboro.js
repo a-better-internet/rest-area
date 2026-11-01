@@ -115,7 +115,7 @@ const parked=(kind, paint, x, z, yaw, y)=>parkCar(x, z, yaw, kind, paint, y+PAVE
   // the light: flat panels in the ceiling, on all night
   for(const x of [-35, -26, -17]) for(const z of [Z-61.5, Z-55.5]){
     B(0.62, 0.05, 1.22, x, CEIL-0.026, z, "#e2e2de");
-    push("tube", planeGeo(0.56, 1.16, 0), x, CEIL-0.052, z, 0, "#ffffff", Math.PI/2, 0); }
+    push("tube", planeGeo(0.56, 1.16, 0), x, CEIL-0.058, z, 0, "#ffffff", Math.PI/2, 0); }        // (7 mm under the housing)
   for(const [x,z] of [[-33, Z-58],[-20, Z-58]])
     LAMPS.push({x:x, y:CEIL-0.4, z:z, color:0xf2f6ff, intensity:1.0, dist:12, decay:1.2, indoor:true, vol:[IX0-0.2, IX1+0.2, IZ0-0.2, IZ1+0.2, FLS-1, CEIL+0.5]});
   LAMPS.push({x:(D.a+D.b)/2, y:FLS+2.3, z:IZ1-0.6, color:0xf2f6ff, intensity:0.55, dist:9, decay:1.6});      // out through the glass at night
