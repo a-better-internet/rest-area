@@ -437,7 +437,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0, docks:[]};
     shed(1322, zs(42), -0.1, "#5a6a4a", "#3e4246"); garden(1350, 1357, zs(38), zs(44)); flagpole(1308.4, zs(7.0)); hoop(1350.0, zs(14), -1); }
   // more trees in the yards, front and back, the big old ones a street like this grows up under
   for(const [sp, x, z, sc] of [["hard", 1080, Z+HW+55, 1.3],["hemlock", 1112, Z+HW+57, 1.1],["hard", 1150, Z+HW+54, 1.35],["pine", 1166, Z+HW+58, 1.15],
-      ["hard", 1196, Z+HW+52, 1.3],["hemlock", 1210, Z+HW+58, 1.1],["hard", 1246, Z+HW+56, 1.4],["hard", 1290, Z+HW+54, 1.3],["pine", 1302, Z+HW+58, 1.15],
+      ["hard", 1196, Z+HW+52, 1.3],["hemlock", 1210, Z+HW+58, 1.1],["hard", 1240.5, Z+HW+56, 1.4],["hard", 1290, Z+HW+54, 1.3],["pine", 1302, Z+HW+58, 1.15],
       ["hard", 1340, Z+HW+55, 1.35],["hemlock", 1372, Z+HW+52, 1.1],["hard", 1392, Z+HW+56, 1.3],
       ["hard", 1110, Z+HW+8, 1.2],["hard", 1157, Z+HW+9, 1.25],["hard", 1248, Z+HW+8, 1.2],["hard", 1294, Z+HW+9, 1.2],["hard", 1338, Z+HW+8, 1.25],
       ["hard", 1100, Z-HW-7, 1.2],["hard", 1152, Z-HW-8, 1.25],["hemlock", 1194, Z-HW-9, 1.05],
@@ -629,8 +629,10 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0, docks:[]};
   addZone(PK.x0, PK.x1, PK.z0, PK.z1, WY-2, Y+12, "LAKESIDE PARK");
   addZone(TW.x0, TW.x1, Z-HW-1, Z+HW+1, Y-2, Y+12, "LAKE STREET · US 6N");
   { const C0=A.corr;
-    W(TW.x0-0.4, TW.x0+0.4, TW.z0, C0.z0); W(TW.x0-0.4, TW.x0+0.4, C0.z1, TW.z1);
-    W(TW.x0, TW.x1, TW.z1-0.4, TW.z1+0.4); W(TW.x1-0.4, TW.x1+0.4, TW.z0, TW.z1);
+    // (the back yards on the south side open into the woods behind them, 14v: the wall goes round those instead)
+    const WD=A.woods;
+    W(TW.x0-0.4, TW.x0+0.4, TW.z0, C0.z0); W(TW.x0-0.4, TW.x0+0.4, C0.z1, WD.z1);
+    W(TW.x0, TW.x1, WD.z1-0.4, WD.z1+0.4); W(TW.x1-0.4, TW.x1+0.4, TW.z0, WD.z1);
     // the shore: a step short of the water, open where a dock goes out
     let x=TW.x0;
     const BANK="THE BANK DROPS STRAIGHT INTO THE LAKE HERE. GO OUT A DOCK, OR TAKE THE BOAT";

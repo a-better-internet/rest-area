@@ -594,6 +594,18 @@ If the scene runs hot on your machine, start there (see below).
       the car. Upstairs are two bedrooms on one side, the kids' room and
       the bathroom on the other, and the hall with the little window over
       the front door.
+  - **The woods behind Lake Street.** Out the back of the yard between
+    two houses on the south side, a sign (THE BACK WOODS · KEEP TO THE
+    PATH) marks a trail of wood chips that runs in a long loop through the
+    trees, several rows deep, hemlock, pine, beech and maple with ferns
+    and shrubs between, out to a wall at the far side. Along it are the
+    things that end up in the woods behind a lake town: a rowboat turned
+    over beside the trail, its green paint gone chalky and moss on the
+    keel; a canoe up on two sawhorses, a paddle under it; an old boat
+    trailer the ferns have got into, its tyres flat; a jon boat half sunk
+    in the leaves with a hole in her side, her anchor run out beside her;
+    and round a big old oak a rusted outboard on a stump, two oars against
+    the trunk, floats hung from a branch and a life ring.
   - **Lakeside Park**, on the north side of the street. A lot sits off the
     road with its stalls angled toward the water and wheel stops at the
     curb. The lawn goes down to the shore under big trees. A paved path
@@ -603,14 +615,24 @@ If the scene runs hot on your machine, start there (see below).
     slide on wood chips, a NO LIFEGUARD sign, and big stones along the
     waterline. Two docks go out into the lake, one with a T at its end and
     one with a finger off it and a bench (sit). Pontoon boats are tied up
-    at them, with a ladder and a life ring. You can walk out on the docks.
-  - **The pontoon.** The one nearest the shore end of the first dock's T
-    isn't tied up, and it has an outboard on its transom. `E` alongside it
-    takes the helm: you pull the cord and the motor catches, and the view
-    goes out behind the boat (the mouse swings it round). `W` opens the
-    throttle, `S` puts it in reverse, `A` and `D` swing the motor, and `E`
-    alongside a dock or the shore steps you off. It goes the way a boat
-    does: it comes up to speed and coasts down, turns by the prop's push
+    at them bow and stern, with a ladder and a life ring. You can walk out
+    on the docks.
+  - **The pretzel cart.** By day a man in a red shirt and a white cap
+    stands at a steel cart on the shore path, under a striped umbrella,
+    with pretzels in a warm glass case, a board with the prices, mustard,
+    napkins and a cooler of drinks; steam comes off the case now and then.
+    `E` at the cart buys one (he says something different each time).
+    After dark the case goes under its cover and he is gone.
+  - **The pontoons.** Every pontoon has an outboard on its transom, and
+    you can take any of them. `E` alongside one (TAKE THIS BOAT) casts off
+    its lines and takes the helm: you pull the cord and the motor catches,
+    and the view goes out behind the boat (the mouse swings it round). `W`
+    opens the throttle, `S` puts it in reverse, and `A` and `D` swing the
+    motor. Come in slow alongside a dock and `E` ties up: the boat glides
+    the last bit in, square to the dock's edge, the bow and stern lines go
+    over to the cleats, and you step onto the dock. Anywhere else (the
+    shore, or coming in too fast) `E` just steps you off. It goes the way
+    a boat does: it comes up to speed and coasts down, turns by the prop's push
     when slow and the water past the motor when fast, skids a little in a
     hard turn, comes up onto the plane with the stern squatting, leans in
     the turn and rocks on the chop at rest. Spray comes off the stern, and
@@ -674,8 +696,8 @@ If the scene runs hot on your machine, start there (see below).
     and valleys go back unbroken to the skyline.
   - **Lakeshore Brewing Co.**, past the last house at the end of the road,
     on the shore. Its lot has cars in it and its sign at the mouth. The
-    building is a long timber taproom with a red standing-seam roof, its
-    door, windows and name toward the road. The lake side is five glass
+    building is a long timber taproom with a red standing-seam roof, a
+    pair of glass doors, windows and its name toward the road. The lake side is five glass
     garage doors, three of them rolled up under the ceiling so the room
     opens onto the grass. Inside there is pine on the walls and ceiling,
     with black beams, fans turning and pendant bulbs. The brewhouse is
@@ -739,7 +761,8 @@ If the scene runs hot on your machine, start there (see below).
     when you come in, tail going, and yips. A husky lies flat out in the
     shade. Two people talk at the fence with coffees, another sits on the
     bench. By day; after dark the park is empty.
-    Take a ball from the bucket yourself (`E`) and throw it: the black lab
+    The bucket of balls stands along the fence past the fountain, well
+    clear of the gate. Take a ball from it yourself (`E`) and throw it: the black lab
     and the brindle leave off their chase and race for it, and the one that
     gets it brings it back and drops it at your feet, the other trotting
     beside, and they wait looking up at you. Walk over it to pick it up.
@@ -816,10 +839,32 @@ If the scene runs hot on your machine, start there (see below).
     readout over the lane on an arm, the stop bar past it with STOP and STOP
     ON RED, and the signal on its pole, red while a truck is on the scale,
     then green and BYPASS. The scale house beside the lane is block with a
-    flat roof, a long window along the lane and the camera on a mast; inside,
-    the officer sits at the desk with the readout, the camera and the log on
-    his screens, with a filing cabinet, the printer, a coffee maker, a fridge,
-    the board of notices and a clock. Its door is on the east side, up a step.
+    flat roof, a long window along the lane and the camera on a mast, and a
+    bench and a butt can by its door. Inside are four rooms. The scale room runs down the
+    lane side: the officer sits at the long desk under the window with the
+    readout, the camera and the log on his screens, the radio base beside
+    him, a TV on the wall, the filing cabinet and the printer, hi-vis vests
+    and hard hats on their pegs, and the portable wheel-load scales stacked
+    in their cases. The drivers come into the lobby from the apron, up a
+    step: a service window through to the officer with a ledge and a stool,
+    a bench, a water cooler, the map of the truck routes and the chart of
+    sizes and weights on the walls, a snack machine and a bin. A restroom
+    opens off it. The break room behind goes round the restroom: a
+    kitchenette under the window with a fridge, a sink, a microwave and
+    the coffee maker, a table with four chairs, the lockers, a couch, the
+    time clock and its rack of cards, and the back door.
+  - Out back, a stepping-stone path goes to a block shed: salt bags and
+    paint on steel shelves, a red mower and an orange snow blower, a stack
+    of cones, shovels and tools on the wall. A plain door at the back of it opens on a stair down to **the
+    listening room**, under the ground: walnut wainscot and green walls, a
+    coffered ceiling, a rug, a fire going in the fireplace, sconces and a
+    floor lamp. A man sits in an oxblood leather recliner with a scotch,
+    beside a side table and its lamp and a brass cart of single malts and
+    blends, a decanter, glasses and an ice bucket. On the console a record
+    goes round under its arm, and a jazz trio plays from the speakers
+    either side (piano, upright bass and brushes, a little crackle off the
+    vinyl). Records fill the shelves, there are books and a globe, and a
+    leather club chair for you (sit).
   - On the apron past the scale two rigs are pulled over. An inspector goes
     round one with a clipboard, stopping to write, while its driver waits
     by his cab with a coffee; cones round it, chocks under a wheel, a tool
@@ -1270,6 +1315,10 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Plan view · hide HUD | `O` · `H` |
 | Graphics settings | `G` |
 
+Your eyes are 1.66 m up standing, and sitting brings them down to where a
+seated person's are. Getting out of a car, off the boat or out of the
+drone, the view eases down to them over half a second rather than jumping.
+
 At a vending machine the keys are its keypad's: arrows (or `WASD`) to pick,
 `Q` a quarter, `F` a dollar bill, `E` or `Enter` to vend, `Space` to shake
 it, `R` coin return, `Esc` to walk away.
@@ -1356,12 +1405,15 @@ centred on the origin.
 | US 6N east through the woods | x 586 … 1062, z −1213 … −1187 |
 | French Creek Fireworks | x 872 … 966, z −1284 … −1205; the building x 893 … 925, z −1274 … −1258 |
 | Lake Street and Lakeside Park | x 1062 … 1420, z −1298 … −1134; the park x 1238 … 1372 north of the road; the shore at z −1296 |
+| The woods behind Lake Street | x 1062 … 1470, z −1134 … −1064, walled at the far side; the trail in from the back of the yard at x 1246 |
+| The pretzel cart | x 1309, z −1287.8, on the shore path |
 | Lakeside Park disc golf | the course sign x 1243, z −1223; tees and baskets over x 1247 … 1364, z −1281 … −1226 |
 | Lakeshore Brewing Co. | lot x 1422 … 1468 from the road to z −1226; the taproom x 1430 … 1460, z −1243 … −1229; the deck x 1423 … 1467, z −1299 … −1266; the cornhole boards x 1444.6, z −1249.4 (where you throw from) and −1258.6 |
 | Lake Street Bark Park | x 1063.6 … 1101, z −1293.4 … −1272; its gates at x 1082, z −1272 and −1268.8; the path in off the street at x 1068 |
 | The Perky Loon | the house x 1433.5 … 1441.5, z −1186.5 … −1179.5; the porch to z −1188.4; the patio x 1431.8 … 1443.8 to z −1193.2; its lot x 1445 … 1462.5 |
 | Its roastery | under the house, x 1433.7 … 1441.3, z −1186.3 … −1179.7, its floor 2.65 m below the ground; the stair down x 1439 … 1440.4 from z −1175.3 to the door at z −1179.5 |
-| The weigh station | its ramps leave I-79 at z −2560 and rejoin it at z −3352; the lanes x −75.75 … −66.75, z −3008 … −2900; the scale z −2950 … −2928; the scale house x −64.2 … −58.6, z −2946 … −2934; the apron x −66.5 … −38, z −3004 … −2962 |
+| The weigh station | its ramps leave I-79 at z −2560 and rejoin it at z −3352; the lanes x −75.75 … −66.75, z −3008 … −2900; the scale z −2950 … −2928; the scale house x −64.2 … −54.2, z −2946 … −2934; the apron x −66.5 … −38, z −3004 … −2962 |
+| The weigh station's shed and listening room | the shed x −60 … −56, z −2930 … −2926; the listening room under it x −60.2 … −53.8, z −2931.2 … −2925, its floor 2.75 m below the ground; the stair down from z −2927.3 |
 | The ends of I-79 | walls across the corridor at z −3700 (north) and +1720 (south) |
 | Edinboro Lake | x 980 … 2260, z −2090 … −1296, a rounded oblong, wandering off the street |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
@@ -1432,7 +1484,8 @@ js/14r-brewery.js   Lakeshore Brewing Co.: its lot, the taproom, the beer garden
 js/14s-edinsub.js   French Creek Substation behind the fuel stop: the tap line, the yard and its equipment, the control house
 js/14t-dogpark.js   Lake Street Bark Park: its fence and double gate, the path in, the agility things; the dogs (fetch, the chase, the little one, the husky) and their people
 js/14u-coffee.js    The Perky Loon, the coffee shop across from the brewery: the house, porch, patio and lot, the room inside, the roastery under it, and its people
-js/14w-weigh.js     the weigh station: the scale, the scale house and its officer, the signal and readout, the OPEN sign, the apron and its rigs, the trucks that come in
+js/14v-lakewoods.js the woods behind Lake Street (its trail and the old boats in it) and the pretzel cart on the shore path
+js/14w-weigh.js     the weigh station: the scale, the scale house's rooms and its officer, the shed and the listening room under it, the signal and readout, the OPEN sign, the apron and its rigs, the trucks that come in
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -1554,7 +1607,7 @@ the generator house's cellar and the trailer's step. The routes are:
   shore and out to the end of a dock;
 - past the car in a ranch's drive and in under its garage door (raised
   first);
-- across the brewery's lot, in at its door and through the taproom to the
+- across the brewery's lot, in at one of its doors and through the taproom to the
   bar; out a garage door to the beer garden; and round the east end of the
   building, down the path to the deck, between its tables and along the
   rail;
@@ -1568,6 +1621,11 @@ the generator house's cellar and the trailer's step. The routes are:
   in at the coral door to the roaster (and the stair down and back up, keys
   held, at each pace);
 - across the weigh station's apron, up the step and into the scale house;
+  on through the lobby and the break room, out the back door to the shed,
+  through the plain door at the back of it and down the stair to the
+  listening room (and the stair down and back up, keys held, at each pace);
+- from Lake Street between two houses, out the back of the yard and round
+  the trail through the woods behind them;
 - into every house on Lake Street and to every room in it. Each house
   lays out its own routes as it builds (`LAKE_HOUSES.routes` in 14o, so
   they move with the plans): in at the front door, round the ground floor,

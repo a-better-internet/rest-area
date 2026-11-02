@@ -258,8 +258,9 @@ No lettering touches or runs past the edge of its board or its border.
   drinks (`_HELD_UP`) and the fisherman's rod. Never leave a drink to the
   forearm's own angle: a forearm brought up level lays it on its side.
 - `addSeat(x, z, y, yaw, label, lie, drop)` (06): `y` is the floor under
-  the seat and `drop` how far your eyes come down as you sit, a chair's
-  0.66 unless given. A stool's seat at 0.79 takes 0.34, one at 0.85 0.265,
+  the seat and `drop` how far a seated person's eyes are below a standing
+  one's, a chair's 0.66 unless given. 17 takes `SEAT_EYE` (0.18) off it, so
+  your eyes sit at a seated person's height, not slumped below it. A stool's seat at 0.79 takes 0.34, one at 0.85 0.265,
   a low Adirondack 0.76.
 - A crowd's `sway` turns them from the waist (their spine and head), never
   the whole body: a person in a chair or on a stool stays square to it.
@@ -296,11 +297,16 @@ No lettering touches or runs past the edge of its board or its border.
   runs between those, not fixed numbers. The traffic loop is
   `2·HWY.wrap` long and centred on the camera (05's `trafficMid`), so the
   traffic is wherever you are.
-- The ground's outer rings: 32 m out to `GROUND_EDGE` (04), 16 m inside
+- The ground's outer rings: 32 m out to `GROUND_EDGE` (00), 16 m inside
   `RING_FAR`, 8 m in `RING_MIDN` up the interstate north, and 2 m in
   `RING_WEIGH` round the weigh station. Each finer ring is a hole in the
   one outside it, on that ring's lattice. The far terrain's rim fades
-  against `GROUND_EDGE`, so nothing near the edge looks cut off.
+  against `GROUND_EDGE`, so nothing near the edge looks cut off. The fog
+  shader (03) thickens to the sky's colour over the last 200 m before
+  `GROUND_EDGE` and toward the camera's far plane, so a far hill fades
+  out rather than being clipped. The sky dome is drawn first
+  (`renderOrder` −1000): three sorts the opaque list by program before
+  depth, and a dome drawn after the terrain painted over the far hills.
 - The weigh station is set out by `WEIGH` (04: its ramps `off` / `on`, the
   lanes, the scale, the house, the apron, the graded pad). 08w lays its road
   through `rampPave` like any ramp, before 08b's `interstateEdges`; 14w
@@ -325,6 +331,35 @@ No lettering touches or runs past the edge of its board or its border.
   the helm sets `BOAT.lights`.
 - The fuel stop's shelves (14k) are one atlas of named products (`GOODS`,
   its `L0` list); add a product to the list and put it with `put`.
+- Coming out of a chase view (a car, the boat, the drone), 19-loop eases
+  the camera from where it was down to your eyes over half a second
+  (`_handT`). Your eyes are always `EYE` over your feet; only the view
+  is eased.
+- Every pontoon is a `LAKESIDE.boats` entry with `pont` and its own
+  outboard (14n). `E` by one (14p's TAKE THIS BOAT) is `BOAT.takeOver`:
+  the rig's hull and that boat's swap places (the rig keeps its working
+  outboard, and the still one moves to the hull left behind),
+  and the boat you last took stays where you left it, its lines out if
+  it is at a dock. `_dockBerth` finds a berth
+  along the open-water edges of `LAKESIDE.docks` (each dock's walkable
+  rects), square to the edge, and `_tieRopes` hangs the bow and stern
+  lines to it. A new dock goes in `LAKESIDE.docks` so boats can tie up
+  to it.
+- The woods behind Lake Street's south side are `EAST.woods` (04), built
+  in 14v with its trail and the boats left in it. 07's canopy shell climbs
+  slowly there so the real trees stand in front of it. Trees planted
+  outside `SITE.zone` get no trunk colliders on their own: 14n and 14v
+  plant with a `tree()` that adds one. Keep any tree clear of a trail
+  head or a path.
+- The weigh station's shed stands on a hole in `RING_WEIGH`
+  (`WEIGH_HOLES`, on its 2 m lattice), and the listening room
+  (`WEIGH.den`) is under it, a VOID, BURIED at 0.6 and lit by under
+  lamps. Its record plays the radio's station 3, the jazz trio (20).
+  The man in the recliner holds a `rocks` glass (14q's held kinds, kept
+  upright by `levelHeld`).
+- The pretzel cart (14v's `PRETZEL`) shuts after dark: `updatePretzel`
+  (from 14's `updateLife`) covers its case and stops the steam, and the
+  vendor is `dayOnly`.
 
 ## Tools
 

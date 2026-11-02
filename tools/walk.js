@@ -139,12 +139,15 @@ const ROUTES={
   // the Perky Loon (14u): in at the patio's gate, up the step and over the porch, in the door to the counter; round behind it
   "into the perky loon":    [[1437.5,-1197],[1437.5,-1193.6],[1437.5,-1190],[1437.5,-1188.6],[1437.5,-1187.5],[1437.5,-1186.0],[1437.5,-1184.0],[1436.2,-1182.6]],
   "behind the coffee counter": [[1436.2,-1182.6],[1435.4,-1182.6],[1435.4,-1180.85],[1437.5,-1180.85],[1440.8,-1180.85]],
+  // the woods behind Lake Street (14v): up between Nos. s4 and s5 to the back of the yard, and out along the trail to the jon boat
+  "into the woods behind lake street": [[1246,-1196],[1246,-1180],[1246,-1160],[1246,-1145],[1246,-1137],[1244,-1128],[1236,-1118],[1222,-1110],[1204,-1104],[1186,-1100],
+                                        [1170,-1092],[1160,-1082],[1168,-1074],[1188,-1072],[1212,-1078],[1236,-1084],[1258,-1090],[1282,-1088]],
   // the weigh station (14w): across the apron from behind the rigs, up the step and in at the scale house's door
   "into the weigh station": [[-42,-2970],[-50,-2955],[-57.4,-2949.0],[-57.4,-2947.2],[-57.4,-2946.3],[-57.4,-2945.4],[-57.4,-2943.6]],
   // and on through it: into the break room, out the back door to the shed, in at its door, through the plain door at the
   // back of it and down the stair to the listening room under it
   "out back to the listening room": [[-57.4,-2943.6],[-59.15,-2943.0],[-59.15,-2942.6],[-59.15,-2941.8],[-59.15,-2940.8],[-57.0,-2940.0],[-57.0,-2938.4],[-55.4,-2937.6],[-55.4,-2935.0],[-55.4,-2934.2],
-                                     [-55.4,-2933.3],[-56.6,-2932.0],[-57.9,-2931.0],[-57.9,-2930.4],[-57.9,-2929.6],[-58.6,-2928.6],[-59.28,-2927.9],[-59.28,-2927.36],[-59.28,-2926.8],
+                                     [-55.4,-2933.3],[-56.6,-2932.0],[-57.9,-2931.0],[-57.9,-2930.4],[-57.9,-2929.6],[-58.6,-2928.6],[-58.95,-2927.85],[-59.28,-2927.8],[-59.28,-2927.36],[-59.28,-2926.8],
                                      [-58.6,-2926.75],[-57.6,-2926.75],[-56.6,-2926.75],[-56.0,-2926.75],[-56.3,-2927.6],[-56.5,-2928.3]],
   // and its roastery (14u): from the gravel lot round the east side of the house, down the stair behind it, in at the coral
   // door, round the packing table to the sacks by the roaster

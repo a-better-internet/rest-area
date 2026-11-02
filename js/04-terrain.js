@@ -102,6 +102,7 @@ const EAST=(function(){
     corr:{x0:EDIN.plain.x1-24, x1:EDIN.x1, z0:z-13, z1:z+13},       // the road's clearing through the woods
     store:{x0:872, x1:966, z0:z-84, z1:z-hw},                         // the fireworks outlet's: its lot and the building, north of the road
     town:{x0:1062, x1:EDIN.x1, z0:z-98, z1:z+66},                     // the street: its houses either side, the park, down to the shore
+    woods:{x0:1062, x1:EDIN.x1, z0:z+66, z1:z+136},                   // the woods behind the south side's back yards (14v), walled at z1
     park:{x0:1238, x1:1372, z0:z-98, z1:z-hw},                        // the lake park, north of the road
     shore:z-96,                                                       // the lake's edge behind the street
     wy:y-2.6,                                                         // the water
