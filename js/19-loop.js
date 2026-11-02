@@ -42,6 +42,7 @@ function updateWind(t, dt){
 }
 
 let acc=0, last=performance.now()/1000, _lastDraw=0;
+let _wasChase=false, _handT=0; const _handFrom=new T.Vector3();
 const _sunDir=new T.Vector3();
 function frame(){
   requestAnimationFrame(frame);
@@ -74,6 +75,7 @@ function frame(){
   WIND_U.uGust.value=0.25+Wind.gust*0.9;
 
   /* ---- camera ---- */
+  if(droneMode || driving || (typeof BOAT!=="undefined" && BOAT.on)) _wasChase=true;
   if(droneMode){
     droneShown.lerpVectors(dronePrev, dronePos, stepAlpha);
     drone.position.copy(droneShown);
@@ -107,11 +109,17 @@ function frame(){
     camera.up.set(0,1,0);
     camera.lookAt(_carLook.x, _carLook.y+0.85, _carLook.z);
   }else{
+    // just out of a car, off the boat or down from the drone: the camera comes down from the chase view to your eyes over
+    // half a second, instead of jumping there (a jump from four metres up reads as having shrunk). Your eyes are where
+    // they always are, EYE over what you stand on; only the camera's way there is eased
+    if(_wasChase){ _handT=0.5; _handFrom.copy(camera.position); }
+    _wasChase=false;
     droneLook.set(0,0,0);
     _carLook.set(0,0,0);
     if(typeof _boatLook!=="undefined") _boatLook.set(0,0,0);
     const eyeY=player.feetY+EYE+player.bob-player.sit*sitDrop;
     camera.position.set(player.pos.x, eyeY, player.pos.z);
+    if(_handT>0){ _handT=Math.max(0, _handT-delta); const k=smoothstep(0, 1, 1-_handT/0.5); camera.position.lerpVectors(_handFrom, camera.position, k); }
     const cp=Math.cos(player.pitch);
     camera.lookAt(player.pos.x - Math.sin(player.yaw)*cp,
                   eyeY + Math.sin(player.pitch),

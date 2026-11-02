@@ -140,7 +140,12 @@ const ROUTES={
   "into the perky loon":    [[1437.5,-1197],[1437.5,-1193.6],[1437.5,-1190],[1437.5,-1188.6],[1437.5,-1187.5],[1437.5,-1186.0],[1437.5,-1184.0],[1436.2,-1182.6]],
   "behind the coffee counter": [[1436.2,-1182.6],[1435.4,-1182.6],[1435.4,-1180.85],[1437.5,-1180.85],[1440.8,-1180.85]],
   // the weigh station (14w): across the apron from behind the rigs, up the step and in at the scale house's door
-  "into the weigh station": [[-42,-2970],[-50,-2955],[-56.5,-2941.9],[-57.4,-2941.9],[-58.3,-2941.9],[-59.2,-2941.9],[-60.4,-2941.9],[-61.2,-2938.2]],
+  "into the weigh station": [[-42,-2970],[-50,-2955],[-57.4,-2949.0],[-57.4,-2947.2],[-57.4,-2946.3],[-57.4,-2945.4],[-57.4,-2943.6]],
+  // and on through it: into the break room, out the back door to the shed, in at its door, through the plain door at the
+  // back of it and down the stair to the listening room under it
+  "out back to the listening room": [[-57.4,-2943.6],[-59.15,-2943.0],[-59.15,-2942.6],[-59.15,-2941.8],[-59.15,-2940.8],[-57.0,-2940.0],[-57.0,-2938.4],[-55.4,-2937.6],[-55.4,-2935.0],[-55.4,-2934.2],
+                                     [-55.4,-2933.3],[-56.6,-2932.0],[-57.9,-2931.0],[-57.9,-2930.4],[-57.9,-2929.6],[-58.6,-2928.6],[-59.28,-2927.9],[-59.28,-2927.36],[-59.28,-2926.8],
+                                     [-58.6,-2926.75],[-57.6,-2926.75],[-56.6,-2926.75],[-56.0,-2926.75],[-56.3,-2927.6],[-56.5,-2928.3]],
   // and its roastery (14u): from the gravel lot round the east side of the house, down the stair behind it, in at the coral
   // door, round the packing table to the sacks by the roaster
   "down to the roastery":   [[1445.8,-1182.5],[1442.6,-1181.0],[1442.4,-1176.0],[1441.6,-1174.4],[1439.7,-1174.4],[1439.7,-1175.6],[1439.7,-1177.0],[1439.7,-1178.8],[1439.7,-1179.6],[1439.7,-1180.5],[1439.8,-1182.6],[1439.8,-1183.8],[1438.0,-1183.9],[1436.8,-1184.4]],
@@ -270,6 +275,12 @@ const ROUTES={
       for(const [m,lab] of PACES("hall stair, keys held")){
         const d=drive(TOP4,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT4,m,lo); REST.sim(40);
         res["hall stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-2.0 ? "down: never reached the hall ("+lo.toFixed(2)+")"
+                                         : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
+    // and the weigh station shed's stair down to the listening room (14w), and back up
+    { const TOP6=[[-59.28,-2926.8],[-58.6,-2926.75],[-57.0,-2926.75],[-55.9,-2926.75]], BOT6=TOP6.slice().reverse(), fy=REST.surf(-59.28,-2926.8,-5.0);
+      for(const [m,lab] of PACES("listening room stair, keys held")){
+        const d=drive(TOP6,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT6,m,lo); REST.sim(40);
+        res["listening room stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-2.0 ? "down: never reached the bottom ("+lo.toFixed(2)+")"
                                          : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
     // and the Perky Loon's stair down to its roastery (14u), in at its door, and back up
     { const TOP5=[[1439.7,-1174.3],[1439.7,-1175.4],[1439.7,-1178.0],[1439.7,-1179.0]], BOT5=TOP5.slice().reverse(), fy=REST.surf(1439.7,-1174.3,EDIN.y+0.5);

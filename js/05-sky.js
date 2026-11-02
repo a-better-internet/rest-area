@@ -16,6 +16,9 @@ const _skyMix=new T.Color();   // scratch for the interpolated gradient stops
   skyTex=setSRGB(new T.CanvasTexture(c));
   skyDome=new T.Mesh(new T.SphereGeometry(2400,26,18),
     new T.MeshBasicMaterial({map:skyTex, side:T.BackSide, fog:false, depthWrite:false}));
+  // drawn before anything else, whatever program sorts first: three sorts the opaque list by program before distance, and
+  // drawn after the ground the dome (depth-tested, 2.4 km out) painted sky over every hill further off than that
+  skyDome.renderOrder=-1000;
   scene.add(skyDome);
 })();
 /* --- stars -------------------------------------------------------------

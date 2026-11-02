@@ -89,7 +89,66 @@ const BOAT={on:false, g:null, x:0, z:0, yaw:0, u:0, v:0, r:0, thr:0, steer:0, rp
   BOAT.use=addUse(R.x, R.z, R.dy, "TAKE THE BOAT", ()=>BOAT.board(), 2.9, ()=>!BOAT.on);
   // and while nobody has it, it is a thing you walk round
   BOAT.col=addColOB(R.x, R.z, R.ry, 1.32, L/2+0.5, WY-1, WY+2.7, COL_DYN);
+  BOAT.hull=R.m;
 })();
+/* ---- every boat at the docks can be taken, and every boat left at one is tied up to it ----
+   14n gives the other pontoons the same hull, their outboard as a child of it and a collider that moves. Taking one
+   swaps hulls: its hull goes into the rig (the outboard that runs, the lights, you at the helm) where it lies, and the
+   rig's hull is left where the rig was with that boat's own outboard on its transom; so the boat you step aboard is the
+   one you chose. A boat at a dock is tied to it by two lines, bow and stern, from its cleats to the dock's edge; stepping
+   off at a dock brings the boat in alongside it first and makes them fast (BOAT.leave, updateBoat's tie) */
+const _ROPE_MAT=new T.MeshStandardMaterial({color:0xe8e0c4, roughness:0.9});
+function _ropeMesh(a, b, sag){ const pts=[]; for(let k=0;k<=8;k++){ const t=k/8; pts.push(new T.Vector3(lerp(a.x,b.x,t), lerp(a.y,b.y,t)-sag*4*t*(1-t), lerp(a.z,b.z,t))); }
+  const m=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 16, 0.011, 5, false), _ROPE_MAT); m.castShadow=true; return m; }
+// where a boat at (x, z, yaw) would lie alongside the nearest dock edge with open water off it: its pose, and the edge
+function _dockBerth(x, z, yaw, maxD){
+  const L=7.2, HW=1.52; let best=null;
+  for(const d of (LAKESIDE.docks||[])){
+    for(const [ax,az,bx,bz] of [[d.x0,d.z0,d.x1,d.z0],[d.x1,d.z0,d.x1,d.z1],[d.x1,d.z1,d.x0,d.z1],[d.x0,d.z1,d.x0,d.z0]]){
+      const ex=bx-ax, ez=bz-az, el=Math.hypot(ex, ez); if(el<2.2) continue;
+      const ux=ex/el, uz=ez/el, mx=(ax+bx)/2, mz=(az+bz)/2; let nx=uz, nz=-ux;
+      const open=(px, pz)=>Terrain.lakeSD(px, pz)<-0.3 && !LAKESIDE.docks.some(o=>px>o.x0 && px<o.x1 && pz>o.z0 && pz<o.z1);
+      if(!open(mx+nx*2, mz+nz*2)){ nx=-nx; nz=-nz; if(!open(mx+nx*2, mz+nz*2)) continue; }
+      const s=clamp((x-ax)*ux+(z-az)*uz, Math.min(L/2-1.2, el/2), Math.max(el-L/2+1.2, el/2));
+      const tx=ax+ux*s+nx*HW, tz=az+uz*s+nz*HW;
+      let ty=Math.atan2(ux, uz); if(Math.cos(ty-yaw)<0) ty+=Math.PI;
+      const dist=Math.hypot(tx-x, tz-z); if(dist>(maxD||7)) continue;
+      const score=dist+2.0*(1-Math.abs(Math.cos(ty-yaw)));
+      if(!best || score<best.score) best={x:tx, z:tz, yaw:ty, score:score, ax:ax, az:az, ux:ux, uz:uz, nx:nx, nz:nz, el:el, y:d.y}; } }
+  return best; }
+// the two lines from a boat at (x, z, yaw) to the edge b, or none (and away with any it had)
+function _tieRopes(st, x, z, yaw, b, wy){
+  if(st.ropes){ scene.remove(st.ropes); st.ropes.children.forEach(m=>m.geometry.dispose()); st.ropes=null; }
+  if(!b) return;
+  const G=new T.Group(), c=Math.cos(yaw), s=Math.sin(yaw), side=Math.sign(-(b.nx*c-b.nz*s))||1;
+  for(const lz of [7.2/2-0.7, -(7.2/2-0.7)]){ const lx=side*1.15, px=x+lx*c+lz*s, pz=z-lx*s+lz*c;
+    const along=Math.sign(lz)*Math.sign(b.ux*s+b.uz*c||1);
+    let t=clamp((px-b.ax)*b.ux+(pz-b.az)*b.uz+along*0.9, 0.2, b.el-0.2);
+    G.add(_ropeMesh(V3(px, wy+0.66, pz), V3(b.ax+b.ux*t, b.y+0.08, b.az+b.uz*t), 0.16)); }
+  scene.add(G); st.ropes=G; }
+(function moorAll(){
+  const B=BOAT; if(!B.g) return;
+  _tieRopes(B, B.x, B.z, B.yaw, _dockBerth(B.x, B.z, B.yaw, 4), B.wy);
+  for(const S of LAKESIDE.boats){ if(!S.pont) continue;
+    _tieRopes(S, S.x, S.z, S.ry, _dockBerth(S.x, S.z, S.ry, 4), S.y0);
+    // take this one: E alongside it, anywhere down its length
+    const u=addUse(S.x, S.z, S.y0+0.55, "TAKE THIS BOAT", ()=>BOAT.takeOver(S), 2.9, ()=>{ if(BOAT.on || BOAT.tie) return false;
+      const c=Math.cos(S.ry), s=Math.sin(S.ry), lz=clamp((player.pos.x-S.x)*s+(player.pos.z-S.z)*c, -S.L/2+0.6, S.L/2-0.6); u.x=S.x+lz*s; u.z=S.z+lz*c; return true; }); } })();
+BOAT.takeOver=function(S){
+  const B=BOAT; if(B.on || !B.hull || !S.m) return;
+  const Hb=B.hull, Hs=S.m;
+  B.g.remove(Hb); scene.remove(Hs); Hs.remove(S.out);
+  Hs.position.set(0, 0, 0); Hs.rotation.set(0, 0, 0); B.g.add(Hs); B.hull=Hs;
+  const px=B.x, pz=B.z, py=B.yaw, sx=S.x, sz=S.z, sy=S.ry;
+  Hb.position.set(px, S.y0, pz); Hb.rotation.set(0, py, 0); scene.add(Hb); Hb.add(S.out); S.m=Hb;
+  S.x=px; S.z=pz; S.ry=py;
+  B.x=sx; B.z=sz; B.yaw=sy; B.u=0; B.v=0; B.r=0; B.g.position.set(sx, B.wy, sz); B.g.rotation.set(0, sy, 0);
+  { const o=_ob(S.x, S.z, S.ry, 1.3, S.L/2+0.5), c=S.col; c.ob=o; c.x0=S.x-o.ex; c.x1=S.x+o.ex; c.z0=S.z-o.ez; c.z1=S.z+o.ez; }
+  _tieRopes(S, S.x, S.z, S.ry, _dockBerth(S.x, S.z, S.ry, 4), S.y0);
+  B.place(); B.board(); };
+// what E says at the helm: alongside a dock it ties up, elsewhere it steps you off
+BOAT.prompt=function(){ const B=BOAT; if(B.tie) return "TYING UP";
+  return Math.abs(B.u)<3.2 && _dockBerth(B.x, B.z, B.yaw, 6) ? "E  ·  TIE UP AT THE DOCK" : "E  ·  STEP OFF"; };
 // where the boat is, in everything else's terms: its collider, the place to board it
 BOAT.place=function(){
   const B=BOAT, o=_ob(B.x, B.z, B.yaw, 1.32, B.L/2+0.5), c=B.col;
@@ -105,6 +164,7 @@ BOAT.board=function(){
   const B=BOAT; if(B.on || !B.g) return;
   if(seated) standUp();
   B.on=true; B.thr=0; B.steer=0; B.col.y1=B.col.y0-1; B.cap.g.visible=true;
+  if(B.ropes) toast("YOU CAST OFF", "#8fd6ff"); _tieRopes(B, 0, 0, 0, null);
   carCamYaw=0; carCamPitch=0.30; _carLook.set(0,0,0);
   if(typeof AUDIO!=="undefined") AUDIO.blip("pull", B.x, B.z);
   B.running=false; B.startT=0.7;
@@ -128,6 +188,12 @@ BOAT.beams=function(dark, delta, beams){
   return true; };
 // stepping off: the nearest place alongside to stand, on a dock or on the shore, and clear of everything
 BOAT.leave=function(){
+  const B=BOAT; if(!B.on || B.tie) return;
+  // alongside a dock, slow: she is brought in to lie along it, then made fast, then you step off (updateBoat)
+  if(Math.abs(B.u)<3.2){ const b=_dockBerth(B.x, B.z, B.yaw, 6);
+    if(b && !_boatHits(b.x, b.z, b.yaw)){ B.tie={t:0, x0:B.x, z0:B.z, y0:B.yaw, b:b}; B.thr=0; toast("BRINGING HER IN ALONGSIDE", "#8fd6ff"); return; } }
+  B.stepOff(); };
+BOAT.stepOff=function(tied){
   const B=BOAT; if(!B.on) return;
   let best=null, bd=1e9;
   const hx=player.pos.x, hz=player.pos.z;
@@ -143,7 +209,7 @@ BOAT.leave=function(){
   B.col.y1=B.col.y0+3.7; B.place();
   player.pos.set(best[0], 0, best[1]); player.feetY=best[2]; player.yaw=B.yaw+Math.PI; player.pitch=-0.1;
   if(typeof AUDIO!=="undefined") AUDIO.blip("clunk", B.x, B.z);
-  toast("YOU TIE HER OFF AND STEP ASHORE", "#8fd6ff"); };
+  toast(tied ? "MADE FAST, BOW AND STERN. YOU STEP ONTO THE DOCK" : "YOU STEP ASHORE", "#8fd6ff"); };
 // does the hull at this pose touch the shore or anything solid at the water? (the points round its outline)
 const _BOAT_PTS=[[-1.25,3.4],[1.25,3.4],[0,3.95],[-1.3,1.2],[1.3,1.2],[-1.3,-1.2],[1.3,-1.2],[-1.2,-3.5],[1.2,-3.5],[0,-4.25]];
 function _boatHits(x, z, yaw){
@@ -159,6 +225,13 @@ function _boatHits(x, z, yaw){
 function updateBoat(dt){
   const B=BOAT; if(!B.g) return;
   B.t+=dt;
+  if(B.tie){ const Q=B.tie; Q.t+=dt; const k=smoothstep(0, 1, Math.min(1, Q.t/1.4));
+    let dyaw=Q.b.yaw-Q.y0; while(dyaw>Math.PI) dyaw-=Math.PI*2; while(dyaw<-Math.PI) dyaw+=Math.PI*2;
+    B.x=lerp(Q.x0, Q.b.x, k); B.z=lerp(Q.z0, Q.b.z, k); B.yaw=Q.y0+dyaw*k; B.u=0; B.v=0; B.r=0; B.thr=0; B.rpm*=0.95;
+    B.pitch*=0.9; B.roll*=0.9;
+    B.g.position.set(B.x, B.wy+Math.sin(B.t*1.1)*0.025, B.z); B.g.rotation.set(B.pitch, B.yaw, B.roll);
+    if(Q.t>=1.4){ B.tie=null; _tieRopes(B, B.x, B.z, B.yaw, Q.b, B.wy); B.stepOff(true); }
+    return; }
   const on=B.on, K=keys;
   if(on && !B.running){ B.startT-=dt; if(B.startT<=0) B.running=true; }
   const tT=on && B.running ? (K.KeyW||K.ArrowUp ? 1 : 0)-(K.KeyS||K.ArrowDown ? 0.55 : 0) : 0;

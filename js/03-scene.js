@@ -109,7 +109,10 @@ T.ShaderChunk.fog_fragment = [
     // (on a clear day a long way off is never all haze: the far hills keep a fifth of their own light and shade,
     // which is what tells a ridge from a flat cut-out; but the world's last couple of hundred metres go wholly into
     // it, so its edge is never seen)
-    "float edgeK = smoothstep(2270.0, 2395.0, max(abs(vFogWorld.x+30.0), abs(vFogWorld.z+20.0)));\n"+
+    // (the edge is GROUND_EDGE's, 00: the last two hundred metres in from it; and anything coming up on the far plane goes
+    // the same way, so no hill is ever cut off by it)
+    "float edgeK = 1.0-smoothstep(20.0, 220.0, min(min(vFogWorld.x-("+GROUND_EDGE.x0.toFixed(1)+"), "+GROUND_EDGE.x1.toFixed(1)+"-vFogWorld.x), min(vFogWorld.z-("+GROUND_EDGE.z0.toFixed(1)+"), "+GROUND_EDGE.z1.toFixed(1)+"-vFogWorld.z)));\n"+
+    "edgeK = max(edgeK, smoothstep(3500.0, 4100.0, distance(vFogWorld, cameraPosition)));\n"+
     "fogFactor = min(fogFactor, mix(1.0-0.34*uHaze.w, 1.0, edgeK));\n"+
     // (and a long way off the haze is a blue-grey a shade under the sky's, the colour far ridges are, easing to the
     // sky's own only at the world's very edge)

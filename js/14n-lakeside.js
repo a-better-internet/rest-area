@@ -32,7 +32,7 @@
    in the middle, a fisherman sitting still. Geese on the lawn and on the
    water. Nobody swims: there's a sign.
    ---------------------------------------------------------------------- */
-const LAKESIDE={water:null, boats:[], geese:[], t:0};
+const LAKESIDE={water:null, boats:[], geese:[], t:0, docks:[]};
 (function lakeside(){
   const E=EDIN, A=EAST, Z=E.z, Y=E.y, HW=E.hw, TW=A.town, PK=A.park, SH=A.shore, WY=A.wy, r=_trng(8181);
   const ME=[];
@@ -542,7 +542,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
 
   /* ---- the docks: boards on a pipe frame out over the water, posts at the corners; the boats at them ---------- */
   const DY=WY+0.55;                                                // the decks
-  const dockRect=(x0, x1, z0, z1)=>{ const L=Math.abs(z1-z0)>Math.abs(x1-x0), w=x1-x0, d=z1-z0;
+  const dockRect=(x0, x1, z0, z1)=>{ LAKESIDE.docks.push({x0:x0, x1:x1, z0:z0, z1:z1, y:DY}); const L=Math.abs(z1-z0)>Math.abs(x1-x0), w=x1-x0, d=z1-z0;
     bx("lk_deck", w, 0.07, d, (x0+x1)/2, DY-0.035, (z0+z1)/2, 0.7, 0, "#c8c2b6");             // (pressure-treated, gone grey)
     // the boards' gaps, the edge boards, the frame under
     const n=Math.floor((L ? d : w)/0.16);
@@ -554,7 +554,9 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     addCol(x-0.12, x+0.12, z-0.12, z+0.12, DY-1, DY+0.6); };
   const cleat=(x, z, ry)=>{ B(0.30, 0.04, 0.06, x, DY+0.06, z, "#8a8d90", ry); for(const sd of [-1,1]) B(0.05, 0.05, 0.05, x+Math.cos(ry)*sd*0.08, DY+0.025, z-Math.sin(ry)*sd*0.08, "#8a8d90", ry); };
   // the pontoon boats: two aluminium logs, a deck, the fence round it, the seats, the helm, a bimini top, the motor
-  // (the one given `ride` is yours to take out: its outboard and its collider are 14p's, which moves it)
+  // (the one given `ride` is the one 14p rigs to drive: its outboard and its collider are 14p's, which moves it. The others
+  //  have the same hull and their outboard as a child of it, and a collider that moves, so 14p can swap any of them into
+  //  the rig: every boat at the docks can be taken out)
   const pontoon=(x, z, ry, seat, ride)=>{ const BM=[], be=(geo,lx,ly,lz,c,rx,rz)=>BM.push({geo:geo, matrix:new T.Matrix4().compose(V3(lx,ly,lz), new T.Quaternion().setFromEuler(new T.Euler(rx||0,0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
     const bb=(w,h,d,lx,ly,lz,c,rx,rz)=>be(boxGeo(w,h,d),lx,ly,lz,c,rx,rz), rb=(w,h,d,lx,ly,lz,c)=>be(rboxGeo(w,h,d,0.05,2),lx,ly,lz,c), L=7.2;
     for(const sd of [-0.85, 0.85]){ be(new T.CylinderGeometry(0.30, 0.30, L-0.8, 18), sd, 0.02, 0, "#c8ccd0", Math.PI/2); be(new T.ConeGeometry(0.30, 0.8, 18), sd, 0.02, L/2, "#c8ccd0", Math.PI/2);
@@ -573,14 +575,15 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
     for(const sd of [-1,1]) for(const dz of [-1.6, 0.4]) be(new T.CylinderGeometry(0.015, 0.015, 1.3, 6), sd*1.18, 1.95, dz, "#c8ccd0");
     bb(2.5, 0.05, 2.3, 0, 2.6, -0.6, "#2a4a6a");
     // the outboard on its transom
-    if(!ride){ bb(0.40, 0.55, 0.45, 0, 0.95, -L/2-0.15, "#1a1a1a"); bb(0.14, 0.75, 0.18, 0, 0.30, -L/2-0.22, "#2a2a2a"); bb(0.30, 0.10, 0.12, 0, -0.08, -L/2-0.20, "#2a2a2a"); }
-    else bb(2.36, 0.40, 0.10, 0, 0.62, -L/2+0.06, "#5a5e62");                                     // (the transom the outboard clamps to)
+    bb(2.36, 0.40, 0.10, 0, 0.62, -L/2+0.06, "#5a5e62");                                          // (the transom the outboard clamps to)
     const m=new T.Mesh(mergeEntries(BM), new T.MeshStandardMaterial({vertexColors:true, roughness:0.45, metalness:0.35}));
     m.position.set(x, WY, z); m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m);
     if(ride){ LAKESIDE.ride={m:m, x:x, z:z, ry:ry, L:L, wy:WY, dy:DY}; return; }
-    LAKESIDE.boats.push({m:m, y0:WY, ph:r()*6.28, ry:ry});
-    const hx=Math.abs(Math.cos(ry))*1.3+Math.abs(Math.sin(ry))*(L/2+0.5), hz=Math.abs(Math.sin(ry))*1.3+Math.abs(Math.cos(ry))*(L/2+0.5);
-    addCol(x-hx, x+hx, z-hz, z+hz, WY-1, WY+2.7); };
+    // its outboard, tilted up, on the transom: a child of the hull, left behind on the transom of whichever hull is moored
+    const OM=[], oe=(w,h,d,lx,ly,lz,c)=>OM.push({geo:boxGeo(w,h,d), matrix:new T.Matrix4().makeTranslation(lx,ly,lz), color:new T.Color(c)});
+    oe(0.40, 0.55, 0.45, 0, 0.95, -L/2-0.15, "#1a1a1a"); oe(0.14, 0.75, 0.18, 0, 0.30, -L/2-0.22, "#2a2a2a"); oe(0.30, 0.10, 0.12, 0, -0.08, -L/2-0.20, "#2a2a2a");
+    const O=new T.Mesh(mergeEntries(OM), new T.MeshStandardMaterial({vertexColors:true, roughness:0.4, metalness:0.3})); O.castShadow=true; m.add(O);
+    LAKESIDE.boats.push({m:m, y0:WY, ph:r()*6.28, ry:ry, x:x, z:z, L:L, out:O, pont:true, col:addColOB(x, z, ry, 1.3, L/2+0.5, WY-1, WY+2.7, COL_DYN)}); };
   // dock A: straight out, a T at the end; dock B: out, then a finger to the east; a ladder, a life ring, a bench
   const docks=[{x0:1288.8, x1:1290.8, z0:SH-20.0, z1:SH+2.2, T:[1284.0, 1295.6, SH-22.4, SH-20.0],
                 edges:[[1288.68, 1288.82, SH-20.0, SH+0.4],[1290.78, 1290.92, SH-20.0, SH+0.4],[1283.88, 1295.72, SH-22.52, SH-22.38],
@@ -606,7 +609,7 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0};
   // the boats: two at dock A's T, one along dock B
   pontoon(1286.0, SH-27.0, 0.0, "#e8e2d2", true); pontoon(1293.6, SH-26.4, 0.04, "#d8e2ec");
   pontoon(1333.0, SH-9.0, Math.PI, "#e8e2d2");
-  for(const [x,z] of [[1293.6, SH-22.6]]) tubeE(V3(x, DY+0.06, z), V3(x, WY+0.6, z-0.8), 0.012, "#e8e2c8");          // (the one you can take is not tied up)
+  // (their lines to the docks are 14p's, which ties up whichever boat is moored where)
   // the shore along the park: big stones at the water's edge, both sides of each dock
   for(let x=PK.x0+1.0; x<PK.x1-1.0; x+=0.85){ if(docks.some(d=>x>d.x0-0.6 && x<d.x1+0.6)) continue;
     const s=0.28+r()*0.25; ent(new T.DodecahedronGeometry(s, 0), x+(r()-0.5)*0.3, WY+0.16+s*0.2, SH+0.2+(r()-0.5)*0.5, ["#8a847a","#7a7468","#9a948a","#6a665e"][(r()*4)|0], r()*3, r()*3); }

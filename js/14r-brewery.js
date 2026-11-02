@@ -116,7 +116,10 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     else { push("glass", planeGeo(w-0.02, h-0.02, 0), c, (y0+y1)/2, mid, Math.PI/2, "#ffffff"); for(const u of [a+0.03, b-0.03]) B(0.10, h, 0.06, c, (y0+y1)/2, u, "#1a1a1a"); B(0.10, 0.06, w, c, y0+0.03, mid, "#1a1a1a"); B(0.10, 0.06, w, c, y1-0.03, mid, "#1a1a1a"); } };
   for(const o of southOps) if(!o.door) glassPane("x", BL.z1-WT/2, o.a, o.b, o.sill, o.head);
   glassPane("x", BL.z0+WT/2, 1431.6, 1436.4, FF+0.9, FF+2.4);
-  { const m=makeDoor(XF(1444.04, BL.z1-WT/2, 0), 0, FF+0.01, 0, "THE TAPROOM", true, 0, "store"); }
+  // the front doors: a pair in the two-metre opening, glass in black frames, each hung from its own jamb and swinging in
+  { makeDoor(XF(1444.04, BL.z1-WT/2, 0), 0, FF+0.01, 0, "THE TAPROOM", true, 0, "store");
+    makeDoor(XF(1445.96, BL.z1-WT/2, Math.PI), 0, FF+0.01, 0, "THE TAPROOM", false, 0, "store");
+    const a=DOORS[DOORS.length-2], b=DOORS[DOORS.length-1]; a.partner=b; b.partner=a; }
   // the garage doors: a black grid of aluminium round sixteen panes; up under the ceiling on their tracks, or down
   const garage=(o)=>{ const w=o.b-o.a, h=3.0, mid=(o.a+o.b)/2, G=[], gl=[];
     const gb=(bw,bh,bd,x,y,z)=>G.push({geo:boxGeo(bw,bh,bd), matrix:new T.Matrix4().makeTranslation(x,y,z), color:new T.Color("#141414")});

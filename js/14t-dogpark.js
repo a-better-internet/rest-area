@@ -138,13 +138,14 @@ const DOGBALL={held:false, key:()=>false, keyup:()=>{}, frame:()=>{}};
     C(0.17, 0.07, fx+0.52, g+0.04, fz, "#c8ccd0", 18); C(0.145, 0.012, fx+0.52, g+0.078, fz, "#7aa0b8", 18);
     tubeE(V3(fx+0.12, g+0.73, fz), V3(fx+0.46, g+0.10, fz), 0.008, "#c8ccd0", 6);
     addCol(fx-0.25, fx+0.7, fz-0.25, fz+0.25, g-0.5, g+1.0); }
-  // the bags and the can, west of the gate; the bucket of balls to borrow, east of it
+  // the bags and the can, west of the gate; the bucket of balls to borrow along the fence east of it, past the fountain
+  // (far enough from the gate that E at the bucket is the bucket's, not the gate's)
   { const sx=gx0-1.6, sz=z1-0.5, g=gy(sx, sz);
     B(0.08, 1.45, 0.08, sx, g+0.66, sz, "#2e5a3a"); B(0.22, 0.30, 0.14, sx, g+1.18, sz-0.09, "#2e5a3a"); B(0.08, 0.05, 0.02, sx, g+1.06, sz-0.162, "#1d1d1e");
     sign(0.2, 0.12, (c,W,H)=>{ c.fillStyle="#efe6cc"; c.fillRect(0,0,W,H); say(c, "BAGS", W/2, H/2, W*0.8, H*0.6, "#2e5a3a", "900", "Arial"); }, sx, g+1.25, sz-0.172, Math.PI, 120);
     C(0.24, 0.78, sx+0.6, g+0.395, sz-0.05, "#2e5a3a", 18); C(0.26, 0.05, sx+0.6, g+0.81, sz-0.05, "#245a30", 18);
     addCol(sx-0.08, sx+0.86, sz-0.32, sz+0.2, g-0.5, g+1.45); }
-  { const bx=gm+1.7, bz=z1-0.45, g=gy(bx, bz); P.bucket=[bx, bz, g];
+  { const bx=gm+6.6, bz=z1-0.55, g=gy(bx, bz); P.bucket=[bx, bz, g];
     C(0.16, 0.30, bx, g+0.155, bz, "#e8642a", 16); C(0.165, 0.03, bx, g+0.30, bz, "#c8501e", 16);
     for(let k=0;k<6;k++){ const a=k*1.05, rr=k ? 0.09 : 0; ent(new T.SphereGeometry(0.033, 10, 8), bx+Math.cos(a)*rr, g+0.315+0.03+(k ? 0 : 0.03), bz+Math.sin(a)*rr, "#d8f040"); }
     B(0.06, 0.62, 0.06, bx+0.32, g+0.31, bz, "#5a4430");
@@ -357,8 +358,9 @@ const DOGBALL={held:false, key:()=>false, keyup:()=>{}, frame:()=>{}};
     toast("A BALL · HOLD SPACE OR THE MOUSE AND LET GO TO THROW IT", "#d8f040"); };
   const playerIn=()=>!driving && !seated && player.pos.x>P.x0 && player.pos.x<P.x1 && player.pos.z>P.z0-0.3 && player.pos.z<P.z1+0.3;
   if(P.bucket){ const [bx, bz, bg]=P.bucket;
-    addUse(bx, bz, bg, "TAKE A BALL FROM THE BUCKET", take, 1.4, ()=>!DOGBALL.held && PF.st==="none" && PF.shown);
-    addUse(bx, bz, bg, "PUT THE BALL BACK", ()=>{ toBucket(); toast("BACK IN THE BUCKET", "#cfe0d4"); }, 1.4, ()=>DOGBALL.held); }
+    // (pri: within reach of the bucket, E is the bucket's before any door's)
+    addUse(bx, bz, bg, "TAKE A BALL FROM THE BUCKET", take, 1.6, ()=>!DOGBALL.held && PF.st==="none" && PF.shown).pri=true;
+    addUse(bx, bz, bg, "PUT THE BALL BACK", ()=>{ toBucket(); toast("BACK IN THE BUCKET", "#cfe0d4"); }, 1.6, ()=>DOGBALL.held).pri=true; }
   const canThrow=()=>DOGBALL.held && playerIn() && !droneMode && view==="fp";
   const throwIt=()=>{ const pw=PF.power; PF.charge=-1; PF.power=0; if(!canThrow()) return;
     const yaw=player.yaw, el=clamp(player.pitch+0.32, 0.06, 1.15), v=5.5+10*pw, fx=-Math.sin(yaw), fz=-Math.cos(yaw);

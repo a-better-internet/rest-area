@@ -31,7 +31,7 @@
 const CROWD={groups:[], t:0};
 function crowdGroup(name, cx, cz, reach){ const g={name:name, cx:cx, cz:cz, r:reach||170, people:[], shown:true, day:true}; CROWD.groups.push(g); return g; }
 // a glass, a can, a cup, a rod, a tray: something held, on a forearm's bone, the way 14b holds a cigarette
-const _HELD={}, _HELD_UP={pint:1, can:1, cup:1};                       // (_HELD_UP: drinks, kept standing in the hand)
+const _HELD={}, _HELD_UP={pint:1, can:1, cup:1, rocks:1};                       // (_HELD_UP: drinks, kept standing in the hand)
 function _heldMat(c){ return _HELD[c]||(_HELD[c]=new T.MeshStandardMaterial({color:c, roughness:0.4, metalness:0.1})); }
 function crowdHold(P, kind, right){
   const h=P.h, g=new T.Group(), bone=P.B[right===false ? P.j.elL : P.j.elR];
@@ -39,6 +39,7 @@ function crowdHold(P, kind, right){
   if(kind==="pint"){ add(new T.CylinderGeometry(0.036, 0.030, 0.15, 12), "#c88a2a", 0, 0.03, 0.02); add(new T.CylinderGeometry(0.037, 0.037, 0.025, 12), "#f4efe0", 0, 0.115, 0.02); }
   else if(kind==="can") add(new T.CylinderGeometry(0.033, 0.033, 0.12, 10), "#3a6aa8", 0, 0.03, 0.02);
   else if(kind==="cup") add(new T.CylinderGeometry(0.04, 0.032, 0.10, 10), "#f2efe6", 0, 0.03, 0.02);
+  else if(kind==="rocks"){ add(new T.CylinderGeometry(0.038, 0.034, 0.085, 14), "#e8eef0", 0, 0.02, 0.02); add(new T.CylinderGeometry(0.0378, 0.0362, 0.04, 14), "#b8742a", 0, 0.008, 0.02); }   // (a short glass of scotch: the whisky a band 1.5 mm proud of the glass, low in it)
   else if(kind==="tray"){
     // level on the flat of the hand: a frame turned back by the arm's own pose (the "tray" job's shoulder and elbow,
     // below), so up in it is up in the world whatever the forearm is doing

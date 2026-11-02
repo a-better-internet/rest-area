@@ -15,7 +15,7 @@
 // riding the country's grain at a few per cent either way
 // the ground's outer edge (the outermost ring below, 32 m): west and south as far as it always went, east well past the
 // lake and north up the interstate past the road's drawn end
-const GROUND_EDGE={x0:-2400, x1:4096, z0:-4608, z1:2400};
+// (GROUND_EDGE, the ground's own edge, is set in 00: the haze (03) fades into the sky against it)
 function roadY(z){
   const w=smoothstep(HWY.flat, HWY.flat+520, Math.abs(z));
   if(w<=0) return 0;
@@ -123,7 +123,9 @@ const WEIGH=(function(){
   const W={lx:-71.25, lw:4.5,                                             // the lanes' middle; each lane's width
            z0:-2900, z1:-3008,                                            // where the lanes begin and end
            scale:{x:-69.0, z0:-2950, z1:-2928, w:3.6},                    // the scale deck in the scale lane
-           house:{x0:-64.2, x1:-58.6, z0:-2946, z1:-2934},                // the scale house beside it
+           house:{x0:-64.2, x1:-54.2, z0:-2946, z1:-2934},                // the scale house beside it
+           shed:{x0:-60, x1:-56, z0:-2930, z1:-2926},                     // the utility shed out back (on RING_WEIGH's 2 m lattice: the ground is holed under it)
+           den:{x0:-60.2, x1:-53.8, z0:-2931.2, z1:-2925.0},              // the room under it, down the stair inside it
            apron:{x0:-66.5, x1:-38, z0:-3004, z1:-2962},                  // the inspection apron east of the lane
            pad:{x0:-76.5, x1:-36, z0:-3012, z1:-2894}};                   // everything paved, for the ground and the woods
   W.off=mk([[-106.4,-2560],[-106.0,-2620],[-104.6,-2680],[-101.8,-2735],[-97.2,-2780],[-90.6,-2816],[-83.4,-2843],[-77.2,-2865],[-73.2,-2884],[-71.25,-2902]]);
@@ -435,6 +437,8 @@ const Terrain=(function(){
 const RING_FAR ={x0:-2400, x1:2400, z0:-2400, z1:2400};
 const RING_MIDN={x0:-448, x1:192, z0:-4224, z1:-1760};
 const RING_WEIGH={x0:-176, x1:-16, z0:-3424, z1:-2496};
+// (holed under the weigh station's shed, where its stair goes down to the room under it: the shed's slab covers it)
+const WEIGH_HOLES=[Object.assign({bare:true}, WEIGH.shed)];
 const RING_MID ={x0:-512, x1:640, z0:-1760, z1:1600};
 const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:344};
 // and two more at 2 m along the interstate, so the ground under every ramp's merge, the crossovers and
@@ -622,7 +626,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   grid(GROUND_EDGE, 32, [RING_FAR, RING_MIDN], "ground-outer", 60);
   grid(RING_FAR, 16, [RING_MID, RING_EAST, RING_MIDN], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
   grid(RING_MIDN, 8, [RING_WEIGH], "ground-midn", 24);
-  grid(RING_WEIGH, 2, [], "ground-weigh", 6);
+  grid(RING_WEIGH, 2, WEIGH_HOLES, "ground-weigh", 6);
   grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS, KIRK_RING], "ground-mid", 24);
   grid(RING_NEAR, 2, [GEN_HOLE], "ground-near", 6);
   grid(RING_HWYN, 2, [], "ground-hwyn", 6);

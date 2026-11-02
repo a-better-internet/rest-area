@@ -132,6 +132,7 @@ dom.addEventListener("touchmove",e=>{
 /* --- doors ------------------------------------------------------------ */
 let nearestDoor=null;
 let seated=null, nearestSeat=null, sitGuard=false, sitDrop=0.66;
+const SEAT_EYE=0.18;
 // Getting up used to try one spot — straight ahead, tested at seat height —
 // and if that was blocked it left you standing inside the chair with every
 // direction blocked, which is what "stuck" was. Now it fans out from the way
@@ -204,7 +205,9 @@ function sitToggle(){
   updateSeats();
   if(!nearestSeat){ toast("NOTHING TO SIT ON","#8fa0ad"); return; }
   seated=nearestSeat; player.yaw=nearestSeat.yaw;
-  sitDrop = nearestSeat.lie ? 1.34 : (nearestSeat.drop || 0.66);
+  // (a seat's drop is how far your eyes come down from standing; SEAT_EYE takes 18 cm off every one of them, so in a
+  //  chair your eyes are about 1.18 m off the floor, as a grown-up's are, not a metre)
+  sitDrop = nearestSeat.lie ? 1.34 : Math.max(0.05, (nearestSeat.drop || 0.66)-SEAT_EYE);
   // on your back you are looking at the ceiling, not down the bed
   if(nearestSeat.lie) player.pitch=Math.max(player.pitch, 0.86);
   // You almost always arrive at a chair still holding W. Standing up is only
@@ -291,7 +294,7 @@ function updateDoors(dt){
      (typeof RAIDERS!=="undefined" && RAIDERS.on) || (typeof CABS!=="undefined" && CABS.on) || (typeof DOZER!=="undefined" && DOZER.on)){ el.classList.remove("show"); return; }
   const bits=[];
   if(driving) bits.push("E  ·  GET OUT");
-  else if(typeof BOAT!=="undefined" && BOAT.on) bits.push("E  ·  STEP OFF");
+  else if(typeof BOAT!=="undefined" && BOAT.on) bits.push(BOAT.prompt ? BOAT.prompt() : "E  ·  STEP OFF");
   else if(seated) bits.push("C  ·  "+(seated.lie?"GET UP":"STAND UP"));
   else{
     const nc=nearestCar();

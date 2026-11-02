@@ -349,6 +349,10 @@ const AUDIO=(function(){
      duller through its open doors, barely through shut ones; at night Terry
      has it turned down. The mower and the blower are where they are. */
   const RCHORD=[[43,[55,59,62]],[48,[55,60,64]],[50,[57,62,66]],[43,[55,59,62]]];
+  // station 3, a record of a jazz trio (14w's listening room): ii-V-I in B flat and round again, a bar of each chord, the
+  // bass walking it in quarters, the ride swung, the hi-hat on two and four, the piano comping the off-beats, and the
+  // surface noise of the vinyl under it
+  const JAZZ=[[48,[58,63,67,70]],[53,[57,63,65,69]],[46,[57,62,65,69]],[46,[57,62,65,69]],[55,[58,62,65,68]],[48,[58,63,67,70]],[53,[57,63,65,69]],[46,[57,62,65,69]]];
   // the radio that plays is the nearest: the garage's, or one on a kitchen counter on Lake Street (14o)
   // (and the brewery's speakers over its garden, 14r, playing out of doors)
   function nearRadio(cam){ let R=GARAGE_RT.radio, bd=R ? Math.hypot(R.x-cam.x, R.z-cam.z) : 1e9;
@@ -387,6 +391,28 @@ const AUDIO=(function(){
             }else if(s===0 && (bar===8||bar===9)) phrase(at, radio.in, 108, 1.1);
             rBeat.next+=st; rBeat.i++;
           }
+        }else if(R.station===3){
+          // swung eighths at 132: the first of each pair two thirds of the beat, the second a third
+          const bt=60/132;
+          if(!rBeat || rBeat.next<t || rBeat.st!==3) rBeat={next:t+0.05, i:0, st:3};
+          while(rBeat.next<t+0.3){
+            const at=rBeat.next, i=rBeat.i%64, e=i%8, bar=Math.floor(i/8), beat=Math.floor(e/2), off=e%2;
+            const [root, ch]=JAZZ[bar];
+            if(!off){
+              // the bass: root on one, then a walk toward the next bar's root
+              const nxt=JAZZ[(bar+1)%8][0], walk=[root, root+4, root+7, nxt+(nxt>root ? -1 : 1)][beat];
+              tone("triangle", hz(walk-12), null, bt*0.82, 0.42, at, undefined, radio.in); tone("sine", hz(walk), null, bt*0.5, 0.10, at, undefined, radio.in);
+              burst(at, 0.16, 6800, 2.2, 0.08, radio.in);                                           // the ride
+              if(beat===1 || beat===3) burst(at, 0.035, 3400, 1.0, 0.10, radio.in);                   // the hat, two and four
+            }else{
+              if(beat===1 || beat===3) burst(at, 0.10, 6800, 2.2, 0.05, radio.in);                    // the skip of the ride
+              // the piano: a short rootless voicing on the and of two, now and then on the and of four too
+              if(beat===1 || (beat===3 && (bar%2))) for(const m of ch) tone("sine", hz(m), null, bt*0.45, 0.045, at+(m-ch[0])*0.003, undefined, radio.in);
+            }
+            rBeat.next+=off ? bt/3 : bt*2/3; rBeat.i++;
+          }
+          // the record's surface: a tick now and then
+          if(Math.random()<dt*6) burst(t+Math.random()*0.05, 0.003+Math.random()*0.006, 2000+Math.random()*4000, 1.5, 0.05+Math.random()*0.08, radio.in);
         }else{
           rBeat=null;
           rTalkT-=dt;
