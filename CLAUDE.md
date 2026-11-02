@@ -356,7 +356,8 @@ No lettering touches or runs past the edge of its board or its border.
   (`WEIGH.den`) is under it, a VOID, BURIED at 0.6 and lit by under
   lamps. Its record plays the radio's station 3, the jazz trio (20).
   The man in the recliner holds a `rocks` glass (14q's held kinds, kept
-  upright by `levelHeld`).
+  upright by `levelHeld`) and takes 14q's `recline` job, which lays a
+  seated person back with the legs out along a footrest.
 - The pretzel cart (14v's `PRETZEL`) shuts after dark: `updatePretzel`
   (from 14's `updateLife`) covers its case and stops the steam, and the
   vendor is `dayOnly`.

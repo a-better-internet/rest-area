@@ -41,7 +41,7 @@ const LAKEWOODS={};
                        [1212,-1078],[1236,-1084],[1258,-1090],[1282,-1088],[1306,-1080],[1330,-1076],[1352,-1084],[1360,-1098],[1350,-1110],[1330,-1118],
                        [1306,-1122],[1282,-1124],[1262,-1126],[1250,-1131],[1246,-1137]].map(p=>({x:p[0], z:p[1]})), 1.5, true);
   for(const p of TR) p.y=gy(p.x, p.z);
-  layRibbon("mulch", TR, -0.62, 0.62, 0.045, 0.5, "#6a5238");
+  layRibbon("mulchbed", TR, -0.62, 0.62, 0.045, 0.6, "#c4b4a2");      // (shredded bark, 08's bed under the shrubs)
   const trailD=(x, z)=>{ let d=1e9; for(let i=1;i<TR.length;i++){ const a=TR[i-1], b=TR[i], ex=b.x-a.x, ez=b.z-a.z, L2=ex*ex+ez*ez;
     const t=L2>0 ? clamp(((x-a.x)*ex+(z-a.z)*ez)/L2, 0, 1) : 0; d=Math.min(d, Math.hypot(x-a.x-ex*t, z-a.z-ez*t)); } return d; };
   LAKEWOODS.trail=TR;

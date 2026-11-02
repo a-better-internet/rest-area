@@ -165,6 +165,8 @@ function _crowdPose(p, now, moving){
     B[J.shR].rotation.set(-0.45-up*0.95, -up*0.55, 0.12-up*0.10); B[J.elR].rotation.set(-1.15-up*0.95, up*0.6, 0);
     B[J.head].rotation.x=-0.12*up; p.sip=up; }
   const k=p.job;
+  // (laid back in a recliner, the footrest out: the back leant into the chair's, the legs out along the rest, the eyes still ahead)
+  if(k==="recline"){ B[J.spine].rotation.x=-0.30; B[J.head].rotation.x+=0.24; B[J.hpL].rotation.x=B[J.hpR].rotation.x=-1.40; B[J.knL].rotation.x=B[J.knR].rotation.x=0.30; }
   if(k==="wash"){ const a=t*2.6; B[J.shR].rotation.set(-1.15+Math.sin(a)*0.25, 0, 0.25+Math.cos(a)*0.25); B[J.elR].rotation.x=-0.5; B[J.spine].rotation.x=0.28; B[J.head].rotation.x=0.2; }
   else if(k==="water"){ B[J.shR].rotation.set(-0.85, 0.2, 0); B[J.elR].rotation.x=-0.25+Math.sin(t*0.7)*0.08; B[J.head].rotation.x=0.35; B[J.spine].rotation.y=Math.sin(t*0.4)*0.25; }
   else if(k==="kneel"){ B[J.root].position.y=0.34; B[J.hpL].rotation.x=B[J.hpR].rotation.x=-0.25; B[J.knL].rotation.x=B[J.knR].rotation.x=2.0;

@@ -244,8 +244,8 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       addCol(x-0.17, x+0.17, z-0.17, z+0.17, FF-0.5, FF+1.4); }
     // the map on the partition between the doors, the limits on the north wall
     { const mx=(D2.b+D3.a)/2, mz=PZ-PT/2; bx("paintm", 2.06, 1.16, 0.03, mx, FF+1.55, mz-0.016, 0.5, 0, "#3a2a1c");
-      sign(2.0, 1.1, (c,Wd,Hh)=>{ c.fillStyle="#f2efe2"; c.fillRect(0,0,Wd,Hh); c.fillStyle="#1f4f8c"; c.fillRect(0,0,Wd,Hh*0.12);
-          say(c, "PENNSYLVANIA · TRUCK ROUTES", Wd/2, Hh*0.06, Wd*0.7, Hh*0.08, "#f4f2ec", "900", "Arial");
+      sign(2.0, 1.1, (c,Wd,Hh)=>{ c.fillStyle="#f2efe2"; c.fillRect(0,0,Wd,Hh); c.fillStyle="#1f4f8c"; c.fillRect(0,0,Wd,Hh*0.15);
+          say(c, "PENNSYLVANIA · TRUCK ROUTES", Wd/2, Hh*0.08, Wd*0.7, Hh*0.07, "#f4f2ec", "900", "Arial");
           c.fillStyle="#e2dcc4"; c.beginPath(); c.moveTo(Wd*0.08, Hh*0.2); c.lineTo(Wd*0.30, Hh*0.18); c.lineTo(Wd*0.34, Hh*0.24); c.lineTo(Wd*0.92, Hh*0.22); c.lineTo(Wd*0.94, Hh*0.86); c.lineTo(Wd*0.08, Hh*0.88); c.closePath(); c.fill();
           c.strokeStyle="#c41a1a"; c.lineWidth=5; c.beginPath(); c.moveTo(Wd*0.20, Hh*0.22); c.lineTo(Wd*0.22, Hh*0.86); c.stroke();
           c.beginPath(); c.moveTo(Wd*0.08, Hh*0.62); c.bezierCurveTo(Wd*0.4, Hh*0.58, Wd*0.6, Hh*0.66, Wd*0.94, Hh*0.60); c.stroke();
@@ -456,7 +456,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       for(const sd of [-1,1]) q(0.16, 0.42, 0.74, sd*0.36, 0.42, 0.02);
       q(0.62, 0.10, 0.46, 0, 0.38, -0.52, -0.12); B(0.60, 0.05, 0.40, rx, DF+0.025, rz, "#1a1410");
       addCol(rx-0.45, rx+0.45, rz-0.78, rz+0.48, DF-0.5, DF+0.6);
-      WEIGH_RT.recliner={x:rx, z:rz-0.04, y:DF};
+      WEIGH_RT.recliner={x:rx, z:rz+0.02, y:DF};
       const tx=rx+0.72, tz=rz+0.05; C(0.22, 0.03, tx, DF+0.58, tz, "#3a2414", 18); C(0.03, 0.56, tx, DF+0.29, tz, "#3a2414", 8); C(0.16, 0.02, tx, DF+0.01, tz, "#3a2414", 14);
       C(0.07, 0.03, tx+0.08, DF+0.61, tz-0.05, "#e8eef0", 12); C(0.06, 0.012, tx-0.05, DF+0.60, tz+0.06, "#2a2a2c", 12);
       C(0.025, 0.42, tx-0.06, DF+0.81, tz+0.04, "#c8a050", 8); CT(0.11, 0.17, 0.20, tx-0.06, DF+1.10, tz+0.04, "#e8d8b0", 18); push("cafe_bulb", new T.SphereGeometry(0.035, 8, 6), tx-0.06, DF+1.03, tz+0.04, 0, "#ffffff");
@@ -634,7 +634,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
   crowdAdd(G, {look:look({skin:SKINS[2], hair:HAIRS[4], shirt:"#5a6a7a", pants:"#2c3446", long:true}), x:D.x+0.02, z:D.z, y:D.y, yaw:-Math.PI/2, mode:"sit", sitY:0.515, sway:0.25});
   // down in the listening room, in the recliner with a scotch, his eyes on the fire, the record going
   if(WEIGH_RT.recliner){ const Q=WEIGH_RT.recliner;
-    crowdAdd(G, {look:look({h:1.0, skin:SKINS[1], hair:HAIRS[4], beard:"#8d8a86", shirt:"#5a3a2a", pants:"#2a2a2c", shoes:"#3a2414", long:true}), x:Q.x, z:Q.z, y:Q.y, yaw:Math.PI, mode:"sit", sitY:0.585, held:"rocks", drink:true, sway:0.12}); }
+    crowdAdd(G, {look:look({h:1.0, skin:SKINS[1], hair:HAIRS[4], beard:"#8d8a86", shirt:"#5a3a2a", pants:"#2a2a2c", shoes:"#3a2414", long:true}), x:Q.x, z:Q.z, y:Q.y, yaw:Math.PI, mode:"sit", job:"recline", sitY:0.585, held:"rocks", drink:true, sway:0.12}); }
   const R=WEIGH_RT.rig; if(!R) return;
   const S=R.S, x=R.x, nz=R.z-S.nose, tz=R.z-S.tail, gy=(px, pz)=>roadY(pz)+PAVE_T+0.015;
   // round the rig: down its right side from the cab to the back, across behind it, up the left, and across the front; a

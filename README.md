@@ -858,9 +858,10 @@ If the scene runs hot on your machine, start there (see below).
     of cones, shovels and tools on the wall. A plain door at the back of it opens on a stair down to **the
     listening room**, under the ground: walnut wainscot and green walls, a
     coffered ceiling, a rug, a fire going in the fireplace, sconces and a
-    floor lamp. A man sits in an oxblood leather recliner with a scotch,
-    beside a side table and its lamp and a brass cart of single malts and
-    blends, a decanter, glasses and an ice bucket. On the console a record
+    floor lamp. A man lies back in an oxblood leather recliner, his feet
+    up on its footrest and a scotch in his hand, beside a side table and
+    its lamp and a brass cart of single malts and blends, a decanter,
+    glasses and an ice bucket. On the console a record
     goes round under its arm, and a jazz trio plays from the speakers
     either side (piano, upright bass and brushes, a little crackle off the
     vinyl). Records fill the shelves, there are books and a globe, and a
