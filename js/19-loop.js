@@ -58,7 +58,7 @@ function frame(){
   if(delta>0.1) delta=0.1;
 
   if(started){
-    acc+=delta; const STEP=1/60; let guard=0;
+    acc+=delta*(typeof ZOMBIE!=="undefined" && ZOMBIE.on ? ZOMBIE.ts : 1); const STEP=1/60; let guard=0;   // (a hit's moment of stillness, 21)
     while(acc>=STEP && guard++<6){
       if(droneMode){ dronePrev.copy(dronePos); droneUpdate(STEP); }
       else{

@@ -401,6 +401,26 @@ No lettering touches or runs past the edge of its board or its border.
   trail or in a ring round you, never in view and never across an edge
   wall. Caches are `CACHES` (x, z, a height to look near, a kind); the
   gun's flash is `FLASH`, a lamp in 16's pool lit by its `mod`.
+- A ladder is 06's `addLadder(x, z, y0, y1, yaw, out, top, label)`: the
+  foot of its climbing line at (x, z), `yaw` the way a climber faces it,
+  `out` where you stand at its foot and `top` (with its `y`) where you step
+  off. It adds the two `E` uses; 17's `climbOn` puts you on it and
+  `climbStep` (from `fixedUpdate`, before anything else moves you) runs
+  `W` / `S` up and down it and steps you off at either end. The water
+  tower's (14x `WATERTOWER`) is the first: its catwalk is an `addFlat` ring
+  inside OB colliders for the tank and the rail.
+- In zombie mode `ZOMBIE.ts` scales time (19 scales `acc` by it, and
+  `ZOMBIE.frame` its own `dt`): a car's hit drops it to 0.15 for a moment.
+  `carVsDead` (21) works the car against the dead every frame: fast, a kill
+  that flings the body (`zb.fly`, integrated in `frame` till it lands);
+  slower, a knockdown (`zb.down`, the body lies, then gets up); slow, a
+  push and a drag on the car that grows with how many are against it.
+  Pipe bombs (`F`) are `BOMBS`; while one beeps the dead within 30 m go to
+  it (`lureFor`), and it goes off with the `BOOM` lamp (a `fire` lamp in
+  16's pool). `atmos` thins the fog with the camera's height over the
+  ground, so a high place sees far even in the gloom. The score's best is
+  kept in `localStorage` (`restarea.zombies.best`), read and written in
+  try/catch.
 
 ## Tools
 

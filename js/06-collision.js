@@ -49,6 +49,17 @@ function addSeat(x,z,y,yaw,label,lie,drop){
 }
 // things you can press E at that are neither a door nor a car
 const USES=[];
+/* Ladders: straight up a face, climbed with W and S (17's climb). Each is the rung's line (x, z, from y0 to y1), the way
+   you face on it (yaw), where you step off at the bottom (out) and at the top (top). addLadder puts a use at each end
+   to get on it. */
+const LADDERS=[];
+function addLadder(x, z, y0, y1, yaw, out, top, label){
+  const L={x:x, z:z, y0:y0, y1:y1, yaw:yaw, out:out, top:top, label:label||"THE LADDER"};
+  LADDERS.push(L);
+  addUse(out.x, out.z, y0, "CLIMB "+L.label, ()=>climbOn(L, "up"), 1.3);
+  addUse(top.x, top.z, top.y, "CLIMB DOWN "+L.label, ()=>climbOn(L, "down"), 1.2);
+  return L;
+}
 // when: optional test, for things that are only sometimes there
 function addUse(x,z,y,label,fn,r,when){ const u={x:x, z:z, y:y, label:label, fn:fn, r:r, when:when}; USES.push(u); return u; }
 const SURF=[];   // flat {x0,x1,z0,z1,y} | ramp {axis,a0,a1,y0,y1}

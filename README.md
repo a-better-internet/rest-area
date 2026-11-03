@@ -474,6 +474,16 @@ If the scene runs hot on your machine, start there (see below).
     blinking, a desk with the laptop open and the log beside it (`E`),
     the one-line diagram on the wall, a hard hat on its hook, a hot stick
     and the window unit.
+  - **The water tower** stands on the flat behind the fuel stop, west of
+    the substation's lane: a steel tower of the old kind, four legs splayed
+    on concrete footings and braced in three tiers with tie rods, a riser
+    pipe up the middle, and up top the tank, a drum with a bowl under it and
+    a cone over it, lettered EDINBORO both ways. A red light blinks on top
+    at night. A caged ladder goes up its east side: `E` at the foot, `W` and
+    `S` to climb (`Shift` faster), and at the top you step off onto the
+    catwalk round the tank, 26 m up. From there you can see the interstate
+    and its bridge, the fields and the farm, the chapel, and the woods
+    going away toward the lake.
   - A pole line runs along US 6N on the north side, and a tap crosses the
     road and goes up the Weirs' lane, with a transformer on its last pole
     and drops to the house and the barn. The poles and wires go on east
@@ -1326,11 +1336,32 @@ If the scene runs hot on your machine, start there (see below).
     the camp, the chapel, the brewery, the Perky Loon, the weigh station)
     that come back a while after you take them. More turns up round you as
     you go, whatever you are shortest of, and the dead drop some.
+  - **Pipe bombs.** `F` throws one, if you have one: it beeps faster and
+    faster for three and a half seconds, and the dead nearby turn and go
+    to it. Then it goes off, throwing them about, knocking down the ones
+    further out, and leaving a scorch on the ground. Keep back from it
+    yourself. You start with one, carry up to four, and find more in the
+    caches.
+  - **Hordes.** From the second level, each time the threat goes up a pack
+    comes at you all at once from one side, and the banner says which.
+  - **In a car.** Hit them fast and they go flying: the car jolts and
+    slows, the view shakes, time stops for an instant, and blood spatters
+    the screen. Hit them slower and they are knocked down and get up again.
+    Creep into a crowd of them and they hold the car back, and four or more
+    will stop it dead.
+  - **Score.** Every kill scores (walkers 10, runners 20, brutes 60, half
+    as much again for the head), and kills close together build a streak,
+    up to five times. The score is at the top of the screen, and your best
+    run is kept in the browser.
+  - **The night** is dark but not black: there is enough grey left in the
+    sky and the fog to see shapes by, and the flashlight and the headlights
+    reach. The fog thins the higher you climb, so from the water tower you
+    can see a long way even in zombie mode. They cannot climb it.
   - **Blood.** Every hit throws a spray of drops and a mist; where they
     fall there are pools. **You** take damage too: the edges of the screen
     go red, on the side it came from, and your heart is loud when you are
-    low. At nothing you are down, with what you lasted and how many you
-    took with you; `ENTER` to go again.
+    low. At nothing you are down, with your score, what you lasted and how
+    many you took with you; `ENTER` to go again.
 - **Sound** is synthesized, with no audio files: road noise that pans with
   the highway, wind, cardinals, chickadees, a wood thrush and crows by day,
   at night a chorus of tree crickets (soft, pulsing, in the 2.6 to 2.9 kHz
@@ -1369,8 +1400,12 @@ quieter and slower in October, the hum of the building and the generators, the h
 
 In zombie mode: click to fire (hold for the carbine), the right button to
 aim down the sights, `R` to reload, `1`–`4` or the wheel to change guns, `V`
-to shove with the gun, and `ENTER` to go again when you are down. The drone,
+to shove with the gun, `F` to throw a pipe bomb, and `ENTER` to go again
+when you are down. The drone,
 the test weather and the wreck are off while it lasts.
+
+On a ladder (the water tower's), `E` at its foot or top gets on, `W` and
+`S` climb, and `Shift` climbs faster.
 
 Your eyes are 1.66 m up standing, and sitting brings them down to where a
 seated person's are. Getting out of a car, off the boat or out of the
@@ -1458,6 +1493,7 @@ centred on the origin.
 | Edinboro (US 6N bridge) | z −1200; ramps from z −640 (south) and −1630 (north); the fields x −330 … 610, z −1460 … −860 |
 | French Creek Substation | x −16 … 36, z −1416 … −1376 (gate x 10 … 13 on the south side); the control house x −14 … −6, z −1388 … −1381 |
 | The Weirs' machine shed | x 136 … 168, z −1120 … −1107 |
+| The water tower | x −39 … −25, z −1325 … −1311; the catwalk 26 m up |
 | The chapel and its graveyard | x 50 … 128, z −1296 … −1205; the chapel x 84 … 93, z −1238 … −1222; the hall under it, the stair down x 85.2 … 86.8, z −1242.3 … −1238 |
 | US 6N east through the woods | x 586 … 1062, z −1213 … −1187 |
 | French Creek Fireworks | x 872 … 966, z −1284 … −1205; the building x 893 … 925, z −1274 … −1258 |
@@ -1543,6 +1579,7 @@ js/14t-dogpark.js   Lake Street Bark Park: its fence and double gate, the path i
 js/14u-coffee.js    The Perky Loon, the coffee shop across from the brewery: the house, porch, patio and lot, the room inside, the roastery under it, and its people
 js/14v-lakewoods.js the woods behind Lake Street (its trail and the old boats in it) and the pretzel cart on the shore path
 js/14w-weigh.js     the weigh station: the scale, the scale house's rooms and its officer, the shed and the listening room under it, the signal and readout, the OPEN sign, the apron and its rigs, the trucks that come in
+js/14x-watertower.js Edinboro's water tower: its legs, tank and lettering, the caged ladder and the catwalk
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -1561,7 +1598,7 @@ js/18j-cornhole.js  cornhole at the brewery's boards against Danny: the bags, th
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
-js/21-zombies.js    zombie mode: the dead, the guns in your hands, pickups, blood, damage, the gloom, its sounds
+js/21-zombies.js    zombie mode: the dead, the guns in your hands, pipe bombs, hordes, the car against them, pickups, blood, damage, the score, the gloom, its sounds
 tools/shot.js       headless screenshots
 tools/walk.js       headless walk-through checks
 tools/zfight.js     coplanar faces in a box of the world

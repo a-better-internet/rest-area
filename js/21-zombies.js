@@ -40,7 +40,7 @@
    button to aim, 1-4 or the wheel for the guns, R to reload, V to shove.
    ---------------------------------------------------------------------- */
 const ZOMBIE=(function(){
-  const Z={on:false, dead:false, hp:100, t:0, kills:0, level:1, fade:0, freeze:false};
+  const Z={on:false, dead:false, hp:100, t:0, kills:0, level:1, fade:0, freeze:false, ts:1, score:0};
   const MAXZ=48, MAXBUILT=60;
   const GUNS=[
     {id:"pistol",  slot:1, name:"PISTOL",        ammo:"9MM",      mag:15, dmg:34,  head:3.0, pellets:1, spread:0.012, ads:0.004,  rate:0.16, auto:false, reload:1.35, range:150, climb:0.012, kick:1.0, snd:"pistol",
@@ -58,7 +58,8 @@ const ZOMBIE=(function(){
   const S={have:{}, mag:{}, ammo:{}, cur:"pistol", next:null, cool:0, reloadT:0, reloading:false, switchT:0, fired:false,
            fireHeld:false, aimHeld:false, ads:0, kick:0, kickR:0, bloom:0, melee:0, meleeHit:false, sprint:0, cycle:0,
            flashT:0, dmgFlash:0, dmgDir:0, dmgDirT:0, shake:0, hitT:0, hitKill:false, bobA:0, swX:0, swY:0, rl:0,
-           lastYaw:0, lastPitch:0, spawnT:6, supplyT:20, levelShown:1, deadT:0, heartT:0, groanT:4, rehideT:0, trailAt:null};
+           lastYaw:0, lastPitch:0, spawnT:6, supplyT:20, levelShown:1, deadT:0, heartT:0, groanT:4, rehideT:0, trailAt:null,
+           bombs:0, throwT:0, streak:0, streakT:0, splat:0, tsT:0, horde:null, crowdT:0};
   Z.trail=[];
   const _v1=new T.Vector3(), _v2=new T.Vector3(), _v3=new T.Vector3(), _o=new T.Vector3(), _d=new T.Vector3();
   const wrapA=a=>Math.atan2(Math.sin(a), Math.cos(a));
@@ -211,7 +212,7 @@ const ZOMBIE=(function(){
     Object.assign(zb, {live:true, state:"alive", x:x, z:z, y:y, yaw:yaw===undefined ? Math.random()*Math.PI*2 : yaw, hp:K.hp*(1+Z.level*0.03),
       speed:(K.sp[0]+Math.random()*(K.sp[1]-K.sp[0]))*(1+Math.min(0.3, Z.level*0.025)), alert:false, ph:Math.random(), t:Math.random()*10,
       atk:0, hit:false, cd:0, hitT:0, losT:Math.random()*0.4, los:false, ti:-1, tiT:0, wT:0, wA:0, wS:0, stuck:0, side:0, kx:0, kz:0,
-      dieT:0, fall:-1, roll:0, pooled:false, corpseT:0, groanT:2+Math.random()*8});
+      dieT:0, fall:-1, roll:0, pooled:false, corpseT:0, groanT:2+Math.random()*8, down:null, fly:null, flung:false, tumble:0});
     const P=zb.P; P.B[P.j.head].scale.set(1,1,1); P.g.rotation.set(0, zb.yaw, 0); P.g.position.set(x, y, z); P.g.visible=true;
     return zb;
   }
@@ -220,7 +221,8 @@ const ZOMBIE=(function(){
   // a handful to start (six at the first level), three more at every level after, coming quicker
   const wantAlive=()=>Math.min(MAXZ, 3+Z.level*3);
   const spawnEvery=()=>Math.max(0.8, 6-Z.level*0.45);
-  function pickKind(){ const L=Z.level, r=Math.random(), pb=L<5?0:Math.min(0.10, 0.025*(L-4)), pr=L<3?0:Math.min(0.32, 0.07*(L-2));
+  function pickKind(){ const L=Z.level, r=Math.random(), pb=L<5?0:Math.min(0.10, 0.025*(L-4)),
+      pr=(L<3?0:Math.min(0.32, 0.07*(L-2)))+(L>=2 && DayNight.state.dark>0.6 ? 0.08 : 0);       // (and at night they come running sooner)
     return r<pb ? "brute" : r<pb+pr ? "runner" : "walker"; }
   // where the next one comes from: back along the way you came, or out of the woods round you; never in front of your eyes,
   // never the far side of the world's edge from you, never in the lake
@@ -251,8 +253,19 @@ const ZOMBIE=(function(){
     for(const [i] of cand){ if(tests++>5) break; const q=T_[i]; if(clearLine(zb.x, zb.y+1.2, zb.z, q[0], q[1]+1.2, q[2])) return i; }
     return -1;
   }
+  // thrown back by a hit: slid along, never into anything
+  function knock(zb, dt){
+    if(Math.abs(zb.kx)+Math.abs(zb.kz)<=0.002) return;
+    const nx=zb.x+zb.kx*dt*6, nz=zb.z+zb.kz*dt*6;
+    if(!zHit(nx, nz, zb.y, 0.28)){ zb.x=nx; zb.z=nz; } const f=Math.max(0, 1-dt*6); zb.kx*=f; zb.kz*=f;
+  }
+  // a pipe bomb beeping within thirty metres: they go to it, and leave you be
+  function lureFor(zb){ for(const b of BOMBS) if(b.live && Math.abs(b.y-zb.y)<5 && Math.hypot(b.x-zb.x, b.z-zb.z)<30) return b; return null; }
   function stepZombie(zb, dt){
     zb.t+=dt; zb.cd=Math.max(0, zb.cd-dt); zb.hitT=Math.max(0, zb.hitT-dt);
+    // on the ground, knocked flat: slid along by the blow, and up again after a while
+    if(zb.down){ zb.down.t+=dt; knock(zb, dt); if(zb.down.t>=zb.down.dur){ zb.down=null; zb.alert=true; } return false; }
+    const lure=lureFor(zb); if(lure) zb.alert=true;
     const K=KIND[zb.kind], px=player.pos.x, pz=player.pos.z, py=player.feetY;
     const dx=px-zb.x, dz=pz-zb.z, d=Math.hypot(dx,dz), dy=py-zb.y;
     const inCar=!!driving, onBoat=typeof BOAT!=="undefined" && BOAT.on;
@@ -269,6 +282,7 @@ const ZOMBIE=(function(){
     }else if(zb.alert && !Z.dead && !onBoat && d<reach && Math.abs(dy)<1.4 && zb.cd<=0){ zb.atk=0.001; zb.hit=false; snd.snarl(zb.x, zb.z, zb.kind); }
     let tx=zb.x, tz=zb.z, speed=0;
     if(zb.atk>0){ tx=px; tz=pz; speed=0; }
+    else if(lure){ tx=lure.x; tz=lure.z; speed=Math.hypot(lure.x-zb.x, lure.z-zb.z)<0.9 ? 0 : zb.speed; }
     else if(zb.alert && !Z.dead){
       zb.losT-=dt;
       if(zb.losT<=0){ zb.losT=0.35+Math.random()*0.35; zb.los=d<40 && clearLine(zb.x, zb.y+1.5, zb.z, px, py+1.4, pz); if(zb.los) zb.ti=-1; }
@@ -303,8 +317,7 @@ const ZOMBIE=(function(){
       zb.ph=(zb.ph+step/(zb.kind==="runner" ? 1.9 : 1.2))%1;
     }
     if(zb.stuck>2.5){ zb.stuck=0; zb.side=-(zb.side||1); zb.ti=-1; zb.tiT=0; }
-    if(Math.abs(zb.kx)+Math.abs(zb.kz)>0.002){ const nx=zb.x+zb.kx*dt*6, nz=zb.z+zb.kz*dt*6;
-      if(!zHit(nx, nz, zb.y, 0.28)){ zb.x=nx; zb.z=nz; } const f=Math.max(0, 1-dt*6); zb.kx*=f; zb.kz*=f; }
+    knock(zb, dt);
     const gy=surfaceY(zb.x, zb.z, zb.y+0.45); zb.y+=(gy-zb.y)*Math.min(1, dt*(gy>zb.y ? 12 : 8));
     // and now and then a groan
     zb.groanT-=dt; if(zb.groanT<=0){ zb.groanT=(zb.alert?3:6)+Math.random()*8; if(d<45) snd.groan(zb.x, zb.z, zb.kind); }
@@ -312,13 +325,17 @@ const ZOMBIE=(function(){
   }
   function poseZombie(zb, moving){
     const P=zb.P, B=P.B, J=P.j, t=zb.t, sd=P.seed;
-    if(zb.state==="dead"){
-      const k=Math.min(1, zb.dieT/0.75), e=k*k;
+    if(zb.state==="dead" || zb.down){
+      // flat on the ground: falling over (or thrown and tumbling), and a knocked-down one getting up again, arms going
+      let e, fall=zb.fall;
+      if(zb.down){ const D=zb.down, u=D.t; fall=D.fall; e=u<0.4 ? (u/0.4)*(u/0.4) : u>D.dur-0.7 ? smoothstep(0, 1, (D.dur-u)/0.7) : 1; }
+      else { const k=Math.min(1, zb.dieT/0.75); e=k*k; }
       poseP(P, "stand", 0, t);
-      B[J.shL].rotation.set(-0.4*e, 0, -0.9*e); B[J.shR].rotation.set(-0.3*e, 0, 0.9*e);
-      B[J.knL].rotation.x=0.5*(1-e)+0.15; B[J.knR].rotation.x=0.3*(1-e)+0.25; B[J.head].rotation.set(0, 0.4*e*(zb.roll>0?1:-1), 0);
-      P.g.rotation.set(zb.fall*e*Math.PI*0.49, zb.yaw, zb.roll*e);
-      P.g.position.set(zb.x, zb.y+0.10*e-(zb.sink||0), zb.z);
+      const fl=zb.down ? Math.sin(t*9)*0.5 : 0;
+      B[J.shL].rotation.set(-0.4*e+fl, 0, -0.9*e); B[J.shR].rotation.set(-0.3*e-fl, 0, 0.9*e);
+      B[J.knL].rotation.x=0.5*(1-e)+0.15+(zb.down ? Math.max(0, fl) : 0); B[J.knR].rotation.x=0.3*(1-e)+0.25; B[J.head].rotation.set(0, 0.4*e*(zb.roll>0?1:-1), 0);
+      P.g.rotation.set(zb.flung ? zb.tumble : fall*e*Math.PI*0.49, zb.yaw, zb.roll*e);
+      P.g.position.set(zb.x, zb.y+(zb.fly ? 0.3 : 0.10*e)-(zb.sink||0), zb.z);
       return;
     }
     poseP(P, moving ? "walk" : "stand", zb.ph, t);
@@ -360,6 +377,7 @@ const ZOMBIE=(function(){
   }
   function rayZombie(o, d, zb, tmax){
     const h=zb.h, fx=Math.sin(zb.yaw), fz=Math.cos(zb.yaw);
+    if(zb.down){ const f=zb.down.fall*0.8*h, t=raySphere(o, d, zb.x+fx*f, zb.y+0.25, zb.z+fz*f, 0.5); return t<tmax ? {t:t, head:false} : null; }
     const th=zb.P.B[zb.P.j.head].scale.x>0.5 ? raySphere(o, d, zb.x+fx*0.13*h, zb.y+1.57*h, zb.z+fz*0.13*h, 0.15*h) : Infinity;
     const tb=rayCyl(o, d, zb.x+fx*0.06, zb.z+fz*0.06, 0.25*h, zb.y+0.05, zb.y+1.42*h);
     if(Math.min(th, tb)>=tmax) return null;
@@ -368,15 +386,20 @@ const ZOMBIE=(function(){
   function hurtZombie(zb, dmg, head, at, dir){
     if(zb.state==="dead") return;
     zb.hp-=dmg; zb.alert=true; zb.hitT=Math.min(0.3, 0.12+dmg/400); zb.atk=0; zb.cd=Math.max(zb.cd, 0.25);
-    const kb=Math.min(0.45, dmg/110)*(zb.kind==="brute" ? 0.3 : 1); zb.kx+=dir.x*kb; zb.kz+=dir.z*kb;
+    const kb=zb.down ? 0 : Math.min(0.45, dmg/110)*(zb.kind==="brute" ? 0.3 : 1); zb.kx+=dir.x*kb; zb.kz+=dir.z*kb;
     blood.burst(at, dir, head ? 22 : 12, head ? 1.4 : 1);
     snd.flesh(at.x, at.z);
     if(zb.hp<=0) killZombie(zb, head, dir);
   }
-  function killZombie(zb, head, dir){
+  function killZombie(zb, head, dir, how){
+    const wasDown=!!zb.down;
     zb.state="dead"; zb.dieT=0; zb.atk=0; zb.corpseT=0; zb.sink=0;
-    zb.fall=(Math.sin(zb.yaw)*dir.x+Math.cos(zb.yaw)*dir.z)>0 ? 1 : -1;
+    zb.fall=wasDown ? zb.down.fall : (Math.sin(zb.yaw)*dir.x+Math.cos(zb.yaw)*dir.z)>0 ? 1 : -1;
+    if(wasDown) zb.dieT=0.75; zb.down=null;
     zb.roll=(Math.random()-0.5)*0.5;
+    // thrown: by a car or a blast, up and over, end over end, the way it was hit
+    if(how && how.fly){ zb.fly=how.fly; zb.flung=true; zb.tumble=0; zb.dieT=0; } else zb.flung=false;
+    addScore(zb, head, how);
     if(head){ zb.P.B[zb.P.j.head].scale.setScalar(0.001);
       _v3.set(zb.x, zb.y+1.6*zb.h, zb.z); blood.burst(_v3, dir, 46, 2.2); blood.mist(_v3, 1.6); }
     Z.kills++; S.hitKill=true; snd.die(zb.x, zb.z);
@@ -385,6 +408,130 @@ const ZOMBIE=(function(){
     if(r<0.18){ const g=owned[(Math.random()*owned.length)|0]; dropPickup("ammo:"+g.ammo, zb.x, zb.z, zb.y); }
     else if(r<0.24) dropPickup("health", zb.x, zb.z, zb.y);
   }
+  /* ---- a car and the dead ----
+     Fast, it goes through them: each one struck is thrown, tumbling, the way the car was going, and the car loses a little
+     (a brute a lot); the moment holds still for a beat, the view jolts, the screen takes the blood. Slower, under a jog, it
+     knocks them flat and they get up again. Slower still they are in the way: every one against the car drags at it, and
+     enough of them stop it dead, clawing at the doors. */
+  function carVsDead(dt, L){
+    const b=driving.veh.body, c=b.position, yaw=carYaw(driving.g.quaternion), fx=Math.sin(yaw), fz=Math.cos(yaw);
+    const vx=b.velocity.x, vz=b.velocity.z, sp=Math.hypot(vx, vz), vf=vx*fx+vz*fz;
+    let n=0, hit=0;
+    for(const zb of L){
+      if(zb.state==="dead" || zb.down) continue;
+      const dx=zb.x-c.x, dz=zb.z-c.z; if(Math.abs(zb.y-(c.y-0.6))>2) continue;
+      const lz=dx*fx+dz*fz, lx=dx*fz-dz*fx;
+      if(Math.abs(lx)>1.32 || Math.abs(lz)>2.55) continue;
+      const ahead=sp<0.3 || (lz>=0)===(vf>=0);
+      if(sp>=5.5 && ahead){
+        _v2.set(vx/sp, 0, vz/sp); _v3.set(zb.x, zb.y+1.0, zb.z);
+        blood.burst(_v3, _v2, 30, 1.9); blood.mist(_v3, 1.5); snd.flesh(zb.x, zb.z);
+        killZombie(zb, false, _v2, {bonus:5, fly:{vx:vx*0.8+(Math.random()-0.5)*2.5, vy:2.6+sp*0.22, vz:vz*0.8+(Math.random()-0.5)*2.5,
+                                                 spin:(Math.random()<0.5?-1:1)*(7+sp*0.25), b:0}});
+        const slow=zb.kind==="brute" ? 0.24 : 0.07; b.velocity.x*=1-slow; b.velocity.z*=1-slow; hit++;
+      }else if(sp>=2.2 && ahead){
+        _v2.set(vx/sp, 0, vz/sp); _v3.set(zb.x, zb.y+1.0, zb.z);
+        const fall=(Math.sin(zb.yaw)*vx+Math.cos(zb.yaw)*vz)>0 ? 1 : -1;
+        hurtZombie(zb, 30+sp*4, false, _v3, _v2);
+        if(zb.state!=="dead"){ zb.down={t:0, dur:2.0+Math.random()*1.4, fall:fall}; zb.atk=0;
+          const side=lx>=0 ? 1 : -1; zb.kx+=fz*side*0.9+vx*0.12; zb.kz+=-fx*side*0.9+vz*0.12; }
+        b.velocity.x*=0.93; b.velocity.z*=0.93; S.shake=Math.min(1, S.shake+0.3); snd.thud();
+      }else{ n+=zb.kind==="brute" ? 3 : 1;
+        if(sp>0.3){ const side=lx>=0 ? 1 : -1; zb.kx+=fz*side*0.06; zb.kz+=-fx*side*0.06; } }   // (shoved along by the bumper)
+    }
+    if(hit){ Z.ts=0.15; S.tsT=0.08; S.shake=Math.min(1, S.shake+0.5+0.15*hit); S.splat=Math.min(1, S.splat+0.55); snd.crunch(); }
+    if(n>0 && sp<5.5){ const k=Math.exp(-dt*(0.75*n+(n>=4 ? 7 : 0))); b.velocity.x*=k; b.velocity.z*=k; S.crowdT=0.4; }
+  }
+
+  /* ---- points: by what it was, more for the head, and a streak of kills close together multiplies them ---- */
+  function addScore(zb, head, how){
+    const base=({walker:10, runner:20, brute:60}[zb.kind]||10)*(head ? 1.5 : 1)+((how && how.bonus)||0);
+    S.streak=S.streakT>0 ? S.streak+1 : 1; S.streakT=2.8;
+    const mult=Math.min(5, 1+Math.floor((S.streak-1)/3));
+    Z.score+=Math.round(base*mult);
+    if(mult>1 && (S.streak-1)%3===0) feed("STREAK  ×"+mult, "#e8c860");
+  }
+
+  /* ---- pipe bombs: F throws one. It beeps faster and faster for three and a half seconds, a red light winking, and every
+     one of them within thirty metres goes to it instead of you; then it goes off. ---- */
+  const BOMBS=[];
+  let _bombGeo=null, _bombMat=null, _bombLight=null;
+  function throwBomb(){
+    if(Z.dead || S.throwT>0 || driving || player.ladder) return;                  // (not from behind the wheel, or off a ladder)
+    if(S.bombs<=0){ feed("NO PIPE BOMBS", "#8a8a7a"); return; }
+    S.bombs--; S.throwT=0.45;
+    if(!_bombGeo){ _bombGeo=new T.CylinderGeometry(0.035, 0.035, 0.22, 10); _bombMat=new T.MeshStandardMaterial({color:0x5a5e60, metalness:0.4, roughness:0.5});
+      _bombLight=new T.MeshBasicMaterial({color:0xff2010}); }
+    const g=new T.Group(); g.add(new T.Mesh(_bombGeo, _bombMat));
+    for(const y of [-0.115, 0.115]) part(g, new T.CylinderGeometry(0.042, 0.042, 0.03, 10), _bombMat, 0, y, 0);
+    part(g, new T.BoxGeometry(0.074, 0.06, 0.074), new T.MeshStandardMaterial({color:0x6a6a2a, roughness:0.9}), 0, 0.02, 0);
+    const lt=new T.Mesh(new T.SphereGeometry(0.014, 8, 6), _bombLight); lt.position.set(0.04, 0.02, 0); g.add(lt);
+    scene.add(g);
+    camera.getWorldDirection(_v1);
+    const b={g:g, lt:lt, x:camera.position.x+_v1.x*0.5, y:camera.position.y+_v1.y*0.5-0.1, z:camera.position.z+_v1.z*0.5,
+             vx:_v1.x*13, vy:_v1.y*13+3.2, vz:_v1.z*13, t:0, fuse:3.5, beepT:0, live:true, rest:false, spin:6};
+    BOMBS.push(b); snd.swish();
+  }
+  function updateBombs(dt){
+    S.throwT=Math.max(0, S.throwT-dt);
+    for(let i=BOMBS.length-1;i>=0;i--){ const b=BOMBS[i];
+      b.t+=dt;
+      if(!b.rest){
+        b.vy-=9.8*dt; const nx=b.x+b.vx*dt, nz=b.z+b.vz*dt, ny=b.y+b.vy*dt;
+        if(zHit(nx, nz, ny-1.0, 0.08)){ b.vx*=-0.35; b.vz*=-0.35; } else { b.x=nx; b.z=nz; }
+        b.y=ny; const g=surfaceY(b.x, b.z, b.y+0.3)+0.04;
+        if(b.y<g){ b.y=g; if(b.vy<-1.5){ b.vy*=-0.32; b.vx*=0.55; b.vz*=0.55; snd.tink(b.x, b.z); } else { b.vy=0; b.vx*=0.5; b.vz*=0.5; if(Math.hypot(b.vx, b.vz)<0.4) b.rest=true; } }
+        b.g.rotation.x+=b.spin*dt; b.spin*=b.rest ? 0 : 0.995; }
+      b.g.position.set(b.x, b.y, b.z);
+      // the beep, closer and closer together, and the light with it
+      const per=Math.max(0.09, 0.55*(1-b.t/b.fuse)); b.beepT-=dt;
+      if(b.beepT<=0){ b.beepT=per; snd.beep(b.x, b.z); b.flashT=0.06; }
+      b.flashT=(b.flashT||0)-dt; b.lt.visible=b.flashT>0;
+      if(b.t>=b.fuse){ explode(b); scene.remove(b.g); BOMBS.splice(i,1); }
+    }
+  }
+  const BOOM={x:0, y:0, z:0, color:0xffa040, intensity:9, dist:45, decay:1.2, fire:true, mod:{v:0}, under:false};
+  LAMPS.push(BOOM);
+  function explode(b){
+    b.live=false;
+    const R=7.5, at=new T.Vector3(b.x, b.y+0.5, b.z);
+    for(const zb of ZS){ if(!zb.live || zb.state==="dead") continue;
+      const dx=zb.x-b.x, dz=zb.z-b.z, d=Math.hypot(dx, dz, (zb.y+0.9)-b.y); if(d>R) continue;
+      const k=1-d/R, ux=d>0.01 ? dx/Math.hypot(dx,dz) : 1, uz=d>0.01 ? dz/Math.hypot(dx,dz) : 0, dmg=40+320*k;
+      _v2.set(ux, 0, uz); _v1.set(zb.x, zb.y+1.0, zb.z);
+      if(dmg>=zb.hp){ blood.burst(_v1, _v2, 26, 2.0); blood.mist(_v1, 1.6);
+        killZombie(zb, false, _v2, {bonus:5, fly:{vx:ux*(3+9*k), vy:3.5+6*k, vz:uz*(3+9*k), spin:(Math.random()<0.5?-1:1)*(6+8*k), b:0}}); }
+      else { hurtZombie(zb, dmg, false, _v1, _v2); if(zb.state!=="dead"){ zb.down={t:0, dur:2.2+Math.random(), fall:(Math.sin(zb.yaw)*ux+Math.cos(zb.yaw)*uz)>0 ? 1 : -1}; zb.kx+=ux*1.4; zb.kz+=uz*1.4; } }
+    }
+    // you, if you are too close
+    const pd=Math.hypot(player.pos.x-b.x, player.pos.z-b.z, (player.feetY+0.9)-b.y);
+    if(pd<6.5) hurtPlayer(75*(1-pd/6.5), b.x, b.z);
+    S.shake=Math.min(1, S.shake+Math.max(0, 1.2*(1-pd/45)));
+    for(let k=0;k<5;k++){ _v1.set(b.x+(Math.random()-0.5)*2.5, b.y+Math.random()*1.5, b.z+(Math.random()-0.5)*2.5); dust.puff(_v1, true); }
+    fx.fire(at); BOOM.x=b.x; BOOM.y=b.y+1.5; BOOM.z=b.z; BOOM.under=buriedAt(b.x, b.z, b.y+0.5); BOOM.mod.v=1;
+    blood.scorch(b.x, b.z, surfaceY(b.x, b.z, b.y+0.3));
+    snd.boom(b.x, b.z);
+    for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-b.x, zb.z-b.z)<90) zb.alert=true;
+    if(pd<4) S.splat=Math.min(1, S.splat+0.5);
+  }
+
+  /* ---- a horde: at each new threat level from the second, a pack of them all from one way, with warning ---- */
+  function compass(a){ const h=Math.atan2(Math.sin(a), -Math.cos(a)), k=Math.round(((h+Math.PI*2)%(Math.PI*2))/(Math.PI/4))%8;
+    return ["NORTH","NORTH-EAST","EAST","SOUTH-EAST","SOUTH","SOUTH-WEST","WEST","NORTH-WEST"][k]; }
+  function startHorde(lv){
+    const a=Math.random()*Math.PI*2; S.horde={a:a, n:4+lv*2, t:2.5, tries:0};
+    banner("A HORDE", "COMING FROM THE "+compass(a)); snd.horde(a);
+  }
+  function updateHorde(dt){
+    const H=S.horde; if(!H || Z.dead) return;
+    H.t-=dt; if(H.t>0) return; H.t=0.45;
+    const px=player.pos.x, pz=player.pos.z, py=player.feetY;
+    for(let k=0;k<8;k++){ const a=H.a+(Math.random()-0.5)*0.9, r=42+Math.random()*22, x=px+Math.sin(a)*r, z=pz+Math.cos(a)*r, y=okSpot(x, z, py);
+      if(y===null || Math.abs(y-py)>8 || edgeBetween(px, pz, x, z)) continue;
+      const zb=spawnZombie(x, z, y, pickKind(), a+Math.PI); if(zb) zb.alert=true; H.n--; break; }
+    if(H.n<=0 || ++H.tries>80) S.horde=null;
+  }
+
   function hurtPlayer(n, fx, fz){
     if(Z.dead) return;
     Z.hp=Math.max(0, Z.hp-n); S.dmgFlash=Math.min(1, S.dmgFlash+n/28); S.shake=Math.min(1, S.shake+n/25);
@@ -395,8 +542,11 @@ const ZOMBIE=(function(){
     snd.hurt();
     if(Z.hp<=0) die();
   }
+  function loadBest(){ try{ return JSON.parse(localStorage.getItem("restarea.zombies.best")||"null"); }catch(e){ return null; } }
+  function saveBest(b){ try{ localStorage.setItem("restarea.zombies.best", JSON.stringify(b)); }catch(e){} }
   function die(){
-    Z.dead=true; S.deadT=0; S.fireHeld=false; S.aimHeld=false;
+    Z.dead=true; S.deadT=0; S.fireHeld=false; S.aimHeld=false; S.horde=null;
+    const best=loadBest(); Z.newBest=!best || Z.score>best.score; if(Z.newBest) saveBest({score:Z.score, t:Z.t, kills:Z.kills}); Z.best=Z.newBest ? null : best;
     if(driving) exitCar(); if(seated) standUp();
     hud.dead(true); snd.die(player.pos.x, player.pos.z, true);
   }
@@ -601,9 +751,9 @@ const ZOMBIE=(function(){
     S.kick*=Math.exp(-dt*13); S.kickR*=Math.exp(-dt*11);
     const rl=S.reloading ? (g.shells ? 1 : Math.sin(clamp(1-S.reloadT/g.reload, 0, 1)*Math.PI)) : 0; S.rl=approach(S.rl, rl, dt*7);
     const sw=S.switchT>0 ? Math.sin(clamp(1-S.switchT/0.45, 0, 1)*Math.PI) : 0;
-    const ml=S.melee>0 ? Math.sin((1-S.melee/0.55)*Math.PI) : 0;
+    const ml=S.melee>0 ? Math.sin((1-S.melee/0.55)*Math.PI) : 0, th=S.throwT>0 ? Math.sin((1-S.throwT/0.45)*Math.PI) : 0;
     const H=g.hip, A=g.adsP, a=S.ads;
-    m.position.set(lerp(H[0],A[0],a)+bx+S.swX-ml*0.05+S.sprint*0.03, lerp(H[1],A[1],a)+by+S.swY-S.rl*0.06-sw*0.3-S.sprint*0.06+ml*0.02, lerp(H[2],A[2],a)+S.kick*0.035-ml*0.12);
+    m.position.set(lerp(H[0],A[0],a)+bx+S.swX-ml*0.05+S.sprint*0.03+th*0.06, lerp(H[1],A[1],a)+by+S.swY-S.rl*0.06-sw*0.3-S.sprint*0.06+ml*0.02-th*0.16, lerp(H[2],A[2],a)+S.kick*0.035-ml*0.12);
     m.rotation.set(S.kickR*0.09-S.rl*0.55-S.sprint*0.35+ml*0.25, S.swX*1.4+S.sprint*0.6+ml*0.5, S.sprint*0.3-S.rl*0.35);
     if(m.userData.pump){ const c=g.rate>0 && S.cycle>0 ? Math.sin(clamp((g.rate-S.cycle-0.2)/0.45, 0, 1)*Math.PI) : 0; m.userData.pump.position.z=-0.25+c*0.075; }
     m.visible=!(g.zoom && S.ads>0.85);
@@ -683,6 +833,14 @@ const ZOMBIE=(function(){
     // a tracer: a streak from the gun to where it went, for a frame or two
     const tg=new T.BufferGeometry(); tg.setAttribute("position", new T.BufferAttribute(new Float32Array(6), 3));
     fx.line=new T.Line(tg, new T.LineBasicMaterial({color:0xffe2a0, transparent:true, opacity:0.55, depthWrite:false})); fx.line.visible=false; fx.line.frustumCulled=false; scene.add(fx.line); fx.lt=0;
+    // a bomb's fire: a ball of it, gone in a third of a second
+    { const ft=blotTex(31, true); fx.ball=new T.Sprite(new T.SpriteMaterial({map:ft, color:0xffa040, blending:T.AdditiveBlending, transparent:true, depthWrite:false, opacity:0}));
+      fx.ball.visible=false; scene.add(fx.ball); fx.bt=0; }
+    fx.fire=(at)=>{ fx.ball.position.copy(at); fx.bt=0.38; fx.ball.visible=true; };
+    blood.scMat=new T.MeshStandardMaterial({map:blotTex(78, false), color:0x14110e, transparent:true, depthWrite:false, roughness:0.9,
+      polygonOffset:true, polygonOffsetFactor:-6, polygonOffsetUnits:-6});
+    blood.scs=[]; blood.si=0; for(let k=0;k<10;k++){ const m=new T.Mesh(new T.PlaneGeometry(1,1), blood.scMat); m.rotation.x=-Math.PI/2; m.visible=false; scene.add(m); blood.scs.push(m); }
+    blood.scorch=(x, z, y)=>{ const m=blood.scs[blood.si++%blood.scs.length]; m.position.set(x, y+0.012, z); m.rotation.z=Math.random()*6.28; m.scale.set(4.2, 4.2, 1); m.visible=true; };
     fx.tracer=(end)=>{ const a=fx.line.geometry.attributes.position; camera.getWorldDirection(_v1); _v2.set(0,1,0).cross(_v1).normalize();
       const sx=camera.position.x+_v1.x*0.8-_v2.x*0.12, sy=camera.position.y+_v1.y*0.8-0.1, sz=camera.position.z+_v1.z*0.8-_v2.z*0.12;
       a.setXYZ(0, sx, sy, sz); a.setXYZ(1, end.x, end.y, end.z); a.needsUpdate=true; fx.line.visible=true; fx.lt=0.05; };
@@ -694,6 +852,8 @@ const ZOMBIE=(function(){
     for(const L of [blood.mists, dust.puffs]) for(const m of L){ if(m.t<=0) continue; m.t-=dt; const u=1-m.t/m.life;
       m.s.scale.setScalar(m.size*(0.4+u*1.2)); m.s.material.opacity=m.op*(1-u)*(0.4+0.6*light); if(m.t<=0) m.s.visible=false; }
     if(fx.lt>0){ fx.lt-=dt; if(fx.lt<=0) fx.line.visible=false; }
+    if(fx.bt>0){ fx.bt-=dt; const u=1-fx.bt/0.38; fx.ball.scale.setScalar(2+u*7); fx.ball.material.opacity=Math.max(0, 1-u)*0.95; if(fx.bt<=0) fx.ball.visible=false; }
+    BOOM.mod.v=Math.max(0, BOOM.mod.v-dt*3.5);
   }
 
   /* ======================================================================
@@ -717,6 +877,11 @@ const ZOMBIE=(function(){
       const w=sub==="5.56" ? 0.28 : 0.22, h=sub==="5.56" ? 0.16 : 0.11, d=sub==="5.56" ? 0.13 : 0.14;
       item.add(new T.Mesh(new T.BoxGeometry(w,h,d), mats));
       if(sub==="5.56") part(item, BOX(0.1,0.02,0.02), MAT.dark, 0, h/2+0.012, 0);
+    }else if(type==="bomb"){
+      col=0xe86a2a; const mt=new T.MeshStandardMaterial({color:0x5a5e60, metalness:0.4, roughness:0.5});
+      for(const dz of [-0.05, 0.05]){ part(item, new T.CylinderGeometry(0.035, 0.035, 0.22, 10), mt, 0, 0.035, dz, 0, 0, Math.PI/2);
+        for(const x of [-0.115, 0.115]) part(item, new T.CylinderGeometry(0.042, 0.042, 0.03, 10), mt, x, 0.035, dz, 0, 0, Math.PI/2); }
+      part(item, BOX(0.08, 0.085, 0.17), new T.MeshStandardMaterial({color:0x6a6a2a, roughness:0.9}), 0, 0.04, 0);
     }else if(type==="health" || type==="medkit"){
       col=0xe04040;
       if(type==="medkit"){ if(!PMAT.kit) PMAT.kit=crossMat("#c8281c", "#f2efe6"); const s=new T.MeshStandardMaterial({color:0xc8281c, roughness:0.6});
@@ -745,7 +910,11 @@ const ZOMBIE=(function(){
     [82, -179, 2.7, "ammo:5.56"], [286, 49, undefined, "medkit"], [312, 156, undefined, "ammo:12 GAUGE"], [18, 80, undefined, "health"],
     [139, 109, undefined, "gun:carbine"], [88, -1230, undefined, "medkit"], [150, -1114, undefined, "gun:rifle"], [909, -1250, undefined, "ammo:5.56"],
     [1300, -1250, undefined, "ammo:9MM"], [1445, -1236, undefined, "medkit"], [1437, -1189, undefined, "ammo:12 GAUGE"], [-61.5, -2940, undefined, "ammo:5.56"],
-    [-56.2, -2918.4, -8.8, "gun:rifle"], [1200, -1180, undefined, "health"], [-10, -1385, undefined, "ammo:5.56"], [-45, -2975, undefined, "health"]];
+    [-56.2, -2918.4, -8.8, "gun:rifle"], [1200, -1180, undefined, "health"], [-10, -1385, undefined, "ammo:5.56"], [-45, -2975, undefined, "health"],
+    // the pipe bombs: the garage's bench, the fireworks outlet (of course), the farm's machine shed, the weigh station's apron
+    [34, 34, 0, "bomb"], [912, -1262, undefined, "bomb"], [152, -1112, undefined, "bomb"], [-48, -2968, undefined, "bomb"],
+    // and up the water tower, for whoever gets up there
+    [WATERTOWER.x+6.5, WATERTOWER.z+1.6, WATERTOWER.catwalk, "ammo:.30-06"]];
   let cachesBuilt=false;
   function buildCaches(){
     if(cachesBuilt) return; cachesBuilt=true;
@@ -753,6 +922,7 @@ const ZOMBIE=(function(){
   }
   function take(p){
     const [type, sub]=p.kind.split(":");
+    if(type==="bomb"){ if(S.bombs>=4) return false; S.bombs++; feed("+1 PIPE BOMB  ·  F TO THROW", "#e8a060"); snd.pick(0); return true; }
     if(type==="ammo"){ if(S.ammo[sub]>=AMMO_MAX[sub]) return false; const n=Math.min(AMMO_BOX[sub], AMMO_MAX[sub]-S.ammo[sub]); S.ammo[sub]+=n; feed("+"+n+" "+sub, "#e8c860"); snd.pick(0); }
     else if(type==="health" || type==="medkit"){ if(Z.hp>=100) return false; const n=type==="medkit" ? 60 : 25; Z.hp=Math.min(100, Z.hp+n); feed(type==="medkit" ? "FIRST AID KIT  +"+n : "BANDAGES  +"+n, "#f08080"); snd.pick(1); }
     else { const g=GUN(sub), had=S.have[sub]; S.have[sub]=true; if(!had) S.mag[sub]=g.mag;
@@ -789,6 +959,7 @@ const ZOMBIE=(function(){
     if(!S.have.rifle && Z.t>320) return "gun:rifle";
     const owned=GUNS.filter(g=>S.have[g.id]); let best=owned[0], low=1e9;
     for(const g of owned){ const f=S.ammo[g.ammo]/AMMO_MAX[g.ammo]; if(f<low){ low=f; best=g; } }
+    if(S.bombs<2 && Math.random()<0.18) return "bomb";
     return Math.random()<0.15 ? "health" : "ammo:"+best.ammo;
   }
 
@@ -851,6 +1022,17 @@ const ZOMBIE=(function(){
     if(k===0){ noiseHit(c, t, 0.04, "bandpass", 2400, 4, 0.14); noiseHit(c, t+0.07, 0.04, "bandpass", 2000, 4, 0.12); }
     else if(k===1){ osc(c, t, "sine", 520, 780, 0.18, 0.08); osc(c, t+0.1, "sine", 780, 1040, 0.22, 0.07); }
     else { noiseHit(c, t, 0.06, "bandpass", 1300, 2, 0.2); osc(c, t+0.05, "triangle", 330, 330, 0.3, 0.06); } };
+  // a car through one: a heavy blow, a crack, the body against the glass
+  snd.crunch=()=>{ const c=AC(); if(!c) return; const t=c.currentTime;
+    osc(c, t, "sine", 95, 32, 0.32, 0.55); noiseHit(c, t, 0.18, "lowpass", 900, 0.8, 0.45); noiseHit(c, t+0.01, 0.04, "highpass", 2400, 0.7, 0.25);
+    noiseHit(c, t+0.09, 0.12, "bandpass", 420, 1.6, 0.22); };
+  snd.tink=(x,z)=>{ const c=AC(); if(!c) return; const q=pv(x, z, 80); osc(c, c.currentTime, "triangle", 1900, 1700, 0.08, 0.05*q.v, q.pan, true); };
+  snd.beep=(x,z)=>{ const c=AC(); if(!c) return; const q=pv(x, z, 140); osc(c, c.currentTime, "square", 1650, 1650, 0.07, 0.06*q.v+0.01, q.pan, true); };
+  snd.boom=(x,z)=>{ const c=AC(); if(!c) return; const q=pv(x, z, 1600), t=c.currentTime+0.01, v=0.35+0.55*q.v;
+    osc(c, t, "sine", 58, 22, 1.3, 0.8*v); noiseHit(c, t, 1.3, "lowpass", 1400, 0.6, 0.75*v, q.pan, false, nb().brown);
+    noiseHit(c, t, 0.12, "lowpass", 4000, 0.5, 0.6*v, q.pan); for(const [dl, a] of [[0.35, 0.22],[0.8, 0.12],[1.5, 0.06]]) noiseHit(c, t+dl, 0.9, "lowpass", 500, 0.5, v*a, (Math.random()-0.5), false, nb().brown); };
+  snd.horde=(a)=>{ const px=player.pos.x, pz=player.pos.z; for(let k=0;k<4;k++){ const b=a+(Math.random()-0.5)*0.6;
+      setTimeout(()=>voice(px+Math.sin(b)*70, pz+Math.cos(b)*70, 260+Math.random()*120, 1.0, 0.45, 1.2, 1800), k*350+Math.random()*200); } };
   snd.heart=()=>{ const c=AC(); if(!c) return; const t=c.currentTime; osc(c, t, "sine", 58, 40, 0.14, 0.32); osc(c, t+0.24, "sine", 52, 38, 0.16, 0.24); };
   // under it all: a wind that never lets up, a low drone, and far off, now and then, one of them
   snd.ambience=(on)=>{ const c=AC();
@@ -883,6 +1065,12 @@ const ZOMBIE=(function(){
       #zthreat{margin-top:12px;font-size:13px;letter-spacing:.28em;color:#c8b070}
       #zthreat span{color:#e02a1a;letter-spacing:.12em}
       #zstats{margin-top:3px;font-family:"JetBrains Mono",monospace;font-size:11px;color:#a8a294;letter-spacing:.14em}
+      #ztop{position:absolute;right:28px;top:22px;text-align:right;text-shadow:0 2px 6px #000}
+      #zscore{font-size:30px;font-weight:700;line-height:1;color:#e8e2d0}
+      #zscore small{font-size:11px;letter-spacing:.3em;color:#9fb46a;margin-right:8px;font-weight:500}
+      #zmult{font-size:15px;letter-spacing:.2em;color:#e8c860;height:18px}
+      #zbombs{margin-top:6px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;color:#e8a060}
+      #zsplat{position:absolute;inset:0;opacity:0}
       #zright{position:absolute;right:28px;bottom:22px;text-align:right;text-shadow:0 2px 6px #000}
       #zgun{font-size:15px;letter-spacing:.3em;color:#9fb46a}
       #zammo{font-size:50px;font-weight:700;line-height:1.05}
@@ -903,7 +1091,7 @@ const ZOMBIE=(function(){
       #zscope:after{content:"";position:absolute;top:50%;left:calc(50% - 34vh);right:calc(50% - 34vh);height:1px;background:rgba(0,0,0,.85)}
       #zbanner{position:absolute;left:0;right:0;top:30%;text-align:center;opacity:0;transition:opacity .8s;text-shadow:0 3px 14px #000}
       #zbanner .a{font-size:44px;font-weight:700;letter-spacing:.14em;color:#d8d0b8}
-      #zbanner .b{font-size:14px;letter-spacing:.36em;color:#9fb46a;margin-top:6px}
+      #zbanner .b{font-size:clamp(10px,1.3vw,14px);letter-spacing:.3em;color:#9fb46a;margin-top:6px;padding:0 16px;line-height:1.8;white-space:pre-line}
       #zdead{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;
         background:radial-gradient(90% 90% at 50% 50%, rgba(40,0,0,.35), rgba(20,0,0,.85))}
       #zdead h1{font-size:96px;font-weight:700;letter-spacing:.2em;color:#b8180e;text-shadow:0 0 30px #000}
@@ -912,21 +1100,29 @@ const ZOMBIE=(function(){
       body.zmode #vig{background:radial-gradient(115% 115% at 50% 46%, transparent 42%, rgba(4,10,4,.78) 100%)}`;
     document.head.appendChild(st);
     const d=document.createElement("div"); d.id="zhud";
-    d.innerHTML=`<div id="zdmg"></div><div id="zdir"></div><div id="zscope"></div>
+    d.innerHTML=`<div id="zsplat"></div><div id="zdmg"></div><div id="zdir"></div><div id="zscope"></div>
+      <div id="ztop"><div id="zscore"></div><div id="zmult"></div></div>
       <div id="zcross"><i></i><i></i><i></i><i></i></div><div id="zhit"></div>
       <div id="zleft"><div class="k">HEALTH</div><div id="zhp">100</div><div id="zbar"><b></b></div><div id="zthreat">THREAT <span></span></div><div id="zstats"></div></div>
-      <div id="zright"><div id="zgun"></div><div id="zammo"></div><div id="zatype"></div><div id="zslots"></div></div>
+      <div id="zright"><div id="zgun"></div><div id="zammo"></div><div id="zatype"></div><div id="zslots"></div><div id="zbombs"></div></div>
       <div id="zfeed"></div><div id="zbanner"><div class="a"></div><div class="b"></div></div>
       <div id="zdead"><h1>YOU DIED</h1><p id="zdstats"></p><p>ENTER · TRY AGAIN &nbsp;&nbsp; Z · LEAVE ZOMBIE MODE</p></div>`;
     document.body.appendChild(d);
     const $=id=>document.getElementById(id);
     Object.assign(hud, {el:d, hp:$("zhp"), bar:d.querySelector("#zbar b"), threat:d.querySelector("#zthreat span"), stats:$("zstats"), gunEl:$("zgun"), ammo:$("zammo"),
       atype:$("zatype"), slots:$("zslots"), feed:$("zfeed"), dmg:$("zdmg"), dirEl:$("zdir"), scope:$("zscope"), cross:$("zcross"), hit:$("zhit"),
-      banner:$("zbanner"), deadEl:$("zdead"), dstats:$("zdstats"), last:{}});
+      banner:$("zbanner"), deadEl:$("zdead"), dstats:$("zdstats"), score:$("zscore"), mult:$("zmult"), bombsEl:$("zbombs"), splatEl:$("zsplat"), last:{}});
+    // blood on the screen: a few blotches, thrown somewhere new each time it starts
+    let _sp=0;
+    hud.splat=(v)=>{ if(v>0.3 && _sp<0.05){ const g=[]; for(let k=0;k<7;k++){ const x=(Math.random()*100).toFixed(0), y=(Math.random()*100).toFixed(0), r=(8+Math.random()*16).toFixed(0);
+        g.push("radial-gradient(circle at "+x+"% "+y+"%, rgba(90,4,2,.9) 0, rgba(70,2,0,.75) "+(r*0.5).toFixed(0)+"vmin, rgba(60,0,0,0) "+r+"vmin)"); }
+      hud.splatEl.style.background=g.join(","); }
+      _sp=v; hud.splatEl.style.opacity=Math.min(0.9, v); };
     hud.cross.ch=[...hud.cross.children];
     hud.gun=()=>{ hud.last.g=null; };
     hud.dead=(on)=>{ hud.deadEl.style.display=on ? "flex" : "none";
-      if(on) hud.dstats.textContent="SURVIVED "+clock(Z.t)+"  ·  "+Z.kills+" KILLED  ·  THREAT "+Z.level; };
+      if(on) hud.dstats.textContent="SCORE "+Z.score+"  ·  SURVIVED "+clock(Z.t)+"  ·  "+Z.kills+" KILLED  ·  THREAT "+Z.level+
+        (Z.newBest ? "  ·  A NEW BEST" : Z.best ? "  ·  BEST "+Z.best.score : ""); };
   }
   const clock=t=>String(Math.floor(t/60)).padStart(2,"0")+":"+String(Math.floor(t%60)).padStart(2,"0");
   function feed(text, col){ const e=document.createElement("div"); e.textContent=text; e.style.color=col||"#e8e2d0"; hud.feed.appendChild(e);
@@ -943,6 +1139,9 @@ const ZOMBIE=(function(){
       hud.slots.innerHTML=GUNS.map(q=>"<span class='"+(q.id===S.cur ? "cur" : S.have[q.id] ? "have" : "")+"'>"+q.slot+" "+q.name.split(" ").pop()+"</span>").join(""); }
     const lv=Z.level; if(L.lv!==lv){ L.lv=lv; hud.threat.textContent="■".repeat(Math.min(lv,12))+"□".repeat(Math.max(0,12-lv)); }
     const st=clock(Z.t)+"  ·  "+Z.kills+" KILLED"; if(L.st!==st){ L.st=st; hud.stats.textContent=st; }
+    if(L.sc!==Z.score){ L.sc=Z.score; hud.score.innerHTML="<small>SCORE</small>"+Z.score; }
+    const mult=S.streakT>0 ? Math.min(5, 1+Math.floor((S.streak-1)/3)) : 1, mt=mult>1 ? "STREAK ×"+mult : ""; if(L.mt!==mt){ L.mt=mt; hud.mult.textContent=mt; }
+    const bt=S.bombs>0 ? "F · PIPE BOMB ×"+S.bombs : ""; if(L.bt!==bt){ L.bt=bt; hud.bombsEl.textContent=bt; }
     // the crosshair opens with the spread, and goes when you aim down the sights
     const gap=5+spreadNow()*520, op=(1-S.ads)*(S.sprint>0.5 ? 0.2 : 1);
     const ch=hud.cross.ch; ch[0].style.top=(-gap-9)+"px"; ch[1].style.top=gap+"px"; ch[2].style.left=(-gap-9)+"px"; ch[3].style.left=gap+"px"; hud.cross.style.opacity=op;
@@ -974,20 +1173,25 @@ const ZOMBIE=(function(){
   Z.atmos=function(dt, dn, under){
     Z.fade=Math.min(1, Z.fade+dt*0.5);
     const k=Z.fade*(1-under), night=dn.nightAmount;
-    _c1.setHex(0x4f5646).lerp(_c2.setHex(0x080a07), Math.min(1, night*1.15));
+    // (by night not black: the fog a dark moonlit green-grey you can make shapes out against, and further off)
+    _c1.setHex(0x4f5646).lerp(_c2.setHex(0x1d251f), Math.min(1, night*1.1));
     scene.fog.color.lerp(_c1, 0.85*k);
-    scene.fog.near=lerp(scene.fog.near, 3, k); scene.fog.far=lerp(scene.fog.far, 95+75*(1-night), k);
+    // and the higher you are the further you see: up the water tower (14x) the fog thins to show the country
+    const up=Math.max(0, camera.position.y-groundY(camera.position.x, camera.position.z)-4);
+    scene.fog.near=lerp(scene.fog.near, 3+up*1.5, k); scene.fog.far=lerp(scene.fog.far, 95+75*(1-night)+40*night+up*9, k);
     _bg.copy(scene.background && scene.background.isColor ? scene.background : _c1).lerp(_c1, 0.8*k); scene.background=_bg;
     HAZE_U.w*=1-k;
     hemi.intensity*=1-0.38*k; hemi.color.lerp(_c3.setHex(0xa9b59a), 0.45*k); hemi.groundColor.lerp(_c4.setHex(0x2a2a1e), 0.4*k);
     key.intensity*=1-0.62*k; key.color.lerp(_c5.setHex(0xb8c0a0), 0.5*k);
     amb.intensity*=1-0.2*k;
+    // a fill at night so it is gloom and not blackout: what the moon would give through cloud, cold and green
+    hemi.intensity+=0.16*night*k; amb.intensity+=0.07*night*k; hemi.color.lerp(_c3.setHex(0x8fa294), 0.3*night*k);
   };
   const _c1=new T.Color(), _c2=new T.Color(), _c3=new T.Color(), _c4=new T.Color(), _c5=new T.Color(), _bg=new T.Color(), _c6=new T.Color(), _c7=new T.Color();
   // and the sky itself comes down dark green-grey, all but black at night (16b's skyWeather calls this as it paints)
   Z.sky=function(img, day, set, night){
     if(!Z.on) return; const k=Z.fade, n=Math.min(1, night+set*0.5);
-    for(const [kk, d, nn] of [["top",0x30352d,0x040504],["mid",0x40463b,0x060706],["low",0x4d5347,0x080907],["hz",0x565c4e,0x0a0c09]]){
+    for(const [kk, d, nn] of [["top",0x30352d,0x0e130f],["mid",0x40463b,0x141a15],["low",0x4d5347,0x19201a],["hz",0x565c4e,0x1d251f]]){
       _c6.setHex(d).lerp(_c7.setHex(nn), n); img[kk].lerp(_c6, 0.82*k); } };
   // the gun's flash lights the world: a lamp in 16's pool, at the gun, as bright as its mod says (and only while it is)
   const FLASH={x:0, y:0, z:0, color:0xffc27a, intensity:3.0, dist:16, decay:1.4, indoor:true, mod:{v:0}, under:false};
@@ -997,7 +1201,9 @@ const ZOMBIE=(function(){
      THE RUN
      ====================================================================== */
   function resetRun(){
-    Z.hp=100; Z.t=0; Z.kills=0; Z.level=1; Z.dead=false;
+    Z.hp=100; Z.t=0; Z.kills=0; Z.level=1; Z.dead=false; Z.score=0; Z.ts=1;
+    S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null;
+    for(const b of BOMBS) scene.remove(b.g); BOMBS.length=0; BOOM.mod.v=0;
     S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0};
     S.cur="pistol"; S.next=null; S.reloading=false; S.switchT=0; S.cool=0; S.ads=0; S.fired=false; S.melee=0; S.dmgFlash=0; S.spawnT=8; S.supplyT=20; S.levelShown=1;
     for(const zb of ZS) recycle(zb);
@@ -1005,6 +1211,7 @@ const ZOMBIE=(function(){
       else if(p.cache){ if(p.kind!==p.kind0){ scene.remove(p.g); p.kind=p.kind0; p.g=pickupMesh(p.kind); p.g.position.set(p.x, p.y, p.z); p.g.userData.glow.position.y=0.03; scene.add(p.g); }
         p.gone=false; p.g.visible=true; } }
     if(blood.decals) for(const m of blood.decals) m.visible=false;
+    if(blood.scs) for(const m of blood.scs) m.visible=false;
     Z.trail.length=0; S.trailAt=null;
     if(vm.show){ vm.show("pistol"); }
     if(hud.dead){ hud.dead(false); hud.last={}; }
@@ -1031,13 +1238,15 @@ const ZOMBIE=(function(){
     hideLiving(true); hideTraffic(true);
     WEATHER.set("dread", true); WEATHER.hold=1e9;
     { const h=DayNight.state.hour; if(h>6.5 && h<17.2) DayNight.setHour(17.4); }
-    renderer.domElement.style.filter="saturate(0.52) contrast(1.12) brightness(0.92)";        // (the colour out of it; the green is in the light and the fog)
+    renderer.domElement.style.filter="saturate(0.52) contrast(1.08) brightness(0.98)";        // (the colour out of it; the green is in the light and the fog)
     document.body.classList.add("zmode"); hud.el.classList.add("on");
     _hudPanels=["mast","keys","cluster","plan"].map(id=>document.getElementById(id)).filter(Boolean);
     for(const el of _hudPanels) el.style.display="none";
     S.lastYaw=player.yaw; S.lastPitch=player.pitch;
     snd.ambience(true);
-    banner("THEY'RE COMING", "CLICK TO SHOOT  ·  R RELOAD  ·  RIGHT BUTTON TO AIM  ·  L FOR THE LIGHT");
+    const best=loadBest();
+    banner("THEY'RE COMING", "CLICK TO SHOOT  ·  R RELOAD  ·  RIGHT BUTTON AIMS  ·  F PIPE BOMB  ·  L LIGHT"+
+           (best ? "\nYOUR BEST  "+best.score+"  ·  "+clock(best.t) : ""));
   };
   Z.stop=function(){
     if(!Z.on) return;
@@ -1046,7 +1255,8 @@ const ZOMBIE=(function(){
     for(let i=PK.length-1;i>=0;i--){ PK[i].g.visible=false; if(PK[i].dyn){ scene.remove(PK[i].g); PK.splice(i,1); } }
     if(blood.decals) for(const m of blood.decals) m.visible=false;
     if(blood.P){ blood.P.n=0; dust.P.n=0; blood.P.pts.visible=false; dust.P.pts.visible=false; }
-    FLASH.mod.v=0;
+    FLASH.mod.v=0; BOOM.mod.v=0; Z.ts=1;
+    for(const b of BOMBS) scene.remove(b.g); BOMBS.length=0;
     hideLiving(false); hideTraffic(false);
     WEATHER.hold=0; WEATHER.set("cloudy", true); WEATHER.hold=0;
     renderer.domElement.style.filter="";
@@ -1064,7 +1274,7 @@ const ZOMBIE=(function(){
     if(/^Digit[1-4]$/.test(k)){ select(+k.slice(5)); return true; }
     if(k==="KeyR"){ startReload(); return true; }
     if(k==="KeyV"){ melee(); return true; }
-    if(k==="KeyF"){ toast("NO DRONE. NOT TONIGHT", "#b8d07a"); return true; }
+    if(k==="KeyF"){ throwBomb(); return true; }                                  // (a pipe bomb; no drone in this)
     if(k==="KeyX" || k==="KeyP" || k==="KeyT"){ return true; }               // (no wrecks, power cuts or storms on top of it)
     return false;
   };
@@ -1073,10 +1283,14 @@ const ZOMBIE=(function(){
   let _poseFrame=0;
   Z.frame=function(dt, now, dark){
     dt=Math.min(dt, 0.05);
+    // a hit's moment of stillness (19 slows the world by Z.ts while it lasts), timed in real time
+    if(S.tsT>0){ S.tsT-=dt; if(S.tsT<=0) Z.ts=1; }
+    dt*=Z.ts;
     const light=clamp(1-dark*0.85, 0.12, 1);
     if(!Z.dead){ Z.t+=dt;
       const lv=Math.min(12, 1+Math.floor(Z.t/75));
-      if(lv>Z.level){ Z.level=lv; banner("THREAT "+lv, lv===3 ? "RUNNERS" : lv===5 ? "BRUTES" : "MORE OF THEM"); }
+      if(lv>Z.level){ Z.level=lv;
+        if(lv>=2 && !S.horde) startHorde(lv); else banner("THREAT "+lv, lv===3 ? "RUNNERS" : lv===5 ? "BRUTES" : "MORE OF THEM"); }
     }else S.deadT+=dt;
     // your trail, a point every three metres you walk (they come along it)
     if(!driving && !(typeof BOAT!=="undefined" && BOAT.on) && !Z.dead){ const q=S.trailAt;
@@ -1091,14 +1305,24 @@ const ZOMBIE=(function(){
     const px=player.pos.x, pz=player.pos.z;
     for(const zb of ZS){ if(!zb.live) continue;
       const d=Math.hypot(zb.x-px, zb.z-pz);
-      if(zb.state==="dead"){ zb.dieT+=dt; zb.corpseT+=dt;
+      if(zb.state==="dead"){
+        if(zb.fly){ const F=zb.fly; F.vy-=9.8*dt; const nx=zb.x+F.vx*dt, nz=zb.z+F.vz*dt;
+          if(!zHit(nx, nz, zb.y, 0.25)){ zb.x=nx; zb.z=nz; } else { F.vx*=-0.3; F.vz*=-0.3; }
+          zb.y+=F.vy*dt; zb.tumble+=F.spin*dt;
+          const g=surfaceY(zb.x, zb.z, zb.y+0.8);
+          if(zb.y<=g && F.vy<0){ zb.y=g;
+            if(F.vy<-3.5 && F.b<1){ F.vy*=-0.25; F.vx*=0.5; F.vz*=0.5; F.spin*=0.5; F.b++; snd.thud(); }
+            else { zb.fly=null; zb.tumble=wrapA(zb.tumble); zb.fall=zb.tumble>=0 ? 1 : -1; zb.dieT=0.76; zb.pooled=false; } }
+          poseZombie(zb, false); continue; }
+        if(zb.flung) zb.tumble+=clamp(zb.fall*Math.PI*0.49-zb.tumble, -dt*7, dt*7);
+        zb.dieT+=dt; zb.corpseT+=dt;
         if(zb.dieT>0.75 && !zb.pooled){ zb.pooled=true;
           const f=zb.fall*0.85*zb.h, cx=zb.x+Math.sin(zb.yaw)*f, cz=zb.z+Math.cos(zb.yaw)*f; blood.decal(cx, cz, surfaceY(cx, cz, zb.y+0.5), 0.9+Math.random()*0.6); }
         if(zb.corpseT>26){ zb.sink=(zb.sink||0)+dt*0.25; if(zb.sink>0.6) { recycle(zb); continue; } }
         if(d>170){ recycle(zb); continue; }
         poseZombie(zb, false); continue; }
       if(d>150){ recycle(zb); continue; }
-      const moving=Z.freeze ? zb.alert : stepZombie(zb, dt);                  // (frozen, for a still picture: in their stride)
+      const moving=Z.freeze ? zb.alert && !zb.down : stepZombie(zb, dt);    // (frozen, for a still picture: in their stride)
       if(Z.freeze && moving) zb.ph=(zb.ph+dt*0.8)%1, zb.t+=dt;
       if(d<70 || ((_poseFrame+zb.P.seed*7)|0)%3===0) poseZombie(zb, moving);
     }
@@ -1112,10 +1336,10 @@ const ZOMBIE=(function(){
       if(d<0.6 && d>1e-4 && Math.abs(a.y-player.feetY)<1.2 && !driving){ const p=0.6-d; if(!zHit(a.x+dx/d*p, a.z+dz/d*p, a.y, 0.28)){ a.x+=dx/d*p; a.z+=dz/d*p; } }
     }
     // a car through them
-    if(driving){ const c=driving.g.position, sp=Math.abs(driving.veh.speed);
-      if(sp>4) for(const zb of L){ if(Math.hypot(zb.x-c.x, zb.z-c.z)<2.2 && Math.abs(zb.y-c.y)<2){
-        _v2.set(Math.sin(carYaw(driving.g.quaternion)), 0, Math.cos(carYaw(driving.g.quaternion))); _v3.set(zb.x, zb.y+1.1, zb.z);
-        hurtZombie(zb, 60+sp*8, false, _v3, _v2); } } }
+    if(driving) carVsDead(dt, L);
+    // the pipe bombs, and a horde when one is coming
+    updateBombs(dt); updateHorde(dt);
+    S.streakT=Math.max(0, S.streakT-dt); if(S.streakT<=0) S.streak=0;
     updateGun(dt);
     updateVM(dt);
     updatePickups(dt);
@@ -1127,6 +1351,8 @@ const ZOMBIE=(function(){
     FLASH.under=buriedAt(camera.position.x, camera.position.z, camera.position.y); FLASH.mod.v=S.flashT>0 ? 1 : 0;
     // the ADS view: tighter, a lot tighter through the rifle's scope
     { const g=G(), want=fov*(1-S.ads*(g.zoom ? 1-g.zoom : 0.2)); if(Math.abs(camera.fov-want)>0.01){ camera.fov=want; camera.updateProjectionMatrix(); } }
+    // the blood on the screen from a hit close to, or a car through them
+    S.splat=Math.max(0, S.splat-dt*0.55); hud.splat(S.splat);
     // hit: the view jolts; down: the view goes to the ground
     if(S.shake>0){ S.shake=Math.max(0, S.shake-dt*2.5); const k=S.shake*S.shake*0.06; camera.position.x+=(Math.random()-0.5)*k; camera.position.y+=(Math.random()-0.5)*k; camera.position.z+=(Math.random()-0.5)*k; }
     if(Z.dead){ const k=Math.min(1, S.deadT/0.9); camera.position.y-=k*1.35; camera.rotateZ(k*0.9); camera.rotateX(-k*0.25); }

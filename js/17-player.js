@@ -224,6 +224,7 @@ function sitToggle(){
 function interact(){
   if(!started) return;
   if(typeof BOAT!=="undefined" && BOAT.on){ BOAT.leave(); return; }
+  if(player.ladder) return;                                        // (on a ladder you climb on and off it, W and S)
   if(driving){ exitCar(); return; }
   { const c=nearestCar(); if(c){ enterCar(c); return; } }
   { const u=nearestUse(); if(u && u.pri){ u.fn(); return; } }
@@ -300,6 +301,7 @@ function updateDoors(dt){
   if(driving) bits.push("E  ·  GET OUT");
   else if(typeof BOAT!=="undefined" && BOAT.on) bits.push(BOAT.prompt ? BOAT.prompt() : "E  ·  STEP OFF");
   else if(seated) bits.push("C  ·  "+(seated.lie?"GET UP":"STAND UP"));
+  else if(player.ladder) bits.push("W  ·  UP      S  ·  DOWN");
   else{
     const nc=nearestCar();
     if(nc) bits.push("E  ·  DRIVE");
@@ -340,6 +342,7 @@ function fixedUpdate(dt){
   }
   const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   const r=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+  if(player.ladder){ climbStep(dt, f); return; }                // on a ladder (06's addLadder): W up, S down, off at either end
   if(seated){                       // sitting: look where you like, go nowhere
     if(sitGuard && !f && !r) sitGuard=false;      // keys released — you may leave
     if((f||r) && !sitGuard) standUp();
@@ -401,6 +404,28 @@ function fixedUpdate(dt){
   // running up a flight the eased feet fall behind the treads; past a step's
   // reach the stair is lost and you drop through to the floor beneath it
   if(target-player.feetY>0.3) player.feetY=target-0.3;
+}
+
+/* --- ladders (06's addLadder) ----------------------------------------------
+   On: you are put on the rungs facing them, a hand's length off, and the
+   view is yours to turn. W climbs, S goes down (Shift or Q a little
+   quicker), and past either end you step off where the ladder says, onto
+   the ground or the walk at the top. */
+function climbOn(L, way){
+  if(seated) standUp();
+  player.ladder={L:L, h:way==="up" ? L.y0 : L.y1-0.05};
+  player.yaw=L.yaw; player.moving=0; player.bob=0;                  // (facing the rungs: forward is -(sin,cos) of yaw)
+  toast(way==="up" ? "ON THE LADDER  ·  W TO CLIMB" : "ON THE LADDER  ·  S TO GO DOWN", "#ffb324");
+}
+function climbStep(dt, f){
+  const C=player.ladder, L=C.L, sp=(keys.ShiftLeft||keys.ShiftRight||keys.KeyQ) ? 3.4 : 2.3;
+  C.h=clamp(C.h+f*sp*dt, L.y0-0.01, L.y1+0.01);
+  // (the rungs are along -(sin,cos) of the way you face from them, so you stand that hand's length back)
+  player.pos.x=L.x+Math.sin(L.yaw)*0.42; player.pos.z=L.z+Math.cos(L.yaw)*0.42; player.feetY=C.h;
+  player.sit=0; player.moving=f ? 1 : 0;
+  if(f){ player.step+=sp*dt; player.bob=Math.sin(player.step*3.6)*0.02; }
+  if(C.h>=L.y1 && f>0){ player.ladder=null; player.pos.x=L.top.x; player.pos.z=L.top.z; player.feetY=L.top.y; toast("AT THE TOP","#ffb324"); }
+  else if(C.h<=L.y0 && f<0){ player.ladder=null; player.pos.x=L.out.x; player.pos.z=L.out.z; player.feetY=surfaceY(L.out.x, L.out.z, L.y0+0.4); }
 }
 
 /* --- drone (F) -------------------------------------------------------- */
