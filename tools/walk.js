@@ -302,6 +302,8 @@ const ROUTES={
         res[S.name+", keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : hi<S.hi-0.1 ? "up: never reached the top ("+hi.toFixed(2)+")"
                                          : typeof d==="string" ? "down: "+d : REST.player.feetY>S.lo+0.1 ? "down: still up at "+REST.player.feetY.toFixed(2) : "ok"; } }
     // and every ladder (06's addLadder): E at its foot, W to the top and off it, then E there and S back down
+    // (E does nothing till the game has started, which the walk never does)
+    const started0=started; started=true;
     for(const L of (typeof LADDERS!=="undefined" ? LADDERS : [])){ const nm=L.label.toLowerCase()+" ladder, keys held";
       for(const [m,lab] of PACES(nm)){
         for(const k in REST.keys) REST.keys[k]=false;
@@ -315,6 +317,7 @@ const ROUTES={
         res[nm+" ("+lab+")"] = top<L.top.y-0.1 ? "up: never reached the top ("+top.toFixed(2)+")" : stuckTop ? "up: stuck where it left you"
           : !onDown ? "E at the top did nothing" : bot>L.y0+0.3 ? "down: still up at "+bot.toFixed(2)
           : REST.probe(REST.player.pos.x, REST.player.pos.z, bot) ? "down: stuck at the foot" : "ok"; } }
+    started=started0;
     // and the trailer's step the same way, at every pace, then back down it
     if(want("trailer step")){ (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");
       const IN=ROUTES["into the trailer"].pts.slice(0,4), OUT=IN.slice().reverse(), fl=REST.surf(IN[3][0],IN[3][1],2);
