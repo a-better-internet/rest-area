@@ -508,7 +508,7 @@ const ZOMBIE=(function(){
     if(pd<6.5) hurtPlayer(75*(1-pd/6.5), b.x, b.z);
     S.shake=Math.min(1, S.shake+Math.max(0, 1.2*(1-pd/45)));
     for(let k=0;k<5;k++){ _v1.set(b.x+(Math.random()-0.5)*2.5, b.y+Math.random()*1.5, b.z+(Math.random()-0.5)*2.5); dust.puff(_v1, true); }
-    fx.fire(at); BOOM.x=b.x; BOOM.y=b.y+1.5; BOOM.z=b.z; BOOM.under=buriedAt(b.x, b.z, b.y+0.5); BOOM.mod.v=1;
+    fx.fire(at); fx.boomSmoke(at); BOOM.x=b.x; BOOM.y=b.y+1.5; BOOM.z=b.z; BOOM.under=buriedAt(b.x, b.z, b.y+0.5); BOOM.mod.v=1;
     blood.scorch(b.x, b.z, surfaceY(b.x, b.z, b.y+0.3));
     snd.boom(b.x, b.z);
     for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-b.x, zb.z-b.z)<90) zb.alert=true;
@@ -836,7 +836,17 @@ const ZOMBIE=(function(){
     // a bomb's fire: a ball of it, gone in a third of a second
     { const ft=blotTex(31, true); fx.ball=new T.Sprite(new T.SpriteMaterial({map:ft, color:0xffa040, blending:T.AdditiveBlending, transparent:true, depthWrite:false, opacity:0}));
       fx.ball.visible=false; scene.add(fx.ball); fx.bt=0; }
-    fx.fire=(at)=>{ fx.ball.position.copy(at); fx.bt=0.38; fx.ball.visible=true; };
+    fx.fire=(at)=>{ fx.ball.position.copy(at); fx.bt=0.5; fx.ball.visible=true; };
+    // and its smoke: a column of dark lumps that rise and spread and thin over three seconds or so
+    { const smTex=blotTex(91, false); fx.smoke=[];
+      for(let k=0;k<9;k++){ const s=new T.Sprite(new T.SpriteMaterial({map:smTex, color:0x3c3b36, transparent:true, depthWrite:false, opacity:0}));
+        s.visible=false; scene.add(s); fx.smoke.push({s:s, t:0, life:1, vx:0, vy:0, vz:0, sz:1}); } }
+    fx.boomSmoke=(at)=>{ for(const m of fx.smoke){ m.s.position.set(at.x+(Math.random()-0.5)*1.8, at.y+Math.random()*1.4, at.z+(Math.random()-0.5)*1.8);
+        m.vx=(Math.random()-0.5)*1.4; m.vy=1.4+Math.random()*2.2; m.vz=(Math.random()-0.5)*1.4; m.t=m.life=2.4+Math.random()*1.6; m.sz=2.2+Math.random()*2.4;
+        m.s.material.rotation=Math.random()*6.28; m.s.visible=true; }
+      // and what it throws: grit and bits of whatever was there, out and up
+      const gy=surfaceY(at.x, at.z, at.y)-0.02;
+      for(let i=0;i<28;i++){ const a=Math.random()*6.28, sp=3+Math.random()*7; dust.P.add(at.x, at.y, at.z, Math.sin(a)*sp, 2.5+Math.random()*7, Math.cos(a)*sp, 1.4, gy, false); } };
     blood.scMat=new T.MeshStandardMaterial({map:blotTex(78, false), color:0x14110e, transparent:true, depthWrite:false, roughness:0.9,
       polygonOffset:true, polygonOffsetFactor:-6, polygonOffsetUnits:-6});
     blood.scs=[]; blood.si=0; for(let k=0;k<10;k++){ const m=new T.Mesh(new T.PlaneGeometry(1,1), blood.scMat); m.rotation.x=-Math.PI/2; m.visible=false; scene.add(m); blood.scs.push(m); }
@@ -852,7 +862,13 @@ const ZOMBIE=(function(){
     for(const L of [blood.mists, dust.puffs]) for(const m of L){ if(m.t<=0) continue; m.t-=dt; const u=1-m.t/m.life;
       m.s.scale.setScalar(m.size*(0.4+u*1.2)); m.s.material.opacity=m.op*(1-u)*(0.4+0.6*light); if(m.t<=0) m.s.visible=false; }
     if(fx.lt>0){ fx.lt-=dt; if(fx.lt<=0) fx.line.visible=false; }
-    if(fx.bt>0){ fx.bt-=dt; const u=1-fx.bt/0.38; fx.ball.scale.setScalar(2+u*7); fx.ball.material.opacity=Math.max(0, 1-u)*0.95; if(fx.bt<=0) fx.ball.visible=false; }
+    // the fire: white-hot and small, then a big orange ball going out
+    if(fx.bt>0){ fx.bt-=dt; const u=Math.min(1, 1-fx.bt/0.5); fx.ball.scale.setScalar(2.5+u*10); fx.ball.material.opacity=Math.pow(Math.max(0, 1-u), 0.7)*0.95;
+      fx.ball.material.color.setHex(0xfff2c8).lerp(_c8.setHex(0xff5a14), Math.min(1, u*1.6)); if(fx.bt<=0) fx.ball.visible=false; }
+    for(const m of fx.smoke){ if(m.t<=0) continue; m.t-=dt; const u=1-m.t/m.life;
+      m.s.position.x+=m.vx*dt; m.s.position.y+=m.vy*dt; m.s.position.z+=m.vz*dt; m.vy*=1-dt*0.5;
+      m.s.scale.setScalar(m.sz*(0.6+u*2.2)); m.s.material.opacity=0.8*Math.min(1, u*10)*Math.pow(1-u, 1.3);
+      m.s.material.color.setHex(0x3c3b36).multiplyScalar(0.35+0.65*light); if(m.t<=0) m.s.visible=false; }
     BOOM.mod.v=Math.max(0, BOOM.mod.v-dt*3.5);
   }
 
@@ -1187,6 +1203,7 @@ const ZOMBIE=(function(){
     // a fill at night so it is gloom and not blackout: what the moon would give through cloud, cold and green
     hemi.intensity+=0.16*night*k; amb.intensity+=0.07*night*k; hemi.color.lerp(_c3.setHex(0x8fa294), 0.3*night*k);
   };
+  const _c8=new T.Color();
   const _c1=new T.Color(), _c2=new T.Color(), _c3=new T.Color(), _c4=new T.Color(), _c5=new T.Color(), _bg=new T.Color(), _c6=new T.Color(), _c7=new T.Color();
   // and the sky itself comes down dark green-grey, all but black at night (16b's skyWeather calls this as it paints)
   Z.sky=function(img, day, set, night){

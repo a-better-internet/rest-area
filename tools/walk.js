@@ -121,6 +121,10 @@ const ROUTES={
   "along the machine shed": [[150,-1123],[150,-1120.6],[158.14,-1120.6],[166.0,-1120.6],[170.0,-1120.6],[170.0,-1112.0]],
   // the substation behind the fuel stop (14s): up the lane from the lot, in at the gate, into the control house; round the yard
   "up to the substation":   {gate:true, pts:[[8,-1250],[11.5,-1268],[11.5,-1372],[11.5,-1376],[11.5,-1379],[-4.4,-1384.4],[-5.6,-1384.4],[-6.0,-1384.4],[-6.4,-1384.4],[-9.0,-1384.4],[-11.5,-1383.0]]},
+  // the water tower (14x): across the field from the fuel stop's lot to the foot of its ladder; and once round its catwalk,
+  // 26 m up (the ladder itself is tested below, with the keys held)
+  "to the water tower":     {seek:[[8,-1250],[-23.4,-1318]]},
+  "round the catwalk":      {y0:200, pts:Array.from({length:25}, (_,k)=>{ const a=0.3+k/24*Math.PI*2*0.96; return [-32+Math.cos(a)*6.43, -1318+Math.sin(a)*6.43]; })},
   "round the substation yard": {gate:true, pts:[[11.5,-1378],[24,-1378],[34,-1378],[34,-1395],[34,-1414],[-14,-1414],[-14,-1392],[-2,-1392],[-2,-1384],[11.5,-1379]]},
   // Lake Street's garages (14n) with their doors up: in past the car in the drive of the ranch by the park
   "into a garage on lake street": {gate:true, pts:[[1270.0,-1190.0],[1269.0,-1183.0],[1268.5,-1181.0],[1268.5,-1177.0]]},
@@ -297,6 +301,20 @@ const ROUTES={
         const u=drive(UPh,m,S.lo); REST.sim(40); const hi=REST.player.feetY, d=drive(DNh,m,hi); REST.sim(40);
         res[S.name+", keys held ("+lab+")"] = typeof u==="string" ? "up: "+u : hi<S.hi-0.1 ? "up: never reached the top ("+hi.toFixed(2)+")"
                                          : typeof d==="string" ? "down: "+d : REST.player.feetY>S.lo+0.1 ? "down: still up at "+REST.player.feetY.toFixed(2) : "ok"; } }
+    // and every ladder (06's addLadder): E at its foot, W to the top and off it, then E there and S back down
+    for(const L of (typeof LADDERS!=="undefined" ? LADDERS : [])){ const nm=L.label.toLowerCase()+" ladder, keys held";
+      for(const [m,lab] of PACES(nm)){
+        for(const k in REST.keys) REST.keys[k]=false;
+        REST.go(L.out.x, L.out.z, L.yaw, L.y0); REST.sim(10); interact();
+        if(!REST.player.ladder){ res[nm+" ("+lab+")"]="E at the foot did nothing"; continue; }
+        if(m) REST.keys[m]=true; REST.keys.KeyW=true; let t=0; while(REST.player.ladder && t<60*40){ REST.sim(1); t++; }
+        REST.keys.KeyW=false; REST.sim(20); const top=REST.player.feetY, stuckTop=REST.probe(REST.player.pos.x, REST.player.pos.z, top);
+        interact(); const onDown=!!REST.player.ladder;
+        REST.keys.KeyS=true; t=0; while(REST.player.ladder && t<60*40){ REST.sim(1); t++; }
+        for(const k in REST.keys) REST.keys[k]=false; REST.sim(20); const bot=REST.player.feetY;
+        res[nm+" ("+lab+")"] = top<L.top.y-0.1 ? "up: never reached the top ("+top.toFixed(2)+")" : stuckTop ? "up: stuck where it left you"
+          : !onDown ? "E at the top did nothing" : bot>L.y0+0.3 ? "down: still up at "+bot.toFixed(2)
+          : REST.probe(REST.player.pos.x, REST.player.pos.z, bot) ? "down: stuck at the foot" : "ok"; } }
     // and the trailer's step the same way, at every pace, then back down it
     if(want("trailer step")){ (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");
       const IN=ROUTES["into the trailer"].pts.slice(0,4), OUT=IN.slice().reverse(), fl=REST.surf(IN[3][0],IN[3][1],2);
