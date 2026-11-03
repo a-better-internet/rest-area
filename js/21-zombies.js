@@ -1365,7 +1365,9 @@ const ZOMBIE=(function(){
   };
   // for tools and testing: put one down, and see what there is
   Z.debug={ZS:ZS, PK:PK, S:S, place:(kind, x, z)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6); return placePickup(kind, x, z, y, {dyn:true, life:600}); }, clear:()=>{ for(const zb of ZS) recycle(zb); if(blood.decals) for(const m of blood.decals) m.visible=false; }, spawnAt:(x, z, kind, yaw, alert)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6), zb=spawnZombie(x, z, y, kind||"walker", yaw); if(zb && alert) zb.alert=true; return zb; },
-           give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, kill:(zb, head)=>{ _v2.set(0,0,-1); killZombie(zb, !!head, _v2); }};
+           give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM,
+           bomb:(x, z, fuse)=>{ S.bombs++; S.throwT=0; throwBomb(); const b=BOMBS[BOMBS.length-1]; if(!b) return null; b.x=x; b.z=z; b.y=surfaceY(x, z, groundY(x,z)+0.6)+0.05;
+             b.vx=b.vy=b.vz=0; b.fuse=fuse||3.5; return b; }, kill:(zb, head)=>{ _v2.set(0,0,-1); killZombie(zb, !!head, _v2); }};
   return Z;
 })();
 // from the start card: straight into it
