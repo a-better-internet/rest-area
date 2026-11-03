@@ -162,6 +162,8 @@
   #boot .go{font-family:"JetBrains Mono";font-size:12px;letter-spacing:.3em;color:var(--amber);
     border:1px solid rgba(244,196,48,.5);padding:10px 20px;border-radius:3px;background:rgba(0,0,0,.35)}
   #boot .hint{font-size:10px;letter-spacing:.2em;color:#9fb3a6}
+  #boot .zgo{color:#b8d07a;border-color:rgba(160,30,24,.75);background:rgba(40,6,4,.55);margin-top:-8px}
+  #boot .zgo:hover{color:#e8f4b0;background:rgba(80,10,6,.7)}
   #boot.hidden{opacity:0;pointer-events:none}
 
   #touch{position:fixed;left:18px;bottom:210px;z-index:11;display:none;grid-template-columns:repeat(3,54px);
@@ -220,6 +222,7 @@
   <div class="row"><span>Sound</span><span><kbd>U</kbd></span></div>
   <div class="row"><span>Plan view · HUD</span><span><kbd>O</kbd> · <kbd>H</kbd></span></div>
   <div class="row"><span>Graphics settings</span><span><kbd>G</kbd></span></div>
+  <div class="row"><span>Zombie mode</span><span><kbd>Z</kbd></span></div>
 </div>
 
 <div id="cluster">
@@ -253,6 +256,7 @@
     <div class="sub">I-79 North · Crawford County · Pennsylvania</div>
   </div>
   <div class="go">CLICK TO PULL IN</div>
+  <div class="go zgo" id="zgo">OR · ZOMBIE MODE</div>
   <div class="hint">the woods are building · give it a moment</div>
   <div class="hint">press G for graphics settings</div>
 </div>
@@ -328,5 +332,6 @@
 <script src="js/18c-settings.js"></script>
 <script src="js/19-loop.js"></script>
 <script src="js/20-audio.js"></script>
+<script src="js/21-zombies.js"></script>
 </body>
 </html>

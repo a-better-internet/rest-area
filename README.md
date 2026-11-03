@@ -242,7 +242,10 @@ If the scene runs hot on your machine, start there (see below).
     at a crawl, and pull back to the middle once past.
 - **The interstate** is two lanes each way with a wooded median. It has
   rumble strips, mile markers, the REST AREA 1/2 MILE and NEXT RIGHT signs,
-  the gore sign and a DO NOT ENTER at the wrong end of the ramp. Three
+  the gore sign and a DO NOT ENTER at the wrong end of the ramp. Every
+  sign and marker stands off the paving: where a ramp's speed-change lane
+  or taper runs beside the road, the mile marker that would have stood in
+  it is left out, and the gore signs stand in the grass past the nose. Three
   paved emergency crossovers cut through the median, level with the road
   on a berm across the swale: one just north of the site in the woods you
   can walk, and one each way out along the road. They are signed NO U TURN
@@ -853,19 +856,22 @@ If the scene runs hot on your machine, start there (see below).
     kitchenette under the window with a fridge, a sink, a microwave and
     the coffee maker, a table with four chairs, the lockers, a couch, the
     time clock and its rack of cards, and the back door.
-  - Out back, a stepping-stone path goes to a block shed: salt bags and
-    paint on steel shelves, a red mower and an orange snow blower, a stack
-    of cones, shovels and tools on the wall. A plain door at the back of it opens on a stair down to **the
-    listening room**, under the ground: walnut wainscot and green walls, a
-    coffered ceiling, a rug, a fire going in the fireplace, sconces and a
-    floor lamp. A man lies back in an oxblood leather recliner, his feet
-    up on its footrest and a scotch in his hand, beside a side table and
-    its lamp and a brass cart of single malts and blends, a decanter,
-    glasses and an ice bucket. On the console a record
-    goes round under its arm, and a jazz trio plays from the speakers
-    either side (piano, upright bass and brushes, a little crackle off the
-    vinyl). Records fill the shelves, there are books and a globe, and a
-    leather club chair for you (sit).
+  - Well out back, a path of stepping stones runs sixteen metres to a
+    block shed: salt bags and paint on steel shelves, a red mower and an
+    orange snow blower, a stack of cones, shovels and tools on the wall. A
+    plain door at the back of it opens on a stair down to **the listening
+    room**, under the ground: walnut wainscot and green walls, a coffered
+    ceiling, a rug, a fire going in the fireplace, sconces and a floor
+    lamp. Beside an oxblood leather recliner are a side table and its lamp
+    and a brass cart of single malts and blends, a decanter, glasses and an
+    ice bucket. Records fill the shelves, there are books and a globe, and
+    a leather club chair for you (sit). He is not always there: most
+    evenings after supper, and some afternoons, a man lies back in the
+    recliner, his feet up on its footrest and a scotch in his hand, and a
+    record goes round on the console with a jazz trio coming from the
+    speakers either side (piano, upright bass and brushes, a little
+    crackle off the vinyl). When he isn't, `E` at the console puts a
+    record on for yourself, and takes it off again.
   - On the apron past the scale two rigs are pulled over. An inspector goes
     round one with a clipboard, stopping to write, while its driver waits
     by his cab with a coffee; cones round it, chocks under a wheel, a tool
@@ -1281,6 +1287,50 @@ If the scene runs hot on your machine, start there (see below).
       at the end of the old drive.
   - You can hear the fire crackle, a little music, and the kids talking and
     laughing, louder as you get closer.
+- **Zombie mode.** A mode of its own: the start card's second button
+  (ZOMBIE MODE), or `Z` at any time, and `Z` again to leave it. The world
+  empties of the living. Nobody is left in it but the dead, the road is
+  empty, the birds and the dogs are quiet. The sky comes down grey, the
+  fog comes in close (green-grey by day, all but black by night) and the
+  colour goes out of everything. It starts late in the afternoon, and the
+  night comes on as it goes; `L` is your flashlight.
+  - **The dead** are the townsfolk, green and bloodied, in what they were
+    wearing: blood down the front from an open mouth, a bite at the neck
+    or an arm, milky eyes. They shamble with their arms up after you, heads
+    lolling and twitching, some dragging a leg or an arm hanging. They
+    wander and groan until they see you or hear a shot, then come, and
+    within reach they claw. They come back along the way you came (they
+    follow you down a stair and in at the door you used) or out of the
+    woods round you, never in front of your eyes. It starts with a few;
+    every minute and a quarter the THREAT goes up a level and there are
+    more of them, faster. From the third level runners come, and from the
+    fifth, brutes that take a lot of killing. Run them down in a car if
+    you have one; they will not follow you into the lake.
+  - **The guns.** You start with a pistol and 45 rounds. A pump shotgun,
+    a carbine and a hunting rifle are out there to be found: in the
+    maintenance garage, at the treatment plant, at the Weirs' machine shed
+    and down in the weigh station's listening room, and later more turn up
+    near you. Each takes its own ammunition. Click to fire (hold it down
+    for the carbine), the right button aims down the sights (the rifle has
+    a scope), `R` reloads, `1`–`4` or the wheel change guns, and `V` shoves
+    them back with the gun. A shot to the head is worth three and takes the
+    head off; the rifle goes through three of them. Shots stop at walls and
+    the ground, kick up dust where they land, and every one of them for a
+    long way round hears the shot. The gun is in your hands on the screen:
+    it bobs as you walk, sways as you turn, kicks, throws its brass, is
+    racked and reloaded, and lights the world for an instant when it goes
+    off.
+  - **Pickups** turn over a glow on the ground and are taken by walking
+    into them: boxes of ammunition by calibre, bandages, first aid kits,
+    the guns. There are caches at places you know (the lobby, the garage,
+    the camp, the chapel, the brewery, the Perky Loon, the weigh station)
+    that come back a while after you take them. More turns up round you as
+    you go, whatever you are shortest of, and the dead drop some.
+  - **Blood.** Every hit throws a spray of drops and a mist; where they
+    fall there are pools. **You** take damage too: the edges of the screen
+    go red, on the side it came from, and your heart is loud when you are
+    low. At nothing you are down, with what you lasted and how many you
+    took with you; `ENTER` to go again.
 - **Sound** is synthesized, with no audio files: road noise that pans with
   the highway, wind, cardinals, chickadees, a wood thrush and crows by day,
   at night a chorus of tree crickets (soft, pulsing, in the 2.6 to 2.9 kHz
@@ -1315,6 +1365,12 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Sound | `U` |
 | Plan view · hide HUD | `O` · `H` |
 | Graphics settings | `G` |
+| Zombie mode on / off | `Z` |
+
+In zombie mode: click to fire (hold for the carbine), the right button to
+aim down the sights, `R` to reload, `1`–`4` or the wheel to change guns, `V`
+to shove with the gun, and `ENTER` to go again when you are down. The drone,
+the test weather and the wreck are off while it lasts.
 
 Your eyes are 1.66 m up standing, and sitting brings them down to where a
 seated person's are. Getting out of a car, off the boat or out of the
@@ -1414,7 +1470,7 @@ centred on the origin.
 | The Perky Loon | the house x 1433.5 … 1441.5, z −1186.5 … −1179.5; the porch to z −1188.4; the patio x 1431.8 … 1443.8 to z −1193.2; its lot x 1445 … 1462.5 |
 | Its roastery | under the house, x 1433.7 … 1441.3, z −1186.3 … −1179.7, its floor 2.65 m below the ground; the stair down x 1439 … 1440.4 from z −1175.3 to the door at z −1179.5 |
 | The weigh station | its ramps leave I-79 at z −2560 and rejoin it at z −3352; the lanes x −75.75 … −66.75, z −3008 … −2900; the scale z −2950 … −2928; the scale house x −64.2 … −54.2, z −2946 … −2934; the apron x −66.5 … −38, z −3004 … −2962 |
-| The weigh station's shed and listening room | the shed x −60 … −56, z −2930 … −2926; the listening room under it x −60.2 … −53.8, z −2931.2 … −2925, its floor 2.75 m below the ground; the stair down from z −2927.3 |
+| The weigh station's shed and listening room | the shed x −60 … −56, z −2918 … −2914; the listening room under it x −61 … −53.4, z −2919.6 … −2912.6, its floor 2.75 m below the ground; the stair down from z −2915.3 |
 | The ends of I-79 | walls across the corridor at z −3700 (north) and +1720 (south) |
 | Edinboro Lake | x 980 … 2260, z −2090 … −1296, a rounded oblong, wandering off the street |
 | Treatment plant | x 118 … 160, z 90 … 128 (gate on the west side) |
@@ -1505,6 +1561,7 @@ js/18j-cornhole.js  cornhole at the brewery's boards against Danny: the bags, th
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
+js/21-zombies.js    zombie mode: the dead, the guns in your hands, pickups, blood, damage, the gloom, its sounds
 tools/shot.js       headless screenshots
 tools/walk.js       headless walk-through checks
 tools/zfight.js     coplanar faces in a box of the world

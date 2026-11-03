@@ -48,8 +48,8 @@ function rigidSkin(parts){
   return geo;
 }
 const _pm=(x,y,z,sx,sy,sz,rx)=>new T.Matrix4().compose(V3(x,y,z), new T.Quaternion().setFromEuler(new T.Euler(rx||0,0,0)), V3(sx||1,sy||1,sz||1));
-function skinned(parts, bones){
-  const mesh=new T.SkinnedMesh(rigidSkin(parts), PEOPLE_MAT);
+function skinned(parts, bones, mat){
+  const mesh=new T.SkinnedMesh(rigidSkin(parts), mat||PEOPLE_MAT);
   mesh.add(bones[0]); mesh.updateMatrixWorld(true);
   mesh.bind(new T.Skeleton(bones));
   mesh.castShadow=true; mesh.frustumCulled=false;
@@ -85,7 +85,7 @@ function buildPerson(o){
   // the head: skull, nose, ears, eyes, hair
   add(sph(0.105*h,14,10), _pm(0,Y(0.73),0.01, 0.92,1.08,1.0), o.skin, head);
   add(new T.BoxGeometry(0.03*h,0.045*h,0.04*h), _pm(0,Y(0.72),0.105*h), o.skin, head);
-  for(const s of [-1,1]){ add(sph(0.013*h,6,5), _pm(s*0.035*h,Y(0.745),0.093*h), "#1a1614", head);
+  for(const s of [-1,1]){ add(sph(0.013*h,6,5), _pm(s*0.035*h,Y(0.745),0.093*h), o.eyes||"#1a1614", head);
                           add(sph(0.024*h,6,5), _pm(s*0.097*h,Y(0.73),0.0, 0.5,1,0.8), o.skin, head); }
   add(new T.SphereGeometry(0.114*h,14,8,0,Math.PI*2,0,Math.PI*0.52), _pm(0,Y(0.745),-0.008*h, 0.95,0.95,1.04), o.hair, head);
   if(o.female) add(new T.BoxGeometry(0.20*h,0.26*h,0.06*h), _pm(0,Y(0.64),-0.075*h), o.hair, head);
@@ -123,7 +123,9 @@ function buildPerson(o){
     if(o.boots) add(new T.BoxGeometry(0.10*h,0.15*h,0.27*h), _pm(s*0.095*h,0.075*h,0.045*h), o.shoes, kn);   // work boots, laced up the shin
     else add(new T.BoxGeometry(0.095*h,0.075*h,0.26*h), _pm(s*0.095*h,0.04,0.045*h), o.shoes, kn);
   }
-  const mesh=skinned(parts, B);
+  // anything more, on the same bones (21's zombies: the blood, the bite, the open mouth)
+  if(o.extra) o.extra(add, Y, h, {root:root,spine:spine,head:head,shL:shL,elL:elL,shR:shR,elR:elR,hpL:hpL,knL:knL,hpR:hpR,knR:knR}, sw);
+  const mesh=skinned(parts, B, o.mat);
   const g=new T.Group(); g.add(mesh); scene.add(g);
   return {g:g, mesh:mesh, B:B, j:{root:root,spine:spine,head:head,shL:shL,elL:elL,shR:shR,elR:elR,hpL:hpL,knL:knL,hpR:hpR,knR:knR}, HIP:HIP, h:h, female:!!o.female};
 }

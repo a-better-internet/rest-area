@@ -191,6 +191,7 @@ const AUDIO=(function(){
     if(!ctx || !enabled) return;
     if(ctx.state==="suspended") ctx.resume();
     const cam=camera.position, t=ctx.currentTime;
+    const ZON=typeof ZOMBIE!=="undefined" && ZOMBIE.on;              // (zombie mode, 21: no birds, no dogs, nobody flushing, no trucks)
     const inside=indoorsAt(cam.x, cam.z, cam.y);
     outLP.frequency.setTargetAtTime(inside?700:16000, t, 0.15);
     outBus.gain.setTargetAtTime(inside?0.45:1, t, 0.15);
@@ -199,6 +200,7 @@ const AUDIO=(function(){
     camera.getWorldDirection(_r);
     const rx=-_r.z, rz=_r.x;                      // the camera's right, on the ground
     for(const v of TRAFFIC){
+      if(!v.g.visible) continue;
       const dx=v.g.position.x-cam.x, dz=v.g.position.z-cam.z, d2=dx*dx+dz*dz;
       const w=(v.big?2.4:1)*(0.4+Math.min(1,v.speed/30)*0.6)/(1+d2/420);
       L+=w; px+=w*(dx*rx+dz*rz)/Math.sqrt(d2+1);
@@ -267,15 +269,15 @@ const AUDIO=(function(){
     // in the restrooms: somebody flushing, a dryer going
     flushT-=dt;
     if(flushT<=0){ flushT=14+Math.random()*30;
-      if(zn && /MEN'S ROOM|RESTROOM/.test(zn)) { if(Math.random()<0.6) flush(); else blip("dryer"); } }     // (a public restroom's, not a house's bedroom)
+      if(zn && !ZON && /MEN'S ROOM|RESTROOM/.test(zn)) { if(Math.random()<0.6) flush(); else blip("dryer"); } }     // (a public restroom's, not a house's bedroom)
     // out on the road, now and then, a truck on its engine brake for the exit
     jakeT-=dt;
-    if(jakeT<=0){ jakeT=50+Math.random()*120; if(!inside) jake(); }
+    if(jakeT<=0){ jakeT=50+Math.random()*120; if(!inside && !ZON) jake(); }
     // a dog in the pet area
     barkT-=dt;
     if(barkT<=0){ barkT=12+Math.random()*30;
       const w=(typeof PEOPLE!=="undefined") && PEOPLE.find(p=>p.dog && p.dog.g.visible);
-      if(w){ const d=Math.hypot(cam.x-w.dx, cam.z-w.dz); if(d<90) bark(0.06/(1+d*d/200)); } }
+      if(w && !ZON){ const d=Math.hypot(cam.x-w.dx, cam.z-w.dz); if(d<90) bark(0.06/(1+d*d/200)); } }
     // the old house: it creaks, settling, when you are inside it
     if(typeof HOUSE!=="undefined" && HOUSE.zone){ const Z=HOUSE.zone;
       if(cam.x>Z.x0 && cam.x<Z.x1 && cam.z>Z.z0 && cam.z<Z.z1 && cam.y>Z.y0 && cam.y<Z.y1){
@@ -292,7 +294,7 @@ const AUDIO=(function(){
     if(birdT<=0){
       const day=1-dark;
       birdT=(0.8+Math.random()*2.6)/Math.max(0.15, day*(0.6+inWoods));
-      if(day>0.3 && !inside) bird(Math.random());
+      if(day>0.3 && !inside && !ZON) bird(Math.random());
     }
   }
   // in a house: the fridge's hum on the floor you are on, louder in the kitchen; the clock's tick when you are near it
@@ -781,7 +783,8 @@ const AUDIO=(function(){
     // and in the building, the tubes coming back with a tick and a buzz
     if(indoorsAt(camera.position.x, camera.position.z, camera.position.y)) tone("sawtooth", 120, 120, 0.4, 0.02, at+0.1, 0, master);
   }
-  return { start:start, update:update, blip:blip, flush:flush, creak:()=>{ if(ctx && enabled) creak(); }, on:()=>enabled,
+  return { ctx:()=>ctx, master:()=>master, outLP:()=>outLP, noise:(s,c)=>noise(s,c),     // (21's zombie mode makes its own sounds on these)
+           start:start, update:update, blip:blip, flush:flush, creak:()=>{ if(ctx && enabled) creak(); }, on:()=>enabled,
            thunder:thunder, outage:outage, genCrank:genCrank, genCatch:genCatch, genStop:genStop, ats:ats,
            campLaugh:campLaugh, campPop:campPop, campSong:()=>{ song=(song+1)%SONGS.length; beat=null; },
            toggle:()=>{ enabled=!enabled; if(!started && enabled) start();

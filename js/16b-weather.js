@@ -30,6 +30,7 @@ const WKINDS={
   fog:    {cover:0.62, rain:0,    fog:1.00, storm:0, label:"FOG"},
   rainfog:{cover:0.98, rain:0.70, fog:0.95, storm:0, label:"RAIN · FOG"},
   storm:  {cover:1.00, rain:1.00, fog:0.22, storm:1, label:"T-STORMS"},
+  dread:  {cover:1.00, rain:0.12, fog:0.72, storm:0, label:"DREAD"},                  // (21's zombie mode, held while it lasts)
 };
 const WEATHER={kind:"clear", cover:0.06, rain:0, fog:0, storm:0, wet:0, flash:0, fast:0,
                next:420+Math.random()*360, hold:0, strikeT:4, thunders:[], pulses:[], lastOut:-1e9, clock:0,
@@ -44,7 +45,7 @@ WEATHER.temp=function(){
 };
 WEATHER.set=function(kind, fast){
   this.kind=kind; this.fast=fast?1:0;
-  const durs={clear:[420,840], cloudy:[240,480], rain:[180,360], fog:[200,420], rainfog:[200,400], storm:[200,320]}[kind];
+  const durs={clear:[420,840], cloudy:[240,480], rain:[180,360], fog:[200,420], rainfog:[200,400], storm:[200,320], dread:[1e6,1e6]}[kind];
   this.next=durs[0]+Math.random()*(durs[1]-durs[0]);
   if(fast) this.hold=600;                              // a test key holds it a while
   if(kind==="storm") this.strikeT=fast?1.2:6;
@@ -236,6 +237,7 @@ function skyWeather(img, day, set, night){
     if(f>0) img[key].lerp(_ocF, f*fk);
     if(W.flash>0) img[key].lerp(_OC.flash, Math.min(0.8, W.flash*0.6));
   }
+  if(typeof ZOMBIE!=="undefined" && ZOMBIE.on) ZOMBIE.sky(img, a, b, c);        // (zombie mode's sky, 21)
 }
 
 /* ---- rain ---------------------------------------------------------------

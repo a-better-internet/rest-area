@@ -234,6 +234,8 @@ function frame(){
   // a short draw distance brings the haze in to meet it
   { const D=DRAW_LEVELS[GFX.draw];
     if(scene.fog.far>D.fog){ scene.fog.far=D.fog; scene.fog.near=Math.min(scene.fog.near, D.fog*0.25); } }
+  // zombie mode's gloom (21): the fog in close and grey-green, the light flat and dim; never underground
+  if(typeof ZOMBIE!=="undefined" && ZOMBIE.on) ZOMBIE.atmos(delta, dn, under);
 
   /* ---- artificial light: emissives ramp, real lights follow the player -- */
   for(const g of GLOW){
@@ -292,7 +294,7 @@ function frame(){
     c.s.material.opacity = 0.26*(1-dn.nightAmount*0.85)*(0.6+0.4*Math.sin(i*2.3))*Math.max(0,1-WEATHER.cover*1.6);
     c.s.material.color.copy(skyImg.low).lerp(WHITE_C, 0.74-dn.nightAmount*0.6);
   }
-  updateTraffic(delta, dark);
+  if(!(typeof ZOMBIE!=="undefined" && ZOMBIE.on)) updateTraffic(delta, dark);       // (in zombie mode the road is empty, 21)
   WHEEL_POOL.update(camera.position);
   updateParkedLOD(camera.position);
   // paint, glass and chrome see the sky: it goes out with the light; so
@@ -360,6 +362,7 @@ function frame(){
   if(typeof AUDIO!=="undefined") AUDIO.update(delta, dark);
   if(ANIM.length) tickAnim(now);
 
+  if(typeof ZOMBIE!=="undefined" && ZOMBIE.on) ZOMBIE.frame(delta, now, dark);   // (the dead, the guns, the blood, 21)
   if(driving && (droneMode || view==="plan")) showCar(driving);
   updateCarLights(dark, delta);
   updateHUD();
@@ -375,6 +378,7 @@ function frame(){
     renderer.render(scene, ortho);
   }else{
     renderer.render(scene, camera);
+    if(typeof ZOMBIE!=="undefined" && ZOMBIE.on) ZOMBIE.render();                    // (the gun in your hands, over the view, 21)
   }
 }
 let _indoorMix=0, _buriedMix=0, _buriedDim=1, _buriedTint=0;

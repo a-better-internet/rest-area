@@ -351,7 +351,8 @@ No lettering touches or runs past the edge of its board or its border.
   outside `SITE.zone` get no trunk colliders on their own: 14n and 14v
   plant with a `tree()` that adds one. Keep any tree clear of a trail
   head or a path.
-- The weigh station's shed stands on a hole in `RING_WEIGH`
+- The weigh station's shed (well out back since round 21: its literal
+  coordinates in 14w go through `zq`, the shift from where it was) stands on a hole in `RING_WEIGH`
   (`WEIGH_HOLES`, on its 2 m lattice), and the listening room
   (`WEIGH.den`) is under it, a VOID, BURIED at 0.6 and lit by under
   lamps. Its record plays the radio's station 3, the jazz trio (20).
@@ -361,6 +362,45 @@ No lettering touches or runs past the edge of its board or its border.
 - The pretzel cart (14v's `PRETZEL`) shuts after dark: `updatePretzel`
   (from 14's `updateLife`) covers its case and stops the steam, and the
   vendor is `dayOnly`.
+- Nothing stands on the road. Every ramp's paving, taper and all, is in
+  `RAMP_PAVE` (08's `rampPave`), and `onPave(x, z, m)` says whether a point
+  is on it or on the interstate. Mile markers are placed by `mileMarkers()`
+  after every ramp is laid (from 08b, after `interstateEdges`) and skip any
+  spot on paving; `checkRoadSigns()` warns of any `guideSign` with a post
+  or face on paving. A gore sign goes just past the nose that `rampPave`
+  returns, in the grass between road and ramp. The corridor's edge walls
+  (07) are kept off the ramps by their paving (`paveOf`), not fixed gaps.
+- A visiting vehicle's heading (14's `stepVisitor`) is `_chordHead`: the
+  chord between its axles along the way, across a leg's seam, so a rig
+  tracks a bend smoothly; `_turnTo` limits how fast it can come round. It
+  slows gently for a slower next leg or a stop, and hard only for
+  something in the way.
+- A crowd person with `when(p)` (14q) is shown only while it says so; 14w's
+  listener decides only while you are well away, so nobody appears or
+  vanishes in front of you. His record plays while he is there
+  (`WEIGH_RT.here`), or while you have put one on (`WEIGH_RT.spin`).
+- Zombie mode is 21-zombies.js (`ZOMBIE`). Its hooks: 17's keydown chain
+  (`ZOMBIE.key`, Z toggles it), the wheel, `look`'s scale and
+  `fixedUpdate` (nothing moves you while you are down); 19 calls
+  `ZOMBIE.atmos` after the haze is set (the gloom: fog, sky and light, and
+  never underground), skips `updateTraffic`, calls `ZOMBIE.frame` before
+  the draw and `ZOMBIE.render` after it (the gun is its own scene, drawn
+  over the view with the depth cleared); 16b holds the `dread` weather; 20
+  exposes `AUDIO.ctx`, `master`, `outLP` and `noise` for its sounds and
+  mutes birds, dogs, flushes and the jake brake while it is on.
+- The dead are 14b's `buildPerson` with `mat` (their own material, so the
+  living, all on `PEOPLE_MAT`, can be hidden by theirs), `eyes` and
+  `extra` (parts on the same bones: the blood, the bite, the mouth). Their
+  looks are 14q's crowd looks, zombified. Anything new built on
+  `PEOPLE_MAT` is hidden in zombie mode on its own.
+- In zombie mode a shot is a ray against the colliders (not the world's
+  edge walls, y up to 300) and the ground, and against each zombie's head
+  sphere and body cylinder. A zombie steers with `zHit` (the colliders,
+  and the lake it will not wade) and follows your trail (`ZOMBIE.trail`,
+  a point every 3 m you walk) when it cannot see you; they spawn on that
+  trail or in a ring round you, never in view and never across an edge
+  wall. Caches are `CACHES` (x, z, a height to look near, a kind); the
+  gun's flash is `FLASH`, a lamp in 16's pool lit by its `mod`.
 
 ## Tools
 

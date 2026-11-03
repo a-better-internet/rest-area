@@ -36,6 +36,8 @@ addEventListener("keydown",e=>{
   if(typeof DGOLF!=="undefined" && DGOLF.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(typeof CORN!=="undefined" && CORN.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(typeof DOGBALL!=="undefined" && DOGBALL.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
+  // Z for zombie mode, and in it the guns' keys (21)
+  if(typeof ZOMBIE!=="undefined" && ZOMBIE.key(e)){ e.preventDefault(); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
   if(e.code==="KeyG" && !e.repeat && window.GFXMENU){ GFXMENU.show(); return; }
   const held=keys[e.code];                  // keydown repeats while a key is down
@@ -101,13 +103,15 @@ function look(dx,dy){
     dronePitch = clamp(dronePitch - dy*0.0026, -0.15, 1.35);
     return;
   }
-  const ls=typeof DGOLF!=="undefined" ? DGOLF.lookScale() : 1;        // (slower through the disc golf sight, 18i)
+  const ls=(typeof DGOLF!=="undefined" ? DGOLF.lookScale() : 1)*        // (slower through the disc golf sight, 18i,
+           (typeof ZOMBIE!=="undefined" && ZOMBIE.on ? ZOMBIE.lookScale() : 1);   //  and down a gun's sights, 21)
   player.yaw   -= dx*0.0026*ls;
   player.pitch  = clamp(player.pitch - dy*0.0024*ls, -1.15, 1.15);
 }
 dom.addEventListener("click",()=>{ if(document.pointerLockElement!==dom && dom.requestPointerLock) dom.requestPointerLock(); });
 // the wheel zooms in (to 24° tighter) or opens the view a little (6° wider)
-addEventListener("wheel",e=>{ fovZoom=clamp(fovZoom+Math.sign(e.deltaY)*3, -24, 6); applyFov(); },
+addEventListener("wheel",e=>{ if(typeof ZOMBIE!=="undefined" && ZOMBIE.on) return;            // (in zombie mode the wheel changes guns, 21)
+                             fovZoom=clamp(fovZoom+Math.sign(e.deltaY)*3, -24, 6); applyFov(); },
                  {passive:true});
 
 // touch: drag to look, on-screen pad to walk
@@ -318,6 +322,7 @@ function nearEdge(x,z){
          ((z<Z.z0 || z>Z.z1) && Math.min(Math.abs(Math.abs(x-HWY.nb)-19.5),Math.abs(Math.abs(x-HWY.sb)-19.5))<1.4);
 }
 function fixedUpdate(dt){
+  if(typeof ZOMBIE!=="undefined" && ZOMBIE.dead){ player.moving=0; return; }        // (down, in zombie mode, 21)
   // the boat (14p) goes on whether you have it or not, adrift; with you at the helm it is all you do
   if(typeof BOAT!=="undefined" && BOAT.g){ updateBoat(dt); if(BOAT.on){ player.sit+=(0-player.sit)*Math.min(1,dt*6); player.bob+=(0-player.bob)*Math.min(1,dt*6); return; } }
   if(driving){                       // you are in the car; the car is driving
