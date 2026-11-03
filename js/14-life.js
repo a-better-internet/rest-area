@@ -115,7 +115,7 @@ function updateVisitors(dt, dark){
     if(v.exiting && !v.weigh && !v.route && v.dir<0 && v.z<=RAMP_EXIT[0].z+0.5){
       const R=v.big ? _truckRoute(v) : _carRoute(v);
       if(!R){ v.exiting=false; VISIT.active--; continue; }
-      v.route=R; R.x0=v.x-RAMP_EXIT[0].x; R.seq=++_visitSeq; v.speed=Math.min(v.speed, 28);
+      v.route=R; R.x0=v.x-RAMP_EXIT[0].x; R.seq=++_visitSeq;
     }
     if(!v.route) continue;
     stepVisitor(v, dt, dark);
@@ -125,13 +125,39 @@ const _vp={x:0,z:0};
 // how high it rides: the rest area's lots are flat at PAVE_T; a leg with its own y (the weigh station's) rides the road's
 // grade on its ramps and the station's paving, a lot layer over the road, on the rest
 const _legY=(L, at)=>L.y ? (L.ramp ? undefined : at.y+0.025) : PAVE_T;
+// A vehicle's heading on its way: along a wheelbase's chord of the path, front axle ahead and rear axle behind, not the
+// segment it is on, which turns in steps at every point of the path (at walking pace a rig's tail swung at each one). The
+// chord is continuous, and a long rig's tail tracks inside the bend the way it does. Behind the start of a leg the rear
+// axle is still on the last one, when the two run the same way.
+function _chordHead(v, R, s){
+  const L=R.legs[R.li], P=L.P, len=P[P.length-1].s, wb=clamp((v.nose-v.tail)*0.5, 2.4, 9);
+  const at=(Pg, li, q)=>{ const a=pathAt(Pg, q); let x=a.x; if(li===0 && R.x0) x+=R.x0*(1-smoothstep(0, 60, q)); return [x, a.z]; };
+  // (the front axle past the end of this leg is on the next, the rear behind its start on the last, when they run the
+  //  same way; behind the first leg's start it is back along the lane it came off, straight)
+  const sf=s+wb/2, Ln=R.legs[R.li+1], sb=s-wb/2, Lp=R.li>0 ? R.legs[R.li-1] : null;
+  const f= sf>len && Ln && !!Ln.rev===!!L.rev && !L.stop ? at(Ln.P, R.li+1, sf-len) : at(P, R.li, Math.min(len, sf));
+  let r;
+  if(sb<0 && Lp && !!Lp.rev===!!L.rev && !Lp.stop){ const Pp=Lp.P; r=at(Pp, R.li-1, Pp[Pp.length-1].s+sb); }
+  else if(sb<0 && R.li===0 && R.x0!==undefined){ const p0=at(P, 0, 0), dz=Math.sign(P[Math.min(P.length-1, 3)].z-P[0].z)||1; r=[p0[0], p0[1]+dz*sb]; }
+  else r=at(P, R.li, Math.max(0, sb));
+  const dx=f[0]-r[0], dz=f[1]-r[1];
+  if(dx*dx+dz*dz<0.01){ const a=pathAt(P, s); return Math.atan2(a.hx, a.hz)+(L.rev?Math.PI:0); }
+  return Math.atan2(dx, dz)+(L.rev?Math.PI:0);
+}
+// and turned toward it no faster than it can be: where two legs meet at an angle (backed out of a stall, then pulling
+// away), or as it leaves the lane for the ramp, the heading comes round over a moment instead of in one frame
+function _turnTo(v, R, h, dt){
+  if(R.hd===undefined) R.hd=v.g.rotation.y;
+  const d=Math.atan2(Math.sin(h-R.hd), Math.cos(h-R.hd)), rate=(1.1+Math.abs(v.speed)*0.35)*dt;
+  R.hd+=clamp(d, -rate, rate); return R.hd;
+}
 const _inAisle=x=>(x>CARLOT.aisle0+1.2 && x<CARLOT.aisle1-1.2) || (x>TRUCKLOT.aisle0+1.5 && x<TRUCKLOT.aisle1-1.5);
 function stepVisitor(v, dt, dark){
   const R=v.route, L=R.legs[R.li], P=L.P, len=P[P.length-1].s;
   if(R.dwell>0){                                           // parked, or paused between legs
     R.dwell-=dt; v.speed=0; v.braking=false;
     if(R.parked && R.ped && !R.ped.done) R.dwell=Math.max(R.dwell, 0.5);   // they are not back yet
-    const at=pathAt(P, len), h=Math.atan2(at.hx, at.hz)+(L.rev?Math.PI:0);
+    const at=pathAt(P, len), h=_turnTo(v, R, _chordHead(v, R, len), dt);
     placeVehicle(v, at.x, at.z, h, dark, _legY(L, at));
     R.blk=null;
     if(R.dwell<=0){
@@ -145,6 +171,9 @@ function stepVisitor(v, dt, dark){
   // the speed it wants: its leg's, braking into a stop, and never into you
   let target=L.speed;
   if(L.stop) target=Math.min(target, Math.sqrt(2*1.8*Math.max(0,len-R.s))+0.2);
+  // and down to the next leg's speed by the time it gets there, gently (a rig off the ramp is at the station's crawl
+  // before the station's lane, not braking hard into it)
+  { const N=R.legs[R.li+1]; if(N && N.speed<target && !L.stop) target=Math.min(target, Math.sqrt(N.speed*N.speed+2*(v.big?0.9:1.6)*Math.max(0,len-R.s))); }
   const here=pathAt(P, R.s);
   const fx=here.hx*(L.rev?-1:1), fz=here.hz*(L.rev?-1:1);
   // the merge: time the end of the ramp against whoever is coming in lane 0,
@@ -199,6 +228,7 @@ function stepVisitor(v, dt, dark){
   if(typeof PEOPLE!=="undefined") for(const q of PEOPLE)        // and anyone on foot in the lot
     if((q.kind==="driver" || q.lot) && q.P.g.visible && consider(q.x, q.z, 0, 0.3, v.hw+0.9)) limBy="you";
   if(dodging) target=Math.min(target, 1.6);
+  const planned=target;                                    // (what the way asks of it, before anything in the way does)
   for(const o of TRAFFIC){
     if(o===v || !o.route || (o.route.dwell>0 && !(R.weigh && o.route.weigh))) continue;   // parked ones are in their stalls, not the aisle (one on the scale is in the lane)
     if(o.route.blk===v && !_yieldsTo(v, o)) continue;       // it is waiting on us: go
@@ -219,13 +249,15 @@ function stepVisitor(v, dt, dark){
       if(typeof AUDIO!=="undefined") AUDIO.blip(v.big?"airhorn":"horn", here.x, here.z); } }
   else R.waited=0;
   v.braking = target < v.speed-0.2;
-  v.speed += clamp(target-v.speed, -4.5*dt, (L.ramp?2.6:1.6)*dt);
+  // slowing for the way is done gently, a rig more gently still; slowing for something in the way is done hard
+  const dec = target<planned-0.01 ? 4.5 : (v.big ? 2.0 : 2.6);
+  v.speed += clamp(target-v.speed, -dec*dt, (L.ramp?2.6:1.6)*dt);
   R.s=Math.min(len, R.s+v.speed*dt);
   v.spin=(v.spin+v.speed*(L.rev?-1:1)*dt/v.spec.wr)%(Math.PI*2);
   const at=pathAt(P, R.s);
   let x=at.x, z=at.z;
   if(R.li===0 && R.x0){ x+=R.x0*(1-smoothstep(0,60,R.s)); }      // ease off the lane onto the ramp
-  let head=Math.atan2(at.hx, at.hz)+(L.rev?Math.PI:0);
+  let head=_turnTo(v, R, _chordHead(v, R, R.s), dt);
   if(dodging){                                             // steering over as it rolls
     const d0=R.dodge||0, step=(0.25+v.speed*0.7)*dt;
     R.dodge=d0+clamp(dWant-d0, -step, step);

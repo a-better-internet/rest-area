@@ -125,8 +125,8 @@ const WEIGH=(function(){
            z0:-2900, z1:-3008,                                            // where the lanes begin and end
            scale:{x:-69.0, z0:-2950, z1:-2928, w:3.6},                    // the scale deck in the scale lane
            house:{x0:-64.2, x1:-54.2, z0:-2946, z1:-2934},                // the scale house beside it
-           shed:{x0:-60, x1:-56, z0:-2930, z1:-2926},                     // the utility shed out back (on RING_WEIGH's 2 m lattice: the ground is holed under it)
-           den:{x0:-60.2, x1:-53.8, z0:-2931.2, z1:-2925.0},              // the room under it, down the stair inside it
+           shed:{x0:-60, x1:-56, z0:-2918, z1:-2914},                     // the utility shed well out back (on RING_WEIGH's 2 m lattice: the ground is holed under it)
+           den:{x0:-61.0, x1:-53.4, z0:-2919.6, z1:-2912.6},              // the room under it, down the stair inside it
            apron:{x0:-66.5, x1:-38, z0:-3004, z1:-2962},                  // the inspection apron east of the lane
            pad:{x0:-76.5, x1:-36, z0:-3012, z1:-2894}};                   // everything paved, for the ground and the woods
   W.off=mk([[-106.4,-2560],[-106.0,-2620],[-104.6,-2680],[-101.8,-2735],[-97.2,-2780],[-90.6,-2816],[-83.4,-2843],[-77.2,-2865],[-73.2,-2884],[-71.25,-2902]]);

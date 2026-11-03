@@ -87,6 +87,19 @@ function layRibbonVar(bk, P, f0, f1, yOff, uv, color){
    the ramp's lines give out (at the far end's crossroad). Returns the whole
    line, taper and all, and the gore's points. */
 const MERGE_ZONES=[];
+// every ramp's paving as laid, taper and all ({Q, RW}): what a sign or a post beside the road must keep off (onPave)
+const RAMP_PAVE=[];
+// whether (x, z) is on the interstate's paving or a ramp's, with m metres to spare
+function onPave(x, z, m){
+  m=m||0;
+  if((x>NB_X0-m && x<NB_X1+m) || (x>SB_X0-m && x<SB_X1+m)) return true;
+  for(const R of RAMP_PAVE){ const Q=R.Q, lim=R.RW+m;
+    if(x<R.x0-lim || x>R.x1+lim || z<R.z0-lim || z>R.z1+lim) continue;
+    for(let i=1;i<Q.length;i++){ const a=Q[i-1], b=Q[i], ex=b.x-a.x, ez=b.z-a.z, L2=ex*ex+ez*ez;
+      const t=L2>0 ? clamp(((x-a.x)*ex+(z-a.z)*ez)/L2, 0, 1) : 0;
+      if(Math.hypot(x-a.x-ex*t, z-a.z-ez*t)<lim) return true; } }
+  return false;
+}
 // a painted line through points on the road, w wide, at the road's grade
 function paintLine(pts, w, color){
   const P=pts.map(q=>({x:q[0], z:q[1], y:roadY(q[1])}));
@@ -124,6 +137,7 @@ function rampPave(P0, RW, X, s, at, taper, color, stop){
     Q.forEach((q,i)=>{ q.y+=0.012*lift[i]; }); }
   layRibbonVar("asphalt", Q, ()=>-RW, (i,p,n)=>clamp(roomP(p,n), -RW, RW), PAVE_T, 0.40, color);
   addPaveRibbon(Q, -RW, RW);
+  RAMP_PAVE.push({Q:Q, RW:RW, x0:Math.min(...Q.map(q=>q.x)), x1:Math.max(...Q.map(q=>q.x)), z0:Math.min(...Q.map(q=>q.z)), z1:Math.max(...Q.map(q=>q.z))});
   // the gore: the run of points where the ramp has parted from the lane but not by GL yet
   const gap=Q.map((p,i)=>roomL(p, pathSide(Q,i))-RW);                      // > 0: shoulder, gore or grass between them
   // (a run of points between nothing and GL apart, with the shared paving at one end of it: after it for an
@@ -229,8 +243,21 @@ function stripe(x0,z0,x1,z1,w,color,y){
       layRibbon("paint", P, -0.075, 0.075, PAVE_T+0.002, 1, WHITE_LINE);
     }
   }
-  /* Mile markers every tenth of a mile, both sides. The rest area is at
-     milepost 154; northbound counts up as you go north (toward -z). */
+})();
+
+/* Mile markers every tenth of a mile, both sides. The rest area is at
+   milepost 154; northbound counts up as you go north (toward -z). Placed
+   once every ramp is laid (08b calls this after interstateEdges): one that
+   would stand on a ramp, its taper or its speed-change lane is left out,
+   the way a real one is moved off a ramp's paving. */
+// any guide sign whose post stands on paving, or whose face hangs over a ramp, is a mistake: say so (run once, after
+// every ramp is laid, from 08b)
+function checkRoadSigns(){
+  for(const S of GUIDE_SIGNS){ if(S.z<HWY.zN || S.z>HWY.zS) continue;
+    const bad=S.posts.some(px=>onPave(px, S.z, 0.5)) || [-0.5, 0, 0.5].some(t=>onPave(S.x+t*S.w, S.z, -0.2));
+    if(bad) console.warn("[sign on the road]", S.lines.join(" / "), S.x.toFixed(1), S.z.toFixed(1)); }
+}
+function mileMarkers(){
   const mm=(x, z, ry)=>{
     const mile=154+(-z)/1609.34;
     const tex=signTex(64,192,(c,W,H)=>{
@@ -249,10 +276,10 @@ function stripe(x0,z0,x1,z1,w,color,y){
   };
   for(let z=HWY.zN+60; z<1450; z+=160.9){
     if(Math.abs(z)<6) continue;
-    mm(NB_X1+1.6, z, 0);
-    mm(SB_X0-1.6, z+40, Math.PI);
+    for(const [x, zz, ry] of [[NB_X1+1.6, z, 0], [SB_X0-1.6, z+40, Math.PI]])
+      if(!onPave(x-0.2, zz, 1.0) && !onPave(x+0.2, zz, 1.0)) mm(x, zz, ry);
   }
-})();
+}
 
 /* ---- the crossovers --------------------------------------------------------
    A paved cut through the median every so often (CROSSOVERS), level with
@@ -296,6 +323,7 @@ function stripe(x0,z0,x1,z1,w,color,y){
    galvanised posts with breakaway bases. Lettering is the plainest wide
    face the browser has. A sign that faces +z is read by northbound
    traffic, which comes from the south. */
+const GUIDE_SIGNS=[];                         // (each one's posts and face, for checkRoadSigns once the ramps are all laid)
 function guideSign(x, z, w, h, ry, lines, opts){
   opts=opts||{};
   const y0=(opts.y===undefined ? roadY(z) : opts.y);
@@ -319,6 +347,7 @@ function guideSign(x, z, w, h, ry, lines, opts){
   const f=ry===0?1:-1, cz=z;
   const top=y0+clear+h;
   const posts=opts.posts===undefined ? (w>2.4?2:1) : opts.posts;
+  GUIDE_SIGNS.push({lines:lines, x:x, z:z, w:w, ry:ry, posts:Array.from({length:posts}, (_, k)=>posts===1 ? x : x+(k?1:-1)*w*0.32)});
   for(let k=0;k<posts;k++){
     const px= posts===1 ? x : x+(k?1:-1)*w*0.32;
     bx("metal", 0.12, top-y0-0.03, 0.12, px, (y0+top-0.03)/2, cz-f*0.115, 0.6, 0, "#a3a8aa");   // behind the plate, not through its face
@@ -334,13 +363,12 @@ function guideSign(x, z, w, h, ry, lines, opts){
   guideSign(east, 800, 5.2, 2.6, 0, ["REST AREA","NEXT RIGHT"]);
   // the blue services panel the state hangs under a rest area sign
   guideSign(east+0.1, 760, 3.0, 1.9, 0, ["RESTROOMS","VENDING · INFO"], {bg:"#1f4fa0", clear:1.6});
-  guideSign(-103.4, 440, 2.6, 1.9, 0, ["REST AREA","↗"], {clear:1.5});
   guideSign(east, -1540, 4.4, 2.2, 0, ["Erie   37","N.Y. Line   54"]);     // past Edinboro's interchange (08b)
   guideSign(west, -380, 4.6, 2.2, Math.PI, ["Meadville   6","Pittsburgh   89"]);
   // speed limits, black on white
   const limit=(x,z,ry)=>guideSign(x, z, 0.92, 1.18, ry, ["SPEED","LIMIT","70"],
                                   {bg:"#ecebe4", fg:"#1a1a1a", clear:1.6, posts:1});
-  limit(east, -1500, 0); limit(west, 640, Math.PI);
+  limit(east, -1880, 0); limit(west, 640, Math.PI);          // (northbound: past Edinboro's on-ramp and its taper, not beside it)
   // on the ramp: where the trucks go and where the cars go
   guideSign(-85.2, 140, 2.4, 1.5, 0, ["TRUCKS","↑"], {y:0, clear:1.5, posts:1});
   guideSign(-68.6, 140, 2.4, 1.5, 0, ["CARS","↗"], {y:0, clear:1.5, posts:1});
@@ -384,6 +412,9 @@ function interstateEdges(){
 // each widens out of the northbound shoulder along a taper, or narrows back into it, and is never laid over the lanes
 (function ramps(){
   RAMP_EXIT.meet =rampPave(RAMP_EXIT,  4.2, NB_X1, 1, "start", 110, "#9a9a98");
+  // REST AREA and the arrow, just past the gore's nose, in the grass between the road and the ramp (as 08b's EXIT 166)
+  { const q=RAMP_EXIT.meet.nose || RAMP_EXIT.find(p=>p.x-4.2-NB_X1>3.0), z=q.z-3.0, xin=q.x-4.2;
+    guideSign((NB_X1+xin)/2, z, 2.0, 1.5, 0, ["REST AREA","↗"], {clear:1.4, posts:1}); }
   // (the entrance's lane carries on to Edinboro's exit a hundred metres on: one auxiliary lane, no weave)
   RAMP_ENTRY.meet=rampPave(RAMP_ENTRY, 4.2, NB_X1, 1, "end", {to:EDIN.off[0].z, xo:EDIN.off[0].x+EDIN.rw}, "#9a9a98");
 })();

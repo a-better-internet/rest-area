@@ -228,11 +228,11 @@ function updateCrowd(dt, now, dark){
   CROWD.t+=dt; const c=camera.position;
   for(const G of CROWD.groups){
     const d=Math.hypot(c.x-G.cx, c.z-G.cz), show=d<G.r;
-    if(show!==G.shown){ G.shown=show; for(const p of G.people){ p.P.g.visible=show && (!p.dayOnly || dark<0.6); if(p.D) p.D.g.visible=p.P.g.visible; if(p.onShow) p.onShow(p, p.P.g.visible); } }
+    if(show!==G.shown){ G.shown=show; for(const p of G.people){ p.P.g.visible=show && (!p.dayOnly || dark<0.6) && (!p.when || p.when(p)); if(p.D) p.D.g.visible=p.P.g.visible; if(p.onShow) p.onShow(p, p.P.g.visible); } }
     if(!show) continue;
     for(const p of G.people){
       // the yards empty after dark: those who are only out by day go in
-      const out=!p.dayOnly || dark<0.6; if(p.P.g.visible!==out){ p.P.g.visible=out; if(p.D) p.D.g.visible=out; if(p.onShow) p.onShow(p, out); }
+      const out=(!p.dayOnly || dark<0.6) && (!p.when || p.when(p)); if(p.P.g.visible!==out){ p.P.g.visible=out; if(p.D) p.D.g.visible=out; if(p.onShow) p.onShow(p, out); }
       if(!out) continue;
       p.t+=dt; let moving=false;
       if(p.path && !(p.yield && p.yield(p))) moving=_crowdWalk(p, dt, G);          // (yield: something that drives stops for you)

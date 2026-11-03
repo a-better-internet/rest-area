@@ -172,7 +172,8 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       for(let k=0;k<3;k++) B(1.6, 0.04, 0.10, x, g+0.44, z-0.12+k*0.12, "#7a5a3a"); B(1.6, 0.30, 0.04, x, g+0.66, z+0.18, "#7a5a3a");
       addCol(x-0.8, x+0.8, z-0.2, z+0.22, g-0.5, g+0.5); addSeat(x, z, g, 0, "THE BENCH BY THE DOOR");
       C(0.13, 0.9, NDX+1.2, g+0.45, H.z0-0.45, "#3a3c3e", 14); C(0.15, 0.03, NDX+1.2, g+0.91, H.z0-0.45, "#5a5e62", 14); addCol(NDX+1.06, NDX+1.34, H.z0-0.6, H.z0-0.3, g-0.5, g+0.9); }
-    for(let k=0;k<5;k++){ const t=k/4, x=lerp(BDX, -57.9, t), z=lerp(H.z1+0.95, W.shed.z0-0.9, t); B(0.62, 0.06, 0.52, x, Y+0.012, z, "#b8b4aa"); } }
+    { const za=H.z1+0.95, zb=W.shed.z0-0.9, n=Math.max(2, Math.round((zb-za)/1.25));     // (a pace apart, all the way out)
+      for(let k=0;k<=n;k++){ const t=k/n, x=lerp(BDX, -57.9, smoothstep(0, 1, t)), z=lerp(za, zb, t); B(0.62, 0.06, 0.52, x, Terrain.groundAt(x, z)+0.012, z, "#b8b4aa"); } } }
 
   /* ---- the scale room: the desk along the lane window and its screens (the readout, the camera on the scale, the log),
      the officer in his chair; the ledge at the service window with the stamp and the ticket printer; the radio base by the
@@ -316,9 +317,9 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
 
   /* ---- the shed out back: block, a flat roof, a steel door facing the scale house's back door. Salt, cones, the mower,
      the snow blower, shovels, a bench; and along its south wall, behind a plain door, the stair down ---- */
-  const SH=W.shed, Ys=roadY((SH.z0+SH.z1)/2), SF=Ys+0.15, SWT=0.2, SX0=SH.x0+SWT, SX1=SH.x1-SWT, SZ0=SH.z0+SWT, SZ1=SH.z1-SWT, STOP=SF+2.45;
+  const SH=W.shed, zq=z=>z+(SH.z0+2930), Ys=roadY((SH.z0+SH.z1)/2), SF=Ys+0.15, SWT=0.2, SX0=SH.x0+SWT, SX1=SH.x1-SWT, SZ0=SH.z0+SWT, SZ1=SH.z1-SWT, STOP=SF+2.45;
   const DN=W.den, DF=Ys-2.75, DCL=Ys-0.31;                                         // the room under it: its floor, its ceiling
-  const STZ0=-2927.30, STZ1=SZ1, LX=-58.75, NR=11, RS=(SF-DF)/NR, RN=(SX1-LX)/(NR-1);   // the stair: its strip, the landing's end, its risers
+  const STZ0=zq(-2927.30), STZ1=SZ1, LX=-58.75, NR=11, RS=(SF-DF)/NR, RN=(SX1-LX)/(NR-1);   // the stair: its strip, the landing's end, its risers
   const SPZ=STZ0-0.06;                                                             // (the partition between the shed and the stair)
   const SDR={a:-58.4, b:-57.4, sill:SF-0.02, head:SF+2.05}, SWN={a:-59.6, b:-58.9, sill:SF+1.15, head:SF+1.75}, BDR={a:-59.74, b:-58.82, sill:SF-0.02, head:SF+2.05};
   { // the slab, round the stair's opening (the ground is holed under all of it, 04's WEIGH_HOLES)
@@ -355,7 +356,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
     LAMPS.push({x:(SDR.a+SDR.b)/2, y:SDR.head+0.1, z:SH.z0-0.6, color:0xffe2b8, intensity:0.45, dist:7, decay:1.6, mothy:true});
     // inside: steel shelving down the west wall (salt, paint, boxes), the mower and the snow blower, cones, the tools on
     // the east wall, a little bench
-    { const x=SX0+0.24, ze=-2928.35;                                    // (stopping short of the partition: the basement door wants room)
+    { const x=SX0+0.24, ze=zq(-2928.35);                                    // (stopping short of the partition: the basement door wants room)
       for(const z of [SZ0+0.05, ze]) for(const dx of [-0.2, 0.2]) B(0.03, 1.8, 0.03, x+dx, SF+0.9, z, "#8a8e90");
       for(const y of [0.12, 0.62, 1.12, 1.62]) B(0.46, 0.02, ze-SZ0, x, SF+y, (SZ0+ze)/2+0.025, "#9a9ea2");
       for(let k=0;k<3;k++) RB(0.40, 0.16, 0.30, x, SF+0.215, SZ0+0.35+k*0.42, "#e8e4d8", 0, 0.06);
@@ -363,20 +364,20 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       for(let k=0;k<2;k++) B(0.40, 0.28, 0.42, x, SF+1.27, SZ0+0.35+k*0.62, "#b8986a");
       addCol(SX0, x+0.23, SZ0, ze+0.02, SF-0.5, SF+1.8); }
     // the mower against the east wall, its handle folded back toward the room; the snow blower beside it, handles up
-    { const mx=-56.6, mz=-2929.4; B(0.50, 0.26, 0.60, mx, SF+0.25, mz, "#c41a1a"); C(0.10, 0.22, mx, SF+0.45, mz, "#2a2a2c", 12);
+    { const mx=-56.6, mz=zq(-2929.4); B(0.50, 0.26, 0.60, mx, SF+0.25, mz, "#c41a1a"); C(0.10, 0.22, mx, SF+0.45, mz, "#2a2a2c", 12);
       for(const [dx2, dz2] of [[-0.24,-0.26],[0.24,-0.26],[-0.24,0.26],[0.24,0.26]]) C(0.09, 0.05, mx+dx2, SF+0.09, mz+dz2, "#1d1d1e", 12, 0, 0, Math.PI/2);
       for(const dz2 of [-0.2, 0.2]) tubeE(V3(mx-0.25, SF+0.35, mz+dz2), V3(mx-0.75, SF+0.80, mz+dz2), 0.012, "#2a2a2c");
       tubeE(V3(mx-0.75, SF+0.80, mz-0.2), V3(mx-0.75, SF+0.80, mz+0.2), 0.014, "#2a2a2c");
       addCol(mx-0.78, mx+0.26, mz-0.32, mz+0.32, SF-0.5, SF+0.85); }
-    { const bx0=-56.62, bz0=-2928.15; RB(0.62, 0.60, 0.72, bx0, SF+0.36, bz0, "#e8641a", 0, 0.05); B(0.66, 0.24, 0.20, bx0, SF+0.28, bz0-0.46, "#3a3c3e");
+    { const bx0=-56.62, bz0=zq(-2928.15); RB(0.62, 0.60, 0.72, bx0, SF+0.36, bz0, "#e8641a", 0, 0.05); B(0.66, 0.24, 0.20, bx0, SF+0.28, bz0-0.46, "#3a3c3e");
       for(const dx2 of [-0.2, 0.2]) tubeE(V3(bx0+dx2, SF+0.60, bz0+0.30), V3(bx0+dx2, SF+1.02, bz0+0.48), 0.012, "#2a2a2c");
       tubeE(V3(bx0-0.2, SF+1.02, bz0+0.48), V3(bx0+0.2, SF+1.02, bz0+0.48), 0.014, "#2a2a2c");
       addCol(bx0-0.33, bx0+0.33, bz0-0.56, bz0+0.5, SF-0.5, SF+1.05); }
     // a stack of cones by the window
     for(let k=0;k<4;k++) ent(new T.ConeGeometry(0.16, 0.62, 12), -59.0, SF+0.33+k*0.08, SZ0+0.32, "#ff6a1a");
     B(0.36, 0.03, 0.36, -59.0, SF+0.017, SZ0+0.32, "#1d1d1e"); addCol(-59.2, -58.8, SZ0, SZ0+0.52, SF-0.5, SF+0.9);
-    B(0.04, 0.08, 1.4, SX1-0.03, SF+1.55, -2928.7, "#6a4a2a");
-    for(let k=0;k<4;k++){ const z=-2929.25+k*0.36; tubeE(V3(SX1-0.08, SF+0.25, z), V3(SX1-0.08, SF+1.55, z), 0.014, "#8a6a48");
+    B(0.04, 0.08, 1.4, SX1-0.03, SF+1.55, zq(-2928.7), "#6a4a2a");
+    for(let k=0;k<4;k++){ const z=zq(-2929.25)+k*0.36; tubeE(V3(SX1-0.08, SF+0.25, z), V3(SX1-0.08, SF+1.55, z), 0.014, "#8a6a48");
       B(0.04, 0.22+((k%2)*0.06), 0.24, SX1-0.08, SF+0.16, z, k%2 ? "#8a8e90" : "#3a3c3e"); } }
 
   /* ---- the stair down: wood treads on solid risers, a rail on posts along its open side ---- */
@@ -429,14 +430,14 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
     // the ceiling, round the stair's opening; dark beams across it in a grid, coffered
     for(const [a, b, c, d] of [[X0, X1, Z0, STZ0],[X0, LX, STZ0, STZ1],[SX1, X1, STZ0, STZ1],[X0, X1, STZ1, Z1]]) ceilAt("den_walnut", a, b, c, d, DCL, "#a07a5a", 1/0.5);
     for(let x=X0+1.07; x<X1-0.5; x+=1.07){ if(x>LX-0.1 && x<SX1+0.1) continue; B(0.14, 0.16, Z1-Z0-0.01, x, DCL-0.075, (Z0+Z1)/2, "#3a2414"); }
-    for(const z of [Z0+1.55, Z0+3.1]) B(X1-X0-0.01, 0.15, 0.14, (X0+X1)/2, DCL-0.08, z, "#3a2414");
+    for(let z=Z0+1.55; z<Z1-0.6; z+=1.55) if(z<STZ0-0.15 || z>STZ1+0.15) B(X1-X0-0.01, 0.15, 0.14, (X0+X1)/2, DCL-0.08, z, "#3a2414");
     // the opening's own sides, down from the shed's slab to the ceiling
     B(SX1-LX, 0.06, 0.04, (LX+SX1)/2, DCL+0.02, STZ0-0.02, "#3a2414");
     addVoid(X0, X1, Z0, Z1, DF-3, DF+1.2, DF); addFlat(X0, X1, Z0, Z1, DF);
     addBuried(X0, X1, Z0, Z1, DF-0.5, DCL+0.05, 0.6);
     addZone(X0, X1, Z0, Z1, DF-0.5, DCL, "THE LISTENING ROOM", true);
     // the rug
-    push("den_rug", new T.PlaneGeometry(3.0, 2.1), -57.0, DF+0.012, -2929.0, 0, "#ffffff", -Math.PI/2, 0);
+    push("den_rug", new T.PlaneGeometry(3.4, 2.4), -57.0, DF+0.012, zq(-2929.0), 0, "#ffffff", -Math.PI/2, 0);
     // the fire on the north wall: a stone surround, the mantel, the firebox and its glow; a print over it
     { const fx=-57.0, fz=Z0; B(1.7, 1.12, 0.32, fx, DF+0.56, fz+0.16, "#8a8070"); B(1.86, 0.08, 0.40, fx, DF+1.16, fz+0.20, "#3a2414");
       B(0.92, 0.56, 0.04, fx, DF+0.48, fz+0.31, "#1a1410"); push("den_fire", planeGeo(0.84, 0.46, 0), fx, DF+0.46, fz+0.335, 0, "#ffffff");
@@ -451,7 +452,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
           c.beginPath(); c.ellipse(Wd*0.54, Hh*0.26, Wd*0.03, Hh*0.06, -0.6, 0, Math.PI*2); c.stroke();
           say(c, "BLUE NOTES AT MIDNIGHT", Wd/2, Hh*0.86, Wd*0.80, Hh*0.08, "#e8d8b0", "700", "Georgia, serif"); }, fx, DF+1.75, fz+0.05, 0, false, 320); }
     // the recliner: oxblood leather, the back laid back, the footrest out; the lamp and the table by it; somebody in it
-    { const rx=-57.0, rz=-2929.35, f=XF(rx, rz, 0), L="#5a2218", q=(w,h,d,lx,ly,lz,rot)=>ent(rboxGeo(w,h,d,Math.min(0.06, Math.min(w,h,d)*0.3),2), f.x(lx,lz), DF+ly, f.z(lx,lz), L, rot||0, 0, 0);
+    { const rx=-57.0, rz=zq(-2929.35), f=XF(rx, rz, 0), L="#5a2218", q=(w,h,d,lx,ly,lz,rot)=>ent(rboxGeo(w,h,d,Math.min(0.06, Math.min(w,h,d)*0.3),2), f.x(lx,lz), DF+ly, f.z(lx,lz), L, rot||0, 0, 0);
       q(0.72, 0.30, 0.66, 0, 0.30, 0); q(0.66, 0.12, 0.56, 0, 0.47, -0.02); q(0.72, 0.74, 0.20, 0, 0.82, 0.36, 0.32);
       for(const sd of [-1,1]) q(0.16, 0.42, 0.74, sd*0.36, 0.42, 0.02);
       q(0.62, 0.10, 0.46, 0, 0.38, -0.52, -0.12); B(0.60, 0.05, 0.40, rx, DF+0.025, rz, "#1a1410");
@@ -463,7 +464,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       addCol(tx-0.23, tx+0.23, tz-0.23, tz+0.23, DF-0.5, DF+0.62);
       lampU({x:tx-0.06, y:DF+1.1, z:tz+0.04, color:0xffc890, intensity:0.6, dist:5, decay:1.6, vol:[X0, X1, Z0, Z1, DF-0.5, DCL+0.3]}); }
     // the cart of scotch: brass, two glass shelves; eight bottles with their labels, a decanter, the glasses, the ice
-    { const cx=-58.25, cz=-2929.55, Bc="#c8a050";
+    { const cx=-58.25, cz=zq(-2929.55), Bc="#c8a050";
       for(const dx2 of [-0.36, 0.36]) for(const dz2 of [-0.20, 0.20]) tubeE(V3(cx+dx2, DF+0.06, cz+dz2), V3(cx+dx2, DF+0.86, cz+dz2), 0.012, Bc);
       tubeE(V3(cx-0.36, DF+0.86, cz-0.20), V3(cx+0.36, DF+0.86, cz-0.20), 0.012, Bc); tubeE(V3(cx-0.36, DF+0.86, cz+0.20), V3(cx+0.36, DF+0.86, cz+0.20), 0.012, Bc);
       for(const y of [0.30, 0.78]) push("glass", boxGeo(0.72, 0.012, 0.40, 0), cx, DF+y, cz, 0, "#ffffff");
@@ -487,7 +488,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       addCol(cx-0.40, cx+0.40, cz-0.26, cz+0.26, DF-0.5, DF+0.9); }
     // the record console on the east wall: walnut, the turntable on it going round, the receiver's dial lit; a speaker each
     // side of it on the floor; the records in their shelves south of it
-    { const cx=X1-0.26, cz=-2929.6; B(0.46, 0.62, 1.6, cx, DF+0.31, cz, "#4a2e1a"); B(0.48, 0.03, 1.62, cx, DF+0.635, cz, "#3a2414");
+    { const cx=X1-0.26, cz=zq(-2929.6); B(0.46, 0.62, 1.6, cx, DF+0.31, cz, "#4a2e1a"); B(0.48, 0.03, 1.62, cx, DF+0.635, cz, "#3a2414");
       for(let k=0;k<3;k++) B(0.012, 0.44, 0.48, cx-0.235, DF+0.30, cz-0.52+k*0.52, "#5a3a22");
       B(0.40, 0.10, 0.48, cx, DF+0.70, cz-0.36, "#5a3a22"); C(0.15, 0.025, cx, DF+0.762, cz-0.38, "#1a1a1a", 28);
       const plat=new T.Mesh(new T.CylinderGeometry(0.148, 0.148, 0.006, 32), new T.MeshStandardMaterial({color:0x0e0e0e, roughness:0.25, metalness:0.1}));
@@ -503,14 +504,21 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
         for(const yy of [0.70, 0.36]) C(yy>0.5 ? 0.05 : 0.09, 0.01, X1-0.404, DF+yy, sz2, "#1a1a16", 18, 0, 0, Math.PI/2);
         addCol(X1-0.39, X1, sz2-0.15, sz2+0.15, DF-0.5, DF+0.92); }
       // the records: low shelves of cubes, the spines in every colour
-      const q2=_trng(9191), rz0=-2927.6, rz1=Z1-0.05;
+      const q2=_trng(9191), rz0=zq(-2927.6), rz1=Z1-0.05;
       B(0.40, 0.90, rz1-rz0, X1-0.21, DF+0.45, (rz0+rz1)/2, "#3a2414");
       for(const y of [0.06, 0.46]){ let z=rz0+0.04; while(z<rz1-0.06){ const w=0.006+q2()*0.006; B(0.30, 0.31, w, X1-0.24, DF+y+0.17, z+w/2, ["#c41a1a","#1f4f8c","#e8d8b0","#2a2a2a","#e8a03a","#2f5a3a","#7a3a8a","#f2efe2"][(q2()*8)|0]); z+=w+0.0015; } }
       for(const y of [0.04, 0.44, 0.86]) B(0.405, 0.02, rz1-rz0+0.005, X1-0.21, DF+y, (rz0+rz1)/2, "#2a1a0e");
       addCol(X1-0.41, X1, rz0, rz1, DF-0.5, DF+0.9);
-      if(typeof LAKE_HOUSES!=="undefined") LAKE_HOUSES.radios.push({x:cx, z:cz, y:DF+0.8, station:3, house:"THE LISTENING ROOM", zone:"THE LISTENING ROOM", vol:0.55}); }
+      WEIGH_RT.radio={x:cx, z:cz, y:DF+0.8, station:3, house:"THE LISTENING ROOM", zone:"THE LISTENING ROOM", vol:0.55};
+      if(typeof LAKE_HOUSES!=="undefined") LAKE_HOUSES.radios.push(WEIGH_RT.radio);
+      // the record goes round while he is down here; when he isn't, you can put one on yourself (and lift it off again)
+      const u=addUse(cx-0.55, cz-0.38, DF+0.8, "PLAY A RECORD", ()=>{
+        if(WEIGH_RT.here){ toast("HE RAISES A FINGER WITHOUT LOOKING ROUND. THE SOLO ISN'T OVER", "#e8d8b0"); return; }
+        WEIGH_RT.spin=!WEIGH_RT.spin;
+        toast(WEIGH_RT.spin ? "YOU DROP THE NEEDLE. A CRACKLE, AND THE TRIO COMES IN" : "YOU LIFT THE NEEDLE. THE ROOM GOES QUIET", "#e8d8b0"); }, 1.3,
+        ()=>{ u.label=WEIGH_RT.here ? "THE RECORD" : WEIGH_RT.spin ? "LIFT THE NEEDLE" : "PLAY A RECORD"; return true; }); }
     // the club chair for whoever comes down, angled at the fire; a floor lamp by it
-    { const cx=-55.35, cz=-2928.35, ry=-0.65, f=XF(cx, cz, ry), L="#6a3a1e", q=(w,h,d,lx,ly,lz)=>ent(rboxGeo(w,h,d,Math.min(0.07, Math.min(w,h,d)*0.3),2), f.x(lx,lz), DF+ly, f.z(lx,lz), L, 0, ry, 0);
+    { const cx=-55.35, cz=zq(-2928.35), ry=-0.65, f=XF(cx, cz, ry), L="#6a3a1e", q=(w,h,d,lx,ly,lz)=>ent(rboxGeo(w,h,d,Math.min(0.07, Math.min(w,h,d)*0.3),2), f.x(lx,lz), DF+ly, f.z(lx,lz), L, 0, ry, 0);
       q(0.80, 0.42, 0.78, 0, 0.21, 0); q(0.80, 0.50, 0.20, 0, 0.62, 0.30); for(const sd of [-1,1]) q(0.18, 0.30, 0.78, sd*0.36, 0.52, 0);
       addCol(cx-0.48, cx+0.48, cz-0.48, cz+0.48, DF-0.5, DF+0.6); addSeat(cx, cz, DF, ry+Math.PI, "THE CLUB CHAIR", false, 0.68);
       const lx=cx+0.62, lz=cz+0.30; C(0.15, 0.02, lx, DF+0.012, lz, "#2a2a2c", 14); C(0.012, 1.45, lx, DF+0.75, lz, "#c8a050", 6); CT(0.12, 0.19, 0.24, lx, DF+1.55, lz, "#e8d8b0", 18);
@@ -525,7 +533,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       addCol(X0, bx0+0.17, za, zb, DF-0.5, DF+2.0);
       B(0.36, 0.14, 0.24, -59.4, DF+0.60, Z1-0.5, "#5a3a22"); B(0.42, 0.56, 0.36, -59.4, DF+0.27, Z1-0.5, "#3a2414"); addCol(-59.62, -59.18, Z1-0.7, Z1-0.3, DF-0.5, DF+0.7); }
     // the sconces on the walls: brass, a shade each, the light thrown up and down
-    for(const [x, z, ry] of [[X0+0.05, -2926.0, Math.PI/2],[X1-0.05, -2927.2, -Math.PI/2],[-58.6, Z0+0.05, 0],[-55.4, Z0+0.05, 0]]){
+    for(const [x, z, ry] of [[X0+0.05, zq(-2926.0), Math.PI/2],[X1-0.05, zq(-2927.2), -Math.PI/2],[-58.6, Z0+0.05, 0],[-55.4, Z0+0.05, 0]]){
       const fx=Math.sin(ry), fz=Math.cos(ry); B(0.10, 0.16, 0.02, x, DF+1.75, z, "#c8a050", ry);
       tubeE(V3(x, DF+1.75, z), V3(x+fx*0.12, DF+1.78, z+fz*0.12), 0.008, "#c8a050");
       CT(0.07, 0.10, 0.14, x+fx*0.14, DF+1.85, z+fz*0.14, "#e8d8b0", 14); push("cafe_bulb", new T.SphereGeometry(0.025, 8, 6), x+fx*0.14, DF+1.80, z+fz*0.14, 0, "#ffffff"); }
@@ -633,8 +641,14 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
   const look=(o)=>Object.assign({h:1.0, skin:SKINS[1], hair:HAIRS[1], shirt:"#4a6a8a", pants:"#3b4a66", shoes:"#1d1d1e"}, o);
   crowdAdd(G, {look:look({skin:SKINS[2], hair:HAIRS[4], shirt:"#5a6a7a", pants:"#2c3446", long:true}), x:D.x+0.02, z:D.z, y:D.y, yaw:-Math.PI/2, mode:"sit", sitY:0.515, sway:0.25});
   // down in the listening room, in the recliner with a scotch, his eyes on the fire, the record going
+  // He isn't always there: most evenings he comes down after supper and stays till past midnight, and some afternoons;
+  // whether he is decided only while you are well away, so he never comes or goes in front of you
   if(WEIGH_RT.recliner){ const Q=WEIGH_RT.recliner;
-    crowdAdd(G, {look:look({h:1.0, skin:SKINS[1], hair:HAIRS[4], beard:"#8d8a86", shirt:"#5a3a2a", pants:"#2a2a2c", shoes:"#3a2414", long:true}), x:Q.x, z:Q.z, y:Q.y, yaw:Math.PI, mode:"sit", job:"recline", sitY:0.585, held:"rocks", drink:true, sway:0.12}); }
+    const when=(p)=>{ const c=camera.position;
+      if(p.here===undefined || Math.hypot(c.x-Q.x, c.z-Q.z)>16){ const h=DayNight.state.hour, r=hash2((DayNight.state.day||0)*1.7+0.31, 3.1);
+        p.here=(h>=18.5 || h<0.75) ? r<0.8 : (h>=13 && h<16.5) ? r<0.3 : false; }
+      WEIGH_RT.here=p.here; return p.here; };
+    crowdAdd(G, {look:look({h:1.0, skin:SKINS[1], hair:HAIRS[4], beard:"#8d8a86", shirt:"#5a3a2a", pants:"#2a2a2c", shoes:"#3a2414", long:true}), x:Q.x, z:Q.z, y:Q.y, yaw:Math.PI, mode:"sit", job:"recline", sitY:0.585, held:"rocks", drink:true, sway:0.12, when:when}); }
   const R=WEIGH_RT.rig; if(!R) return;
   const S=R.S, x=R.x, nz=R.z-S.nose, tz=R.z-S.tail, gy=(px, pz)=>roadY(pz)+PAVE_T+0.015;
   // round the rig: down its right side from the cab to the back, across behind it, up the left, and across the front; a
@@ -650,7 +664,10 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
 function updateWeighStation(dt, dark){
   const R=WEIGH_RT; if(!R.lamps) return;
   R.t+=dt;
-  if(R.platter) R.platter.rotation.y-=dt*3.49;                          // (33⅓)
+  // the record plays while he is down here, or while you have one on; the platter spins up and runs down
+  { const on=!!(R.here || R.spin); R.pv=(R.pv||0)+clamp((on ? 3.49 : 0)-(R.pv||0), -2.5*dt, 2.5*dt);
+    if(R.platter) R.platter.rotation.y-=dt*R.pv;                         // (33⅓)
+    if(R.radio) R.radio.station=on ? 3 : -1; }
   const h=DayNight.state.hour, open=h>=6 && h<23;
   if(open!==R.open){ R.open=open; R.openPanel.material.map=open ? R.openTex.open : R.openTex.closed; R.openPanel.material.needsUpdate=true; }
   const ph=(R.t*0.8)%1;
@@ -701,7 +718,7 @@ function updateWeighTrucks(dt){
     if(!v.weigh) continue;
     if(!v.route){
       if(v.z>z0+760 || v.z<z0-30){ v.weigh=false; v.exiting=false; R.active--; continue; }     // wrapped round the loop, or missed it
-      if(v.z<=z0+0.5){ const RT=_weighRoute(v); v.route=RT; RT.x0=v.x-W.off[0].x; RT.seq=++_visitSeq; v.speed=Math.min(v.speed, 26); } }
+      if(v.z<=z0+0.5){ const RT=_weighRoute(v); v.route=RT; RT.x0=v.x-W.off[0].x; RT.seq=++_visitSeq; } }
     if(v.route){ const L=v.route.legs[v.route.li]; if(L && L.scale && v.route.s>=L.P[L.P.length-1].s-0.05) sc=v; }
   }
   R.onScale=sc;

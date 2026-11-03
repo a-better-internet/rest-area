@@ -250,3 +250,5 @@ const EDIN_RT={};
 })();
 // the interstate's outside edge lines and rumble strips, now that every ramp has said where it joins (08)
 interstateEdges();
+mileMarkers();                                   // (08: after every ramp is laid, so none stands on one)
+checkRoadSigns();

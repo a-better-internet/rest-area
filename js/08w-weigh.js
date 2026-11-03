@@ -25,7 +25,7 @@
   const W=WEIGH, RW=2.45, LY=PAVE_T+0.015, PY=LY+0.006;
   // the ground under it is walked on at the paving's height
   addPaveRaster(-182, -3460, -18, -2500);
-  rampPave(W.off, RW, NB_X1, 1, "start", 110, "#9a9a98");
+  const offM=rampPave(W.off, RW, NB_X1, 1, "start", 110, "#9a9a98"); W.offM=offM;
   rampPave(W.on, RW, NB_X1, 1, "end", 110, "#9a9a98");
 
   /* ---- the lanes and the apron: one ribbon along the lanes' middle, every two metres, its west edge the bypass lane's
@@ -76,10 +76,11 @@
   /* ---- the signs on the interstate that bring them in ---- */
   const X=NB_X1+5.0;
   guideSign(X, -1830, 5.0, 2.8, 0, ["WEIGH STATION","1/2 MILE"]);
-  guideSign(X, W.off[0].z+90, 5.0, 2.8, 0, ["WEIGH STATION","NEXT RIGHT"]);
-  // at the gore: where to go, small, past the nose
-  { const nose=W.off.find(p=>p.x>NB_X1+4.8) || W.off[W.off.length-1];
-    guideSign(nose.x-1.5, nose.z-4, 2.6, 1.6, 0, ["WEIGH STATION","↗"], {clear:1.6}); }
+  // (short of the taper, where the speed-change lane opens beside the road: the sign may not stand in it)
+  guideSign(X, W.offM.line[0].z+70, 5.0, 2.8, 0, ["WEIGH STATION","NEXT RIGHT"]);
+  // at the gore: where to go, small, just past the nose, in the grass between the road and the ramp (as 08b's EXIT 166)
+  { const q=W.offM.nose || W.off.find(p=>p.x-RW-NB_X1>3.0), z=q.z-3.0, xin=q.x-RW;
+    guideSign((NB_X1+xin)/2, z, 1.9, 1.4, 0, ["WEIGH","STATION","↗"], {clear:1.4, posts:1}); }
   // speed on the ramp, on its right
   { const p=W.off[Math.floor(W.off.length*0.45)], tex=signTex(120, 160, (c, Wd, H)=>{ c.fillStyle="#f2f0ea"; c.fillRect(0, 0, Wd, H);
       c.strokeStyle="#1a1a1a"; c.lineWidth=5; rrect(c, 7, 7, Wd-14, H-14, 8); c.stroke(); c.fillStyle="#1a1a1a";

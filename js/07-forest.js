@@ -886,11 +886,23 @@ const FOREST=(function(){
   (function bounds(){
     const Z0=SITE.zone, I=SITE.walkInset, gaps=[[HWY.sb-19,HWY.sb+19],[HWY.nb-19,HWY.nb+19]];
     const Z={x0:Z0.x0+I, x1:Z0.x1-(SITE.walkInsetE||I), z0:Z0.z0+I, z1:Z0.z1-I};
+    // A ramp crosses a wall on the slant, so a wall is kept off its paving by the paving itself, not a fixed gap: a ramp's
+    // paving as points, its centre line every half metre and out to both edges
+    const paveOf=(P, RW)=>{ const pts=[];
+      for(let i=1;i<P.length;i++){ const a=P[i-1], b=P[i], L=Math.hypot(b.x-a.x, b.z-a.z)||1, ux=(b.x-a.x)/L, uz=(b.z-a.z)/L, n=Math.ceil(L/0.5);
+        for(let k=0;k<=n;k++){ const cx=a.x+(b.x-a.x)*k/n, cz=a.z+(b.z-a.z)*k/n; for(let o=-RW;o<=RW+1e-6;o+=RW/4) pts.push([cx-uz*o, cz+ux*o]); } }
+      return pts; };
+    const WX=HWY.nb+19.5;                                   // the northbound side's roadside wall
+    // The entrance ramp leaves the zone across the corner where its north wall meets that roadside wall: the roadside wall
+    // stops short of the ramp (zS), the zone's wall starts past it (gE), and a notch is walled round between them, clear
+    const RE=paveOf(RAMP_ENTRY, 4.2), zS=Math.min(...RE.filter(p=>p[0]>WX-1.4).map(p=>p[1]))-1.5;
+    const gE=Math.max(HWY.nb+19, Math.max(...RE.filter(p=>p[1]>zS-0.5 && p[1]<Z.z0+0.6).map(p=>p[0]))+1.5);
     for(const zz of [Z.z0, Z.z1]){
       let x=Z.x0;
-      for(const g of gaps){ addCol(x, g[0], zz-0.5, zz+0.5, -40, 300); x=g[1]; }
+      for(const g of gaps){ addCol(x, g[0], zz-0.5, zz+0.5, -40, 300); x=(zz===Z.z0 && g[1]===HWY.nb+19) ? gE : g[1]; }
       addCol(x, Z.x1, zz-0.5, zz+0.5, -40, 300);
     }
+    addCol(WX-0.4, gE+0.4, zS-0.4, zS+0.4, -40, 300); addCol(gE-0.4, gE+0.4, zS, Z.z0, -40, 300);
     addCol(Z.x0-0.5, Z.x0+0.5, Z.z0, Z.z1, -40, 300);
     addCol(Z.x1-0.5, Z.x1+0.5, Z.z0, Z.z1, -40, 300);
     // The two down the median stand open at the crossovers, and the strip of woods between them is
@@ -910,10 +922,13 @@ const FOREST=(function(){
       if(z<b) addCol(ex-0.4, ex+0.4, z, b, -40, 300); };
     // (the northbound side's east wall opens where the weigh station's ramps go through it, and the station's own clearing
     //  is walled round behind; both carriageways' walls run to the far ends, HWY.endN and endS, where a wall goes across)
-    const WS=WEIGH, wGap=[WS.off.find(p=>p.x>HWY.nb+19.5).z+6, WS.on.slice().reverse().find(p=>p.x>HWY.nb+19.5).z-6];
+    // (the gap runs from a metre and a half south of the off-ramp's paving, wherever it lies east of the wall's line, to as
+    //  far north of the on-ramp's: the walls across from the gap to the pad's back then miss the ramps too)
+    const WS=WEIGH, WO=paveOf(WS.off, 2.45), WN=paveOf(WS.on, 2.45);
+    const wGap=[Math.max(...WO.filter(p=>p[0]>WX-1.4).map(p=>p[1]))+1.5, Math.min(...WN.filter(p=>p[0]>WX-1.4).map(p=>p[1]))-1.5];
     for(const ex of [HWY.nb+19.5, HWY.nb-19.5, HWY.sb+19.5, HWY.sb-19.5]){
       const med=ex===HWY.nb-19.5 || ex===HWY.sb+19.5;
-      wall(ex, HWY.endN, Z.z0, med ? cut : ex===HWY.nb+19.5 ? [[EP.z0, EP.z1], [wGap[1], wGap[0]]] : [[EP.z0, EP.z1]], med ? deck : []);
+      wall(ex, HWY.endN, ex===WX ? zS : Z.z0, med ? cut : ex===HWY.nb+19.5 ? [[EP.z0, EP.z1], [wGap[1], wGap[0]]] : [[EP.z0, EP.z1]], med ? deck : []);
       wall(ex, Z.z1, HWY.endS, med ? cut : [], []);
     }
     // round the weigh station: from the gap in the roadside wall out past the pad and back

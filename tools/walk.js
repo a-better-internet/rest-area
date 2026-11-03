@@ -147,8 +147,8 @@ const ROUTES={
   // and on through it: into the break room, out the back door to the shed, in at its door, through the plain door at the
   // back of it and down the stair to the listening room under it
   "out back to the listening room": [[-57.4,-2943.6],[-59.15,-2943.0],[-59.15,-2942.6],[-59.15,-2941.8],[-59.15,-2940.8],[-57.0,-2940.0],[-57.0,-2938.4],[-55.4,-2937.6],[-55.4,-2935.0],[-55.4,-2934.2],
-                                     [-55.4,-2933.3],[-56.6,-2932.0],[-57.9,-2931.0],[-57.9,-2930.4],[-57.9,-2929.6],[-58.6,-2928.6],[-58.95,-2927.85],[-59.28,-2927.8],[-59.28,-2927.36],[-59.28,-2926.8],
-                                     [-58.6,-2926.75],[-57.6,-2926.75],[-56.6,-2926.75],[-56.0,-2926.75],[-56.3,-2927.6],[-56.5,-2928.3]],
+                                     [-55.4,-2933.3],[-56.2,-2930.0],[-57.4,-2925.0],[-57.9,-2921.0],[-57.9,-2919.0],[-57.9,-2918.4],[-57.9,-2917.6],[-58.6,-2916.6],[-58.95,-2915.85],[-59.28,-2915.8],[-59.28,-2915.36],[-59.28,-2914.8],
+                                     [-58.6,-2914.75],[-57.6,-2914.75],[-56.6,-2914.75],[-56.0,-2914.75],[-56.3,-2915.6],[-56.5,-2916.3]],
   // and its roastery (14u): from the gravel lot round the east side of the house, down the stair behind it, in at the coral
   // door, round the packing table to the sacks by the roaster
   "down to the roastery":   [[1445.8,-1182.5],[1442.6,-1181.0],[1442.4,-1176.0],[1441.6,-1174.4],[1439.7,-1174.4],[1439.7,-1175.6],[1439.7,-1177.0],[1439.7,-1178.8],[1439.7,-1179.6],[1439.7,-1180.5],[1439.8,-1182.6],[1439.8,-1183.8],[1438.0,-1183.9],[1436.8,-1184.4]],
@@ -280,7 +280,7 @@ const ROUTES={
         res["hall stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-2.0 ? "down: never reached the hall ("+lo.toFixed(2)+")"
                                          : typeof u==="string" ? "up: "+u : REST.player.feetY<fy-0.05 ? "up: never got back up ("+REST.player.feetY.toFixed(2)+")" : "ok"; } }
     // and the weigh station shed's stair down to the listening room (14w), and back up
-    { const TOP6=[[-59.28,-2926.8],[-58.6,-2926.75],[-57.0,-2926.75],[-55.9,-2926.75]], BOT6=TOP6.slice().reverse(), fy=REST.surf(-59.28,-2926.8,-5.0);
+    { const TOP6=[[-59.28,-2914.8],[-58.6,-2914.75],[-57.0,-2914.75],[-55.9,-2914.75]], BOT6=TOP6.slice().reverse(), fy=REST.surf(-59.28,-2914.8,-5.0);
       for(const [m,lab] of PACES("listening room stair, keys held")){
         const d=drive(TOP6,m,fy); REST.sim(40); const lo=REST.player.feetY, u=drive(BOT6,m,lo); REST.sim(40);
         res["listening room stair, keys held ("+lab+")"] = typeof d==="string" ? "down: "+d : lo>fy-2.0 ? "down: never reached the bottom ("+lo.toFixed(2)+")"
