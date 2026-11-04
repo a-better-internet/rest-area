@@ -196,12 +196,13 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   for(const [x,z,c] of [[69.0,-212.8,0x9a5cff],[75.4,-212.8,0x4fb8ff],[69.0,-218.2,0xff5fb0],[72.6,-218.0,0x7a6cff],[72.4,-214.2,0xfff0e0],[74.4,-217.6,0xfff0e0]])
     lamp({x:x, y:A.y+2.25, z:z, color:c, intensity:c===0xfff0e0?0.62:0.80, dist:8, decay:1.4});
 
-  /* ---- the cabinets: four of them, a good stride apart, every one of them played ----------- */
-  // (18f plays Astro Raiders; 18g the other three, each on its own screen the same way)
-  const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP"];
-  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c"];
+  /* ---- the cabinets: six of them round the walls, every one of them played ----------- */
+  // (18f plays Astro Raiders; 18g Maze Muncher and Block Drop, 18m Brickyard Breakout, Groundhog Gulch and Turnpike Turtle,
+  // each on its own screen the same way)
+  const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP","GROUNDHOG GULCH","TURNPIKE TURTLE"];
+  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a"];
   ARCADE.cabs=[];
-  const marC=cvs(512,96), mx=marC.getContext("2d");
+  const marC=cvs(768,96), mx=marC.getContext("2d");
   NAMES.forEach((n,i)=>{ const ox=i*128, oy=0, g=mx.createLinearGradient(0,oy,0,oy+96);
     g.addColorStop(0,["#1a0a2e","#2e0a0a","#0a1a2e"][i%3]); g.addColorStop(1,"#000"); mx.fillStyle=g; mx.fillRect(ox,oy,128,96);
     mx.strokeStyle=["#ff4fbf","#4fd8ff","#f2e23a","#7aff7a"][i%4]; mx.lineWidth=3; mx.strokeRect(ox+4,oy+4,120,88);
@@ -242,7 +243,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
       ARCADE.cabs[i]={name:NAMES[i], c:c, x:c.getContext("2d"), tex:tex, mesh:m, stick:st, stand:{x:pf[0], z:pf[1]}, ry:ry,
                       screenY:A.y+1.30, screen:{x:ps[0], z:ps[1]}, floor:A.y};
       if(i===0) ARCADE.raiders=ARCADE.cabs[0]; }
-    marG.push({geo:cellGeo(0.56, 0.16, i, 1, 4), matrix:new T.Matrix4().compose(V3(pm[0], A.y+1.68, pm[1]), new T.Quaternion().setFromEuler(new T.Euler(0, ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color(0xffffff)});
+    marG.push({geo:cellGeo(0.56, 0.16, i, 1, 6), matrix:new T.Matrix4().compose(V3(pm[0], A.y+1.68, pm[1]), new T.Quaternion().setFromEuler(new T.Euler(0, ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color(0xffffff)});
     const a0=L(-0.34,-0.42), a1=L(0.34,0.62);
     addCol(Math.min(a0[0],a1[0]), Math.max(a0[0],a1[0]), Math.min(a0[1],a1[1]), Math.max(a0[1],a1[1]), A.y-0.5, A.y+1.86);
     const pu=L(0, 1.15);
@@ -253,6 +254,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   // two on the west wall facing in, two on the back wall facing the door
   cab(0, A.x0+0.45, -213.4, Math.PI/2); cab(1, A.x0+0.45, -216.0, Math.PI/2);
   cab(2, 69.5, A.z0+0.45, 0);           cab(3, 71.7, A.z0+0.45, 0);
+  // and two on the front wall, either side of the way in, facing the room
+  cab(4, 69.6, A.z1-0.45, Math.PI);     cab(5, 74.2, A.z1-0.45, Math.PI);
   // the marquees: one mesh, one texture, every cabinet a cell of it
   scene.add(new T.Mesh(mergeEntries(marG), marM));
 

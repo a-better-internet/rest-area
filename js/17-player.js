@@ -32,10 +32,13 @@ addEventListener("keydown",e=>{
   if(typeof DOZER!=="undefined" && DOZER.on){ e.preventDefault(); DOZER.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
+  // the warp list, for testing (18l): ` opens it; while it is open the keys are its
+  if(typeof WARP!=="undefined" && WARP.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   // on the disc golf course with the disc in your hand, Space winds up the throw (18i)
   if(typeof DGOLF!=="undefined" && DGOLF.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(typeof CORN!=="undefined" && CORN.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(typeof DOGBALL!=="undefined" && DOGBALL.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
+  if(typeof YARDHOOP!=="undefined" && YARDHOOP.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   // Z for zombie mode, and in it the guns' keys (21)
   if(typeof ZOMBIE!=="undefined" && ZOMBIE.key(e)){ e.preventDefault(); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
@@ -69,7 +72,7 @@ addEventListener("keydown",e=>{
   // the key that gets you out of it
   if((e.code==="KeyE" || (e.code==="Space" && !driving && !(typeof BOAT!=="undefined" && BOAT.on))) && !droneMode) interact();
 });
-addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); if(typeof CORN!=="undefined") CORN.keyup(e); if(typeof DOGBALL!=="undefined") DOGBALL.keyup(e); });
+addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); if(typeof CORN!=="undefined") CORN.keyup(e); if(typeof DOGBALL!=="undefined") DOGBALL.keyup(e); if(typeof YARDHOOP!=="undefined") YARDHOOP.keyup(e); });
 // Alt-tab away mid-stride and the keyup for whatever you were holding never
 // arrives, so the key stays down for good. Drop everything when the window
 // stops listening.
@@ -226,8 +229,10 @@ function interact(){
   if(typeof BOAT!=="undefined" && BOAT.on){ BOAT.leave(); return; }
   if(player.ladder) return;                                        // (on a ladder you climb on and off it, W and S)
   if(driving){ exitCar(); return; }
-  { const c=nearestCar(); if(c){ enterCar(c); return; } }
-  { const u=nearestUse(); if(u && u.pri){ u.fn(); return; } }
+  // a car within reach, unless something that takes E first (a game's, pri) is nearer than it
+  { const c=nearestCar(), u=nearestUse();
+    if(u && u.pri && (!c || Math.hypot(player.pos.x-u.x, player.pos.z-u.z)<Math.hypot(player.pos.x-c.g.position.x, player.pos.z-c.g.position.z))){ u.fn(); return; }
+    if(c){ enterCar(c); return; } }
   if(nearestDoor && nearestDoor.occ && nearestDoor.occBy && nearestDoor.occBy.cust){
     toast(["\u201cGIVE ME A MINUTE ON THIS ONE.\u201d","\u201cYOU DON'T WANT THIS ONE. TRY THE NEXT.\u201d"][(Math.random()*2)|0],"#cfe0d4"); return; }
   if(nearestDoor && nearestDoor.occ){
@@ -303,10 +308,11 @@ function updateDoors(dt){
   else if(seated) bits.push("C  ·  "+(seated.lie?"GET UP":"STAND UP"));
   else if(player.ladder) bits.push("W  ·  UP      S  ·  DOWN");
   else{
-    const nc=nearestCar();
+    const nc0=nearestCar(), np=nearestUse();
+    const nc=(np && np.pri && nc0 && Math.hypot(player.pos.x-np.x, player.pos.z-np.z)<Math.hypot(player.pos.x-nc0.g.position.x, player.pos.z-nc0.g.position.z)) ? null : nc0;
     if(nc) bits.push("E  ·  DRIVE");
     if(nearestSeat) bits.push("C  ·  "+(nearestSeat.lie?"LIE DOWN":"SIT")+"  ·  "+nearestSeat.label);
-    const u=nc ? null : nearestUse();
+    const u=nc ? null : np;
     if(u && u.pri) bits.push("E  ·  "+u.label);                      // cleaning up beats the stall door
     else if(best && !nc) bits.push(best.occ ? "OCCUPIED" : best.promptFn ? best.promptFn(best) : "E  ·  "+(best.manualOnly ? (best.target>0.5?"CLOSE ":"OPEN ")+best.label : best.label));
     else if(u) bits.push("E  ·  "+u.label);

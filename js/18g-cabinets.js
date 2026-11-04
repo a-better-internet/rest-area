@@ -34,7 +34,7 @@
    the drop quickens as the rows go, and the score spins up to what it is.
    The pictures are drawn here, not taken from the references.
    ---------------------------------------------------------------------- */
-const CABS={on:false, i:-1, keys:{}, t:0, acc:[0,0,0,0], hi:[0,0,0,0], state:[]};
+const CABS={on:false, i:-1, keys:{}, t:0, acc:{}, hi:{}, state:[]};
 const _CB={W:336, H:280};
 function _cbSnd(i, k){ const R=ARCADE.cabs && ARCADE.cabs[i]; if(typeof AUDIO!=="undefined" && R) AUDIO.blip(k, R.screen.x, R.screen.z); }
 const _cbFont=(x, px)=>{ x.font="bold "+px+"px 'Courier New', monospace"; };
@@ -409,7 +409,7 @@ function updateCabs(dt){
   if(!ARCADE.cabs) return;
   CABS.t+=dt;
   const cam=camera.position;
-  for(let i=1;i<4;i++){
+  for(const i of Object.keys(_CBG).map(Number)){                 // (every cabinet with a game: 18m adds two, and the new breakout)
     const R=ARCADE.cabs[i], G=_CBG[i]; if(!R || !G) continue;
     if(CABS.on && CABS.i===i){
       const S=CABS.state[i], n=Math.max(1, Math.ceil(dt*120)), h=dt/n;
@@ -417,6 +417,7 @@ function updateCabs(dt){
       CABS.hi[i]=Math.max(CABS.hi[i]||0, S.score);
       G.draw(R.x, S, CABS.t); R.tex.needsUpdate=true;
       const L=G.lean(S, CABS.keys); R.stick.rotation.z=-L[0]*0.35; R.stick.rotation.x=-L[1]*0.35;
+      if((S.over || S.won) && G.done) G.done(S, i);                // (a game that keeps its best scores, 18m)
       // you, at the cabinet, looking down at its screen
       player.pos.set(R.stand.x, 0, R.stand.z); player.feetY=R.floor; player.yaw=R.ry;
       const d=Math.hypot(R.stand.x-R.screen.x, R.stand.z-R.screen.z);
@@ -425,7 +426,7 @@ function updateCabs(dt){
     }
     // its attract mode, a dozen frames a second while anyone is near enough to see it
     if(Math.hypot(cam.x-R.screen.x, cam.z-R.screen.z)>14 || Math.abs(cam.y-R.screenY)>4) continue;
-    CABS.acc[i]+=dt; if(CABS.acc[i]<1/12) continue; CABS.acc[i]=0;
+    CABS.acc[i]=(CABS.acc[i]||0)+dt; if(CABS.acc[i]<1/12) continue; CABS.acc[i]=0;
     G.attract(R.x, CABS.t, i); R.tex.needsUpdate=true;
   }
 }

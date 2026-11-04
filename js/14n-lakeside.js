@@ -33,6 +33,8 @@
    water. Nobody swims: there's a sign.
    ---------------------------------------------------------------------- */
 const LAKESIDE={water:null, boats:[], geese:[], t:0, docks:[]};
+// every hoop in a yard or over a drive: its rim, its board, which way it faces and the ground under it (18k shoots at them)
+const YARD_HOOPS=[];
 (function lakeside(){
   const E=EDIN, A=EAST, Z=E.z, Y=E.y, HW=E.hw, TW=A.town, PK=A.park, SH=A.shore, WY=A.wy, r=_trng(8181);
   const ME=[];
@@ -212,7 +214,8 @@ const LAKESIDE={water:null, boats:[], geese:[], t:0, docks:[]};
   const cans=(x, z)=>{ for(const [dx,col] of [[0,"#2a3a2a"],[0.62,"#2a4a8a"]]){ RB(0.56, 1.0, 0.62, x+dx, Y+0.5, z, col, 0, 0.05); B(0.60, 0.05, 0.66, x+dx, Y+1.02, z, col); }
     addCol(x-0.32, x+0.94, z-0.34, z+0.34, Y-0.5, Y+1.1); };
   const hoop=(x, z, f)=>{ C(0.06, 3.3, x, Y+1.65, z, "#5a5e60", 12); B(1.2, 0.8, 0.04, x, Y+3.25, z+f*0.15, "#f4f2ec"); B(0.5, 0.36, 0.045, x, Y+3.1, z+f*0.15, "#c42a1a");
-    ent(new T.TorusGeometry(0.23, 0.012, 6, 18), x, Y+3.05, z+f*0.42, "#e6531c", Math.PI/2); addCol(x-0.1, x+0.1, z-0.1, z+0.1, Y-0.5, Y+3.4); };
+    ent(new T.TorusGeometry(0.23, 0.012, 6, 18), x, Y+3.05, z+f*0.42, "#e6531c", Math.PI/2); addCol(x-0.1, x+0.1, z-0.1, z+0.1, Y-0.5, Y+3.4);
+    YARD_HOOPS.push({x:x, z:z, f:f, y:Y, rim:{x:x, y:Y+3.05, z:z+f*0.42, r:0.23}, board:{z:z+f*0.15, x0:x-0.6, x1:x+0.6, y0:Y+2.85, y1:Y+3.65, t:0.02}}); };
   const fire=(x, z)=>{ const g=gy(x,z);                          // (north of the road: the chairs on its landward side, looking past it at the water) for(let k=0;k<12;k++){ const a=k/12*Math.PI*2; ent(new T.DodecahedronGeometry(0.15, 0), x+Math.cos(a)*0.62, g+0.08, z+Math.sin(a)*0.62, ["#7a7468","#8a847a","#6a665e"][k%3], k, k*2); }
     C(0.5, 0.02, x, g+0.012, z, "#2a2420", 20); for(let k=0;k<3;k++){ const a=k*2.1; ent(new T.CylinderGeometry(0.05, 0.05, 0.55, 8), x+Math.cos(a)*0.12, g+0.07, z+Math.sin(a)*0.12, "#3a2a1e", Math.PI/2, a, 0); }
     addCol(x-0.75, x+0.75, z-0.75, z+0.75, g-0.5, g+0.3);
