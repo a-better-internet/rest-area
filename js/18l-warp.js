@@ -21,25 +21,25 @@ const WARP=(function(){
     ["THE LOBBY",                 0.0,     2.0,    0.0,        x=>g(x[1], x[2])],
     ["THE CAR LOT",             -36.0,    22.0,    0.0,        x=>g(x[1], x[2])],
     ["THE VENDING ROOM",        -66.0,     0.5,   -Math.PI/2,  x=>g(x[1], x[2])],
-    ["THE MAINTENANCE GARAGE",   30.6,    33.7,    0.0,        x=>g(x[1], x[2])],
+    ["THE GARAGE",   30.6,    33.7,    0.0,        x=>g(x[1], x[2])],
     ["THE DUG-OUT (DARTS)",      73.6,  -179.6,    Math.PI/2,  x=>surfaceY(x[1], x[2], SUB_G-2.2)],
     ["THE ARCADE",               72.0,  -212.4,    0.0,        x=>ARCADE.room ? ARCADE.room.y : g(x[1], x[2], -3)],
     ["THE SUB-BASEMENT",         80.0,  -232.0,    0.0,        x=>SUBBASE.y],
     ["THE BOILER HALL",          99.0,  -268.0,    0.0,        x=>SUBBASE.y-5.0],
     ["THE TREATMENT PLANT",      86.4,   121.6,   -Math.PI/2,  x=>g(x[1], x[2])],
-    ["THE CAMP IN THE WOODS",   278.0,    49.6,   -Math.PI/2,  x=>g(x[1], x[2])],
+    ["THE CAMP",   278.0,    49.6,   -Math.PI/2,  x=>g(x[1], x[2])],
     ["THE OLD HOUSE",           312.0,   153.0,    Math.PI,    x=>g(x[1], x[2])],
-    ["I-79, THE MEDIAN CROSSOVER",-104.5, -250.0,  0.0,        x=>g(x[1], x[2])],
-    ["EDINBORO, THE US 6N BRIDGE", -8.0, -1201.8, -Math.PI/2,  x=>g(x[1], x[2], 9)],
+    ["I-79 CROSSOVER",-104.5, -250.0,  0.0,        x=>g(x[1], x[2])],
+    ["THE US 6N BRIDGE", -8.0, -1201.8, -Math.PI/2,  x=>g(x[1], x[2], 9)],
     ["THE FUEL STOP",           -26.0, -1238.0,    0.0,        x=>g(x[1], x[2])],
-    ["THE WATER TOWER CATWALK", -25.6, -1318.0,   -Math.PI/2,  x=>WATERTOWER.catwalk],
-    ["FRENCH CREEK SUBSTATION",  11.5, -1372.0,    0.0,        x=>g(x[1], x[2])],
+    ["THE TOWER CATWALK", -25.6, -1318.0,   -Math.PI/2,  x=>WATERTOWER.catwalk],
+    ["EDINBORO SUBSTATION",  11.5, -1372.0,    0.0,        x=>g(x[1], x[2])],
     ["THE WEIR FARM",           150.0, -1192.0,    0.0,        x=>g(x[1], x[2])],
     ["THE CHAPEL",               88.5, -1204.0,    Math.PI,    x=>g(x[1], x[2])],
     ["THE FIREWORKS STORE",     901.6, -1250.0,    0.0,        x=>g(x[1], x[2])],
     ["LAKE STREET",            1270.0, -1190.0,    0.0,        x=>g(x[1], x[2])],
-    ["THE HOOP OVER THE DRIVE",    0.0,     0.0,    0.0,        null],
-    ["THE PARK AND THE DOCKS", 1300.0, -1240.0,    0.0,        x=>g(x[1], x[2])],
+    ["THE DRIVEWAY HOOP",    0.0,     0.0,    0.0,        null],
+    ["THE PARK DOCKS", 1300.0, -1240.0,    0.0,        x=>g(x[1], x[2])],
     ["THE DOG PARK",           1068.4, -1203.0,    0.0,        x=>g(x[1], x[2])],
     ["THE BREWERY",            1447.0, -1215.0,    0.0,        x=>g(x[1], x[2])],
     ["THE PERKY LOON",         1437.5, -1197.0,    Math.PI,    x=>g(x[1], x[2])],
@@ -57,7 +57,7 @@ const WARP=(function(){
       background:rgba(14,20,18,.92);border:1px solid rgba(220,232,214,.35);border-radius:6px;padding:16px 22px 14px;
       font-family:"Oswald",Arial,sans-serif;color:#e4ecdf;letter-spacing:.08em;max-width:calc(100vw - 32px);box-sizing:border-box}
     #warp h4{margin:0 0 10px;font-size:15px;letter-spacing:.3em;color:#9fd36a;font-weight:600}
-    #warp .g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 26px;font-size:13px}
+    #warp .g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 26px;font-size:13px;white-space:nowrap}
     #warp .g b{display:inline-block;width:1.6em;color:#f2d27a}
     #warp p{margin:10px 0 0;font-size:11px;opacity:.6;letter-spacing:.2em}`;
   document.head.appendChild(st); document.body.appendChild(box);
