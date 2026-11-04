@@ -334,8 +334,9 @@ const ZOMBIE=(function(){
       const fl=zb.down ? Math.sin(t*9)*0.5 : 0;
       B[J.shL].rotation.set(-0.4*e+fl, 0, -0.9*e); B[J.shR].rotation.set(-0.3*e-fl, 0, 0.9*e);
       B[J.knL].rotation.x=0.5*(1-e)+0.15+(zb.down ? Math.max(0, fl) : 0); B[J.knR].rotation.x=0.3*(1-e)+0.25; B[J.head].rotation.set(0, 0.4*e*(zb.roll>0?1:-1), 0);
-      P.g.rotation.set(zb.flung ? zb.tumble : fall*e*Math.PI*0.49, zb.yaw, zb.roll*e);
-      P.g.position.set(zb.x, zb.y+(zb.fly ? 0.3 : 0.10*e)-(zb.sink||0), zb.z);
+      if(zb.flung && zb.fq){ P.g.quaternion.copy(zb.fq); P.g.position.copy(zb.fpos); P.g.position.y-=zb.sink||0; return; }
+      P.g.rotation.set(fall*e*Math.PI*0.49, zb.yaw, zb.roll*e);
+      P.g.position.set(zb.x, zb.y+0.10*e-(zb.sink||0), zb.z);
       return;
     }
     poseP(P, moving ? "walk" : "stand", zb.ph, t);
@@ -398,7 +399,8 @@ const ZOMBIE=(function(){
     if(wasDown) zb.dieT=0.75; zb.down=null;
     zb.roll=(Math.random()-0.5)*0.5;
     // thrown: by a car or a blast, up and over, end over end, the way it was hit
-    if(how && how.fly){ zb.fly=how.fly; zb.flung=true; zb.tumble=0; zb.dieT=0; } else zb.flung=false;
+    if(how && how.fly){ const F=zb.fly=how.fly; zb.flung=true; zb.dieT=0; F.hc=0.95*zb.h; F.x=zb.x; F.y=zb.y+F.hc; F.z=zb.z; F.yaw=zb.yaw;
+      if(!zb.fq){ zb.fq=new T.Quaternion(); zb.fpos=new T.Vector3(); } flingPose(zb); } else zb.flung=false;
     addScore(zb, head, how);
     if(head){ zb.P.B[zb.P.j.head].scale.setScalar(0.001);
       _v3.set(zb.x, zb.y+1.6*zb.h, zb.z); blood.burst(_v3, dir, 46, 2.2); blood.mist(_v3, 1.6); }
@@ -408,13 +410,59 @@ const ZOMBIE=(function(){
     if(r<0.18){ const g=owned[(Math.random()*owned.length)|0]; dropPickup("ammo:"+g.ammo, zb.x, zb.z, zb.y); }
     else if(r<0.24) dropPickup("health", zb.x, zb.z, zb.y);
   }
+  /* ---- thrown ----
+     What a car or a blast does to a body: it goes the way it was sent, turning about a level axis across that way, the
+     legs swept out from under it and the head going back toward what hit it, about half a turn to a turn and a half
+     over the whole flight by how hard it was hit, and a little twist about its own length if it was struck off-centre.
+     It turns about its middle, not its feet. It lands, maybe bounces once, and slides to a stop on its back or its
+     face. (ux, uz) the way, hs and vy how fast along it and up, k 0..1 how hard, tw the twist.) */
+  function fling(ux, uz, hs, vy, k, tw){
+    // it comes down near flat: a quarter turn hit slowly, three quarters at road speed, now and then one and a quarter
+    const T_=(vy+Math.sqrt(vy*vy+2*9.8*0.8))/9.8, m=clamp(Math.round(k*1.5+Math.random()*0.7-0.35), 0, 2),
+          turns=0.25+0.5*m+(Math.random()-0.5)*0.12;
+    return {vx:ux*hs, vy:vy, vz:uz*hs, ax:uz, az:-ux, ang:0, w:-turns*Math.PI*2/T_, wy:tw||0, b:0, slide:false, tgt:0};
+  }
+  const _fqT=new T.Quaternion(), _fqY=new T.Quaternion(), _fAx=new T.Vector3(), _fUp=new T.Vector3(0,1,0);
+  function flingPose(zb){
+    const F=zb.fly; _fAx.set(F.ax, 0, F.az);
+    zb.fq.copy(_fqT.setFromAxisAngle(_fAx, F.ang)).multiply(_fqY.setFromAxisAngle(_fUp, F.yaw));
+    zb.fpos.set(0, F.hc, 0).applyQuaternion(zb.fq); zb.fpos.set(F.x-zb.fpos.x, F.y-zb.fpos.y, F.z-zb.fpos.z);
+  }
+  // how high its middle sits over the ground at this angle: on its feet 0.95 of its height, lying 0.14
+  const _lie=(F)=>Math.max(0.14, 0.88*F.hc*Math.abs(Math.cos(F.ang)));
+  function flyStep(zb, dt){
+    const F=zb.fly;
+    if(!F.slide){
+      F.vy-=9.8*dt; F.ang+=F.w*dt; F.yaw+=F.wy*dt;
+      const nx=F.x+F.vx*dt, nz=F.z+F.vz*dt;
+      if(!zHit(nx, nz, F.y-0.5, 0.25)){ F.x=nx; F.z=nz; } else { F.vx*=-0.25; F.vz*=-0.25; }
+      F.y+=F.vy*dt;
+      const g=surfaceY(F.x, F.z, F.y), lo=g+_lie(F);
+      if(F.y<=lo && F.vy<0){ F.y=lo; snd.thud(); _v3.set(F.x, g+0.1, F.z); blood.mist(_v3, 0.8);
+        if(F.vy<-3.2 && F.b<1){ F.vy*=-0.22; F.vx*=0.62; F.vz*=0.62; F.w*=0.35; F.wy*=0.5; F.b++; }
+        else { F.slide=true; F.vy=0;
+          // flat on its back or its face: the next way flat it was turning toward, or back to the one it has only just passed
+          const q=Math.PI/2, lo=q*(2*Math.floor((F.ang/q-1)/2)+1), hi=lo+2*q;
+          F.tgt=F.w<=0 ? (hi-F.ang<0.9 ? hi : lo) : (F.ang-lo<0.9 ? lo : hi); F.vx*=0.8; F.vz*=0.8;
+          blood.decal(F.x, F.z, g, 0.5+Math.random()*0.3); } }
+    }else{
+      // on the ground: it slides and slows, and comes down flat on its back or its face
+      const sp=Math.hypot(F.vx, F.vz), ns=Math.max(0, sp-7.5*dt), f=sp>0 ? ns/sp : 0; F.vx*=f; F.vz*=f;
+      const nx=F.x+F.vx*dt, nz=F.z+F.vz*dt; if(!zHit(nx, nz, F.y-0.1, 0.25)){ F.x=nx; F.z=nz; } else { F.vx=F.vz=0; }
+      F.ang+=(F.tgt-F.ang)*Math.min(1, dt*7); F.yaw+=F.wy*dt; F.wy*=Math.max(0, 1-dt*4);
+      F.y=surfaceY(F.x, F.z, F.y+0.3)+_lie(F);
+      if(ns<0.05 && Math.abs(F.tgt-F.ang)<0.02){ F.ang=F.tgt; flingPose(zb); zb.x=F.x; zb.z=F.z; zb.y=F.y-_lie(F);
+        zb.fly=null; zb.dieT=0.76; zb.pooled=false; return; }
+    }
+    zb.x=F.x; zb.z=F.z; zb.dieT+=dt; flingPose(zb);
+  }
   /* ---- a car and the dead ----
      Fast, it goes through them: each one struck is thrown, tumbling, the way the car was going, and the car loses a little
      (a brute a lot); the moment holds still for a beat, the view jolts, the screen takes the blood. Slower, under a jog, it
      knocks them flat and they get up again. Slower still they are in the way: every one against the car drags at it, and
      enough of them stop it dead, clawing at the doors. */
   function carVsDead(dt, L){
-    const b=driving.veh.body, c=b.position, yaw=carYaw(driving.g.quaternion), fx=Math.sin(yaw), fz=Math.cos(yaw);
+    const b=driving.veh.body, c=b.position, yaw=carYaw(b.quaternion), fx=Math.sin(yaw), fz=Math.cos(yaw);
     const vx=b.velocity.x, vz=b.velocity.z, sp=Math.hypot(vx, vz), vf=vx*fx+vz*fz;
     let n=0, hit=0;
     for(const zb of L){
@@ -426,8 +474,8 @@ const ZOMBIE=(function(){
       if(sp>=5.5 && ahead){
         _v2.set(vx/sp, 0, vz/sp); _v3.set(zb.x, zb.y+1.0, zb.z);
         blood.burst(_v3, _v2, 30, 1.9); blood.mist(_v3, 1.5); snd.flesh(zb.x, zb.z);
-        killZombie(zb, false, _v2, {bonus:5, fly:{vx:vx*0.8+(Math.random()-0.5)*2.5, vy:2.6+sp*0.22, vz:vz*0.8+(Math.random()-0.5)*2.5,
-                                                 spin:(Math.random()<0.5?-1:1)*(7+sp*0.25), b:0}});
+        { const k=clamp((sp-5.5)/16, 0, 1), side=(Math.random()-0.5)*0.22+lx*0.06, ux=vx/sp+fz*side, uz=vz/sp-fx*side, ul=Math.hypot(ux, uz);
+          killZombie(zb, false, _v2, {bonus:5, fly:fling(ux/ul, uz/ul, sp*(0.72+Math.random()*0.16), 1.1+sp*0.13, k, -lx*0.9+(Math.random()-0.5)*0.6)}); }
         const slow=zb.kind==="brute" ? 0.24 : 0.07; b.velocity.x*=1-slow; b.velocity.z*=1-slow; hit++;
       }else if(sp>=2.2 && ahead){
         _v2.set(vx/sp, 0, vz/sp); _v3.set(zb.x, zb.y+1.0, zb.z);
@@ -500,7 +548,7 @@ const ZOMBIE=(function(){
       const k=1-d/R, ux=d>0.01 ? dx/Math.hypot(dx,dz) : 1, uz=d>0.01 ? dz/Math.hypot(dx,dz) : 0, dmg=40+320*k;
       _v2.set(ux, 0, uz); _v1.set(zb.x, zb.y+1.0, zb.z);
       if(dmg>=zb.hp){ blood.burst(_v1, _v2, 26, 2.0); blood.mist(_v1, 1.6);
-        killZombie(zb, false, _v2, {bonus:5, fly:{vx:ux*(3+9*k), vy:3.5+6*k, vz:uz*(3+9*k), spin:(Math.random()<0.5?-1:1)*(6+8*k), b:0}}); }
+        killZombie(zb, false, _v2, {bonus:5, fly:fling(ux, uz, 2.5+8*k, 3.2+5*k, k, (Math.random()-0.5)*2.5)}); }
       else { hurtZombie(zb, dmg, false, _v1, _v2); if(zb.state!=="dead"){ zb.down={t:0, dur:2.2+Math.random(), fall:(Math.sin(zb.yaw)*ux+Math.cos(zb.yaw)*uz)>0 ? 1 : -1}; zb.kx+=ux*1.4; zb.kz+=uz*1.4; } }
     }
     // you, if you are too close
@@ -1181,7 +1229,9 @@ const ZOMBIE=(function(){
   }
   function hideTraffic(on){
     for(const v of TRAFFIC){
-      if(on){ if(!(v.route && v.route.parked) && v.g.visible){ v.g.visible=false; v._zHid=true; } }
+      // (and its collider out of the way with it: hidden, it would still stand in the road where it stopped, solid
+      // and unseen. Traffic stands still while this lasts, and placeVehicle (05) puts it back when it moves again)
+      if(on){ if(!(v.route && v.route.parked) && v.g.visible){ v.g.visible=false; v._zHid=true; v.col.y0=-900; v.col.y1=-899; } }
       else if(v._zHid){ v.g.visible=true; v._zHid=false; }
     }
   }
@@ -1323,18 +1373,10 @@ const ZOMBIE=(function(){
     for(const zb of ZS){ if(!zb.live) continue;
       const d=Math.hypot(zb.x-px, zb.z-pz);
       if(zb.state==="dead"){
-        if(zb.fly){ const F=zb.fly; F.vy-=9.8*dt; const nx=zb.x+F.vx*dt, nz=zb.z+F.vz*dt;
-          if(!zHit(nx, nz, zb.y, 0.25)){ zb.x=nx; zb.z=nz; } else { F.vx*=-0.3; F.vz*=-0.3; }
-          zb.y+=F.vy*dt; zb.tumble+=F.spin*dt;
-          const g=surfaceY(zb.x, zb.z, zb.y+0.8);
-          if(zb.y<=g && F.vy<0){ zb.y=g;
-            if(F.vy<-3.5 && F.b<1){ F.vy*=-0.25; F.vx*=0.5; F.vz*=0.5; F.spin*=0.5; F.b++; snd.thud(); }
-            else { zb.fly=null; zb.tumble=wrapA(zb.tumble); zb.fall=zb.tumble>=0 ? 1 : -1; zb.dieT=0.76; zb.pooled=false; } }
-          poseZombie(zb, false); continue; }
-        if(zb.flung) zb.tumble+=clamp(zb.fall*Math.PI*0.49-zb.tumble, -dt*7, dt*7);
+        if(zb.fly){ flyStep(zb, dt); poseZombie(zb, false); continue; }
         zb.dieT+=dt; zb.corpseT+=dt;
         if(zb.dieT>0.75 && !zb.pooled){ zb.pooled=true;
-          const f=zb.fall*0.85*zb.h, cx=zb.x+Math.sin(zb.yaw)*f, cz=zb.z+Math.cos(zb.yaw)*f; blood.decal(cx, cz, surfaceY(cx, cz, zb.y+0.5), 0.9+Math.random()*0.6); }
+          const f=zb.flung ? 0 : zb.fall*0.85*zb.h, cx=zb.x+Math.sin(zb.yaw)*f, cz=zb.z+Math.cos(zb.yaw)*f; blood.decal(cx, cz, surfaceY(cx, cz, zb.y+0.5), 0.9+Math.random()*0.6); }
         if(zb.corpseT>26){ zb.sink=(zb.sink||0)+dt*0.25; if(zb.sink>0.6) { recycle(zb); continue; } }
         if(d>170){ recycle(zb); continue; }
         poseZombie(zb, false); continue; }
