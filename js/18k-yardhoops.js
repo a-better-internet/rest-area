@@ -148,7 +148,7 @@ const YARDHOOP=(function(){
       // the power rises and falls while you hold it: let go at the top
       if(B.charge>=0){ B.charge+=dt; B.ph=(B.charge/1.4)%2; B.power=B.ph<1 ? B.ph : 2-B.ph; cM.style.opacity=1; cMi.style.width=(B.power*100).toFixed(1)+"%"; }
       const k=B.charge>=0 ? B.power : 0; camera.updateMatrixWorld();
-      ball.position.set(0.05, -0.30+k*0.10, -0.55+k*0.08).applyMatrix4(camera.matrixWorld); ball.visible=view==="fp" && !droneMode;
+      ball.position.set(0.22-k*0.10, -0.36+k*0.14, -0.62+k*0.06).applyMatrix4(camera.matrixWorld); ball.visible=view==="fp" && !droneMode;
       return;
     }
     // in the air or loose: four small steps a frame
