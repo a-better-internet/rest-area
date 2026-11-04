@@ -238,8 +238,8 @@ const _BK=(function(){
         x.fillStyle="#e8662a"; x.fillText("BRICKYARD", W/2, 52); x.fillStyle="#e8f0ff"; x.fillText("BREAKOUT", W/2, 80);
         const R=ROUNDS[((t/14)|0)%ROUNDS.length], gone=((t*3)|0)%60;
         R.m.forEach((row, r)=>{ for(let c=0;c<COLS;c++){ const ch=row[c]; if(ch && ch!=="." && (c*7+r*5)%60>gone) brick(x, AX+c*BW, 100+r*BH, ch, 0, 1); } });
-        const u=(t*0.41)%2, v=(t*0.6)%2, bx=AX+BR+(COLS*BW-2*BR)*(u<1?u:2-u), by=200+30*(v<1?v:2-v);
-        ball(x, bx, by); bat(x, clamp(bx-BAT_W/2, AX, AX+COLS*BW-BAT_W), BAT_W, "", t);
+        const u=(t*0.41)%2, v=(t*0.6)%2, bx=AX+BR+(COLS*BW-2*BR)*(u<1?u:2-u), by=192+22*(v<1?v:2-v);
+        ball(x, bx, by); x.save(); x.translate(0, -44); bat(x, clamp(bx-BAT_W/2, AX, AX+COLS*BW-BAT_W), BAT_W, "", t); x.restore();
       } else _cbTopDraw(x, "brickyard", 60, "#e8662a");
       _cbFoot(x, i, t); _cbTube(x); }
   };

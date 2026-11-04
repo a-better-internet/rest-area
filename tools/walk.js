@@ -318,6 +318,12 @@ const ROUTES={
           : !onDown ? "E at the top did nothing" : bot>L.y0+0.3 ? "down: still up at "+bot.toFixed(2)
           : REST.probe(REST.player.pos.x, REST.player.pos.z, bot) ? "down: stuck at the foot" : "ok"; } }
     started=started0;
+    // and every place on the warp list (18l): put down on a floor, clear of everything, and still on it a second later
+    if(typeof WARP!=="undefined" && want("warps")){ const bad=[];
+      WARP.places.forEach((pl, i)=>{ WARP.go(i); const y0=REST.player.feetY;
+        if(REST.probe(REST.player.pos.x, REST.player.pos.z, y0)) bad.push(pl[0]+" (in something)");
+        else { REST.sim(60); if(Math.abs(REST.player.feetY-y0)>0.3) bad.push(pl[0]+" (fell to "+REST.player.feetY.toFixed(2)+")"); } });
+      res["warps ("+WARP.places.length+")"]= bad.length ? "bad: "+bad.join("; ") : "ok"; }
     // and the trailer's step the same way, at every pace, then back down it
     if(want("trailer step")){ (0,eval)("TRAILER_RT.target=1; TRAILER_RT.open=1; updateTrailer(0.01,0,0);");
       const IN=ROUTES["into the trailer"].pts.slice(0,4), OUT=IN.slice().reverse(), fl=REST.surf(IN[3][0],IN[3][1],2);

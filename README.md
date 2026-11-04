@@ -528,8 +528,8 @@ If the scene runs hot on your machine, start there (see below).
     sets, sheds, kayaks on a rack, a bass boat on its trailer, a fire ring
     with chairs round it looking at the water, a vegetable garden, a flag
     flying off its pole,
-    a basketball hoop over a garage, the AC and the propane tank, and two
-    pink flamingos. Two cars are parked on the shoulder for a cookout. The
+    a basketball hoop over a garage (every one of them can be shot at:
+    below), the AC and the propane tank, and two pink flamingos. Two cars are parked on the shoulder for a cookout. The
     woods close round the back of the lots and both ends of the street, and
     at either end they come right down to the water: past the dog park's
     fence and beside the brewery's garden you look into trees standing
@@ -656,8 +656,9 @@ If the scene runs hot on your machine, start there (see below).
     with the water at night. It bumps off the shore, the docks, the
     pilings and the other boats. At night it shows its running lights (red
     and green at the bow, white at the stern) and two headlights on the bow
-    rail that throw their beams out over the water ahead; `L` at the helm
-    turns them off and on.
+    rail that throw their beams out over the water ahead, wide and long
+    rather than bright, a broad swath of water and shore lit in front of
+    her; `L` at the helm turns them off and on.
     Geese graze on the lawn and paddle about between the docks.
   - **Disc golf.** Six holes are laid out over the park's lawn between the
     lot and the shore, par 19, from 34 to 52 m. Each has a concrete tee
@@ -956,10 +957,12 @@ If the scene runs hot on your machine, start there (see below).
       Twenty-five metres on, under the hill, a pair of sliding glass doors
       parts as you come up to them, each leaf running into a pocket in the
       wall, onto a small arcade with a cosmic carpet, black walls with pink
-      and blue neon, and a GAME ROOM sign. Four upright cabinets stand
-      spread round the walls, each running its own attract screen (ASTRO
-      RAIDERS, MAZE MUNCHER, BRICKYARD BREAKOUT and BLOCK DROP), with a
-      token changer by the way in, clear of the trash can.
+      and blue neon, and a GAME ROOM sign. Six upright cabinets stand
+      round the walls, each running its own attract screen (ASTRO
+      RAIDERS, MAZE MUNCHER, BRICKYARD BREAKOUT and BLOCK DROP on the west
+      and back walls, GROUNDHOG GULCH and TURNPIKE TURTLE either side of
+      the way in), with a token changer by the door, clear of the trash
+      can.
     - **MECH 2.** The first steel door opens on what its name says: the air
       handler that breathes for the corridor and the arcade (`E`), its duct
       away along the ceiling, a water heater, the sump under its grate, the
@@ -1026,10 +1029,33 @@ If the scene runs hot on your machine, start there (see below).
         home. Blinky, Pinky, Inky and Clyde wander at their own paces. The
         muncher keeps going the way you last pushed him, you have three of
         him, and the tunnel runs across the middle.
-      - **Brickyard Breakout** (the old Turnpike Racer, its marquee
-        repainted) follows Sara Sánchez's MIT-licensed 2D breakout: a wall
-        of fifteen bricks, a point a brick, three balls, the bat on the
-        stick or the mouse.
+      - **Brickyard Breakout** is the wall game done the way the later
+        ones did it. Eight rounds of brickwork (a plain wall, a chimney,
+        arches, pallets, a kiln, a checker, a rampart, a hard hat), then
+        round again harder. Silver bricks take a few hits and gold ones
+        none. The ball comes off the bat at an angle by where it struck,
+        a little faster with every brick. Broken bricks now and then drop
+        a capsule: W widens the bat, S slows the ball, T makes three balls,
+        G glues the ball to the bat till you let it go, Z puts a zapper on
+        it (`Space` fires), + is another bat and K the next round. Pigeons
+        wander down through the play. There is a count in before every
+        serve, `P` pauses, and the best five scores are kept.
+      - **Groundhog Gulch.** A groundhog digs down from the grass through
+        topsoil, clay, shale and the coal seam. Beetles and skunks wait in
+        pockets in the ground and come along the tunnels it digs, or creep
+        through the dirt as a pair of eyes; a skunk lets fly a cloud of
+        stink along its row. The groundhog has a garden hose: `Space` sends
+        the water along the tunnel, and pressed again (or held) fills
+        whatever it reached until it bursts, worth more the deeper it is.
+        Dig out under a rock and it rocks and falls on whatever is below.
+        Clear the gulch of them and the next is dug fresh, with more.
+      - **Turnpike Turtle.** A box turtle has to cross I-79 (five lanes of
+        cars, pickups and rigs, each its own way and pace), the median and
+        French Creek (logs, strings of inner tubes and canoes, carrying it
+        along), and get into one of five nests in the far bank against the
+        clock. Into the water, off the edge or into the brambles between
+        the nests is the end of it. Fill all five and round it goes again,
+        faster; from the second round a hawk's shadow sweeps the median.
       - **Block Drop** follows Jake Gordon's MIT-licensed
         javascript-tetris: a well ten by twenty, the seven pieces from a
         bag, ten for a piece set down and a hundred for a row (doubling
@@ -1346,9 +1372,19 @@ If the scene runs hot on your machine, start there (see below).
     comes at you all at once from one side, and the banner says which.
   - **In a car.** Hit them fast and they go flying: the car jolts and
     slows, the view shakes, time stops for an instant, and blood spatters
-    the screen. Hit them slower and they are knocked down and get up again.
+    the screen. A body is thrown the way the car was going, legs swept out
+    from under it, and turns over about its middle (a quarter of a turn
+    hit slowly, three quarters at road speed, a turn and a quarter flat
+    out), lands, maybe bounces once, and slides to a stop on its back or
+    its face. Hit them slower and they are knocked down and get up again.
     Creep into a crowd of them and they hold the car back, and four or more
     will stop it dead.
+  - **The troopers.** Now and then a cruiser, or two or three in a line,
+    comes down I-79 flat out with its bar going (red and blue on the road
+    at night) and its siren wailing, rising as it comes and falling as it
+    goes. They move out of your lane, or slow to your pace if they cannot
+    get round, and throw any of the dead in their way. Those kills are not
+    yours.
   - **Score.** Every kill scores (walkers 10, runners 20, brutes 60, half
     as much again for the head), and kills close together build a streak,
     up to five times. The score is at the top of the screen, and your best
@@ -1420,11 +1456,24 @@ new game, and `Esc` or `E` puts the darts down.
 
 At the Astro Raiders cabinet `A`/`D` or the arrows move, `Space` or a click
 fires, `N` (or `Enter`) starts a new game and `Esc` or `E` steps away. At
-the other three the arrows or `WASD` work the stick: in Maze Muncher they
-steer, in Brickyard Breakout they (or the mouse) move the bat, and in Block
-Drop left and right move the piece, up turns it and down drops it faster.
-`N` (or `Space`, when the game is over) starts again, and `Esc` or `E` steps
-away.
+the other five the arrows or `WASD` work the stick: in Maze Muncher they
+steer; in Brickyard Breakout they (or the mouse) move the bat, `Space`
+serves, lets a glued ball go and fires the zapper, and `P` pauses; in Block
+Drop left and right move the piece, up turns it and down drops it faster;
+in Groundhog Gulch they dig and `Space` is the hose; in Turnpike Turtle each
+press is a hop. `N` (or `Space`, when the game is over) starts again, and
+`Esc` or `E` steps away.
+
+At a hoop over a drive on Lake Street, `E` in front of it takes the ball.
+Look where you want it to go (higher, for more arc), hold `Space` or the
+mouse button while the power rises and falls, and let go to shoot. Walk to
+the rebound, or it comes back to you; `E` there again puts it down.
+
+` (the key left of 1) opens a warp list, for testing: a digit or a letter
+puts you straight down in one of 28 places (the lobby, the arcade, the
+sub-basement, the boiler hall, the water tower's catwalk, the weigh
+station's listening room and the rest), out of any car, boat or drone
+first. ` or `Esc` shuts it.
 
 At the air hockey table the mouse (or `WASD`) moves your mallet. At the
 hoops machine you aim with the mouse, and a click or `Space` shoots. At
@@ -1591,10 +1640,13 @@ js/18b-vending.js   the vending machines' keypad, coins, coil and shaking
 js/18d-darts.js     darts: aiming, the throw and its flight, scoring, 301 against Dale
 js/18e-games.js     the arcade's games: air hockey against the table, and hoops (its net)
 js/18f-raiders.js   Astro Raiders, the space invaders game on the first cabinet
-js/18g-cabinets.js  the other three cabinets: Maze Muncher, Brickyard Breakout, Block Drop
+js/18g-cabinets.js  Maze Muncher and Block Drop, and the cabinets every one of the arcade's games is played on
 js/18h-dozer.js     the coin dozer on the arcade's east wall: its cabinet, and the game
 js/18i-discgolf.js  the disc golf course in Lakeside Park: its tees, baskets, sign and loaner box, and the game (the throw, the flight, the chains, the aim, the card)
 js/18j-cornhole.js  cornhole at the brewery's boards against Danny: the bags, the throw, the slide on the board, the score
+js/18k-yardhoops.js shooting baskets at the hoops over the drives on Lake Street: the ball, the rim, the board, the net, the tally
+js/18l-warp.js      the warp list, for testing: ` and a key puts you down in one of 28 places
+js/18m-cabgames.js  the newer cabinets: Brickyard Breakout rebuilt, Groundhog Gulch, Turnpike Turtle; their best scores
 js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience

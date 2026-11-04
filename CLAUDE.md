@@ -421,6 +421,29 @@ No lettering touches or runs past the edge of its board or its border.
   ground, so a high place sees far even in the gloom. The score's best is
   kept in `localStorage` (`restarea.zombies.best`), read and written in
   try/catch.
+- Zombie mode hides the traffic, and a hidden vehicle's collider is put
+  out of the way with it (`hideTraffic`, 21): a hidden thing must never
+  keep a collider where it stood. A thrown body (`fling`, `flyStep`) flies
+  as its middle, turning about a level axis across the throw, and its
+  pose is that turn on its heading (`zb.fq`, `zb.fpos`), not Euler angles
+  about its feet. The cruisers on I-79 (`COPS`) are 14e's
+  `standingVehicle` + `cruiserKit`, each with a `COL_DYN` box while it
+  runs and a `LAMPS` entry whose colour flips red and blue with its bar.
+- `E` (17's `interact`) takes a car within reach before anything else,
+  unless a `pri` use is nearer than the car: a game set up by a parked car
+  (14n's hoops over the drives, 18k) still gets its `E`.
+- Every hoop 14n puts up is in `YARD_HOOPS` (rim, board, facing, ground)
+  and 18k's `YARDHOOP` plays all of them.
+- The warp list (18l `WARP`, the backquote key) is for testing: add a place
+  to its list with its floor (a global that holds it, or a height to find
+  it under). `tools/walk.js` puts you down at every one of them and fails
+  any that is in something or does not hold you (`ONLY=warps`).
+- The arcade's cabinets are 12c's `NAMES` (six, the marquee a cell each)
+  and 18g's `_CBG` by cabinet index: a game is an object with `newGame`,
+  `step`, `draw`, `attract`, `lean` and optionally `key`, `mouse` and
+  `done` (called once it is over, to keep its best scores, 18m's
+  `_cbAddTop`). 18m registers Brickyard Breakout (2), Groundhog Gulch (4)
+  and Turnpike Turtle (5); 18g's loop runs whatever is registered.
 
 ## Tools
 
