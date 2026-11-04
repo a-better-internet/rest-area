@@ -575,7 +575,7 @@ const ZOMBIE=(function(){
       const V=standingVehicle(0, "#80858a", COP_X, 0, 0, 0), kit=cruiserKit(V);
       V.g.visible=false; const lit=_carLamps(V.g, V.lamps);
       const col={x0:0, x1:0, z0:0, z1:0, y0:-900, y1:-899, ob:{cx:0, cz:0, c:1, s:0, hx:V.S.hw||0.95, hz:2.4}}; COL_DYN.push(col);
-      const lamp={x:0, y:-50, z:0, color:0xff2418, intensity:5, dist:24, decay:1.6, mod:{v:0}, under:false}; LAMPS.push(lamp);
+      const lamp={x:0, y:-50, z:0, color:0xff2418, intensity:3.0, dist:18, decay:1.8, mod:{v:0}, under:false}; LAMPS.push(lamp);
       COPS.push({V:V, kit:kit, lit:lit, col:col, lamp:lamp, on:false, x:0, z:0, tx:0, dir:1, sp:0, want:0, lane:0, hitT:0, past:false}); }
   }
   function hideCop(c){ c.on=false; c.V.g.visible=false; c.col.y0=-900; c.col.y1=-899; c.lamp.mod.v=0; }
