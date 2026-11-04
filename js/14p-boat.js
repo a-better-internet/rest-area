@@ -183,8 +183,13 @@ BOAT.beams=function(dark, delta, beams){
   const k=B.lightK<0.01 ? 0 : B.lightK;
   Lp.M.dock.opacity=0.25+0.62*k; Lp.M.red.opacity=Lp.M.grn.opacity=0.30+0.65*k; Lp.M.wht.opacity=0.30+0.62*k;
   if(k<=0 || !B.on) return false;
-  B.g.updateMatrixWorld(); _blT.copy(Lp.aim); B.g.localToWorld(_blT);
-  for(let i=0;i<2;i++){ _blP.copy(Lp.beam[i]); B.g.localToWorld(_blP); beams[i].position.copy(_blP); beams[i].target.position.copy(_blT); beams[i].intensity=1.9*k; }
+  // they reach further and spread wider than a car's, not brighter: each aimed a little out to its own side and well
+  // ahead, a wide soft cone that falls off slowly, so between them they light a broad swath of water and the shore ahead
+  B.g.updateMatrixWorld();
+  for(let i=0;i<2;i++){ const L=beams[i];
+    _blP.copy(Lp.beam[i]); B.g.localToWorld(_blP); L.position.copy(_blP);
+    _blT.copy(Lp.aim); _blT.x+=(i ? 1 : -1)*7; _blT.z+=14; B.g.localToWorld(_blT); L.target.position.copy(_blT);
+    L.angle=0.74; L.penumbra=0.85; L.distance=170; L.decay=1.0; L.intensity=1.45*k; }
   return true; };
 // stepping off: the nearest place alongside to stand, on a dock or on the shore, and clear of everything
 BOAT.leave=function(){

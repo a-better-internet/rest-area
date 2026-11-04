@@ -404,7 +404,7 @@ const ZOMBIE=(function(){
     addScore(zb, head, how);
     if(head){ zb.P.B[zb.P.j.head].scale.setScalar(0.001);
       _v3.set(zb.x, zb.y+1.6*zb.h, zb.z); blood.burst(_v3, dir, 46, 2.2); blood.mist(_v3, 1.6); }
-    Z.kills++; S.hitKill=true; snd.die(zb.x, zb.z);
+    if(!(how && how.cops)){ Z.kills++; S.hitKill=true; } snd.die(zb.x, zb.z);
     // what they had on them
     const r=Math.random(), owned=GUNS.filter(g=>S.have[g.id]);
     if(r<0.18){ const g=owned[(Math.random()*owned.length)|0]; dropPickup("ammo:"+g.ammo, zb.x, zb.z, zb.y); }
@@ -493,6 +493,7 @@ const ZOMBIE=(function(){
 
   /* ---- points: by what it was, more for the head, and a streak of kills close together multiplies them ---- */
   function addScore(zb, head, how){
+    if(how && how.cops) return;                                                  // (theirs, not yours)
     const base=({walker:10, runner:20, brute:60}[zb.kind]||10)*(head ? 1.5 : 1)+((how && how.bonus)||0);
     S.streak=S.streakT>0 ? S.streak+1 : 1; S.streakT=2.8;
     const mult=Math.min(5, 1+Math.floor((S.streak-1)/3));
@@ -562,6 +563,98 @@ const ZOMBIE=(function(){
     for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-b.x, zb.z-b.z)<90) zb.alert=true;
     if(pd<4) S.splat=Math.min(1, S.splat+0.5);
   }
+
+  /* ---- the troopers: now and then a cruiser, or two or three in a line, comes down I-79 flat out with its bar going and
+     its siren wailing, both ways, lane to lane round you or your car, through any of them on the road (14e's cruiser:
+     standingVehicle, cruiserKit, flashBar, _carLamps). Only while you are within sight of the road. ---- */
+  const COPS=[]; let _sir=null;
+  const COP_X=(HWY.nb+HWY.sb)/2;
+  function buildCops(){
+    if(COPS.length || typeof cruiserKit!=="function") return;
+    for(let i=0;i<4;i++){
+      const V=standingVehicle(0, "#80858a", COP_X, 0, 0, 0), kit=cruiserKit(V);
+      V.g.visible=false; const lit=_carLamps(V.g, V.lamps);
+      const col={x0:0, x1:0, z0:0, z1:0, y0:-900, y1:-899, ob:{cx:0, cz:0, c:1, s:0, hx:V.S.hw||0.95, hz:2.4}}; COL_DYN.push(col);
+      const lamp={x:0, y:-50, z:0, color:0xff2418, intensity:5, dist:24, decay:1.6, mod:{v:0}, under:false}; LAMPS.push(lamp);
+      COPS.push({V:V, kit:kit, lit:lit, col:col, lamp:lamp, on:false, x:0, z:0, tx:0, dir:1, sp:0, want:0, lane:0, hitT:0, past:false}); }
+  }
+  function hideCop(c){ c.on=false; c.V.g.visible=false; c.col.y0=-900; c.col.y1=-899; c.lamp.mod.v=0; }
+  // a run: one, two or three of them, the same way, the same lane, thirty metres apart, coming up behind where you are
+  function copRun(){
+    const px=player.pos.x, pz=player.pos.z, free=COPS.filter(c=>!c.on); if(!free.length) return;
+    const n=Math.min(free.length, Math.random()<0.5 ? 1 : Math.random()<0.7 ? 2 : 3), dir=Math.random()<0.5 ? -1 : 1, lane=Math.random()<0.6 ? 1 : 0;
+    const sp=36+Math.random()*8, z0=clamp(pz-dir*(460+Math.random()*80), HWY.endN+60, HWY.endS-60);
+    for(let k=0;k<n;k++){ const c=free[k]; c.on=true; c.dir=dir; c.lane=lane; c.x=c.tx=laneX(dir, lane); c.z=z0-dir*k*(28+Math.random()*10);
+      c.sp=c.want=sp-k*0.5; c.hitT=0; c.past=false; c.V.g.visible=true; c.ph=Math.random(); }
+    feed("SIRENS ON I-79", "#8fb4ff");
+  }
+  // the ways across its side of the road it may go: its two lanes, and the right shoulder
+  function copXs(dir){ return [laneX(dir, 0), laneX(dir, 1), dir<0 ? NB_X1-HWY.shR*0.5 : SB_X0+HWY.shR*0.5]; }
+  function updateCops(dt, now, dark){
+    if(!COPS.length) return;
+    const px=player.pos.x, pz=player.pos.z;
+    // a run every so often, while you are near enough the road to see it
+    S.copT=(S.copT===undefined ? 9 : S.copT)-dt;
+    if(S.copT<=0){ S.copT=16+Math.random()*22; if(Math.abs(px-COP_X)<520 && !COPS.some(c=>c.on)) copRun(); }
+    // what is in the road: you, or the car you are in, and how fast that is going along it
+    const you=driving ? driving.veh.body.position : player.pos, yv=driving ? driving.veh.body.velocity.z : 0;
+    let near=null, nd=1e9;
+    for(const c of COPS){ if(!c.on) continue;
+      // keep clear of you: the lane you are in, ahead, is no lane for it; a clear one if there is one, else slow to your pace
+      const ahead=c.dir*(you.z-c.z), xs=copXs(c.dir);
+      const blocked=(x)=>ahead>-3 && ahead<150 && Math.abs(you.x-x)<2.3;
+      if(blocked(c.tx)){ let best=null; for(const x of xs) if(!blocked(x) && (best===null || Math.abs(x-c.x)<Math.abs(best-c.x))) best=x;
+        if(best!==null) c.tx=best; }
+      c.want=(blocked(c.tx) && ahead<60) ? Math.max(4, yv*c.dir) : 40;
+      // and the one ahead of it in a run, it keeps its distance from
+      for(const o of COPS){ if(o===c || !o.on || o.dir!==c.dir) continue; const g=c.dir*(o.z-c.z); if(g>0 && g<22 && Math.abs(o.x-c.x)<2) c.want=Math.min(c.want, o.sp*0.95); }
+      c.sp+=clamp(c.want-c.sp, -14*dt, 6*dt);
+      const vx=clamp(c.tx-c.x, -5, 5); c.x+=clamp(c.tx-c.x, -5*dt, 5*dt);
+      c.z+=c.dir*c.sp*dt;
+      // gone: well past you, or at the end of the road
+      if(c.dir*(c.z-pz)>520 || c.z<HWY.endN+30 || c.z>HWY.endS-30){ hideCop(c); continue; }
+      const y=roadY(c.z)+0.02, head=Math.atan2(vx, c.dir*Math.max(c.sp, 4)), fz=Math.cos(head), fx=Math.sin(head);
+      const g=c.V.g; g.position.set(c.x, y, c.z); g.rotation.y=head; g.rotation.x=-Math.atan((roadY(c.z+fz)-roadY(c.z-fz))/2);
+      // its footprint, for your car (06's turned rectangle)
+      const o=c.col.ob; o.cx=c.x; o.cz=c.z; o.c=fz; o.s=fx; const hx=Math.abs(fz)*o.hx+Math.abs(fx)*o.hz, hz=Math.abs(fx)*o.hx+Math.abs(fz)*o.hz;
+      c.col.x0=c.x-hx; c.col.x1=c.x+hx; c.col.z0=c.z-hz; c.col.z1=c.z+hz; c.col.y0=y; c.col.y1=y+1.45;
+      // the bar, the lamps, and at night red and blue thrown on the road round it
+      const f=flashBar(c.kit, now+c.ph, true, dark);
+      for(const L of c.lit){ L.s.visible=dark>0.04; if(dark>0.04) L.s.material.opacity=L.soft ? dark*(L.head ? 0.34 : 0.22) : dark*(L.head ? 0.98 : 0.8); }
+      c.lamp.x=c.x; c.lamp.y=y+2.2; c.lamp.z=c.z; c.lamp.mod.v=f ? 1 : 0; c.lamp.color=f>0 ? 0xff2418 : 0x2a5cff;
+      // through any of them in its way
+      for(const zb of ZS){ if(!zb.live || zb.state==="dead" || Math.abs(zb.y-y)>2) continue;
+        const dx=zb.x-c.x, dz=zb.z-c.z, lz=dx*fx+dz*fz, lx=dx*fz-dz*fx;
+        if(Math.abs(lx)>1.2 || Math.abs(lz)>2.5) continue;
+        const sp=c.sp; _v2.set(fx, 0, fz); _v3.set(zb.x, zb.y+1.0, zb.z); blood.burst(_v3, _v2, 30, 1.9); blood.mist(_v3, 1.5); snd.flesh(zb.x, zb.z);
+        killZombie(zb, false, _v2, {cops:true, fly:fling(fx, fz, Math.min(24, sp*0.7), Math.min(4.4, 1.1+sp*0.1), 1, (Math.random()-0.5)*2)});
+        c.sp*=0.94; }
+      // a whoosh going by
+      const d=Math.hypot(c.x-camera.position.x, c.z-camera.position.z);
+      if(d<18 && !c.past){ c.past=true; const a=AC(); if(a){ const q=pv(c.x, c.z, 300); noiseHit(a, a.currentTime, 0.7, "lowpass", 700, 0.7, 0.35*q.v+0.05, q.pan, true); } }
+      if(d<nd){ nd=d; near=c; }
+    }
+    siren(near, dt);
+  }
+  // the siren: one voice for the nearest, a long wail far off and a quick yelp close, pitched up coming and down going
+  function siren(c, dt){
+    const a=AC();
+    if(!a){ return; }
+    if(!c){ if(_sir){ _sir.g.gain.setTargetAtTime(0, a.currentTime, 0.4); _sir.t+=dt; if(_sir.t>2){ try{ _sir.o.stop(); _sir.o2.stop(); }catch(e){} _sir=null; } } return; }
+    if(!_sir){ const o=a.createOscillator(), o2=a.createOscillator(); o.type="square"; o2.type="sawtooth";
+      const lp=a.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=2400; const g=a.createGain(); g.gain.value=0;
+      const p=a.createStereoPanner ? a.createStereoPanner() : null;
+      o.connect(lp); o2.connect(lp); lp.connect(g); if(p){ g.connect(p); p.connect(AUDIO.outLP()); } else g.connect(AUDIO.outLP());
+      o.start(); o2.start(); _sir={o:o, o2:o2, g:g, p:p, ph:0, t:0}; }
+    _sir.t=0;
+    const cx=camera.position.x, cz=camera.position.z, dx=c.x-cx, dz=c.z-cz, d=Math.hypot(dx, dz)+0.01;
+    const vr=(c.dir*c.sp*dz)/d, dop=343/(343+vr);                         // (+ going away)
+    const yelp=d<140, per=yelp ? 0.32 : 4.2; _sir.ph=(_sir.ph+dt/per)%1;
+    const u=yelp ? (_sir.ph<0.5 ? _sir.ph*2 : 2-_sir.ph*2) : 0.5-0.5*Math.cos(_sir.ph*Math.PI*2), fr=(650+620*u)*dop;
+    _sir.o.frequency.setTargetAtTime(fr, a.currentTime, 0.02); _sir.o2.frequency.setTargetAtTime(fr*1.005, a.currentTime, 0.02);
+    const q=pv(c.x, c.z, 26000); _sir.g.gain.setTargetAtTime(0.05*q.v, a.currentTime, 0.1); if(_sir.p) _sir.p.pan.setTargetAtTime(q.pan, a.currentTime, 0.1);
+  }
+  function stopCops(){ for(const c of COPS) hideCop(c); const a=AC(); if(_sir && a){ _sir.g.gain.setTargetAtTime(0, a.currentTime, 0.1); try{ _sir.o.stop(a.currentTime+0.5); _sir.o2.stop(a.currentTime+0.5); }catch(e){} } _sir=null; S.copT=9; }
 
   /* ---- a horde: at each new threat level from the second, a pack of them all from one way, with warning ---- */
   function compass(a){ const h=Math.atan2(Math.sin(a), -Math.cos(a)), k=Math.round(((h+Math.PI*2)%(Math.PI*2))/(Math.PI/4))%8;
@@ -1298,7 +1391,7 @@ const ZOMBIE=(function(){
   Z.start=function(){
     if(Z.on) return;
     if(!started) begin();
-    build();
+    build(); buildCops();
     if(droneMode) setDrone(false);
     if(seated) standUp();
     Z.on=true; Z.fade=0; resetRun();
@@ -1317,7 +1410,7 @@ const ZOMBIE=(function(){
   };
   Z.stop=function(){
     if(!Z.on) return;
-    Z.on=false; Z.dead=false;
+    Z.on=false; Z.dead=false; stopCops();
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ PK[i].g.visible=false; if(PK[i].dyn){ scene.remove(PK[i].g); PK.splice(i,1); } }
     if(blood.decals) for(const m of blood.decals) m.visible=false;
@@ -1397,7 +1490,7 @@ const ZOMBIE=(function(){
     // a car through them
     if(driving) carVsDead(dt, L);
     // the pipe bombs, and a horde when one is coming
-    updateBombs(dt); updateHorde(dt);
+    updateBombs(dt); updateHorde(dt); updateCops(dt, now, dark);
     S.streakT=Math.max(0, S.streakT-dt); if(S.streakT<=0) S.streak=0;
     updateGun(dt);
     updateVM(dt);
@@ -1424,7 +1517,7 @@ const ZOMBIE=(function(){
   };
   // for tools and testing: put one down, and see what there is
   Z.debug={ZS:ZS, PK:PK, S:S, place:(kind, x, z)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6); return placePickup(kind, x, z, y, {dyn:true, life:600}); }, clear:()=>{ for(const zb of ZS) recycle(zb); if(blood.decals) for(const m of blood.decals) m.visible=false; }, spawnAt:(x, z, kind, yaw, alert)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6), zb=spawnZombie(x, z, y, kind||"walker", yaw); if(zb && alert) zb.alert=true; return zb; },
-           give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM,
+           give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM, cops:COPS, copRun:copRun,
            bomb:(x, z, fuse)=>{ S.bombs++; S.throwT=0; throwBomb(); const b=BOMBS[BOMBS.length-1]; if(!b) return null; b.x=x; b.z=z; b.y=surfaceY(x, z, groundY(x,z)+0.6)+0.05;
              b.vx=b.vy=b.vz=0; b.fuse=fuse||3.5; return b; }, kill:(zb, head)=>{ _v2.set(0,0,-1); killZombie(zb, !!head, _v2); }};
   return Z;

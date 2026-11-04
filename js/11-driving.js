@@ -424,6 +424,8 @@ function updateCarLights(dark, delta){
   for(let i=0;i<2;i++){
     carBeams[i].intensity=1.65*k;
     carLamps[i].visible=on; carTails[i].visible=on;
+    // (a car's own cone: the boat (14p) widens and lengthens these two when they are its lights)
+    if(on){ const L=carBeams[i]; L.angle=Math.PI/6; L.penumbra=0.55; L.distance=90; L.decay=1.5; }
   }
   LENS_MAT.opacity=0.80*k;
   TAIL_MAT.opacity=0.78*k;
