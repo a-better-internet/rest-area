@@ -765,6 +765,43 @@ const FOREST=(function(){
     })();
     tex.anisotropy=MAXANISO;
     const mat2=new T.MeshStandardMaterial({vertexColors:true, map:tex, roughness:0.95, metalness:0});
+    /* The shell's grid is 8 m, and 32 m far off, which is coarser than a crown: lit by the sun it is one smooth hill.
+       So each pixel works out the crowns over it, in two sizes (whole trees about seven metres across, and the clumps
+       of leaves on them): a dome to each, its normal leaning out from the crown's middle so the side to the sun is lit
+       and the far side is in its own shade, and the gaps between crowns dark. Where a pixel is wider than a crown can
+       be drawn it fades to the mean, so nothing shimmers at the horizon; and on a steep face (a clearing's edge) the
+       crowns, which are laid out across the ground, leave off. */
+    mat2.extensions={derivatives:true};
+    mat2.onBeforeCompile=(sh)=>{
+      sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vCanW;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvCanW=(modelMatrix*vec4(transformed, 1.0)).xyz;");
+      sh.fragmentShader=sh.fragmentShader.replace("#include <common>", `#include <common>
+varying vec3 vCanW;
+vec2 canH(vec2 p){ vec3 q=fract(vec3(p.xyx)*vec3(0.1031, 0.1030, 0.0973)); q+=dot(q, q.yzx+33.33); return fract((q.xx+q.yz)*q.zy); }
+// the nearest crown's middle to p (in cells): xy from it to p, z how far, w how far to the next one
+vec4 canCrown(vec2 p){
+  vec2 ip=floor(p), fp=fract(p); float f1=9.0, f2=9.0; vec2 d1=vec2(0.0);
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=vec2(float(i), float(j)), r=g+0.15+0.7*canH(ip+g)-fp; float d=dot(r, r);
+    if(d<f1){ f2=f1; f1=d; d1=r; } else if(d<f2) f2=d; }
+  return vec4(-d1, sqrt(f1), sqrt(f2)); }`)
+        .replace("#include <color_fragment>", `#include <color_fragment>
+  vec3 canOff=vec3(0.0); float canK=0.0;
+  { vec2 wp=vCanW.xz; float fw=length(fwidth(wp));
+    vec3 wn=normalize(cross(dFdx(vCanW), dFdy(vCanW))); wn*=sign(wn.y);
+    float steep=smoothstep(0.45, 0.8, wn.y);
+    float k1=(1.0-smoothstep(1.2, 3.4, fw))*steep, k2=(1.0-smoothstep(0.45, 1.3, fw))*steep;
+    vec4 a=canCrown(wp/7.0+vec2(3.7, 1.9)), b=canCrown(wp/2.4+vec2(11.3, 5.1));
+    float ha=clamp(a.z/0.62, 0.0, 1.0), hb=clamp(b.z/0.66, 0.0, 1.0);
+    // the gap between two crowns, and the fall of each dome to its edge, darker
+    float aoA=mix(0.50, 1.0, smoothstep(0.0, 0.30, a.w-a.z))*mix(0.62, 1.0, sqrt(1.0-ha*ha));
+    float aoB=mix(0.80, 1.0, sqrt(1.0-hb*hb));
+    float ao=mix(0.78, aoA, k1)*mix(0.95, aoB, k2);
+    diffuseColor.rgb*=ao/0.85;                                  // (a little darker on the whole: the shade inside a wood)
+    canOff=vec3(a.x, 0.0, a.y)/max(a.z, 1e-3)*ha*0.95*k1+vec3(b.x, 0.0, b.y)/max(b.z, 1e-3)*hb*0.45*k2;
+    canK=k1; }`)
+        .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
+  normal=normalize(normal+mat3(viewMatrix)*canOff);`);
+    };
     const sumA=[new T.Color(0x456c2e), new T.Color(0x3c6029), new T.Color(0x4f7633), new T.Color(0x33502c)];
     const autA=[new T.Color(0xc0472a), new T.Color(0xd9822a), new T.Color(0xd8b23a), new T.Color(0x8a5a2c), new T.Color(0x4a6a3a)];
     function shell(R, cell, holes, fine){

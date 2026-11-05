@@ -255,6 +255,11 @@ const HUM_POS=[];                                   // transformers that hum and
     makeDoor(XF(H.x1-WT/2, DOOR.a+0.02, -Math.PI/2), 0, FF+0.01, 0, "THE CONTROL HOUSE", true, 0, "steel", 0x7d8286);
     for(const [x0,x1,z0,z1] of [[H.x0, H.x1, H.z0, IZ0],[H.x0, H.x1, IZ1, H.z1],[H.x0, IX0, IZ0, IZ1],[IX1, H.x1, IZ0, DOOR.a],[IX1, H.x1, DOOR.b, IZ1]]) addCol(x0, x1, z0, z1, FF-0.5, TOPW);
     addZone(IX0, IX1, IZ0, IZ1, FF-0.5, CL, "THE CONTROL HOUSE", true);
+    // its roof, and a ladder up the north wall out past the eave; the air handler up there
+    { const RT=TOPW+0.18, fx=-12.5, fz=H.z0;
+      roofLadder({x:fx, z:fz, nx:0, nz:-1, g:surfaceY(fx, fz-0.9, groundY(fx, fz-0.9)+0.6), edge:RT, roof:RT, off:0.45, soffit:TOPW-0.02, land:-0.10, label:"THE CONTROL HOUSE'S LADDER"});
+      addFlat(H.x0-0.25, H.x1+0.25, H.z0-0.25, H.z1+0.25, RT); addZone(H.x0-0.25, H.x1+0.25, H.z0-0.25, H.z1+0.25, TOPW, TOPW+4, "THE CONTROL HOUSE · ROOF");
+      roofUnit(-8.6, -1384.0, RT, 1.3, 1.0, 0.75, "#c9ccc8", 1); }
     // outside: the light over the door, the window unit through the south wall, a louvre on the north, the signs
     B(0.24, 0.12, 0.18, H.x1+0.085, DOOR.head+0.32, (DOOR.a+DOOR.b)/2, "#2a2a2c"); push("tube", planeGeo(0.18, 0.12, 0), H.x1+0.12, DOOR.head+0.255, (DOOR.a+DOOR.b)/2, 0, "#ffffff", Math.PI/2, 0);
     LAMPS.push({x:H.x1+0.6, y:DOOR.head+0.1, z:(DOOR.a+DOOR.b)/2, color:0xffe2b8, intensity:0.6, dist:9, decay:1.5, mothy:true});

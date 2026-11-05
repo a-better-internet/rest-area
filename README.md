@@ -191,7 +191,11 @@ If the scene runs hot on your machine, start there (see below).
     visitors in the aisle as they give way to it.
 - **The vehicles** are lofted, not boxed.
   - Sedans, SUVs, pickups and minivans have rounded bodies with real wheel
-    arches. Each has a greenhouse, door seams and mirrors. The head and tail
+    arches. Each has a greenhouse, door seams and mirrors. The windows are
+    framed all the way round: the A pillars are slim bands of paint from the
+    roof to the cowl, a black frame runs along the tops of the side windows
+    and round the B and C pillars, and the windscreen and back light sit in
+    black gaskets top and bottom. The head and tail
     lamps are patches of the body's own corners, so they follow its curve:
     a bezel, the lens and a chrome strip in front, the lens and a reversing
     lamp behind. On a sedan or pickup the tail lamps carry on in across the
@@ -324,8 +328,11 @@ If the scene runs hot on your machine, start there (see below).
     slushies opens on the restroom: one room with tile to the shoulder, a
     tube that flickers, the sink, the dryer, a fold-up changing table, the
     mop bucket, and a wall written on by everybody who ever got off here.
-    Out back, the dumpster in its block enclosure. Open all night, lit all
-    night. `E` talks to the clerk, grabs a drink, pours a coffee or a
+    Out back, the dumpster in its block enclosure. A galvanised ladder goes
+    up the west wall near the back and over the parapet onto the roof
+    (`E` at its foot), where the air handlers stand on their curbs and you
+    can look out over the pumps, the bridge and the fields. Open all night,
+    lit all night. `E` talks to the clerk, grabs a drink, pours a coffee or a
     slushie, looks in the bait cooler, reads the wall, or tries the pumps.
   - **The Weir place**, south of the road up a gravel lane, past the
     mailbox and a farm stand selling sweet corn on the honour system. The
@@ -468,7 +475,8 @@ If the scene runs hot on your machine, start there (see below).
     hums. Two floodlights light the yard at night, a white pickup is
     parked inside, and by day a lineman in a vest stands by the
     transformer with his clipboard. In the corner is the control house,
-    block with a flat roof and a light over its steel door. Inside are the
+    block with a flat roof and a light over its steel door, and a ladder up
+    its north wall to the roof and the air handler on it. Inside are the
     relay panels across the north wall with their meters, lamps and
     switches, the battery rack and its charger, the RTU with its lamps
     blinking, a desk with the laptop open and the log beside it (`E`),
@@ -503,7 +511,9 @@ If the scene runs hot on your machine, start there (see below).
     window with posters in it (BUY 1 GET 2 FREE), under the lit name. At
     the road stands the red pole sign (FIREWORKS · WHOLESALE PRICES · OPEN
     7 DAYS), lit at night, and a big yew on its bed of mulch. There are lot
-    lights, a shipping container out back, and a dumpster. Inside is one
+    lights, a shipping container out back, and a dumpster. A caged ladder
+    goes up the back wall at the east end to the flat roof, five and a half
+    metres up, with two air handlers on it. Inside is one
     big sales floor under bare joists and strip lights: five gondolas of
     cakes, artillery shells, rockets, fountains and sparklers, each aisle
     signed overhead (`E` to browse); shelving up the back wall under
@@ -854,7 +864,8 @@ If the scene runs hot on your machine, start there (see below).
     ON RED, and the signal on its pole, red while a truck is on the scale,
     then green and BYPASS. The scale house beside the lane is block with a
     flat roof, a long window along the lane and the camera on a mast, and a
-    bench and a butt can by its door. Inside are four rooms. The scale room runs down the
+    bench and a butt can by its door. A ladder goes up its back wall, out
+    past the eave, to the roof, where the air handler and the mast are. Inside are four rooms. The scale room runs down the
     lane side: the officer sits at the long desk under the window with the
     readout, the camera and the log on his screens, the radio base beside
     him, a TV on the wall, the filing cabinet and the printer, hi-vis vests
@@ -1156,7 +1167,13 @@ If the scene runs hot on your machine, start there (see below).
   eastern hemlock, white pine and spruce, with an understory of saplings,
   shrubs and ferns. Logs, stumps and rocks lie on the forest floor. Trees
   sway in the wind. Past the edge of the walkable zone a canopy shell
-  carries the woods over the ridges to the horizon.
+  carries the woods over the ridges to the horizon. Its grid is coarser than
+  a tree, so it works out the crowns over each pixel: whole trees about
+  seven metres across and the clumps of leaves on them, each a dome lit on
+  the sun's side and shaded on the far one, with dark gaps between. Far
+  off, where a pixel is wider than a crown, it fades to the mean so the
+  skyline doesn't shimmer. The far ground is never one even slope either:
+  it rolls a little in long crossing swells and finer hummocks.
 - **Time and season.**
   - A day lasts 22 minutes, with sunrise and sunset at Crawford County's
     real times: about 6:05 and 20:45 in July, 7:25 and 18:45 in October.
@@ -1348,8 +1365,21 @@ If the scene runs hot on your machine, start there (see below).
     and down in the weigh station's listening room, and later more turn up
     near you. Each takes its own ammunition. Click to fire (hold it down
     for the carbine), the right button aims down the sights (the rifle has
-    a scope), `R` reloads, `1`–`4` or the wheel change guns, and `V` shoves
-    them back with the gun. A shot to the head is worth three and takes the
+    a scope), `R` reloads, `1`–`5` or the wheel change guns, and `V` shoves
+    them back with the gun.
+  - **The flamethrower** is in French Creek Fireworks and in the boiler
+    hall's stores. Hold the button down: it throws a stream of burning
+    fuel ten metres that falls a little, then rolls up in flame and soot.
+    Anything in it catches, and burns down in a few seconds, lighting what
+    is round it as it goes (a kill by fire is worth five more). Its fuel
+    comes in jerrycans: at the pumps, in the garage, by the Weirs' fuel
+    tank and in the boiler hall.
+  - **Glass breaks.** Every pane in the world (windows, doors, the cases)
+    takes a few hits: each shot stars it with a crack where it went in,
+    and the third (a shotgun's second, the rifle's second) shatters it in
+    a shower of pieces that fall and lie on the floor. Then shots go
+    through where it was. The flamethrower's heat cracks it too. It is all
+    whole again the next time zombie mode starts. A shot to the head is worth three and takes the
     head off; the rifle goes through three of them. Shots stop at walls and
     the ground, kick up dust where they land, and every one of them for a
     long way round hears the shot. The gun is in your hands on the screen:
@@ -1360,14 +1390,17 @@ If the scene runs hot on your machine, start there (see below).
     into them: boxes of ammunition by calibre, bandages, first aid kits,
     the guns. There are caches at places you know (the lobby, the garage,
     the camp, the chapel, the brewery, the Perky Loon, the weigh station)
-    that come back a while after you take them. More turns up round you as
+    that come back a while after you take them. Down in the red boiler
+    hall, by its east wall, are the emergency stores: an olive locker with
+    a box of every kind of ammunition, fuel for the flamethrower, a first
+    aid kit, two crates of pipe bombs and the flamethrower itself. More turns up round you as
     you go, whatever you are shortest of, and the dead drop some.
   - **Pipe bombs.** `F` throws one, if you have one: it beeps faster and
     faster for three and a half seconds, and the dead nearby turn and go
     to it. Then it goes off, throwing them about, knocking down the ones
     further out, and leaving a scorch on the ground. Keep back from it
-    yourself. You start with one, carry up to four, and find more in the
-    caches.
+    yourself. You start with one, carry up to six, and find more in the
+    caches; a crate of them fills you up.
   - **Hordes.** From the second level, each time the threat goes up a pack
     comes at you all at once from one side, and the banner says which.
   - **In a car.** Hit them fast and they go flying: the car jolts and
@@ -1392,7 +1425,9 @@ If the scene runs hot on your machine, start there (see below).
   - **The night** is dark but not black: there is enough grey left in the
     sky and the fog to see shapes by, and the flashlight and the headlights
     reach. The fog thins the higher you climb, so from the water tower you
-    can see a long way even in zombie mode. They cannot climb it.
+    can see a long way even in zombie mode. They cannot climb it, or any
+    ladder: a roof is somewhere to stand and shoot down from, and there is
+    ammunition left on the fuel stop's and the fireworks store's.
   - **Blood.** Every hit throws a spray of drops and a mist; where they
     fall there are pools. **You** take damage too: the edges of the screen
     go red, on the side it came from, and your heart is loud when you are
@@ -1434,14 +1469,17 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Graphics settings | `G` |
 | Zombie mode on / off | `Z` |
 
-In zombie mode: click to fire (hold for the carbine), the right button to
-aim down the sights, `R` to reload, `1`–`4` or the wheel to change guns, `V`
+In zombie mode: click to fire (hold for the carbine and the flamethrower),
+the right button to aim down the sights, `R` to reload, `1`–`5` or the
+wheel to change guns, `V`
 to shove with the gun, `F` to throw a pipe bomb, and `ENTER` to go again
 when you are down. The drone,
 the test weather and the wreck are off while it lasts.
 
-On a ladder (the water tower's), `E` at its foot or top gets on, `W` and
-`S` climb, and `Shift` climbs faster.
+On a ladder (the water tower's, or one up to a roof: the fuel stop's, the
+fireworks store's, the scale house's or the substation's control house's),
+`E` at its foot or top gets on, `W` and `S` climb, and `Shift` climbs
+faster.
 
 Your eyes are 1.66 m up standing, and sitting brings them down to where a
 seated person's are. Getting out of a car, off the boat or out of the
@@ -1470,9 +1508,10 @@ mouse button while the power rises and falls, and let go to shoot. Walk to
 the rebound, or it comes back to you; `E` there again puts it down.
 
 ` (the key left of 1) opens a warp list, for testing: a digit or a letter
-puts you straight down in one of 28 places (the lobby, the arcade, the
+puts you straight down in one of 30 places (the lobby, the arcade, the
 sub-basement, the boiler hall, the water tower's catwalk, the weigh
-station's listening room and the rest), out of any car, boat or drone
+station's listening room, the fuel stop's and the fireworks store's roofs
+and the rest), out of any car, boat or drone
 first. ` or `Esc` shuts it.
 
 At the air hockey table the mouse (or `WASD`) moves your mallet. At the

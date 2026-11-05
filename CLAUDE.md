@@ -445,6 +445,34 @@ No lettering touches or runs past the edge of its board or its border.
   `_cbAddTop`). 18m registers Brickyard Breakout (2), Groundhog Gulch (4)
   and Turnpike Turtle (5); 18g's loop runs whatever is registered.
 
+- A ladder up a wall to a flat roof is 06's `roofLadder({x, z, nx, nz, g,
+  edge, roof, off, soffit, land, label})`: (x, z) where its middle meets
+  the wall's outer face, (nx, nz) that face's outward normal, `off` how far
+  out the rungs stand (past any eave), `land` where the goose-neck comes
+  down on the roof. It builds the rails, rungs, brackets and (over 4.2 m) a
+  cage, and calls `addLadder`. The roof itself is the building's: an
+  `addFlat` at its top, a `· ROOF` zone added after the general one, and
+  colliders for what stands on it (06's `roofUnit` is an air handler with
+  its own). A parapet's wall colliders already run to its top; a roof with
+  no parapet lets you walk off it and drop. The fuel stop (14k), the
+  fireworks store (14m), the scale house (14w) and the control house (14s)
+  have them; the dead cannot climb one.
+- Every pane baked into the `glass` or `tint` bucket is in 01's
+  `GLASS_PANES` (its middle, normal, half sizes, and its run of vertices in
+  the merged mesh), so anything glazed with `push("glass", ...)` can be shot
+  out in zombie mode with no more work. A pane is a plane or a box no more
+  than 8 cm thick and at least 12 cm each way. 21 collapses a broken pane's
+  vertices and puts them back (`mendGlass`) when the mode ends or restarts.
+- The flamethrower (21's `FL`) is two sprite pools, the flame added and the
+  soot drawn over, and two `fire` lamps in 16's pool. A zombie's `burn` is
+  seconds left alight; `hurtZombie`'s sixth argument marks fire (no blood,
+  no knockback, and a kill pays `bonus`).
+- The canopy shell (07) draws its crowns per pixel (`canCrown`, two sizes,
+  faded by `fwidth` so far off it is the mean and does not shimmer, and off
+  on steep faces). The terrain (04) leans its normal on a few long swells
+  and hummocks the same way. Both use `fwidth`, so their materials set
+  `extensions.derivatives`.
+
 ## Tools
 
 Run them with `NODE_PATH` pointing at a global Playwright, for example

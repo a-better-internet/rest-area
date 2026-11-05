@@ -154,6 +154,11 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
     for(const [dy, L] of [[2.9, 0.9],[2.5, 0.6]]) tube("metal", V3(H.x0+0.4-L/2, TOPW+dy, H.z0+0.6), V3(H.x0+0.4+L/2, TOPW+dy, H.z0+0.6), 0.012, 6, "#9a9ea2");
     B(0.30, 0.18, 0.18, H.x0+0.20, TOPW+2.2, H.z0+0.6, "#e8e6de"); B(0.08, 0.06, 0.06, H.x0+0.37, TOPW+2.2, H.z0+0.6, "#5a5e62");
     B(0.08, 0.13, 0.15, H.x0+0.03, TOPW+2.2, H.z0+0.6, "#1d1d1e");
+    // and you can get up there: a ladder up the back wall, out past the eave, between the two windows
+    { const RT=TOPW+0.20, fx=-60.3, fz=H.z1;
+      roofLadder({x:fx, z:fz, nx:0, nz:1, g:surfaceY(fx, fz+0.9, groundY(fx, fz+0.9)+0.6), edge:RT, roof:RT, off:0.75, soffit:TOPW-0.02, land:0.10, label:"THE SCALE HOUSE'S LADDER"});
+      addFlat(H.x0-0.55, H.x1+0.55, H.z0-0.55, H.z1+0.55, RT); addZone(H.x0-0.55, H.x1+0.55, H.z0-0.55, H.z1+0.55, TOPW, TOPW+4, "THE SCALE HOUSE · ROOF");
+      addCol(-58.32, -56.88, H.z1-3.52, H.z1-2.48, RT-0.05, TOPW+1.03); addCol(H.x0+0.32, H.x0+0.48, H.z0+0.52, H.z0+0.68, RT-0.05, TOPW+3.2); }
     // the lights over the doors; over the lane window two floods on the scale
     for(const [x, zf, sd] of [[NDX, H.z0, -1],[BDX, H.z1, 1]]){ B(0.24, 0.12, 0.18, x, ND.head+0.34, zf+sd*0.085, "#2a2a2c"); push("lamplens", planeGeo(0.18, 0.12, 0), x, ND.head+0.275, zf+sd*0.085, 0, "#ffffff", Math.PI/2, 0);
       LAMPS.push({x:x, y:ND.head+0.2, z:zf+sd*0.7, color:0xffe2b8, intensity:0.6, dist:9, decay:1.5, mothy:true}); }

@@ -60,6 +60,63 @@ function addLadder(x, z, y0, y1, yaw, out, top, label){
   addUse(top.x, top.z, top.y, "CLIMB DOWN "+L.label, ()=>climbOn(L, "down"), 1.2);
   return L;
 }
+/* A FIXED LADDER UP A WALL TO A FLAT ROOF (the fuel stop's, the fireworks outlet's, the scale house's, the control
+   house's): galvanised rails and round rungs on brackets off the wall, up past the edge and over it in a goose-neck
+   that comes down on the roof; a cage round it from head height when it is tall. o: x, z where the ladder's middle
+   meets the wall's outer face; nx, nz the face's outward normal (along x or along z); g the ground at its foot; edge
+   the top of what you climb over (a parapet's coping, a roof's edge); roof what you stand on up there; off how far out
+   the rungs stand from the face (clear of any eave); soffit the underside of an eave, which the brackets stay under;
+   land where the rails come down on the roof, along the normal from the face (less than 0 is inside it); label.
+   It adds the ladder (addLadder) and the colliders of its rails; the roof's flat, its zone and anything standing on
+   the roof are the building's to add. The rails' faces are kept off each other's planes: the goose-neck's bars are
+   thicker than the rails and run past them, and the rails stop inside the bars. */
+function roofLadder(o){
+  const nx=o.nx, nz=o.nz, tx=-nz, tz=nx, off=o.off||0.18, land=o.land, g=o.g, edge=o.edge, roof=o.roof;
+  const HW=0.23, col=o.color||"#8e9497", ry=Math.atan2(nx, nz), top=edge+1.07, soffit=o.soffit===undefined ? 1e9 : o.soffit;
+  const P=(n, t)=>[o.x+nx*n+tx*t, o.z+nz*n+tz*t];
+  for(const s of [-1,1]){
+    // the rail, from a little into the ground to just inside the goose-neck's bar
+    let [x,z]=P(off, s*HW); bx("steel", 0.014, top+0.02-(g-0.08), 0.065, x, (top+0.02+g-0.08)/2, z, 1, ry, col);
+    // over the edge: a bar from just past the rail to just past where it comes down
+    const n0=off+0.0425, n1=land-0.0425; [x,z]=P((n0+n1)/2, s*HW); bx("steel", 0.018, 0.065, n0-n1, x, top, z, 1, ry, col);
+    // and down to the roof, a centimetre into it
+    [x,z]=P(land, s*HW); bx("steel", 0.014, top+0.02-(roof-0.01), 0.065, x, (top+0.02+roof-0.01)/2, z, 1, ry, col);
+    // the brackets: from a little into the wall to past the rail, between the rungs, under any eave
+    for(let y=g+0.75; y<Math.min(edge, soffit)-0.25; y+=1.5){ [x,z]=P((off+0.03)/2, s*HW); bx("steel", 0.03, 0.05, off+0.09, x, y, z, 1, ry, col); }
+    // the landing's posts are solid
+    [x,z]=P(land, s*HW); addCol(x-0.04, x+0.04, z-0.04, z+0.04, roof, top+0.04);
+  }
+  // the rungs, round, every 30 cm to the edge, their ends in the rails
+  const [rx, rz]=P(off, 0);
+  for(let y=g+0.3; y<=edge+0.02; y+=0.3) cyl("steel", 0.0125, 0.0125, 2*HW, 8, rx, y, rz, col, nx ? Math.PI/2 : 0, 0, nz ? Math.PI/2 : 0);
+  // a tall one has a cage: hoops from over your head to the top of the rails, open to the wall, and straps up them
+  if(edge-g>4.2){
+    const R=0.38, cn=off+0.30, A=2*Math.acos(-0.30/R), hoop=new T.TorusGeometry(R, 0.011, 5, 22, A);
+    hoop.rotateX(Math.PI/2); hoop.rotateY(A/2-Math.atan2(nz, nx));
+    const [cx, cz]=P(cn, 0), y0=g+2.3;
+    for(let y=y0; y<top-0.1; y+=0.9) push("steel", hoop, cx, y, cz, 0, col);
+    push("steel", hoop, cx, top-0.03, cz, 0, col);
+    for(const a of [-2.0, -1.0, 0, 1.0, 2.0]){ const qx=cx+(nx*Math.cos(a)+tx*Math.sin(a))*(R+0.004), qz=cz+(nz*Math.cos(a)+tz*Math.sin(a))*(R+0.004);
+      cyl("steel", 0.008, 0.008, top-y0+0.02, 6, qx, (top+y0-0.03)/2, qz, col); }
+  }
+  // the rails are solid, from the ground to the edge
+  const [ax, az]=P(off-0.035, -HW-0.02), [bxx, bzz]=P(off+0.035, HW+0.02);
+  addCol(Math.min(ax, bxx), Math.max(ax, bxx), Math.min(az, bzz), Math.max(az, bzz), g-1, edge);
+  const [ox, oz]=P(off+0.95, 0), [px, pz]=P(land-0.55, 0);
+  return addLadder(rx, rz, g, o.y1===undefined ? edge : o.y1, ry, {x:ox, z:oz}, {x:px, z:pz, y:roof}, o.label);
+}
+/* A ROOFTOP UNIT, for a roof you can now walk on: the air handler's cabinet on its curb (sunk into the curb, the curb
+   a centimetre into the roof), louvres along one long side standing a little proud of it, the condenser's fan on top
+   with its grille, and a collider round the lot. y is the roof's top; side +1/-1 puts the louvres on the +z/-z face. */
+function roofUnit(x, z, y, w, d, h, col, side){
+  const sd=side||1, top=y+0.19+h;
+  bx("paintm", w+0.12, 0.22, d+0.12, x, y+0.10, z, 0.5, 0, "#8d8a85");
+  bx("paintm", w, h, d, x, y+0.19+h/2, z, 0.5, 0, col||"#c9ccc8");
+  for(let k=0;k<Math.floor((h-0.3)/0.09);k++) bx("paintm", w*0.62, 0.025, 0.03, x-w*0.12, y+0.36+k*0.09, z+sd*(d/2+0.012), 0.5, 0, "#9a9d9a");
+  cyl("metal", 0.40, 0.40, 0.15, 22, x+w*0.22, top+0.065, z, "#a4a6a4");
+  cyl("metal", 0.34, 0.34, 0.02, 22, x+w*0.22, top+0.14, z, "#2a2c2c");
+  addCol(x-w/2-0.08, x+w/2+0.08, z-d/2-0.08, z+d/2+0.08, y, top+0.15);
+}
 // when: optional test, for things that are only sometimes there
 function addUse(x,z,y,label,fn,r,when){ const u={x:x, z:z, y:y, label:label, fn:fn, r:r, when:when}; USES.push(u); return u; }
 const SURF=[];   // flat {x0,x1,z0,z1,y} | ramp {axis,a0,a1,y0,y1}

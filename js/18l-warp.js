@@ -45,8 +45,10 @@ const WARP=(function(){
     ["THE PERKY LOON",         1437.5, -1197.0,    Math.PI,    x=>g(x[1], x[2])],
     ["THE ROASTERY",           1437.5, -1183.0,    0.0,        x=>surfaceY(x[1], x[2], groundY(x[1], x[2])-2.2)],
     ["THE WEIGH STATION",       -42.0, -2970.0,    Math.PI/2,  x=>g(x[1], x[2])],
-    ["THE LISTENING ROOM",      -57.2, -2916.1,    0.0,        x=>surfaceY(x[1], x[2], groundY(x[1], x[2])-2.3), true]];
-  const KEYS="1234567890ABCDFGHIJKLMNOPQRT";              // (E and S left out: E is your hand, S is a step back)
+    ["THE LISTENING ROOM",      -57.2, -2916.1,    0.0,        x=>surfaceY(x[1], x[2], groundY(x[1], x[2])-2.3), true],
+    ["THE FUEL STOP ROOF",      -30.0, -1257.0,    Math.PI/2,  x=>g(x[1], x[2], 6)],
+    ["THE FIREWORKS ROOF",      909.0, -1266.0,    0.0,        x=>g(x[1], x[2], 7)]];
+  const KEYS="1234567890ABCDFGHIJKLMNOPQRTUV";            // (E and S left out: E is your hand, S is a step back)
   // the hoop: in front of the first one there is, facing it
   const hoopAt=()=>{ const H=(typeof YARD_HOOPS!=="undefined" && YARD_HOOPS[0]) || null; if(!H) return null;
     const x=H.rim.x, z=H.rim.z+H.f*4.5; return [x, z, Math.atan2(-(H.rim.x-x), -(H.rim.z-z)), surfaceY(x, z, H.y+1)]; };

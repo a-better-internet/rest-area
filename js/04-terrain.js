@@ -616,8 +616,21 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
               vec3 vd = normalize(vWPos - cameraPosition);
               texelColor.rgb *= 1.0 + band*vd.z*0.20*vGrass.y*(1.0 - 0.6*fd);
             }
-            diffuseColor *= texelColor;`);
+            diffuseColor *= texelColor;`)
+          /* and the ground is never as smooth as its grid: the 16 m and 32 m rings far off are one even slope lit
+             one even way. So the normal takes a little roll from a few long, crossing swells (twenty and forty
+             metres, in no line with the grid) and finer hummocks; it is fainter on what is walked on close to, and
+             fades where a pixel is wider than a hummock so the far fields don't shimmer */
+          .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
+            { vec2 p=vWPos.xz; float fw=length(fwidth(p)); vec2 gr=vec2(0.0);
+              const vec2 D0=vec2(0.83, 0.56), D1=vec2(-0.41, 0.91), D2=vec2(0.97, -0.24), D3=vec2(-0.71, -0.70);
+              gr+=0.050*cos(dot(p, D0)*0.157+1.3)*D0+0.045*cos(dot(p, D1)*0.149+4.1)*D1;
+              gr+=0.060*cos(dot(p, D2)*0.311+2.2)*D2*(1.0-smoothstep(4.0, 10.0, fw));
+              gr+=0.055*cos(dot(p, D3)*0.73+0.4)*D3*(1.0-smoothstep(1.5, 4.0, fw));
+              gr*=0.35+0.65*smoothstep(25.0, 90.0, distance(vWPos, cameraPosition));
+              normal=normalize(normal-mat3(viewMatrix)*vec3(gr.x, 0.0, gr.y)*2.2); }`);
       };
+      TERRAIN_MAT.extensions={derivatives:true};
       TERRAIN_MAT.customProgramCacheKey=()=>"terrain-lawn";
     }
     const mesh=new T.Mesh(g,TERRAIN_MAT); mesh.receiveShadow=true; mesh.name=name;

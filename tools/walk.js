@@ -125,6 +125,9 @@ const ROUTES={
   // 26 m up (the ladder itself is tested below, with the keys held)
   "to the water tower":     {seek:[[8,-1250],[-23.4,-1318]]},
   "round the catwalk":      {y0:200, pts:Array.from({length:25}, (_,k)=>{ const a=0.3+k/24*Math.PI*2*0.96; return [-32+Math.cos(a)*6.43, -1318+Math.sin(a)*6.43]; })},
+  // the roofs with ladders (14k, 14m): from the top of each ladder round the air handlers (the ladders are tested below)
+  "over the fuel stop's roof": {y0:10, pts:[[-38.9,-1261.8],[-35,-1258],[-26,-1257.6],[-18,-1257.6],[-14,-1252],[-36,-1252]]},
+  "over the fireworks roof": {y0:12, pts:[[922,-1272.85],[918,-1271],[909,-1266],[896,-1262],[896,-1272],[910,-1272.5]]},
   "round the substation yard": {gate:true, pts:[[11.5,-1378],[24,-1378],[34,-1378],[34,-1395],[34,-1414],[-14,-1414],[-14,-1392],[-2,-1392],[-2,-1384],[11.5,-1379]]},
   // Lake Street's garages (14n) with their doors up: in past the car in the drive of the ranch by the park
   "into a garage on lake street": {gate:true, pts:[[1270.0,-1190.0],[1269.0,-1183.0],[1268.5,-1181.0],[1268.5,-1177.0]]},
@@ -304,7 +307,7 @@ const ROUTES={
     // and every ladder (06's addLadder): E at its foot, W to the top and off it, then E there and S back down
     // (E does nothing till the game has started, which the walk never does)
     const started0=started; started=true;
-    for(const L of (typeof LADDERS!=="undefined" ? LADDERS : [])){ const nm=L.label.toLowerCase()+" ladder, keys held";
+    for(const L of (typeof LADDERS!=="undefined" ? LADDERS : [])){ const nm=L.label.toLowerCase().replace(/ ladder$/, "")+" ladder, keys held";
       for(const [m,lab] of PACES(nm)){
         for(const k in REST.keys) REST.keys[k]=false;
         REST.go(L.out.x, L.out.z, L.yaw, L.y0); REST.sim(10); interact();

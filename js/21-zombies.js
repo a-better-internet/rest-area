@@ -794,20 +794,28 @@ const ZOMBIE=(function(){
   }
   /* ---- the flamethrower: a jet of burning fuel ten metres out, stopped by what it meets; what it reaches catches and burns
      on for a few seconds, running about in it; heat cracks glass and then breaks it; its light on everything round you ---- */
-  const FL={sp:[], si:0, lamp:null, lamp2:null, t:0, burnT:0, roarT:0};
+  const FL={sp:[], si:0, sm:[], mi:0, lamp:null, lamp2:null, t:0, burnT:0, roarT:0};
   function flameBuild(){
     if(FL.lamp) return;
-    const tex=signTex(64, 64, (c, W, H)=>{ const g=c.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2); g.addColorStop(0, "rgba(255,255,240,1)"); g.addColorStop(0.3, "rgba(255,230,170,0.85)");
-      g.addColorStop(0.65, "rgba(255,160,60,0.35)"); g.addColorStop(1, "rgba(255,90,10,0)"); c.fillStyle=g; c.fillRect(0, 0, W, H);
+    const tex=signTex(64, 64, (c, W, H)=>{ const g=c.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2); g.addColorStop(0, "rgba(255,236,200,0.85)"); g.addColorStop(0.3, "rgba(255,190,120,0.6)");
+      g.addColorStop(0.65, "rgba(255,120,40,0.22)"); g.addColorStop(1, "rgba(255,70,10,0)"); c.fillStyle=g; c.fillRect(0, 0, W, H);
       const r=_trng(5); for(let k=0;k<30;k++){ c.fillStyle="rgba(255,255,255,"+(0.1+r()*0.2).toFixed(2)+")"; c.beginPath(); c.arc(W/2+(r()-0.5)*W*0.5, H/2+(r()-0.5)*H*0.5, 2+r()*5, 0, 7); c.fill(); } });
     for(let k=0;k<140;k++){ const m=new T.Sprite(new T.SpriteMaterial({map:tex, color:0xffa040, blending:T.AdditiveBlending, transparent:true, depthWrite:false, opacity:0}));
       m.visible=false; scene.add(m); FL.sp.push({s:m, v:new T.Vector3(), t:0, life:1, go:0, reach:10, big:1}); }
+    // and the smoke off it, sooty, drawn over what is behind it (not added to it)
+    const stex=signTex(64, 64, (c, W, H)=>{ const g=c.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2); g.addColorStop(0, "rgba(255,255,255,0.8)"); g.addColorStop(0.5, "rgba(255,255,255,0.4)");
+      g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle=g; c.fillRect(0, 0, W, H); });
+    for(let k=0;k<80;k++){ const m=new T.Sprite(new T.SpriteMaterial({map:stex, color:0x24201c, transparent:true, depthWrite:false, opacity:0}));
+      m.visible=false; scene.add(m); FL.sm.push({s:m, v:new T.Vector3(), t:0, life:2}); }
     FL.lamp={x:0, y:-50, z:0, color:0xff8a3a, intensity:4.2, dist:15, decay:1.4, fire:true, mod:{v:0}, under:false}; LAMPS.push(FL.lamp);
     FL.lamp2={x:0, y:-50, z:0, color:0xff7a2a, intensity:3.0, dist:11, decay:1.5, fire:true, mod:{v:0}, under:false}; LAMPS.push(FL.lamp2);
   }
   function flameParticle(x, y, z, vx, vy, vz, life, reach, big){
     const p=FL.sp[FL.si++%FL.sp.length]; p.s.position.set(x, y, z); p.v.set(vx, vy, vz); p.t=0; p.life=life; p.go=0; p.reach=reach; p.big=big||1;
     p.s.visible=true; p.s.material.rotation=Math.random()*6.28; }
+  function smokePuff(x, y, z, sz){
+    const p=FL.sm[FL.mi++%FL.sm.length]; p.s.position.set(x, y, z); p.v.set((Math.random()-0.5)*0.5, 0.7+Math.random()*0.6, (Math.random()-0.5)*0.5);
+    p.t=0; p.life=1.6+Math.random()*1.2; p.sz=sz||1; p.s.visible=true; p.s.material.rotation=Math.random()*6.28; }
   function flameOut(g){
     flameBuild();
     camera.getWorldDirection(_v1); _o.copy(camera.position);
@@ -835,10 +843,17 @@ const ZOMBIE=(function(){
       if(u>=1){ p.s.visible=false; continue; }
       const st=p.v.length()*dt; p.go+=st;
       if(p.go>p.reach && st>0){ p.v.multiplyScalar(0.15); p.v.y+=1.2; p.go=-1e9; }          // (it splashes on what it meets)
-      p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.max(0, 1-dt*1.2)); p.v.y+=2.4*dt;
-      const sc=(0.16+u*1.5)*p.big; p.s.scale.set(sc, sc, 1);
-      p.s.material.color.setHex(0xfff0c0).lerp(_c7.setHex(0xff5a14), Math.min(1, u*1.8));
-      p.s.material.opacity=Math.pow(1-u, 0.9)*0.85; }
+      // the fuel drops a little at first, then what burns goes up
+      p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.max(0, 1-dt*1.2)); p.v.y+=(u<0.35 ? -2.5 : 2.6)*dt;
+      const sc=(0.12+u*1.05)*p.big; p.s.scale.set(sc, sc, 1);
+      p.s.material.color.setHex(0xffd99a).lerp(_c7.setHex(0xff6a18), Math.min(1, u*2.2));
+      if(u>0.5) p.s.material.color.lerp(_c7.setHex(0x8a2208), (u-0.5)*1.6);
+      p.s.material.opacity=Math.min(1, u/0.06)*Math.pow(1-u, 1.3)*0.6;
+      if(u>0.55 && Math.random()<dt*3*p.big) smokePuff(p.s.position.x, p.s.position.y+0.2, p.s.position.z, p.big); }
+    for(const p of FL.sm){ if(!p.s.visible) continue; p.t+=dt; const u=p.t/p.life;
+      if(u>=1){ p.s.visible=false; continue; }
+      p.s.position.addScaledVector(p.v, dt); p.v.y+=0.25*dt; const sc=(0.45+u*2.2)*p.sz; p.s.scale.set(sc, sc, 1);
+      p.s.material.opacity=(u<0.18 ? u/0.18 : (1-u)/0.82)*0.34; }
     FL.t-=dt; FL.lamp.mod.v=FL.t>0 ? 0.75+0.25*Math.random() : Math.max(0, FL.lamp.mod.v-dt*6);
     // the dead burning: flames up off them, the nearest of them lighting what is round it
     let near=null, nd=1e9; FL.burnT-=dt; const emit=FL.burnT<=0; if(emit) FL.burnT=0.05;
@@ -853,7 +868,7 @@ const ZOMBIE=(function(){
     // the roar while it goes
     FL.roarT-=dt; snd.flame(FL.roarT>0);
   }
-  function stopFlame(){ if(!FL.lamp) return; for(const p of FL.sp) p.s.visible=false; FL.lamp.mod.v=0; FL.lamp2.mod.v=0; FL.roarT=0; snd.flame(false); for(const zb of ZS) zb.burn=0; }
+  function stopFlame(){ if(!FL.lamp) return; for(const p of FL.sp) p.s.visible=false; for(const p of FL.sm) p.s.visible=false; FL.lamp.mod.v=0; FL.lamp2.mod.v=0; FL.roarT=0; snd.flame(false); for(const zb of ZS) zb.burn=0; }
   function fire(){
     const g=G();
     if(S.mag[g.id]<=0){ snd.click(); S.cool=0.25; S.fired=true; if(S.ammo[g.ammo]>0) startReload(); return; }
@@ -1252,6 +1267,8 @@ const ZOMBIE=(function(){
     [-56.2, -2918.4, -8.8, "gun:rifle"], [1200, -1180, undefined, "health"], [-10, -1385, undefined, "ammo:5.56"], [-45, -2975, undefined, "health"],
     // the pipe bombs: the garage's bench, the fireworks outlet (of course), the farm's machine shed, the weigh station's apron
     [34, 34, 0, "bomb"], [912, -1262, undefined, "bomb"], [152, -1112, undefined, "bomb"], [-48, -2968, undefined, "bomb"],
+    // up on two of the roofs, for whoever climbs the ladders: shells on the fuel stop's, rifle rounds on the fireworks store's
+    [-27, -1258, 4.42, "ammo:12 GAUGE"], [909, -1266, 6.67, "ammo:.30-06"],
     // and up the water tower, for whoever gets up there
     [WATERTOWER.x+6.5, WATERTOWER.z+1.6, WATERTOWER.catwalk, "ammo:.30-06"],
     // the flamethrower at the fireworks outlet; fuel at the pumps, in the garage and by the farm's tank
