@@ -814,31 +814,38 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
 varying vec3 vCanW;
 vec2 canH(vec2 p){ vec3 q=fract(vec3(p.xyx)*vec3(0.1031, 0.1030, 0.0973)); q+=dot(q, q.yzx+33.33); return fract((q.xx+q.yz)*q.zy); }
 // the nearest crown's middle to p (in cells): xy from it to p, z how far, w how far to the next one
-vec4 canCrown(vec2 p){
-  vec2 ip=floor(p), fp=fract(p); float f1=9.0, f2=9.0; vec2 d1=vec2(0.0);
-  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=vec2(float(i), float(j)), r=g+0.15+0.7*canH(ip+g)-fp; float d=dot(r, r);
-    if(d<f1){ f2=f1; f1=d; d1=r; } else if(d<f2) f2=d; }
+vec4 canCrown(vec2 p, out float id){
+  // (weighted by a size for each crown: so they are not all one size, and they meet along curves, not straight seams)
+  vec2 ip=floor(p), fp=fract(p); float f1=9.0, f2=9.0; vec2 d1=vec2(0.0); id=0.5;
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=vec2(float(i), float(j)), h=canH(ip+g), r=g+0.15+0.7*h-fp;
+    float rad=0.72+0.56*fract(h.x*7.13+h.y*3.71), d=dot(r, r)/(rad*rad);
+    if(d<f1){ f2=f1; f1=d; d1=r/rad; id=fract(h.x*13.7+h.y*5.3); } else if(d<f2) f2=d; }
   return vec4(-d1, sqrt(f1), sqrt(f2)); }`)
         .replace("#include <color_fragment>", `#include <color_fragment>
   vec3 canOff=vec3(0.0); float canK=0.0;
-  { vec2 wp=vCanW.xz; float fw=length(fwidth(wp));
+  { vec2 wp=vCanW.xz; float fw=length(fwidth(wp)), idA, idB, idC;
     vec3 wn=normalize(cross(dFdx(vCanW), dFdy(vCanW))); wn*=sign(wn.y);
     float steep=smoothstep(0.45, 0.8, wn.y);
     float k1=(1.0-smoothstep(1.2, 3.4, fw))*steep, k2=(1.0-smoothstep(0.45, 1.3, fw))*steep;
-    vec4 a=canCrown(wp/7.0+vec2(3.7, 1.9)), b=canCrown(wp/2.4+vec2(11.3, 5.1));
-    float ha=clamp(a.z/0.62, 0.0, 1.0), hb=clamp(b.z/0.66, 0.0, 1.0);
-    // the gap between two crowns, and the fall of each dome to its edge, darker
-    float aoA=mix(0.50, 1.0, smoothstep(0.0, 0.30, a.w-a.z))*mix(0.62, 1.0, sqrt(1.0-ha*ha));
-    float aoB=mix(0.80, 1.0, sqrt(1.0-hb*hb));
+    // (the ground the crowns stand on, bent a few metres this way and that, so they do not go in rows)
+    vec2 ww=wp+vec2(sin(wp.y*0.11+1.7)+0.5*sin(wp.x*0.23+0.6), cos(wp.x*0.13+0.4)+0.5*cos(wp.y*0.19+2.3))*2.6;
+    vec4 a=canCrown(ww/7.0+vec2(3.7, 1.9), idA), b=canCrown(ww/2.4+vec2(11.3, 5.1), idB);
+    float ha=clamp(a.z/0.95, 0.0, 1.0), hb=clamp(b.z/0.95, 0.0, 1.0);
+    // the gap between two crowns in their shade, soft; each dome falling off to its edge; each tree its own green
+    float aoA=mix(0.64, 1.0, smoothstep(0.0, 0.42, a.w-a.z))*mix(0.70, 1.0, sqrt(1.0-ha*ha*ha));
+    float aoB=mix(0.84, 1.0, sqrt(1.0-hb*hb));
     // and stands: the trees go in groups, older and taller, a gap where one came down; these hold on out to a
     // couple of kilometres, which is where the hills across the lake are
     float k3=(1.0-smoothstep(14.0, 46.0, fw))*steep;
-    vec4 c=canCrown(wp/26.0+vec2(5.3, 8.9)); float hc=clamp(c.z/0.70, 0.0, 1.0);
-    float aoC=mix(0.70, 1.0, smoothstep(0.0, 0.28, c.w-c.z))*mix(0.80, 1.0, sqrt(1.0-hc*hc));
-    float ao=mix(0.78, aoA, k1)*mix(0.95, aoB, k2)*mix(0.86, aoC, k3);
-    diffuseColor.rgb*=ao/(0.85*0.86);                           // (a little darker on the whole: the shade inside a wood)
-    canOff=vec3(a.x, 0.0, a.y)/max(a.z, 1e-3)*ha*0.95*k1+vec3(b.x, 0.0, b.y)/max(b.z, 1e-3)*hb*0.45*k2
-          +vec3(c.x, 0.0, c.y)/max(c.z, 1e-3)*hc*0.55*k3;
+    vec4 c=canCrown(ww/26.0+vec2(5.3, 8.9), idC); float hc=clamp(c.z/0.95, 0.0, 1.0);
+    float aoC=mix(0.76, 1.0, smoothstep(0.0, 0.40, c.w-c.z))*mix(0.84, 1.0, sqrt(1.0-hc*hc));
+    float ao=mix(0.82, aoA, k1)*mix(0.95, aoB, k2)*mix(0.89, aoC, k3);
+    diffuseColor.rgb*=ao/(0.85*0.89);                           // (a little darker on the whole: the shade inside a wood)
+    diffuseColor.rgb*=mix(vec3(1.0), mix(vec3(0.88, 0.92, 0.97), vec3(1.10, 1.07, 0.90), idA), 0.8*k1);
+    diffuseColor.rgb*=mix(vec3(1.0), mix(vec3(0.92, 0.95, 0.98), vec3(1.06, 1.04, 0.94), idC), k3);
+    // the normal leans out from the middle of each, more toward its edge: a round crown, not a cone
+    canOff=vec3(a.x, 0.0, a.y)/max(a.z, 1e-3)*ha*ha*1.05*k1+vec3(b.x, 0.0, b.y)/max(b.z, 1e-3)*hb*0.40*k2
+          +vec3(c.x, 0.0, c.y)/max(c.z, 1e-3)*hc*hc*0.55*k3;
     canK=k1; }`)
         .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
   normal=normalize(normal+mat3(viewMatrix)*canOff);`);
