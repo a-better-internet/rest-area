@@ -132,7 +132,9 @@ function rampPave(P0, RW, X, s, at, taper, color, stop){
   // where the ramp's paving lies over the shoulder it is a layer on the road, so it sits a centimetre and a
   // bit above it (and one polygon-offset step over it), easing up and down over fifteen metres either side;
   // it stops just outside the edge line, which stays on the road's own surface
-  { const over=Q.map((p,i)=>roomX(p, pathSide(Q,i))<RW ? 1 : 0), lift=Q.map(()=>0);
+  // (and the same where a ramp's far end laps a crossroad's shoulder, stop.mouth below)
+  const M0=stop && stop.mouth;
+  { const over=Q.map((p,i)=>roomX(p, pathSide(Q,i))<RW || (M0 && Math.abs(p.z-M0.z)<M0.hw+RW) ? 1 : 0), lift=Q.map(()=>0);
     for(let i=0;i<Q.length;i++) if(over[i]) for(let j=0;j<Q.length;j++){ const d=Math.abs(Q[j].s-Q[i].s); if(d<15) lift[j]=Math.max(lift[j], 1-smoothstep(5, 15, d)); }
     Q.forEach((q,i)=>{ q.y+=0.012*lift[i]; }); }
   /* Where its far end runs into a crossroad along x (US 6N: stop.mouth = {z, e, meet}, 08b) the ramp joins the

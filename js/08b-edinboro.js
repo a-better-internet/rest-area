@@ -54,7 +54,7 @@ const EDIN_RT={};
   // (08's rampPave: each out of, or back into, the interstate's shoulder along a taper, never over its lanes)
   // (each ramp joins US 6N along it, a slip road: paved to its edge line, its lines run on to meet that line, and
   //  where they meet it is kept, mouth.meet, 08's rampPave)
-  const RW=E.rw, MOUTHS=[], onX=()=>{ const f=p=>Math.abs(p.z-Z)<HW+RW+0.2; f.mouth={z:Z, e:3.6, meet:[]}; MOUTHS.push(f.mouth); return f; };
+  const RW=E.rw, MOUTHS=[], onX=()=>{ const f=p=>Math.abs(p.z-Z)<HW+RW+0.2; f.mouth={z:Z, e:3.6, hw:HW, meet:[]}; MOUTHS.push(f.mouth); return f; };
   const offM=rampPave(E.off, RW, NB_X1,  1, "start", 0, "#9a9a98", onX());       // (the rest area's entrance lane runs on into it)
   rampPave(E.on, RW, SB_X0, -1, "end", 110, "#929290", onX());
   rampPave(E.onN, RW, NB_X1, 1, "end", 110, "#929290", onX());
