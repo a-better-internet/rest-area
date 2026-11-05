@@ -45,16 +45,19 @@ const ZOMBIE=(function(){
   const GUNS=[
     {id:"pistol",  slot:1, name:"PISTOL",        ammo:"9MM",      mag:15, dmg:34,  head:3.0, pellets:1, spread:0.012, ads:0.004,  rate:0.16, auto:false, reload:1.35, range:150, climb:0.012, kick:1.0, snd:"pistol",
      hip:[0.13,-0.145,-0.33], adsP:[0,-0.060,-0.31]},
-    {id:"shotgun", slot:2, name:"PUMP SHOTGUN",  ammo:"12 GAUGE", mag:6,  dmg:16,  head:2.0, pellets:9, spread:0.065, ads:0.050,  rate:0.95, auto:false, reload:0.55, shells:true, range:60, climb:0.035, kick:2.2, snd:"shotgun",
+    {id:"shotgun", slot:2, name:"PUMP SHOTGUN",  ammo:"12 GAUGE", mag:6,  dmg:16,  head:2.0, pellets:9, glass:0.45, spread:0.065, ads:0.050,  rate:0.95, auto:false, reload:0.55, shells:true, range:60, climb:0.035, kick:2.2, snd:"shotgun",
      hip:[0.14,-0.16,-0.30], adsP:[0,-0.036,-0.30]},
     {id:"carbine", slot:3, name:"CARBINE",       ammo:"5.56",     mag:30, dmg:27,  head:2.6, pellets:1, spread:0.018, ads:0.006,  rate:0.092, auto:true, reload:2.1, range:240, climb:0.009, kick:0.8, snd:"carbine",
      hip:[0.13,-0.15,-0.28], adsP:[0,-0.058,-0.32]},
-    {id:"rifle",   slot:4, name:"HUNTING RIFLE", ammo:".30-06",   mag:5,  dmg:150, head:3.0, pellets:1, pierce:3, spread:0.004, ads:0.0005, rate:1.2, auto:false, reload:2.6, range:420, climb:0.045, kick:2.6, snd:"rifle",
+    {id:"rifle",   slot:4, name:"HUNTING RIFLE", ammo:".30-06",   mag:5,  dmg:150, head:3.0, pellets:1, glass:2, pierce:3, spread:0.004, ads:0.0005, rate:1.2, auto:false, reload:2.6, range:420, climb:0.045, kick:2.6, snd:"rifle",
      hip:[0.14,-0.16,-0.30], adsP:[0,-0.075,-0.16], zoom:0.40},
+    {id:"flamer",  slot:5, name:"FLAMETHROWER",  ammo:"FUEL",     mag:100, dmg:0, head:1, pellets:0, flame:true, spread:0, ads:0, rate:0.05, auto:true, reload:2.4, range:10, climb:0, kick:0.12, snd:"flamer",
+     hip:[0.16,-0.17,-0.34], adsP:[0.10,-0.15,-0.36]},
   ];
   const GUN=id=>GUNS.find(g=>g.id===id);
-  const AMMO_MAX={"9MM":180, "12 GAUGE":48, "5.56":240, ".30-06":30};
-  const AMMO_BOX={"9MM":24, "12 GAUGE":8, "5.56":30, ".30-06":5};
+  const AMMO_MAX={"9MM":180, "12 GAUGE":48, "5.56":240, ".30-06":30, "FUEL":400};
+  const AMMO_BOX={"9MM":24, "12 GAUGE":8, "5.56":30, ".30-06":5, "FUEL":100};
+  const BOMB_MAX=6;
   const S={have:{}, mag:{}, ammo:{}, cur:"pistol", next:null, cool:0, reloadT:0, reloading:false, switchT:0, fired:false,
            fireHeld:false, aimHeld:false, ads:0, kick:0, kickR:0, bloom:0, melee:0, meleeHit:false, sprint:0, cycle:0,
            flashT:0, dmgFlash:0, dmgDir:0, dmgDirT:0, shake:0, hitT:0, hitKill:false, bobA:0, swX:0, swY:0, rl:0,
@@ -384,13 +387,13 @@ const ZOMBIE=(function(){
     if(Math.min(th, tb)>=tmax) return null;
     return th<tb ? {t:th, head:true} : {t:tb, head:false};
   }
-  function hurtZombie(zb, dmg, head, at, dir){
+  function hurtZombie(zb, dmg, head, at, dir, fire){
     if(zb.state==="dead") return;
-    zb.hp-=dmg; zb.alert=true; zb.hitT=Math.min(0.3, 0.12+dmg/400); zb.atk=0; zb.cd=Math.max(zb.cd, 0.25);
-    const kb=zb.down ? 0 : Math.min(0.45, dmg/110)*(zb.kind==="brute" ? 0.3 : 1); zb.kx+=dir.x*kb; zb.kz+=dir.z*kb;
-    blood.burst(at, dir, head ? 22 : 12, head ? 1.4 : 1);
-    snd.flesh(at.x, at.z);
-    if(zb.hp<=0) killZombie(zb, head, dir);
+    zb.hp-=dmg; zb.alert=true; zb.atk=0;
+    if(!fire){ zb.hitT=Math.min(0.3, 0.12+dmg/400); zb.cd=Math.max(zb.cd, 0.25);
+      const kb=zb.down ? 0 : Math.min(0.45, dmg/110)*(zb.kind==="brute" ? 0.3 : 1); zb.kx+=dir.x*kb; zb.kz+=dir.z*kb;
+      blood.burst(at, dir, head ? 22 : 12, head ? 1.4 : 1); snd.flesh(at.x, at.z); }
+    if(zb.hp<=0) killZombie(zb, head, dir, fire ? {bonus:5} : undefined);
   }
   function killZombie(zb, head, dir, how){
     const wasDown=!!zb.down;
@@ -700,10 +703,162 @@ const ZOMBIE=(function(){
     const g=G(), mv=player.moving ? (keys.KeyQ ? 0.06 : (keys.ShiftLeft||keys.ShiftRight) ? 0.025 : 0.01) : 0;
     return lerp(g.spread, g.ads, S.ads)+mv*(1-S.ads*0.7)+S.bloom;
   }
+  /* ---- glass: a shot into a pane stops there and cracks it, a few more and it goes, in a shower of pieces, and the
+     opening is open; shots go on through it. 01's GLASS_PANES is every pane baked (the windows, the doors' lights, the
+     cases); broken, a pane's run of vertices in its merged mesh is pulled to a point, and put back when the run ends. ---- */
+  let _gGrid=null; const BROKEN=[], _gp=new T.Vector3(), _gq=new T.Vector3();
+  function glassGrid(){ if(_gGrid) return _gGrid; _gGrid=new Map();
+    for(const P of (typeof GLASS_PANES!=="undefined" ? GLASS_PANES : [])){ const r=Math.max(P.hu, P.hv);
+      for(let gx=Math.floor((P.c.x-r)/8); gx<=Math.floor((P.c.x+r)/8); gx++) for(let gz=Math.floor((P.c.z-r)/8); gz<=Math.floor((P.c.z+r)/8); gz++){
+        const k=gx+":"+gz; let L=_gGrid.get(k); if(!L) _gGrid.set(k, L=[]); L.push(P); } }
+    return _gGrid; }
+  function glassRay(o, d, tmax){
+    const Gd=glassGrid(); let best=null, bt=tmax; const seen=new Set();
+    for(let t=0; t<=bt+8; t+=4){ const L=Gd.get(Math.floor((o.x+d.x*t)/8)+":"+Math.floor((o.z+d.z*t)/8)); if(!L) continue;
+      for(const P of L){ if(seen.has(P)) continue; seen.add(P);
+        const dn=d.dot(P.n); if(Math.abs(dn)<1e-4) continue;
+        const tt=_gp.copy(P.c).sub(o).dot(P.n)/dn; if(tt<0.05 || tt>=bt) continue;
+        _gp.copy(o).addScaledVector(d, tt).sub(P.c);
+        if(Math.abs(_gp.dot(P.u))>P.hu || Math.abs(_gp.dot(P.v))>P.hv) continue;
+        bt=tt; best=P; } }
+    return best ? {P:best, t:bt} : null;
+  }
+  const glassFX={cracks:[], ci:0, shards:[], si:0, mat:null, geo:null};
+  function crackTex(seed){
+    return signTex(256, 256, (c, W, H)=>{ const r=_trng(seed); c.clearRect(0, 0, W, H); c.strokeStyle="rgba(236,246,250,0.9)"; c.lineCap="round";
+      const cx=W/2, cy=H/2, n=9+((r()*6)|0), ang=[];
+      for(let k=0;k<n;k++) ang.push(k/n*Math.PI*2+(r()-0.5)*0.5);
+      for(const a0 of ang){ let x=cx, y=cy, a=a0; c.lineWidth=1.6; c.beginPath(); c.moveTo(x, y);
+        const L=W*(0.30+r()*0.18); for(let s=0;s<L;s+=8){ a+=(r()-0.5)*0.35; x+=Math.cos(a)*8; y+=Math.sin(a)*8; c.lineTo(x, y); } c.stroke(); }
+      c.lineWidth=1.1;
+      for(const R of [W*0.07, W*0.16, W*0.27]) for(let k=0;k<n;k++){ if(r()<0.35) continue; const a=ang[k], b=ang[(k+1)%n]+(k+1===n ? Math.PI*2 : 0), rr=R*(0.85+r()*0.3);
+        c.beginPath(); c.moveTo(cx+Math.cos(a)*rr, cy+Math.sin(a)*rr); c.lineTo(cx+Math.cos((a+b)/2)*rr*1.06, cy+Math.sin((a+b)/2)*rr*1.06); c.lineTo(cx+Math.cos(b)*rr, cy+Math.sin(b)*rr); c.stroke(); }
+      c.fillStyle="rgba(240,248,252,0.95)"; c.beginPath(); c.arc(cx, cy, 4, 0, Math.PI*2); c.fill(); });
+  }
+  function glassBuild(){
+    if(glassFX.mat) return;
+    const texs=[crackTex(11), crackTex(29), crackTex(47)];
+    const mats=texs.map(t=>new T.MeshStandardMaterial({map:t, transparent:true, depthWrite:false, side:T.DoubleSide, roughness:0.25, metalness:0.2,
+      polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}));
+    for(let k=0;k<48;k++){ const m=new T.Mesh(new T.PlaneGeometry(1, 1), mats[k%3]); m.visible=false; scene.add(m); glassFX.cracks.push(m); }
+    glassFX.mat=new T.MeshStandardMaterial({color:0xd6ecf2, transparent:true, opacity:0.6, roughness:0.05, metalness:0.55, side:T.DoubleSide});
+    for(let k=0;k<140;k++){ const g=new T.BufferGeometry(), a=0.03+Math.random()*0.07, b=0.02+Math.random()*0.06;
+      g.setAttribute("position", new T.BufferAttribute(new Float32Array([0,0,0, a,0.004,b*0.3, b*0.4,-0.003,a]), 3)); g.computeVertexNormals();
+      const m=new T.Mesh(g, glassFX.mat); m.visible=false; scene.add(m); glassFX.shards.push({m:m, vx:0, vy:0, vz:0, w:new T.Vector3(), t:0, rest:false}); }
+  }
+  function hitGlass(P, o, d, t, dmg){
+    glassBuild();
+    _gp.copy(o).addScaledVector(d, t);
+    P.hp-=dmg;
+    if(P.hp<=0){ shatter(P, d); return; }
+    snd.glassHit(_gp.x, _gp.z);
+    // a crack where it went in, on your side of the pane, bigger as they join
+    const side=d.dot(P.n)<0 ? 1 : -1, m=glassFX.cracks[glassFX.ci++%glassFX.cracks.length];
+    if(m.userData.pane){ const L=m.userData.pane.cracks, j=L.indexOf(m); if(j>=0) L.splice(j, 1); }
+    const sz=clamp(Math.min(P.hu, P.hv)*1.5, 0.22, 0.85)*(1+0.3*P.cracks.length);
+    m.position.copy(_gp).addScaledVector(P.n, side*0.007); _gq.copy(m.position).addScaledVector(P.n, side); m.lookAt(_gq);
+    m.rotateZ(Math.random()*6.28); m.scale.setScalar(sz); m.visible=true; m.userData.pane=P; P.cracks.push(m);
+    for(let k=0;k<3;k++) shard(_gp.x, _gp.y, _gp.z, d.x*1.2+(Math.random()-0.5), 0.6+Math.random(), d.z*1.2+(Math.random()-0.5));
+  }
+  function shard(x, y, z, vx, vy, vz){
+    const s=glassFX.shards[glassFX.si++%glassFX.shards.length]; s.m.position.set(x, y, z); s.vx=vx; s.vy=vy; s.vz=vz;
+    s.w.set((Math.random()-0.5)*20, (Math.random()-0.5)*20, (Math.random()-0.5)*20); s.t=0; s.rest=false; s.m.visible=true;
+  }
+  function shatter(P, d){
+    P.broke=true; for(const m of P.cracks){ m.visible=false; m.userData.pane=null; } P.cracks=[];
+    const A=P.mesh.geometry.attributes.position;
+    if(!P.orig){ P.orig=new Float32Array(P.nv*3); for(let i=0;i<P.nv;i++){ P.orig[i*3]=A.getX(P.v0+i); P.orig[i*3+1]=A.getY(P.v0+i); P.orig[i*3+2]=A.getZ(P.v0+i); } }
+    const x0=A.getX(P.v0), y0=A.getY(P.v0), z0=A.getZ(P.v0); for(let i=0;i<P.nv;i++) A.setXYZ(P.v0+i, x0, y0, z0); A.needsUpdate=true;
+    BROKEN.push(P);
+    // the pieces: most of them on, the way the shot went, the rest falling where they were
+    const n=clamp(Math.round(P.hu*P.hv*70), 10, 40);
+    for(let k=0;k<n;k++){ const a=(Math.random()*2-1)*P.hu, b=(Math.random()*2-1)*P.hv;
+      _gp.copy(P.c).addScaledVector(P.u, a).addScaledVector(P.v, b); const f=Math.random()<0.7 ? 1.5+Math.random()*2.5 : 0.2;
+      shard(_gp.x, _gp.y, _gp.z, d.x*f+(Math.random()-0.5)*0.8, d.y*f+Math.random()*0.8, d.z*f+(Math.random()-0.5)*0.8); }
+    snd.shatter(P.c.x, P.c.z, Math.min(1, P.hu*P.hv*2.5+0.35));
+  }
+  function updateGlass(dt){
+    for(const s of glassFX.shards){ if(!s.m.visible) continue; s.t+=dt;
+      if(!s.rest){ s.vy-=9.8*dt; s.m.position.x+=s.vx*dt; s.m.position.y+=s.vy*dt; s.m.position.z+=s.vz*dt;
+        s.m.rotation.x+=s.w.x*dt; s.m.rotation.y+=s.w.y*dt; s.m.rotation.z+=s.w.z*dt;
+        const g=surfaceY(s.m.position.x, s.m.position.z, s.m.position.y+0.3);
+        if(s.m.position.y<=g+0.004){ s.m.position.y=g+0.004; if(s.vy<-2 && Math.random()<0.5){ s.vy*=-0.2; s.vx*=0.4; s.vz*=0.4; } else { s.rest=true; s.m.rotation.x=0; s.m.rotation.z=0; } } }
+      if(s.t>40) s.m.visible=false; }
+  }
+  function mendGlass(){
+    for(const P of BROKEN){ const A=P.mesh.geometry.attributes.position; for(let i=0;i<P.nv;i++) A.setXYZ(P.v0+i, P.orig[i*3], P.orig[i*3+1], P.orig[i*3+2]); A.needsUpdate=true; P.broke=false; }
+    BROKEN.length=0;
+    for(const P of (typeof GLASS_PANES!=="undefined" ? GLASS_PANES : [])){ P.hp=3; P.cracks=[]; }
+    for(const m of glassFX.cracks){ m.visible=false; m.userData.pane=null; }
+    for(const s of glassFX.shards) s.m.visible=false;
+  }
+  /* ---- the flamethrower: a jet of burning fuel ten metres out, stopped by what it meets; what it reaches catches and burns
+     on for a few seconds, running about in it; heat cracks glass and then breaks it; its light on everything round you ---- */
+  const FL={sp:[], si:0, lamp:null, lamp2:null, t:0, burnT:0, roarT:0};
+  function flameBuild(){
+    if(FL.lamp) return;
+    const tex=signTex(64, 64, (c, W, H)=>{ const g=c.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2); g.addColorStop(0, "rgba(255,255,240,1)"); g.addColorStop(0.3, "rgba(255,230,170,0.85)");
+      g.addColorStop(0.65, "rgba(255,160,60,0.35)"); g.addColorStop(1, "rgba(255,90,10,0)"); c.fillStyle=g; c.fillRect(0, 0, W, H);
+      const r=_trng(5); for(let k=0;k<30;k++){ c.fillStyle="rgba(255,255,255,"+(0.1+r()*0.2).toFixed(2)+")"; c.beginPath(); c.arc(W/2+(r()-0.5)*W*0.5, H/2+(r()-0.5)*H*0.5, 2+r()*5, 0, 7); c.fill(); } });
+    for(let k=0;k<140;k++){ const m=new T.Sprite(new T.SpriteMaterial({map:tex, color:0xffa040, blending:T.AdditiveBlending, transparent:true, depthWrite:false, opacity:0}));
+      m.visible=false; scene.add(m); FL.sp.push({s:m, v:new T.Vector3(), t:0, life:1, go:0, reach:10, big:1}); }
+    FL.lamp={x:0, y:-50, z:0, color:0xff8a3a, intensity:4.2, dist:15, decay:1.4, fire:true, mod:{v:0}, under:false}; LAMPS.push(FL.lamp);
+    FL.lamp2={x:0, y:-50, z:0, color:0xff7a2a, intensity:3.0, dist:11, decay:1.5, fire:true, mod:{v:0}, under:false}; LAMPS.push(FL.lamp2);
+  }
+  function flameParticle(x, y, z, vx, vy, vz, life, reach, big){
+    const p=FL.sp[FL.si++%FL.sp.length]; p.s.position.set(x, y, z); p.v.set(vx, vy, vz); p.t=0; p.life=life; p.go=0; p.reach=reach; p.big=big||1;
+    p.s.visible=true; p.s.material.rotation=Math.random()*6.28; }
+  function flameOut(g){
+    flameBuild();
+    camera.getWorldDirection(_v1); _o.copy(camera.position);
+    let reach=rayWorld(_o, _v1, g.range).t;
+    // glass: it holds the fire back, and the heat cracks it and then breaks it
+    const GH=glassRay(_o, _v1, reach+0.3);
+    if(GH && !GH.P.broke){ reach=GH.t; GH.P.heat=(GH.P.heat||0)+1; if(GH.P.heat%8===0) hitGlass(GH.P, _o, _v1, GH.t, 1); }
+    _v2.set(0, 1, 0).cross(_v1).normalize();
+    for(let k=0;k<3;k++){ const sp=12+Math.random()*3;
+      flameParticle(_o.x+_v1.x*0.55+_v2.x*0.10, _o.y+_v1.y*0.55-0.13, _o.z+_v1.z*0.55+_v2.z*0.10,
+        _v1.x*sp+(Math.random()-0.5)*1.6, _v1.y*sp+(Math.random()-0.5)*1.2+0.3, _v1.z*sp+(Math.random()-0.5)*1.6, 0.55+Math.random()*0.25, reach, 1); }
+    const L=Math.min(3.5, reach*0.6); FL.lamp.x=_o.x+_v1.x*L; FL.lamp.y=_o.y+_v1.y*L; FL.lamp.z=_o.z+_v1.z*L; FL.t=0.12; FL.roarT=0.12;
+    // what it reaches: a cone a hand wide at the nozzle, a metre and a half across at the end
+    for(const zb of ZS){ if(!zb.live || zb.state==="dead") continue;
+      const dx=zb.x-_o.x, dy=(zb.y+1.0)-_o.y, dz=zb.z-_o.z, d=Math.hypot(dx, dy, dz); if(d>reach+0.8) continue;
+      const al=dx*_v1.x+dy*_v1.y+dz*_v1.z; if(al<0.3) continue;
+      if(Math.sqrt(Math.max(0, d*d-al*al))>0.45+al*0.12) continue;
+      _v3.set(zb.x, zb.y+1.0, zb.z); zb.burn=Math.max(zb.burn||0, 3.5); hurtZombie(zb, 6, false, _v3, _v1, true); }
+    for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-player.pos.x, zb.z-player.pos.z)<40) zb.alert=true;
+  }
+  function updateFlame(dt, now){
+    if(!FL.lamp) return;
+    // the jet and the burning
+    for(const p of FL.sp){ if(!p.s.visible) continue; p.t+=dt; const u=p.t/p.life;
+      if(u>=1){ p.s.visible=false; continue; }
+      const st=p.v.length()*dt; p.go+=st;
+      if(p.go>p.reach && st>0){ p.v.multiplyScalar(0.15); p.v.y+=1.2; p.go=-1e9; }          // (it splashes on what it meets)
+      p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.max(0, 1-dt*1.2)); p.v.y+=2.4*dt;
+      const sc=(0.16+u*1.5)*p.big; p.s.scale.set(sc, sc, 1);
+      p.s.material.color.setHex(0xfff0c0).lerp(_c7.setHex(0xff5a14), Math.min(1, u*1.8));
+      p.s.material.opacity=Math.pow(1-u, 0.9)*0.85; }
+    FL.t-=dt; FL.lamp.mod.v=FL.t>0 ? 0.75+0.25*Math.random() : Math.max(0, FL.lamp.mod.v-dt*6);
+    // the dead burning: flames up off them, the nearest of them lighting what is round it
+    let near=null, nd=1e9; FL.burnT-=dt; const emit=FL.burnT<=0; if(emit) FL.burnT=0.05;
+    for(const zb of ZS){ if(!zb.live || !(zb.burn>0)) continue;
+      zb.burn-=dt;
+      if(zb.state!=="dead"){ zb.hp-=30*dt; zb.alert=true; if(zb.hp<=0){ _v3.set(0,0,-1); killZombie(zb, false, _v3, {bonus:5}); zb.burn=Math.min(zb.burn, 2.5); } }
+      if(emit){ const lying=zb.state==="dead", by=lying ? 0.15 : 0.3+Math.random()*1.3;
+        flameParticle(zb.x+(Math.random()-0.5)*(lying ? 1.2 : 0.4), zb.y+by, zb.z+(Math.random()-0.5)*(lying ? 1.2 : 0.4),
+          (Math.random()-0.5)*0.4, 1.2+Math.random(), (Math.random()-0.5)*0.4, 0.45+Math.random()*0.3, 99, 0.55); }
+      const d=Math.hypot(zb.x-player.pos.x, zb.z-player.pos.z); if(d<nd){ nd=d; near=zb; } }
+    if(near && nd<40){ FL.lamp2.x=near.x; FL.lamp2.y=near.y+1.2; FL.lamp2.z=near.z; FL.lamp2.mod.v=0.7+0.3*Math.random(); } else FL.lamp2.mod.v=0;
+    // the roar while it goes
+    FL.roarT-=dt; snd.flame(FL.roarT>0);
+  }
+  function stopFlame(){ if(!FL.lamp) return; for(const p of FL.sp) p.s.visible=false; FL.lamp.mod.v=0; FL.lamp2.mod.v=0; FL.roarT=0; snd.flame(false); for(const zb of ZS) zb.burn=0; }
   function fire(){
     const g=G();
     if(S.mag[g.id]<=0){ snd.click(); S.cool=0.25; S.fired=true; if(S.ammo[g.ammo]>0) startReload(); return; }
     if(S.reloading){ if(g.shells && S.mag[g.id]>0){ S.reloading=false; S.reloadT=0; } else return; }
+    if(g.flame){ S.mag[g.id]--; S.cool=g.rate; flameOut(g); return; }
     S.mag[g.id]--; S.cool=g.rate; S.cycle=g.rate; S.flashT=0.055; S.kick=g.kick; S.kickR=g.kick;
     if(!g.auto) S.fired=true;
     S.bloom=Math.min(0.05, S.bloom+(g.auto ? 0.004 : g.spread*0.4));
@@ -718,7 +873,11 @@ const ZOMBIE=(function(){
     for(let p=0;p<g.pellets;p++){
       const th=sp*Math.sqrt(Math.random()), ph=Math.random()*Math.PI*2, tt=Math.tan(th);
       _d.copy(_v1).addScaledVector(_v2, tt*Math.cos(ph)).addScaledVector(_v3, tt*Math.sin(ph)).normalize();
-      const W=rayWorld(_o, _d, g.range);
+      let W=rayWorld(_o, _d, g.range);
+      // glass in the way: whole, it takes the shot; broken, the shot goes on through where it was
+      const GH=glassRay(_o, _d, Math.min(g.range, W.t+0.45));
+      if(GH){ if(!GH.P.broke){ hitGlass(GH.P, _o, _d, GH.t, g.glass||1); W={t:GH.t, what:"glass"}; }
+        else if(W.t-GH.t<0.7){ const t0=GH.t+0.6; _gq.copy(_o).addScaledVector(_d, t0); const W2=rayWorld(_gq, _d, Math.max(0.1, g.range-t0)); W={t:t0+W2.t, what:W2.what}; } }
       const L=[];
       for(const zb of ZS){ if(!zb.live || zb.state==="dead") continue;
         if(Math.abs(zb.x-_o.x)>g.range+2 || Math.abs(zb.z-_o.z)>g.range+2) continue;
@@ -729,7 +888,7 @@ const ZOMBIE=(function(){
         const e=hits.get(h.zb)||{dmg:0, head:false, at:new T.Vector3(), dir:_d.clone()};
         e.dmg+=g.dmg*(h.head ? g.head : 1)*(1-n*0.25); e.head=e.head||h.head; e.at.copy(_o).addScaledVector(_d, h.t);
         hits.set(h.zb, e); n++; if(n>=(g.pierce||1)) endT=h.t; }
-      if(n<(g.pierce||1) && W.what){ _v1.copy(_o).addScaledVector(_d, W.t-0.04); dust.puff(_v1, W.what==="ground"); }
+      if(n<(g.pierce||1) && W.what && W.what!=="glass"){ _v1.copy(_o).addScaledVector(_d, W.t-0.04); dust.puff(_v1, W.what==="ground"); }
       if(p===0) tracerEnd=_o.clone().addScaledVector(_d, Math.min(endT, g.range));
       camera.getWorldDirection(_v1);
     }
@@ -849,6 +1008,18 @@ const ZOMBIE=(function(){
       part(Gp, BOX(0.012,0.03,0.012), M.dark, 0,0.03,-0.30); part(Gp, BOX(0.003,0.018,0.003), M.dark, 0,0.054,-0.30);
       mz(0,0.008,-0.49); pt(0.02,0.018,-0.03);
       if(hands){ arm(Gp, [0.004,-0.075,0.075], [0.06,-0.25,0.38], 0.35); arm(Gp, [0,-0.035,-0.22], [-0.16,-0.25,0.04], 0.05); }
+    }else if(id==="flamer"){
+      // a hand flame gun: the fuel bottle under the wand, the wand to the nozzle, two grips, the valve, a pilot burning at the tip
+      const red=new T.MeshStandardMaterial({color:0xa8281c, metalness:0.3, roughness:0.45});
+      part(Gp, CYLZ(0.05,0.05,0.30,18), red, 0,-0.075,0.03); for(const z of [0.18,-0.12]) part(Gp, CYLZ(0.053,0.053,0.02,18), M.dark, 0,-0.075,z);
+      part(Gp, CYLZ(0.015,0.015,0.64,10), M.metal, 0,0.02,-0.22); part(Gp, CYLZ(0.03,0.025,0.12,16), M.dark, 0,0.02,-0.56);
+      part(Gp, CYLZ(0.007,0.007,0.20,8), M.brass, 0.028,0.034,-0.45); part(Gp, CYLZ(0.012,0.012,0.05,10), M.brass, 0,-0.022,-0.04);
+      part(Gp, BOX(0.012,0.05,0.012), M.dark, 0,-0.0,-0.04); part(Gp, BOX(0.06,0.012,0.012), red, 0,0.025,-0.04);
+      part(Gp, BOX(0.03,0.11,0.045), M.dark, 0,-0.04,0.12, 0.25); part(Gp, BOX(0.03,0.10,0.04), M.dark, 0,-0.035,-0.30, 0.12);
+      if(hands){ const pl=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, color:0x6aa8ff, blending:T.AdditiveBlending, transparent:true, depthWrite:false, opacity:0.85}));
+        pl.scale.set(0.03, 0.045, 1); pl.position.set(0, 0.022, -0.63); Gp.add(pl); Gp.userData.pilot=pl; }
+      mz(0,0.02,-0.63); pt(0,0.02,-0.1);
+      if(hands){ arm(Gp, [0.004,-0.075,0.12], [0.06,-0.25,0.40], 0.3); arm(Gp, [0,-0.075,-0.30], [-0.16,-0.25,0.04], 0.05); }
     }else{
       part(Gp, BOX(0.04,0.05,0.5), M.wood, 0,-0.012,-0.17); part(Gp, BOX(0.04,0.10,0.24), M.wood, 0,-0.045,0.21, -0.1).userData.stock=true;
       part(Gp, CYLZ(0.016,0.016,0.2), M.metal, 0,0.02,-0.03); part(Gp, CYLZ(0.0095,0.011,0.5), M.metal, 0,0.024,-0.46);
@@ -899,6 +1070,7 @@ const ZOMBIE=(function(){
     if(m.userData.pump){ const c=g.rate>0 && S.cycle>0 ? Math.sin(clamp((g.rate-S.cycle-0.2)/0.45, 0, 1)*Math.PI) : 0; m.userData.pump.position.z=-0.25+c*0.075; }
     m.visible=!(g.zoom && S.ads>0.85);
     // the flash, the light it throws, the brass flying out
+    if(m.userData.pilot){ const f=0.8+0.4*Math.random(); m.userData.pilot.scale.set(0.028*f, 0.042*f, 1); }
     vm.flash.visible=S.flashT>0 && m.visible;
     if(vm.flash.visible){ m.userData.muzzle.getWorldPosition(vm.flash.position); const s=(g.id==="shotgun" ? 0.2 : g.id==="pistol" ? 0.12 : 0.16)*(0.8+Math.random()*0.4);
       vm.flash.scale.set(s, s, s); vm.flash.material.rotation=Math.random()*6.28; }
@@ -1017,7 +1189,7 @@ const ZOMBIE=(function(){
      PICKUPS
      ====================================================================== */
   const PK=[];
-  const LABEL={"9MM":["9MM","#c8a040","#2a1a0a"], "12 GAUGE":["12 GA","#a8281c","#f2e8d0"], "5.56":["5.56","#4a5a32","#e8e4c8"], ".30-06":[".30-06","#2e4a2e","#e8dca8"]};
+  const LABEL={"FUEL":["FUEL","#c42a1a","#f2e8d0"], "9MM":["9MM","#c8a040","#2a1a0a"], "12 GAUGE":["12 GA","#a8281c","#f2e8d0"], "5.56":["5.56","#4a5a32","#e8e4c8"], ".30-06":[".30-06","#2e4a2e","#e8dca8"]};
   const PMAT={};
   function labelMat(txt, bg, fg){ return new T.MeshStandardMaterial({roughness:0.7, map:signTex(128, 64, (c,W,H)=>{ c.fillStyle=bg; c.fillRect(0,0,W,H);
     c.strokeStyle=fg; c.lineWidth=4; c.strokeRect(6,6,W-12,H-12); c.fillStyle=fg; fitText(c, txt, W*0.8, H*0.6, W/2, H/2, "700", "Oswald, Arial"); })}); }
@@ -1028,7 +1200,17 @@ const ZOMBIE=(function(){
     const g=new T.Group(), item=new T.Group(); g.add(item);
     const [type, sub]=kind.split(":");
     let col=0xe8c050;
-    if(type==="ammo"){
+    if(type==="ammo" && sub==="FUEL"){
+      // a red jerrycan: its body, the label, the handle, the spout
+      col=0xe86a2a; const L=LABEL.FUEL; if(!PMAT.aFUEL) PMAT.aFUEL=labelMat(L[0], L[1], L[2]); const rd=new T.MeshStandardMaterial({color:0xb02a1c, roughness:0.5, metalness:0.2});
+      item.add(new T.Mesh(new T.BoxGeometry(0.11, 0.26, 0.20), [rd, rd, rd, rd, PMAT.aFUEL, rd])); part(item, BOX(0.03, 0.03, 0.13), MAT.dark, 0, 0.145, 0.02);
+      part(item, new T.CylinderGeometry(0.014, 0.018, 0.07, 10), rd, 0, 0.15, -0.085, 0.5);
+    }else if(type==="bombs"){
+      // a crate of them, lid off
+      col=0xe86a2a; const wd=new T.MeshStandardMaterial({color:0x6a6a3a, roughness:0.9}), mt=new T.MeshStandardMaterial({color:0x5a5e60, metalness:0.4, roughness:0.5});
+      part(item, BOX(0.42, 0.16, 0.28), wd, 0, 0, 0);
+      for(let k=0;k<3;k++) part(item, new T.CylinderGeometry(0.035, 0.035, 0.24, 10), mt, -0.12+k*0.12, 0.10, 0, 0, 0, Math.PI/2);
+    }else if(type==="ammo"){
       const L=LABEL[sub], key="a"+sub; if(!PMAT[key]) PMAT[key]=labelMat(L[0], L[1], L[2]);
       const side=new T.MeshStandardMaterial({color:L[1], roughness:0.7}), mats=[side, side, PMAT[key], side, side, side];
       const w=sub==="5.56" ? 0.28 : 0.22, h=sub==="5.56" ? 0.16 : 0.11, d=sub==="5.56" ? 0.13 : 0.14;
@@ -1071,7 +1253,12 @@ const ZOMBIE=(function(){
     // the pipe bombs: the garage's bench, the fireworks outlet (of course), the farm's machine shed, the weigh station's apron
     [34, 34, 0, "bomb"], [912, -1262, undefined, "bomb"], [152, -1112, undefined, "bomb"], [-48, -2968, undefined, "bomb"],
     // and up the water tower, for whoever gets up there
-    [WATERTOWER.x+6.5, WATERTOWER.z+1.6, WATERTOWER.catwalk, "ammo:.30-06"]];
+    [WATERTOWER.x+6.5, WATERTOWER.z+1.6, WATERTOWER.catwalk, "ammo:.30-06"],
+    // the flamethrower at the fireworks outlet; fuel at the pumps, in the garage and by the farm's tank
+    [903, -1268, undefined, "gun:flamer"], [-22, -1232, undefined, "ammo:FUEL"], [36, 29, 0, "ammo:FUEL"], [158, -1118, undefined, "ammo:FUEL"],
+    // and the emergency stores in the boiler hall (12e), in front of the locker and the crates: every kind, and pipe bombs by the crate
+    ...[["ammo:9MM",87.0,-279.3],["ammo:12 GAUGE",87.8,-279.3],["ammo:5.56",88.6,-279.3],["ammo:.30-06",90.4,-279.3],["ammo:FUEL",91.2,-279.3],
+        ["bombs",88.0,-278.2],["bombs",89.4,-278.2],["medkit",90.8,-278.2],["gun:flamer",92.0,-278.4]].map(([k,x,z])=>[x, z, SUBBASE.y-5.0, k])];
   let cachesBuilt=false;
   function buildCaches(){
     if(cachesBuilt) return; cachesBuilt=true;
@@ -1079,7 +1266,8 @@ const ZOMBIE=(function(){
   }
   function take(p){
     const [type, sub]=p.kind.split(":");
-    if(type==="bomb"){ if(S.bombs>=4) return false; S.bombs++; feed("+1 PIPE BOMB  ·  F TO THROW", "#e8a060"); snd.pick(0); return true; }
+    if(type==="bomb"){ if(S.bombs>=BOMB_MAX) return false; S.bombs++; feed("+1 PIPE BOMB  ·  F TO THROW", "#e8a060"); snd.pick(0); return true; }
+    if(type==="bombs"){ if(S.bombs>=BOMB_MAX) return false; const n=BOMB_MAX-S.bombs; S.bombs=BOMB_MAX; feed("+"+n+" PIPE BOMBS  ·  F TO THROW", "#e8a060"); snd.pick(2); return true; }
     if(type==="ammo"){ if(S.ammo[sub]>=AMMO_MAX[sub]) return false; const n=Math.min(AMMO_BOX[sub], AMMO_MAX[sub]-S.ammo[sub]); S.ammo[sub]+=n; feed("+"+n+" "+sub, "#e8c860"); snd.pick(0); }
     else if(type==="health" || type==="medkit"){ if(Z.hp>=100) return false; const n=type==="medkit" ? 60 : 25; Z.hp=Math.min(100, Z.hp+n); feed(type==="medkit" ? "FIRST AID KIT  +"+n : "BANDAGES  +"+n, "#f08080"); snd.pick(1); }
     else { const g=GUN(sub), had=S.have[sub]; S.have[sub]=true; if(!had) S.mag[sub]=g.mag;
@@ -1114,9 +1302,10 @@ const ZOMBIE=(function(){
     if(!S.have.shotgun && Z.t>70) return "gun:shotgun";
     if(!S.have.carbine && Z.t>190) return "gun:carbine";
     if(!S.have.rifle && Z.t>320) return "gun:rifle";
+    if(!S.have.flamer && Z.t>440) return "gun:flamer";
     const owned=GUNS.filter(g=>S.have[g.id]); let best=owned[0], low=1e9;
     for(const g of owned){ const f=S.ammo[g.ammo]/AMMO_MAX[g.ammo]; if(f<low){ low=f; best=g; } }
-    if(S.bombs<2 && Math.random()<0.18) return "bomb";
+    if(S.bombs<3 && Math.random()<0.18) return "bomb";
     return Math.random()<0.15 ? "health" : "ammo:"+best.ammo;
   }
 
@@ -1183,6 +1372,18 @@ const ZOMBIE=(function(){
   snd.crunch=()=>{ const c=AC(); if(!c) return; const t=c.currentTime;
     osc(c, t, "sine", 95, 32, 0.32, 0.55); noiseHit(c, t, 0.18, "lowpass", 900, 0.8, 0.45); noiseHit(c, t+0.01, 0.04, "highpass", 2400, 0.7, 0.25);
     noiseHit(c, t+0.09, 0.12, "bandpass", 420, 1.6, 0.22); };
+  let _roar=null;
+  snd.flame=(on)=>{ const c=AC(); if(!c) return;
+    if(on && !_roar){ const s=c.createBufferSource(); s.buffer=nb().brown; s.loop=true; const b=c.createBiquadFilter(); b.type="bandpass"; b.frequency.value=420; b.Q.value=0.6;
+      const h=c.createBufferSource(); h.buffer=nb().white; h.loop=true; const hb=c.createBiquadFilter(); hb.type="highpass"; hb.frequency.value=2600; const hg=c.createGain(); hg.gain.value=0.25;
+      const g=c.createGain(); g.gain.value=0; s.connect(b); b.connect(g); h.connect(hb); hb.connect(hg); hg.connect(g); g.connect(AUDIO.master()); s.start(); h.start(); _roar={s:s, h:h, g:g, on:false}; }
+    if(!_roar) return;
+    if(on!==_roar.on){ _roar.on=on; _roar.g.gain.setTargetAtTime(on ? 0.5 : 0, c.currentTime, on ? 0.04 : 0.12); } };
+  snd.glassHit=(x,z)=>{ const c=AC(); if(!c) return; const q=pv(x, z, 300), t=c.currentTime;
+    noiseHit(c, t, 0.06, "highpass", 3200, 0.8, 0.22*q.v+0.03, q.pan, true); osc(c, t, "triangle", 3100, 2600, 0.12, 0.05*q.v, q.pan, true); };
+  snd.shatter=(x,z,k)=>{ const c=AC(); if(!c) return; const q=pv(x, z, 600), t=c.currentTime, v=(0.4*q.v+0.06)*k;
+    noiseHit(c, t, 0.45, "highpass", 2400, 0.7, v, q.pan, true); noiseHit(c, t, 0.18, "bandpass", 900, 1.0, v*0.8, q.pan, true);
+    for(let i=0;i<9;i++) osc(c, t+0.05+Math.random()*0.7, "triangle", 2600+Math.random()*2600, 0, 0.09, v*0.18, q.pan, true); };
   snd.tink=(x,z)=>{ const c=AC(); if(!c) return; const q=pv(x, z, 80); osc(c, c.currentTime, "triangle", 1900, 1700, 0.08, 0.05*q.v, q.pan, true); };
   snd.beep=(x,z)=>{ const c=AC(); if(!c) return; const q=pv(x, z, 140); osc(c, c.currentTime, "square", 1650, 1650, 0.07, 0.06*q.v+0.01, q.pan, true); };
   snd.boom=(x,z)=>{ const c=AC(); if(!c) return; const q=pv(x, z, 1600), t=c.currentTime+0.01, v=0.35+0.55*q.v;
@@ -1362,9 +1563,9 @@ const ZOMBIE=(function(){
      ====================================================================== */
   function resetRun(){
     Z.hp=100; Z.t=0; Z.kills=0; Z.level=1; Z.dead=false; Z.score=0; Z.ts=1;
-    S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null;
+    S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null; mendGlass();
     for(const b of BOMBS) scene.remove(b.g); BOMBS.length=0; BOOM.mod.v=0;
-    S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0};
+    S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0, flamer:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0, "FUEL":0}; stopFlame();
     S.cur="pistol"; S.next=null; S.reloading=false; S.switchT=0; S.cool=0; S.ads=0; S.fired=false; S.melee=0; S.dmgFlash=0; S.spawnT=8; S.supplyT=20; S.levelShown=1;
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ const p=PK[i]; if(p.dyn){ scene.remove(p.g); PK.splice(i,1); }
@@ -1410,7 +1611,7 @@ const ZOMBIE=(function(){
   };
   Z.stop=function(){
     if(!Z.on) return;
-    Z.on=false; Z.dead=false; stopCops();
+    Z.on=false; Z.dead=false; stopCops(); mendGlass(); stopFlame();
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ PK[i].g.visible=false; if(PK[i].dyn){ scene.remove(PK[i].g); PK.splice(i,1); } }
     if(blood.decals) for(const m of blood.decals) m.visible=false;
@@ -1431,7 +1632,7 @@ const ZOMBIE=(function(){
     if(!Z.on) return false;
     if(Z.dead){ if(e.code==="Enter" || e.code==="Space"){ if(S.deadT>1.2){ resetRun(); banner("AGAIN", "THEY'RE STILL OUT THERE"); } } return e.code!=="KeyH" && e.code!=="KeyG"; }
     const k=e.code;
-    if(/^Digit[1-4]$/.test(k)){ select(+k.slice(5)); return true; }
+    if(/^Digit[1-5]$/.test(k)){ select(+k.slice(5)); return true; }
     if(k==="KeyR"){ startReload(); return true; }
     if(k==="KeyV"){ melee(); return true; }
     if(k==="KeyF"){ throwBomb(); return true; }                                  // (a pipe bomb; no drone in this)
@@ -1490,7 +1691,7 @@ const ZOMBIE=(function(){
     // a car through them
     if(driving) carVsDead(dt, L);
     // the pipe bombs, and a horde when one is coming
-    updateBombs(dt); updateHorde(dt); updateCops(dt, now, dark);
+    updateBombs(dt); updateHorde(dt); updateCops(dt, now, dark); updateGlass(dt); updateFlame(dt, now);
     S.streakT=Math.max(0, S.streakT-dt); if(S.streakT<=0) S.streak=0;
     updateGun(dt);
     updateVM(dt);
@@ -1517,7 +1718,7 @@ const ZOMBIE=(function(){
   };
   // for tools and testing: put one down, and see what there is
   Z.debug={ZS:ZS, PK:PK, S:S, place:(kind, x, z)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6); return placePickup(kind, x, z, y, {dyn:true, life:600}); }, clear:()=>{ for(const zb of ZS) recycle(zb); if(blood.decals) for(const m of blood.decals) m.visible=false; }, spawnAt:(x, z, kind, yaw, alert)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6), zb=spawnZombie(x, z, y, kind||"walker", yaw); if(zb && alert) zb.alert=true; return zb; },
-           give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM, cops:COPS, copRun:copRun,
+           give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM, cops:COPS, copRun:copRun, glassRay:glassRay, broken:BROKEN,
            bomb:(x, z, fuse)=>{ S.bombs++; S.throwT=0; throwBomb(); const b=BOMBS[BOMBS.length-1]; if(!b) return null; b.x=x; b.z=z; b.y=surfaceY(x, z, groundY(x,z)+0.6)+0.05;
              b.vx=b.vy=b.vz=0; b.fuse=fuse||3.5; return b; }, kill:(zb, head)=>{ _v2.set(0,0,-1); killZombie(zb, !!head, _v2); }};
   return Z;

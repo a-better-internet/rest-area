@@ -326,6 +326,23 @@ const BOILERS={t:0, roar:0, wheel:null, door:null, fires:[], fireMat:null, gauge
     BOILERS.spill=lamp({x:(r.x0+r.x1)/2, y:SB+1.6, z:Z1-0.6, color:0xff3418, intensity:0, dist:7, decay:1.4});
     BOILERS.spill.vol=[97.6, 99.6, Z1-1.0, -254.6, SB-0.5, SB+SH+0.2]; }
 
+  /* ---- the emergency stores, in the south-west corner: an olive steel locker stencilled for it, and crates by it (in zombie mode
+     21 lays out what is in them in front: every kind of ammunition, fuel, pipe bombs by the crate, a first aid kit) ---- */
+  { const lx=87.6, lz=Z0+0.27, OL="#4e5a46";
+    B(1.20, 1.90, 0.50, lx, HF+0.95, lz, OL); B(1.24, 0.05, 0.54, lx, HF+1.925, lz, "#3e4838");
+    B(0.012, 1.80, 0.012, lx, HF+0.95, lz+0.256, "#2a3026");
+    for(const sd of [-1,1]){ B(0.03, 0.18, 0.03, lx+sd*0.07, HF+1.00, lz+0.27, "#9a9a94");
+      for(let k=0;k<4;k++) B(0.36, 0.012, 0.012, lx+sd*0.32, HF+0.30+k*0.05, lz+0.256, "#323a2e"); }
+    sign(0.92, 0.24, (c, W, Hh)=>{ c.fillStyle="#c42a1a"; c.fillRect(0, 0, W, Hh); c.strokeStyle="#f2e8d0"; c.lineWidth=5; c.strokeRect(6, 6, W-12, Hh-12);
+      say(c, "EMERGENCY STORES", W/2, Hh*0.40, W*0.78, Hh*0.40, "#f2e8d0", "900", "'Arial Black', Arial");
+      say(c, "AMMUNITION · FUEL · DEMOLITION", W/2, Hh*0.74, W*0.74, Hh*0.18, "#f2e8d0", "700", "Arial"); }, lx, HF+1.58, lz+0.262, 0);
+    addCol(lx-0.62, lx+0.62, Z0, lz+0.28, HF-0.5, HF+1.96);
+    // the crates: demolition, stacked on ammunition
+    const cx=89.45; B(0.90, 0.50, 0.60, cx, HF+0.25, Z0+0.34, "#5a5a3a"); B(0.70, 0.40, 0.50, cx, HF+0.70, Z0+0.30, "#62623e");
+    for(const [w, h, y, z, t] of [[0.62, 0.20, HF+0.27, Z0+0.652, "AMMUNITION"], [0.50, 0.17, HF+0.70, Z0+0.562, "DEMOLITION"]])
+      sign(w, h, (c, W, Hh)=>{ c.fillStyle="#5a5a3a"; c.fillRect(0, 0, W, Hh); say(c, t, W/2, Hh*0.52, W*0.80, Hh*0.58, "#e8e0b0", "900", "'Arial Black', Arial"); }, cx, y, z, 0);
+    addCol(cx-0.47, cx+0.47, Z0, Z0+0.66, HF-0.5, HF+0.92); }
+
   const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.25}));
   mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
 })();

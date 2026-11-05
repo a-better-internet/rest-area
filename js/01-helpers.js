@@ -475,6 +475,21 @@ function _inflateBox(e, i){
   eps=Math.min(eps, lo*0.15)+((i*2654435761>>>0)%16)*0.00012;
   e.matrix=e.matrix.clone().multiply(new T.Matrix4().makeScale((w+2*eps)/w, (h+2*eps)/h, (d+2*eps)/d));
 }
+/* Every pane of glass baked (the "glass" and "tint" buckets): where it is, which way it faces, how big, and which run of
+   vertices in which merged mesh it is, so a pane can be broken on its own (21's zombie mode shoots them). A pane is an
+   entry thin one way and at least twelve centimetres the other two. */
+const GLASS_PANES=[];
+function _paneOf(e){
+  const g=e.geo; if(!g.boundingBox) g.computeBoundingBox(); const bb=g.boundingBox, el=e.matrix.elements;
+  const ax=[[el[0],el[1],el[2]],[el[4],el[5],el[6]],[el[8],el[9],el[10]]], len=ax.map(a=>Math.hypot(a[0],a[1],a[2]));
+  const W=[(bb.max.x-bb.min.x)*len[0], (bb.max.y-bb.min.y)*len[1], (bb.max.z-bb.min.z)*len[2]];
+  let k=0; for(let i=1;i<3;i++) if(W[i]<W[k]) k=i;
+  const o=[0,1,2].filter(i=>i!==k);
+  if(W[k]>0.08 || W[o[0]]<0.12 || W[o[1]]<0.12) return null;
+  const v3=(a, l)=>new T.Vector3(a[0]/l, a[1]/l, a[2]/l);
+  return {c:new T.Vector3((bb.min.x+bb.max.x)/2, (bb.min.y+bb.max.y)/2, (bb.min.z+bb.max.z)/2).applyMatrix4(e.matrix),
+          n:v3(ax[k], len[k]), u:v3(ax[o[0]], len[o[0]]), v:v3(ax[o[1]], len[o[1]]), hu:W[o[0]]/2, hv:W[o[1]]/2, hp:3, broke:false, cracks:[]};
+}
 function bakeBuckets(scene){
   const out=[], _c=new T.Vector3();
   let _ei=0;
@@ -497,6 +512,8 @@ function bakeBuckets(scene){
         if(!ents.length) continue;
         // one tile can still outgrow a 16-bit index; mergeEntries copes
         const mesh=new T.Mesh(mergeEntries(ents), m);
+        if(name==="glass" || name==="tint"){ let vo=0;
+          for(const e of ents){ const n=e.geo.attributes.position.count, P=_paneOf(e); if(P){ P.mesh=mesh; P.v0=vo; P.nv=n; GLASS_PANES.push(P); } vo+=n; } }
         mesh.castShadow=cast;
         mesh.receiveShadow = !NO_SHADOW_IN.has(name);
         mesh.name="bucket:"+name+":"+k+(cast?"":":flat");

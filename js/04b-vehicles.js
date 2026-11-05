@@ -329,13 +329,35 @@ function greenhouse(G, OP, GL, paint){
     const C=new T.Color(P), zz=span(G.zRR+0.04, G.zRF-0.04, 16);
     OP.push({geo:skin(zz, zz.map(z=>ring(z,0.014).slice(7,18)), false, ()=>C, FIN.paint), matrix:new T.Matrix4(), color:null});
   }
-  strip(4, 7, G.zRF-0.06, G.zA, G.aPillar||P, FIN.paint, 0.016, 10);            // A pillars
+  // bands laid along the ring by distance round it, not by its points, so a pillar or a seal keeps its width as the ring
+  // changes height: L the ring's arc lengths, cut() a run of it resampled to m+1 points
+  const arcs=r=>{ const L=[0]; for(let i=1;i<r.length;i++) L.push(L[i-1]+Math.hypot(r[i][0]-r[i-1][0], r[i][1]-r[i-1][1])); return L; };
+  const cut=(r, L, s0, s1, m)=>{ const o=[]; let i=1;
+    for(let k=0;k<=m;k++){ const sv=lerp(s0, s1, k/m); while(i<L.length-1 && L[i]<sv) i++; while(i>1 && L[i-1]>sv) i--;
+      const t=clamp((sv-L[i-1])/((L[i]-L[i-1])||1), 0, 1); o.push([lerp(r[i-1][0], r[i][0], t), lerp(r[i-1][1], r[i][1], t)]); }
+    return o; };
+  // either side: from a to b round the ring from its foot (a and b given the ring's lengths), mirrored on the other side
+  const band=(fa, fb, z0, z1, color, fin, out, n, m, inner)=>{ if(z1-z0<0.004) return; const C=new T.Color(color), zz=span(z0, z1, n);
+    for(const side of [0,1]){ const rings=zz.map(z=>{ const r=ring(z, out), L=arcs(r), E=L[L.length-1], a=Math.max(0, fa(L)), b=Math.max(a+0.001, fb(L));
+        const q=side ? cut(r, L, E-b, E-a, m||4) : cut(r, L, a, b, m||4); return inner ? q.reverse() : q; });
+      OP.push({geo:skin(zz, rings, false, ()=>C, fin), matrix:new T.Matrix4(), color:null}); } };
+  // and across the top from one corner to the other (a windshield's or a back light's gasket)
+  const across=(z0, z1, color, out)=>{ const C=new T.Color(color), zz=span(z0, z1, 2);
+    OP.push({geo:skin(zz, zz.map(z=>{ const r=ring(z, out), L=arcs(r); return cut(r, L, L[7], L[L.length-1]-L[7], 14); }), false, ()=>C, FIN.trim), matrix:new T.Matrix4(), color:null}); };
+  // A pillars: nine and a half centimetres wide all the way down the windshield's edge to the cowl, not a wedge
+  band(L=>L[7]-0.095, L=>L[7], G.zRF-0.06, G.zA, G.aPillar||P, FIN.paint, 0.016, 12);
   for(const [z0,z1,c] of (G.pillars||[])) strip(0, 7, z0, z1, c==="paint"?P:c, c==="paint"?FIN.paint:FIN.trim, 0.016, 3);
+  // the frame along the tops of the side windows, between the pillars, from the A pillar back to the tail of the glass
+  { const cuts=(G.pillars||[]).map(p=>[p[0]-0.004, p[1]+0.004]).sort((a,b)=>a[0]-b[0]); let z=G.zB+0.02;
+    for(const [a,b] of cuts.concat([[G.zRF-0.06, 1e9]])){ if(a>z) band(L=>L[7]-0.032, L=>L[7], z, Math.min(a, G.zRF-0.06), BLK, FIN.trim, 0.0145, Math.max(2, Math.ceil((a-z)/0.15))); z=Math.max(z, b); } }
+  // the windshield's rubber, top and foot, and the back light's
+  across(G.zRF-0.035, G.zRF+0.045, BLK, 0.013); across(G.zA-0.06, G.zA-0.005, BLK, 0.013);
+  if(G.zRR-G.zB>0.15){ across(G.zRR-0.045, G.zRR+0.035, BLK, 0.013); across(G.zB+0.005, G.zB+0.06, BLK, 0.013); }
   // and seen through the glass from the other side, their linings and the headliner, a couple of centimetres in
   if(G.lining!==undefined){
     const C=new T.Color(G.lining), zz=span(G.zRR+0.04, G.zRF-0.04, 16);
     OP.push({geo:skin(zz, zz.map(z=>ring(z,-0.022).slice(7,18).reverse()), false, ()=>C, FIN.trim), matrix:new T.Matrix4(), color:null});
-    strip(4, 7, G.zRF-0.06, G.zA, G.lining, FIN.trim, -0.022, 10, true);
+    band(L=>L[7]-0.095, L=>L[7], G.zRF-0.06, G.zA, G.lining, FIN.trim, -0.022, 12, 4, true);
     for(const [z0,z1] of (G.pillars||[])) strip(0, 7, z0, z1, G.lining, FIN.trim, -0.022, 3, true);
   }
   return {roofY:roofY, ring:ring};
