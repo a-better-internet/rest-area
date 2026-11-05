@@ -845,7 +845,7 @@ const ZOMBIE=(function(){
       if(p.go>p.reach && st>0){ p.v.multiplyScalar(0.15); p.v.y+=1.2; p.go=-1e9; }          // (it splashes on what it meets)
       // the fuel drops a little at first, then what burns goes up
       p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.max(0, 1-dt*1.2)); p.v.y+=(u<0.35 ? -2.5 : 2.6)*dt;
-      const sc=(0.12+u*1.05)*p.big; p.s.scale.set(sc, sc, 1);
+      const sc=(0.17+u*1.0)*p.big; p.s.scale.set(sc, sc, 1);
       p.s.material.color.setHex(0xffd99a).lerp(_c7.setHex(0xff6a18), Math.min(1, u*2.2));
       if(u>0.5) p.s.material.color.lerp(_c7.setHex(0x8a2208), (u-0.5)*1.6);
       p.s.material.opacity=Math.min(1, u/0.06)*Math.pow(1-u, 1.3)*0.6;
