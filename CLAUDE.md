@@ -467,6 +467,13 @@ No lettering touches or runs past the edge of its board or its border.
   soot drawn over, and two `fire` lamps in 16's pool. A zombie's `burn` is
   seconds left alight; `hurtZombie`'s sixth argument marks fire (no blood,
   no knockback, and a kill pays `bonus`).
+- A ramp that runs into a crossroad along x (US 6N's four) is given a
+  `stop` carrying `mouth: {z, e, meet}` (08b's `onX()`, one per ramp).
+  `rampPave` then paves it only to the crossroad's edge line, runs its
+  lines on until they meet that line (or eases the one that never does
+  onto it along the road), and puts where they meet in `mouth.meet`. 08b
+  lays US 6N's edge lines after the ramps, from those: solid, and dotted
+  across each mouth. Never break an edge line by hand.
 - The canopy shell (07) draws its crowns per pixel (`canCrown`, two sizes,
   faded by `fwidth` so far off it is the mean and does not shimmer, and off
   on steep faces). The terrain (04) leans its normal on a few long swells

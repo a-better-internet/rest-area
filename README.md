@@ -298,14 +298,22 @@ If the scene runs hot on your machine, start there (see below).
     stop, and come down the cut to an acceleration lane, so you can get
     back on the way you came either way.
   - US 6N is two lanes with a double yellow line and W-beam rail off the
-    bridge ends. It has route markers, an Edinboro 3 · Union City 14
+    bridge ends. Each ramp joins it along the road, the way a slip road
+    does: the ramp's lines run on until they meet US 6N's white edge line
+    (the one at the gore, the other easing in along the road downstream),
+    and the edge line is dotted across the merge and solid everywhere
+    else. It has route markers, an Edinboro 3 · Union City 14
     distance sign, and I-79 NORTH and SOUTH signs pointing to the on-ramps.
   - The road's west end is closed for now with a type III barricade
     reading ROAD CLOSED. East, it goes on past the fields (below) to the
     lake, and is closed there instead, past the last house.
   - Farmland runs out both ways: a dozen fields of corn, soybeans and hay
     (round bales left in it) and two pastures, with farm fence along the
-    road. There are hedgerows between the fields, a big lone oak, and the
+    road. The corn is a deep blue-green, the beans darker, the hay gone to
+    gold and olive, and none of it one even colour: broad soft patches go
+    across each field where the crop is doing better or worse. The grass
+    between the fields and along the road is rank and dull, never the rest
+    area's watered green. There are hedgerows between the fields, a big lone oak, and the
     pole line crossing.
   - **French Creek Fuel & Mart**, on the north side by the bridge. A lot,
     a canopy with its lights over two islands of pumps (somebody filling
@@ -1168,11 +1176,16 @@ If the scene runs hot on your machine, start there (see below).
   shrubs and ferns. Logs, stumps and rocks lie on the forest floor. Trees
   sway in the wind. Past the edge of the walkable zone a canopy shell
   carries the woods over the ridges to the horizon. Its grid is coarser than
-  a tree, so it works out the crowns over each pixel: whole trees about
-  seven metres across and the clumps of leaves on them, each a dome lit on
-  the sun's side and shaded on the far one, with dark gaps between. Far
-  off, where a pixel is wider than a crown, it fades to the mean so the
-  skyline doesn't shimmer. The far ground is never one even slope either:
+  a tree, so it works out the crowns over each pixel: whole trees of
+  different sizes, about seven metres across, each its own green, the
+  clumps of leaves on them, and stands of them a few tens of metres across
+  that hold out to the hills across the lake. Each crown is a dome lit on
+  the sun's side and shaded on the far one, with soft dark gaps between.
+  Far off, where a pixel is wider than a crown, it fades to the mean so
+  the skyline doesn't shimmer. The far trees in the woods you can walk in
+  are a few soft balls each; over their leaves each pixel takes a clump
+  from a noise, lit and shaded, and their edges thin out raggedly where
+  they turn away from you, so they read as leaves rather than polygons. The far ground is never one even slope either:
   it rolls a little in long crossing swells and finer hummocks.
 - **Time and season.**
   - A day lasts 22 minutes, with sunrise and sunset at Crawford County's
