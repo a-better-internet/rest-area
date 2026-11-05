@@ -43,10 +43,7 @@ const EDIN_RT={};
   runX("road", E.x0, E.x1, -3.6, 3.6, PAVE_T, 0.40, "#8a8a88");
   // the double yellow, and the white edges (broken where a ramp comes in on the eastbound side)
   for(const o of [-0.13, 0.13]) runX("paint", E.x0, E.x1, o-0.05, o+0.05, PAVE_T+0.002, 1, YELLOW_LINE);
-  // the white edges, each broken at the two ramp mouths on its side
-  for(const [o, breaks] of [[-3.6, [[-237,-200], [-70,-33]]], [3.6, [[-266,-206], [-64,-4]]]]){
-    let a=E.x0; for(const [b0,b1] of breaks){ runX("paint", a, b0, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE); a=b1; }
-    runX("paint", a, E.x1, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE); }
+  // (the white edges are laid below, once the ramps have said where they meet them)
   // you stand on it: on the ground either side, and on the deck over the interstate (a surface,
   // so that under the bridge you are on the interstate and not up on the deck, 06)
   addPaveRect(E.x0, E.bw0, Z-HW, Z+HW, Y);
@@ -55,11 +52,26 @@ const EDIN_RT={};
 
   /* ---- the ramps ---------------------------------------------------------- */
   // (08's rampPave: each out of, or back into, the interstate's shoulder along a taper, never over its lanes)
-  const RW=E.rw, onX=p=>Math.abs(p.z-Z)<HW+RW+0.2;
-  const offM=rampPave(E.off, RW, NB_X1,  1, "start", 0, "#9a9a98", onX);       // (the rest area's entrance lane runs on into it)
-  rampPave(E.on, RW, SB_X0, -1, "end", 110, "#929290", onX);
-  rampPave(E.onN, RW, NB_X1, 1, "end", 110, "#929290", onX);
-  const offSM=rampPave(E.offS, RW, SB_X0, -1, "start", 100, "#929290", onX);
+  // (each ramp joins US 6N along it, a slip road: paved to its edge line, its lines run on to meet that line, and
+  //  where they meet it is kept, mouth.meet, 08's rampPave)
+  const RW=E.rw, MOUTHS=[], onX=()=>{ const f=p=>Math.abs(p.z-Z)<HW+RW+0.2; f.mouth={z:Z, e:3.6, meet:[]}; MOUTHS.push(f.mouth); return f; };
+  const offM=rampPave(E.off, RW, NB_X1,  1, "start", 0, "#9a9a98", onX());       // (the rest area's entrance lane runs on into it)
+  rampPave(E.on, RW, SB_X0, -1, "end", 110, "#929290", onX());
+  rampPave(E.onN, RW, NB_X1, 1, "end", 110, "#929290", onX());
+  const offSM=rampPave(E.offS, RW, SB_X0, -1, "start", 100, "#929290", onX());
+  // the white edges: solid the length of the road, and dotted across each mouth, from where the ramp's one line
+  // meets the edge to where its other does (the dots stop short of the far one, which comes in along the edge)
+  for(const o of [3.6, -3.6]){ const sd=o>0 ? -1 : 1, br=[];             // (o > 0 is the north side, z under Z)
+    for(const m of MOUTHS){ if(m.meet.length<2 || m.side!==sd) continue;
+      const lo=Math.min(...m.meet), hi=Math.max(...m.meet), far=m.tail===undefined ? 0 : m.tail<=lo+0.01 ? -1 : 1;
+      br.push([lo, hi, far]); }
+    br.sort((a,b)=>a[0]-b[0]);
+    let a=E.x0;
+    for(const [b0,b1,far] of br){ runX("paint", a, b0, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE);
+      const d0=far<0 ? b0+8 : b0+1.0, d1=far<0 ? b1-1.0 : b1-8;                 // (no dots where the eased line comes in)
+      for(let x=d0; x+1.2<=d1; x+=3.6) runX("paint", x, x+1.2, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE);
+      a=b1; }
+    runX("paint", a, E.x1, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE); }
   // the exit number on a post just past each gore's nose, in the grass between the road and the ramp
   { const q=offM.nose || E.off.find(p=>p.x-RW-NB_X1>3.0), z=q.z-2.5, xin=q.x-RW;
     guideSign((NB_X1+xin)/2, z, 1.5, 1.5, 0, ["EXIT","166","↗"], {clear:1.3, posts:1, y:roadY(z)}); }

@@ -135,7 +135,17 @@ function rampPave(P0, RW, X, s, at, taper, color, stop){
   { const over=Q.map((p,i)=>roomX(p, pathSide(Q,i))<RW ? 1 : 0), lift=Q.map(()=>0);
     for(let i=0;i<Q.length;i++) if(over[i]) for(let j=0;j<Q.length;j++){ const d=Math.abs(Q[j].s-Q[i].s); if(d<15) lift[j]=Math.max(lift[j], 1-smoothstep(5, 15, d)); }
     Q.forEach((q,i)=>{ q.y+=0.012*lift[i]; }); }
-  layRibbonVar("asphalt", Q, ()=>-RW, (i,p,n)=>clamp(roomP(p,n), -RW, RW), PAVE_T, 0.40, color);
+  /* Where its far end runs into a crossroad along x (US 6N: stop.mouth = {z, e, meet}, 08b) the ramp joins the
+     road the way a slip road does, along it. It is paved only out to the crossroad's edge line (the road's own lanes
+     keep their own surface), its lines run on until they meet that line, the one that never does is carried on
+     along the road and eased onto it, and where each meets it goes into mouth.meet, for 08b to dot the crossroad's
+     edge line between them and run it solid everywhere else. */
+  const M=stop && stop.mouth, msg=M ? (Math.sign(Q[Q.length>>1].z-M.z)||1) : 0; if(M) M.side=msg;
+  const mlim=(p,n,lo)=>{ if(!M) return lo ? -1e9 : 1e9; const E=M.e+0.10;
+    if(Math.abs(n.z)<1e-4) return msg*(p.z-M.z)>=E ? (lo ? -1e9 : 1e9) : (lo ? 1e9 : -1e9);
+    const b=(M.z+msg*E-p.z)/n.z; return (msg*n.z>0)===lo ? b : (lo ? -1e9 : 1e9); };
+  layRibbonVar("asphalt", Q, (i,p,n)=>Math.max(-RW, mlim(p,n,true)),
+    (i,p,n)=>{ const a=Math.max(-RW, mlim(p,n,true)); return Math.max(a, Math.min(clamp(roomP(p,n), -RW, RW), mlim(p,n,false))); }, PAVE_T, 0.40, color);
   addPaveRibbon(Q, -RW, RW);
   RAMP_PAVE.push({Q:Q, RW:RW, x0:Math.min(...Q.map(q=>q.x)), x1:Math.max(...Q.map(q=>q.x)), z0:Math.min(...Q.map(q=>q.z)), z1:Math.max(...Q.map(q=>q.z))});
   // the gore: the run of points where the ramp has parted from the lane but not by GL yet
@@ -157,12 +167,33 @@ function rampPave(P0, RW, X, s, at, taper, color, stop){
   // the ramp's own lines: white on the right all the way; on the left, white from the gore's point to its nose
   // (the channelizing line), yellow from the nose on
   const live=(p)=>!(stop && stop(p));
-  const right=Q.filter(live); if(right.length>2) layRibbon("paint", right, -RW+0.18, -RW+0.32, PAVE_T+0.008, 1, WHITE_LINE);
+  // a line's run along the ramp: where it may go (ok) and, at a crossroad, outside its edge line, cut exactly where
+  // it meets that line; and if it reaches the crossroad end of the ramp without meeting it, on along the road and
+  // onto it (a separate run that starts where this one ends, the same way, so their ends match)
+  const ce=at==="start" ? Q.length-1 : 0;
+  function lineRun(off, ok, o0, o1, col){
+    const sd=Q.map((p,i)=>!ok(i) ? -1 : !M ? 1 : msg*(p.z+pathSide(Q,i).z*off-M.z)-(M.e+0.145));
+    const out=[];
+    for(let i=0;i<Q.length;i++){
+      if(sd[i]>=0) out.push(Q[i]);
+      if(M && i+1<Q.length && ok(i) && ok(i+1) && (sd[i]>=0)!==(sd[i+1]>=0)){ const t=sd[i]/(sd[i]-sd[i+1]), a=Q[i], b=Q[i+1];
+        const q={x:lerp(a.x,b.x,t), z:lerp(a.z,b.z,t), y:lerp(a.y,b.y,t), s:lerp(a.s,b.s,t)}; out.push(q);
+        M.meet.push(q.x+pathSide(Q, t<0.5 ? i : i+1).x*off); } }
+    if(out.length>2) layRibbon("paint", out, o0, o1, PAVE_T+0.008, 1, col);
+    if(M && sd[ce]>=0){
+      const e=Q[ce], nb2=Q[ce===0 ? 1 : ce-1], L=Math.hypot(e.x-nb2.x, e.z-nb2.z)||1, tx=(e.x-nb2.x)/L, tz=(e.z-nb2.z)/L;
+      const nE=pathSide(Q, ce), dz=(M.z+msg*M.e)-(e.z+nE.z*off), T=[];
+      for(let k=1;k<=8;k++){ const u=k/8; T.push({x:e.x+tx*2*k, z:e.z+tz*2*k+dz*smoothstep(0, 1, u), y:e.y}); }
+      const tail=ce===0 ? T.reverse().concat([e]) : [e].concat(T);
+      tail.forEach((q,i)=>{ q.s=i ? tail[i-1].s+Math.hypot(q.x-tail[i-1].x, q.z-tail[i-1].z) : 0; });
+      layRibbon("paint", tail, o0, o1, PAVE_T+0.008, 1, col);
+      M.tail=T[ce===0 ? 0 : T.length-1].x; M.meet.push(M.tail); }
+  }
+  lineRun(-RW+0.25, i=>M ? true : live(Q[i]), -RW+0.18, -RW+0.32, WHITE_LINE);
   const nose=gore.length ? (at==="start" ? gore[gore.length-1] : gore[0]) : null;
   const tip=gore.length ? (at==="start" ? gore[0] : gore[gore.length-1]) : null;
   const past=(p)=>at==="start" ? p.s>=nose.s : p.s<=nose.s;
-  const left=Q.filter((p,i)=>live(p) && gap[i]>=GL-0.05 && (!nose || past(p)));
-  if(left.length>2) layRibbon("paint", left, RW-0.32, RW-0.18, PAVE_T+0.008, 1, YELLOW_LINE);
+  lineRun(RW-0.25, i=>(M ? true : live(Q[i])) && gap[i]>=GL-0.05 && (!nose || past(Q[i])), RW-0.32, RW-0.18, YELLOW_LINE);
   if(nose){
     const chan=Q.filter((p,i)=>i>=g0 && i<=g1 && gap[i]>=0 && live(p));
     if(chan.length>1) layRibbon("paint", chan, RW-0.32, RW-0.18, PAVE_T+0.008, 1, WHITE_LINE);
