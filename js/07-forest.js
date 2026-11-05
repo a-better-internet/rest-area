@@ -242,7 +242,42 @@ const FOREST=(function(){
     return _tex(c);
   })();
   const FAR_MAT=new T.MeshStandardMaterial({map:FAR_TEX, vertexColors:true, roughness:0.92, metalness:0});
-  FAR_MAT.onBeforeCompile=(sh)=>{ patchColour(sh); };
+  /* A far crown is a few twenty-sided balls, and lit as balls they are polygons on sticks. So over the leaves
+     (aLeaf) each pixel takes a clump from a noise in the world: its normal leans with the noise's slope, so the
+     crown is lumps lit and shaded under the sun, the hollows between them darker; and where the ball turns away
+     from you its edge thins out raggedly (it is discarded against the noise), so the outline is leaves and not a
+     facet. Where a pixel is wider than a clump both fade, so nothing sparkles. */
+  FAR_MAT.extensions={derivatives:true};
+  FAR_MAT.onBeforeCompile=(sh)=>{ patchColour(sh);
+    sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vFarW;\nvarying float vFarLeaf;")
+      .replace("#include <begin_vertex>", `#include <begin_vertex>
+  { vec4 fw=vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+    fw=instanceMatrix*fw;
+  #endif
+    vFarW=(modelMatrix*fw).xyz; vFarLeaf=aLeaf; }`);
+    sh.fragmentShader=sh.fragmentShader.replace("#include <common>", `#include <common>
+varying vec3 vFarW;
+varying float vFarLeaf;
+float farH(vec3 p){ p=fract(p*0.3183099+0.1); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
+  return mix(mix(mix(farH(i), farH(i+vec3(1.0,0.0,0.0)), f.x), mix(farH(i+vec3(0.0,1.0,0.0)), farH(i+vec3(1.0,1.0,0.0)), f.x), f.y),
+             mix(mix(farH(i+vec3(0.0,0.0,1.0)), farH(i+vec3(1.0,0.0,1.0)), f.x), mix(farH(i+vec3(0.0,1.0,1.0)), farH(i+vec3(1.0,1.0,1.0)), f.x), f.y), f.z); }`)
+      .replace("#include <color_fragment>", `#include <color_fragment>
+  float farK=0.0, farN0=0.5; vec3 farP=vFarW*1.05;
+  if(vFarLeaf>0.5){
+    farK=1.0-smoothstep(0.30, 0.95, length(fwidth(vFarW)));
+    farN0=farN(farP); float n1=farN(farP*2.3+vec3(7.1, 3.3, 1.7));
+    // the ragged edge: thin where the ball turns away from you, against the noise
+    float facing=abs(dot(normalize(vNormal), normalize(vViewPosition)));
+    if(farK>0.0 && facing<0.42*farK*(0.35+0.65*(farN0*0.6+n1*0.5))) discard;
+    diffuseColor.rgb*=mix(0.93, 0.66+0.5*farN0*(0.75+0.5*n1), farK); }`)
+      .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
+  if(farK>0.0){ const float e=0.3;
+    vec3 g=vec3(farN(farP+vec3(e,0.0,0.0))-farN0, farN(farP+vec3(0.0,e,0.0))-farN0, farN(farP+vec3(0.0,0.0,e))-farN0)/e;
+    normal=normalize(normal-mat3(viewMatrix)*g*0.85*farK); }`);
+  };
+  FAR_MAT.customProgramCacheKey=()=>"far-crowns";
 
   /* ---- a tree, built by hand: limbs and cards ---------------------------- */
   class TG{
@@ -795,9 +830,15 @@ vec4 canCrown(vec2 p){
     // the gap between two crowns, and the fall of each dome to its edge, darker
     float aoA=mix(0.50, 1.0, smoothstep(0.0, 0.30, a.w-a.z))*mix(0.62, 1.0, sqrt(1.0-ha*ha));
     float aoB=mix(0.80, 1.0, sqrt(1.0-hb*hb));
-    float ao=mix(0.78, aoA, k1)*mix(0.95, aoB, k2);
-    diffuseColor.rgb*=ao/0.85;                                  // (a little darker on the whole: the shade inside a wood)
-    canOff=vec3(a.x, 0.0, a.y)/max(a.z, 1e-3)*ha*0.95*k1+vec3(b.x, 0.0, b.y)/max(b.z, 1e-3)*hb*0.45*k2;
+    // and stands: the trees go in groups, older and taller, a gap where one came down; these hold on out to a
+    // couple of kilometres, which is where the hills across the lake are
+    float k3=(1.0-smoothstep(14.0, 46.0, fw))*steep;
+    vec4 c=canCrown(wp/26.0+vec2(5.3, 8.9)); float hc=clamp(c.z/0.70, 0.0, 1.0);
+    float aoC=mix(0.70, 1.0, smoothstep(0.0, 0.28, c.w-c.z))*mix(0.80, 1.0, sqrt(1.0-hc*hc));
+    float ao=mix(0.78, aoA, k1)*mix(0.95, aoB, k2)*mix(0.86, aoC, k3);
+    diffuseColor.rgb*=ao/(0.85*0.86);                           // (a little darker on the whole: the shade inside a wood)
+    canOff=vec3(a.x, 0.0, a.y)/max(a.z, 1e-3)*ha*0.95*k1+vec3(b.x, 0.0, b.y)/max(b.z, 1e-3)*hb*0.45*k2
+          +vec3(c.x, 0.0, c.y)/max(c.z, 1e-3)*hc*0.55*k3;
     canK=k1; }`)
         .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
   normal=normalize(normal+mat3(viewMatrix)*canOff);`);
