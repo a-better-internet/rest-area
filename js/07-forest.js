@@ -832,20 +832,22 @@ vec4 canCrown(vec2 p, out float id){
     vec4 a=canCrown(ww/7.0+vec2(3.7, 1.9), idA), b=canCrown(ww/2.4+vec2(11.3, 5.1), idB);
     float ha=clamp(a.z/0.95, 0.0, 1.0), hb=clamp(b.z/0.95, 0.0, 1.0);
     // the gap between two crowns in their shade, soft; each dome falling off to its edge; each tree its own green
-    float aoA=mix(0.64, 1.0, smoothstep(0.0, 0.42, a.w-a.z))*mix(0.70, 1.0, sqrt(1.0-ha*ha*ha));
+    // (the gap's width grows with the pixel's, so it never draws as a hard line)
+    float aoA=mix(0.64, 1.0, smoothstep(0.0, 0.42+fw*0.09, a.w-a.z))*mix(0.70, 1.0, sqrt(1.0-ha*ha*ha));
     float aoB=mix(0.84, 1.0, sqrt(1.0-hb*hb));
     // and stands: the trees go in groups, older and taller, a gap where one came down; these hold on out to a
     // couple of kilometres, which is where the hills across the lake are
     float k3=(1.0-smoothstep(14.0, 46.0, fw))*steep;
     vec4 c=canCrown(ww/26.0+vec2(5.3, 8.9), idC); float hc=clamp(c.z/0.95, 0.0, 1.0);
-    float aoC=mix(0.76, 1.0, smoothstep(0.0, 0.40, c.w-c.z))*mix(0.84, 1.0, sqrt(1.0-hc*hc));
-    float ao=mix(0.82, aoA, k1)*mix(0.95, aoB, k2)*mix(0.89, aoC, k3);
-    diffuseColor.rgb*=ao/(0.85*0.89);                           // (a little darker on the whole: the shade inside a wood)
+    // (a stand is a soft swell of tone, no seam round it: from across the lake a seam would be a net over the hills)
+    float aoC=mix(0.80, 1.0, sqrt(1.0-hc*hc));
+    float ao=mix(0.82, aoA, k1)*mix(0.95, aoB, k2)*mix(0.91, aoC, k3);
+    diffuseColor.rgb*=ao/(0.85*0.91);                           // (a little darker on the whole: the shade inside a wood)
     diffuseColor.rgb*=mix(vec3(1.0), mix(vec3(0.88, 0.92, 0.97), vec3(1.10, 1.07, 0.90), idA), 0.8*k1);
     diffuseColor.rgb*=mix(vec3(1.0), mix(vec3(0.92, 0.95, 0.98), vec3(1.06, 1.04, 0.94), idC), k3);
     // the normal leans out from the middle of each, more toward its edge: a round crown, not a cone
     canOff=vec3(a.x, 0.0, a.y)/max(a.z, 1e-3)*ha*ha*1.05*k1+vec3(b.x, 0.0, b.y)/max(b.z, 1e-3)*hb*0.40*k2
-          +vec3(c.x, 0.0, c.y)/max(c.z, 1e-3)*hc*hc*0.55*k3;
+          +vec3(c.x, 0.0, c.y)/max(c.z, 1e-3)*hc*(1.0-hc)*1.4*k3;   // (level at a stand's edge: no crease between two)
     canK=k1; }`)
         .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
   normal=normalize(normal+mat3(viewMatrix)*canOff);`);
