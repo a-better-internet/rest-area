@@ -181,6 +181,9 @@ function rampPave(P0, RW, X, s, at, taper, color, stop){
         M.meet.push(q.x+pathSide(Q, t<0.5 ? i : i+1).x*off); } }
     if(out.length>2) layRibbon("paint", out, o0, o1, PAVE_T+0.008, 1, col);
     if(M && sd[ce]>=0){
+      // (the one that comes in along the road: where it is first within a metre of the edge line, the dots stop)
+      const ord=ce===0 ? Q.map((_,i)=>Q.length-1-i) : Q.map((_,i)=>i);
+      for(const i of ord){ const zl=Q[i].z+pathSide(Q,i).z*off; if(sd[i]>=0 && Math.abs(zl-(M.z+msg*M.e))<1.0){ M.near=Q[i].x+pathSide(Q,i).x*off; break; } }
       const e=Q[ce], nb2=Q[ce===0 ? 1 : ce-1], L=Math.hypot(e.x-nb2.x, e.z-nb2.z)||1, tx=(e.x-nb2.x)/L, tz=(e.z-nb2.z)/L;
       const nE=pathSide(Q, ce), dz=(M.z+msg*M.e)-(e.z+nE.z*off), T=[];
       for(let k=1;k<=8;k++){ const u=k/8; T.push({x:e.x+tx*2*k, z:e.z+tz*2*k+dz*smoothstep(0, 1, u), y:e.y}); }

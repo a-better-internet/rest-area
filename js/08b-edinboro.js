@@ -64,11 +64,13 @@ const EDIN_RT={};
   for(const o of [3.6, -3.6]){ const sd=o>0 ? -1 : 1, br=[];             // (o > 0 is the north side, z under Z)
     for(const m of MOUTHS){ if(m.meet.length<2 || m.side!==sd) continue;
       const lo=Math.min(...m.meet), hi=Math.max(...m.meet), far=m.tail===undefined ? 0 : m.tail<=lo+0.01 ? -1 : 1;
-      br.push([lo, hi, far]); }
+      // (the dots run from the gore to where the other line has come within a metre of the edge, not beside it)
+      const nr=m.near===undefined ? (far<0 ? lo+8 : hi-8) : far<0 ? Math.max(lo+1, m.near) : Math.min(hi-1, m.near);
+      br.push([lo, hi, far, nr]); }
     br.sort((a,b)=>a[0]-b[0]);
     let a=E.x0;
-    for(const [b0,b1,far] of br){ runX("paint", a, b0, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE);
-      const d0=far<0 ? b0+8 : b0+1.0, d1=far<0 ? b1-1.0 : b1-8;                 // (no dots where the eased line comes in)
+    for(const [b0,b1,far,nr] of br){ runX("paint", a, b0, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE);
+      const d0=far<0 ? nr : b0+1.0, d1=far<0 ? b1-1.0 : nr;                     // (no dots where the eased line comes in)
       for(let x=d0; x+1.2<=d1; x+=3.6) runX("paint", x, x+1.2, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE);
       a=b1; }
     runX("paint", a, E.x1, o-0.075, o+0.075, PAVE_T+0.002, 1, WHITE_LINE); }
