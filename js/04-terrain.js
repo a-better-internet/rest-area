@@ -458,7 +458,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   const campC=new T.Color(0x5a4a38), yardC=new T.Color(0x6e7440), rutC=new T.Color(0x5e5240);
   // (greens a mown Pennsylvania lawn has in August: olive, not lime; dry patches straw, low spots darker)
   const lawnC=new T.Color(0x506f38), mowC=new T.Color(0x5a713c), vergeC=new T.Color(0x67723f),
-        dryC=new T.Color(0x7c7848), lushC=new T.Color(0x3f5a2e),
+        dryC=new T.Color(0x7c7848), lushC=new T.Color(0x3f5a2e), farmGC=new T.Color(0x67683f),
         litterC=new T.Color(0x5f4d35), mossC=new T.Color(0x4d5a30), deepC=new T.Color(0x3d3729),
         gravelC=new T.Color(0x8e8a7e), rockC=new T.Color(0x6f6a5c), bedC=new T.Color(0x5a5446), shoreC=new T.Color(0x857a60);
   const _c2=new T.Color();
@@ -475,6 +475,10 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     const g1=Terrain.fbm(x*0.045+3.1, z*0.045+7.7, 3), g2=Terrain.fbm(x*0.23+11.0, z*0.23+2.0, 2);
     out.lerp(dryC, smoothstep(0.52,0.74,g1)*0.38);
     out.lerp(lushC, smoothstep(0.44,0.22,g2)*0.28);
+    // out in the farm country the grass between the fields and along the road is rank and dull, going to hay in
+    // the dry: never the rest area's watered green
+    const fd=Terrain.boxDist(EDIN.plain, x, z);
+    if(fd<40) out.lerp(farmGC, (1-smoothstep(0, 40, fd))*(0.42+0.18*smoothstep(0.45, 0.7, g1)));
     // a band of gravel at the pavement's edge
     if(hd<7.2) out.lerp(gravelC, smoothstep(7.2,6.1,hd)*(Math.abs(x-HWY.nb)<7.2||Math.abs(x-HWY.sb)<7.2?1:0));
     // the floor of the woods: litter, moss in the damp, darker further in

@@ -212,9 +212,25 @@ const EDIN_RT={};
     const t=_tex(c); t.anisotropy=MAXANISO; return t;
   };
   const TILE={corn:6.1, soy:4.6, hay:22, pasture:9};
+  /* Each crop's green is held down (in full sun the raw ones read lime) and pulled a little toward its own: the
+     corn a deep blue-green, the beans darker, the hay gone to gold and olive, the pasture grazed dull. And across a
+     field the crop is never one even colour: broad soft patches where it is doing better or worse, a wetter
+     corner, the headlands trodden, go over it in the world's own terms (no repeat to see from the bridge). */
+  const FIELD_TINT={corn:0x9ca394, soy:0x989f92, hay:0xb9a888, pasture:0xa0a290};
   for(const kind of ["corn","soy","hay","pasture"]){
     const tex=cropTex(kind);
-    bucketOf("field_"+kind, ()=>new T.MeshStandardMaterial(Object.assign({map:tex, roughness:1.0}, _po(-2))));
+    bucketOf("field_"+kind, ()=>{ const m=new T.MeshStandardMaterial(Object.assign({map:tex, roughness:1.0, color:FIELD_TINT[kind]}, _po(-2)));
+      m.onBeforeCompile=(sh)=>{
+        sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vFieldW;")
+          .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFieldW=(modelMatrix*vec4(transformed, 1.0)).xyz;");
+        sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vFieldW;")
+          .replace("#include <map_fragment>", `#include <map_fragment>
+  { vec2 p=vFieldW.xz;
+    float n=0.50*sin(p.x*0.031+1.3)*sin(p.y*0.027+0.4)+0.30*sin(p.x*0.083-p.y*0.061+2.1)+0.20*sin(p.x*0.013+p.y*0.019+0.7);
+    diffuseColor.rgb*=0.93+0.11*n;
+    diffuseColor.rgb=mix(diffuseColor.rgb, vec3(dot(diffuseColor.rgb, vec3(0.30, 0.55, 0.15)))*vec3(1.04, 1.0, 0.92), 0.12+0.10*max(-n, 0.0)); }`);
+      };
+      m.customProgramCacheKey=()=>"field-"+kind; return m; });
   }
   for(const F of E.fields){
     const w=F.x1-F.x0, d=F.z1-F.z0, g=new T.PlaneGeometry(w, d), a=g.attributes.uv, t=TILE[F.crop];
