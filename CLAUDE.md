@@ -400,7 +400,10 @@ No lettering touches or runs past the edge of its board or its border.
   a point every 3 m you walk) when it cannot see you; they spawn on that
   trail or in a ring round you, never in view and never across an edge
   wall. Caches are `CACHES` (x, z, a height to look near, a kind); the
-  gun's flash is `FLASH`, a lamp in 16's pool lit by its `mod`.
+  gun's flash is `FLASH`, a lamp in 16's pool lit by its `mod`. A pickup
+  is let go of with `dropMesh` (its own geometry and materials freed, the
+  shared `MAT` and `PMAT` kept), never a bare `scene.remove`: each one
+  builds its own, and a long run would leak them.
 - A ladder is 06's `addLadder(x, z, y0, y1, yaw, out, top, label)`: the
   foot of its climbing line at (x, z), `yaw` the way a climber faces it,
   `out` where you stand at its foot and `top` (with its `y`) where you step
@@ -450,10 +453,11 @@ No lettering touches or runs past the edge of its board or its border.
   the wall's outer face, (nx, nz) that face's outward normal, `off` how far
   out the rungs stand (past any eave), `land` where the goose-neck comes
   down on the roof. It builds the rails, rungs, brackets and (over 4.2 m) a
-  cage, and calls `addLadder`. The roof itself is the building's: an
-  `addFlat` at its top, a `· ROOF` zone added after the general one, and
-  colliders for what stands on it (06's `roofUnit` is an air handler with
-  its own). A parapet's wall colliders already run to its top; a roof with
+  cage, and calls `addLadder`. Its `walk: [x0, x1, z0, z1]` lays the roof's
+  flat at `roof` and records it in `ROOF_WALKS`, where 21 never puts one of
+  the dead down. The rest of the roof is the building's: a `· ROOF` zone
+  added after the general one, and colliders for what stands on it (06's
+  `roofUnit` is an air handler with its own). A parapet's wall colliders already run to its top; a roof with
   no parapet lets you walk off it and drop. The fuel stop (14k), the
   fireworks store (14m), the scale house (14w) and the control house (14s)
   have them; the dead cannot climb one.
