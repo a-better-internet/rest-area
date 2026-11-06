@@ -93,8 +93,8 @@ const parked=(kind, paint, x, z, yaw, y)=>parkCar(x, z, yaw, kind, paint, y+PAVE
   // the roof is walkable: a fixed ladder up the west wall near the back and over the parapet; on the roof the air
   // handlers on their curbs and the plumbing's vents
   { const fx=S.x0, fz=S.z0+2.2, RT=CEIL+0.22;
-    roofLadder({x:fx, z:fz, nx:-1, nz:0, g:surfaceY(fx-0.6, fz, groundY(fx-0.6, fz)+0.6), edge:TOPW+0.066, roof:RT, land:-(WT+0.30), label:"THE FUEL STOP'S LADDER"});
-    addFlat(IX0, IX1, IZ0, IZ1, RT); addZone(IX0, IX1, IZ0, IZ1, CEIL+0.1, CEIL+4.5, "FRENCH CREEK FUEL · ROOF");
+    roofLadder({x:fx, z:fz, nx:-1, nz:0, g:surfaceY(fx-0.6, fz, groundY(fx-0.6, fz)+0.6), edge:TOPW+0.066, roof:RT, land:-(WT+0.30), label:"THE FUEL STOP'S LADDER", walk:[IX0, IX1, IZ0, IZ1]});
+    addZone(IX0, IX1, IZ0, IZ1, CEIL+0.1, CEIL+4.5, "FRENCH CREEK FUEL · ROOF");
     roofUnit(-22.0, S.z0+3.4, RT, 2.4, 1.5, 1.05, "#c9ccc8", 1); roofUnit(-31.0, S.z0+3.0, RT, 1.6, 1.2, 0.85, "#c9ccc8", 1);
     for(const [vx, vz] of [[-15.2, S.z0+6.0],[-15.8, S.z0+6.5]]) cyl("metal", 0.05, 0.05, 0.46, 10, vx, RT+0.22, vz, "#4a4c4c"); }
   B(18.0, 0.95, 0.10, (S.x0+S.x1)/2, FLS+3.32, S.z1+0.05, GRN);

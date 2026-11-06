@@ -243,6 +243,8 @@ const ZOMBIE=(function(){
       if((dx*fx+dz*fz)/d>0.4 && k<12) continue;
       const y=okSpot(x, z, yh); if(y===null || Math.abs(y-py)>14) continue;
       if(edgeBetween(px, pz, x, z)) continue;
+      // (never on a roof a ladder goes up to: they cannot climb, and up there is meant to be out of their reach)
+      if(ROOF_WALKS.some(r=>x>r.x0-0.5 && x<r.x1+0.5 && z>r.z0-0.5 && z<r.z1+0.5 && y>r.y-0.6)) continue;
       return {x:x, z:z, y:y};
     }
     return null;
@@ -512,12 +514,14 @@ const ZOMBIE=(function(){
     if(Z.dead || S.throwT>0 || driving || player.ladder) return;                  // (not from behind the wheel, or off a ladder)
     if(S.bombs<=0){ feed("NO PIPE BOMBS", "#8a8a7a"); return; }
     S.bombs--; S.throwT=0.45;
-    if(!_bombGeo){ _bombGeo=new T.CylinderGeometry(0.035, 0.035, 0.22, 10); _bombMat=new T.MeshStandardMaterial({color:0x5a5e60, metalness:0.4, roughness:0.5});
+    if(!_bombGeo){ _bombGeo={pipe:new T.CylinderGeometry(0.035, 0.035, 0.22, 10), cap:new T.CylinderGeometry(0.042, 0.042, 0.03, 10),
+        box:new T.BoxGeometry(0.074, 0.06, 0.074), lt:new T.SphereGeometry(0.014, 8, 6)};                 // (once: every throw shares them)
+      _bombMat={pipe:new T.MeshStandardMaterial({color:0x5a5e60, metalness:0.4, roughness:0.5}), box:new T.MeshStandardMaterial({color:0x6a6a2a, roughness:0.9})};
       _bombLight=new T.MeshBasicMaterial({color:0xff2010}); }
-    const g=new T.Group(); g.add(new T.Mesh(_bombGeo, _bombMat));
-    for(const y of [-0.115, 0.115]) part(g, new T.CylinderGeometry(0.042, 0.042, 0.03, 10), _bombMat, 0, y, 0);
-    part(g, new T.BoxGeometry(0.074, 0.06, 0.074), new T.MeshStandardMaterial({color:0x6a6a2a, roughness:0.9}), 0, 0.02, 0);
-    const lt=new T.Mesh(new T.SphereGeometry(0.014, 8, 6), _bombLight); lt.position.set(0.04, 0.02, 0); g.add(lt);
+    const g=new T.Group(); g.add(new T.Mesh(_bombGeo.pipe, _bombMat.pipe));
+    for(const y of [-0.115, 0.115]) part(g, _bombGeo.cap, _bombMat.pipe, 0, y, 0);
+    part(g, _bombGeo.box, _bombMat.box, 0, 0.02, 0);
+    const lt=new T.Mesh(_bombGeo.lt, _bombLight); lt.position.set(0.04, 0.02, 0); g.add(lt);
     scene.add(g);
     camera.getWorldDirection(_v1);
     const b={g:g, lt:lt, x:camera.position.x+_v1.x*0.5, y:camera.position.y+_v1.y*0.5-0.1, z:camera.position.z+_v1.z*0.5,
@@ -1253,6 +1257,13 @@ const ZOMBIE=(function(){
     item.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
     return g;
   }
+  // a pickup taken or gone is let go of properly: its own geometry and materials freed (each one built its own), the
+  // shared ones (MAT's, the labels in PMAT) kept, and textures never (they are all shared)
+  function dropMesh(g){
+    scene.remove(g); const keep=new Set(Object.values(MAT).concat(Object.values(PMAT)));
+    g.traverse(o=>{ if(!o.isMesh) return; if(o.geometry) o.geometry.dispose();
+      for(const m of (Array.isArray(o.material) ? o.material : [o.material])) if(m && !keep.has(m)) m.dispose(); });
+  }
   function placePickup(kind, x, z, y, o){
     const g=pickupMesh(kind); g.position.set(x, y, z); g.userData.glow.position.y=0.03; scene.add(g);
     const p=Object.assign({kind:kind, x:x, z:z, y:y, g:g, t:Math.random()*6}, o||{}); PK.push(p); return p;
@@ -1299,12 +1310,12 @@ const ZOMBIE=(function(){
       if(p.gone){ p.respawn-=dt; if(p.respawn<=0){ p.gone=false; p.g.visible=true; } continue; }
       const it=p.g.userData.item; it.position.y=0.38+Math.sin(p.t*2.2)*0.06; it.rotation.y+=dt*1.3;
       p.g.userData.glow.material.opacity=0.34+0.16*Math.sin(p.t*3);
-      if(p.dyn){ p.life-=dt; if(p.life<=0 || Math.hypot(p.x-px, p.z-pz)>160){ scene.remove(p.g); PK.splice(i,1); continue; } }
+      if(p.dyn){ p.life-=dt; if(p.life<=0 || Math.hypot(p.x-px, p.z-pz)>160){ dropMesh(p.g); PK.splice(i,1); continue; } }
       if(Z.dead) continue;
       if(Math.hypot(p.x-px, p.z-pz)<1.2 && Math.abs(p.y-py)<1.6 && take(p)){
         if(p.cache){ p.gone=true; p.g.visible=false; p.respawn=120+Math.random()*60;
-          if(p.kind.startsWith("gun:")){ const g=GUN(p.kind.slice(4)); scene.remove(p.g); p.kind="ammo:"+g.ammo; p.g=pickupMesh(p.kind); p.g.position.set(p.x, p.y, p.z); p.g.userData.glow.position.y=0.03; p.g.visible=false; scene.add(p.g); } }
-        else { scene.remove(p.g); PK.splice(i,1); } }
+          if(p.kind.startsWith("gun:")){ const g=GUN(p.kind.slice(4)); dropMesh(p.g); p.kind="ammo:"+g.ammo; p.g=pickupMesh(p.kind); p.g.position.set(p.x, p.y, p.z); p.g.userData.glow.position.y=0.03; p.g.visible=false; scene.add(p.g); } }
+        else { dropMesh(p.g); PK.splice(i,1); } }
     }
     // more turns up round you as you go: what you are short of most
     S.supplyT-=dt;
@@ -1585,8 +1596,8 @@ const ZOMBIE=(function(){
     S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0, flamer:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0, "FUEL":0}; stopFlame();
     S.cur="pistol"; S.next=null; S.reloading=false; S.switchT=0; S.cool=0; S.ads=0; S.fired=false; S.melee=0; S.dmgFlash=0; S.spawnT=8; S.supplyT=20; S.levelShown=1;
     for(const zb of ZS) recycle(zb);
-    for(let i=PK.length-1;i>=0;i--){ const p=PK[i]; if(p.dyn){ scene.remove(p.g); PK.splice(i,1); }
-      else if(p.cache){ if(p.kind!==p.kind0){ scene.remove(p.g); p.kind=p.kind0; p.g=pickupMesh(p.kind); p.g.position.set(p.x, p.y, p.z); p.g.userData.glow.position.y=0.03; scene.add(p.g); }
+    for(let i=PK.length-1;i>=0;i--){ const p=PK[i]; if(p.dyn){ dropMesh(p.g); PK.splice(i,1); }
+      else if(p.cache){ if(p.kind!==p.kind0){ dropMesh(p.g); p.kind=p.kind0; p.g=pickupMesh(p.kind); p.g.position.set(p.x, p.y, p.z); p.g.userData.glow.position.y=0.03; scene.add(p.g); }
         p.gone=false; p.g.visible=true; } }
     if(blood.decals) for(const m of blood.decals) m.visible=false;
     if(blood.scs) for(const m of blood.scs) m.visible=false;
@@ -1630,7 +1641,7 @@ const ZOMBIE=(function(){
     if(!Z.on) return;
     Z.on=false; Z.dead=false; stopCops(); mendGlass(); stopFlame();
     for(const zb of ZS) recycle(zb);
-    for(let i=PK.length-1;i>=0;i--){ PK[i].g.visible=false; if(PK[i].dyn){ scene.remove(PK[i].g); PK.splice(i,1); } }
+    for(let i=PK.length-1;i>=0;i--){ PK[i].g.visible=false; if(PK[i].dyn){ dropMesh(PK[i].g); PK.splice(i,1); } }
     if(blood.decals) for(const m of blood.decals) m.visible=false;
     if(blood.P){ blood.P.n=0; dust.P.n=0; blood.P.pts.visible=false; dust.P.pts.visible=false; }
     FLASH.mod.v=0; BOOM.mod.v=0; Z.ts=1;
@@ -1735,7 +1746,7 @@ const ZOMBIE=(function(){
   };
   // for tools and testing: put one down, and see what there is
   Z.debug={ZS:ZS, PK:PK, S:S, place:(kind, x, z)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6); return placePickup(kind, x, z, y, {dyn:true, life:600}); }, clear:()=>{ for(const zb of ZS) recycle(zb); if(blood.decals) for(const m of blood.decals) m.visible=false; }, spawnAt:(x, z, kind, yaw, alert)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6), zb=spawnZombie(x, z, y, kind||"walker", yaw); if(zb && alert) zb.alert=true; return zb; },
-           give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM, cops:COPS, copRun:copRun, glassRay:glassRay, broken:BROKEN,
+           give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM, BOMBS:BOMBS, cops:COPS, copRun:copRun, glassRay:glassRay, broken:BROKEN,
            bomb:(x, z, fuse)=>{ S.bombs++; S.throwT=0; throwBomb(); const b=BOMBS[BOMBS.length-1]; if(!b) return null; b.x=x; b.z=z; b.y=surfaceY(x, z, groundY(x,z)+0.6)+0.05;
              b.vx=b.vy=b.vz=0; b.fuse=fuse||3.5; return b; }, kill:(zb, head)=>{ _v2.set(0,0,-1); killZombie(zb, !!head, _v2); }};
   return Z;

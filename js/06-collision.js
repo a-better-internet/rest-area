@@ -53,6 +53,7 @@ const USES=[];
    you face on it (yaw), where you step off at the bottom (out) and at the top (top). addLadder puts a use at each end
    to get on it. */
 const LADDERS=[];
+const ROOF_WALKS=[];          // the roofs the ladders go up to (roofLadder's walk): the dead are never put down on one (21)
 function addLadder(x, z, y0, y1, yaw, out, top, label){
   const L={x:x, z:z, y0:y0, y1:y1, yaw:yaw, out:out, top:top, label:label||"THE LADDER"};
   LADDERS.push(L);
@@ -67,8 +68,8 @@ function addLadder(x, z, y0, y1, yaw, out, top, label){
    the top of what you climb over (a parapet's coping, a roof's edge); roof what you stand on up there; off how far out
    the rungs stand from the face (clear of any eave); soffit the underside of an eave, which the brackets stay under;
    land where the rails come down on the roof, along the normal from the face (less than 0 is inside it); label.
-   It adds the ladder (addLadder) and the colliders of its rails; the roof's flat, its zone and anything standing on
-   the roof are the building's to add. The rails' faces are kept off each other's planes: the goose-neck's bars are
+   It adds the ladder (addLadder) and the colliders of its rails, and with walk ([x0, x1, z0, z1]) the roof's flat at
+   roof, kept in ROOF_WALKS; the roof's zone and anything standing on the roof are the building's to add. The rails' faces are kept off each other's planes: the goose-neck's bars are
    thicker than the rails and run past them, and the rails stop inside the bars. */
 function roofLadder(o){
   const nx=o.nx, nz=o.nz, tx=-nz, tz=nx, off=o.off||0.18, land=o.land, g=o.g, edge=o.edge, roof=o.roof;
@@ -103,6 +104,7 @@ function roofLadder(o){
   const [ax, az]=P(off-0.035, -HW-0.02), [bxx, bzz]=P(off+0.035, HW+0.02);
   addCol(Math.min(ax, bxx), Math.max(ax, bxx), Math.min(az, bzz), Math.max(az, bzz), g-1, edge);
   const [ox, oz]=P(off+0.95, 0), [px, pz]=P(land-0.55, 0);
+  if(o.walk){ const [w0, w1, w2, w3]=o.walk; addFlat(w0, w1, w2, w3, roof); ROOF_WALKS.push({x0:w0, x1:w1, z0:w2, z1:w3, y:roof}); }
   return addLadder(rx, rz, g, o.y1===undefined ? edge : o.y1, ry, {x:ox, z:oz}, {x:px, z:pz, y:roof}, o.label);
 }
 /* A ROOFTOP UNIT, for a roof you can now walk on: the air handler's cabinet on its curb (sunk into the curb, the curb

@@ -146,8 +146,8 @@ const FIREWORKS={};
   B(BX1-BX0+0.16, 0.10, BZ1-BZ0+0.16, (BX0+BX1)/2, TOPW+0.05, (BZ0+BZ1)/2, "#bebcb5");                 // (the roof: a pale membrane, weathered)
   // the roof, walkable: a caged ladder up the back wall near the east end; the air handlers on it
   { const fx=BX1-3.0, fz=BZ0, RT=TOPW+0.10;
-    roofLadder({x:fx, z:fz, nx:0, nz:-1, g:surfaceY(fx, fz-0.6, groundY(fx, fz-0.6)+0.6), edge:RT, roof:RT, off:0.30, soffit:TOPW, land:-0.6, label:"THE FIREWORKS STORE'S LADDER"});
-    addFlat(BX0-0.08, BX1+0.08, BZ0-0.08, BZ1+0.08, RT); addZone(BX0-0.08, BX1+0.08, BZ0-0.08, BZ1+0.08, TOPW, TOPW+5, "FRENCH CREEK FIREWORKS · ROOF");
+    roofLadder({x:fx, z:fz, nx:0, nz:-1, g:surfaceY(fx, fz-0.6, groundY(fx, fz-0.6)+0.6), edge:RT, roof:RT, off:0.30, soffit:TOPW, land:-0.6, label:"THE FIREWORKS STORE'S LADDER", walk:[BX0-0.08, BX1+0.08, BZ0-0.08, BZ1+0.08]});
+    addZone(BX0-0.08, BX1+0.08, BZ0-0.08, BZ1+0.08, TOPW, TOPW+5, "FRENCH CREEK FIREWORKS · ROOF");
     roofUnit(902.0, BZ0+5.0, RT, 2.6, 1.6, 1.15, "#c9ccc8", 1); roofUnit(915.0, BZ0+5.5, RT, 2.6, 1.6, 1.15, "#c9ccc8", 1); }
   for(const [y0,y1,col] of [[FLS, FLS+2.4, "#ecebe6"],[FLS+2.4, CEIL, "#f4f3ee"]]){
     lineX("block", IZ1, -1, IX0, IX1, y0, y1, front, col, 0.6);
