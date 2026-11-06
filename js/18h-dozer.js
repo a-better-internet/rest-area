@@ -140,8 +140,12 @@ const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
   cg.setDrawRange(0, 0); cg.boundingSphere=new T.Sphere(V3(0, DECK, 0), 1.2);
   const coins=new T.Mesh(cg, coinM); coins.frustumCulled=false; G.add(coins);
   coins.userData={nv:nv, ni:ni, oP:oP, oN:oN, aP:aP, aN:aN, aC:aC};
-  // the prizes, a mesh each, made as they drop
-  const prizeMesh=(type)=>{
+  // the prizes, a mesh each as they drop; each kind's geometry, material (and the die's face) made once and shared, so
+  // the ones that fall off the front and are let go of leave nothing behind
+  const _PZ={};
+  const prizeMesh=(type)=>{ if(!_PZ[type]){ const m=_prize(type); _PZ[type]={geo:m.geometry, mat:m.material}; }
+    return new T.Mesh(_PZ[type].geo, _PZ[type].mat); };
+  const _prize=(type)=>{
     if(type==="gem") return new T.Mesh(new T.OctahedronGeometry(0.028), new T.MeshStandardMaterial({color:0x3ae8ff, metalness:0.5, roughness:0.1, emissive:0x0a3a44, emissiveIntensity:0.8}));
     if(type==="die"){ const t=signTex(64,64,(c,Wc,Hc)=>{ c.fillStyle="#f4f2ec"; c.fillRect(0,0,Wc,Hc); c.fillStyle="#c42a1a"; for(const [px,py] of [[0.25,0.25],[0.5,0.5],[0.75,0.75]]){ c.beginPath(); c.arc(Wc*px,Hc*py,6,0,7); c.fill(); } });
       return new T.Mesh(rboxGeo(0.04,0.04,0.04,0.008,2), new T.MeshStandardMaterial({map:t, roughness:0.4})); }

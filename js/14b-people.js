@@ -791,7 +791,9 @@ function updatePeople(dt, now, dark){
       else if(p.state==="inside"){ _stepInside(p, dt, now); }
       else if(p.state==="back"){ if(_stepWalker(p, dt, 1.25)){ p.state="gone"; P.g.visible=false; p.t=2.5;
         if(typeof AUDIO!=="undefined") AUDIO.blip("door",p.x,p.z); } }
-      else if(p.state==="gone"){ p.t-=dt; if(p.t<=0){ p.done=true; scene.remove(P.g); P.mesh.geometry.dispose(); PEOPLE.splice(i,1); continue; } }
+      else if(p.state==="gone"){ p.t-=dt; if(p.t<=0){ p.done=true; scene.remove(P.g); P.mesh.geometry.dispose();
+        if(P.mesh.skeleton && P.mesh.skeleton.dispose) P.mesh.skeleton.dispose();                    // (and its bones' texture)
+        PEOPLE.splice(i,1); continue; } }
       if(P.g.visible){
         if(p.state==="inside"){ if(cd<60) _poseInside(p, now); }
         else poseP(P, p.moving?"walk":"stand", p.ph, now);
