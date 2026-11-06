@@ -168,6 +168,7 @@ function _idle(p, mode, t){
   }
 }
 function poseP(p, mode, ph, t){
+  const sd=p.seed||0;                            // (a person built without a seed, a custom one, still looks round: not NaN)
   const B=p.B, J=p.j, s=Math.sin(ph*Math.PI*2), c=Math.cos(ph*Math.PI*2);
   for(const b of B) b.rotation.set(0,0,0);
   B[J.root].position.set(0, p.HIP, 0);           // (all of it, every frame: _idle's weight shift moves it sideways, and must not add up)
@@ -184,19 +185,19 @@ function poseP(p, mode, ph, t){
     B[J.hpL].rotation.x=B[J.hpR].rotation.x=-1.50;
     B[J.knL].rotation.x=B[J.knR].rotation.x=1.45;
     B[J.shL].rotation.x=B[J.shR].rotation.x=-0.55; B[J.elL].rotation.x=B[J.elR].rotation.x=-0.85;
-    B[J.head].rotation.y=Math.sin(t*0.3+p.seed)*0.5; B[J.head].rotation.x=0.08;
+    B[J.head].rotation.y=Math.sin(t*0.3+sd)*0.5; B[J.head].rotation.x=0.08;
   }else{
     // standing: weight on one leg, a little sway, the head looking about
     B[J.hpL].rotation.z=0.03; B[J.hpR].rotation.z=-0.02; B[J.knL].rotation.x=0.05;
     B[J.shL].rotation.z=-0.06; B[J.shR].rotation.z=0.06; B[J.elL].rotation.x=B[J.elR].rotation.x=-0.12;
-    B[J.spine].rotation.y=Math.sin(t*0.4+p.seed)*0.05;
-    B[J.head].rotation.y=Math.sin(t*0.25+p.seed*2)*0.45;
+    B[J.spine].rotation.y=Math.sin(t*0.4+sd)*0.05;
+    B[J.head].rotation.y=Math.sin(t*0.25+sd*2)*0.45;
     if(mode==="phone"){ B[J.shR].rotation.x=-0.35; B[J.shR].rotation.z=0.35; B[J.elR].rotation.x=-2.35; B[J.head].rotation.y*=0.4; B[J.head].rotation.z=-0.12; }
     if(mode==="read"){ B[J.head].rotation.x=0.30; B[J.head].rotation.y*=0.2; B[J.shL].rotation.x=B[J.shR].rotation.x=-0.45; B[J.elL].rotation.x=B[J.elR].rotation.x=-1.1; }
     // the drag: the arm comes forward and in, the elbow folds right up and
     // the forearm turns over, so the fingers end at the lips; the head
     // stops looking about and meets the hand
-    if(mode==="smoke"){ const up=_smokeUp(_smokeCyc(t,p.seed));
+    if(mode==="smoke"){ const up=_smokeUp(_smokeCyc(t,sd));
       B[J.shR].rotation.set(-0.25-up*1.008, -up*0.817, 0.18-up*0.165);
       B[J.elR].rotation.set(-0.9-up*1.30, up*0.875, 0);
       B[J.head].rotation.y*=1-up; B[J.head].rotation.x=-0.04*up; }

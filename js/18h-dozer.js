@@ -305,7 +305,7 @@ function _dzDraw(g){
   }
   { const U=C.coins.userData; C.coins.geometry.setDrawRange(0, n*U.ni);
     for(const a of [U.aP, U.aN, U.aC]){ a.updateRange.offset=0; a.updateRange.count=n*U.nv*3; a.needsUpdate=true; } }
-  C.pusher.position.z=g.pz-0.0;
+  C.pusher.position.z=g.pz===undefined ? 0 : g.pz;                                // (drawn once at load, before its first step has set it)
   C.chute.position.x=g.aim; C.bucket.position.x=g.bonusX;
   C.trayGlow.material.opacity=0.25+0.6*g.flash;
   const k=Math.floor(DOZER.t*8);
