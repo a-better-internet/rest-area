@@ -1620,7 +1620,9 @@ const ZOMBIE=(function(){
   Z.start=function(){
     if(Z.on) return;
     if(!started) begin();
+    const first=!built;
     build(); buildCops();
+    if(first){ gfxWarm(scene, camera); gfxWarm(vm.scene, vm.cam, true); }   // (their shaders now, not at the first one you see: 19's warm-up)
     if(droneMode) setDrone(false);
     if(seated) standUp();
     Z.on=true; Z.fade=0; resetRun();

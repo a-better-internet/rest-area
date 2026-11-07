@@ -19,6 +19,29 @@
         const t=m[k]; if(!t || !t.isTexture || seen.has(t)) continue; seen.add(t);
         if(t.anisotropy<MAXANISO){ t.anisotropy=MAXANISO; t.needsUpdate=true; } } }); }
 
+/* THE WARM-UP. The first time three draws with a material it compiles a shader program for it, and the first time it
+   draws a mesh or a texture it sends it to the card. On a Mac each program is a stall of its own (Chrome turns it into
+   Metal), and done in the middle of play, in front of you, that is the freeze: the first look into a room, the first
+   of the dead, a crowd coming into view. So it is done here, once, while the sign is still up: every material in the
+   scene compiled against the lights it will be drawn with (hidden things too: renderer.compile walks everything), and
+   with `draw` one draw of everything shown, in the frustum or not, into a small target the shaders cannot tell from
+   the screen (the same output encoding), which sends the meshes and textures and builds the shadow map's own
+   programs. 21 calls it again when zombie mode is first built, for the dead and the guns. */
+function gfxWarm(sc, cam, draw){
+  const t0=Date.now();
+  try{ renderer.compile(sc, cam); }catch(e){ console.warn("warm-up: compile", e); }
+  if(draw){
+    const off=[], was=renderer.getRenderTarget(), rt=new T.WebGLRenderTarget(64, 64);
+    rt.texture.encoding=renderer.outputEncoding;
+    sc.traverse(o=>{ if(o.frustumCulled){ o.frustumCulled=false; off.push(o); } });
+    try{ renderer.setRenderTarget(rt); renderer.render(sc, cam); }
+    catch(e){ console.warn("warm-up: draw", e); }
+    finally{ renderer.setRenderTarget(was); for(const o of off) o.frustumCulled=true; rt.dispose(); }
+  }
+  return Date.now()-t0;
+}
+GFX.warmMs=gfxWarm(scene, camera, true);
+
 const bootEl=document.getElementById("boot");
 function begin(){
   if(started) return;
@@ -52,7 +75,7 @@ function frame(){
      to draw. */
   { const tms=performance.now();
     if(GFX.fps>0 && tms-_lastDraw < 1000/GFX.fps-1.6) return;
-    _lastDraw=tms; }
+    _lastDraw=tms; _meter.c0=tms; }
   const now=performance.now()/1000;
   let delta=now-last; last=now;
   if(delta>0.1) delta=0.1;
@@ -135,8 +158,8 @@ function frame(){
   {
     torchLvl += ((torchOn?1:0)-torchLvl)*Math.min(1, delta*9);
     const lit=torchLvl>0.003;
-    torch.visible=lit; torchSpill.visible=lit;
-    if(lit){
+    if(!lit){ torch.intensity=0; torchSpill.intensity=0; }                // (never hidden: see 03's torch)
+    else {
       torch.position.copy(camera.position);
       camera.getWorldDirection(_torchDir);
       torchSpill.position.copy(camera.position).addScaledVector(_torchDir, 0.5);
@@ -162,7 +185,7 @@ function frame(){
   key.target.position.set(kx, kty, kz);
   // at night the light is the moon's, as much of it as there is
   key.intensity=dn.sunIntensity-dn.nightAmount*0.30*(1-(0.25+0.75*MOON.bright));
-  key.castShadow = GFX.shadows>0 && dn.sunHeight > 0.04;
+  keyShadeWant = dn.sunHeight > 0.04;                                     // (16b clears it in heavy cloud; keyShadow, 03)
   key.color.copy(DayNight.P.dayLight)
     .lerp(DayNight.P.setLight, Math.min(1,dn.sunsetAmount*1.2))
     .lerp(DayNight.P.nightLight, dn.nightAmount);
@@ -208,6 +231,7 @@ function frame(){
   scene.fog.far =1250+dn.nightAmount*300;
   scene.background=skyImg.hz;
   applyWeather(delta, now, dn, dark);
+  keyShadow(keyShadeWant);
   // (the blue of distance is a clear day's: weather fog and the night have their own colour, 03)
   HAZE_U.w=(1-WEATHER.fog)*(1-WEATHER.cover*0.6)*(1-dn.nightAmount);
   /* UNDERGROUND HAS NO CLOCK. Anywhere addBuried() marks (12b's cellar and
@@ -380,6 +404,7 @@ function frame(){
     renderer.render(scene, camera);
     if(typeof ZOMBIE!=="undefined" && ZOMBIE.on) ZOMBIE.render();                    // (the gun in your hands, over the view, 21)
   }
+  _meter.cpu+=performance.now()-_meter.c0;                                        // (this frame's own work, for the meter and AUTO: 18c)
 }
 let _indoorMix=0, _buriedMix=0, _buriedDim=1, _buriedTint=0;
 const _tintSky=new T.Color(), _tintGnd=new T.Color();

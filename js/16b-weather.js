@@ -467,7 +467,7 @@ function applyWeather(dt, now, dn, dark){
   const W=WEATHER, cam=camera.position, night=dn.nightAmount;
   // the light: diffused under cloud, flashed by lightning
   key.intensity*=1-0.82*W.cover;
-  if(W.cover>0.82) key.castShadow=false;
+  if(W.cover>0.82) keyShadeWant=false;                                    // (the shade drawn in, not the light's casting off: 03)
   hemi.intensity=hemi.intensity*(1-0.18*W.cover)+W.flash*2.2;
   amb.intensity+=W.flash*0.7;
   // the haze: in fog, a hundred metres or so; less in heavy rain

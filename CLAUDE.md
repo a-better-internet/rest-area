@@ -483,6 +483,32 @@ No lettering touches or runs past the edge of its board or its border.
   on steep faces). The terrain (04) leans its normal on a few long swells
   and hummocks the same way. Both use `fwidth`, so their materials set
   `extensions.derivatives`.
+- Never change which lights are in the scene, or whether one casts a
+  shadow, while the game runs. Hiding or showing a light, or flipping
+  `castShadow`, makes every lit shader compile again: a freeze of a second
+  or more on a Mac. Turn a light down to intensity 0 instead (03's torch,
+  16's lamp pool). The sun's shade goes and comes through `keyShadeWant` /
+  `keyShadow()` (03), which draw the shadow camera's far plane in rather
+  than stop it casting. Changing the light count or shadows in the menu is
+  the only exception.
+- 19's `gfxWarm(scene, camera, draw)` compiles every material in a scene,
+  hidden ones too, once at load. With `draw` it also does one unculled draw
+  into a small target, which sends the meshes and textures to the card.
+  Anything a mode builds when it starts gets the same treatment right
+  after it is built (21 warms the dead and the gun's own scene the first
+  time zombie mode starts).
+
+## The machine it must run on
+
+The owner plays in Chrome on a refurbished MacBook Pro: a 2.4 GHz 8-core
+Intel Core i9 with Intel UHD Graphics 630 (1536 MB shared), 32 GB of
+2667 MHz DDR4, macOS 14.7.1. Treat the Intel chip as the floor, at Retina
+resolution, and keep High and Ultra for faster cards. 03 asks for the
+high-performance GPU and reads which one it got (`GFX.gpu`, `GFX.tier`).
+On a first run on an integrated chip it starts at Medium with resolution
+on AUTO (`GFX.res` −1, 18c's `_autoResStep` moves `GFX.auto`). Anything
+costly per pixel or per frame should scale with a menu setting, not be
+fixed.
 
 ## Tools
 

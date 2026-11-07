@@ -28,16 +28,16 @@ function cullBaked(cam, dt, force){
 }
 
 const GFX_PRESETS=[
-  {name:"LOW",    res:0.75, shadows:0, draw:0, lights:4},
-  {name:"MEDIUM", res:1,    shadows:1, draw:1, lights:8},
+  {name:"LOW",    res:-1,   shadows:0, draw:0, lights:4},
+  {name:"MEDIUM", res:-1,   shadows:1, draw:1, lights:8},
   {name:"HIGH",   res:0,    shadows:3, draw:2, lights:12},
   {name:"ULTRA",  res:0,    shadows:4, draw:3, lights:16}];
-const _RES=[0.5, 0.75, 1, 1.5, 2, 0];
+const _RES=[-1, 0.5, 0.75, 1, 1.5, 2, 0];
 const _FPS=[30, 60, 0];
 const _LIGHTS=[4, 6, 8, 12, 16, 24];
 function _resName(r){
   const nat=Math.min(devicePixelRatio||1, 2);
-  return r===0 ? "NATIVE · "+(+nat.toFixed(2))+"×" : (r+"×");
+  return r===0 ? "NATIVE · "+(+nat.toFixed(2))+"×" : r<0 ? "AUTO · "+(+gfxPixelRatio().toFixed(2))+"×" : (r+"×");
 }
 function _presetIndex(){
   for(let i=0;i<GFX_PRESETS.length;i++){
@@ -52,13 +52,15 @@ const GFX_ROWS=[
    get:()=>_presetIndex(), n:()=>GFX_PRESETS.length,
    show:i=>i<0 ? "CUSTOM" : GFX_PRESETS[i].name,
    set:i=>{ const p=GFX_PRESETS[i]; GFX.res=p.res; GFX.shadows=p.shadows; GFX.draw=p.draw; GFX.lights=p.lights; },
-   note:()=>"Sets everything below at once. The frame cap is left as it is."},
+   note:()=>"Sets resolution, shadows, draw distance and lights at once. The frame cap and antialiasing are left as they are."},
   {k:"res", label:"RESOLUTION",
    get:()=>Math.max(0,_RES.indexOf(GFX.res)), n:()=>_RES.length,
    show:i=>_resName(_RES[i]),
    set:i=>{ GFX.res=_RES[i]; },
    note:()=>{ const pr=gfxPixelRatio(), w=Math.round(innerWidth*pr), h=Math.round(innerHeight*pr);
-     return "Pixels drawn per screen point: "+w+"×"+h+" now. On a Retina Mac 1× draws a quarter of the pixels that 2× does, and is the single biggest saving."; }},
+     return (GFX.res<0 ? "AUTO lowers the resolution when frames run long and raises it again when there is room. " : "")+
+       "Pixels drawn: "+w+"×"+h+" now. On a Retina Mac 1× draws a quarter of the pixels that 2× does, and is the single biggest saving."+
+       (GFX.gpu ? " Drawing on: "+GFX.gpu.replace(/^ANGLE \(|\)$/g, "").slice(0, 90)+"." : ""); }},
   {k:"fps", label:"FRAME-RATE CAP",
    get:()=>Math.max(0,_FPS.indexOf(GFX.fps)), n:()=>_FPS.length,
    show:i=>_FPS[i] ? _FPS[i]+" FPS" : "OFF",
@@ -82,6 +84,12 @@ const GFX_ROWS=[
    show:i=>_LIGHTS[i]+" AT ONCE",
    set:i=>{ GFX.lights=_LIGHTS[i]; },
    note:()=>"Real lights on the nearest lamps; the rest only glow. Every lit pixel pays for each one, lit or not."},
+  {k:"aa", label:"ANTIALIASING",
+   get:()=>GFX.aa?1:0, n:()=>2,
+   show:i=>(i ? "ON" : "OFF")+(!!i!==GFX.aa0 ? " · ON RELOAD" : ""),
+   set:i=>{ GFX.aa=!!i; },
+   note:()=>"Smooths edges by keeping four samples of every pixel. The canvas is made with it or without it, so a change takes effect "+
+     "when the page is reloaded. On a chip built into the processor, at a Retina resolution, it costs nearly as much as the resolution does."},
   {k:"meter", label:"FRAME METER",
    get:()=>GFX.meter?1:0, n:()=>2,
    show:i=>i ? "ON" : "OFF",
@@ -159,8 +167,8 @@ function applyGraphics(){
   if(A.shadows!==GFX.shadows){
     const was=A.shadows===null ? null : SHADOW_LEVELS[A.shadows], now=SHADOW_LEVELS[GFX.shadows];
     renderer.shadowMap.enabled=!!now;
+    key.castShadow=!!now;
     if(now){ setShadowLevel(GFX.shadows); renderer.shadowMap.type=now.soft ? T.PCFSoftShadowMap : T.PCFShadowMap; }
-    else key.castShadow=false;
     if(A.shadows!==null && (!was!==!now || (was && now && was.soft!==now.soft))) _rebuildMaterials();
     A.shadows=GFX.shadows;
   }
@@ -168,21 +176,41 @@ function applyGraphics(){
   _fpsEl.style.display=GFX.meter ? "block" : "none";
   cullBaked(camera.position, 0, true);
   try{ localStorage.setItem("restarea.gfx", JSON.stringify({res:GFX.res, fps:GFX.fps, shadows:GFX.shadows,
-         draw:GFX.draw, lights:GFX.lights, meter:GFX.meter})); }catch(e){}
+         draw:GFX.draw, lights:GFX.lights, meter:GFX.meter, aa:GFX.aa})); }catch(e){}
 }
 // what the renderer was built with is already in effect
 _gfxApplied={res:GFX.res, shadows:GFX.shadows, lights:GFX.lights};
 _fpsEl.style.display=GFX.meter ? "block" : "none";
 
+/* --- AUTO resolution -------------------------------------------------------
+   Every half second the meter has the mean time between frames drawn, and how much of it the page's own work took
+   (the simulation and handing the draw to the card). Two in a row well over what the frame cap asks for (a whole
+   second of it, not one hitch), with the page's own share well under it so it is the card that is behind, and the
+   scale comes down a step: fewer pixels cannot help a frame the script is holding up; sixteen in a row at the cap (eight
+   seconds with room to spare) and it goes back up a smaller step, but not to the scale it last had to leave for
+   another forty-five seconds, so it settles instead of seesawing. Between half and the screen's own. */
+const _autoRes={bad:0, good:0, ceil:9, since:0};
+function _autoResStep(ms, cpu){
+  if(GFX.res!==-1 || document.hidden || ms>400) return;              // (a stall, or the tab away: not the picture's fault)
+  const A=_autoRes, want=GFX.fps>0 ? 1000/GFX.fps : 1000/60, nat=Math.min(devicePixelRatio||1, 2);
+  A.since+=0.5;
+  if(ms>want*1.22){ if(cpu<ms*0.7){ A.bad++; } else A.bad=0; A.good=0; } else if(ms<want*1.06){ A.good++; A.bad=0; } else { A.bad=0; A.good=0; }
+  let to=GFX.auto;
+  if(A.bad>=2 && GFX.auto>0.5){ A.ceil=GFX.auto; A.since=0; to=Math.max(0.5, GFX.auto*0.85); }
+  else if(A.good>=16 && GFX.auto<nat){ const up=Math.min(nat, GFX.auto*1.07); if(up<A.ceil*0.98 || A.since>45){ to=up; if(up>=A.ceil) A.ceil=9; } A.good=0; }
+  if(to!==GFX.auto){ GFX.auto=+to.toFixed(3); A.bad=0; renderer.setPixelRatio(gfxPixelRatio()); renderer.setSize(innerWidth, innerHeight); }
+}
+
 /* --- the meter: frames actually drawn, over half a second ---------------- */
-const _meter={n:0, t0:performance.now(), fps:0, ms:0};
+const _meter={n:0, t0:performance.now(), fps:0, ms:0, cpu:0, cpuMs:0, c0:0};
 function updateSettings(dt){
   const M=_meter, t=performance.now();
   M.n++;
   if(t-M.t0>=500){
-    M.fps=M.n*1000/(t-M.t0); M.ms=(t-M.t0)/M.n; M.n=0; M.t0=t;
+    M.fps=M.n*1000/(t-M.t0); M.ms=(t-M.t0)/M.n; M.cpuMs=M.cpu/M.n; M.n=0; M.cpu=0; M.t0=t;
+    _autoResStep(M.ms, M.cpuMs);
     const I=renderer.info.render;
-    const line=M.fps.toFixed(0)+" FPS · "+M.ms.toFixed(1)+" ms";
+    const line=M.fps.toFixed(0)+" FPS · "+M.ms.toFixed(1)+" ms (script "+M.cpuMs.toFixed(1)+")";
     if(GFX.meter) _fpsEl.textContent=line+" · "+I.calls+" draws";
     if(GFXMENU.open){
       const pr=gfxPixelRatio();

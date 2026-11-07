@@ -12,11 +12,13 @@ const app=document.getElementById("app");
    resolution and shadow size; the menu that changes them is 18c-settings.
    res 0 is "native": the screen's own pixel density, up to 2x. */
 const GFX=(function(){
-  const D={res:0, fps:60, shadows:3, draw:2, lights:12, meter:false};
+  const D={res:0, fps:60, shadows:3, draw:2, lights:12, meter:false, aa:true};
   let s=null;
   try{ s=JSON.parse(localStorage.getItem("restarea.gfx")||"null"); }catch(e){}
   const o=Object.assign({}, D, (s && typeof s==="object") ? s : {});
   for(const k in D) if(typeof o[k]!==typeof D[k]) o[k]=D[k];
+  o.saved=!!(s && typeof s==="object");                    // (nothing saved yet: the first run, set to the card below)
+  o.auto=1;                                                  // (resolution AUTO's own scale, res -1: 18c moves it)
   return o;
 })();
 // shadow levels: 0 is none at all; the map covers a square the player stands
@@ -33,10 +35,23 @@ const DRAW_LEVELS=[
   {name:"MEDIUM", tree:70,  small:34, cull:1150, fog:1120},
   {name:"FAR",    tree:84,  small:40, cull:1e9,  fog:1e9},
   {name:"MAX",    tree:120, small:56, cull:1e9,  fog:1e9}];
-function gfxPixelRatio(){ return GFX.res>0 ? GFX.res : Math.min(devicePixelRatio||1, 2); }
+/* res: a fixed scale, 0 the screen's own (up to 2x), or -1 AUTO: 18c moves GFX.auto between half and the screen's own,
+   down when frames run long and slowly back up when there is room, so a fast card stays sharp and a slow one stays
+   smooth */
+function gfxPixelRatio(){ const nat=Math.min(devicePixelRatio||1, 2); return GFX.res>0 ? GFX.res : GFX.res<0 ? Math.min(nat, GFX.auto) : nat; }
 GFX.shadows=Math.max(0, Math.min(SHADOW_LEVELS.length-1, GFX.shadows|0));
 GFX.draw=Math.max(0, Math.min(DRAW_LEVELS.length-1, GFX.draw|0));
-const renderer=new T.WebGLRenderer({antialias:true});
+/* THE CARD. A laptop with two graphics chips (a MacBook Pro with an Intel and an AMD) gives a web page the slow one
+   unless the page asks for the other: so ask. Then read which one we got, and on the first run (nothing saved) set
+   the graphics to suit it: a chip built into the processor starts at MEDIUM with the resolution on AUTO; anything
+   else keeps HIGH. Whatever is chosen in the menu after that is kept, and the menu says which card is drawing. */
+const renderer=new T.WebGLRenderer({antialias:GFX.aa, powerPreference:"high-performance"});
+GFX.aa0=GFX.aa;                                              // (what the canvas was made with: a change takes a reload, 18c)
+GFX.gpu=(function(){ try{ const gl=renderer.getContext(), x=gl.getExtension("WEBGL_debug_renderer_info");
+  return String(x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)||""); }catch(e){ return ""; } })();
+GFX.tier=/intel|uhd|iris|hd graphics|mali|adreno|powervr|swiftshader|llvmpipe|software|microsoft basic/i.test(GFX.gpu) ? "integrated"
+        : /nvidia|geforce|quadro|rtx|gtx|radeon|amd|apple/i.test(GFX.gpu) ? "dedicated" : "unknown";
+if(!GFX.saved && GFX.tier==="integrated"){ GFX.res=-1; GFX.auto=1; GFX.shadows=1; GFX.draw=1; GFX.lights=8; }
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(gfxPixelRatio());
 renderer.shadowMap.enabled=GFX.shadows>0;
@@ -149,7 +164,9 @@ function applyFov(){
 const hemi=new T.HemisphereLight(0xdfe8f0, 0x3f4a2c, 0.72); scene.add(hemi);
 const amb =new T.AmbientLight(0xf2f2ea, 0.12); scene.add(amb);
 
-/* --- the flashlight: one spot moved onto the camera every frame ---------- */
+/* --- the flashlight: one spot moved onto the camera every frame ----------
+   Never hidden, only turned down to nothing: a light coming or going changes every lit shader in the world (see
+   THE SHADOW STAYS ON, below), and the torch is switched on and off all the time. */
 const torch=new T.SpotLight(0xfff0d0, 0.0, 34, 0.40, 0.55, 1.35);
 torch.castShadow=false;
 const torchTarget=new T.Object3D();
@@ -188,3 +205,19 @@ setShadowLevel(GFX.shadows);
    box (setShadowLevel does). */
 key.shadow.bias=-0.00005; key.shadow.normalBias=0.014;
 scene.add(key); scene.add(key.target);
+/* THE SHADOW STAYS ON. A light that starts or stops casting changes every lit shader in the world, and three builds
+   them all again at once: a freeze of a second or more on a slow card, at dusk, at dawn and whenever the cloud
+   closed in. So the key casts for as long as shadows are on in the menu, and when its shade should go (the sun
+   down, a heavy overcast) the shadow camera's far plane is drawn in to a millimetre past its near: every fragment
+   is then outside it and lit, and the map is not drawn again until the shade comes back. One last draw first, so
+   the matrix the shaders read is the thin one. The loop asks each frame through keyShadeWant (16b clears it in
+   cloud); keyShadow() acts only on a change. */
+let keyShadeWant=true, _keyShade=true;
+function keyShadow(on){
+  if(on===_keyShade) return;
+  _keyShade=on;
+  ksc.far=on ? KEY_D+110 : ksc.near+0.001;
+  ksc.updateProjectionMatrix();
+  renderer.shadowMap.autoUpdate=on;
+  renderer.shadowMap.needsUpdate=true;
+}

@@ -1557,16 +1557,34 @@ being drawn and the draw calls.
 
 | Setting | Choices | What it does |
 | --- | --- | --- |
-| Preset | Low · Medium · High · Ultra | Sets everything below except the frame cap. High is how the scene has always looked. |
-| Resolution | 0.5× · 0.75× · 1× · 1.5× · 2× · native | Pixels drawn per screen point. Native is the screen's own density, up to 2×. On a Retina Mac, 1× draws a quarter of the pixels that native does, and is the biggest single saving. |
+| Preset | Low · Medium · High · Ultra | Sets resolution, shadows, draw distance and lights. High is how the scene has always looked. Low and Medium put the resolution on auto. |
+| Resolution | auto · 0.5× · 0.75× · 1× · 1.5× · 2× · native | Pixels drawn per screen point. Native is the screen's own density, up to 2×. On a Retina Mac, 1× draws a quarter of the pixels that native does, and is the biggest single saving. Auto starts at 1× and moves between 0.5× and native. It steps down when frames run long for a second, and creeps back up after eight seconds with room to spare. |
 | Frame-rate cap | 30 · 60 · off | 60 by default. A 120 Hz ProMotion screen draws twice as many frames with the cap off. |
 | Shadows | Off · Low · Medium · High · Ultra | The sun's shadow map: 1024 to 4096 texels, over 76 to 116 m. Low uses hard-edged filtering. Off skips the shadow pass entirely: everything near you is no longer drawn a second time, into the map. |
 | Draw distance | Near · Medium · Far · Max | How far full trees reach (54 to 120 m) and, on Near and Medium, a limit past which nothing is drawn (620 m and 1150 m). The haze closes in to meet the limit, so nothing is seen to vanish. Far is the original. |
 | Lights | 4 · 6 · 8 · 12 · 16 · 24 | How many real point lights follow you round the lamps. Every lit pixel pays for each one, lit or not. The rest of the lamps only glow. |
-| Frame meter | off · on | Frames per second, frame time and draw calls in the top corner. |
+| Antialiasing | on · off | Smooths edges with four samples a pixel. Takes effect on the next reload, because the canvas is made with it or without it. On a chip built into the processor at Retina resolution it costs nearly as much as the resolution does. |
+| Frame meter | off · on | Frames per second, frame time and draw calls in the top corner. The figure after "script" is how much of each frame the page's own work took. Frame time well over it means the graphics chip is behind, and auto resolution only steps down then. |
 
 Changing shadows on or off, or between hard and soft, rebuilds every shader
 once, so there is a short hitch.
+
+**The first run.** The page asks the browser for the fast graphics chip. A
+MacBook Pro with both an Intel and an AMD chip otherwise gives a web page the
+Intel one. The page then reads which chip it got. The menu's resolution note
+names it. If nothing has been saved yet and the chip is one built into the
+processor (Intel UHD or Iris, or a software renderer), the page starts at
+Medium with auto resolution. Any other chip starts at High. Whatever you
+choose in the menu after that is kept.
+
+**No freezes mid-game.** Every shader the world uses is compiled once at
+load, behind the sign, and so is everything zombie mode adds the first time
+it starts. One draw of the whole world sends its meshes and textures to the
+card at the same time. The sun's shadow is never switched off. At night and
+under heavy cloud its range is pulled in to nothing, and the flashlight is
+turned down to zero rather than removed. A light coming or going would make
+every lit shader compile again, which was a freeze of a second or more at
+dusk, at dawn, when a storm came over, and at each click of the flashlight.
 
 ## Layout
 
@@ -1699,7 +1717,7 @@ js/18j-cornhole.js  cornhole at the brewery's boards against Danny: the bags, th
 js/18k-yardhoops.js shooting baskets at the hoops over the drives on Lake Street: the ball, the rim, the board, the net, the tally
 js/18l-warp.js      the warp list, for testing: ` and a key puts you down in one of 28 places
 js/18m-cabgames.js  the newer cabinets: Brickyard Breakout rebuilt, Groundhog Gulch, Turnpike Turtle; their best scores
-js/18c-settings.js  the graphics menu: resolution, frame cap, shadows, draw distance, light count; the frame meter
+js/18c-settings.js  the graphics menu: resolution (and auto), frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience
 js/21-zombies.js    zombie mode: the dead, the guns in your hands, pipe bombs, hordes, the car against them, pickups, blood, damage, the score, the gloom, its sounds
