@@ -57,7 +57,7 @@ const ZOMBIE=(function(){
     {id:"flamer",  slot:5, name:"FLAMETHROWER",  ammo:"FUEL",     mag:100, dmg:0, head:1, pellets:0, flame:true, spread:0, ads:0, rate:0.05, auto:true, reload:2.4, range:10, climb:0, kick:0.12, snd:"flamer",
      hip:[0.16,-0.17,-0.34], adsP:[0.10,-0.15,-0.36]},
     {id:"rocket",  slot:6, name:"ROCKET LAUNCHER", ammo:"ROCKETS", mag:1,  dmg:0, head:1, pellets:0, rocket:true, spread:0.010, ads:0.002, rate:0.9, auto:false, reload:2.3, range:400, climb:0.05, kick:3.0, snd:"rocket",
-     hip:[0.15,-0.105,-0.20], adsP:[0.068,-0.058,-0.17]},
+     hip:[0.17,-0.12,-0.25], adsP:[0.068,-0.066,-0.17]},
   ];
   const GUN=id=>GUNS.find(g=>g.id===id);
   const AMMO_MAX={"9MM":180, "12 GAUGE":48, "5.56":240, ".30-06":30, "FUEL":400, "ROCKETS":12};
@@ -1095,7 +1095,8 @@ const ZOMBIE=(function(){
              sleeve:new T.MeshStandardMaterial({color:0x3b4233, roughness:0.92}),
              brass:new T.MeshStandardMaterial({color:0xb48c3c, metalness:0.6, roughness:0.35}),
              lens:new T.MeshStandardMaterial({color:0x1a2a3a, metalness:0.4, roughness:0.12}),
-             olive:new T.MeshStandardMaterial({color:0x4c5434, roughness:0.72, metalness:0.05})};
+             olive:new T.MeshStandardMaterial({color:0x4c5434, roughness:0.72, metalness:0.05}),
+             dot:new T.MeshBasicMaterial({color:0xff2a1a, toneMapped:false})};
   const BOX=(w,h,d)=>new T.BoxGeometry(w,h,d);
   const CYLZ=(r0,r1,L,s)=>{ const g=new T.CylinderGeometry(r0,r1,L,s||14); g.rotateX(Math.PI/2); return g; };
   function part(Gp, geo, mat, x,y,z, rx,ry,rz){ const m=new T.Mesh(geo, mat); m.position.set(x,y,z); m.rotation.set(rx||0,ry||0,rz||0); Gp.add(m); return m; }
@@ -1157,9 +1158,11 @@ const ZOMBIE=(function(){
       part(Gp, CYLZ(0.051,0.051,0.03,18), M.dark, 0,0,-0.26); part(Gp, BOX(0.03,0.05,0.16), M.dark, 0,0.05,-0.02);
       part(Gp, BOX(0.03,0.11,0.045), M.dark, 0,-0.10,0.06, 0.24); part(Gp, BOX(0.03,0.09,0.04), M.dark, 0,-0.092,-0.20, 0.1);
       part(Gp, BOX(0.006,0.005,0.04), M.dark, 0,-0.062,0.025);
-      // the sight: a bracket, the body, the eyepiece toward you
-      part(Gp, BOX(0.024,0.02,0.05), M.dark, -0.046,0.028,-0.02); part(Gp, BOX(0.028,0.032,0.09), M.dark, -0.068,0.058,-0.02);
-      part(Gp, CYLZ(0.013,0.013,0.012,14), M.lens, -0.068,0.058,0.028); part(Gp, CYLZ(0.012,0.012,0.012,14), M.lens, -0.068,0.058,-0.068);
+      // the sight: a bracket out to the left, and on it an open frame you look through, a red dot at its front
+      part(Gp, BOX(0.024,0.02,0.05), M.dark, -0.046,0.028,-0.02); part(Gp, BOX(0.032,0.012,0.06), M.dark, -0.068,0.044,-0.02);
+      for(const sx of [-1,1]) part(Gp, BOX(0.003,0.034,0.05), M.dark, -0.068+sx*0.0155,0.067,-0.02);
+      part(Gp, BOX(0.034,0.003,0.05), M.dark, -0.068,0.0855,-0.02);
+      part(Gp, new T.SphereGeometry(0.0022,8,6), MAT.dot, -0.068,0.066,-0.044);
       const wh=new T.Group(); Gp.add(wh); Gp.userData.warhead=wh;
       part(wh, CYLZ(0.045,0.004,0.17,16), M.olive, 0,0,-0.62); part(wh, CYLZ(0.045,0.045,0.04,16), M.dark, 0,0,-0.52);
       mz(0,0,-0.56); pt(0,0,0.40);
@@ -1611,7 +1614,7 @@ const ZOMBIE=(function(){
       #zammo{font-size:50px;font-weight:700;line-height:1.05}
       #zammo small{font-size:22px;color:#a8a294;font-weight:500}
       #zatype{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;color:#a8a294}
-      #zslots{margin-top:8px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em}
+      #zslots{margin-top:8px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;max-width:min(470px,52vw);margin-left:auto;line-height:2}
       #zslots span{display:inline-block;margin-left:8px;padding:2px 6px;border:1px solid rgba(232,226,208,.18);color:rgba(232,226,208,.25)}
       #zslots span.have{color:#cfc9b8;border-color:rgba(232,226,208,.45)}
       #zslots span.cur{color:#14120e;background:#c8b070;border-color:#c8b070}
