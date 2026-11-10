@@ -73,7 +73,8 @@ RAIDERS.stop=function(){ RAIDERS.on=false; RAIDERS.keys={}; player.pitch=-0.1; i
 RAIDERS.key=function(e){
   if(e.code==="Escape" || e.code==="KeyE" || e.code==="Tab"){ if(!e.repeat) RAIDERS.stop(); return; }
   const G=RAIDERS.g;
-  if((e.code==="KeyN" || e.code==="Enter") && !e.repeat){ RAIDERS.newGame(); return; }
+  if(e.code==="KeyN" && !e.repeat){ RAIDERS.newGame(); return; }
+  if(e.code==="Enter" && !e.repeat && G && (G.over || G.won)){ RAIDERS.newGame(); return; }
   if(e.code==="Space" && !e.repeat){ if(G && (G.over || G.won)) RAIDERS.newGame(); else RAIDERS.fire=true; return; }
   RAIDERS.keys[e.code]=true;
 };
@@ -169,7 +170,7 @@ function _rdAttract(x, t){
   const rows=[[0,"= 100 · 1 HIT"],[2,"= 100 · 2 HITS"],[1,"= 100 · 3 HITS"]];
   rows.forEach(([k,s],i)=>{ const K=_RK[k], f=((t*1.6)|0)%2; _rdSprite(x, _RS[K.sp][f], W/2-92, 112+i*26, 2, K.col); x.fillStyle="#f4f4f4"; x.textAlign="left"; x.fillText(s, W/2-58, 120+i*26); });
   x.textAlign="center";
-  if(((t*2)|0)%2){ x.fillStyle="#f2e23a"; x.fillText("INSERT COIN · E TO PLAY", W/2, H-46); }
+  if(((t*2)|0)%2){ x.fillStyle="#f2e23a"; x.fillText("INSERT COIN · ENTER TO PLAY", W/2, H-46); }
   x.fillStyle="#9a9aaa"; x.fillText("HI SCORE "+String(RAIDERS.hi||0).padStart(5,"0"), W/2, H-22);
   x.fillStyle="rgba(0,0,0,0.22)"; for(let y=0;y<H;y+=3) x.fillRect(0,y,W,1);
 }

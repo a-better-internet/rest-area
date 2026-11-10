@@ -32,6 +32,8 @@ addEventListener("keydown",e=>{
   if(typeof DOZER!=="undefined" && DOZER.on){ e.preventDefault(); DOZER.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
+  // the code box (21): / opens it; while it is open every key is its
+  if(typeof ZOMBIE!=="undefined" && ZOMBIE.codeKey(e)){ e.preventDefault(); keys[e.code]=false; return; }
   // the warp list, for testing (18l): ` opens it; while it is open the keys are its
   if(typeof WARP!=="undefined" && WARP.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   // on the disc golf course with the disc in your hand, Space winds up the throw (18i)
@@ -43,6 +45,9 @@ addEventListener("keydown",e=>{
   if(typeof ZOMBIE!=="undefined" && ZOMBIE.key(e)){ e.preventDefault(); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
   if(e.code==="KeyG" && !e.repeat && window.GFXMENU){ GFXMENU.show(); return; }
+  // ENTER plays the arcade game you are standing at, whatever door is by it (E is the door's)
+  if((e.code==="Enter" || e.code==="NumpadEnter") && !e.repeat && started && !driving && !droneMode && !player.ladder){
+    const g=nearestUse(true); if(g){ e.preventDefault(); g.fn(); return; } }
   const held=keys[e.code];                  // keydown repeats while a key is down
   keys[e.code]=true;
   if(e.code==="KeyQ" && !held) toast("SPRINT","#ffd48a");
@@ -255,9 +260,10 @@ function interact(){
 /* Things you can use: a vending machine, the fountain, the hand dryer, the
    brochure rack. Each is a point, a reach and a line of prompt; content
    files register them with addUse. */
-function nearestUse(){
+function nearestUse(game){
   let best=null, bd=1e9;
   for(const u of USES){
+    if(!!u.game!==!!game) continue;                                // (the arcade's games are ENTER's, not E's: nearestUse(true))
     if(u.when && !u.when()) continue;
     const d=Math.hypot(player.pos.x-u.x, player.pos.z-u.z);
     if(d<(u.r||1.6) && Math.abs(player.feetY-u.y)<1.2 && d<bd){ bd=d; best=u; }
@@ -312,7 +318,8 @@ function updateDoors(dt){
     const nc=(np && np.pri && nc0 && Math.hypot(player.pos.x-np.x, player.pos.z-np.z)<Math.hypot(player.pos.x-nc0.g.position.x, player.pos.z-nc0.g.position.z)) ? null : nc0;
     if(nc) bits.push("E  ·  DRIVE");
     if(nearestSeat) bits.push("C  ·  "+(nearestSeat.lie?"LIE DOWN":"SIT")+"  ·  "+nearestSeat.label);
-    const u=nc ? null : np;
+    const u=nc ? null : np, ng=nearestUse(true);
+    if(ng) bits.push("ENTER  ·  "+ng.label);
     if(u && u.pri) bits.push("E  ·  "+u.label);                      // cleaning up beats the stall door
     else if(best && !nc) bits.push(best.occ ? "OCCUPIED" : best.promptFn ? best.promptFn(best) : "E  ·  "+(best.manualOnly ? (best.target>0.5?"CLOSE ":"OPEN ")+best.label : best.label));
     else if(u) bits.push("E  ·  "+u.label);

@@ -162,7 +162,7 @@ const DOZER={on:false, g:null, keys:{}, t:0, acc:0, hi:0, shake:0, demoT:0};
   const W2=(lx,lz)=>[D.x+lx*Math.cos(D.ry)+lz*Math.sin(D.ry), D.z-lx*Math.sin(D.ry)+lz*Math.cos(D.ry)];
   const st=W2(0, 1.02), look=W2(0, -0.02), a0=W2(-W/2, -DP/2), a1=W2(W/2, DP/2+0.20);
   addCol(Math.min(a0[0],a1[0]), Math.max(a0[0],a1[0]), Math.min(a0[1],a1[1]), Math.max(a0[1],a1[1]), A.y-0.5, A.y+TOP+0.5);
-  addUse(st[0], st[1], A.y, "PLAY COIN DOZER", ()=>DOZER.start(), 0.9);
+  addUse(st[0], st[1], A.y, "PLAY COIN DOZER", ()=>DOZER.start(), 0.9).game=true;
   ARCADE.games.push({name:"COIN DOZER", x:st[0], z:st[1]});
   DOZER.cab={G:G, D:D, coins:coins, prizeMesh:prizeMesh, pusher:pusher, chute:chute, bucket:bucket, trayGlow:trayGlow, bulbs:bulbs, bA:bA, bB:bB, domes:domes, neons:neons,
              read:{c:rc, x:rc.getContext("2d"), tex:rtex}, back:{c:bgc, x:bgc.getContext("2d"), base:bgBase, tex:bgTex},
@@ -322,7 +322,7 @@ function _dzReadout(g, live){
     x.fillStyle=g.last ? "#ff3ecb" : "#8a8aa0"; x.font="bold 18px 'Courier New', monospace";
     x.fillText(g.last || (g.hop<_DZ.HOP ? "NEXT IN "+Math.ceil(_DZ.REGEN-g.regen)+"s" : "HOPPER FULL"), W*0.83, H/2);
   } else {
-    x.fillStyle=((DOZER.t*2)|0)%2 ? "#ffd247" : "#ff3ecb"; x.fillText("E TO PLAY · HI "+("0000"+DOZER.hi).slice(-4), W/2, H/2);
+    x.fillStyle=((DOZER.t*2)|0)%2 ? "#ffd247" : "#ff3ecb"; x.fillText("ENTER TO PLAY · HI "+("0000"+DOZER.hi).slice(-4), W/2, H/2);
   }
   R.tex.needsUpdate=true;
   // and the same on the backglass, in the band across its top, where you look while you play
@@ -334,7 +334,7 @@ function _dzReadout(g, live){
     put("TOKENS "+("00"+g.hop).slice(-2), 362, 52, 36, 196, g.hop>0 ? "#3df3ff" : "#ff5a3a");
     put(g.last || (g.hop<_DZ.HOP ? "NEXT TOKEN IN "+Math.ceil(_DZ.REGEN-g.regen)+"s" : "HOPPER FULL"), 256, 98, 24, 400, g.last ? "#ff3ecb" : "#8a8aa0");
   } else {
-    put("E TO PLAY", 256, 52, 36, 400, ((DOZER.t*2)|0)%2 ? "#ffd247" : "#ff3ecb");
+    put("ENTER TO PLAY", 256, 52, 36, 400, ((DOZER.t*2)|0)%2 ? "#ffd247" : "#ff3ecb");
     put("HIGH SCORE "+("0000"+DOZER.hi).slice(-4), 256, 98, 24, 400, "#3df3ff");
   }
   B.tex.needsUpdate=true;

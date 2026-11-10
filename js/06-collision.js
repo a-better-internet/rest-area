@@ -104,7 +104,7 @@ function roofLadder(o){
   const [ax, az]=P(off-0.035, -HW-0.02), [bxx, bzz]=P(off+0.035, HW+0.02);
   addCol(Math.min(ax, bxx), Math.max(ax, bxx), Math.min(az, bzz), Math.max(az, bzz), g-1, edge);
   const [ox, oz]=P(off+0.95, 0), [px, pz]=P(land-0.55, 0);
-  if(o.walk){ const [w0, w1, w2, w3]=o.walk; addFlat(w0, w1, w2, w3, roof); ROOF_WALKS.push({x0:w0, x1:w1, z0:w2, z1:w3, y:roof}); }
+  if(o.walk){ const [w0, w1, w2, w3]=o.walk; addFlat(w0, w1, w2, w3, roof); ROOF_WALKS.push({x0:w0, x1:w1, z0:w2, z1:w3, y:roof, label:o.label||""}); }
   return addLadder(rx, rz, g, o.y1===undefined ? edge : o.y1, ry, {x:ox, z:oz}, {x:px, z:pz, y:roof}, o.label);
 }
 /* A ROOFTOP UNIT, for a roof you can now walk on: the air handler's cabinet on its curb (sunk into the curb, the curb

@@ -976,12 +976,12 @@ If the scene runs hot on your machine, start there (see below).
       Twenty-five metres on, under the hill, a pair of sliding glass doors
       parts as you come up to them, each leaf running into a pocket in the
       wall, onto a small arcade with a cosmic carpet, black walls with pink
-      and blue neon, and a GAME ROOM sign. Six upright cabinets stand
+      and blue neon, and a GAME ROOM sign. Seven upright cabinets stand
       round the walls, each running its own attract screen (ASTRO
       RAIDERS, MAZE MUNCHER, BRICKYARD BREAKOUT and BLOCK DROP on the west
-      and back walls, GROUNDHOG GULCH and TURNPIKE TURTLE either side of
-      the way in), with a token changer by the door, clear of the trash
-      can.
+      and back walls, SUDS PATROL in the back corner, GROUNDHOG GULCH and
+      TURNPIKE TURTLE either side of the way in), with a token changer by
+      the door, clear of the trash can.
     - **MECH 2.** The first steel door opens on what its name says: the air
       handler that breathes for the corridor and the arcade (`E`), its duct
       away along the ceiling, a water heater, the sump under its grate, the
@@ -1028,7 +1028,11 @@ If the scene runs hot on your machine, start there (see below).
       stop valve weeps steam, and now and then a safety valve lifts with a
       shriek. `E` at the door again swings it shut and the wheel spins home.
       It is underground and red at any hour.
-    - **Astro Raiders.** Every cabinet plays. `E` at the first stands you at it,
+    - **`ENTER` plays.** Every game in the arcade (the cabinets, the air
+      hockey, the hoops and the coin dozer) starts with `ENTER` while you
+      stand at it, and the prompt says so. `E` no longer starts them, so
+      `E` by the sliding doors is always the doors.
+    - **Astro Raiders.** Every cabinet plays. `ENTER` at the first stands you at it,
       looking at its screen in the cabinet, with the room still round you.
       It is a space invaders game after yojoecool's MIT-licensed
       SpaceInvaders. Five rows of raiders march across and step down, faster
@@ -1038,7 +1042,7 @@ If the scene runs hot on your machine, start there (see below).
       than the last. `A`/`D` or the arrows move, `Space` or a click fires,
       the stick on the cabinet leans as you move, `N` starts again and `Esc`
       or `E` steps away.
-    - **The other three** play exactly the same way: `E` stands you at the
+    - **The others** play exactly the same way: `ENTER` stands you at the
       cabinet, you play on its screen with the stick leaning under your
       hand, `N` (or `Space` once it is over) starts again, and `Esc` or `E`
       steps away. Each keeps its high score.
@@ -1075,12 +1079,33 @@ If the scene runs hot on your machine, start there (see below).
         clock. Into the water, off the edge or into the brambles between
         the nests is the end of it. Fill all five and round it goes again,
         faster; from the second round a hawk's shadow sweeps the median.
+      - **Suds Patrol** is a one-screen platform game of the
+        bubble-trapping kind, with its own stages and characters. You are
+        the rest area's night custodian with a soap wand, and the place is
+        crawling with stink bugs walking the shelves, spotted lanternflies
+        hopping between them and dust bunnies drifting through it all.
+        `Space` (or `J`) blows a bubble out in front of you. One that
+        catches a bug while it is still being blown out carries it up
+        under the ceiling, and touching a bubble pops it. Pop one with a
+        bug in it and the bug comes down as a snack: a soft pretzel, a
+        whoopie pie, a pierogi and so on up to a sticky bun, better on
+        later stages and better again for each bug in one chain (bubbles
+        touching pop together, and a chain of bugs is worth a bonus too).
+        Leave a caught bug too long and it gets out, red and quicker. Hold
+        jump as you come down on a bubble to bounce off it. Fall through
+        the gap in the floor and you drop in again at the top. Clear the
+        bugs for the next stage: the lobby, vending row, the truck lot, the
+        picnic grove, the loading dock, the boiler room, the arcade and the
+        roof, then round again faster. Dawdle and they all turn red
+        (HURRY UP!), and later a stink cloud comes for you through
+        everything. Three lives, another at 20,000 and every 30,000 after.
+        The best five scores are kept.
       - **Block Drop** follows Jake Gordon's MIT-licensed
         javascript-tetris: a well ten by twenty, the seven pieces from a
         bag, ten for a piece set down and a hundred for a row (doubling
         for each more at once), the drop quickening as the rows go, and the
         next piece in its box.
-    - **Air hockey.** `E` at the near end of the table puts the red mallet
+    - **Air hockey.** `ENTER` at the near end of the table puts the red mallet
       in your hand, and you play the table's computer, first to seven. The
       mouse (or `WASD`) moves your mallet round your half. The puck rides
       the air, comes off the rails with most of its speed and off a mallet
@@ -1091,7 +1116,7 @@ If the scene runs hot on your machine, start there (see below).
       hangs back or reaches late, so a quick shot gets past it. This is the physics of the little canvas
       game the crew left on the office computer, moved onto the table in
       metres.
-    - **Hoops.** `E` at the front of the basketball machine stands you at
+    - **Hoops.** `ENTER` at the front of the basketball machine stands you at
       the line. You aim where you look, and a click or `Space` shoots the
       next ball from the tray. The rim and the backboard are hard: off the
       front of the rim it bounces out, off the board it can still drop.
@@ -1102,7 +1127,7 @@ If the scene runs hot on your machine, start there (see below).
       first shot. The balls roll back down the ramp to you.
     - **Coin dozer.** On the east wall, a pusher machine in purple with
       pink and cyan neon, its marquee lit and its chase bulbs running.
-      `E` stands you at it looking down through the glass at a deck of
+      `ENTER` stands you at it looking down through the glass at a deck of
       brass tokens with the pusher going back and forth behind them. `A`
       and `D` (or the arrows, or the mouse) move the chute along the back,
       `Space` or a click drops a token, and `X` shakes the machine (once
@@ -1378,8 +1403,25 @@ If the scene runs hot on your machine, start there (see below).
     and down in the weigh station's listening room, and later more turn up
     near you. Each takes its own ammunition. Click to fire (hold it down
     for the carbine), the right button aims down the sights (the rifle has
-    a scope), `R` reloads, `1`–`5` or the wheel change guns, and `V` shoves
+    a scope), `R` reloads, `1`–`6` or the wheel change guns, and `V` shoves
     them back with the gun.
+  - **Zoom.** Down the sights the view closes in (the rifle's scope a lot).
+    While you hold the right button the wheel zooms further in or back out,
+    and `+` and `-` do the same at any time. The steps go from the sights'
+    own up to six times that. Each gun keeps its own zoom, the mouse slows
+    with it so your aim stays steady, and the zoom shows under the
+    crosshair.
+  - **The rocket launcher** (`6`) is in the boiler hall's stores, up on the
+    roof of the Edinboro substation's control house, and later it turns up
+    near you. One rocket in the tube: it goes where the crosshair is, at
+    sixty metres a second, burning and trailing smoke, with a back-blast
+    of smoke out behind you. It goes off at the first thing it meets (a
+    wall, the ground, a window, one of them) or after seven seconds in the
+    air. The blast throws them about like a pipe bomb's, a little tighter
+    and harder, and blows out the windows round it. Don't fire it at your
+    feet. The tube reloads itself. Rockets come three to a case: in the
+    stores, up on the scale house's roof, and now and then off the dead.
+    Pipe bombs blow out the windows near them now too.
   - **The flamethrower** is in French Creek Fireworks and in the boiler
     hall's stores. Hold the button down: it throws a stream of burning
     fuel ten metres that falls a little, then rolls up in flame and soot.
@@ -1406,7 +1448,8 @@ If the scene runs hot on your machine, start there (see below).
     that come back a while after you take them. Down in the red boiler
     hall, by its east wall, are the emergency stores: an olive locker with
     a box of every kind of ammunition, fuel for the flamethrower, a first
-    aid kit, two crates of pipe bombs and the flamethrower itself. More turns up round you as
+    aid kit, two crates of pipe bombs, the flamethrower itself, and a row
+    in front with the rocket launcher and two cases of rockets. More turns up round you as
     you go, whatever you are shortest of, and the dead drop some.
   - **Pipe bombs.** `F` throws one, if you have one: it beeps faster and
     faster for three and a half seconds, and the dead nearby turn and go
@@ -1414,6 +1457,13 @@ If the scene runs hot on your machine, start there (see below).
     further out, and leaving a scorch on the ground. Keep back from it
     yourself. You start with one, carry up to six, and find more in the
     caches; a crate of them fills you up.
+  - **Codes.** `/` opens a box at the foot of the screen. Type a code and
+    press `ENTER` (`Esc` shuts it). **NINELIVES** turns infinite health on
+    or off: hits still flash and shake, but take nothing. **BOTTOMLESS**
+    turns infinite ammo on or off: every magazine stays full, nothing needs
+    reloading, and the pipe bombs never run out. What is on shows under the
+    score. Codes last until you turn them off or reload the page, and a run
+    played with either one on is not saved as your best.
   - **Hordes.** From the second level, each time the threat goes up a pack
     comes at you all at once from one side, and the banner says which.
   - **In a car.** Hit them fast and they go flying: the car jolts and
@@ -1467,6 +1517,8 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Walk / look | `WASD` / drag or mouse |
 | Run · sprint | `Shift` · `Q` |
 | Door · drive · use | `E` |
+| Play an arcade game | `Enter` |
+| Codes (zombie mode) | `/` |
 | Handbrake (driving) | `Space` |
 | Throttle · reverse · steer (the boat) | `W` · `S` · `A` `D` |
 | Sit / stand | `C` |
@@ -1483,7 +1535,8 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Zombie mode on / off | `Z` |
 
 In zombie mode: click to fire (hold for the carbine and the flamethrower),
-the right button to aim down the sights, `R` to reload, `1`–`5` or the
+the right button to aim down the sights (the wheel zooms while you hold
+it, and `+` / `-` zoom at any time), `R` to reload, `1`–`6` or the
 wheel to change guns, `V`
 to shove with the gun, `F` to throw a pipe bomb, and `ENTER` to go again
 when you are down. The drone,
@@ -1506,14 +1559,15 @@ At the oche you aim with the mouse. A click or `Space` throws, `N` starts a
 new game, and `Esc` or `E` puts the darts down.
 
 At the Astro Raiders cabinet `A`/`D` or the arrows move, `Space` or a click
-fires, `N` (or `Enter`) starts a new game and `Esc` or `E` steps away. At
-the other five the arrows or `WASD` work the stick: in Maze Muncher they
+fires, `N` (or `Enter`, once it is over) starts a new game and `Esc` or `E`
+steps away. At the other six the arrows or `WASD` work the stick: in Maze Muncher they
 steer; in Brickyard Breakout they (or the mouse) move the bat, `Space`
 serves, lets a glued ball go and fires the zapper, and `P` pauses; in Block
 Drop left and right move the piece, up turns it and down drops it faster;
 in Groundhog Gulch they dig and `Space` is the hose; in Turnpike Turtle each
-press is a hop. `N` (or `Space`, when the game is over) starts again, and
-`Esc` or `E` steps away.
+press is a hop; in Suds Patrol left and right walk, up (or `W`, `K`) jumps
+and `Space` (or `J`) blows a bubble. `N` (or `Space` or `Enter`, when the
+game is over) starts again, and `Esc` or `E` steps away.
 
 At a hoop over a drive on Lake Street, `E` in front of it takes the ball.
 Look where you want it to go (higher, for more arc), hold `Space` or the
@@ -1717,6 +1771,7 @@ js/18j-cornhole.js  cornhole at the brewery's boards against Danny: the bags, th
 js/18k-yardhoops.js shooting baskets at the hoops over the drives on Lake Street: the ball, the rim, the board, the net, the tally
 js/18l-warp.js      the warp list, for testing: ` and a key puts you down in one of 28 places
 js/18m-cabgames.js  the newer cabinets: Brickyard Breakout rebuilt, Groundhog Gulch, Turnpike Turtle; their best scores
+js/18n-suds.js      Suds Patrol, the bubble-trapping platform game on the seventh cabinet
 js/18c-settings.js  the graphics menu: resolution (and auto), frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience

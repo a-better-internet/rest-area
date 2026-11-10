@@ -664,6 +664,16 @@ const AUDIO=(function(){
       tone("square", 880, 700, 0.07, 0.024*vol, t, 0, master);
     }else if(kind==="chomp0"||kind==="chomp1"){   // the muncher's two-note chew, a dot at a time
       const up=kind==="chomp0"; tone("triangle", up?260:480, up?480:260, 0.08, 0.05*vol, t, 0, master);
+    }else if(kind==="suds"){                      // Suds Patrol (18n): a bubble blown
+      tone("sine", 420, 980, 0.12, 0.035*vol, t, 0, master);
+    }else if(kind==="pop"){                       // a bubble popped
+      tone("square", 1300, 300, 0.06, 0.03*vol, t, 0, master);
+    }else if(kind==="hop"){                       // a jump
+      tone("square", 260, 620, 0.10, 0.022*vol, t, 0, master);
+    }else if(kind==="nab"){                       // a bug caught in one
+      tone("triangle", 600, 1200, 0.16, 0.04*vol, t, 0, master); tone("triangle", 900, 1800, 0.12, 0.03*vol, t+0.08, 0, master);
+    }else if(kind==="snack"){                     // a snack picked up
+      tone("square", 880, null, 0.05, 0.025*vol, t, 0, master); tone("square", 1320, null, 0.08, 0.025*vol, t+0.05, 0, master);
     }else if(kind==="pellet"){                    // a power pellet
       tone("square", 200, 900, 0.22, 0.03*vol, t, 0, master);
     }else if(kind==="eatghost"){                  // a blue ghost eaten

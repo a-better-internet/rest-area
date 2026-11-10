@@ -56,7 +56,7 @@ function _cbMid(x, a, b){
 // the foot of every attract screen: INSERT COIN flashing, the high score
 function _cbFoot(x, i, t){
   const W=_CB.W, H=_CB.H; x.textAlign="center"; x.textBaseline="middle"; _cbFont(x, 13);
-  if(((t*2)|0)%2){ x.fillStyle="#f2e23a"; x.fillText("INSERT COIN · E TO PLAY", W/2, H-40); }
+  if(((t*2)|0)%2){ x.fillStyle="#f2e23a"; x.fillText("INSERT COIN · ENTER TO PLAY", W/2, H-40); }
   x.fillStyle="#9a9aaa"; x.fillText("HI SCORE "+String(CABS.hi[i]||0).padStart(5,"0"), W/2, H-20);
 }
 
@@ -397,8 +397,8 @@ CABS.stop=function(){
 CABS.key=function(e){
   if(e.code==="Escape" || e.code==="KeyE" || e.code==="Tab"){ if(!e.repeat) CABS.stop(); return; }
   const i=CABS.i, G=_CBG[i], S=CABS.state[i];
-  if((e.code==="KeyN" || e.code==="Enter") && !e.repeat){ CABS.state[i]=G.newGame(i); return; }
-  if(e.code==="Space" && !e.repeat && S && (S.over || S.won)){ CABS.state[i]=G.newGame(i); return; }
+  if(e.code==="KeyN" && !e.repeat){ CABS.state[i]=G.newGame(i); return; }
+  if((e.code==="Space" || e.code==="Enter") && !e.repeat && S && (S.over || S.won)){ CABS.state[i]=G.newGame(i); return; }
   if(S && G.key) G.key(S, e);
   CABS.keys[e.code]=true;
 };

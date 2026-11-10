@@ -36,8 +36,11 @@
    (soft decals on the ground); a head shot takes the head. You take damage
    too: the edges of the screen go red, from the side it came; at nothing you
    are down. ENTER to go again, Z to leave.
+   THE LAUNCHER and THE CODES: a rocket launcher to find (ROCKETS, blast);
+   / for a code box, NINELIVES endless health, BOTTOMLESS endless ammo.
    Keys in the mode: click to fire (hold it for the carbine), the right
-   button to aim, 1-4 or the wheel for the guns, R to reload, V to shove.
+   button to aim (the wheel zooms while it is held; + and - too), 1-6 or the
+   wheel for the guns, R to reload, V to shove.
    ---------------------------------------------------------------------- */
 const ZOMBIE=(function(){
   const Z={on:false, dead:false, hp:100, t:0, kills:0, level:1, fade:0, freeze:false, ts:1, score:0};
@@ -53,16 +56,18 @@ const ZOMBIE=(function(){
      hip:[0.14,-0.16,-0.30], adsP:[0,-0.075,-0.16], zoom:0.40},
     {id:"flamer",  slot:5, name:"FLAMETHROWER",  ammo:"FUEL",     mag:100, dmg:0, head:1, pellets:0, flame:true, spread:0, ads:0, rate:0.05, auto:true, reload:2.4, range:10, climb:0, kick:0.12, snd:"flamer",
      hip:[0.16,-0.17,-0.34], adsP:[0.10,-0.15,-0.36]},
+    {id:"rocket",  slot:6, name:"ROCKET LAUNCHER", ammo:"ROCKETS", mag:1,  dmg:0, head:1, pellets:0, rocket:true, spread:0.010, ads:0.002, rate:0.9, auto:false, reload:2.3, range:400, climb:0.05, kick:3.0, snd:"rocket",
+     hip:[0.15,-0.105,-0.20], adsP:[0.068,-0.058,-0.17]},
   ];
   const GUN=id=>GUNS.find(g=>g.id===id);
-  const AMMO_MAX={"9MM":180, "12 GAUGE":48, "5.56":240, ".30-06":30, "FUEL":400};
-  const AMMO_BOX={"9MM":24, "12 GAUGE":8, "5.56":30, ".30-06":5, "FUEL":100};
+  const AMMO_MAX={"9MM":180, "12 GAUGE":48, "5.56":240, ".30-06":30, "FUEL":400, "ROCKETS":12};
+  const AMMO_BOX={"9MM":24, "12 GAUGE":8, "5.56":30, ".30-06":5, "FUEL":100, "ROCKETS":3};
   const BOMB_MAX=6;
   const S={have:{}, mag:{}, ammo:{}, cur:"pistol", next:null, cool:0, reloadT:0, reloading:false, switchT:0, fired:false,
            fireHeld:false, aimHeld:false, ads:0, kick:0, kickR:0, bloom:0, melee:0, meleeHit:false, sprint:0, cycle:0,
            flashT:0, dmgFlash:0, dmgDir:0, dmgDirT:0, shake:0, hitT:0, hitKill:false, bobA:0, swX:0, swY:0, rl:0,
            lastYaw:0, lastPitch:0, spawnT:6, supplyT:20, levelShown:1, deadT:0, heartT:0, groanT:4, rehideT:0, trailAt:null,
-           bombs:0, throwT:0, streak:0, streakT:0, splat:0, tsT:0, horde:null, crowdT:0};
+           bombs:0, throwT:0, streak:0, streakT:0, splat:0, tsT:0, horde:null, crowdT:0, zoomBy:{}, zoomT:0, cheated:false};
   Z.trail=[];
   const _v1=new T.Vector3(), _v2=new T.Vector3(), _v3=new T.Vector3(), _o=new T.Vector3(), _d=new T.Vector3();
   const wrapA=a=>Math.atan2(Math.sin(a), Math.cos(a));
@@ -411,7 +416,7 @@ const ZOMBIE=(function(){
       _v3.set(zb.x, zb.y+1.6*zb.h, zb.z); blood.burst(_v3, dir, 46, 2.2); blood.mist(_v3, 1.6); }
     if(!(how && how.cops)){ Z.kills++; S.hitKill=true; } snd.die(zb.x, zb.z);
     // what they had on them
-    const r=Math.random(), owned=GUNS.filter(g=>S.have[g.id]);
+    const r=Math.random(), owned=GUNS.filter(g=>S.have[g.id] && (g.id!=="rocket" || Math.random()<0.25));      // (a rocket off one of them now and then, not often)
     if(r<0.18){ const g=owned[(Math.random()*owned.length)|0]; dropPickup("ammo:"+g.ammo, zb.x, zb.z, zb.y); }
     else if(r<0.24) dropPickup("health", zb.x, zb.z, zb.y);
   }
@@ -512,8 +517,8 @@ const ZOMBIE=(function(){
   let _bombGeo=null, _bombMat=null, _bombLight=null;
   function throwBomb(){
     if(Z.dead || S.throwT>0 || driving || player.ladder) return;                  // (not from behind the wheel, or off a ladder)
-    if(S.bombs<=0){ feed("NO PIPE BOMBS", "#8a8a7a"); return; }
-    S.bombs--; S.throwT=0.45;
+    if(S.bombs<=0 && !Z.infAmmo){ feed("NO PIPE BOMBS", "#8a8a7a"); return; }
+    if(!Z.infAmmo) S.bombs--; S.throwT=0.45;
     if(!_bombGeo){ _bombGeo={pipe:new T.CylinderGeometry(0.035, 0.035, 0.22, 10), cap:new T.CylinderGeometry(0.042, 0.042, 0.03, 10),
         box:new T.BoxGeometry(0.074, 0.06, 0.074), lt:new T.SphereGeometry(0.014, 8, 6)};                 // (once: every throw shares them)
       _bombMat={pipe:new T.MeshStandardMaterial({color:0x5a5e60, metalness:0.4, roughness:0.5}), box:new T.MeshStandardMaterial({color:0x6a6a2a, roughness:0.9})};
@@ -548,28 +553,114 @@ const ZOMBIE=(function(){
   }
   const BOOM={x:0, y:0, z:0, color:0xffa040, intensity:9, dist:45, decay:1.2, fire:true, mod:{v:0}, under:false};
   LAMPS.push(BOOM);
-  function explode(b){
-    b.live=false;
-    const R=7.5, at=new T.Vector3(b.x, b.y+0.5, b.z);
+  function explode(b){ b.live=false; blast(b.x, b.y, b.z, 7.5, 40, 320, 6.5, 75); }
+  /* ---- a blast (a pipe bomb's, a rocket's): R its reach, d0 + d1 the damage at its edge and the more at its heart; anyone
+     within pr of it takes up to pd. Everything in reach is thrown or knocked flat, the glass round it goes, and every one
+     of them for ninety metres comes to see. ---- */
+  function blast(bx, by, bz, R, d0, d1, pr, pd){
+    const b={x:bx, y:by, z:bz}, at=new T.Vector3(b.x, b.y+0.5, b.z);
     for(const zb of ZS){ if(!zb.live || zb.state==="dead") continue;
       const dx=zb.x-b.x, dz=zb.z-b.z, d=Math.hypot(dx, dz, (zb.y+0.9)-b.y); if(d>R) continue;
-      const k=1-d/R, ux=d>0.01 ? dx/Math.hypot(dx,dz) : 1, uz=d>0.01 ? dz/Math.hypot(dx,dz) : 0, dmg=40+320*k;
+      const k=1-d/R, ux=d>0.01 ? dx/Math.hypot(dx,dz) : 1, uz=d>0.01 ? dz/Math.hypot(dx,dz) : 0, dmg=d0+d1*k;
       _v2.set(ux, 0, uz); _v1.set(zb.x, zb.y+1.0, zb.z);
       if(dmg>=zb.hp){ blood.burst(_v1, _v2, 26, 2.0); blood.mist(_v1, 1.6);
         killZombie(zb, false, _v2, {bonus:5, fly:fling(ux, uz, 2.5+8*k, 3.2+5*k, k, (Math.random()-0.5)*2.5)}); }
       else { hurtZombie(zb, dmg, false, _v1, _v2); if(zb.state!=="dead"){ zb.down={t:0, dur:2.2+Math.random(), fall:(Math.sin(zb.yaw)*ux+Math.cos(zb.yaw)*uz)>0 ? 1 : -1}; zb.kx+=ux*1.4; zb.kz+=uz*1.4; } }
     }
     // you, if you are too close
-    const pd=Math.hypot(player.pos.x-b.x, player.pos.z-b.z, (player.feetY+0.9)-b.y);
-    if(pd<6.5) hurtPlayer(75*(1-pd/6.5), b.x, b.z);
-    S.shake=Math.min(1, S.shake+Math.max(0, 1.2*(1-pd/45)));
+    const pdist=Math.hypot(player.pos.x-b.x, player.pos.z-b.z, (player.feetY+0.9)-b.y);
+    if(pdist<pr) hurtPlayer(pd*(1-pdist/pr), b.x, b.z);
+    S.shake=Math.min(1, S.shake+Math.max(0, 1.2*(1-pdist/45)));
+    // the windows round it: every pane within most of its reach goes, out from it
+    if(typeof GLASS_PANES!=="undefined"){ glassBuild();
+      for(const P of GLASS_PANES){ if(P.broke) continue; const qx=P.c.x-b.x, qy=P.c.y-b.y, qz=P.c.z-b.z, q=Math.hypot(qx, qy, qz);
+        if(q<R*0.8){ _v2.set(qx, qy, qz).multiplyScalar(1/Math.max(q, 0.01)); shatter(P, _v2); } } }
     for(let k=0;k<5;k++){ _v1.set(b.x+(Math.random()-0.5)*2.5, b.y+Math.random()*1.5, b.z+(Math.random()-0.5)*2.5); dust.puff(_v1, true); }
     fx.fire(at); fx.boomSmoke(at); BOOM.x=b.x; BOOM.y=b.y+1.5; BOOM.z=b.z; BOOM.under=buriedAt(b.x, b.z, b.y+0.5); BOOM.mod.v=1;
     blood.scorch(b.x, b.z, surfaceY(b.x, b.z, b.y+0.3));
     snd.boom(b.x, b.z);
     for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-b.x, zb.z-b.z)<90) zb.alert=true;
-    if(pd<4) S.splat=Math.min(1, S.splat+0.5);
+    if(pdist<4) S.splat=Math.min(1, S.splat+0.5);
   }
+
+  /* ---- the rocket launcher: one in the tube, a back-blast of smoke behind you as it goes, and the rocket itself out along
+     your aim at sixty metres a second, burning and trailing smoke, its light on what it passes. It goes off at the first
+     thing it meets (a wall, the ground, a window, one of them) or after seven seconds in the air, as a pipe bomb's blast
+     a little tighter and a lot harder at the heart. It flies straight: it goes where the crosshair is. ---- */
+  const ROCKETS=[], RKT={pool:[], smoke:[], si:0, lamp:null};
+  function rocketBuild(){
+    if(RKT.lamp) return;
+    const body=new T.MeshStandardMaterial({color:0x5a6240, roughness:0.6}), tip=new T.MeshStandardMaterial({color:0x2c2e2a, roughness:0.5, metalness:0.3});
+    const fin=new T.MeshStandardMaterial({color:0x3a3e32, roughness:0.7});
+    const glow=new T.SpriteMaterial({map:GLOW_TEX, color:0xffb060, blending:T.AdditiveBlending, transparent:true, depthWrite:false});
+    for(let k=0;k<4;k++){ const g=new T.Group();
+      part(g, CYLZ(0.04, 0.04, 0.5, 12), body, 0, 0, 0); part(g, CYLZ(0.04, 0.004, 0.2, 12), tip, 0, 0, 0.35);       // (it flies along its +z)
+      for(let f=0;f<4;f++){ const a=f*Math.PI/2; part(g, BOX(0.004, 0.09, 0.12), fin, Math.sin(a)*0.06, Math.cos(a)*0.06, -0.2, 0, 0, -a); }
+      const fl=new T.Sprite(glow); fl.position.z=-0.32; fl.scale.set(0.5, 0.5, 1); g.add(fl);
+      g.visible=false; scene.add(g); RKT.pool.push({g:g, fl:fl, busy:false}); }
+    const stex=signTex(64, 64, (c, W, H)=>{ const gr=c.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2); gr.addColorStop(0, "rgba(255,255,255,0.75)");
+      gr.addColorStop(0.55, "rgba(255,255,255,0.32)"); gr.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle=gr; c.fillRect(0, 0, W, H); });
+    for(let k=0;k<110;k++){ const m=new T.Sprite(new T.SpriteMaterial({map:stex, color:0xa8a49a, transparent:true, depthWrite:false, opacity:0}));
+      m.visible=false; scene.add(m); RKT.smoke.push({s:m, v:new T.Vector3(), t:0, life:1, sz:1}); }
+    RKT.lamp={x:0, y:-50, z:0, color:0xffa050, intensity:2.6, dist:12, decay:1.4, fire:true, mod:{v:0}, under:false}; LAMPS.push(RKT.lamp);
+  }
+  function rocketSmoke(x, y, z, vx, vy, vz, sz, life){
+    const p=RKT.smoke[RKT.si++%RKT.smoke.length]; p.s.position.set(x, y, z); p.v.set(vx, vy, vz); p.t=0; p.life=life; p.sz=sz;
+    p.s.visible=true; p.s.material.rotation=Math.random()*6.28; }
+  function launchRocket(g){
+    rocketBuild();
+    const slot=RKT.pool.find(q=>!q.busy); if(!slot) return;
+    camera.getWorldDirection(_v1); _o.copy(camera.position);
+    // where the crosshair is (with the gun's spread), and the rocket from the tube on your shoulder straight at it
+    const sp=spreadNow(), ph=Math.random()*Math.PI*2, th=sp*Math.sqrt(Math.random());
+    _v2.set(0,1,0).cross(_v1).normalize(); _v3.copy(_v1).cross(_v2).normalize();
+    _d.copy(_v1).addScaledVector(_v2, Math.tan(th)*Math.cos(ph)).addScaledVector(_v3, Math.tan(th)*Math.sin(ph)).normalize();
+    const aimT=Math.max(4, rayWorld(_o, _d, g.range).t);
+    const tx=_o.x+_d.x*aimT, ty=_o.y+_d.y*aimT, tz=_o.z+_d.z*aimT;
+    const sx=_o.x+_v1.x*0.7-_v2.x*0.13, sy=_o.y+_v1.y*0.7-0.08, sz=_o.z+_v1.z*0.7-_v2.z*0.13;
+    let dx=tx-sx, dy=ty-sy, dz=tz-sz; const L=Math.hypot(dx, dy, dz)||1; dx/=L; dy/=L; dz/=L;
+    slot.busy=true; slot.g.visible=true;
+    ROCKETS.push({q:slot, x:sx, y:sy, z:sz, dx:dx, dy:dy, dz:dz, v:60, t:0, puff:0});
+    // the back-blast: a burst of smoke out behind you
+    for(let k=0;k<10;k++){ const u=0.2+Math.random()*1.4;
+      rocketSmoke(_o.x-_v1.x*(0.6+u)-_v2.x*0.13, _o.y-_v1.y*u-0.1, _o.z-_v1.z*(0.6+u)-_v2.z*0.13,
+                  -_v1.x*(2+Math.random()*3)+(Math.random()-0.5), 0.3+Math.random()*0.6, -_v1.z*(2+Math.random()*3)+(Math.random()-0.5), 0.8+Math.random()*0.8, 1.4+Math.random()); }
+    for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-player.pos.x, zb.z-player.pos.z)<90) zb.alert=true;
+  }
+  const _rq=new T.Quaternion(), _rz=new T.Vector3(0, 0, 1);
+  function updateRockets(dt, light){
+    let lit=null;
+    for(let i=ROCKETS.length-1;i>=0;i--){ const r=ROCKETS[i];
+      r.t+=dt; const L=r.v*dt;
+      _o.set(r.x, r.y, r.z); _d.set(r.dx, r.dy, r.dz);
+      // what it meets on this stretch: the world, a window, one of them
+      let hitT=Infinity, pane=null;
+      const W=rayWorld(_o, _d, L+0.2); if(W.what) hitT=W.t;
+      const GH=glassRay(_o, _d, Math.min(hitT, L+0.2)); if(GH && !GH.P.broke && GH.t<hitT){ hitT=GH.t; pane=GH.P; }
+      for(const zb of ZS){ if(!zb.live || zb.state==="dead" || Math.abs(zb.x-r.x)>L+3 || Math.abs(zb.z-r.z)>L+3) continue;
+        const h=rayZombie(_o, _d, zb, hitT); if(h && h.t<hitT) hitT=h.t; }
+      if(hitT<=L+0.2 || r.t>7){
+        const back=hitT<Infinity ? Math.max(0, hitT-0.25) : 0, ex=r.x+r.dx*back, ey=r.y+r.dy*back, ez=r.z+r.dz*back;
+        if(pane){ glassBuild(); shatter(pane, _d); }
+        blast(ex, ey-0.4, ez, 6.5, 60, 380, 5.5, 70);
+        r.q.busy=false; r.q.g.visible=false; ROCKETS.splice(i, 1); continue; }
+      r.x+=r.dx*L; r.y+=r.dy*L; r.z+=r.dz*L;
+      r.q.g.position.set(r.x, r.y, r.z); _d.set(r.dx, r.dy, r.dz); r.q.g.quaternion.copy(_rq.setFromUnitVectors(_rz, _d));
+      r.q.fl.material.opacity=0.75+0.25*Math.random(); const f=0.42+0.2*Math.random(); r.q.fl.scale.set(f, f, 1);
+      // its smoke, a puff every few centimetres of the way, left hanging where it was
+      r.puff+=L; while(r.puff>0.35){ r.puff-=0.35; const u=Math.random()*L;
+        rocketSmoke(r.x-r.dx*(0.3+u), r.y-r.dy*(0.3+u), r.z-r.dz*(0.3+u), (Math.random()-0.5)*0.4, 0.15+Math.random()*0.3, (Math.random()-0.5)*0.4, 0.35+Math.random()*0.25, 1.6+Math.random()*1.2); }
+      lit=r;
+    }
+    if(RKT.lamp){ if(lit){ RKT.lamp.x=lit.x-lit.dx*0.5; RKT.lamp.y=lit.y; RKT.lamp.z=lit.z-lit.dz*0.5; RKT.lamp.under=buriedAt(lit.x, lit.z, lit.y); RKT.lamp.mod.v=1; } else RKT.lamp.mod.v=0; }
+    for(const p of RKT.smoke){ if(p.t>=p.life || !p.s.visible) continue; p.t+=dt; const u=p.t/p.life;
+      p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.max(0, 1-dt*1.6)); p.v.y+=dt*0.25;
+      p.s.scale.setScalar(p.sz*(0.5+u*2.4)); p.s.material.opacity=0.55*Math.min(1, u*12)*Math.pow(1-u, 1.4);
+      p.s.material.color.setHex(0xa8a49a).multiplyScalar(0.3+0.7*light);
+      if(u>=1) p.s.visible=false; }
+  }
+  function stopRockets(){ for(const r of ROCKETS){ r.q.busy=false; r.q.g.visible=false; } ROCKETS.length=0; if(RKT.lamp) RKT.lamp.mod.v=0;
+    for(const p of RKT.smoke){ p.s.visible=false; p.t=p.life; } }
 
   /* ---- the troopers: now and then a cruiser, or two or three in a line, comes down I-79 flat out with its bar going and
      its siren wailing, both ways, lane to lane round you or your car, through any of them on the road (14e's cruiser:
@@ -682,6 +773,7 @@ const ZOMBIE=(function(){
 
   function hurtPlayer(n, fx, fz){
     if(Z.dead) return;
+    if(Z.god){ S.dmgFlash=Math.min(0.3, S.dmgFlash+n/90); S.shake=Math.min(0.35, S.shake+n/70); return; }     // (NINELIVES: you feel it, it takes nothing)
     Z.hp=Math.max(0, Z.hp-n); S.dmgFlash=Math.min(1, S.dmgFlash+n/28); S.shake=Math.min(1, S.shake+n/25);
     // from which side, on the screen
     const a=Math.atan2(fx-player.pos.x, fz-player.pos.z), view=Math.atan2(-Math.sin(player.yaw), -Math.cos(player.yaw));
@@ -694,7 +786,7 @@ const ZOMBIE=(function(){
   function saveBest(b){ try{ localStorage.setItem("restarea.zombies.best", JSON.stringify(b)); }catch(e){} }
   function die(){
     Z.dead=true; S.deadT=0; S.fireHeld=false; S.aimHeld=false; S.horde=null;
-    const best=loadBest(); Z.newBest=!best || Z.score>best.score; if(Z.newBest) saveBest({score:Z.score, t:Z.t, kills:Z.kills}); Z.best=Z.newBest ? null : best;
+    const best=loadBest(); Z.newBest=!S.cheated && (!best || Z.score>best.score); if(Z.newBest) saveBest({score:Z.score, t:Z.t, kills:Z.kills}); Z.best=Z.newBest ? null : best;
     if(driving) exitCar(); if(seated) standUp();
     hud.dead(true); snd.die(player.pos.x, player.pos.z, true);
   }
@@ -875,10 +967,14 @@ const ZOMBIE=(function(){
   function stopFlame(){ if(!FL.lamp) return; for(const p of FL.sp) p.s.visible=false; for(const p of FL.sm) p.s.visible=false; FL.lamp.mod.v=0; FL.lamp2.mod.v=0; FL.roarT=0; snd.flame(false); for(const zb of ZS) zb.burn=0; }
   function fire(){
     const g=G();
+    if(Z.infAmmo){ S.mag[g.id]=g.mag; if(S.reloading){ S.reloading=false; S.reloadT=0; } }        // (BOTTOMLESS: always a full one)
     if(S.mag[g.id]<=0){ snd.click(); S.cool=0.25; S.fired=true; if(S.ammo[g.ammo]>0) startReload(); return; }
     if(S.reloading){ if(g.shells && S.mag[g.id]>0){ S.reloading=false; S.reloadT=0; } else return; }
-    if(g.flame){ S.mag[g.id]--; S.cool=g.rate; flameOut(g); return; }
-    S.mag[g.id]--; S.cool=g.rate; S.cycle=g.rate; S.flashT=0.055; S.kick=g.kick; S.kickR=g.kick;
+    const use=Z.infAmmo ? 0 : 1;
+    if(g.flame){ S.mag[g.id]-=use; S.cool=g.rate; flameOut(g); return; }
+    if(g.rocket){ S.mag[g.id]-=use; S.cool=g.rate; S.fired=true; S.flashT=0.09; S.kick=g.kick; S.kickR=g.kick; S.shake=Math.min(1, S.shake+0.35);
+      launchRocket(g); player.pitch=clamp(player.pitch+g.climb*(1-S.ads*0.4), -1.15, 1.15); snd.gun("rocket"); return; }
+    S.mag[g.id]-=use; S.cool=g.rate; S.cycle=g.rate; S.flashT=0.055; S.kick=g.kick; S.kickR=g.kick;
     if(!g.auto) S.fired=true;
     S.bloom=Math.min(0.05, S.bloom+(g.auto ? 0.004 : g.spread*0.4));
     player.pitch=clamp(player.pitch+g.climb*(0.7+Math.random()*0.6)*(1-S.ads*0.4), -1.15, 1.15);
@@ -920,7 +1016,7 @@ const ZOMBIE=(function(){
     vm.eject(g.id);
   }
   function startReload(){
-    const g=G(); if(S.reloading || S.switchT>0 || Z.dead) return;
+    const g=G(); if(S.reloading || S.switchT>0 || Z.dead || Z.infAmmo) return;
     if(S.mag[g.id]>=g.mag || S.ammo[g.ammo]<=0) return;
     S.reloading=true; S.reloadT=g.reload; snd.reload(g, 0);
   }
@@ -967,6 +1063,7 @@ const ZOMBIE=(function(){
         else { const take=Math.min(g.mag-S.mag[g.id], S.ammo[g.ammo]); S.mag[g.id]+=take; S.ammo[g.ammo]-=take; S.reloading=false; snd.reload(g, 1); }
       }
     }
+    if(g.rocket && S.mag[g.id]<=0 && S.ammo[g.ammo]>0 && !S.reloading && S.cool<=0 && S.switchT<=0) startReload();     // (a tube: the next one in as soon as this one is away)
     const canFire=!Z.dead && S.switchT<=0 && S.melee<=0 && S.sprint<0.35 && !droneMode && !driving && !(typeof BOAT!=="undefined" && BOAT.on) && !seated;
     if(S.fireHeld && canFire && S.cool<=0 && (g.auto || !S.fired)) fire();
     if(!S.fireHeld) S.fired=false;
@@ -974,7 +1071,19 @@ const ZOMBIE=(function(){
     if(S.cycle<=0) S.pumped=false;
   }
   const approach=(v,t,r)=>v+clamp(t-v,-r,r);
-  Z.lookScale=()=>1-S.ads*(G().zoom ? 0.62 : 0.3);
+  /* ---- the zoom: down the sights the view closes in (the rifle's scope a lot), and the wheel while you aim, or + and -,
+     takes it further in or back out, from the sights' own to six times that. Each gun keeps its own. The look slows with
+     it, so the crosshair moves the same distance across what you are aiming at whatever the zoom. ---- */
+  const ZOOMS=[1, 1.5, 2, 3, 4, 6];
+  const zoomOf=g=>S.zoomBy[g.id]||1;
+  const aimFov=g=>(g.zoom ? g.zoom : 0.8)/zoomOf(g);                        // (the view down the sights, as a part of the open one)
+  function zoomStep(d){
+    const g=G(); if(g.flame || Z.dead) return;
+    const i=ZOOMS.indexOf(zoomOf(g)), j=clamp((i<0 ? 0 : i)+d, 0, ZOOMS.length-1);
+    if(ZOOMS[j]===zoomOf(g)) return;
+    S.zoomBy[g.id]=ZOOMS[j]; S.zoomT=1.6; snd.tick();
+  }
+  Z.lookScale=()=>1-S.ads*(1-Math.min(1, aimFov(G())*0.92));
 
   /* ======================================================================
      THE GUN IN YOUR HANDS: its own scene, drawn over the view
@@ -985,7 +1094,8 @@ const ZOMBIE=(function(){
              glove:new T.MeshStandardMaterial({color:0x2c3125, roughness:0.88}),
              sleeve:new T.MeshStandardMaterial({color:0x3b4233, roughness:0.92}),
              brass:new T.MeshStandardMaterial({color:0xb48c3c, metalness:0.6, roughness:0.35}),
-             lens:new T.MeshStandardMaterial({color:0x1a2a3a, metalness:0.4, roughness:0.12})};
+             lens:new T.MeshStandardMaterial({color:0x1a2a3a, metalness:0.4, roughness:0.12}),
+             olive:new T.MeshStandardMaterial({color:0x4c5434, roughness:0.72, metalness:0.05})};
   const BOX=(w,h,d)=>new T.BoxGeometry(w,h,d);
   const CYLZ=(r0,r1,L,s)=>{ const g=new T.CylinderGeometry(r0,r1,L,s||14); g.rotateX(Math.PI/2); return g; };
   function part(Gp, geo, mat, x,y,z, rx,ry,rz){ const m=new T.Mesh(geo, mat); m.position.set(x,y,z); m.rotation.set(rx||0,ry||0,rz||0); Gp.add(m); return m; }
@@ -1039,6 +1149,21 @@ const ZOMBIE=(function(){
         pl.scale.set(0.03, 0.045, 1); pl.position.set(0, 0.022, -0.63); Gp.add(pl); Gp.userData.pilot=pl; }
       mz(0,0.02,-0.63); pt(0,0.02,-0.1);
       if(hands){ arm(Gp, [0.004,-0.075,0.12], [0.06,-0.25,0.40], 0.3); arm(Gp, [0,-0.075,-0.30], [-0.16,-0.25,0.04], 0.05); }
+    }else if(id==="rocket"){
+      // a tube on the shoulder: flared at the back, a grip and a fore-grip under it, the sight out on its left, and the
+      // rocket's nose standing out of the front while there is one in it
+      part(Gp, CYLZ(0.048,0.048,0.86,18), M.olive, 0,0,-0.10); part(Gp, CYLZ(0.066,0.049,0.08,18), M.olive, 0,0,0.37);
+      part(Gp, CYLZ(0.052,0.052,0.035,18), M.dark, 0,0,-0.52); part(Gp, CYLZ(0.051,0.051,0.03,18), M.dark, 0,0,0.10);
+      part(Gp, CYLZ(0.051,0.051,0.03,18), M.dark, 0,0,-0.26); part(Gp, BOX(0.03,0.05,0.16), M.dark, 0,0.05,-0.02);
+      part(Gp, BOX(0.03,0.11,0.045), M.dark, 0,-0.10,0.06, 0.24); part(Gp, BOX(0.03,0.09,0.04), M.dark, 0,-0.092,-0.20, 0.1);
+      part(Gp, BOX(0.006,0.005,0.04), M.dark, 0,-0.062,0.025);
+      // the sight: a bracket, the body, the eyepiece toward you
+      part(Gp, BOX(0.024,0.02,0.05), M.dark, -0.046,0.028,-0.02); part(Gp, BOX(0.028,0.032,0.09), M.dark, -0.068,0.058,-0.02);
+      part(Gp, CYLZ(0.013,0.013,0.012,14), M.lens, -0.068,0.058,0.028); part(Gp, CYLZ(0.012,0.012,0.012,14), M.lens, -0.068,0.058,-0.068);
+      const wh=new T.Group(); Gp.add(wh); Gp.userData.warhead=wh;
+      part(wh, CYLZ(0.045,0.004,0.17,16), M.olive, 0,0,-0.62); part(wh, CYLZ(0.045,0.045,0.04,16), M.dark, 0,0,-0.52);
+      mz(0,0,-0.56); pt(0,0,0.40);
+      if(hands){ arm(Gp, [0.004,-0.13,0.075], [0.06,-0.30,0.40], 0.3); arm(Gp, [0,-0.12,-0.20], [-0.16,-0.28,0.02], 0.05); }
     }else{
       part(Gp, BOX(0.04,0.05,0.5), M.wood, 0,-0.012,-0.17); part(Gp, BOX(0.04,0.10,0.24), M.wood, 0,-0.045,0.21, -0.1).userData.stock=true;
       part(Gp, CYLZ(0.016,0.016,0.2), M.metal, 0,0.02,-0.03); part(Gp, CYLZ(0.0095,0.011,0.5), M.metal, 0,0.024,-0.46);
@@ -1066,7 +1191,7 @@ const ZOMBIE=(function(){
     vm.flash=new T.Sprite(new T.SpriteMaterial({map:ft, blending:T.AdditiveBlending, depthWrite:false, transparent:true})); vm.flash.visible=false; vm.scene.add(vm.flash);
     vm.shells=[]; for(let k=0;k<10;k++){ const m=new T.Mesh(new T.CylinderGeometry(0.0045,0.0045,0.02,8), MAT.brass); m.visible=false; vm.scene.add(m); vm.shells.push({m:m, v:new T.Vector3(), t:0}); }
     vm.show=id=>{ for(const k in vm.guns) vm.guns[k].visible=k===id; };
-    vm.eject=id=>{ if(id==="shotgun" || id==="rifle") return; const s=vm.shells.find(q=>q.t<=0)||vm.shells[0], g=vm.guns[S.cur];
+    vm.eject=id=>{ if(id==="shotgun" || id==="rifle" || id==="rocket") return; const s=vm.shells.find(q=>q.t<=0)||vm.shells[0], g=vm.guns[S.cur];
       g.userData.port.getWorldPosition(s.m.position); s.v.set(0.9+Math.random()*0.4, 0.9+Math.random()*0.5, 0.2); s.t=0.7; s.m.visible=true; s.m.rotation.set(Math.random()*3, 0, Math.random()*3); };
     vm.show(S.cur);
   }
@@ -1086,12 +1211,13 @@ const ZOMBIE=(function(){
     const H=g.hip, A=g.adsP, a=S.ads;
     m.position.set(lerp(H[0],A[0],a)+bx+S.swX-ml*0.05+S.sprint*0.03+th*0.06, lerp(H[1],A[1],a)+by+S.swY-S.rl*0.06-sw*0.3-S.sprint*0.06+ml*0.02-th*0.16, lerp(H[2],A[2],a)+S.kick*0.035-ml*0.12);
     m.rotation.set(S.kickR*0.09-S.rl*0.55-S.sprint*0.35+ml*0.25, S.swX*1.4+S.sprint*0.6+ml*0.5, S.sprint*0.3-S.rl*0.35);
+    if(m.userData.warhead) m.userData.warhead.visible=S.reloading ? S.reloadT<=g.reload*0.45 : S.mag[g.id]>0;
     if(m.userData.pump){ const c=g.rate>0 && S.cycle>0 ? Math.sin(clamp((g.rate-S.cycle-0.2)/0.45, 0, 1)*Math.PI) : 0; m.userData.pump.position.z=-0.25+c*0.075; }
     m.visible=!(g.zoom && S.ads>0.85);
     // the flash, the light it throws, the brass flying out
     if(m.userData.pilot){ const f=0.8+0.4*Math.random(); m.userData.pilot.scale.set(0.028*f, 0.042*f, 1); }
     vm.flash.visible=S.flashT>0 && m.visible;
-    if(vm.flash.visible){ m.userData.muzzle.getWorldPosition(vm.flash.position); const s=(g.id==="shotgun" ? 0.2 : g.id==="pistol" ? 0.12 : 0.16)*(0.8+Math.random()*0.4);
+    if(vm.flash.visible){ m.userData.muzzle.getWorldPosition(vm.flash.position); const s=(g.id==="rocket" ? 0.34 : g.id==="shotgun" ? 0.2 : g.id==="pistol" ? 0.12 : 0.16)*(0.8+Math.random()*0.4);
       vm.flash.scale.set(s, s, s); vm.flash.material.rotation=Math.random()*6.28; }
     vm.pt.intensity=S.flashT>0 ? 2.6 : 0; m.userData.muzzle.getWorldPosition(vm.pt.position);
     for(const s of vm.shells){ if(s.t<=0) continue; s.t-=dt; s.v.y-=9.8*dt*0.5; s.m.position.addScaledVector(s.v, dt); s.m.rotation.x+=dt*14; if(s.t<=0) s.m.visible=false; }
@@ -1208,7 +1334,7 @@ const ZOMBIE=(function(){
      PICKUPS
      ====================================================================== */
   const PK=[];
-  const LABEL={"FUEL":["FUEL","#c42a1a","#f2e8d0"], "9MM":["9MM","#c8a040","#2a1a0a"], "12 GAUGE":["12 GA","#a8281c","#f2e8d0"], "5.56":["5.56","#4a5a32","#e8e4c8"], ".30-06":[".30-06","#2e4a2e","#e8dca8"]};
+  const LABEL={"ROCKETS":["ROCKETS","#4c5434","#e8e4c8"], "FUEL":["FUEL","#c42a1a","#f2e8d0"], "9MM":["9MM","#c8a040","#2a1a0a"], "12 GAUGE":["12 GA","#a8281c","#f2e8d0"], "5.56":["5.56","#4a5a32","#e8e4c8"], ".30-06":[".30-06","#2e4a2e","#e8dca8"]};
   const PMAT={};
   function labelMat(txt, bg, fg){ return new T.MeshStandardMaterial({roughness:0.7, map:signTex(128, 64, (c,W,H)=>{ c.fillStyle=bg; c.fillRect(0,0,W,H);
     c.strokeStyle=fg; c.lineWidth=4; c.strokeRect(6,6,W-12,H-12); c.fillStyle=fg; fitText(c, txt, W*0.8, H*0.6, W/2, H/2, "700", "Oswald, Arial"); })}); }
@@ -1224,6 +1350,13 @@ const ZOMBIE=(function(){
       col=0xe86a2a; const L=LABEL.FUEL; if(!PMAT.aFUEL) PMAT.aFUEL=labelMat(L[0], L[1], L[2]); const rd=new T.MeshStandardMaterial({color:0xb02a1c, roughness:0.5, metalness:0.2});
       item.add(new T.Mesh(new T.BoxGeometry(0.11, 0.26, 0.20), [rd, rd, rd, rd, PMAT.aFUEL, rd])); part(item, BOX(0.03, 0.03, 0.13), MAT.dark, 0, 0.145, 0.02);
       part(item, new T.CylinderGeometry(0.014, 0.018, 0.07, 10), rd, 0, 0.15, -0.085, 0.5);
+    }else if(type==="ammo" && sub==="ROCKETS"){
+      // a wooden case, lid off, three rounds in it nose to tail
+      col=0xe8a050; const L=LABEL.ROCKETS; if(!PMAT.aROCKETS) PMAT.aROCKETS=labelMat(L[0], L[1], L[2]);
+      const wd=new T.MeshStandardMaterial({color:0x5a5a32, roughness:0.9});
+      item.add(new T.Mesh(new T.BoxGeometry(0.62, 0.12, 0.30), [wd, wd, wd, wd, PMAT.aROCKETS, wd]));
+      for(let k=0;k<3;k++){ part(item, new T.CylinderGeometry(0.04, 0.04, 0.42, 12), MAT.olive, -0.04, 0.105, -0.09+k*0.09, 0, 0, Math.PI/2);
+        part(item, new T.CylinderGeometry(0.004, 0.04, 0.14, 12), MAT.dark, 0.24, 0.105, -0.09+k*0.09, 0, 0, -Math.PI/2); }
     }else if(type==="bombs"){
       // a crate of them, lid off
       col=0xe86a2a; const wd=new T.MeshStandardMaterial({color:0x6a6a3a, roughness:0.9}), mt=new T.MeshStandardMaterial({color:0x5a5e60, metalness:0.4, roughness:0.5});
@@ -1286,7 +1419,11 @@ const ZOMBIE=(function(){
     [903, -1268, undefined, "gun:flamer"], [-22, -1232, undefined, "ammo:FUEL"], [36, 29, 0, "ammo:FUEL"], [158, -1118, undefined, "ammo:FUEL"],
     // and the emergency stores in the boiler hall (12e), in front of the locker and the crates: every kind, and pipe bombs by the crate
     ...[["ammo:9MM",87.0,-279.3],["ammo:12 GAUGE",87.8,-279.3],["ammo:5.56",88.6,-279.3],["ammo:.30-06",90.4,-279.3],["ammo:FUEL",91.2,-279.3],
-        ["bombs",88.0,-278.2],["bombs",89.4,-278.2],["medkit",90.8,-278.2],["gun:flamer",92.0,-278.4]].map(([k,x,z])=>[x, z, SUBBASE.y-5.0, k])];
+        ["bombs",88.0,-278.2],["bombs",89.4,-278.2],["medkit",90.8,-278.2],["gun:flamer",92.0,-278.4],
+        // (and a row more in front: the launcher and its rockets)
+        ["gun:rocket",88.6,-277.1],["ammo:ROCKETS",89.9,-277.1],["ammo:ROCKETS",91.2,-277.1]].map(([k,x,z])=>[x, z, SUBBASE.y-5.0, k]),
+    // a launcher up on the substation's control house, and rockets up on the scale house, for whoever climbs the ladders (06's roofLadder)
+    ...ROOF_WALKS.filter(w=>/CONTROL HOUSE|SCALE HOUSE/.test(w.label)).map(w=>[(w.x0+w.x1)/2, (w.z0+w.z1)/2, w.y+0.4, /CONTROL/.test(w.label) ? "gun:rocket" : "ammo:ROCKETS"])];
   let cachesBuilt=false;
   function buildCaches(){
     if(cachesBuilt) return; cachesBuilt=true;
@@ -1331,6 +1468,7 @@ const ZOMBIE=(function(){
     if(!S.have.carbine && Z.t>190) return "gun:carbine";
     if(!S.have.rifle && Z.t>320) return "gun:rifle";
     if(!S.have.flamer && Z.t>440) return "gun:flamer";
+    if(!S.have.rocket && Z.t>560) return "gun:rocket";
     const owned=GUNS.filter(g=>S.have[g.id]); let best=owned[0], low=1e9;
     for(const g of owned){ const f=S.ammo[g.ammo]/AMMO_MAX[g.ammo]; if(f<low){ low=f; best=g; } }
     if(S.bombs<3 && Math.random()<0.18) return "bomb";
@@ -1357,6 +1495,13 @@ const ZOMBIE=(function(){
     o.connect(g); if(dest) g.connect(dest); else out(c, g, pan, outdoor); o.start(t); o.stop(t+dur+0.05); return o;
   }
   snd.gun=(kind)=>{ const c=AC(); if(!c) return; const t=c.currentTime+0.003;
+    if(kind==="rocket"){
+      // a hard thump out of the back of the tube, then the motor tearing away from you
+      noiseHit(c, t, 0.22, "lowpass", 900, 0.7, 0.55); osc(c, t, "sine", 90, 38, 0.3, 0.5);
+      const fl=noiseHit(c, t+0.04, 1.1, "bandpass", 1800, 1.4, 0.32); fl.frequency.exponentialRampToValueAtTime(420, t+1.1);
+      const inside=indoorsAt(camera.position.x, camera.position.z, camera.position.y) || buriedAt(camera.position.x, camera.position.z, camera.position.y);
+      if(!inside) noiseHit(c, t+0.3, 0.9, "lowpass", 500, 0.5, 0.12, 0, false, nb().brown);
+      return; }
     const P={pistol:[0.42,2600,0.14,150], shotgun:[0.62,1700,0.30,95], carbine:[0.36,3000,0.11,170], rifle:[0.7,2100,0.42,85]}[kind];
     const fl=noiseHit(c, t, P[2], "lowpass", P[1]*2, 0.7, P[0]); fl.frequency.exponentialRampToValueAtTime(P[1]*0.25, t+P[2]);
     osc(c, t, "sine", P[3], 34, 0.2, P[0]*0.9);
@@ -1365,6 +1510,7 @@ const ZOMBIE=(function(){
     if(!inside){ for(const [dl, a] of [[0.24, 0.16],[0.55, 0.09],[1.1, 0.05]]) noiseHit(c, t+dl, 0.5, "lowpass", 600, 0.5, P[0]*a, (Math.random()-0.5)*1.2, false, nb().brown); }
     else noiseHit(c, t+0.03, 0.18, "bandpass", 900, 1.2, P[0]*0.25);
   };
+  snd.tick=()=>{ const c=AC(); if(!c) return; noiseHit(c, c.currentTime, 0.02, "bandpass", 4200, 4, 0.08); };
   snd.click=()=>{ const c=AC(); if(!c) return; const t=c.currentTime; noiseHit(c, t, 0.03, "highpass", 3000, 0.7, 0.12); };
   snd.reload=(g, end)=>{ const c=AC(); if(!c) return; const t=c.currentTime;
     if(!end){ noiseHit(c, t+0.15, 0.05, "bandpass", 1800, 3, 0.16); noiseHit(c, t+g.reload*0.55, 0.06, "bandpass", 1400, 3, 0.18); }
@@ -1455,8 +1601,11 @@ const ZOMBIE=(function(){
       #zscore{font-size:30px;font-weight:700;line-height:1;color:#e8e2d0}
       #zscore small{font-size:11px;letter-spacing:.3em;color:#9fb46a;margin-right:8px;font-weight:500}
       #zmult{font-size:15px;letter-spacing:.2em;color:#e8c860;height:18px}
+      #zcheat{margin-top:4px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;color:#7fd0e8}
       #zbombs{margin-top:6px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;color:#e8a060}
       #zsplat{position:absolute;inset:0;opacity:0}
+      #zzoom{position:absolute;left:0;right:0;top:calc(50% + 34px);text-align:center;font-family:"JetBrains Mono",monospace;font-size:12px;
+        letter-spacing:.24em;color:#e8e2d0;text-shadow:0 1px 4px #000;opacity:0;transition:opacity .25s}
       #zright{position:absolute;right:28px;bottom:22px;text-align:right;text-shadow:0 2px 6px #000}
       #zgun{font-size:15px;letter-spacing:.3em;color:#9fb46a}
       #zammo{font-size:50px;font-weight:700;line-height:1.05}
@@ -1487,8 +1636,8 @@ const ZOMBIE=(function(){
     document.head.appendChild(st);
     const d=document.createElement("div"); d.id="zhud";
     d.innerHTML=`<div id="zsplat"></div><div id="zdmg"></div><div id="zdir"></div><div id="zscope"></div>
-      <div id="ztop"><div id="zscore"></div><div id="zmult"></div></div>
-      <div id="zcross"><i></i><i></i><i></i><i></i></div><div id="zhit"></div>
+      <div id="ztop"><div id="zscore"></div><div id="zmult"></div><div id="zcheat"></div></div>
+      <div id="zcross"><i></i><i></i><i></i><i></i></div><div id="zhit"></div><div id="zzoom"></div>
       <div id="zleft"><div class="k">HEALTH</div><div id="zhp">100</div><div id="zbar"><b></b></div><div id="zthreat">THREAT <span></span></div><div id="zstats"></div></div>
       <div id="zright"><div id="zgun"></div><div id="zammo"></div><div id="zatype"></div><div id="zslots"></div><div id="zbombs"></div></div>
       <div id="zfeed"></div><div id="zbanner"><div class="a"></div><div class="b"></div></div>
@@ -1497,7 +1646,7 @@ const ZOMBIE=(function(){
     const $=id=>document.getElementById(id);
     Object.assign(hud, {el:d, hp:$("zhp"), bar:d.querySelector("#zbar b"), threat:d.querySelector("#zthreat span"), stats:$("zstats"), gunEl:$("zgun"), ammo:$("zammo"),
       atype:$("zatype"), slots:$("zslots"), feed:$("zfeed"), dmg:$("zdmg"), dirEl:$("zdir"), scope:$("zscope"), cross:$("zcross"), hit:$("zhit"),
-      banner:$("zbanner"), deadEl:$("zdead"), dstats:$("zdstats"), score:$("zscore"), mult:$("zmult"), bombsEl:$("zbombs"), splatEl:$("zsplat"), last:{}});
+      banner:$("zbanner"), deadEl:$("zdead"), dstats:$("zdstats"), score:$("zscore"), mult:$("zmult"), bombsEl:$("zbombs"), splatEl:$("zsplat"), zoomEl:$("zzoom"), cheatEl:$("zcheat"), last:{}});
     // blood on the screen: a few blotches, thrown somewhere new each time it starts
     let _sp=0;
     hud.splat=(v)=>{ if(v>0.3 && _sp<0.05){ const g=[]; for(let k=0;k<7;k++){ const x=(Math.random()*100).toFixed(0), y=(Math.random()*100).toFixed(0), r=(8+Math.random()*16).toFixed(0);
@@ -1508,7 +1657,7 @@ const ZOMBIE=(function(){
     hud.gun=()=>{ hud.last.g=null; };
     hud.dead=(on)=>{ hud.deadEl.style.display=on ? "flex" : "none";
       if(on) hud.dstats.textContent="SCORE "+Z.score+"  ·  SURVIVED "+clock(Z.t)+"  ·  "+Z.kills+" KILLED  ·  THREAT "+Z.level+
-        (Z.newBest ? "  ·  A NEW BEST" : Z.best ? "  ·  BEST "+Z.best.score : ""); };
+        (S.cheated ? "  ·  CHEATS ON, NOT COUNTED" : Z.newBest ? "  ·  A NEW BEST" : Z.best ? "  ·  BEST "+Z.best.score : ""); };
   }
   const clock=t=>String(Math.floor(t/60)).padStart(2,"0")+":"+String(Math.floor(t%60)).padStart(2,"0");
   function feed(text, col){ const e=document.createElement("div"); e.textContent=text; e.style.color=col||"#e8e2d0"; hud.feed.appendChild(e);
@@ -1518,16 +1667,17 @@ const ZOMBIE=(function(){
   function updateHUD(dt){
     const g=G(), L=hud.last;
     const hp=Math.ceil(Z.hp); if(L.hp!==hp){ L.hp=hp; hud.hp.textContent=hp; hud.bar.style.width=hp+"%"; hud.hp.style.color=hp<30 ? "#e0402a" : "#e8e2d0"; }
-    const ammo=S.mag[g.id]+"|"+S.ammo[g.ammo]+"|"+g.id+"|"+(S.reloading?1:0);
+    const ammo=S.mag[g.id]+"|"+S.ammo[g.ammo]+"|"+g.id+"|"+(S.reloading?1:0)+"|"+(Z.infAmmo?1:0);
     if(L.ammo!==ammo || L.g!==g.id){ L.ammo=ammo; L.g=g.id; hud.gunEl.textContent=g.name;
-      hud.ammo.innerHTML=(S.reloading ? "<small>RELOADING</small>" : S.mag[g.id]+" <small>/ "+S.ammo[g.ammo]+"</small>");
+      hud.ammo.innerHTML=(S.reloading ? "<small>RELOADING</small>" : S.mag[g.id]+" <small>/ "+(Z.infAmmo ? "∞" : S.ammo[g.ammo])+"</small>");
       hud.atype.textContent=g.ammo;
       hud.slots.innerHTML=GUNS.map(q=>"<span class='"+(q.id===S.cur ? "cur" : S.have[q.id] ? "have" : "")+"'>"+q.slot+" "+q.name.split(" ").pop()+"</span>").join(""); }
     const lv=Z.level; if(L.lv!==lv){ L.lv=lv; hud.threat.textContent="■".repeat(Math.min(lv,12))+"□".repeat(Math.max(0,12-lv)); }
     const st=clock(Z.t)+"  ·  "+Z.kills+" KILLED"; if(L.st!==st){ L.st=st; hud.stats.textContent=st; }
     if(L.sc!==Z.score){ L.sc=Z.score; hud.score.innerHTML="<small>SCORE</small>"+Z.score; }
     const mult=S.streakT>0 ? Math.min(5, 1+Math.floor((S.streak-1)/3)) : 1, mt=mult>1 ? "STREAK ×"+mult : ""; if(L.mt!==mt){ L.mt=mt; hud.mult.textContent=mt; }
-    const bt=S.bombs>0 ? "F · PIPE BOMB ×"+S.bombs : ""; if(L.bt!==bt){ L.bt=bt; hud.bombsEl.textContent=bt; }
+    const bt=Z.infAmmo ? "F · PIPE BOMB ×∞" : S.bombs>0 ? "F · PIPE BOMB ×"+S.bombs : ""; if(L.bt!==bt){ L.bt=bt; hud.bombsEl.textContent=bt; }
+    const ct=[Z.god ? "∞ HEALTH" : "", Z.infAmmo ? "∞ AMMO" : ""].filter(Boolean).join("  ·  "); if(L.ct!==ct){ L.ct=ct; hud.cheatEl.textContent=ct; }
     // the crosshair opens with the spread, and goes when you aim down the sights
     const gap=5+spreadNow()*520, op=(1-S.ads)*(S.sprint>0.5 ? 0.2 : 1);
     const ch=hud.cross.ch; ch[0].style.top=(-gap-9)+"px"; ch[1].style.top=gap+"px"; ch[2].style.left=(-gap-9)+"px"; ch[3].style.left=gap+"px"; hud.cross.style.opacity=op;
@@ -1537,6 +1687,10 @@ const ZOMBIE=(function(){
     hud.dmg.style.opacity=Math.min(1, S.dmgFlash+low+(Z.dead ? 0.7 : 0));
     S.dmgDirT=Math.max(0, S.dmgDirT-dt); hud.dirEl.style.opacity=Math.min(1, S.dmgDirT); hud.dirEl.style.transform="rotate("+S.dmgDir+"rad)";
     hud.scope.style.display=g.zoom && S.ads>0.85 && !Z.dead ? "block" : "none";
+    // the zoom, while you are down the sights (and a moment after you change it)
+    S.zoomT=Math.max(0, S.zoomT-dt);
+    const zt=g.flame ? "" : (S.ads>0.5 || S.zoomT>0) ? (+(1/aimFov(g)).toFixed(1))+"×"+(S.ads>0.5 ? "  ·  WHEEL ZOOMS" : "  ·  WHEN AIMING") : "";
+    if(L.zt!==zt){ L.zt=zt; hud.zoomEl.textContent=zt; } hud.zoomEl.style.opacity=zt ? (S.ads>0.5 ? 0.85 : 0.65) : 0;
     for(let i=FEED.length-1;i>=0;i--){ const f=FEED[i]; f.t-=dt; if(f.t<0.6) f.e.style.opacity=Math.max(0, f.t/0.6); if(f.t<=0){ f.e.remove(); FEED.splice(i,1); } }
     if(bannerT>0){ bannerT-=dt; if(bannerT<=0) hud.banner.style.opacity=0; }
   }
@@ -1591,9 +1745,9 @@ const ZOMBIE=(function(){
      ====================================================================== */
   function resetRun(){
     Z.hp=100; Z.t=0; Z.kills=0; Z.level=1; Z.dead=false; Z.score=0; Z.ts=1;
-    S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null; mendGlass();
-    for(const b of BOMBS) scene.remove(b.g); BOMBS.length=0; BOOM.mod.v=0;
-    S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0, flamer:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0, "FUEL":0}; stopFlame();
+    S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null; mendGlass(); S.cheated=!!(Z.god || Z.infAmmo);
+    for(const b of BOMBS) scene.remove(b.g); BOMBS.length=0; BOOM.mod.v=0; stopRockets();
+    S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0, flamer:0, rocket:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0, "FUEL":0, "ROCKETS":0}; stopFlame();
     S.cur="pistol"; S.next=null; S.reloading=false; S.switchT=0; S.cool=0; S.ads=0; S.fired=false; S.melee=0; S.dmgFlash=0; S.spawnT=8; S.supplyT=20; S.levelShown=1;
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ const p=PK[i]; if(p.dyn){ dropMesh(p.g); PK.splice(i,1); }
@@ -1608,14 +1762,14 @@ const ZOMBIE=(function(){
   let built=false;
   function build(){
     if(built) return; built=true;
-    buildVM(); buildFX(); buildHUD(); buildCaches();
+    buildVM(); buildFX(); rocketBuild(); buildHUD(); buildCaches();
     // a crowd of them made now, while you are looking at the start, not in the middle of a fight (each is a mesh of its own)
     for(const [kind, n] of [["walker", 14], ["runner", 4], ["brute", 2]]) for(let k=0;k<n;k++) ZS.push(buildZombie(kind));
     const dom=renderer.domElement;
     dom.addEventListener("mousedown", e=>{ if(!Z.on || Z.dead) return; if(e.button===0) S.fireHeld=true; else if(e.button===2) S.aimHeld=true; });
     addEventListener("mouseup", e=>{ if(e.button===0){ S.fireHeld=false; } else if(e.button===2) S.aimHeld=false; });
     dom.addEventListener("contextmenu", e=>{ if(Z.on){ e.preventDefault(); e.stopPropagation(); } });
-    addEventListener("wheel", e=>{ if(Z.on && !Z.dead) cycleGun(Math.sign(e.deltaY)); }, {passive:true});
+    addEventListener("wheel", e=>{ if(!Z.on || Z.dead || !e.deltaY) return; if(S.aimHeld) zoomStep(-Math.sign(e.deltaY)); else cycleGun(Math.sign(e.deltaY)); }, {passive:true});
   }
   Z.start=function(){
     if(Z.on) return;
@@ -1636,12 +1790,12 @@ const ZOMBIE=(function(){
     S.lastYaw=player.yaw; S.lastPitch=player.pitch;
     snd.ambience(true);
     const best=loadBest();
-    banner("THEY'RE COMING", "CLICK TO SHOOT  ·  R RELOAD  ·  RIGHT BUTTON AIMS  ·  F PIPE BOMB  ·  L LIGHT"+
+    banner("THEY'RE COMING", "CLICK TO SHOOT  ·  R RELOAD  ·  RIGHT BUTTON AIMS, THE WHEEL ZOOMS  ·  F PIPE BOMB  ·  L LIGHT"+
            (best ? "\nYOUR BEST  "+best.score+"  ·  "+clock(best.t) : ""));
   };
   Z.stop=function(){
     if(!Z.on) return;
-    Z.on=false; Z.dead=false; stopCops(); mendGlass(); stopFlame();
+    Z.on=false; Z.dead=false; stopCops(); mendGlass(); stopFlame(); stopRockets();
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ PK[i].g.visible=false; if(PK[i].dyn){ dropMesh(PK[i].g); PK.splice(i,1); } }
     if(blood.decals) for(const m of blood.decals) m.visible=false;
@@ -1662,8 +1816,10 @@ const ZOMBIE=(function(){
     if(!Z.on) return false;
     if(Z.dead){ if(e.code==="Enter" || e.code==="Space"){ if(S.deadT>1.2){ resetRun(); banner("AGAIN", "THEY'RE STILL OUT THERE"); } } return e.code!=="KeyH" && e.code!=="KeyG"; }
     const k=e.code;
-    if(/^Digit[1-5]$/.test(k)){ select(+k.slice(5)); return true; }
+    if(/^Digit[1-6]$/.test(k)){ select(+k.slice(5)); return true; }
     if(k==="KeyR"){ startReload(); return true; }
+    if(k==="Equal" || k==="NumpadAdd"){ zoomStep(1); return true; }
+    if(k==="Minus" || k==="NumpadSubtract"){ zoomStep(-1); return true; }
     if(k==="KeyV"){ melee(); return true; }
     if(k==="KeyF"){ throwBomb(); return true; }                                  // (a pipe bomb; no drone in this)
     if(k==="KeyX" || k==="KeyP" || k==="KeyT"){ return true; }               // (no wrecks, power cuts or storms on top of it)
@@ -1721,7 +1877,7 @@ const ZOMBIE=(function(){
     // a car through them
     if(driving) carVsDead(dt, L);
     // the pipe bombs, and a horde when one is coming
-    updateBombs(dt); updateHorde(dt); updateCops(dt, now, dark); updateGlass(dt); updateFlame(dt, now);
+    updateBombs(dt); updateRockets(dt, light); updateHorde(dt); updateCops(dt, now, dark); updateGlass(dt); updateFlame(dt, now);
     S.streakT=Math.max(0, S.streakT-dt); if(S.streakT<=0) S.streak=0;
     updateGun(dt);
     updateVM(dt);
@@ -1733,7 +1889,7 @@ const ZOMBIE=(function(){
     FLASH.x=camera.position.x+_v1.x*0.7; FLASH.y=camera.position.y+_v1.y*0.7; FLASH.z=camera.position.z+_v1.z*0.7;
     FLASH.under=buriedAt(camera.position.x, camera.position.z, camera.position.y); FLASH.mod.v=S.flashT>0 ? 1 : 0;
     // the ADS view: tighter, a lot tighter through the rifle's scope
-    { const g=G(), want=fov*(1-S.ads*(g.zoom ? 1-g.zoom : 0.2)); if(Math.abs(camera.fov-want)>0.01){ camera.fov=want; camera.updateProjectionMatrix(); } }
+    { const g=G(), want=fov*(1-S.ads*(1-aimFov(g))); if(Math.abs(camera.fov-want)>0.01){ camera.fov=want; camera.updateProjectionMatrix(); } }
     // the blood on the screen from a hit close to, or a car through them
     S.splat=Math.max(0, S.splat-dt*0.55); hud.splat(S.splat);
     // hit: the view jolts; down: the view goes to the ground
@@ -1746,10 +1902,45 @@ const ZOMBIE=(function(){
     if(Z.hp<30 && !Z.dead){ S.heartT-=dt; if(S.heartT<=0){ S.heartT=0.85; snd.heart(); } }
     S.groanT-=dt; if(S.groanT<=0){ S.groanT=4+Math.random()*7; const a=Math.random()*6.28; voice(px+Math.sin(a)*70, pz+Math.cos(a)*70, 80+Math.random()*40, 1.6, 0.5, 0.5, 900); }
   };
+  /* ---- CODES. / opens a box at the foot of the screen; type a code and ENTER (ESC to shut it). NINELIVES and BOTTOMLESS
+     each turn one on, and off again: endless health (the hits are felt but take nothing) and endless ammunition (every
+     magazine always full, no reloading, pipe bombs without end). They hold till you turn them off or reload the page,
+     in zombie mode or out of it, and a run played with either on is not kept as your best. ---- */
+  const CODES={NINELIVES:["god", "INFINITE HEALTH"], BOTTOMLESS:["infAmmo", "INFINITE AMMO"]};
+  Z.god=false; Z.infAmmo=false;
+  const CB={open:false, txt:"", el:null};
+  function codeBox(on){
+    if(!CB.el){ CB.el=document.createElement("div"); CB.el.id="zcode";
+      CB.el.style.cssText="position:fixed;left:50%;bottom:16%;transform:translateX(-50%);z-index:13;display:none;padding:10px 18px;"+
+        "background:rgba(10,12,10,.86);border:1px solid rgba(232,226,208,.35);font-family:'JetBrains Mono',monospace;font-size:15px;"+
+        "letter-spacing:.22em;color:#e8e2d0;text-shadow:0 1px 3px #000;white-space:nowrap";
+      document.body.appendChild(CB.el); }
+    CB.open=on; CB.txt=""; CB.el.style.display=on ? "block" : "none"; if(on){ clearKeys(); drawBox(); }
+  }
+  function drawBox(){ CB.el.textContent="CODE  ›  "+CB.txt+(((Date.now()/400)|0)%2 ? "_" : " ")+"      ENTER · ESC"; }
+  function codeSay(t, col){ if(Z.on && hud.feed) feed(t, col); else toast(t, col); }
+  function enterCode(raw){
+    const c=CODES[raw.replace(/[^A-Z]/g, "")];
+    if(!c){ if(raw) codeSay("NOTHING HAPPENS", "#8a8a7a"); return; }
+    Z[c[0]]=!Z[c[0]]; if(Z[c[0]] && Z.on) S.cheated=true;
+    if(c[0]==="god" && Z.god){ Z.hp=100; }
+    if(c[0]==="infAmmo" && Z.infAmmo){ for(const g of GUNS) if(S.have[g.id]) S.mag[g.id]=g.mag; S.reloading=false; }
+    codeSay(c[1]+(Z[c[0]] ? " · ON" : " · OFF"), Z[c[0]] ? "#7fd0e8" : "#a8a294"); if(AC()) snd.pick(Z[c[0]] ? 2 : 0);
+    if(hud.last) hud.last.ammo=null;
+  }
+  Z.codeKey=function(e){
+    if(!CB.open){ if(e.code==="Slash" && !e.repeat && started){ codeBox(true); return true; } return false; }
+    if(e.code==="Escape"){ codeBox(false); return true; }
+    if(e.code==="Enter" || e.code==="NumpadEnter"){ const t=CB.txt; codeBox(false); enterCode(t); return true; }
+    if(e.code==="Backspace"){ CB.txt=CB.txt.slice(0, -1); drawBox(); return true; }
+    if(e.key && e.key.length===1 && /[a-z0-9 ]/i.test(e.key) && CB.txt.length<16){ CB.txt+=e.key.toUpperCase(); drawBox(); }
+    return true;                                                                // (everything else is swallowed while it is open)
+  };
+  setInterval(()=>{ if(CB.open) drawBox(); }, 400);
   // for tools and testing: put one down, and see what there is
   Z.debug={ZS:ZS, PK:PK, S:S, place:(kind, x, z)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6); return placePickup(kind, x, z, y, {dyn:true, life:600}); }, clear:()=>{ for(const zb of ZS) recycle(zb); if(blood.decals) for(const m of blood.decals) m.visible=false; }, spawnAt:(x, z, kind, yaw, alert)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6), zb=spawnZombie(x, z, y, kind||"walker", yaw); if(zb && alert) zb.alert=true; return zb; },
            give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM, BOMBS:BOMBS, cops:COPS, copRun:copRun, glassRay:glassRay, broken:BROKEN,
-           bomb:(x, z, fuse)=>{ S.bombs++; S.throwT=0; throwBomb(); const b=BOMBS[BOMBS.length-1]; if(!b) return null; b.x=x; b.z=z; b.y=surfaceY(x, z, groundY(x,z)+0.6)+0.05;
+           code:enterCode, rockets:ROCKETS, zoomStep:zoomStep, bomb:(x, z, fuse)=>{ S.bombs++; S.throwT=0; throwBomb(); const b=BOMBS[BOMBS.length-1]; if(!b) return null; b.x=x; b.z=z; b.y=surfaceY(x, z, groundY(x,z)+0.6)+0.05;
              b.vx=b.vy=b.vz=0; b.fuse=fuse||3.5; return b; }, kill:(zb, head)=>{ _v2.set(0,0,-1); killZombie(zb, !!head, _v2); }};
   return Z;
 })();

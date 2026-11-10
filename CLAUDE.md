@@ -483,6 +483,36 @@ No lettering touches or runs past the edge of its board or its border.
   on steep faces). The terrain (04) leans its normal on a few long swells
   and hummocks the same way. Both use `fwidth`, so their materials set
   `extensions.derivatives`.
+- A use that starts an arcade game is marked `.game` (12c's cabinets, the
+  air hockey and the hoops, 18h's dozer). 17's `nearestUse(true)` finds
+  those and `ENTER` starts one. `E` (`nearestUse()`) never does, so `E`
+  by the arcade's sliding doors is always the doors. A game's own keys
+  must not take a mid-game `ENTER` as "start again": that is `N`, or
+  `Space` / `Enter` once it is over.
+- Suds Patrol is 18n's `_SP` on cabinet 6 (12c's seventh, `NAMES` and
+  the marquee's cells run to `NAMES.length`). A stage is platforms as
+  `[row, c0, c1]` on its 42 × 32 grid of 8 px tiles (one-way: you land on
+  them from above and jump up through them), bugs as `[kind, column, row
+  stood on]`, and its colours. The floor and ceiling have a gap in the
+  middle that wraps you from the bottom to the top.
+- Zombie mode's blasts are 21's `blast(x, y, z, R, d0, d1, pr, pd)`: the
+  pipe bomb's and the rocket's. Anything else that explodes should use
+  it. It throws or knocks down the dead, hurts you within `pr`, and
+  shatters every pane in `GLASS_PANES` within 0.8 R. Rockets (`ROCKETS`,
+  a pool of four meshes from `rocketBuild`, built with the rest at
+  `build()` so the warm-up sees them) fly straight at the crosshair's
+  point and test the world, the glass and the dead along each frame's
+  stretch.
+- The zoom is per gun (`S.zoomBy`, steps `ZOOMS`). `aimFov(g)` is the
+  aimed view as a fraction of the open one, and `lookScale` follows it.
+  The wheel zooms while the right button is held and changes guns
+  otherwise.
+- Codes: `/` opens 21's box (`Z.codeKey`, early in 17's keydown chain,
+  every key its own while it is open). `CODES` maps a word to a flag on
+  `ZOMBIE`: `NINELIVES` sets `god`, which `hurtPlayer` checks first, and
+  `BOTTOMLESS` sets `infAmmo`, so `fire` uses nothing and `throwBomb`
+  nothing. A run with either on sets `S.cheated`, and `die()` does not
+  save it as the best.
 - Never change which lights are in the scene, or whether one casts a
   shadow, while the game runs. Hiding or showing a light, or flipping
   `castShadow`, makes every lit shader compile again: a freeze of a second
