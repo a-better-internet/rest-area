@@ -976,10 +976,11 @@ If the scene runs hot on your machine, start there (see below).
       Twenty-five metres on, under the hill, a pair of sliding glass doors
       parts as you come up to them, each leaf running into a pocket in the
       wall, onto a small arcade with a cosmic carpet, black walls with pink
-      and blue neon, and a GAME ROOM sign. Seven upright cabinets stand
+      and blue neon, and a GAME ROOM sign. Eight upright cabinets stand
       round the walls, each running its own attract screen (ASTRO
       RAIDERS, MAZE MUNCHER, BRICKYARD BREAKOUT and BLOCK DROP on the west
-      and back walls, SUDS PATROL in the back corner, GROUNDHOG GULCH and
+      and back walls, SUDS PATROL in the back corner, ROUTE 6 RALLY by the
+      hoops, GROUNDHOG GULCH and
       TURNPIKE TURTLE either side of the way in), with a token changer by
       the door, clear of the trash can.
     - **MECH 2.** The first steel door opens on what its name says: the air
@@ -1100,6 +1101,16 @@ If the scene runs hot on your machine, start there (see below).
         (HURRY UP!), and later a stink cloud comes for you through
         everything. Three lives, another at 20,000 and every 30,000 after.
         The best five scores are kept.
+      - **Route 6 Rally** is a behind-the-car road racer drawn the old
+        pseudo-3D way, with its own road and cars. You drive a little rally
+        hatchback three laps of a loop of US 6 through farm country and
+        along the lake (barns, silos, maples, billboards), starting at the
+        back of eight. Up or `W` is the gas, down or `S` the brake, left
+        and right steer, and `Space` shifts between LOW (pulls hard, tops
+        out early) and HIGH. Bends throw you outward, the grass drags, and
+        a sign or a car hit at speed spins you out. The clock runs down and
+        each lap puts 45 seconds back on it. Points for the distance, for
+        every car passed and for where you finish. The best five are kept.
       - **Block Drop** follows Jake Gordon's MIT-licensed
         javascript-tetris: a well ten by twenty, the seven pieces from a
         bag, ten for a piece set down and a hundred for a row (doubling
@@ -1457,6 +1468,10 @@ If the scene runs hot on your machine, start there (see below).
     further out, and leaving a scorch on the ground. Keep back from it
     yourself. You start with one, carry up to six, and find more in the
     caches; a crate of them fills you up.
+  - **At a game** (a cabinet, the tables, the oche, the disc golf, the
+    cornhole, a hoop, the dog park's ball) the gun is put away: it is not
+    drawn, the crosshair goes, and a click does not fire. It comes back
+    out when you step away. The dead keep coming while you play.
   - **Codes.** `/` opens a box at the foot of the screen. Type a code and
     press `ENTER` (`Esc` shuts it). **NINELIVES** turns infinite health on
     or off: hits still flash and shake, but take nothing. **BOTTOMLESS**
@@ -1560,12 +1575,13 @@ new game, and `Esc` or `E` puts the darts down.
 
 At the Astro Raiders cabinet `A`/`D` or the arrows move, `Space` or a click
 fires, `N` (or `Enter`, once it is over) starts a new game and `Esc` or `E`
-steps away. At the other six the arrows or `WASD` work the stick: in Maze Muncher they
+steps away. At the other seven the arrows or `WASD` work the stick: in Maze Muncher they
 steer; in Brickyard Breakout they (or the mouse) move the bat, `Space`
 serves, lets a glued ball go and fires the zapper, and `P` pauses; in Block
 Drop left and right move the piece, up turns it and down drops it faster;
 in Groundhog Gulch they dig and `Space` is the hose; in Turnpike Turtle each
-press is a hop; in Suds Patrol left and right walk, up (or `W`, `K`) jumps
+press is a hop; in Route 6 Rally up is the gas, down the brake, left and
+right steer and `Space` shifts; in Suds Patrol left and right walk, up (or `W`, `K`) jumps
 and `Space` (or `J`) blows a bubble. `N` (or `Space` or `Enter`, when the
 game is over) starts again, and `Esc` or `E` steps away.
 
@@ -1772,6 +1788,7 @@ js/18k-yardhoops.js shooting baskets at the hoops over the drives on Lake Street
 js/18l-warp.js      the warp list, for testing: ` and a key puts you down in one of 28 places
 js/18m-cabgames.js  the newer cabinets: Brickyard Breakout rebuilt, Groundhog Gulch, Turnpike Turtle; their best scores
 js/18n-suds.js      Suds Patrol, the bubble-trapping platform game on the seventh cabinet
+js/18o-racer.js     Route 6 Rally, the pseudo-3D road racer on the eighth cabinet
 js/18c-settings.js  the graphics menu: resolution (and auto), frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience

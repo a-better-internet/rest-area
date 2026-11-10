@@ -795,6 +795,11 @@ const ZOMBIE=(function(){
      THE GUNS
      ====================================================================== */
   const G=()=>GUN(S.cur);
+  // at a game (a cabinet, the tables, the oche, a disc, a bag, a ball) the gun is put away: not drawn, not fired
+  const atGame=()=>[typeof CABS!=="undefined" && CABS, typeof RAIDERS!=="undefined" && RAIDERS, typeof HOCKEY!=="undefined" && HOCKEY,
+    typeof HOOPS!=="undefined" && HOOPS, typeof DOZER!=="undefined" && DOZER, typeof DARTS!=="undefined" && DARTS, typeof DGOLF!=="undefined" && DGOLF,
+    typeof CORN!=="undefined" && CORN, typeof YARDHOOP!=="undefined" && YARDHOOP].some(g=>g && g.on) || (typeof DOGBALL!=="undefined" && DOGBALL.held);
+  Z.stowed=atGame;
   function spreadNow(){
     const g=G(), mv=player.moving ? (keys.KeyQ ? 0.06 : (keys.ShiftLeft||keys.ShiftRight) ? 0.025 : 0.01) : 0;
     return lerp(g.spread, g.ads, S.ads)+mv*(1-S.ads*0.7)+S.bloom;
@@ -1048,7 +1053,7 @@ const ZOMBIE=(function(){
     const g=G();
     S.cool=Math.max(0, S.cool-dt); S.cycle=Math.max(0, S.cycle-dt); S.flashT=Math.max(0, S.flashT-dt);
     S.bloom=Math.max(0, S.bloom-dt*(g.auto ? 0.05 : 0.08));
-    S.ads=approach(S.ads, (S.aimHeld && !Z.dead && S.switchT<=0 && !S.reloading && S.sprint<0.5) ? 1 : 0, dt*(g.zoom ? 5 : 8));
+    S.ads=approach(S.ads, (S.aimHeld && !Z.dead && !atGame() && S.switchT<=0 && !S.reloading && S.sprint<0.5) ? 1 : 0, dt*(g.zoom ? 5 : 8));
     const sprinting=keys.KeyQ && player.moving && !S.aimHeld;
     S.sprint=approach(S.sprint, sprinting ? 1 : 0, dt*6);
     if(S.switchT>0){ const was=S.switchT; S.switchT-=dt;
@@ -1064,7 +1069,7 @@ const ZOMBIE=(function(){
       }
     }
     if(g.rocket && S.mag[g.id]<=0 && S.ammo[g.ammo]>0 && !S.reloading && S.cool<=0 && S.switchT<=0) startReload();     // (a tube: the next one in as soon as this one is away)
-    const canFire=!Z.dead && S.switchT<=0 && S.melee<=0 && S.sprint<0.35 && !droneMode && !driving && !(typeof BOAT!=="undefined" && BOAT.on) && !seated;
+    const canFire=!Z.dead && !atGame() && S.switchT<=0 && S.melee<=0 && S.sprint<0.35 && !droneMode && !driving && !(typeof BOAT!=="undefined" && BOAT.on) && !seated;
     if(S.fireHeld && canFire && S.cool<=0 && (g.auto || !S.fired)) fire();
     if(!S.fireHeld) S.fired=false;
     if(g.shells && S.cycle>0 && S.cycle<g.rate-0.2 && !S.pumped){ S.pumped=true; snd.pump(); }
@@ -1231,7 +1236,7 @@ const ZOMBIE=(function(){
     vm.cam.aspect=camera.aspect; vm.cam.updateProjectionMatrix();
   }
   Z.render=function(){
-    if(!vm.scene || Z.dead || droneMode || driving || (typeof BOAT!=="undefined" && BOAT.on) || seated) return;
+    if(!vm.scene || Z.dead || atGame() || droneMode || driving || (typeof BOAT!=="undefined" && BOAT.on) || seated) return;
     const ac=renderer.autoClear; renderer.autoClear=false; renderer.clearDepth(); renderer.render(vm.scene, vm.cam); renderer.autoClear=ac;
   };
 
@@ -1682,7 +1687,7 @@ const ZOMBIE=(function(){
     const bt=Z.infAmmo ? "F · PIPE BOMB ×∞" : S.bombs>0 ? "F · PIPE BOMB ×"+S.bombs : ""; if(L.bt!==bt){ L.bt=bt; hud.bombsEl.textContent=bt; }
     const ct=[Z.god ? "∞ HEALTH" : "", Z.infAmmo ? "∞ AMMO" : ""].filter(Boolean).join("  ·  "); if(L.ct!==ct){ L.ct=ct; hud.cheatEl.textContent=ct; }
     // the crosshair opens with the spread, and goes when you aim down the sights
-    const gap=5+spreadNow()*520, op=(1-S.ads)*(S.sprint>0.5 ? 0.2 : 1);
+    const gap=5+spreadNow()*520, op=atGame() ? 0 : (1-S.ads)*(S.sprint>0.5 ? 0.2 : 1);
     const ch=hud.cross.ch; ch[0].style.top=(-gap-9)+"px"; ch[1].style.top=gap+"px"; ch[2].style.left=(-gap-9)+"px"; ch[3].style.left=gap+"px"; hud.cross.style.opacity=op;
     S.hitT=Math.max(0, S.hitT-dt); hud.hit.style.opacity=S.hitT>0 ? 1 : 0; hud.hit.className=S.hitKill && S.hitT>0 ? "kill" : ""; if(S.hitT<=0) S.hitKill=false;
     S.dmgFlash=Math.max(0, S.dmgFlash-dt*1.2);

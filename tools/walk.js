@@ -51,7 +51,7 @@ const ROUTES={
   // the generator house's basement (12b): in at its door, through the grey door, down the stair, round into the room
   "down to the basement":  {gate:true, pts:[[80,-174.2],[80,-177.4],[81.5,-176.8],[82.6,-176.8],[83.0,-176.8],[85.5,-176.8],[86.2,-176.8],[86.2,-178.4],[83.5,-178.4],[82.2,-178.3],[79.6,-178.3],[77.8,-179.5],[74.0,-179.5],[72.9,-179.6]]},
   // on through the dug-out, the door and the corridor, to the arcade under the hill
-  "down to the arcade":    [[72.9,-179.6],[72.0,-182.6],[72.0,-183.5],[72.0,-184.2],[72.0,-186.5],[72.0,-210.0],[72.0,-212.0],[74.6,-212.8],[75.4,-215.0],[74.4,-216.0],[72.0,-216.2],[69.2,-216.0],[69.8,-217.7],[71.7,-217.7],[69.0,-217.9],[68.25,-218.0]],
+  "down to the arcade":    [[72.9,-179.6],[72.0,-182.6],[72.0,-183.5],[72.0,-184.2],[72.0,-186.5],[72.0,-210.0],[72.0,-212.0],[74.6,-212.8],[75.4,-215.0],[74.4,-216.0],[72.0,-216.2],[69.2,-216.0],[69.8,-217.7],[71.7,-217.7],[72.95,-217.95],[71.7,-217.7],[69.0,-217.9],[68.25,-218.0]],
   // the two steel doors in its east wall (12d): MECH 2; and the stores, the stair and the sub-basement under them,
   // the hallways out to the bunk room, the chair, the boiler room and the door at the end
   "into mech 2":           {gate:true, pts:[[72.0,-191.0],[72.6,-191.0],[73.1,-191.0],[73.6,-191.0],[75.0,-190.6],[75.6,-190.0]]},

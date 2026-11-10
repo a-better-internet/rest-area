@@ -198,9 +198,9 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
 
   /* ---- the cabinets: seven of them round the walls, every one of them played ----------- */
   // (18f plays Astro Raiders; 18g Maze Muncher and Block Drop, 18m Brickyard Breakout, Groundhog Gulch and Turnpike Turtle,
-  // 18n Suds Patrol, each on its own screen the same way. ENTER plays the one you are at (17), so E is only ever the door's)
-  const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP","GROUNDHOG GULCH","TURNPIKE TURTLE","SUDS PATROL"];
-  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8"];
+  // 18n Suds Patrol, 18o Route 6 Rally, each on its own screen the same way. ENTER plays the one you are at (17), so E is only ever the door's)
+  const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP","GROUNDHOG GULCH","TURNPIKE TURTLE","SUDS PATROL","ROUTE 6 RALLY"];
+  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8","#c8641a"];
   ARCADE.cabs=[];
   const marC=cvs(128*NAMES.length,96), mx=marC.getContext("2d");
   NAMES.forEach((n,i)=>{ const ox=i*128, oy=0, g=mx.createLinearGradient(0,oy,0,oy+96);
@@ -258,6 +258,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   cab(4, 69.6, A.z1-0.45, Math.PI);     cab(5, 74.2, A.z1-0.45, Math.PI);
   // and the seventh in the back corner, by the west wall's pair
   cab(6, 68.25, A.z0+0.45, 0);
+  // and the eighth on the back wall, between Block Drop and the hoops
+  cab(7, 72.95, A.z0+0.45, 0);
   // the marquees: one mesh, one texture, every cabinet a cell of it
   scene.add(new T.Mesh(mergeEntries(marG), marM));
 

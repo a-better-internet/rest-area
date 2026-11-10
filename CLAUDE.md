@@ -441,7 +441,7 @@ No lettering touches or runs past the edge of its board or its border.
   to its list with its floor (a global that holds it, or a height to find
   it under). `tools/walk.js` puts you down at every one of them and fails
   any that is in something or does not hold you (`ONLY=warps`).
-- The arcade's cabinets are 12c's `NAMES` (six, the marquee a cell each)
+- The arcade's cabinets are 12c's `NAMES` (eight, the marquee a cell each)
   and 18g's `_CBG` by cabinet index: a game is an object with `newGame`,
   `step`, `draw`, `attract`, `lean` and optionally `key`, `mouse` and
   `done` (called once it is over, to keep its best scores, 18m's
@@ -495,6 +495,14 @@ No lettering touches or runs past the edge of its board or its border.
   them from above and jump up through them), bugs as `[kind, column, row
   stood on]`, and its colours. The floor and ceiling have a gap in the
   middle that wraps you from the bottom to the top.
+- Route 6 Rally is 18o's `_RR` on cabinet 7 (back wall, by the hoops). Its
+  road is `PLAN`'s stretches `[segments, bend, rise]` built into 200-unit
+  segments with roadside sprites, drawn by projecting segment after
+  segment to the horizon. Billboard lettering is only drawn while the
+  whole board face is on the screen.
+- In zombie mode the gun is put away while you are at any game (21's
+  `atGame()`, also `ZOMBIE.stowed()`): not drawn, no crosshair, no
+  firing, no aiming. A new game with an `on` flag goes in its list.
 - Zombie mode's blasts are 21's `blast(x, y, z, R, d0, d1, pr, pd)`: the
   pipe bomb's and the rocket's. Anything else that explodes should use
   it. It throws or knocks down the dead, hurts you within `pr`, and
