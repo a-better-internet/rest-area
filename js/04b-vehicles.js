@@ -348,8 +348,14 @@ function greenhouse(G, OP, GL, paint){
   band(L=>L[7]-0.095, L=>L[7], G.zRF-0.06, G.zA, G.aPillar||P, FIN.paint, 0.016, 12);
   for(const [z0,z1,c] of (G.pillars||[])) strip(0, 7, z0, z1, c==="paint"?P:c, c==="paint"?FIN.paint:FIN.trim, 0.016, 3);
   // the frame along the tops of the side windows, between the pillars, from the A pillar back to the tail of the glass
-  { const cuts=(G.pillars||[]).map(p=>[p[0]-0.004, p[1]+0.004]).sort((a,b)=>a[0]-b[0]); let z=G.zB+0.02;
-    for(const [a,b] of cuts.concat([[G.zRF-0.06, 1e9]])){ if(a>z) band(L=>L[7]-0.032, L=>L[7], z, Math.min(a, G.zRF-0.06), BLK, FIN.trim, 0.0145, Math.max(2, Math.ceil((a-z)/0.15))); z=Math.max(z, b); } }
+  { const cuts=(G.pillars||[]).map(p=>[p[0]-0.004, p[1]+(p[2]==="paint" ? 0.028 : 0.004)]).sort((a,b)=>a[0]-b[0]); let z=G.zB+0.02;
+    // (as deep round the corner as the A pillar is, so the frame and the pillar meet edge to edge where the windshield
+    // begins, and from the side the frame reads as the black surround it is, not a hairline on the roof's curve)
+    for(const [a,b] of cuts.concat([[G.zRF-0.06, 1e9]])){ if(a>z) band(L=>L[7]-0.095, L=>L[7], z, Math.min(a, G.zRF-0.06), BLK, FIN.trim, 0.0145, Math.max(2, Math.ceil((a-z)/0.15))); z=Math.max(z, b); } }
+  // the window's other edges: a rubber seal down the A pillar's foot, and down the front of a body-coloured rear pillar
+  // (butted to the top frame's end, not over it)
+  band(L=>L[7]-0.118, L=>L[7]-0.095, G.zRF-0.06, G.zA, BLK, FIN.trim, 0.0152, 12);
+  for(const [z0,z1,c] of (G.pillars||[])) if(c==="paint" && z1+0.028<G.zRF-0.06) strip(0, 7, z1, z1+0.028, BLK, FIN.trim, 0.0152, 2);
   // the windshield's rubber, top and foot, and the back light's
   across(G.zRF-0.035, G.zRF+0.045, BLK, 0.013); across(G.zA-0.06, G.zA-0.005, BLK, 0.013);
   if(G.zRR-G.zB>0.15){ across(G.zRR-0.045, G.zRR+0.035, BLK, 0.013); across(G.zB+0.005, G.zB+0.06, BLK, 0.013); }
@@ -496,10 +502,11 @@ function carParts(kind, paintHex, coarse){
   both(sd=>{
     const z=D.gh.zA-0.20, yb=Math.min(D.gh.belt-0.02, B.sec(z).t-0.03), xb=Math.max(B.pt(z, B.angAt(z, yb)).x, G.wb)-0.012, y=yb+0.085;
     vBox(OP, 0.11, 0.035, 0.07, sd*(xb+0.045), yb+0.02, z+0.01, BLK, FIN.trim);                   // the sail and stalk
-    vBox(OP, 0.03, 0.07, 0.035, sd*(xb+0.085), yb+0.05, z+0.005, BLK, FIN.trim);
-    vAdd(OP, new T.SphereGeometry(0.5,10,8), sd*(xb+0.125), y, z, paintHex, FIN.paint);
-    OP[OP.length-1].matrix.scale(new T.Vector3(0.10,0.12,0.18));
-    vBox(OP, 0.012, 0.09, 0.13, sd*(xb+0.17), y, z-0.02, 0x30373c, FIN.chrome);
+    vBox(OP, 0.03, 0.06, 0.035, sd*(xb+0.085), yb+0.045, z+0.005, BLK, FIN.trim);
+    // the housing: wider out from the door than it is tall, shallow front to back, its round face forward and the
+    // glass in its back, facing the driver
+    vAdd(OP, rboxGeo(0.20, 0.125, 0.075, 0.03, 3).clone(), sd*(xb+0.175), y, z, paintHex, FIN.paint);
+    vBox(OP, 0.172, 0.098, 0.008, sd*(xb+0.177), y, z-0.0385, 0x8c979e, FIN.chrome);
   });
   /* ---- the rest of the outside ---- */
   const halfW=(z,y)=>B.pt(z, B.angAt(z,y)).x;                     // the skin's half width at height y

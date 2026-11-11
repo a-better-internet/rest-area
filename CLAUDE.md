@@ -643,3 +643,13 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - `addBuried`'s ninth argument `[yTop, yBottom]` grades a stairwell:
   `buriedShare` runs 0 at the top to 1 at the bottom, and 19 and 16 follow
   it. A stair down from daylight gets one, with a dim under lamp part way.
+- Paving made of several shapes (a ring of drive and its mouths, an apron,
+  a walk) is laid as one surface with 01's `sdPaveGeo(sdUnion([...], r),
+  x0, x1, z0, z1, cell, uvm)`: each piece an `SD_rect` / `SD_ring` /
+  `SD_ellipse`, joined with a fillet of radius r, its uvs in world metres
+  so the texture's joints run on across the pieces (14z2's drive). Never
+  lay overlapping rectangles and a ring as separate planes: their ends
+  leave notches and their textures do not line up.
+- Where a ramp's line is carried along a crossroad onto its edge line
+  (08's `lineRun` tail), it eases from the ramp's heading to land on the
+  edge line exactly, so the solid line carries straight on from it.

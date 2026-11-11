@@ -187,8 +187,11 @@ function rampPave(P0, RW, X, s, at, taper, color, stop){
       const ord=ce===0 ? Q.map((_,i)=>Q.length-1-i) : Q.map((_,i)=>i);
       for(const i of ord){ const zl=Q[i].z+pathSide(Q,i).z*off; if(sd[i]>=0 && Math.abs(zl-(M.z+msg*M.e))<1.0){ M.near=Q[i].x+pathSide(Q,i).x*off; break; } }
       const e=Q[ce], nb2=Q[ce===0 ? 1 : ce-1], L=Math.hypot(e.x-nb2.x, e.z-nb2.z)||1, tx=(e.x-nb2.x)/L, tz=(e.z-nb2.z)/L;
-      const nE=pathSide(Q, ce), dz=(M.z+msg*M.e)-(e.z+nE.z*off), T=[];
-      for(let k=1;k<=8;k++){ const u=k/8; T.push({x:e.x+tx*2*k, z:e.z+tz*2*k+dz*smoothstep(0, 1, u), y:e.y}); }
+      // (from the ramp's end along its own heading, blended onto the edge line over 30 m: it leaves the ramp tangent to
+      // it and lands on the edge line exactly, tangent to that, so the solid line carries straight on from its end)
+      const nE=pathSide(Q, ce), zt=(M.z+msg*M.e)-nE.z*off, T=[], NT=15, sx=Math.sign(tx)||1;
+      for(let k=1;k<=NT;k++){ const u=k/NT, w=u*u*u*(u*(u*6-15)+10);
+        T.push({x:e.x+sx*Math.max(Math.abs(tx), 0.6)*2*k, z:lerp(e.z+tz*2*k*(1-u), zt, w), y:e.y}); }
       const tail=ce===0 ? T.reverse().concat([e]) : [e].concat(T);
       tail.forEach((q,i)=>{ q.s=i ? tail[i-1].s+Math.hypot(q.x-tail[i-1].x, q.z-tail[i-1].z) : 0; });
       layRibbon("paint", tail, o0, o1, PAVE_T+0.008, 1, col);

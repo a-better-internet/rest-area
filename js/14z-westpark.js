@@ -62,8 +62,10 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   tx("wp_vinyl", 128, 128, (c,Wd,Hh)=>{ const r=_trng(61); for(let i=0;i<4;i++) for(let j=0;j<4;j++){ c.fillStyle=(i+j)%2 ? "#d8d0bc" : "#e8e2d0"; c.fillRect(i*32, j*32, 32, 32); }
     for(let k=0;k<900;k++){ c.fillStyle=["rgba(90,80,60,0.25)","rgba(255,255,255,0.35)","rgba(140,120,90,0.2)"][k%3]; c.fillRect(r()*Wd, r()*Hh, 1+r()*1.5, 1+r()*1.5); }
     c.fillStyle="rgba(0,0,0,0.08)"; for(let i=0;i<=4;i++){ c.fillRect(i*32, 0, 1, Hh); c.fillRect(0, i*32, Wd, 1); } }, 0.6);
-  tx("wp_gravel", 128, 128, (c,Wd,Hh)=>{ const r=_trng(7); c.fillStyle="#8e887a"; c.fillRect(0,0,Wd,Hh);
-    for(let k=0;k<1400;k++){ c.fillStyle=["#a8a294","#6e6a60","#9a8e78","#c0baa8","#5e5a50"][(r()*5)|0]; c.fillRect(r()*Wd, r()*Hh, 1+r()*2.5, 1+r()*2); } }, 1.0);
+  tx("wp_gravel", 256, 256, (c,Wd,Hh)=>{ const r=_trng(7); c.fillStyle="#6c675d"; c.fillRect(0,0,Wd,Hh);
+    // (a darker, finer stone than it was: crushed limestone gone grey with use, the odd pale chip, never a white blotch)
+    for(let k=0;k<5200;k++){ c.fillStyle=["#7e786c","#5a564e","#746a5a","#8a8478","#4e4a44","#686458"][(r()*6)|0]; c.globalAlpha=0.55+r()*0.45; c.fillRect(r()*Wd, r()*Hh, 1+r()*1.6, 1+r()*1.3); }
+    c.globalAlpha=1; }, 1.0);
   tx("wp_skirt", 128, 128, (c,Wd,Hh)=>{ c.fillStyle="#ece8de"; c.fillRect(0,0,Wd,Hh); for(let x=0;x<Wd;x+=21){ c.fillStyle="#c8c4b8"; c.fillRect(x, 0, 2, Hh); c.fillStyle="#fbf8f0"; c.fillRect(x+3, 0, 2, Hh); }
     c.fillStyle="#3a3a38"; c.fillRect(40, 52, 46, 26); c.fillStyle="#8a8a86"; for(let y=55;y<76;y+=5) c.fillRect(42, y, 42, 2);
     c.fillStyle="rgba(90,80,60,0.25)"; c.fillRect(0, Hh-14, Wd, 14); }, 0.8);
@@ -82,8 +84,10 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   bucketOf("wp_xmas", ()=>new T.MeshBasicMaterial({vertexColors:true, toneMapped:false}));
   bucketOf("wp_glowbox", ()=>emitMat(0xfff2d8, 0.9, "indoor"));
   bucketOf("wp_popcorn", ()=>emitMat(0xffb830, 0.9, "indoor"));
-  bucketOf("wp_road", ()=>{ const t=signTex(128, 128, (c,Wd,Hh)=>{ const r=_trng(8); c.fillStyle="#8e887a"; c.fillRect(0,0,Wd,Hh);
-      for(let k=0;k<1400;k++){ c.fillStyle=["#a8a294","#6e6a60","#9a8e78","#c0baa8","#5e5a50"][(r()*5)|0]; c.fillRect(r()*Wd, r()*Hh, 1+r()*2.5, 1+r()*2); } });
+  bucketOf("wp_road", ()=>{ const t=signTex(256, 256, (c,Wd,Hh)=>{ const r=_trng(8); c.fillStyle="#6c675d"; c.fillRect(0,0,Wd,Hh);
+    // (a darker, finer stone than it was: crushed limestone gone grey with use, the odd pale chip, never a white blotch)
+    for(let k=0;k<5200;k++){ c.fillStyle=["#7e786c","#5a564e","#746a5a","#8a8478","#4e4a44","#686458"][(r()*6)|0]; c.globalAlpha=0.55+r()*0.45; c.fillRect(r()*Wd, r()*Hh, 1+r()*1.6, 1+r()*1.3); }
+    c.globalAlpha=1; });
     t.wrapS=t.wrapT=T.RepeatWrapping; return new T.MeshStandardMaterial(Object.assign({map:t, roughness:1.0}, _po(-2))); });
 
   /* ---- walls: outlines less their openings, in a grid (14o's pieces / vslab / vliner, built in world terms) ---- */
@@ -512,8 +516,8 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   addFlat(PX-PT/2-0.01, PX+PT/2+0.01, KD.a, KD.b, HFY); addFlat(PX-PT/2-0.01, PX+PT/2+0.01, SD.a, SD.b, HFY);
   // the front: a concrete stoop and steps to the road's side, a ramp beside them; the door; the sign; the flagpole
   { const sz0=hz0-1.8, sz1=hz0;
-    B(3.0, HFY-Y+0.04, 1.8, (ND.a+ND.b)/2, (HFY+Y)/2-0.02, (sz0+sz1)/2, "#b8b4a8"); addFlat((ND.a+ND.b)/2-1.5, (ND.a+ND.b)/2+1.5, sz0, sz1+HWT, HFY);
-    for(let k=0;k<2;k++) B(3.0, (HFY-Y)/3*(2-k), 0.3, (ND.a+ND.b)/2, Y+(HFY-Y)/3*(2-k)/2, sz0-0.15-k*0.3, "#b8b4a8");
+    B(3.0, HFY-Y+0.04, 1.8, (ND.a+ND.b)/2, (HFY+Y)/2-0.02, (sz0+sz1)/2, "#97938a"); addFlat((ND.a+ND.b)/2-1.5, (ND.a+ND.b)/2+1.5, sz0, sz1+HWT, HFY);
+    for(let k=0;k<2;k++) B(3.0, (HFY-Y)/3*(2-k), 0.3, (ND.a+ND.b)/2, Y+(HFY-Y)/3*(2-k)/2, sz0-0.15-k*0.3, "#97938a");
     addRamp((ND.a+ND.b)/2-1.5, (ND.a+ND.b)/2+1.5, sz0-0.6, sz0, "z", sz0-0.6, sz0, Y+0.02, HFY);
     makeDoor(XF(ND.a+0.02, hz0+HWT/2, 0), 0, HFY+0.01, 0, "THE COMMUNITY HALL", true, 0, "vision", 0x2a4a3a);
     addFlat(ND.a, ND.b, hz0-0.01, iz0+0.01, HFY);
@@ -899,10 +903,49 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     const railZ=(x, side, a, b, gaps)=>{ let p=a; for(const g of gaps.concat([[b, b]])){ if(g[0]-p>0.05){ B(0.03, 0.05, g[0]-p, x+side*0.022, HFY+0.82, (p+g[0])/2, "#8a6a4a"); B(0.02, 0.12, g[0]-p, x+side*0.017, HFY+0.065, (p+g[0])/2, "#6a4a2e"); } p=g[1]; } };
     railX(iz0, 1, ix0+0.05, PX-PT/2-0.05, [[ND.a-0.06, ND.b+0.06]]); railX(iz1, -1, ix0+0.05, PX-PT/2-0.05, []);
     railZ(ix0, 1, iz0+0.05, iz1-0.05, []); railZ(PX-PT/2, -1, iz0+0.05, iz1-0.05, [[KD.a-0.06, KD.b+0.06],[SD.a-0.06, SD.b+0.06]]);
-    const flagPA=(c,Wd,Hh)=>{ c.fillStyle="#1f3f7a"; c.fillRect(0,0,Wd,Hh); c.fillStyle="#d8b040"; c.beginPath(); c.ellipse(Wd/2, Hh/2, Wd*0.14, Hh*0.26, 0, 0, 7); c.fill();
-      c.fillStyle="#1f3f7a"; c.beginPath(); c.ellipse(Wd/2, Hh/2, Wd*0.10, Hh*0.19, 0, 0, 7); c.fill(); c.fillStyle="#d8b040"; c.fillRect(Wd*0.47, Hh*0.40, Wd*0.06, Hh*0.2); };
-    for(const [fz, fl] of [[-1181.4, flagUS],[-1174.6, flagPA]]){ const fx=ix0+0.45; C(0.016, 2.2, fx, HFY+1.1, fz, "#c8a050", 8); S(0.04, fx, HFY+2.24, fz, "#d8b040"); CT(0.14, 0.18, 0.08, fx, HFY+0.04, fz, "#3a3a3c", 14);
-      B(0.04, 0.03, 0.62, fx+0.03, HFY+2.04, fz, "#c8a050"); sign(0.6, 0.95, fl, fx+0.06, HFY+1.55, fz, Math.PI/2, false, 200); addCol(fx-0.18, fx+0.18, fz-0.18, fz+0.18, HFY-0.06, HFY+2.2); }
+    /* The two flags on their stands at the front, 3 by 5 feet, hanging from the staff and falling in soft folds: the
+       hoist along the staff, the fly drooping a little and rippled, fringed in gold on three sides. The national flag
+       stands on the speaker's right (the room's north end), the state's on the left. Each is drawn at its true
+       proportions on a 5:3 canvas: 13 stripes, a canton 7 stripes deep and two fifths of the fly with 50 stars in
+       rows of six and five; the state's arms on blue: the shield of ship, plough and wheat, the horses either side,
+       the eagle over it, the motto on a ribbon under. */
+    const FW=1.5, FH=0.9;
+    const star=(c, x, y, r)=>{ c.beginPath(); for(let k=0;k<10;k++){ const a=-Math.PI/2+k*Math.PI/5, rr=k%2 ? r*0.4 : r; c.lineTo(x+Math.cos(a)*rr, y+Math.sin(a)*rr); } c.closePath(); c.fill(); };
+    const fringe=(c, Wd, Hh)=>{ c.fillStyle="#d8b040"; c.fillRect(Wd-Wd*0.025, 0, Wd*0.025, Hh); c.fillRect(0, 0, Wd, Hh*0.03); c.fillRect(0, Hh-Hh*0.03, Wd, Hh*0.03);
+      c.fillStyle="rgba(120,80,10,0.5)"; for(let x=0;x<Wd;x+=5){ c.fillRect(x, 0, 1, Hh*0.03); c.fillRect(x, Hh-Hh*0.03, 1, Hh*0.03); } for(let y=0;y<Hh;y+=5) c.fillRect(Wd-Wd*0.025, y, Wd*0.025, 1); };
+    const drawUS=(c,Wd,Hh)=>{ const g=Hh*0.94, y0=Hh*0.03, sh=g/13;
+      for(let k=0;k<13;k++){ c.fillStyle=k%2 ? "#f2f0ea" : "#b22234"; c.fillRect(0, y0+k*sh, Wd, sh+1); }
+      const cw=Wd*0.40, ch=sh*7; c.fillStyle="#3c3b6e"; c.fillRect(0, y0, cw, ch); c.fillStyle="#f2f0ea";
+      for(let r=0;r<9;r++){ const n=r%2 ? 5 : 6; for(let i=0;i<n;i++) star(c, cw*((r%2 ? 2 : 1)+i*2)/12, y0+ch*(r+1)/10, ch*0.045); }
+      fringe(c, Wd, Hh); };
+    const drawPA=(c,Wd,Hh)=>{ c.fillStyle="#1f3f7a"; c.fillRect(0,0,Wd,Hh); const cx=Wd/2, cy=Hh*0.47, sw=Hh*0.30;
+      // the horses, rearing either side of the shield, and the eagle over it
+      for(const sdd of [-1,1]){ c.fillStyle="#3a2414"; c.beginPath(); c.ellipse(cx+sdd*sw*0.95, cy+sw*0.15, sw*0.30, sw*0.55, sdd*0.35, 0, 7); c.fill();
+        c.beginPath(); c.ellipse(cx+sdd*sw*1.05, cy-sw*0.45, sw*0.13, sw*0.22, sdd*0.6, 0, 7); c.fill(); }
+      c.fillStyle="#3a2a1a"; c.beginPath(); c.ellipse(cx, cy-sw*0.98, sw*0.16, sw*0.12, 0, 0, 7); c.fill();
+      for(const sdd of [-1,1]){ c.beginPath(); c.moveTo(cx, cy-sw*0.95); c.lineTo(cx+sdd*sw*0.55, cy-sw*1.25); c.lineTo(cx+sdd*sw*0.42, cy-sw*0.88); c.closePath(); c.fill(); }
+      // the shield: the ship on blue, the plough on gold, three sheaves of wheat on gold, in a gold border
+      const sx=cx-sw*0.45, sy=cy-sw*0.7, w2=sw*0.9, h2=sw*1.15;
+      const outline=()=>{ c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx+w2, sy); c.lineTo(sx+w2, sy+h2*0.6); c.quadraticCurveTo(sx+w2, sy+h2, cx, sy+h2); c.quadraticCurveTo(sx, sy+h2, sx, sy+h2*0.6); c.closePath(); };
+      c.save(); outline(); c.fillStyle="#e8c060"; c.fill(); c.clip(); c.fillStyle="#6a9ad8"; c.fillRect(sx, sy, w2, h2*0.34); c.fillStyle="#7a5a30"; c.fillRect(sx+w2*0.25, sy+h2*0.2, w2*0.5, h2*0.07);
+      c.fillStyle="#f2f0ea"; c.fillRect(cx-1, sy+h2*0.04, 2, h2*0.16); c.fillStyle="#d8b040"; c.fillRect(sx, sy+h2*0.34, w2, h2*0.3); c.fillStyle="#3a3a3a"; c.fillRect(sx+w2*0.3, sy+h2*0.45, w2*0.4, h2*0.06);
+      c.fillStyle="#c89a30"; for(let i=0;i<3;i++){ c.beginPath(); c.ellipse(sx+w2*(0.25+i*0.25), sy+h2*0.8, w2*0.07, h2*0.12, 0, 0, 7); c.fill(); } c.restore();
+      c.strokeStyle="#d8b040"; c.lineWidth=3; outline(); c.stroke();
+      // the ribbon, with the motto
+      const ry0=cy+sw*0.82; c.fillStyle="#f2ece0"; c.beginPath(); c.moveTo(cx-sw*1.5, ry0); c.quadraticCurveTo(cx, ry0+sw*0.28, cx+sw*1.5, ry0); c.lineTo(cx+sw*1.5, ry0+sw*0.2); c.quadraticCurveTo(cx, ry0+sw*0.48, cx-sw*1.5, ry0+sw*0.2); c.closePath(); c.fill();
+      c.fillStyle="#7a1a1a"; fitText(c, "VIRTUE, LIBERTY AND INDEPENDENCE", sw*2.3, sw*0.13, cx, ry0+sw*0.2, "700", "Georgia, serif");
+      fringe(c, Wd, Hh); };
+    const flagMesh=(draw, fx, fz, dir)=>{ const tex=signTex(500, 300, draw), NU=28, NV=6, top=HFY+2.42, pos=[], uv=[], idx=[];
+      tex.anisotropy=4;
+      for(let j=0;j<=NV;j++) for(let i=0;i<=NU;i++){ const u=i/NU, v=j/NV;
+        const wave=Math.sin(u*Math.PI*3.4)*0.075*Math.pow(u, 0.7)+Math.sin(u*Math.PI*1.3+v*0.6)*0.025*u, droop=0.13*u*u+0.03*u*v;
+        pos.push(fx+0.03+wave, top-v*FH-droop, fz+dir*(0.02+u*FW*(1-0.07*u))); uv.push(u, 1-v); }
+      for(let j=0;j<NV;j++) for(let i=0;i<NU;i++){ const a=j*(NU+1)+i, b=a+1, cc=a+NU+1, d=cc+1; idx.push(a, cc, b, b, cc, d); }
+      const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+      const m=new T.Mesh(g, new T.MeshStandardMaterial({map:tex, roughness:0.85, side:T.DoubleSide})); m.castShadow=true; m.receiveShadow=true; m.name="hall-flag"; scene.add(m); };
+    for(const [fz, draw, dir] of [[-1174.6, drawUS, 1],[-1181.4, drawPA, -1]]){ const fx=ix0+0.45;
+      C(0.016, 2.5, fx, HFY+1.25, fz, "#c8a050", 8); S(0.042, fx, HFY+2.54, fz, "#d8b040"); CT(0.15, 0.19, 0.08, fx, HFY+0.04, fz, "#3a3a3c", 14);
+      flagMesh(draw, fx, fz, dir); addCol(fx-0.18, fx+0.18, fz-0.18, fz+0.18, HFY-0.06, HFY+2.5); }
     // the trophy case between the north windows: glass doors, shelves, cups and plaques
     { const tcx=-1127.5, tcz=iz0+0.25, w=1.4, h=1.85, d=0.42;
       B(w, 0.12, d, tcx, HFY+0.06+0.005, tcz, "#5a3a22"); B(w, 0.06, d, tcx, HFY+h-0.03, tcz, "#5a3a22"); for(const s2 of [-1,1]) B(0.05, h, d, tcx+s2*(w/2-0.025), HFY+h/2, tcz, "#5a3a22"); B(w-0.1, h-0.18, 0.02, tcx, HFY+h/2+0.03, iz0+0.05, "#3a2414");

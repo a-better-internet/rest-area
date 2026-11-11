@@ -528,6 +528,34 @@ function bakeBuckets(scene){
   return out;
 }
 
+/* --- paving as one piece -----------------------------------------------
+   A drive, a walk or a pad made of several shapes (a ring of drive, the mouths to the road, an apron, a walk) is
+   laid as ONE surface: each shape a signed distance (negative inside; SD_* below), joined with a smooth union of
+   radius r, so wherever two meet there is a fillet and never a notch or a sliver of grass between them. The union
+   is filled cell by cell (marching squares, `cell` metres) into a flat mesh in world x/z at y 0, its uvs in world
+   metres over `uvm`, so a texture's joints run on unbroken across every piece. */
+const SD_box=(cx, cz, hx, hz)=>(x, z)=>{ const qx=Math.abs(x-cx)-hx, qz=Math.abs(z-cz)-hz; return Math.hypot(Math.max(qx,0), Math.max(qz,0))+Math.min(Math.max(qx,qz),0); };
+const SD_rect=(x0, x1, z0, z1)=>SD_box((x0+x1)/2, (z0+z1)/2, Math.abs(x1-x0)/2, Math.abs(z1-z0)/2);
+const SD_ellipse=(cx, cz, a, b)=>(x, z)=>{ const px=x-cx, pz=z-cz, k0=Math.hypot(px/a, pz/b), k1=Math.hypot(px/(a*a), pz/(b*b)); return k1>1e-9 ? k0*(k0-1)/k1 : -Math.min(a,b); };
+const SD_ring=(cx, cz, a0, b0, a1, b1)=>{ const o=SD_ellipse(cx, cz, a0, b0), i=SD_ellipse(cx, cz, a1, b1); return (x, z)=>Math.max(o(x, z), -i(x, z)); };
+function sdUnion(list, r){ return (x, z)=>{ let d=list[0](x, z);
+  for(let k=1;k<list.length;k++){ const e=list[k](x, z), h=Math.max(r-Math.abs(d-e), 0)/r; d=Math.min(d, e)-h*h*r*0.25; } return d; }; }
+function sdPaveGeo(sd, x0, x1, z0, z1, cell, uvm){
+  cell=cell||0.2; uvm=uvm||3; const nx=Math.ceil((x1-x0)/cell), nz=Math.ceil((z1-z0)/cell), V=new Float32Array((nx+1)*(nz+1));
+  for(let j=0;j<=nz;j++) for(let i=0;i<=nx;i++) V[j*(nx+1)+i]=sd(x0+i*cell, z0+j*cell);
+  const pos=[], uv=[], tri=(a,b,c)=>{ for(const p of [a,c,b]){ pos.push(p[0], 0, p[1]); uv.push(p[0]/uvm, -p[1]/uvm); } };
+  for(let j=0;j<nz;j++) for(let i=0;i<nx;i++){
+    const C=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]].map(([a,b])=>[x0+a*cell, z0+b*cell, V[b*(nx+1)+a]]);
+    if(C.every(c=>c[2]>=0)) continue;
+    const poly=[];
+    for(let k=0;k<4;k++){ const a=C[k], b=C[(k+1)%4]; if(a[2]<0) poly.push([a[0], a[1]]);
+      if((a[2]<0)!==(b[2]<0)){ const t=a[2]/(a[2]-b[2]); poly.push([a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]); } }
+    for(let k=1;k+1<poly.length;k++) tri(poly[0], poly[k], poly[k+1]); }
+  const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
+  g.setAttribute("normal", new T.Float32BufferAttribute(new Float32Array(pos.length).map((_, i)=>i%3===1 ? 1 : 0), 3));
+  return g;
+}
+
 /* --- hand-merged detail --------------------------------------------------
    The fittings, furniture and odds and ends each place merges by hand (its `ME`) are cut into 64 m tiles the way the
    buckets are, so the camera can cull what is behind it, and a tile further off than the draw distance's `detail`

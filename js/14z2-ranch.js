@@ -74,7 +74,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
       for(let k=0;k<40;k++){ c.fillStyle="rgba(120,110,90,0.08)"; c.fillRect(i*32+r()*32, j*32+r()*32, 2, 2); } }
     c.fillStyle="#9a9286"; for(let i=0;i<=4;i++){ c.fillRect(i*32-1, 0, 2, Hh); c.fillRect(0, i*32-1, Wd, 2); } }, 0.35);
   tx("rn_carpet", 64, 64, (c,Wd,Hh)=>{ const r=_trng(5); c.fillStyle="#c8bca8"; c.fillRect(0,0,Wd,Hh); for(let k=0;k<900;k++){ c.fillStyle=r()<0.5 ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)"; c.fillRect(r()*Wd, r()*Hh, 1, 1); } }, 1.0);
-  tx("rn_conc", 256, 256, (c,Wd,Hh)=>{ const r=_trng(9); c.fillStyle="#b2aea4"; c.fillRect(0,0,Wd,Hh);
+  tx("rn_conc", 256, 256, (c,Wd,Hh)=>{ const r=_trng(9); c.fillStyle="#9e9a90"; c.fillRect(0,0,Wd,Hh);
     for(let k=0;k<4000;k++){ c.fillStyle="rgba("+(r()<0.5?"60,55,45":"255,255,250")+","+(r()*0.10).toFixed(3)+")"; c.fillRect(r()*Wd, r()*Hh, 1+r()*2, 1); }
     c.strokeStyle="rgba(70,64,56,0.55)"; c.lineWidth=2; c.strokeRect(1, 1, Wd-2, Hh-2);
     c.strokeStyle="rgba(70,64,56,0.25)"; c.lineWidth=1; c.beginPath(); c.moveTo(40, 0); c.lineTo(70, 90); c.lineTo(58, 150); c.stroke(); }, 0.9);
@@ -83,7 +83,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     // the waterline tile: a band of small dark-blue squares along the top (v near 1, the wall's top)
     for(let i=0;i<8;i++) for(let j=0;j<2;j++){ c.fillStyle=(i+j)%2 ? "#1e4a7a" : "#265a8e"; c.fillRect(i*16+1, j*16+1, 14, 14); }
     c.fillStyle="#e8f2f2"; c.fillRect(0, 32, Wd, 2); }, 0.55);
-  bucketOf("rn_drive", ()=>{ const t=signTex(256, 256, (c,Wd,Hh)=>{ const r=_trng(19); c.fillStyle="#aeaaa0"; c.fillRect(0,0,Wd,Hh);
+  bucketOf("rn_drive", ()=>{ const t=signTex(256, 256, (c,Wd,Hh)=>{ const r=_trng(19); c.fillStyle="#9c988e"; c.fillRect(0,0,Wd,Hh);
       for(let k=0;k<5000;k++){ c.fillStyle="rgba("+(r()<0.5?"60,55,45":"255,255,250")+","+(r()*0.11).toFixed(3)+")"; c.fillRect(r()*Wd, r()*Hh, 1+r()*2, 1); }
       c.strokeStyle="rgba(60,56,50,0.5)"; c.lineWidth=2; c.beginPath(); c.moveTo(0,1); c.lineTo(Wd,1); c.moveTo(1,0); c.lineTo(1,Hh); c.stroke();
       c.strokeStyle="rgba(60,56,50,0.3)"; c.lineWidth=1; c.beginPath(); c.moveTo(30,40); c.lineTo(90,70); c.lineTo(120,140); c.moveTo(180,200); c.lineTo(230,180); c.stroke(); });
@@ -668,15 +668,15 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
      ====================================================================== */
   use("site");
   const DCX=-1425.0, DCZ=-1180.6, DA0=12.6, DB0=7.6, DA1=8.4, DB1=3.6;
-  { const sh=new T.Shape(); sh.absellipse(0, 0, DA0, DB0, 0, Math.PI*2, false); const hl=new T.Path(); hl.absellipse(0, 0, DA1, DB1, 0, Math.PI*2, true); sh.holes.push(hl);
-    const g=new T.ShapeGeometry(sh, 64), U=g.attributes.uv; for(let i=0;i<U.count;i++) U.setXY(i, U.getX(i)/3.0, U.getY(i)/3.0);
-    push("rn_drive", g, DCX, Y+0.03, DCZ, 0, "#a29e94", -Math.PI/2, 0);
-    const rect=(x0, x1, z0, z1)=>{ const g2=planeGeo(x1-x0, z1-z0, 0), U2=g2.attributes.uv; for(let i=0;i<U2.count;i++) U2.setXY(i, U2.getX(i)*(x1-x0)/3, U2.getY(i)*(z1-z0)/3);
-      push("rn_drive2", g2, (x0+x1)/2, Y+0.036, (z0+z1)/2, 0, "#a29e94", -Math.PI/2, 0); };
-    rect(-1436.6, -1432.4, Z+HW-0.2, DCZ-4.0); rect(-1417.6, -1413.4, Z+HW-0.2, DCZ-4.0);       // the two mouths, from the road
-    rect(GX0-0.2, GX1+0.2, DCZ+3.6, GZ0-0.02);                                                // the apron to the garage
-    rect(-1428.1, -1426.1, DCZ+3.8, WZ0-1.25);                                                // the walk to the porch steps
-    rect(-1424.2, -1420.6, WZ1-0.02, WZ1+1.0); }
+  /* the circle of drive, its two mouths from the road, the apron to the garage and the walks, laid as one surface
+     (01's sdPaveGeo): a fillet wherever two pieces meet, its joints running on unbroken */
+  { const sd=sdUnion([SD_ring(DCX, DCZ, DA0, DB0, DA1, DB1),
+      SD_rect(-1436.6, -1432.4, Z+HW-0.2, DCZ-2.6), SD_rect(-1417.6, -1413.4, Z+HW-0.2, DCZ-2.6),        // the two mouths, from the road
+      SD_rect(GX0-0.2, GX1, DCZ+3.3, GZ0-0.02),                                                       // the apron to the garage,
+      SD_rect(DCX+9.0, GX1, DCZ, DCZ+3.6),                                                            //  its east edge carried down to the ring's tip
+      SD_rect(-1428.1, -1426.1, DCZ+4.4, WZ0-1.25),                                                   // the walk to the porch steps
+      SD_rect(-1424.2, -1420.6, WZ1-0.02, WZ1+1.0)], 2.0);                                            // the step out of the back
+    push("rn_drive", sdPaveGeo(sd, -1442, -1408, Z+HW-0.4, WZ1+1.4, 0.2, 3), 0, Y+0.03, 0, 0, "#86817a"); }
   // the island: three boulders, the tall ornamental grass, a few lower plants
   for(const [bx2, bz, s, sd] of [[-1428.5, -1180.0, 0.95, 11],[-1424.0, -1181.6, 0.7, 12],[-1420.8, -1179.6, 0.55, 13],[-1438.9, -1186.4, 0.45, 14],[-1411.6, -1187.0, 0.6, 15],[-1440.5, -1172.0, 0.5, 16],[-1410.0, -1171.0, 0.42, 17]]){
     const g=rockGeo(s, sd); g.scale(1.2, 1.0, 0.9); push("rock", g, bx2, Y+s*0.45, bz, sd*0.7, "#8a847a"); addCol(bx2-s, bx2+s, bz-s*0.8, bz+s*0.8, Y-0.5, Y+s*0.9); }
