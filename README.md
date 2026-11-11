@@ -1539,6 +1539,26 @@ If the scene runs hot on your machine, start there (see below).
   credits are kept between visits; run dry and the bartender stakes you a
   hundred. It is underground and lit the same at every hour. Past the park
   the road goes on west to the end of the map.
+  The park is lived in. The single-wides have crowned, round-edged roofs,
+  corner trim, a stripe down each side, vinyl skirting with its vents and
+  board decks with balusters; out the back, propane tanks and the electric
+  pedestal, and on some a window unit, a dish or an aerial. Every lot is
+  dressed its own way: a welcome mat and geraniums, a deck chair, a basket
+  hanging from the awning, a kettle grill and a cooler, solar lights along
+  the gravel, pink flamingos and a gnome, and by turns a hammock, a
+  clothesline, a kiddie pool, bikes against the skirting or tiki torches.
+  Inside are braided rugs, a ceiling fan turning, coats on hooks by the
+  door, a sign over the TV, a coffee maker and a dish rack, a shower
+  curtain. The common fire burns day and night, a few of the lots' fire
+  rings are lit after dark with neighbours round them, a radio on one deck
+  has the ballgame on, and the jukebox downstairs plays country. The hall
+  has gutters, flower beds and coach lamps out front, cars in its lot, a
+  chair rail, flags by the officers' table, a trophy case and a coat rack.
+  The Pine Knot has a padded bar front, Christmas lights along the back
+  bar, a popcorn machine, a beer cooler, a pool table under its lamp, a fan
+  and a cricket chalkboard by the dartboard. Out on the farms there is a
+  scarecrow and bales in the pumpkin patch, and signs for U-pick pumpkins,
+  choose-and-cut trees, the sunflower maze and the vineyard's tastings.
 - **Sound** is synthesized, with no audio files: road noise that pans with
   the highway, wind, cardinals, chickadees, a wood thrush and crows by day,
   at night a chorus of tree crickets (soft, pulsing, in the 2.6 to 2.9 kHz

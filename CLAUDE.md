@@ -559,6 +559,14 @@ No lettering touches or runs past the edge of its board or its border.
   wallet, `SLOTS.credits`, kept in `localStorage` (`restarea.slots.credits`).
   `SLOTS.sim(n)` plays n spins of nine lines and returns what comes back per
   credit bet (about 0.94); check it after changing a pay or a weight.
+- 14z's dressing pass runs over `WESTPARK.trailers` (each keeps its frame:
+  `sd(d)` back from the lane end, `rng`, the deck `dk`, `inX0`/`inX1`, `xb`).
+  Fires are 14z's `campfire(x, z, scale, always)` (14d's flame, coals, halo
+  and a `fire` lamp) in `WESTPARK.fires`; `updateWestPark` (from 14's
+  `updateLife`) flickers them, lights the lots' fires after dark, turns the
+  ceiling fans (`WESTPARK.fans`) and sets `WESTPARK.nightCrowd` only while
+  you are well away. `WESTPARK.radios` join 20's `nearRadio`. Wall signs in
+  the trailers are one atlas (`homeSign`, bucket `wp_homesign`).
 
 ## The machine it must run on
 
