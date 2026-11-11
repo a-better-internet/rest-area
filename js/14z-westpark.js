@@ -119,7 +119,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   function windowAt(ax, c, t, o, out, trim, curtain){
     const w=o.b-o.a, h=o.head-o.sill, m=(o.a+o.b)/2, ym=(o.sill+o.head)/2;
     push("glass", planeGeo(w-0.02, h-0.02, 0), ax==="x" ? m : c, ym, ax==="x" ? c : m, ax==="x" ? 0 : Math.PI/2, "#ffffff");
-    const fo=c+out*(t/2+0.025), fi=c-out*(t/2+0.02);
+    const fo=c+out*(t/2+0.032), fi=c-out*(t/2+0.02);
     for(const [ww, hh, ds, dy] of [[w+0.16, 0.07, 0, h/2+0.035],[w+0.16, 0.07, 0, -h/2-0.035],[0.07, h, -w/2-0.035, 0],[0.07, h, w/2+0.035, 0]]){
       if(ax==="x") B(ww, hh, 0.04, m+ds, ym+dy, fo, trim); else B(0.04, hh, ww, fo, ym+dy, m+ds, trim); }
     if(ax==="x") B(w+0.06, 0.03, 0.10, m, o.sill-0.015, fi-out*0.03, "#e8e4d8"); else B(0.10, 0.03, w+0.06, fi-out*0.03, o.sill-0.015, m, "#e8e4d8");
@@ -245,9 +245,9 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     // side along the hall
     const dA=8.4, dBd=10.8, xb=cx-0.75, PT=0.08;
     const zA=sd(dA), zBb=sd(dBd);
-    const hallDoor={a:inX0+0.10, b:inX0+0.92, sill:FY-0.01, head:FY+2.0};
+    const hallDoor={a:inX0+0.08, b:inX0+1.0, sill:FY-0.01, head:FY+2.0};
     wall("wp_wall", "x", zA, PT, inX0, inX1, FY, CL, [hallDoor], "#f2eee4", 0.5, FY);
-    wall("wp_wall", "x", zBb, PT, inX0, inX1, FY, CL, [{a:inX0+0.10, b:inX0+0.92, sill:FY-0.01, head:FY+2.0}], "#f2eee4", 0.5, FY);
+    wall("wp_wall", "x", zBb, PT, inX0, inX1, FY, CL, [{a:inX0+0.08, b:inX0+1.0, sill:FY-0.01, head:FY+2.0}], "#f2eee4", 0.5, FY);
     { const [a, b]=rng(dA, dBd), bd={a:(a+b)/2-0.38, b:(a+b)/2+0.38, sill:FY-0.01, head:FY+2.0};
       wall("wp_wall", "z", xb, PT, a+PT/2, b-PT/2, FY, CL, [bd], "#f2eee4", 0.5, FY);
       makeDoor(XF(xb, bd.a+0.02, -Math.PI/2), 0, FY+0.01, 0, "THE BATHROOM", true, 0.3, "closet", 0xf0ece2); }
@@ -274,12 +274,12 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       for(const [d2, c2] of [[3.6, "#4a7a9a"],[1.2, "#c8a050"]]){ B(0.03, 0.42, 0.56, inX0+0.025, fy+1.45, sd(d2), "#3a2a1a"); B(0.02, 0.36, 0.50, inX0+0.04, fy+1.45, sd(d2), c2); }
       C(0.14, 0.03, inX1-0.02, fy+1.6, sd(3.9), "#f2f0ea", 18, 0, 0, Math.PI/2); }
     // the kitchen: the counter along the west wall under its window, the range, the fridge, the dinette by the door
-    { const kc=F(inX0+0.31, 6.2, faceW), cab=["#e8e2d0","#8a6a4a","#c8d0c8","#e8dcc0"][(r()*4)|0];
-      kc.b(3.0, 0.86, 0.60, 0, 0.43, 0, cab); kc.b(3.02, 0.04, 0.63, 0, 0.88, 0.01, "#5a5450");
-      for(let x2=-1.2; x2<1.4; x2+=0.6) kc.b(0.56, 0.62, 0.012, x2, 0.42, 0.302, cab);
-      kc.b(0.62, 0.006, 0.42, -0.95, 0.902, 0.04, "#c8ccd0"); kc.b(3.0, 0.70, 0.34, 0, 1.86, -0.13, cab);
+    { const kc=F(inX0+0.31, 6.05, faceW), cab=["#e8e2d0","#8a6a4a","#c8d0c8","#e8dcc0"][(r()*4)|0];
+      kc.b(2.7, 0.86, 0.60, 0, 0.43, 0, cab); kc.b(2.72, 0.04, 0.63, 0, 0.88, 0.01, "#5a5450");
+      for(const x2 of [-1.05, -0.45, 0.15]) kc.b(0.56, 0.62, 0.012, x2, 0.42, 0.302, cab);
+      kc.b(0.62, 0.006, 0.42, -0.95, 0.902, 0.04, "#c8ccd0"); kc.b(2.7, 0.70, 0.34, 0, 1.86, -0.13, cab);
       kc.b(0.72, 0.90, 0.6, 0.9, 0.45, 0.01, "#ece9e2"); kc.b(0.70, 0.012, 0.56, 0.9, 0.912, 0.01, "#1a1a1c");
-      kc.col(3.0, 0.63, 0, 0.01, 0.95);
+      kc.col(2.7, 0.63, 0, 0.01, 0.95);
       const fr=F(inX1-0.40, 8.0, faceE); fr.f(0.78, 1.72, 0.70, 0, 0.86, 0, "#ece9e2", 0.03); fr.b(0.74, 0.012, 0.012, 0, 1.16, 0.355, "#c8c4ba"); fr.col(0.78, 0.7, 0, 0, 1.75);
       const dn=F(inX1-0.45, 5.2, faceE), tc=["#e8e2d0","#6a4a2e","#c8c0b0"][(r()*3)|0];
       dn.b(0.75, 0.04, 1.0, 0, 0.74, 0, tc); dn.b(0.06, 0.72, 0.06, 0, 0.36, 0, "#8a8d90"); dn.col(0.75, 1.0, 0, 0, 0.76);
@@ -300,7 +300,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       bd2.b(1.5, 0.30, 2.0, 0, 0.17, 0, "#5a3a22"); bd2.f(1.42, 0.22, 1.96, 0, 0.42, 0.01, "#f2f0ea", 0.06); bd2.f(1.46, 0.06, 1.4, 0, 0.55, 0.3, qc, 0.03);
       for(const s2 of [-1,1]) bd2.f(0.6, 0.13, 0.34, s2*0.36, 0.60, -0.72, "#f4f2ec", 0.05); bd2.b(1.56, 0.9, 0.06, 0, 0.45, -1.02, "#5a3a22");
       bd2.col(1.56, 2.05, 0, 0, 0.7); bd2.seat(0, 0.2, "THE BED");
-      const dr=F(inX0+0.27, 11.8, faceW); dr.b(1.0, 0.84, 0.48, 0, 0.42, 0, "#6a4a2e"); for(let k=0;k<3;k++) dr.b(0.9, 0.22, 0.012, 0, 0.14+k*0.25, 0.242, "#4a3020"); dr.col(1.0, 0.48, 0, 0, 0.9);
+      const dr=F(inX0+0.27, 12.95, faceW); dr.b(1.0, 0.84, 0.48, 0, 0.42, 0, "#6a4a2e"); for(let k=0;k<3;k++) dr.b(0.9, 0.22, 0.012, 0, 0.14+k*0.25, 0.242, "#4a3020"); dr.col(1.0, 0.48, 0, 0, 0.9);
       const ns=F(cx+1.35, 13.9, faceLane); ns.b(0.42, 0.52, 0.38, 0, 0.26, 0, "#6a4a2e"); ns.col(0.42, 0.38, 0, 0, 0.6);
       CT(0.08, 0.13, 0.18, ns.x(0,0), fy+0.70, ns.z(0,0), "#e8d8b0");
       LAMPS.push({x:cx, y:CL-0.2, z:sd(12.6), color:0xffe2b0, intensity:0.5, dist:4.5, decay:1.6, indoor:true, vol:[x0, x1, z0, z1, FY-0.5, CL+0.2]}); }
@@ -478,7 +478,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     addRamp((ND.a+ND.b)/2-1.5, (ND.a+ND.b)/2+1.5, sz0-0.6, sz0, "z", sz0-0.6, sz0, Y+0.02, HFY);
     makeDoor(XF(ND.a+0.02, hz0+HWT/2, 0), 0, HFY+0.01, 0, "THE COMMUNITY HALL", true, 0, "vision", 0x2a4a3a);
     addFlat(ND.a, ND.b, hz0-0.01, iz0+0.01, HFY);
-    B(0.05, 0.08, ND.b-ND.a+0.16, (ND.a+ND.b)/2, ND.head+0.04, hz0-0.03, "#f2f0ea");
+    B(0.05, 0.08, ND.b-ND.a+0.16, (ND.a+ND.b)/2, ND.head+0.05, hz0-0.037, "#f2f0ea");
     sign(5.2, 0.62, (c,Wd,Hh)=>{ c.fillStyle="#2e4a32"; c.fillRect(0,0,Wd,Hh); c.strokeStyle="#e8d8b0"; c.lineWidth=5; c.strokeRect(7,7,Wd-14,Hh-14);
       say(c, "FRENCH CREEK PINES · COMMUNITY HALL", Wd/2, Hh*0.52, Wd*0.80, Hh*0.50, "#f2e6c8", "800", "Georgia, serif"); }, (hx0+hx1)/2, EAVE-0.42, hz0-0.13, Math.PI, false, 900);
     bx("wood", 5.3, 0.70, 0.04, (hx0+hx1)/2, EAVE-0.42, hz0-0.085, 0.4, 0, "#5a3a22");
@@ -584,7 +584,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     B(BX1-BX0, 0.9, 0.5, (BX0+BX1)/2, BF+0.45, QZ0+0.25, "#3a2414"); B(BX1-BX0, 0.04, 0.54, (BX0+BX1)/2, BF+0.92, QZ0+0.27, "#2a1a0e");
     push("mirror", planeGeo(BX1-BX0-1.2, 0.8, 0), (BX0+BX1)/2, BF+1.6, QZ0+0.012, 0, "#ffffff");
     for(const y of [1.3, 1.72]) B(BX1-BX0-1.0, 0.03, 0.22, (BX0+BX1)/2, BF+y, QZ0+0.13, "#2a1a0e");
-    const qb=_trng(2626); for(const y of [0.942, 1.316, 1.736]) for(let x=BX0+0.6; x<BX1-0.6; x+=0.13+qb()*0.06){ const h=0.22+qb()*0.12;
+    const qb=_trng(2626); for(const y of [0.942, 1.316, 1.736]) for(let x=BX0+0.6; x<BX1-0.6; x+=0.16+qb()*0.10){ const h=0.22+qb()*0.12;
       ent(new T.CylinderGeometry(0.034, 0.038, h, 10), x, BF+y+h/2, QZ0+0.14, ["#3a5a2a","#6a3a12","#2a2018","#c8b088","#7a1a1a","#e8e2d0","#2a3a6a"][(qb()*7)|0]); }
     addCol(BX0, BX1, QZ0, QZ0+0.52, BF-0.5, BF+2.0);
     // the taps on the bar, a row of handles
@@ -602,6 +602,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       qq(0.42, 0.05, 0.42, 0, 0.46, 0, "#5a1e14"); qq(0.40, 0.40, 0.04, 0, 0.70, -0.19, "#3a2414"); for(const a2 of [-0.18, 0.18]) for(const b2 of [-0.18, 0.18]) qq(0.03, 0.44, 0.03, a2, 0.22, b2, "#3a2414");
       addCol(sx-0.22, sx+0.22, sz-0.22, sz+0.22, BF-0.5, BF+0.5); addSeat(sx, sz, BF, ry+Math.PI, "A CHAIR AT A TABLE"); }
     C(0.04, 0.1, tx3+0.2, BF+0.82, tz+0.1, "#c41a1a", 10); C(0.03, 0.12, tx3-0.2, BF+0.83, tz-0.1, "#f2f0ea", 10); }
+  for(const lx of [-1129.0, -1124.0]) lampU({x:lx, y:BCL-0.3, z:-1174.6, color:0xffd8a8, intensity:0.45, dist:5, decay:1.5, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]});
   for(const lx of [-1127.5, -1121.5]) lampU({x:lx, y:BCL-0.3, z:-1178, color:0xffd8a8, intensity:0.5, dist:6, decay:1.5, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]});
   // the walls: the honour roll, the plaques, the photos, the flags, the meat raffle wheel, the tip boards, the bingo board,
   // the jukebox, the dartboard, the beer signs
@@ -620,9 +621,9 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       B(0.04, 0.12, 0.06, wx-0.03, BF+2.02, wz, "#c8a050");
       sign(0.8, 0.22, (c,Wd,Hh)=>{ c.fillStyle="#b82a22"; c.fillRect(0,0,Wd,Hh); say(c, "MEAT RAFFLE · SATURDAYS 3PM", Wd/2, Hh/2, Wd*0.80, Hh*0.55, "#f2f0ea", "800", "Arial"); }, QX1-0.03, BF+1.0, wz, -Math.PI/2, false, 320);
       sign(1.2, 0.9, (c,Wd,Hh)=>{ c.fillStyle="#1a3a2a"; c.fillRect(0,0,Wd,Hh); say(c, "QUEEN OF HEARTS", Wd/2, Hh*0.12, Wd*0.78, Hh*0.11, "#e8c878", "800", "Georgia, serif");
-        for(let i=0;i<8;i++) for(let j=0;j<5;j++){ const open=((i*5+j)*7)%11<4; c.fillStyle=open ? "#f2f0ea" : "#b82a22"; c.fillRect(Wd*0.1+i*Wd*0.1, Hh*0.26+j*Hh*0.13, Wd*0.085, Hh*0.11);
-          if(open){ c.fillStyle="#b82a22"; c.font="bold 14px Arial"; c.textAlign="center"; c.fillText("♥", Wd*0.1+i*Wd*0.1+Wd*0.042, Hh*0.26+j*Hh*0.13+Hh*0.075); } }
-        say(c, "JACKPOT $3,140", Wd/2, Hh*0.94, Wd*0.70, Hh*0.08, "#f2c41c", "800", "Arial"); }, QX1-0.03, BF+1.6, -1179.6, -Math.PI/2, false, 400); }
+        for(let i=0;i<8;i++) for(let j=0;j<5;j++){ const open=((i*5+j)*7)%11<4; c.fillStyle=open ? "#f2f0ea" : "#b82a22"; c.fillRect(Wd*0.1+i*Wd*0.1, Hh*0.24+j*Hh*0.115, Wd*0.085, Hh*0.10);
+          if(open){ c.fillStyle="#b82a22"; c.font="bold 14px Arial"; c.textAlign="center"; c.fillText("♥", Wd*0.1+i*Wd*0.1+Wd*0.042, Hh*0.24+j*Hh*0.115+Hh*0.065); } }
+        say(c, "JACKPOT $3,140", Wd/2, Hh*0.87, Wd*0.70, Hh*0.07, "#f2c41c", "800", "Arial"); }, QX1-0.03, BF+1.6, -1179.6, -Math.PI/2, false, 400); }
     // the tip board shelf by the bar's end
     { const tz=-1182.3, tx3=-1119.6; B(0.8, 0.9, 0.4, tx3+0.3, BF+0.45, tz, "#3a2414"); addCol(tx3-0.1, tx3+0.7, tz-0.2, tz+0.2, BF-0.5, BF+0.9);
       sign(0.7, 0.5, (c,Wd,Hh)=>{ c.fillStyle="#f2e88a"; c.fillRect(0,0,Wd,Hh); say(c, "TIP BOARDS", Wd/2, Hh*0.15, Wd*0.78, Hh*0.13, "#1a1a1a", "800", "Arial");
@@ -695,8 +696,8 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   // the routes the walking test takes: the lane, into a trailer and through it, into the hall and down to the lounge
   { const T1=WESTPARK.trailers[0], sdT=d=>T1.za+T1.dir*d;
     WESTPARK.routes={"french creek pines: the lane":[[GX, Z+HW+1],[GX, LZ],[-1205, LZ],[-990, LZ]],
-      "french creek pines: a trailer":[[T1.x1+4.2, LZ],[T1.steps.x, T1.steps.z],[T1.door.x, T1.door.z],[T1.x+0.6, T1.door.z],[T1.x+0.6, sdT(8.02)],[T1.x-1.64, sdT(8.02)],[T1.x-1.64, sdT(10.0)],[T1.x-1.64, sdT(11.1)],[T1.x-1.0, sdT(12.2)]],
-      "french creek pines: the hall and the lounge":[[(ND.a+ND.b)/2, Z+HW+1.5],[(ND.a+ND.b)/2, hz0-2.0],[(ND.a+ND.b)/2, hz0+1.5],[-1118.5, (SD.a+SD.b)/2],[-1116.0, (SD.a+SD.b)/2],[-1116.2, SWZ1+0.45],
+      "french creek pines: a trailer":[[T1.x1+4.2, LZ],[T1.steps.x, T1.steps.z],[T1.door.x, T1.door.z],[T1.x+0.6, T1.door.z],[T1.x+0.6, sdT(7.95)],[T1.x-1.51, sdT(7.95)],[T1.x-1.51, sdT(10.0)],[T1.x-1.51, sdT(11.1)],[T1.x-1.0, sdT(11.8)]],
+      "french creek pines: the hall and the lounge":[[(ND.a+ND.b)/2, Z+HW+1.5],[(ND.a+ND.b)/2, hz0-2.0],[(ND.a+ND.b)/2, hz0+1.5],[-1118.5, (SD.a+SD.b)/2],[-1116.35, (SD.a+SD.b)/2],[-1116.35, SWZ1+0.45],
         [(SWX0+SWX1)/2, SWZ1+0.45],[(SWX0+SWX1)/2, SWZ1-0.3],[(SWX0+SWX1)/2, SWZ0-0.6],[-1118.0, -1180.6],[-1125.5, -1180.6]]}; }
 
   // the merged meshes: the site, each trailer, the hall, the lounge
