@@ -170,6 +170,7 @@ const ROUTES={
   await p.waitForFunction(()=>window.REST,null,{timeout:120000});
   // the houses on Lake Street (14o) lay out their own routes, through their own transforms, as they build
   Object.assign(ROUTES, await p.evaluate(()=>typeof LAKE_HOUSES!=="undefined" ? LAKE_HOUSES.routes : {}));
+  Object.assign(ROUTES, await p.evaluate(()=>typeof WESTPARK!=="undefined" ? WESTPARK.routes : {}));
   // ONLY=regex runs just the routes, seats and stair tests whose names match it (for working on one place)
   const out=await p.evaluate(([ROUTES, only])=>{
     const res={}, ONLY=only ? new RegExp(only, "i") : null, want=n=>!ONLY || ONLY.test(n);

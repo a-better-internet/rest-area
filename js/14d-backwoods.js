@@ -21,6 +21,32 @@
      and at the back of it all the property line, POSTED and painted purple
      the way Pennsylvania lets a landowner say no trespassing.
    ---------------------------------------------------------------------- */
+// a flame card's material: noise rising through it, white-yellow at the root to red at the tips, added (the camp's fire below, the brewery's pit, 14r)
+function fireFlameMat(seed){ return new T.ShaderMaterial({
+    uniforms:{time:{value:0}, seed:{value:seed}, k:{value:1}},
+    vertexShader:"varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+    fragmentShader:
+`uniform float time, seed, k; varying vec2 vUv;
+float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
+float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+  return mix(mix(h(i),h(i+vec2(1.0,0.0)),f.x), mix(h(i+vec2(0.0,1.0)),h(i+vec2(1.0,1.0)),f.x), f.y); }
+float fbm(vec2 p){ float s=0.0, a=0.5; for(int i=0;i<4;i++){ s+=a*n(p); p*=2.03; a*=0.5; } return s; }
+void main(){
+  float y=vUv.y, t=time*1.9;
+  float q=fbm(vec2(vUv.x*3.0+seed, y*2.2-t));
+  float q2=fbm(vec2(vUv.x*7.0-seed*1.7, y*4.6-t*1.5));
+  float x=abs(vUv.x-0.5+(q-0.5)*0.42*y);
+  float w=0.40*pow(max(0.0,1.0-y),0.7)*(0.72+0.56*q2);
+  float body=smoothstep(w, w*0.25, x);
+  float top=1.0-smoothstep(0.30, 0.95, y+(q-0.5)*0.55);
+  float base=smoothstep(0.0, 0.06, y);
+  float a=body*top*base*k;
+  float heat=clamp(body*(1.2-y)*1.25, 0.0, 1.0);
+  vec3 c=mix(vec3(0.85,0.16,0.02), vec3(1.0,0.50,0.07), smoothstep(0.08,0.5,heat));
+  c=mix(c, vec3(1.0,0.90,0.58), smoothstep(0.62,0.98,heat));
+  gl_FragColor=vec4(c*1.5, a);
+}`,
+    transparent:true, depthWrite:false, blending:T.AdditiveBlending, side:T.DoubleSide, toneMapped:false, fog:false}); }
 const BACKWOODS={teens:[], flames:[], deep:[], left:new Set(), leftItems:[], present:true, leftSeed:1};
 (function backwoods(){
   const n0=scene.children.length;                  // what this file adds, for updateDeep
@@ -153,31 +179,7 @@ const BACKWOODS={teens:[], flames:[], deep:[], left:new Set(), leftItems:[], pre
   /* the flames: cards that turn to face you, a noise rising through them,
      white-yellow at the root, orange, red at the tips, and added, not laid
      over, so where two cross they burn brighter */
-  const flameMat=seed=>new T.ShaderMaterial({
-    uniforms:{time:{value:0}, seed:{value:seed}, k:{value:1}},
-    vertexShader:"varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-    fragmentShader:
-`uniform float time, seed, k; varying vec2 vUv;
-float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
-float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
-  return mix(mix(h(i),h(i+vec2(1.0,0.0)),f.x), mix(h(i+vec2(0.0,1.0)),h(i+vec2(1.0,1.0)),f.x), f.y); }
-float fbm(vec2 p){ float s=0.0, a=0.5; for(int i=0;i<4;i++){ s+=a*n(p); p*=2.03; a*=0.5; } return s; }
-void main(){
-  float y=vUv.y, t=time*1.9;
-  float q=fbm(vec2(vUv.x*3.0+seed, y*2.2-t));
-  float q2=fbm(vec2(vUv.x*7.0-seed*1.7, y*4.6-t*1.5));
-  float x=abs(vUv.x-0.5+(q-0.5)*0.42*y);
-  float w=0.40*pow(max(0.0,1.0-y),0.7)*(0.72+0.56*q2);
-  float body=smoothstep(w, w*0.25, x);
-  float top=1.0-smoothstep(0.30, 0.95, y+(q-0.5)*0.55);
-  float base=smoothstep(0.0, 0.06, y);
-  float a=body*top*base*k;
-  float heat=clamp(body*(1.2-y)*1.25, 0.0, 1.0);
-  vec3 c=mix(vec3(0.85,0.16,0.02), vec3(1.0,0.50,0.07), smoothstep(0.08,0.5,heat));
-  c=mix(c, vec3(1.0,0.90,0.58), smoothstep(0.62,0.98,heat));
-  gl_FragColor=vec4(c*1.5, a);
-}`,
-    transparent:true, depthWrite:false, blending:T.AdditiveBlending, side:T.DoubleSide, toneMapped:false, fog:false});
+  const flameMat=fireFlameMat;
   for(const [w,h,dx,dz,sd] of [[1.05,1.55,0,0,1.3],[0.80,1.20,0.12,-0.08,4.1],[0.62,0.95,-0.14,0.10,7.7]]){
     const g=new T.PlaneGeometry(w,h); g.translate(0,h/2,0);
     const m=new T.Mesh(g, flameMat(sd)); m.position.set(F.x+dx, fy+0.10, F.z+dz); m.renderOrder=4; m.frustumCulled=false;

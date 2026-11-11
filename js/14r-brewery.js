@@ -241,9 +241,25 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     for(let k=0;k<14;k++){ const a=k/14*6.283; ent(new T.DodecahedronGeometry(0.16, 0), fx+Math.cos(a)*0.62, g0+0.12, fz+Math.sin(a)*0.62, "#6a665e", a, a*2); }
     C(0.5, 0.06, fx, g0+0.04, fz, "#2a2624", 18);
     addCol(fx-0.8, fx+0.8, fz-0.8, fz+0.8, g0-0.5, g0+0.4);
-    const fire=new T.Mesh(new T.ConeGeometry(0.28, 0.5, 8, 1, true), new T.MeshBasicMaterial({color:0xff8a2a, toneMapped:false, transparent:true, opacity:0.85, side:T.DoubleSide}));
-    fire.position.set(fx, g0+0.32, fz); scene.add(fire);
-    BREWERY.fire={m:fire, l:{x:fx, y:g0+0.9, z:fz, color:0xff8a3a, intensity:0.0, dist:7, decay:1.6, fire:true}}; LAMPS.push(BREWERY.fire.l);
+    // the fire as the camp's in the woods is (14d): split logs leaned in, coals under them, flame cards that turn to you,
+    // a halo, sparks and smoke going up; a little smaller, it being a pit for sitting round
+    const fy=g0+0.07, flames=[];
+    for(let k=0;k<4;k++){ const a=k*Math.PI/2+0.4; push("logbark", FOREST.barkCyl(0.06, 0.05, 0.62, 7), fx+Math.cos(a)*0.16, fy+0.19, fz+Math.sin(a)*0.16, -a, "#4a3e34", 0, 0.95); }
+    for(const a of [0.3, 1.8]) push("logbark", FOREST.barkCyl(0.07, 0.065, 0.72, 7), fx, fy+0.07, fz, a, "#3a312a", 0, Math.PI/2);
+    { const cT=(function(){ const c=cvs(128,128), x=c.getContext("2d"), r=_trng(79);
+        for(let i=0;i<170;i++){ const a=r()*7, d=Math.pow(r(),0.7)*44, s=2+r()*7, px=64+Math.cos(a)*d, py=64+Math.sin(a)*d, g=x.createRadialGradient(px,py,0,px,py,s);
+          g.addColorStop(0,"rgba(255,"+(120+r()*90|0)+",40,0.95)"); g.addColorStop(1,"rgba(255,60,10,0)"); x.fillStyle=g; x.fillRect(px-s,py-s,s*2,s*2); }
+        return new T.CanvasTexture(c); })();
+      const coals=new T.Mesh(new T.CircleGeometry(0.42, 22), new T.MeshBasicMaterial({map:cT, transparent:true, depthWrite:false, blending:T.AdditiveBlending, toneMapped:false,
+        polygonOffset:true, polygonOffsetFactor:-6, polygonOffsetUnits:-12}));
+      coals.rotation.x=-Math.PI/2; coals.position.set(fx, g0+0.075, fz); scene.add(coals); BREWERY.coals=coals; }
+    for(const [w,h,dx,dz,sd] of [[0.78,1.15,0,0,2.3],[0.60,0.90,0.09,-0.06,5.1],[0.48,0.72,-0.10,0.08,8.7]]){
+      const g=new T.PlaneGeometry(w,h); g.translate(0,h/2,0);
+      const m=new T.Mesh(g, fireFlameMat(sd)); m.position.set(fx+dx, fy+0.06, fz+dz); m.renderOrder=4; m.frustumCulled=false; scene.add(m); flames.push(m); }
+    const halo=new T.Sprite(new T.SpriteMaterial({map:GLOW_TEX, color:0xff7a2a, transparent:true, depthWrite:false, blending:T.AdditiveBlending, opacity:0.4, toneMapped:false}));
+    halo.scale.set(2.6, 2.0, 1); halo.position.set(fx, fy+0.6, fz); scene.add(halo);
+    BREWERY.fire={flames:flames, halo:halo, x:fx, y:fy, z:fz, sparkT:0, smokeT:0, pop:3, l:{x:fx, y:g0+0.9, z:fz, color:0xff8a3c, intensity:0.0, dist:11, decay:1.5, fire:true}};
+    LAMPS.push(BREWERY.fire.l);
     // the sofas: dark wicker frames, cream cushions, three of them round the pit
     const sofa=(x, z, ry)=>{ const f=XF(x, z, ry), g=gy(x,z), q=(w,h,d,lx,ly,lz,c)=>RB(w,h,d, f.x(lx,lz), g+ly, f.z(lx,lz), c, ry, 0.04);
       q(1.9, 0.38, 0.82, 0, 0.19, 0, "#3a3028"); q(1.9, 0.48, 0.18, 0, 0.62, -0.32, "#3a3028"); for(const sd of [-1,1]) q(0.16, 0.30, 0.82, sd*0.87, 0.48, 0, "#3a3028");
@@ -678,9 +694,21 @@ function updateBrewery(dt, dark){
     const rest=smoothstep(0.6, 0.85, _noise1(t*0.05+3.1)), look=_noise1(t*0.18+1.7);
     Bn[Dg.head].rotation.set(0.35*rest+Math.sin(t*9)*0.015*(1-rest), look*0.9*(1-rest*0.6), 0);
     Bn[Dg.tail].rotation.set(-0.62, Math.sin(t*(1.6+1.4*Math.max(0, _noise1(t*0.3))))*0.40, 0); }       // (laid out behind her, sweeping the boards)
-  if(B.fire){ const n=0.8+0.2*Math.sin(CROWD.t*11)*Math.sin(CROWD.t*4.3); B.fire.m.scale.set(1, n, 1); B.fire.m.material.opacity=0.55+0.3*n;
-    B.fire.l.intensity=0.9*n*smoothstep(0.15, 0.6, dark); B.fire.m.visible=true;
-    if(dark>0.2 && typeof PUFFS!=="undefined" && Math.random()<dt*6) PUFFS.emit(B.fire.l.x+(Math.random()-0.5)*0.2, B.fire.l.y-0.3, B.fire.l.z+(Math.random()-0.5)*0.2, 0, 0.5, 0, 0.12, 0.7, 2.2, 0.35, 0.55, 0.7); }
+  if(B.fire){ const Fi=B.fire, t=CROWD.t, cam=camera.position, d=Math.hypot(cam.x-Fi.x, cam.z-Fi.z);
+    // (the camp's fire's flicker, 14d: it breathes and jumps, the light and the halo and the coals with it)
+    const n=0.5+0.5*Math.sin(t*7.3)*Math.sin(t*3.1+1.3)+0.25*Math.sin(t*17.9), fl=0.78+0.22*clamp(n, 0, 1);
+    Fi.l.intensity=1.25*fl*(0.45+0.55*smoothstep(0.1, 0.6, dark));
+    Fi.halo.material.opacity=(0.14+0.40*dark)*fl; if(B.coals) B.coals.material.opacity=0.65+0.35*Math.sin(t*2.1)*Math.sin(t*0.7);
+    if(d<160){ for(let i=0;i<Fi.flames.length;i++){ const m=Fi.flames[i];
+        m.rotation.y=Math.atan2(cam.x-m.position.x, cam.z-m.position.z)+(i-1)*0.5; m.material.uniforms.time.value=t+i*3.7; m.material.uniforms.k.value=0.85+0.15*fl; }
+      Fi.sparkT-=dt; Fi.pop-=dt;
+      if(Fi.sparkT<=0 && typeof SPARKS!=="undefined"){ Fi.sparkT=0.08+Math.random()*0.14;
+        SPARKS.emit(Fi.x+(Math.random()-0.5)*0.3, Fi.y+0.3, Fi.z+(Math.random()-0.5)*0.3, (Math.random()-0.5)*0.4, 1.2+Math.random()*1.4, (Math.random()-0.5)*0.4, 0.03+Math.random()*0.02, 0.8+Math.random()*1.2); }
+      if(Fi.pop<=0 && typeof SPARKS!=="undefined"){ Fi.pop=3+Math.random()*8;
+        for(let k=0;k<5+Math.random()*6;k++) SPARKS.emit(Fi.x+(Math.random()-0.5)*0.25, Fi.y+0.25, Fi.z+(Math.random()-0.5)*0.25, (Math.random()-0.5)*1.2, 1.8+Math.random()*2.0, (Math.random()-0.5)*1.2, 0.035+Math.random()*0.025, 0.9+Math.random()*1.0); }
+      Fi.smokeT-=dt;
+      if(Fi.smokeT<=0 && typeof PUFFS!=="undefined"){ Fi.smokeT=0.14+Math.random()*0.08;
+        PUFFS.emit(Fi.x+(Math.random()-0.5)*0.25, Fi.y+0.85, Fi.z+(Math.random()-0.5)*0.25, (Math.random()-0.5)*0.1, 0.6+Math.random()*0.3, (Math.random()-0.5)*0.1, 0.18, 1.3+Math.random()*0.7, 4.5+Math.random()*2, 0.20, 0.62, 0.9*dark+0.2); } } }
   // the neons: a little brighter as the light goes
   if(B.neon) for(const m of B.neon) m.material.color.setScalar(0.72+0.28*smoothstep(0.1, 0.6, dark));
   // the cat on her barrel: breathing slow, an ear going now and then, the end of her tail

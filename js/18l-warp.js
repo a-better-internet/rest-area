@@ -47,7 +47,11 @@ const WARP=(function(){
     ["THE WEIGH STATION",       -42.0, -2970.0,    Math.PI/2,  x=>g(x[1], x[2])],
     ["THE LISTENING ROOM",      -57.2, -2916.1,    0.0,        x=>surfaceY(x[1], x[2], groundY(x[1], x[2])-2.3), true],
     ["THE FUEL STOP ROOF",      -30.0, -1257.0,    Math.PI/2,  x=>g(x[1], x[2], 6)],
-    ["THE FIREWORKS ROOF",      909.0, -1266.0,    0.0,        x=>g(x[1], x[2], 7)]];
+    ["THE FIREWORKS ROOF",      909.0, -1266.0,    0.0,        x=>g(x[1], x[2], 7)],
+    ["FRENCH CREEK PINES",    -1100.0, -1150.0,   Math.PI/2,   x=>g(x[1], x[2])],
+    ["A TRAILER (LOT 1)",     -1213.2, -1158.6,   Math.PI,     x=>surfaceY(x[1], x[2], EDIN.y+0.72)],
+    ["THE COMMUNITY HALL",    -1124.0, -1178.0,   Math.PI/2,   x=>surfaceY(x[1], x[2], WESTPARK.hall.FY)],
+    ["THE PINE KNOT",         -1125.0, -1180.6,   Math.PI,     x=>surfaceY(x[1], x[2], WESTPARK.hall.BF), true]];
   const KEYS="1234567890ABCDFGHIJKLMNOPQRTUV";            // (E and S left out: E is your hand, S is a step back)
   // the hoop: in front of the first one there is, facing it
   const hoopAt=()=>{ const H=(typeof YARD_HOOPS!=="undefined" && YARD_HOOPS[0]) || null; if(!H) return null;

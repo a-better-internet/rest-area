@@ -199,9 +199,26 @@ const EDIN_RT={};
      the ground; a texture per crop, tiled every few metres. */
   const cropTex=(kind)=>{
     const S=256, c=cvs(S,S), x=c.getContext("2d"), r=_trng(kind.length*97+13);
-    const base={corn:"#4c6a25", soy:"#3d5c24", hay:"#7c8244", pasture:"#4a6234"}[kind];
+    const base={corn:"#4c6a25", soy:"#3d5c24", hay:"#7c8244", pasture:"#4a6234",
+                grape:"#55683a", pumpkin:"#3f5726", sunflower:"#4a5e28", xmas:"#5a6c3a"}[kind];
     x.fillStyle=base; x.fillRect(0,0,S,S);
-    if(kind==="corn" || kind==="soy"){
+    if(kind==="pumpkin"){
+      // the vines sprawled every way over dark soil, big leaves, the odd yellow flower and a few small pumpkins in the leaves
+      x.fillStyle="#4e3e2a"; x.globalAlpha=0.35; for(let k=0;k<60;k++) x.fillRect(r()*S, r()*S, 10+r()*30, 4+r()*10); x.globalAlpha=1;
+      for(let k=0;k<420;k++){ x.fillStyle=["#3e6a2a","#2e5420","#567a32","#4a6a2a"][(r()*4)|0]; x.globalAlpha=0.7; x.beginPath(); x.ellipse(r()*S, r()*S, 4+r()*7, 3+r()*5, r()*3, 0, 7); x.fill(); }
+      for(let k=0;k<40;k++){ x.fillStyle="#e8c030"; x.globalAlpha=0.8; x.beginPath(); x.arc(r()*S, r()*S, 1.5+r()*1.5, 0, 7); x.fill(); }
+      for(let k=0;k<14;k++){ x.fillStyle=r()<0.7 ? "#d8701a" : "#c8501a"; x.globalAlpha=0.9; x.beginPath(); x.ellipse(r()*S, r()*S, 3+r()*3, 2.5+r()*2, 0, 0, 7); x.fill(); }
+    }else if(kind==="sunflower"){
+      // seen from above: a sea of heads, gold petals round brown middles, leaves between
+      for(let k=0;k<500;k++){ x.fillStyle=r()<0.5 ? "#3e5a22" : "#56742c"; x.globalAlpha=0.6; x.beginPath(); x.ellipse(r()*S, r()*S, 3+r()*4, 2+r()*3, r()*3, 0, 7); x.fill(); }
+      for(let k=0;k<180;k++){ const px=r()*S, py=r()*S, rr=3+r()*2.5; x.globalAlpha=0.95; x.fillStyle=r()<0.8 ? "#f2c41c" : "#e8a812"; x.beginPath(); x.arc(px, py, rr, 0, 7); x.fill();
+        x.fillStyle="#5a3a1a"; x.beginPath(); x.arc(px, py, rr*0.45, 0, 7); x.fill(); }
+    }else if(kind==="grape" || kind==="xmas"){
+      // mown grass between the rows (the rows themselves stand up out of it)
+      for(let k=0;k<2600;k++){ x.strokeStyle=["#5f763c","#4a6134","#6c7644","#566634"][(r()*4)|0]; x.globalAlpha=0.4; x.lineWidth=1;
+        const px=r()*S, py=r()*S; x.beginPath(); x.moveTo(px,py); x.lineTo(px+(r()-0.5)*3, py-2-r()*4); x.stroke(); }
+      if(kind==="grape"){ x.fillStyle="#6a5a3e"; x.globalAlpha=0.35; for(let i=0;i<4;i++) x.fillRect(0, i*S/4, S, 6); }
+    }else if(kind==="corn" || kind==="soy"){
       // rows: thirty inches apart for corn, fifteen for beans, the dirt between showing
       const n=kind==="corn" ? 8 : 14;
       for(let i=0;i<n;i++){ const y=i*S/n;
@@ -225,13 +242,13 @@ const EDIN_RT={};
     x.globalAlpha=1;
     const t=_tex(c); t.anisotropy=MAXANISO; return t;
   };
-  const TILE={corn:6.1, soy:4.6, hay:22, pasture:9};
+  const TILE={corn:6.1, soy:4.6, hay:22, pasture:9, grape:10.4, pumpkin:7, sunflower:5.2, xmas:9};
   /* Each crop's green is held down (in full sun the raw ones read lime) and pulled a little toward its own: the
      corn a deep blue-green, the beans darker, the hay gone to gold and olive, the pasture grazed dull. And across a
      field the crop is never one even colour: broad soft patches where it is doing better or worse, a wetter
      corner, the headlands trodden, go over it in the world's own terms (no repeat to see from the bridge). */
-  const FIELD_TINT={corn:0x9ca394, soy:0x989f92, hay:0xb9a888, pasture:0xa0a290};
-  for(const kind of ["corn","soy","hay","pasture"]){
+  const FIELD_TINT={corn:0x9ca394, soy:0x989f92, hay:0xb9a888, pasture:0xa0a290, grape:0xa0a492, pumpkin:0xa4a294, sunflower:0xb4ac94, xmas:0x9ea290};
+  for(const kind of ["corn","soy","hay","pasture","grape","pumpkin","sunflower","xmas"]){
     const tex=cropTex(kind);
     bucketOf("field_"+kind, ()=>{ const m=new T.MeshStandardMaterial(Object.assign({map:tex, roughness:1.0, color:FIELD_TINT[kind]}, _po(-2)));
       m.onBeforeCompile=(sh)=>{
@@ -269,6 +286,72 @@ const EDIN_RT={};
       }
     }
   }
+  /* ---- the west farms' crops, standing up out of their fields ----
+     The vineyard in rows running north and south, a post every seven metres and the vines trained along the wires
+     between in a hedge of leaf; the pumpkins lying out in the vines, orange and here and there a white one; the
+     sunflowers a band of tall stalks along the front and through the middle, the rest seen as heads from above; the
+     Christmas trees in rows, every size from last year's whips to this year's, with blocks already cut. The many small
+     things are instanced, a draw each kind, and cast no shadow. */
+  { const W=E.fields.filter(f=>["grape","pumpkin","sunflower","xmas"].includes(f.crop));
+    const leaf=signTex(128, 64, (c,Wd,Hh)=>{ const q=_trng(5757); c.fillStyle="#3e5a22"; c.fillRect(0,0,Wd,Hh);
+      for(let k=0;k<420;k++){ c.fillStyle=["#4e6e2a","#2e4a1a","#5e7e34","#3a5620","#6a8a3c"][(q()*5)|0]; c.globalAlpha=0.8; c.beginPath(); c.ellipse(q()*Wd, q()*Hh, 3+q()*5, 2+q()*4, q()*3, 0, 7); c.fill(); }
+      for(let k=0;k<26;k++){ c.fillStyle=q()<0.5 ? "#3a1a3a" : "#4a2a4a"; c.globalAlpha=0.9; c.beginPath(); c.arc(q()*Wd, Hh*0.55+q()*Hh*0.35, 2+q()*1.5, 0, 7); c.fill(); } });
+    leaf.wrapS=leaf.wrapT=T.RepeatWrapping;
+    bucketOf("vine_leaf", ()=>new T.MeshStandardMaterial({map:leaf, roughness:0.95}));
+    const inst=(geo, mat, list)=>{ if(!list.length) return; const m=new T.InstancedMesh(geo, mat, list.length), M=new T.Matrix4(), q=new T.Quaternion(), e=new T.Euler();
+      list.forEach((o,i)=>{ e.set(o.rx||0, o.ry||0, 0); q.setFromEuler(e); M.compose(V3(o.x, o.y, o.z), q, V3(o.s, o.sy||o.s, o.s)); m.setMatrixAt(i, M); if(o.c) m.setColorAt(i, new T.Color(o.c)); });
+      m.instanceMatrix.needsUpdate=true; if(m.instanceColor) m.instanceColor.needsUpdate=true; m.frustumCulled=false; m.castShadow=false; m.receiveShadow=true; scene.add(m); return m; };
+    const pumpkins=[], heads=[], stalks=[], trees=[], trunks=[];
+    for(const F of W){ const q=_trng(Math.round(-F.x0*7+F.z0)), fw=F.x1-F.x0, fd=F.z1-F.z0, front=F.z0>Z ? F.z0 : F.z1, back=F.z0>Z ? F.z1 : F.z0, sd=F.z0>Z ? 1 : -1;
+      if(F.crop==="grape"){
+        // rows north and south, 2.8 m apart, headlands at the ends
+        for(let x=F.x0+3; x<F.x1-2; x+=2.8){ const z0=F.z0+6, z1=F.z1-6, L=z1-z0, zc=(z0+z1)/2;
+          push("vine_leaf", boxGeo(0.62, 0.95, L, 0.5), x, Y+1.18, zc, 0, "#ffffff");
+          bx("wood", 0.05, 0.62, L, x, Y+0.40, zc, 0.4, 0, "#5a4a36");                       // (the trunks, a low hedge of them under the leaf)
+          for(let z=z0; z<=z1+0.01; z+=7) bx("wood", 0.08, 1.9, 0.08, x+0.36, Y+0.95, z, 0.4, 0, "#6d5c48");
+          addCol(x-0.32, x+0.32, z0, z1, Y-0.5, Y+1.7); } }
+      else if(F.crop==="pumpkin"){
+        for(let k=0;k<Math.round(fw*fd/38);k++){ const x=F.x0+3+q()*(fw-6), z=F.z0+3+q()*(fd-6), s=0.8+q()*0.7;
+          pumpkins.push({x:x, y:Y+0.15*s+0.03, z:z, s:s, sy:s*0.78, ry:q()*6, c:q()<0.1 ? "#e8e2cc" : ["#e0701a","#d8601a","#e8821e"][(q()*3)|0]}); } }
+      else if(F.crop==="sunflower"){
+        // a band twelve metres deep along the front and a strip down the middle, a stalk every half metre in rows 0.8 apart
+        const band=(za, zb)=>{ for(let z=za; z<zb; z+=0.8) for(let x=F.x0+1.5; x<F.x1-1.5; x+=0.5+q()*0.15){ const h=1.6+q()*0.7, xx=x+(q()-0.5)*0.2, zz=z+(q()-0.5)*0.2;
+          stalks.push({x:xx, y:Y+h/2, z:zz, s:1, sy:h}); heads.push({x:xx, y:Y+h+0.02, z:zz-sd*0.06, s:0.85+q()*0.35, rx:-sd*1.2, ry:F.z0>Z ? Math.PI : 0, c:q()<0.15 ? "#e8a812" : "#f2c41c"}); } };
+        band(sd>0 ? front+1 : front-13, sd>0 ? front+13 : front-1);
+        const mid=(F.z0+F.z1)/2; band(mid-4, mid+4);
+        addCol(F.x0+1, F.x1-1, Math.min(front+sd*1, front+sd*13), Math.max(front+sd*1, front+sd*13), Y-0.5, Y+2.4); addCol(F.x0+1, F.x1-1, mid-4, mid+4, Y-0.5, Y+2.4); }
+      else if(F.crop==="xmas"){
+        for(let x=F.x0+3; x<F.x1-2; x+=3.2) for(let z=F.z0+4; z<F.z1-3; z+=3.2){
+          const blk=hash2(Math.floor((x-F.x0)/22), Math.floor((z-F.z0)/30)+F.x0); if(blk<0.22) continue;     // (a block cut last December)
+          const age=hash2(Math.floor((x-F.x0)/22)+7, Math.floor((z-F.z0)/30)), h=0.6+age*2.4+(q()-0.5)*0.4;
+          trees.push({x:x+(q()-0.5)*0.4, y:Y+0.12+h/2, z:z+(q()-0.5)*0.4, s:h*0.36, sy:h, ry:q()*6, c:["#2e4a2a","#3a5a32","#28442a","#33502e"][(q()*4)|0]});
+          trunks.push({x:x, y:Y+0.06, z:z, s:1, sy:1});
+          if(h>1.4) addCol(x-0.3, x+0.3, z-0.3, z+0.3, Y-0.5, Y+h); } } }
+    inst(new T.SphereGeometry(0.24, 12, 8), new T.MeshStandardMaterial({roughness:0.6}), pumpkins);
+    inst(new T.CylinderGeometry(0.018, 0.026, 1, 6), new T.MeshStandardMaterial({color:0x4e6e2a, roughness:0.9}), stalks);
+    inst(new T.CylinderGeometry(0.16, 0.13, 0.05, 12), new T.MeshStandardMaterial({roughness:0.8, emissive:0x2a1a00}), heads);
+    inst(new T.ConeGeometry(1, 1, 8), new T.MeshStandardMaterial({roughness:0.95}), trees);
+    inst(new T.CylinderGeometry(0.05, 0.06, 0.12, 6), new T.MeshStandardMaterial({color:0x5a4030, roughness:0.9}), trunks); }
+  /* the farm stand by the road between the pumpkins and the grapes: a shed roof on posts over a counter and bins, the
+     sign on the front, pumpkins and mums along the front, hay bales either side; an honour box on the counter */
+  { const sx=E.stand.x, sz=E.stand.z, f=XF(sx, sz, Math.PI), q=(w,h,d,lx,ly,lz,c,bk)=>lbx(f, bk||"wood", w,h,d, lx,Y+ly,lz, 0.4, c);
+    for(const lx of [-2.2, 2.2]) for(const lz of [-1.2, 1.2]) q(0.12, lz<0 ? 2.6 : 2.3, 0.12, lx, lz<0 ? 1.3 : 1.15, lz, "#7a6248");
+    q(5.0, 0.06, 3.0, 0, 2.48, 0, "#8a5a3a"); q(5.1, 0.04, 3.1, 0, 2.53, 0, "#5a3e2a", "metal");
+    q(4.4, 0.90, 0.7, 0, 0.45, 0.6, "#a87a52"); q(4.5, 0.04, 0.8, 0, 0.92, 0.6, "#7a5a3a");
+    for(const lx of [-1.5, 0, 1.5]) q(1.2, 0.6, 0.8, lx, 0.3, -0.6, "#8a6a4a");
+    const st=signTex(400, 120, (c,Wd,Hh)=>{ c.fillStyle="#f2ece0"; c.fillRect(0,0,Wd,Hh); c.strokeStyle="#7a2a1a"; c.lineWidth=6; c.strokeRect(6,6,Wd-12,Hh-12);
+      c.fillStyle="#7a2a1a"; fitText(c, "HOLLOWAY FARM STAND", Wd*0.80, Hh*0.30, Wd/2, Hh*0.36, "800", "Georgia, serif");
+      c.fillStyle="#3a5a2a"; fitText(c, "PUMPKINS · MUMS · CIDER · HONEY · CUT YOUR OWN TREE", Wd*0.82, Hh*0.18, Wd/2, Hh*0.70, "700", "Arial"); });
+    const sp=V3(f.x(0, 1.62), Y+2.0, f.z(0, 1.62)); bx("wood", 2.8, 0.86, 0.04, sp.x, sp.y, sp.z+0.02, 0.4, 0, "#5a3e2a");
+    signPanel(2.7, 0.80, st, sp.x, sp.y, sp.z-0.004, Math.PI);
+    const q2=_trng(4242); for(let k=0;k<14;k++){ const lx=-2.0+k*0.3+(q2()-0.5)*0.1, s=0.25+q2()*0.12; push("paintm", new T.SphereGeometry(s, 12, 8).scale(1, 0.78, 1), f.x(lx, 1.4), Y+s*0.78, 0, f.z(lx, 1.4), ["#e0701a","#d8601a","#e8821e","#e8e2cc"][(q2()*4)|0]); }
+    for(const lx of [-1.5, 0, 1.5]) for(let k=0;k<6;k++) push("paintm", new T.SphereGeometry(0.16, 10, 8), f.x(lx+(k%3-1)*0.3, -0.6+(k>2?0.2:-0.2)), Y+0.66, 0, f.z(lx+(k%3-1)*0.3, -0.6+(k>2?0.2:-0.2)), "#e0701a");
+    for(const lx of [-2.0, 2.0]){ push("paintm", new T.CylinderGeometry(0.2, 0.18, 0.22, 12), f.x(lx, 1.9), Y+0.11, 0, f.z(lx, 1.9), "#7a4a2a");
+      push("paintm", new T.SphereGeometry(0.28, 12, 8), f.x(lx, 1.9), Y+0.34, 0, f.z(lx, 1.9), lx<0 ? "#c84a8a" : "#e8b030"); }
+    for(const lx of [-3.0, 3.0]) bx("wood", 0.9, 0.5, 0.5, f.x(lx, 0.2), Y+0.25, f.z(lx, 0.2), 0.4, 0, "#c8b06a");
+    q(0.22, 0.16, 0.16, 1.4, 1.02, 0.6, "#3a5a8a", "metal");
+    addCol(sx-3.4, sx+3.4, sz-1.4, sz+2.2, Y-0.5, Y+1.0);
+    addUse(sx, sz-3.0, Y, "THE HONOUR BOX", ()=>toast(["PUMPKINS $5 · BIG ONES $8 · MUMS $10 · PAY IN THE BOX, GOD IS WATCHING","A HANDWRITTEN NOTE: 'BACK AT 4 · CIDER IN THE COOLER'","YOU DROP A DOLLAR IN FOR LUCK"][(Math.random()*3)|0], "#e8c070"), 1.6); }
   // a farm fence along the road's right of way, posts and three strands, in front of each field
   for(const F of E.fields){
     const zf=F.z0>Z ? F.z0-3 : F.z1+3;

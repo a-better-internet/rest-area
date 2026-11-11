@@ -537,6 +537,69 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       ent(new T.SphereGeometry(0.15, 18, 12), bx0, DF+2.18, (za+zb)/2, "#3a6a8a"); C(0.10, 0.03, bx0, DF+2.015, (za+zb)/2, "#c8a050", 14);
       addCol(X0, bx0+0.17, za, zb, DF-0.5, DF+2.0);
       B(0.36, 0.14, 0.24, -59.4, DF+0.60, Z1-0.5, "#5a3a22"); B(0.42, 0.56, 0.36, -59.4, DF+0.27, Z1-0.5, "#3a2414"); addCol(-59.62, -59.18, Z1-0.7, Z1-0.3, DF-0.5, DF+0.7); }
+    /* the room's other end, dug out under the yard: a bar along the west wall past the books, a card table, a pool table
+       under its lamp, the piano in the corner by the fireplace, a loveseat, and the sleeves of the records he plays most
+       framed along the south wall */
+    { // the bar: a walnut counter running north and south, three stools, a back bar of bottles against the wall
+      const bx=-62.6, za=-2914.4, zb=-2909.4, zc=(za+zb)/2;
+      B(0.56, 1.02, zb-za, bx, DF+0.51, zc, "#4a2e1a"); B(0.66, 0.05, zb-za+0.10, bx+0.03, DF+1.045, zc, "#2a1a0e");
+      B(0.03, 0.06, zb-za, bx+0.30, DF+0.18, zc, "#c8a050");                                                     // (the brass foot rail)
+      addCol(bx-0.30, bx+0.36, za-0.05, zb+0.05, DF-0.5, DF+1.07);
+      for(let k=0;k<3;k++){ const sz=za+0.9+k*1.6, sx=bx+0.82;
+        C(0.19, 0.06, sx, DF+0.76, sz, "#5a2218", 18); C(0.025, 0.72, sx, DF+0.37, sz, "#2a2a2c", 8); C(0.16, 0.02, sx, DF+0.012, sz, "#2a2a2c", 16);
+        addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, DF-0.5, DF+0.8); addSeat(sx, sz, DF, -Math.PI/2, "A STOOL AT THE BAR", false, 0.34); }
+      const wx=X0+0.20; B(0.36, 0.86, zb-za, wx, DF+0.43, zc, "#3a2414"); B(0.40, 0.04, zb-za+0.04, wx, DF+0.88, zc, "#2a1a0e");
+      for(const y of [1.30, 1.72]) B(0.26, 0.03, zb-za-0.4, X0+0.14, DF+y, zc, "#2a1a0e");
+      push("mirror", planeGeo(zb-za-0.6, 0.70, 0), X0+0.012, DF+1.52, zc, Math.PI/2, "#ffffff");
+      const q4=_trng(4141); for(const y of [0.906, 1.322, 1.742]) for(let z=za+0.35; z<zb-0.3; z+=0.16+q4()*0.08){ const h=0.22+q4()*0.12;
+        ent(new T.CylinderGeometry(0.035, 0.038, h, 10), X0+0.16, DF+y+h/2, z, ["#3a5a2a","#6a3a12","#2a2018","#c8b088","#7a1a1a","#e8e2d0"][(q4()*6)|0]); }
+      addCol(X0, X0+0.40, za, zb, DF-0.5, DF+2.0);
+      lampU({x:bx+0.3, y:DCL-0.3, z:zc, color:0xffc070, intensity:0.45, dist:5, decay:1.6, vol:[X0, X1, Z0, Z1, DF-0.5, DCL+0.3]}); }
+    { // the card table: green baize, four chairs, a deck and the chips out
+      const tx=-62.4, tz=-2920.4; C(0.62, 0.04, tx, DF+0.76, tz, "#1e5a32", 28); C(0.66, 0.05, tx, DF+0.74, tz, "#3a2414", 28); C(0.06, 0.72, tx, DF+0.37, tz, "#3a2414", 10); C(0.30, 0.03, tx, DF+0.015, tz, "#3a2414", 18);
+      addCol(tx-0.66, tx+0.66, tz-0.66, tz+0.66, DF-0.5, DF+0.8);
+      for(let k=0;k<4;k++){ const a=k*Math.PI/2+0.3, sx=tx+Math.sin(a)*0.98, sz=tz+Math.cos(a)*0.98, ry=a+Math.PI, f=XF(sx, sz, ry);
+        const q=(w,h,d,lx,ly,lz,c)=>ent(boxGeo(w,h,d), f.x(lx,lz), DF+ly, f.z(lx,lz), c, 0, ry, 0);
+        q(0.44, 0.05, 0.42, 0, 0.46, 0, "#5a2218"); q(0.42, 0.46, 0.04, 0, 0.72, -0.20, "#3a2414");
+        for(const ax of [-0.18, 0.18]) for(const az of [-0.17, 0.17]) q(0.03, 0.44, 0.03, ax, 0.22, az, "#3a2414");
+        addCol(sx-0.24, sx+0.24, sz-0.24, sz+0.24, DF-0.5, DF+0.5); addSeat(sx, sz, DF, ry+Math.PI, "A CHAIR AT THE CARD TABLE"); }
+      const q5=_trng(5151); for(let k=0;k<14;k++){ const a=q5()*6.28, r=0.1+q5()*0.35; C(0.02, 0.006, tx+Math.cos(a)*r, DF+0.786+(k%3)*0.006, tz+Math.sin(a)*r, ["#c41a1a","#1f4f8c","#e8e2d0","#2a2a2a"][k%4], 12); }
+      B(0.06, 0.02, 0.09, tx+0.2, DF+0.792, tz-0.15, "#e8e2d0");
+      lampU({x:tx, y:DCL-0.35, z:tz, color:0xffd0a0, intensity:0.5, dist:4.5, decay:1.6, vol:[X0, X1, Z0, Z1, DF-0.5, DCL+0.3]});
+      C(0.012, 0.42, tx, DCL-0.21, tz, "#2a2a2c", 6); CT(0.14, 0.26, 0.16, tx, DCL-0.48, tz, "#1e5a32", 18); push("cafe_bulb", new T.SphereGeometry(0.035, 8, 6), tx, DCL-0.55, tz, 0, "#ffffff"); }
+    { // the pool table: walnut rails, green cloth, the balls racked, a cue on it and two in a rack on the wall
+      const px=-55.0, pz=-2910.7, L=2.40, Wd=1.32;
+      B(L, 0.62, Wd, px, DF+0.47, pz, "#3a2414"); B(L-0.24, 0.02, Wd-0.24, px, DF+0.79, pz, "#1e6a3a");
+      for(const [w, d, ox, oz] of [[L, 0.12, 0, Wd/2-0.06],[L, 0.12, 0, -Wd/2+0.06],[0.12, Wd-0.24, L/2-0.06, 0],[0.12, Wd-0.24, -L/2+0.06, 0]]) B(w, 0.06, d, px+ox, DF+0.81, pz+oz, "#4a2e1a");
+      for(const sx of [-1,1]) for(const sz of [-1,1]) B(0.16, 0.16, 0.16, px+sx*(L/2-0.14), DF+0.08, pz+sz*(Wd/2-0.14), "#2a1a0e");
+      const BALLS=["#f2e23a","#1f4f8c","#c41a1a","#5a1a6a","#e8862a","#1e6a3a","#7a1a1a","#1a1a1a","#f2e23a","#1f4f8c","#c41a1a","#5a1a6a","#e8862a","#1e6a3a","#7a1a1a"];
+      let k=0; for(let row=0;row<5;row++) for(let i=0;i<=row;i++){ ent(new T.SphereGeometry(0.028, 12, 8), px+0.55+row*0.049, DF+0.828, pz+(i-row/2)*0.057, BALLS[k++]); }
+      ent(new T.SphereGeometry(0.028, 12, 8), px-0.6, DF+0.828, pz, "#f4f2ec");
+      tubeE(V3(px-0.9, DF+0.85, pz+0.30), V3(px+0.3, DF+0.83, pz+0.42), 0.008, "#c8a070");
+      addCol(px-L/2, px+L/2, pz-Wd/2, pz+Wd/2, DF-0.5, DF+0.84);
+      B(1.2, 0.04, 0.04, px, DCL-0.62, pz, "#3a2414"); for(const dx2 of [-0.45, 0, 0.45]){ CT(0.08, 0.20, 0.16, px+dx2, DCL-0.72, pz, "#1e5a32", 16);
+        push("cafe_bulb", new T.SphereGeometry(0.03, 8, 6), px+dx2, DCL-0.78, pz, 0, "#ffffff"); }
+      for(const dx2 of [-0.5, 0.5]) C(0.006, 0.6, px+dx2, DCL-0.31, pz, "#2a2a2c", 6);
+      lampU({x:px, y:DCL-0.8, z:pz, color:0xfff0d0, intensity:0.7, dist:5, decay:1.5, vol:[X0, X1, Z0, Z1, DF-0.5, DCL+0.3]});
+      B(0.60, 0.80, 0.06, -51.6, DF+1.25, Z1-0.04, "#3a2414"); for(const dx2 of [-0.18, 0, 0.18]) tubeE(V3(-51.6+dx2, DF+0.92, Z1-0.10), V3(-51.6+dx2, DF+1.62, Z1-0.10), 0.009, "#c8a070"); }
+    { // the piano in the north-east corner, its bench; a lamp on it
+      const nx=-52.2, nz=Z0+0.32; B(1.48, 1.18, 0.58, nx, DF+0.59, nz, "#1a1410"); B(1.40, 0.05, 0.30, nx, DF+0.74, nz+0.42, "#1a1410");
+      B(1.24, 0.03, 0.14, nx, DF+0.765, nz+0.36, "#f4f2ec"); for(let k=0;k<20;k++) if(k%7!==2 && k%7!==6) B(0.018, 0.012, 0.08, nx-0.58+k*0.062, DF+0.786, nz+0.33, "#1a1a1a");
+      B(0.90, 0.06, 0.36, nx, DF+0.48, nz+0.92, "#1a1410"); for(const sd of [-1,1]) B(0.05, 0.46, 0.30, nx+sd*0.40, DF+0.23, nz+0.92, "#1a1410");
+      addCol(nx-0.75, nx+0.75, Z0, nz+0.62, DF-0.5, DF+1.2); addCol(nx-0.46, nx+0.46, nz+0.74, nz+1.10, DF-0.5, DF+0.5); addSeat(nx, nz+0.92, DF, Math.PI, "THE PIANO BENCH");
+      C(0.07, 0.03, nx-0.5, DF+1.195, nz, "#c8a050", 12); C(0.01, 0.30, nx-0.5, DF+1.34, nz, "#c8a050", 6); CT(0.07, 0.12, 0.12, nx-0.5, DF+1.52, nz, "#e8d8b0", 14);
+      lampU({x:nx-0.5, y:DF+1.5, z:nz+0.2, color:0xffc890, intensity:0.35, dist:4, decay:1.6, vol:[X0, X1, Z0, Z1, DF-0.5, DCL+0.3]});
+      addUse(nx, nz+1.4, DF, "PLAY THE PIANO", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("rim", nx, nz);
+        toast(["A FEW BARS OF 'ROUND MIDNIGHT', MOSTLY RIGHT","THE B FLAT STICKS","YOU PLAY THE BASS LINE OFF THE RECORD. IT ALMOST WORKS"][(Math.random()*3)|0], "#e8d8b0"); }, 1.1); }
+    { // a loveseat in the south-east, toward the pool table
+      const lx=X1-0.55, lz=-2911.3, f=XF(lx, lz, -Math.PI/2), L="#3a4a5a", q=(w,h,d,ax,ay,az)=>ent(rboxGeo(w,h,d,Math.min(0.06, Math.min(w,h,d)*0.3),2), f.x(ax,az), DF+ly0+ay, f.z(ax,az), L, 0, -Math.PI/2, 0), ly0=0;
+      q(1.5, 0.40, 0.82, 0, 0.22, 0); q(1.5, 0.48, 0.18, 0, 0.62, -0.32); for(const sd of [-1,1]) q(0.16, 0.26, 0.82, sd*0.67, 0.52, 0);
+      addCol(lx-0.42, lx+0.42, lz-0.76, lz+0.76, DF-0.5, DF+0.6); for(const d2 of [-0.35, 0.35]) addSeat(lx-0.05, lz+d2, DF, Math.PI/2, "THE LOVESEAT", false, 0.72); }
+    { // the sleeves framed along the south wall, between the pool table's lamp and the corner
+      const q6=_trng(6161);
+      for(let k=0;k<6;k++){ const x=-61.2+k*0.95; if(x>-60.2 && x<-58.6) continue; B(0.34, 0.34, 0.02, x, DF+1.62, Z1-0.012, "#1a1410");
+        const c1=["#c84a2a","#1f4f8c","#e8b040","#2a6a5a","#5a2a6a","#d8d0c0"][(q6()*6)|0], c2=["#1a1a1a","#f4f0e6","#7a1a1a"][(q6()*3)|0];
+        B(0.30, 0.30, 0.008, x, DF+1.62, Z1-0.026, c1); B(0.18, 0.12, 0.004, x+(q6()-0.5)*0.06, DF+1.58+(q6()-0.5)*0.08, Z1-0.032, c2); } }
     // the sconces on the walls: brass, a shade each, the light thrown up and down
     for(const [x, z, ry] of [[X0+0.05, zq(-2926.0), Math.PI/2],[X1-0.05, zq(-2927.2), -Math.PI/2],[-58.6, Z0+0.05, 0],[-55.4, Z0+0.05, 0]]){
       const fx=Math.sin(ry), fz=Math.cos(ry); B(0.10, 0.16, 0.02, x, DF+1.75, z, "#c8a050", ry);

@@ -773,6 +773,9 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     // and over the woods behind Lake Street's back yards (14v plants them, several rows deep, to the wall at their far side)
     if(fine && typeof EAST!=="undefined" && EAST.woods){ const WD=EAST.woods, ex=Math.max(0, x-WD.x1, WD.x0-x), ez=Math.max(0, z-(WD.z1+6), (WD.z0-10)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 52, cd)-m)*w; }
+    // and round French Creek Pines and along the road to it, which 14z lines with real trees the same way
+    if(fine && typeof WEST!=="undefined"){ const P=WEST.park, ex=Math.max(0, x-(P.x1+40), (P.x0-40)-x), ez=Math.max(0, z-(P.z1+44), (P.z0-60)-z);
+      const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
     // and round the weigh station's clearing, which 14w lines with real trees the same way
     if(fine && typeof WEIGH!=="undefined"){ const P=WEIGH.pad, ex=Math.max(0, x-(P.x1+30), (P.x0-6)-x), ez=Math.max(0, z-(P.z1+120), (P.z0-150)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
@@ -899,8 +902,9 @@ vec4 canCrown(vec2 p, out float id){
     }
     shell(RING_MID, 8, [Z], true);
     shell(EAST.can, 8, [], true);                                   // (east along US 6N: the woods the road goes through, close to)
+    shell(WEST.can, 8, [], true);                                   // (and west of the fields, round French Creek Pines)
     shell(RING_MIDN, 8, [], true);                                  // (north of Edinboro, up past the weigh station to the road's end)
-    shell(GROUND_EDGE, 32, [RING_MID, EAST.can, RING_MIDN], false);
+    shell(GROUND_EDGE, 32, [RING_MID, EAST.can, RING_MIDN, WEST.can], false);
     /* The curtain. From inside the zone, through a hundred metres of trunks,
        the edge of the canopy would be a lid with daylight under it. So the
        zone's boundary hangs a dark wall from the canopy down to the ground:
@@ -1033,8 +1037,8 @@ vec4 canCrown(vec2 p, out float id){
       addCol(EP.x0, HWY.sb-19.1, zz-0.4, zz+0.4, -40, 300);
       addCol(HWY.nb+19.1, EP.x1, zz-0.4, zz+0.4, -40, 300);
     }
-    // (open at the east end where US 6N goes on through the woods: 14m walls its way from there)
-    addCol(EP.x0-0.4, EP.x0+0.4, EP.z0, EP.z1, -40, 300);
+    // (open at both ends where US 6N goes on through the woods: 14m walls its way east from there, 14z west)
+    addCol(EP.x0-0.4, EP.x0+0.4, EP.z0, WEST.corr.z0, -40, 300); addCol(EP.x0-0.4, EP.x0+0.4, WEST.corr.z1, EP.z1, -40, 300);
     addCol(EP.x1-0.4, EP.x1+0.4, EP.z0, EAST.corr.z0, -40, 300); addCol(EP.x1-0.4, EP.x1+0.4, EAST.corr.z1, EP.z1, -40, 300);
   })();
 

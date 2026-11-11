@@ -1511,6 +1511,34 @@ If the scene runs hot on your machine, start there (see below).
     go red, on the side it came from, and your heart is loud when you are
     low. At nothing you are down, with your score, what you lasted and how
     many you took with you; `ENTER` to go again.
+- **West on US 6N.** Leave I-79 at Edinboro and head west, away from the
+  town, and the road runs on through a second run of
+  farms, not the hay and corn of the east side: a vineyard in trellised
+  rows, a pumpkin patch, sunflowers taller than you, and a Christmas-tree
+  farm with its cut blocks, and the Holloway farm stand by the road with
+  its honour box. Past the farms the woods close in, and on the south side
+  a sign by a drive says **FRENCH CREEK PINES · CAMPGROUND & MOBILE HOME
+  PARK**. A gravel lane runs through a clearing under tall pines and
+  maples, a dozen single-wides end on to it, each with its deck and steps,
+  a striped awning, a fire ring and camp chairs, a picnic table, string
+  lights, flowers, a flag, a car on the gravel. Every trailer can be walked
+  into: the living room at the lane end (a sofa, a recliner, the TV), the
+  kitchen and dinette by the door, the bathroom and the bedroom at the
+  back. Out the back are tent pads, a canned-ham camper, a horseshoe pit,
+  a swing set and the common fire with its log benches. By the way in is
+  the **community hall**: a meeting room set out with folding chairs and
+  the officers' table under MONTHLY MEETING · SECOND TUESDAY · 7 PM, the
+  bulletin board, a coffee urn by the kitchen's pass-through, a piano.
+  Through a door at the back a stair goes down to **THE PINE KNOT**, the
+  members' lounge (21 and over): panelled walls and a drop ceiling, a long
+  bar with its stools and taps, red-check tables, the honour roll, the meat
+  raffle wheel and the queen of hearts board, tip boards, a dartboard, the
+  jukebox, beer signs, and four **slot machines** (LUCKY PINES and GOLD
+  CREEK) you can play: `ENTER` at one, `Space` spins, the arrows set the
+  bet and the lines (nine), `M` bets the most. The pine is wild, and your
+  credits are kept between visits; run dry and the bartender stakes you a
+  hundred. It is underground and lit the same at every hour. Past the park
+  the road goes on west to the end of the map.
 - **Sound** is synthesized, with no audio files: road noise that pans with
   the highway, wind, cardinals, chickadees, a wood thrush and crows by day,
   at night a chorus of tree crickets (soft, pulsing, in the 2.6 to 2.9 kHz
@@ -1769,6 +1797,7 @@ js/14u-coffee.js    The Perky Loon, the coffee shop across from the brewery: the
 js/14v-lakewoods.js the woods behind Lake Street (its trail and the old boats in it) and the pretzel cart on the shore path
 js/14w-weigh.js     the weigh station: the scale, the scale house's rooms and its officer, the shed and the listening room under it, the signal and readout, the OPEN sign, the apron and its rigs, the trucks that come in
 js/14x-watertower.js Edinboro's water tower: its legs, tank and lettering, the caged ladder and the catwalk
+js/14z-westpark.js  French Creek Pines: the trailers, the lane, the community hall and the Pine Knot under it, the slot machines' cabinets
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
@@ -1789,6 +1818,7 @@ js/18l-warp.js      the warp list, for testing: ` and a key puts you down in one
 js/18m-cabgames.js  the newer cabinets: Brickyard Breakout rebuilt, Groundhog Gulch, Turnpike Turtle; their best scores
 js/18n-suds.js      Suds Patrol, the bubble-trapping platform game on the seventh cabinet
 js/18o-racer.js     Route 6 Rally, the pseudo-3D road racer on the eighth cabinet
+js/18p-slots.js     the Pine Knot's slot machines: five reels, nine lines, the pine wild
 js/18c-settings.js  the graphics menu: resolution (and auto), frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience

@@ -543,6 +543,23 @@ No lettering touches or runs past the edge of its board or its border.
   after it is built (21 warms the dead and the gun's own scene the first
   time zombie mode starts).
 
+- West of the interchange is `WEST` (04): the road's clearing (`corr`),
+  French Creek Pines (`park`, its `lane` and the drive at `gate`) and the
+  hall's footprint (`hall`). Its ground is its own 4 m ring (`RING_WEST`),
+  holed over the hall's basement (`WEST_HOLES`), and the canopy its own
+  8 m shell (`WEST.can`). The west fields (08b's grape, pumpkin,
+  sunflower and xmas crops) are `EDIN.fields` like the east's.
+- 14z builds the park in world coordinates with its own copies of 14o's
+  `pieces` / `vslab` / `vliner` (`wall`, `liner`). `WESTPARK.trailers`
+  holds each trailer's frame, and `WESTPARK.routes` its walk routes, which
+  `tools/walk.js` takes from the page. The Pine Knot under the hall is
+  BURIED, a VOID and lit by under lamps.
+- The slot machines are `ARCADE.cabs[8..11]` (14z builds them, `slot:true`)
+  and 18p's one game on all four `_CBG` entries. Their credits are one
+  wallet, `SLOTS.credits`, kept in `localStorage` (`restarea.slots.credits`).
+  `SLOTS.sim(n)` plays n spins of nine lines and returns what comes back per
+  credit bet (about 0.94); check it after changing a pay or a weight.
+
 ## The machine it must run on
 
 The owner plays in Chrome on a refurbished MacBook Pro: a 2.4 GHz 8-core
