@@ -143,7 +143,7 @@ function rampPave(P0, RW, X, s, at, taper, color, stop){
      along the road and eased onto it, and where each meets it goes into mouth.meet, for 08b to dot the crossroad's
      edge line between them and run it solid everywhere else. */
   const M=stop && stop.mouth, msg=M ? (Math.sign(Q[Q.length>>1].z-M.z)||1) : 0; if(M) M.side=msg;
-  const mlim=(p,n,lo)=>{ if(!M) return lo ? -1e9 : 1e9; const E=M.e+0.10;
+  const mlim=(p,n,lo)=>{ if(!M || M.linesOnly) return lo ? -1e9 : 1e9; const E=M.e+0.10;
     if(Math.abs(n.z)<1e-4) return msg*(p.z-M.z)>=E ? (lo ? -1e9 : 1e9) : (lo ? 1e9 : -1e9);
     const b=(M.z+msg*E-p.z)/n.z; return (msg*n.z>0)===lo ? b : (lo ? -1e9 : 1e9); };
   layRibbonVar("asphalt", Q, (i,p,n)=>Math.max(-RW, mlim(p,n,true)),
@@ -252,6 +252,28 @@ function paveRect(bk, x0,x1,z0,z1, color){
     push(bk, g, x+w/2, PAVE_T, z+d/2, 0, color||"#ffffff", -Math.PI/2, 0);
   }
   addPaveRect(x0,x1,z0,z1,0);
+}
+/* the rounded corner where a road meets a lot's edge: (xe, ze) the corner, the road's side running along z and the
+   lot's edge along x; sx the way out from the road along x, sz the way out from the lot along z; a quarter-round of
+   radius r cut out of the square between them, paved a few centimetres over the road's own paving (a layer under the
+   lot's) and to the lot's edge exactly, so no two faces of the lot's layer lie over one another */
+function filletPave(xe, ze, sx, sz, r, color){
+  const o=0.12, pts=[new T.Vector2(xe-sx*o, -ze)];                 // (over the road's paving, a layer under it; to the lot's edge exactly)
+  for(let k=0;k<=10;k++){ const t=k/10*Math.PI/2, x=xe+sx*r-sx*r*Math.cos(t), z=ze+sz*r-sz*r*Math.sin(t);
+    pts.push(new T.Vector2(k===0 ? x-sx*o : x, -z)); }
+  const sh=new T.Shape(sx*sz>0 ? pts.reverse() : pts), g=new T.ShapeGeometry(sh), U=g.attributes.uv;
+  for(let i=0;i<U.count;i++) U.setXY(i, U.getX(i)*0.62, U.getY(i)*0.62);
+  push("lotpave", g, 0, PAVE_T, 0, 0, color, -Math.PI/2, 0);
+}
+// the same where the road runs along x out of a lot's side along z (the lot's edge at x = xe): sz the way out from the
+// road along z; the lot lies to the west (smaller x)
+function filletPaveX(xe, ze, sz, r, color){
+  const o=0.12, pts=[new T.Vector2(xe, -(ze-sz*o))];
+  for(let k=0;k<=10;k++){ const t=k/10*Math.PI/2, x=xe+r-r*Math.sin(t), z=ze+sz*r-sz*r*Math.cos(t);
+    pts.push(new T.Vector2(x, -(k===0 ? z-sz*o : z))); }
+  const sh=new T.Shape(sz>0 ? pts : pts.reverse()), g=new T.ShapeGeometry(sh), U=g.attributes.uv;
+  for(let i=0;i<U.count;i++) U.setXY(i, U.getX(i)*0.62, U.getY(i)*0.62);
+  push("lotpave", g, 0, PAVE_T, 0, 0, color, -Math.PI/2, 0);
 }
 // a painted line from (x0,z0) to (x1,z1) on flat paving
 function stripe(x0,z0,x1,z1,w,color,y){
@@ -447,12 +469,15 @@ function interstateEdges(){
 /* ---- the ramps ----------------------------------------------------------- */
 // each widens out of the northbound shoulder along a taper, or narrows back into it, and is never laid over the lanes
 (function ramps(){
-  RAMP_EXIT.meet =rampPave(RAMP_EXIT,  4.2, NB_X1, 1, "start", 110, "#9a9a98");
+  // (each ramp's far end is the truck lot's edge: paved two hand-breadths into the lot, which is laid over it, and its
+  //  lines cut square where they reach that edge; rampPave's crossroad mouth does both, along x at the lot's end)
+  const lotEnd=(zEdge, side)=>{ const f=()=>false; f.mouth={z:zEdge-side*4.0, e:3.7, meet:[], linesOnly:true}; return f; };    // (its lines to 0.155 m inside the edge; its paving on under the lot)
+  RAMP_EXIT.meet =rampPave(RAMP_EXIT,  4.2, NB_X1, 1, "start", 110, "#9a9a98", lotEnd(SITE.truck.z1, 1));
   // REST AREA and the arrow, just past the gore's nose, in the grass between the road and the ramp (as 08b's EXIT 166)
   { const q=RAMP_EXIT.meet.nose || RAMP_EXIT.find(p=>p.x-4.2-NB_X1>3.0), z=q.z-3.0, xin=q.x-4.2;
     guideSign((NB_X1+xin)/2, z, 2.0, 1.5, 0, ["REST AREA","↗"], {clear:1.4, posts:1}); }
   // (the entrance's lane carries on to Edinboro's exit a hundred metres on: one auxiliary lane, no weave)
-  RAMP_ENTRY.meet=rampPave(RAMP_ENTRY, 4.2, NB_X1, 1, "end", {to:EDIN.off[0].z, xo:EDIN.off[0].x+EDIN.rw}, "#9a9a98");
+  RAMP_ENTRY.meet=rampPave(RAMP_ENTRY, 4.2, NB_X1, 1, "end", {to:EDIN.off[0].z, xo:EDIN.off[0].x+EDIN.rw}, "#9a9a98", lotEnd(SITE.truck.z0, -1));
 })();
 
 /* ---- the lots ----------------------------------------------------------- */
@@ -527,7 +552,8 @@ const ADA_SIGNS=[], ADA_TEX={};
   const TL=TRUCKLOT, sa=Math.sin(TL.angle), ca=Math.cos(TL.angle);
   for(let z=TL.stallZ1; z>=TL.stallZ0; z-=TL.pitch){
     // to the lot's west edge, or its north curb, whichever it reaches first
-    const L=Math.min((TL.aisle0-Tk.x0-0.6)/sa, (z-Tk.z0-0.6)/ca);
+    const L=Math.min((TL.aisle0-Tk.x0-0.6)/sa, (z-Tk.z0-6)/ca);         // (clear of the way in from the ramp, as the aisle's line is)
+    if(L<2) continue;
     stripe(TL.aisle0, z, TL.aisle0-sa*L, z-ca*L, 0.14, "#e2e0d8");
   }
   stripe(TL.aisle0, Tk.z0+6, TL.aisle0, Tk.z1-6, 0.14, "#e2e0d8");
@@ -552,12 +578,20 @@ const ADA_SIGNS=[], ADA_TEX={};
   }
   // curbs at the lot edges, broken where traffic goes in and out
   curb(Tk.x0-0.18, Tk.x0, Tk.z0+2, Tk.z1-2);
-  curb(Cr.x1, Cr.x1+0.18, Cr.z0+14, SITE.walk.z0);
   curb(Cr.x1, Cr.x1+0.18, SITE.walk.z1, Cr.z1-2);
-  curb(Tk.x0, -82, Tk.z1, Tk.z1+0.18);                             // south, west of the ramp
-  curb(-68, Cr.x1, Tk.z1, Tk.z1+0.18);                             // south, east of it
-  curb(Tk.x0, -82, Tk.z0-0.18, Tk.z0);                             // north, west of the ramp
-  curb(-68, -30, Tk.z0-0.18, Tk.z0);                               // north, east of it
+  /* Where a road meets a lot's edge its corners are rounded off in paving (filletPave), so there is no square notch of
+     grass either side of it, and the curb runs on from where the rounding ends. The ramps meet the truck lot's two ends;
+     the substation's drive leaves the car lot's east side. */
+  const rampX=(P, z)=>{ for(let i=1;i<P.length;i++){ const a=P[i-1], b=P[i]; if((a.z-z)*(b.z-z)<=0) return lerp(a.x, b.x, (z-a.z)/((b.z-a.z)||1)); } return P[0].x; };
+  const FR=2.8, RWr=4.2;
+  for(const [P, ze, sz] of [[RAMP_EXIT, Tk.z1, 1], [RAMP_ENTRY, Tk.z0, -1]]){
+    const xc=rampX(P, ze), xw=xc-RWr, xe=xc+RWr;
+    filletPave(xw, ze, -1, sz, FR, "#a8a8a6"); filletPave(xe, ze, 1, sz, FR, "#a8a8a6");
+    if(sz>0){ curb(Tk.x0, xw-FR, Tk.z1, Tk.z1+0.18); curb(xe+FR, Cr.x1, Tk.z1, Tk.z1+0.18); }
+    else { curb(Tk.x0, xw-FR, Tk.z0-0.18, Tk.z0); curb(xe+FR, Cr.x1, Tk.z0-0.18, Tk.z0); } }
+  { const zc=rampX(DRIVE.map(p=>({x:p.z, z:p.x})), Cr.x1), zn=zc-2.6, zs=zc+2.6;           // (the drive's z where it crosses x = Cr.x1)
+    filletPaveX(Cr.x1, zn, -1, FR*0.8, "#b2b2b0"); filletPaveX(Cr.x1, zs, 1, FR*0.8, "#b2b2b0");
+    curb(Cr.x1, Cr.x1+0.18, Cr.z0+0.18, zn-FR*0.8); curb(Cr.x1, Cr.x1+0.18, zs+FR*0.8, SITE.walk.z0); }
 })();
 
 /* ---- the walk, the plaza, the paths ------------------------------------- */

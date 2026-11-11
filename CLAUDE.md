@@ -483,6 +483,13 @@ No lettering touches or runs past the edge of its board or its border.
   on steep faces). The terrain (04) leans its normal on a few long swells
   and hummocks the same way. Both use `fwidth`, so their materials set
   `extensions.derivatives`.
+- Where a road meets a lot's edge, its lines stop at that edge exactly
+  (the ramps pass `rampPave` a `stop` whose `mouth` has `linesOnly`, so
+  the paving runs on under the lot and only the lines are cut). The
+  corners are rounded with 08's `filletPave` / `filletPaveX`, paved over
+  the road's layer and up to the lot's edge, never over the lot. The curbs
+  start where the rounding ends, and lot markings keep 6 m clear of the
+  way in.
 - A use that starts an arcade game is marked `.game` (12c's cabinets, the
   air hockey and the hoops, 18h's dozer). 17's `nearestUse(true)` finds
   those and `ENTER` starts one. `E` (`nearestUse()`) never does, so `E`

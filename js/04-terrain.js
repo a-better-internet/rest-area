@@ -136,7 +136,7 @@ const WEIGH=(function(){
 // the drive up to the substation: off the north end of the car lot, east
 // through the trees, climbing a couple of metres to the compound's gate
 const DRIVE=smoothPath([
-  {x:-29,z:-140,y:0},{x:-14,z:-146,y:0},{x:4,z:-151,y:0.35},{x:22,z:-154,y:1.05},
+  {x:-26.3,z:-141.6,y:0},{x:-22,z:-142.2,y:0},{x:-12,z:-145.4,y:0},{x:4,z:-151,y:0.35},{x:22,z:-154,y:1.05},
   {x:38,z:-159,y:1.85},{x:52,z:-166,y:2.45},{x:60.5,z:-169,y:SITE.sub.y}], 2.0);
 // a cleared right-of-way north from the compound, poles every ninety metres
 const POWER={x0:84, z0:-184, x1:136, z1:-1500};
