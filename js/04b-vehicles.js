@@ -436,6 +436,12 @@ function carParts(kind, paintHex, coarse){
   for(const a of S.axles) vBox(OP, 2*(S.track-0.17), 0.46, 2*D.arch-0.06, 0, S.wr+0.13, a, BLK, FIN.trim);
   const mir=v=>new T.Vector3(-v.x, v.y, v.z), mirN=n=>new T.Vector3(-n.x, n.y, n.z);
   const both=(fn)=>{ fn(1); fn(-1); };
+  /* A corner lamp is a patch laid on the skin between two heights. Above the skin's top at that station there is no
+     skin: the patch folds over the shoulder onto the deck and its pieces stand out at odd angles. So each lamp's
+     middle is held 7 cm plus its own half height below the lowest top along its length (and as far above the foot). */
+  { const fit=(y, hh, z0, z1)=>{ let t=1e9, b=-1e9; for(let k=0;k<=4;k++){ const q=B.sec(lerp(z0, z1, k/4)); t=Math.min(t, q.t); b=Math.max(b, q.b); }
+      return clamp(y, b+hh+0.07, t-hh-0.07); };
+    D.headY=fit(D.headY, 0.064, B.zN-0.44, B.zN-0.02); D.tailY=fit(D.tailY, 0.070, B.zT+0.02, B.zT+0.42); }
   // lamps on the corners, where the skin turns
   both(sd=>{
     // a dark bezel, the lens inside it, a chrome reflector band across its foot
@@ -485,12 +491,15 @@ function carParts(kind, paintHex, coarse){
     both(sd=>onSurf(OP, 0.16, 0.03, 0.02, sd>0?p:mir(p), sd>0?n:mirN(n), paintHex, FIN.paint, 0.0));
   }
   // mirrors on stalks at the base of the A pillar
+  // (the foot of the stalk sits on the door's top at the sail, where the skin is at the belt: not out at the body's widest
+  // half width and a hand above the belt, which on a tall body is above the skin there and leaves the mirror in the air)
   both(sd=>{
-    const z=D.gh.zA-0.22, s=B.sec(z), y=D.gh.belt+0.10;
-    vAdd(OP, new T.SphereGeometry(0.5,10,8), sd*(s.w+0.07), y, z, paintHex, FIN.paint);
+    const z=D.gh.zA-0.20, yb=Math.min(D.gh.belt-0.02, B.sec(z).t-0.03), xb=Math.max(B.pt(z, B.angAt(z, yb)).x, G.wb)-0.012, y=yb+0.085;
+    vBox(OP, 0.11, 0.035, 0.07, sd*(xb+0.045), yb+0.02, z+0.01, BLK, FIN.trim);                   // the sail and stalk
+    vBox(OP, 0.03, 0.07, 0.035, sd*(xb+0.085), yb+0.05, z+0.005, BLK, FIN.trim);
+    vAdd(OP, new T.SphereGeometry(0.5,10,8), sd*(xb+0.125), y, z, paintHex, FIN.paint);
     OP[OP.length-1].matrix.scale(new T.Vector3(0.10,0.12,0.18));
-    vBox(OP, 0.012, 0.09, 0.13, sd*(s.w+0.115), y, z-0.02, 0x30373c, FIN.chrome);
-    vBox(OP, 0.10, 0.03, 0.06, sd*(s.w+0.02), y-0.04, z+0.02, BLK, FIN.trim);
+    vBox(OP, 0.012, 0.09, 0.13, sd*(xb+0.17), y, z-0.02, 0x30373c, FIN.chrome);
   });
   /* ---- the rest of the outside ---- */
   const halfW=(z,y)=>B.pt(z, B.angAt(z,y)).x;                     // the skin's half width at height y
@@ -937,7 +946,7 @@ const WHEEL_POOL=(function(){
       const cull=Math.min(900, DRAW_LEVELS[GFX.draw].cull);
       if(v.lod){ const bodyNear=d2<130*130; v.lod.near.visible=bodyNear; v.lod.far.visible=!bodyNear && d2<cull*cull; }
       if(d2>cull*cull || !g.visible) continue;
-      const near=d2<110*110;
+      const near=d2<60*60;                 // (the far wheel is all a wheel is past sixty metres)
       g.updateMatrixWorld();
       _r.makeRotationX(v.spin||0);
       for(const s of v.wheelSlots){

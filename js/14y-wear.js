@@ -239,8 +239,7 @@ const WEAR={leaves:[], autumn:null};
     wire(V3(S2.x+0.32, h2-2.5, S2.z), house, 0.8, 0.012); wire(V3(S2.x+0.32, h2-2.5, S2.z), barn, 0.7, 0.012);
     addZone(36, 590, zN-1, zN+1, Y-1, Y+12, "US 6N"); }
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.08}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.08}), "14y-wear");
   WEAR.ms=performance.now()-t0;
 })();
 // the leaves: all of them in October, a sprinkle of last year's the rest of the year

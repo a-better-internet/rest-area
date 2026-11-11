@@ -187,15 +187,20 @@ function addZoneOB(cx,cz,yaw,hx,hz,y0,y1,name,indoor){
   ZONES.push({x0:cx-o.ex,x1:cx+o.ex,z0:cz-o.ez,z1:cz+o.ez,y0:y0,y1:y1,name:name,indoor:!!indoor,ob:o});
 }
 function indoorsAt(x,z,y){
-  for(let i=0;i<ZONES.length;i++){
-    const q=ZONES[i];
+  const ix=_rgAt(_ZONE_G, x, z);                  // (06's rect grid, further on)
+  for(let k=0;k<ix.length;k++){
+    const q=ZONES[ix[k]];
     if(q.indoor && x>q.x0&&x<q.x1&&z>q.z0&&z<q.z1&&y>=q.y0&&y<q.y1 && (!q.ob || obIn(q.ob,x,z))) return true;
   }
   return false;
 }
 // underground: the basement under the generator house (12b), where the loop turns the sky down
 const BURIED=[];
-function addBuried(x0,x1,z0,z1,y0,y1,amb,tint){ BURIED.push({x0,x1,z0,z1,y0,y1,amb,tint:tint ? new T.Color(tint) : null}); }
+// (a ninth argument [yTop, yBottom] grades it: a stairwell going down is underground by degrees, none of it at yTop and
+// all of it at yBottom, so the light changes as you go down rather than all at once at some line)
+// (a graded one goes first, so a stairwell is asked before the basement it goes down into, however they overlap)
+function addBuried(x0,x1,z0,z1,y0,y1,amb,tint,grad){ const q={x0,x1,z0,z1,y0,y1,amb,tint:tint ? new T.Color(tint) : null, grad:grad||null}; if(grad) BURIED.unshift(q); else BURIED.push(q); }
+function buriedShare(q, y){ if(!q) return 0; if(!q.grad) return 1; const t=(q.grad[0]-y)/(q.grad[0]-q.grad[1]); return t<=0 ? 0 : t>=1 ? 1 : t*t*(3-2*t); }
 function buriedVolAt(x,z,y){
   for(let i=0;i<BURIED.length;i++){
     const q=BURIED[i];
@@ -272,9 +277,32 @@ function groundY(x,z){
 const STEP_UP=0.62;
 const VOIDS=[];
 function addVoid(x0,x1,z0,z1,y0,y1,floor){ VOIDS.push({x0,x1,z0,z1,y0,y1,floor}); }
+/* RECT GRIDS. SURF, ZONES and VOIDS run to thousands across the world, and the walker, the people, the cars and the
+   dead ask after them many times a frame. Each list keeps a 32 m grid of indices into it, filled in as the list grows
+   (they only ever grow; a rect's bounds never change after it is added, only a surface's height). Whatever covers
+   more than 400 cells is kept in the grid's own short list, which every query also walks. A query returns the
+   indices in the order they were added, so "the last one that holds you" stays the last one. */
+function _rgrid(list){ return {list:list, n:0, map:new Map(), big:[], tmp:[]}; }
+function _rgSync(G){
+  const L=G.list;
+  for(; G.n<L.length; G.n++){ const r=L[G.n], i0=Math.floor(r.x0/32), i1=Math.floor(r.x1/32), j0=Math.floor(r.z0/32), j1=Math.floor(r.z1/32);
+    if((i1-i0+1)*(j1-j0+1)>400){ G.big.push(G.n); continue; }
+    for(let i=i0;i<=i1;i++) for(let j=j0;j<=j1;j++){ const k=i*100003+j; let a=G.map.get(k); if(!a){ a=[]; G.map.set(k, a); } a.push(G.n); } }
+}
+const _RG_NONE=[];
+function _rgAt(G, x, z){
+  _rgSync(G);
+  const a=G.map.get(Math.floor(x/32)*100003+Math.floor(z/32)) || _RG_NONE;
+  if(!G.big.length) return a;
+  const t=G.tmp; t.length=0; let i=0, j=0;                  // (merged in order: the cell's and the big ones')
+  while(i<a.length || j<G.big.length) t.push(j>=G.big.length || (i<a.length && a[i]<G.big[j]) ? a[i++] : G.big[j++]);
+  return t;
+}
+const _SURF_G=_rgrid(SURF), _ZONE_G=_rgrid(ZONES), _VOID_G=_rgrid(VOIDS);
 function voidAt(x,z,y){
-  for(let i=VOIDS.length-1;i>=0;i--){
-    const v=VOIDS[i];
+  const ix=_rgAt(_VOID_G, x, z);
+  for(let k=ix.length-1;k>=0;k--){
+    const v=VOIDS[ix[k]];
     if(x>v.x0&&x<v.x1&&z>v.z0&&z<v.z1&&y>=v.y0&&y<v.y1) return v;
   }
   return null;
@@ -282,8 +310,9 @@ function voidAt(x,z,y){
 function surfaceY(x,z,curY){
   const _v=voidAt(x,z,curY);
   let best=_v ? _v.floor : groundY(x,z);
-  for(let i=0;i<SURF.length;i++){
-    const s=SURF[i];
+  const ix=_rgAt(_SURF_G, x, z);
+  for(let k=0;k<ix.length;k++){
+    const s=SURF[ix[k]];
     if(x<=s.x0||x>=s.x1||z<=s.z0||z>=s.z1) continue;
     if(s.ob && !obIn(s.ob,x,z)) continue;
     let y;
@@ -311,8 +340,9 @@ function blocked(x,z,feetY){
 }
 function zoneAt(x,z,y){
   let hit=null;
-  for(let i=0;i<ZONES.length;i++){
-    const q=ZONES[i];
+  const ix=_rgAt(_ZONE_G, x, z);
+  for(let k=0;k<ix.length;k++){
+    const q=ZONES[ix[k]];
     if(x>q.x0&&x<q.x1&&z>q.z0&&z<q.z1&&y>=q.y0&&y<q.y1 && (!q.ob || obIn(q.ob,x,z))) hit=q;
   }
   return hit?hit.name:null;

@@ -242,7 +242,7 @@ function frame(){
   // (a volume given a share, addBuried's last argument, holds the fill at that fraction of it: 12d's
   // sub-basement is all but dark between its bulbs)
   const _bv=buriedVolAt(camera.position.x, camera.position.z, camera.position.y);
-  _buriedMix += ((_bv?1:0)-_buriedMix)*Math.min(1, delta*2.5);
+  _buriedMix += (buriedShare(_bv, camera.position.y)-_buriedMix)*Math.min(1, delta*(_bv && _bv.grad ? 6 : 2.5));
   _buriedDim += (((_bv && _bv.amb) || 1)-_buriedDim)*Math.min(1, delta*1.2);
   // (and one given a colour, its eighth, has its fill that colour: 12e's boiler hall is red)
   _buriedTint += ((_bv && _bv.tint ? 1 : 0)-_buriedTint)*Math.min(1, delta*1.2);
@@ -289,6 +289,7 @@ function frame(){
   tickFlicker(delta);
   updateLights(darkL, camera.position);
   FOREST.update(camera.position);
+  updateCrops(camera.position);
   if(typeof updateWear==="function") updateWear();
   if(typeof updateDeep==="function") updateDeep(camera.position);
   cullBaked(camera.position, delta);

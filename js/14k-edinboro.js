@@ -588,8 +588,7 @@ const parked=(kind, paint, x, z, yaw, y)=>parkCar(x, z, yaw, kind, paint, y+PAVE
   addZone(IX0, IX1, IZ0, IZ1, FLS-0.5, CEIL, "FRENCH CREEK FUEL · MART", true);
   EDIN_PLACES.store={x0:IX0, x1:IX1, z0:IZ0, z1:IZ1, y:FLS, door:(D.a+D.b)/2, zf:S.z1};
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.12}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.12}), "14k-edinboro");
 })();
 
 /* ======================================================================
@@ -1773,8 +1772,7 @@ const COW_MAT=new T.MeshStandardMaterial({map:COW_HIDE, vertexColors:true, rough
   // the cows, out in the pasture behind
   for(const [x,z,ry,gz] of [[150,Z+178,0.4,1],[158,Z+184,2.0,1],[171,Z+176,-1.2,0],[186,Z+192,0.9,1],[197,Z+181,2.6,1],[214,Z+200,-0.4,0],[176,Z+206,1.5,1],[205,Z+222,-2.2,1]]) cow(x, z, ry, gz);
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.08}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.08}), "14k-edinboro");
   EDIN_PLACES.farm={house:H, ff:FF, ff2:FF2, door:FDOOR, lane:LX};
 })();
 // the cows: they turn a little as they graze, the head working at the grass and now and then coming up

@@ -326,6 +326,5 @@ const FIREWORKS={};
   addUse(903.8, (GZ0+GZ1)/2, FLS, "BROWSE THE SHELVES", ()=>toast(["A 500-GRAM CAKE CALLED “BACKYARD BLITZKRIEG”: 49 SHOTS, $89.99, BUY ONE GET TWO","A BOX OF SPARKLERS, THE SAME BOX AS WHEN YOU WERE SEVEN","“NIGHT HAWK”: AERIAL REPEATER. THE BACK OF THE BOX SAYS ONLY “MOVE AWAY”"][(Math.random()*3)|0], "#ffd8a0"), 2.2);
   FIREWORKS.store={x0:BX0, x1:BX1, z0:BZ0, z1:BZ1, floor:FLS, door:(DOOR.a+DOOR.b)/2};
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.1}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.1}), "14m-fireworks");
 })();

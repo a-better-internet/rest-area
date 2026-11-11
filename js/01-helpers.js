@@ -528,6 +528,21 @@ function bakeBuckets(scene){
   return out;
 }
 
+/* --- hand-merged detail --------------------------------------------------
+   The fittings, furniture and odds and ends each place merges by hand (its `ME`) are cut into 64 m tiles the way the
+   buckets are, so the camera can cull what is behind it, and a tile further off than the draw distance's `detail`
+   is not drawn (18c's cullBaked). Merged whole, a place's detail was one mesh as wide as the place, drawn from a
+   mile off. Returns the meshes. */
+const DETAIL=[];
+function detailMesh(ents, mat, name, cast){
+  const tiles=new Map(), _c=new T.Vector3(), out=[];
+  for(const e of ents){ _c.setFromMatrixPosition(e.matrix); const k=Math.floor(_c.x/64)+":"+Math.floor(_c.z/64);
+    let L=tiles.get(k); if(!L){ L=[]; tiles.set(k, L); } L.push(e); }
+  for(const [k, L] of tiles){ const m=new T.Mesh(mergeEntries(L), mat);
+    m.castShadow=cast!==false; m.receiveShadow=true; m.name=(name||"detail")+":"+k; scene.add(m); DETAIL.push(m); out.push(m); }
+  return out;
+}
+
 /* --- local frames ------------------------------------------------------
    three.js's rotation.y = t sends a local offset (dx, dz) to
    (dx·cos t + dz·sin t, −dx·sin t + dz·cos t). Written the other way round

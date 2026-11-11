@@ -612,3 +612,34 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - `tools/zfight.js '{"x0":..,"x1":..,"z0":..,"z1":..,"y0":..,"y1":..}'`
   finds coplanar faces in a box.
 - `tools/signaudit.js [pad]` finds sign text too close to an edge.
+
+## Round 28 notes
+
+- A place's own hand-merged detail (its `ME` list of fittings, furniture,
+  odds and ends) goes through 01's `detailMesh(ents, mat, name, cast)`, not
+  `new T.Mesh(mergeEntries(ME), …)`. It cuts the entries into 64 m tiles,
+  so the camera can cull what is behind it, and 18c's `cullBaked` hides a
+  tile further off than the draw distance's `detail` (`DRAW_LEVELS`, 03).
+  A landmark that must be seen from far off (14x's water tower) stays a
+  plain mesh.
+- Instanced crops (08b's west farms) are tiled the same way: `CROP_TILES`,
+  each kind with its own `far`, shown by `updateCrops` (from 19). An
+  InstancedMesh spread over a field must never be `frustumCulled=false`
+  with a world-sized reach: it is drawn whole from everywhere.
+- `SURF`, `ZONES` and `VOIDS` are looked up through 06's rect grids
+  (`_rgAt`). They only ever grow, and a rect's bounds never change once it
+  is added (a surface's height may). Never splice one or move a rect.
+- `Terrain.groundAt` remembers its rings' corner heights (`_GH`, 04). The
+  field is fixed once the ground is built; never change what `heightAt`
+  returns after load.
+- `updateDoors` (17) skips drawing a door at rest. Anything that moves a
+  door's leaf itself sets `d.open`, never the leaf's transform.
+- Lit colours above 0.60 are eased halfway back (03, in
+  `lights_physical_fragment`): this renderer takes hex as painted, so a pale
+  slab in full sun would otherwise clip. Concrete wants about `#a8a49a`
+  to `#b8b4aa`, not `#d0ccc2`.
+- The sun's shadows fade out over the outer 13% of the shadow map (03), so
+  their reach never shows as a line moving with you.
+- `addBuried`'s ninth argument `[yTop, yBottom]` grades a stairwell:
+  `buriedShare` runs 0 at the top to 1 at the bottom, and 19 and 16 follow
+  it. A stair down from daylight gets one, with a dim under lamp part way.

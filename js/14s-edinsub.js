@@ -341,8 +341,7 @@ const HUM_POS=[];                                   // transformers that hum and
   for(const x of [-11.8, -8.4]){ B(1.24, 0.08, 0.30, x, CL-0.045, -1384.5, "#e8e8e4"); push("tube", planeGeo(1.16, 0.22, 0), x, CL-0.092, -1384.5, 0, "#ffffff", Math.PI/2, 0);
     LAMPS.push({x:x, y:CL-0.3, z:-1384.5, color:0xeef4ff, intensity:0.85, dist:7, decay:1.5, indoor:true, vol:[IX0, IX1, IZ0, IZ1, FF-0.5, CL]}); }
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.25}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.25}), "14s-edinsub");
   EDIN_SUB.house=H; EDIN_SUB.gate={x:GX, z:F.z1}; EDIN_SUB.fence=F; EDIN_SUB.door=DOOR; EDIN_SUB.ff=FF;
 
   // a lineman out by the transformer, checking the gauges on his clipboard, by day; his truck the white one by the gate

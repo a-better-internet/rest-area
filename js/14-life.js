@@ -470,21 +470,24 @@ const FF=(function(){
   const p=new T.Points(g, new T.PointsMaterial({map:GLOW_TEX, size:0.34, sizeAttenuation:true, vertexColors:true,
     transparent:true, depthWrite:false, blending:T.AdditiveBlending, toneMapped:false}));
   p.frustumCulled=false; p.visible=false; scene.add(p);
-  return {p:p, pos:pos, col:col, ph:ph, off:off, N:N, cx:0, cz:0};
+  return {p:p, pos:pos, col:col, ph:ph, off:off, N:N, cx:0, cz:0, tick:0};
 })();
 function updateFireflies(dt, now, dark){
   const on=dark>0.45 && !FOREST.isAutumn() && !indoorsAt(camera.position.x,camera.position.z,camera.position.y);
   FF.p.visible=on; if(!on) return;
   const k=Math.min(1,(dark-0.45)*3), px=camera.position.x, pz=camera.position.z, half=38;
+  FF.tick=(FF.tick+1)%10;
+  if(!FF.live){ FF.live=new Uint8Array(FF.N); FF.gy=new Float32Array(FF.N); for(let i=0;i<FF.N;i++) FF.gy[i]=Terrain.groundAt(FF.pos[i*3], FF.pos[i*3+2]); }
   for(let i=0;i<FF.N;i++){
     let x=FF.pos[i*3]+Math.sin(now*0.3+FF.ph[i])*0.4*dt, z=FF.pos[i*3+2]+Math.cos(now*0.27+FF.ph[i]*1.3)*0.4*dt;
     x=px+(((x-px+half)%(half*2))+half*2)%(half*2)-half;
     z=pz+(((z-pz+half)%(half*2))+half*2)%(half*2)-half;
     FF.pos[i*3]=x; FF.pos[i*3+2]=z;
-    // over grass and the edge of the woods, not over the asphalt or deep in
-    const cd=Terrain.clearDist(x,z), paved=pavedY(x,z)!==null;
-    FF.pos[i*3+1]=Terrain.heightAt(x,z)+FF.off[i]+Math.sin(now*0.8+FF.ph[i])*0.2;
-    const live=(!paved && cd>-30 && cd<14) ? 1 : 0;
+    // over grass and the edge of the woods, not over the asphalt or deep in (asked of each in turn, a tenth of them a
+    // frame: a firefly drifts a few centimetres a second)
+    if((i+FF.tick)%10===0){ const cd=Terrain.clearDist(x,z); FF.live[i]=(pavedY(x,z)===null && cd>-30 && cd<14) ? 1 : 0; FF.gy[i]=Terrain.groundAt(x,z); }
+    FF.pos[i*3+1]=FF.gy[i]+FF.off[i]+Math.sin(now*0.8+FF.ph[i])*0.2;
+    const live=FF.live[i];
     const f=Math.pow(Math.max(0,Math.sin(now*(0.9+(i%7)*0.08)+FF.ph[i])),18)*live*k;
     FF.col[i*3]=0.80*f; FF.col[i*3+1]=1.0*f; FF.col[i*3+2]=0.28*f;
   }
@@ -506,12 +509,12 @@ function updateLeaves(dt, now){
   const on=FOREST.isAutumn() && !indoorsAt(camera.position.x,camera.position.z,camera.position.y);
   for(const L of LEAVES){
     if(!on){ L.m.visible=false; continue; }
-    const gy=Terrain.heightAt(L.x,L.z);
+    const gy=Terrain.groundAt(L.x,L.z);
     if(L.y<gy || Math.hypot(L.x-camera.position.x, L.z-camera.position.z)>34){
       // drop a new one somewhere near you, from about crown height
       const a=Math.random()*6.28, r=4+Math.random()*28;
       L.x=camera.position.x+Math.cos(a)*r; L.z=camera.position.z+Math.sin(a)*r;
-      L.y=Terrain.heightAt(L.x,L.z)+6+Math.random()*12;
+      L.y=Terrain.groundAt(L.x,L.z)+6+Math.random()*12;
       if(Terrain.clearDist(L.x,L.z)<-12){ L.y=-99; continue; }
     }
     L.y-=L.vy*dt*(0.7+0.3*Math.sin(now*L.sp+L.ph));

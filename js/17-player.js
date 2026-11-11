@@ -290,10 +290,13 @@ function updateDoors(dt){
       if(shut && i<0) COL_DYN.push(gc); else if(!shut && i>=0) COL_DYN.splice(i,1);
     }
     d.open += (d.target-d.open)*Math.min(1, dt*(d.rate || (d.manualOnly?1.6:5.2)));
-    // a sliding pair runs its leaves apart; anything else swings on its hinge
-    if(d.slide) for(const s of d.slide) s.g.position.x=s.x0+s.dx*d.open;
-    else if(d.lift) d.lift(d.open);                                   // (an overhead door, 01's makeLiftDoor)
-    else d.g.rotation.y = d.base + d.swing*d.open;
+    if(Math.abs(d.target-d.open)<5e-4) d.open=d.target;
+    // a door at rest where it was last drawn is not drawn again (there are hundreds, and an overhead door redraws its sections)
+    if(d.open!==d._drawn){ d._drawn=d.open;
+      // a sliding pair runs its leaves apart; anything else swings on its hinge
+      if(d.slide) for(const s of d.slide) s.g.position.x=s.x0+s.dx*d.open;
+      else if(d.lift) d.lift(d.open);                                 // (an overhead door, 01's makeLiftDoor)
+      else d.g.rotation.y = d.base + d.swing*d.open; }
     // and while it is shut it is solid, which a leaf on its own never is
     if(d.blockCol){
       const shut=d.open<0.35 && (!d.partner || d.partner.open<0.35);

@@ -25,6 +25,11 @@ function cullBaked(cam, dt, force){
     const d=Math.hypot(bs.center.x-cam.x, bs.center.y-cam.y, bs.center.z-cam.z)-bs.radius;
     m.visible = d<lim && (!m.userData.deep || _deepShown);
   }
+  const dl=Math.min(lim, DRAW_LEVELS[GFX.draw].detail*(cam.y-Terrain.heightAt(cam.x, cam.z)>40 ? 1.4 : 1));
+  for(const m of DETAIL){
+    const bs=m.geometry.boundingSphere || (m.geometry.computeBoundingSphere(), m.geometry.boundingSphere);
+    m.visible = Math.hypot(bs.center.x-cam.x, bs.center.y-cam.y, bs.center.z-cam.z)-bs.radius<dl;
+  }
 }
 
 const GFX_PRESETS=[

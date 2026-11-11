@@ -260,8 +260,7 @@ const VENDHUT_RT={brew:0, pour:0, mugUnder:false, board:null, flick:null, lamp:n
   ent(new T.SphereGeometry(0.07, 12, 8, 0, Math.PI*2, Math.PI/2, Math.PI/2), IX0+0.5, CEIL, IZ1-0.5, "#1a1c1e");
   B(0.18, 0.02, 0.18, IX0+0.5, CEIL-0.01, IZ1-0.5, "#d8d8d4");
 
-  const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, metalness:0.15}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(E, new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, metalness:0.15}), "13b-vendhut");
 })();
 // the hot drinks' lit picture: a cup steaming on a dark ground
 bucketOf("pic:vend:coffee", ()=>picGlowMat("vend:coffee", 512, (x,W,H)=>{

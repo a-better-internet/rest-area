@@ -404,8 +404,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
       ["NO DRINKS ON THE MACHINES","WINNER STAYS ON (AIR HOCKEY)","NO HANGING ON THE RIM, DALE","WHAT'S DOWN HERE STAYS DOWN HERE"].forEach((s,i)=>say(x, s, W/2, Hh*(0.36+i*0.15), W*0.86, Hh*0.10, "#1a1a1a", "600", F)); },
     A.x1-0.012, A.y+1.70, -217.7, -Math.PI/2);                                    // (south of the coin dozer, 18h)
 
-  const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, metalness:0.15}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(E, new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, metalness:0.15}), "12c-arcade");
   addZone(A.x0, A.x1, A.z0, A.z1+WT, A.y-0.5, A.y+A.h, "THE ARCADE", true);
   addBuried(A.x0, A.x1, A.z0, A.z1+WT, A.y-0.5, A.y+A.h+0.05, 0);
   ARCADE.room=A;

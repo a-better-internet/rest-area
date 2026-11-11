@@ -118,8 +118,7 @@ const LAKEWOODS={};
       tree(edge ? (q<0.3 ? "hemlock" : "edge") : (q<0.22 ? "hemlock" : q<0.32 ? "pine" : q<0.45 ? "beech" : "hard"), jx, jz, 0.85+hash2(jx*3, jz)*0.4);
       if(q>0.55){ const fx=jx+(hash2(jz, jx)-0.5)*2.4, fz=jz+(hash2(jx, jz*2)-0.5)*2.4; if(trailD(fx, fz)>1.1) FOREST.plant(q>0.8 ? "shrub" : "fern", fx, fz, {scale:0.8+q*0.5, solid:false}); } } }
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.8, metalness:0.1}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.8, metalness:0.1}), "14v-lakewoods");
   addZone(WD.x0, WD.x1, WD.z0, WD.z1, -20, 40, "THE WOODS BEHIND LAKE STREET");
 })();
 
@@ -175,8 +174,7 @@ const PRETZEL={};
     for(let k=0;k<8;k++){ const a0=k*Math.PI/4, g2=new T.CylinderGeometry(0.0, 1.15, 0.36, 2, 1, true, a0, Math.PI/4);
       ent(g2, ux, g+2.12, uz, k%2 ? "#f4f2ec" : "#c8241a"); } C(0.03, 0.06, ux, g+2.33, uz, "#d8dade", 8); }
   addCol(x-0.74, x+0.82, z-0.40, z+0.40, g-0.5, g+1.45);
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.4, metalness:0.35, side:T.DoubleSide}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.4, metalness:0.35, side:T.DoubleSide}), "14v-lakewoods");
   // the cover that goes over the case at night
   const cover=new T.Mesh(boxGeo(1.0, 0.58, 0.56, 0), new T.MeshStandardMaterial({color:0x2a4a6a, roughness:0.9})); cover.position.set(x, cy+0.005, z); cover.visible=false; scene.add(cover);
   Object.assign(PRETZEL, {x:x, z:z, g:g, cover:cover, steam:{x:x, y:cy+0.30, z:z}, n:0});

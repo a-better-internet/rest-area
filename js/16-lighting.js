@@ -32,7 +32,8 @@ function updateLights(dark, camPos){
   _lampSort.length=0;
   // underground only the lamps down there count, and they are on as they are
   // at any hour; above ground those lamps are behind rock (19-loop, 06 BURIED)
-  const down=buriedAt(camPos.x, camPos.z, camPos.y);
+  // (in a graded stairwell, the lamps below take over a third of the way down: 06's buriedShare)
+  const _bq=buriedVolAt(camPos.x, camPos.z, camPos.y), down=!!_bq && buriedShare(_bq, camPos.y)>0.33;
   for(const l of LAMPS){
     if(!!l.under!==down) continue;
     // on a circuit that is off (a power cut) it is not a light at all

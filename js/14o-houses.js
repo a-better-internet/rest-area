@@ -931,8 +931,7 @@ const LAKE_HOUSES={routes:{}, stairs:[], fridges:[], clocks:[], radios:[], cats:
   for(const h of Hs){ cur=h; h.walls=[]; h.rooms=[]; h.beds=[]; h.tvOn=h.no%3===1; const c0=COL.length;
     if(h.kind==="cape") cape(h); else if(h.kind==="ranch") ranch(h); else if(h.kind==="bungalow") bungalow(h); else if(h.kind==="twoStorey") twoStorey(h);
     dress(h, c0); }
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.06}));
-  mesh.castShadow=true; mesh.receiveShadow=true; mesh.name="lake-houses"; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.06}), "lake-houses");
   // the clocks' hands, all in one: an hour and a minute hand each, on the game's clock
   const NC=LAKE_HOUSES.clocks.length, HANDS=new T.InstancedMesh(new T.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), new T.MeshStandardMaterial({color:0x1a1a1a, roughness:0.5}), Math.max(1, NC*2));
   HANDS.count=NC*2; HANDS.frustumCulled=false; HANDS.name="clock-hands"; scene.add(HANDS);

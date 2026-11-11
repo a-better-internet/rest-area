@@ -204,8 +204,7 @@ const DOGBALL={held:false, key:()=>false, keyup:()=>{}, frame:()=>{}};
   { const x=1091.2, z=-1278.2, g=gy(x, z); tubeE(V3(x-0.18, g+0.03, z+0.02), V3(x+0.16, g+0.03, z-0.04), 0.022, "#c8b090", 8);
     for(const sd of [-1,1]) ent(new T.SphereGeometry(0.036, 8, 6), x+sd*0.18, g+0.033, z-(sd>0 ? 0.045 : -0.02), sd>0 ? "#c42a1a" : "#2a5a9a"); }
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.15}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.15}), "14t-dogpark");
 })();
 
 /* ---- the dogs and their people ------------------------------------------------------------------------------------------ */

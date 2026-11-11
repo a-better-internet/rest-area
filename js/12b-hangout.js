@@ -625,8 +625,7 @@ function chalkDraw(c, names, colA, colB, note){
     pic(0.16, 0.04, (x,W,Hh)=>{ x.fillStyle="#c9a23a"; x.fillRect(0,0,W,Hh); say(x, "DALE · 2019 · 8 PT", W/2, Hh/2, W*0.84, Hh*0.6, "#2a1a0e", "700", "Georgia, serif"); },
       wx+0.032, wy-0.21, wz, Math.PI/2, false, 160, 40); }
 
-  const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.12}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(E, new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.12}), "12b-hangout");
   addZone(IX0, IX1, IZ0, IZ1, FB-0.5, CB, "THE BASEMENT", true);
   addZone(XX0, IX0, XZ0, XZ1, FB-0.5, CB, "THE BASEMENT", true);
   // below the ground: the rooms, and the stairwell from a little above the bottom of the slab

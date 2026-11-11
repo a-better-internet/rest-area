@@ -353,8 +353,7 @@ const SUBBASE={drip:2.5, vols:[]};
   for(const [x,y,w,h] of [[96.4,0.30,0.70,0.60],[97.1,0.25,0.60,0.50],[96.5,0.80,0.50,0.40]]) B(w, h, 0.42, x, SB+y, -247.37, "#6a5a40");
   addCol(96.0, 97.45, -247.6, -247.14, SB-0.5, SB+1.1);
   chalk(["IIII IIII IIII IIII", "IIII IIII IIII II"], 0.9, 0.36, 99.388, SB+1.45, -251.0, -Math.PI/2);
-  const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.12}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(E, new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.12}), "12d-subbasement");
 })();
 // the drips: now and then, somewhere near, while you are down there
 function updateSubbasement(dt){

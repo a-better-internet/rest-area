@@ -28,13 +28,14 @@ const SHADOW_LEVELS=[null,
   {name:"MEDIUM", map:2048, half:48, soft:true},
   {name:"HIGH",   map:3072, half:54, soft:true},
   {name:"ULTRA",  map:4096, half:58, soft:true}];
-// draw distance: how far the near trees reach, how far anything is drawn,
+// draw distance: how far the near trees reach, how far anything is drawn, how far a place's hand-merged detail is
+// drawn (01's detailMesh),
 // and where the haze closes in so nothing is seen to vanish
 const DRAW_LEVELS=[
-  {name:"NEAR",   tree:54,  small:26, cull:620,  fog:600},
-  {name:"MEDIUM", tree:70,  small:34, cull:1150, fog:1120},
-  {name:"FAR",    tree:84,  small:40, cull:1e9,  fog:1e9},
-  {name:"MAX",    tree:120, small:56, cull:1e9,  fog:1e9}];
+  {name:"NEAR",   tree:54,  small:26, cull:620,  fog:600,  detail:360},
+  {name:"MEDIUM", tree:70,  small:34, cull:1150, fog:1120, detail:520},
+  {name:"FAR",    tree:84,  small:40, cull:1e9,  fog:1e9,  detail:800},
+  {name:"MAX",    tree:120, small:56, cull:1e9,  fog:1e9,  detail:1200}];
 /* res: a fixed scale, 0 the screen's own (up to 2x), or -1 AUTO: 18c moves GFX.auto between half and the screen's own,
    down when frames run long and slowly back up when there is room, so a fast card stays sharp and a slow one stays
    smooth */
@@ -72,6 +73,22 @@ T.ShaderChunk.tonemapping_pars_fragment =
       "  vec3 hi = max( color - vec3( K ), vec3( 0.0 ) );",
       "  return lo + ( 1.0 - K ) * ( vec3( 1.0 ) - exp( -hi / ( 1.0 - K ) ) );",
       "}" ].join("\n"));
+/* NOTHING PAINTED WHITE GOES WHITE IN THE SUN. Colours here are taken as painted (no sRGB decode), so a pale slab's
+   0.83 lit by a 1.3 sun plus the sky lands past the shoulder and reads as a white hole. Every lit surface's colour is
+   eased above 0.60: halfway back toward it, so pale concrete, white siding and white paint stay distinguishable in
+   full sun and still read pale. Below 0.60 every colour is untouched. Only the standard material (the world's)
+   takes it; the glows and the basic materials do not. */
+T.ShaderChunk.lights_physical_fragment=
+  "diffuseColor.rgb = min( diffuseColor.rgb, vec3( 0.60 ) ) + 0.5 * max( diffuseColor.rgb - vec3( 0.60 ), vec3( 0.0 ) );\n"+
+  T.ShaderChunk.lights_physical_fragment;
+/* NO EDGE TO THE SHADE. The key's map covers a square round the player (SHADOW_LEVELS) and stops; past its edge
+   everything is lit, and that edge moving with you reads as shadows being drawn in as you walk. So a shadow fades
+   out over the outer part of the map instead: full strength in the middle, nothing at the rim, no line anywhere. */
+{ const _sc=T.ShaderChunk.shadowmap_pars_fragment, _from="\t\t}\n\t\treturn shadow;\n\t}\n\tvec2 cubeToUV";
+  if(_sc.indexOf(_from)<0) console.warn("shadow edge fade: chunk not found");
+  T.ShaderChunk.shadowmap_pars_fragment=_sc.replace(_from,
+    "\t\t}\n\t\tfloat shEdge = min( min( shadowCoord.x, 1.0 - shadowCoord.x ), min( shadowCoord.y, 1.0 - shadowCoord.y ) );\n"+
+    "\t\treturn mix( 1.0, shadow, smoothstep( 0.0, 0.13, shEdge ) );\n\t}\n\tvec2 cubeToUV"); }
 /* GROUND MIST, IN THE FOG ITSELF. Every lit surface already mixes in the
    haze by its distance; it now also mixes in a mist whose density is
    thickest at the ground and thins out over a metre or two above it,

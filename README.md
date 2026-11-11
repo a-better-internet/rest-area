@@ -1732,6 +1732,32 @@ turned down to zero rather than removed. A light coming or going would make
 every lit shader compile again, which was a freeze of a second or more at
 dusk, at dawn, when a storm came over, and at each click of the flashlight.
 
+**What is not drawn.** Each kind of the west farms' crops (the pumpkins,
+the sunflower stalks and heads, the Christmas trees) is cut into 64 m tiles,
+and a tile past its own distance is not drawn: a stalk at 220 m, a tree at
+700 m. Uncut, they were 1.4 million triangles drawn every frame from
+anywhere in the world. Each place's hand-merged detail (its fittings,
+furniture and odds and ends) is tiled the same way. It is not drawn past
+360, 520, 800 or 1200 m, by draw distance, and 40% further from the
+air. At the rest area that takes the triangles in view from about 4.9
+million to 3.1 million. A car's detailed wheels give way to the plain ones
+at 60 m.
+
+**What the page does each frame.** Floors, rooms and voids are looked up
+through a 32 m grid, not a walk of every one. The ground's height under a
+foot, a wheel or a walker is taken from corners it has already worked out.
+A door at rest is not drawn again. Fireflies ask where the lawn is a tenth
+of them a frame. A crowd's collision test throws out every box by its
+bounds before it looks closer.
+
+**Where the time still goes**, on a chip built into the processor:
+- **Lights** are the biggest cost per pixel. Each lit pixel pays for every
+  point light in the pool, lit or not, so 6 instead of 8 is a real saving.
+- **Resolution** comes next. Auto is the right setting.
+- **The far woods** (about half a million triangles of crown blobs) and
+  the fine 2 m ground near the interstate are the largest meshes left in
+  view.
+
 ## Layout
 
 World units are metres. +x points east, away from the highway, and the

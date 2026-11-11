@@ -547,7 +547,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       addCol(bx-0.30, bx+0.36, za-0.05, zb+0.05, DF-0.5, DF+1.07);
       for(let k=0;k<3;k++){ const sz=za+0.9+k*1.6, sx=bx+0.82;
         C(0.19, 0.06, sx, DF+0.76, sz, "#5a2218", 18); C(0.025, 0.72, sx, DF+0.37, sz, "#2a2a2c", 8); C(0.16, 0.02, sx, DF+0.012, sz, "#2a2a2c", 16);
-        addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, DF-0.5, DF+0.8); addSeat(sx, sz, DF, -Math.PI/2, "A STOOL AT THE BAR", false, 0.34); }
+        addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, DF-0.5, DF+0.8); addSeat(sx, sz, DF, Math.PI/2, "A STOOL AT THE BAR", false, 0.34); }
       const wx=X0+0.20; B(0.36, 0.86, zb-za, wx, DF+0.43, zc, "#3a2414"); B(0.40, 0.04, zb-za+0.04, wx, DF+0.88, zc, "#2a1a0e");
       for(const y of [1.30, 1.72]) B(0.26, 0.03, zb-za-0.4, X0+0.14, DF+y, zc, "#2a1a0e");
       push("mirror", planeGeo(zb-za-0.6, 0.70, 0), X0+0.012, DF+1.52, zc, Math.PI/2, "#ffffff");
@@ -586,7 +586,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       const nx=-52.2, nz=Z0+0.32; B(1.48, 1.18, 0.58, nx, DF+0.59, nz, "#1a1410"); B(1.40, 0.05, 0.30, nx, DF+0.74, nz+0.42, "#1a1410");
       B(1.24, 0.03, 0.14, nx, DF+0.765, nz+0.36, "#f4f2ec"); for(let k=0;k<20;k++) if(k%7!==2 && k%7!==6) B(0.018, 0.012, 0.08, nx-0.58+k*0.062, DF+0.786, nz+0.33, "#1a1a1a");
       B(0.90, 0.06, 0.36, nx, DF+0.48, nz+0.92, "#1a1410"); for(const sd of [-1,1]) B(0.05, 0.46, 0.30, nx+sd*0.40, DF+0.23, nz+0.92, "#1a1410");
-      addCol(nx-0.75, nx+0.75, Z0, nz+0.62, DF-0.5, DF+1.2); addCol(nx-0.46, nx+0.46, nz+0.74, nz+1.10, DF-0.5, DF+0.5); addSeat(nx, nz+0.92, DF, Math.PI, "THE PIANO BENCH");
+      addCol(nx-0.75, nx+0.75, Z0, nz+0.62, DF-0.5, DF+1.2); addCol(nx-0.46, nx+0.46, nz+0.74, nz+1.10, DF-0.5, DF+0.5); addSeat(nx, nz+0.92, DF, 0, "THE PIANO BENCH");
       C(0.07, 0.03, nx-0.5, DF+1.195, nz, "#c8a050", 12); C(0.01, 0.30, nx-0.5, DF+1.34, nz, "#c8a050", 6); CT(0.07, 0.12, 0.12, nx-0.5, DF+1.52, nz, "#e8d8b0", 14);
       lampU({x:nx-0.5, y:DF+1.5, z:nz+0.2, color:0xffc890, intensity:0.35, dist:4, decay:1.6, vol:[X0, X1, Z0, Z1, DF-0.5, DCL+0.3]});
       addUse(nx, nz+1.4, DF, "PLAY THE PIANO", ()=>{ if(typeof AUDIO!=="undefined") AUDIO.blip("rim", nx, nz);
@@ -697,8 +697,7 @@ const WEIGH_RT={active:0, max:3, open:true, onScale:null, sig:"", sigT:0, t:0, f
       FOREST.plant(edge ? (qq<0.2 ? "hemlock" : "edge") : (qq<0.25 ? "hemlock" : qq<0.33 ? "pine" : "hard"), jx, jz, {scale:0.85+hash2(jx*3, jz)*0.35});
       if(edge && qq<0.5){ const sx=jx+(hash2(jz, jx)-0.5)*2, sz=jz+(hash2(jx, jz*2)-0.5)*2; if(Terrain.clearDist(sx, sz)>0.5) FOREST.plant("shrub", sx, sz, {scale:0.9+qq, solid:false}); } } }
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.2}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.2}), "14w-weigh");
 })();
 
 /* ---- the people: the officer at the desk; on the apron the inspector going round the rig with his clipboard, and its

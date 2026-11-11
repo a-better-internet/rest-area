@@ -743,8 +743,7 @@ normal=normalize(normal+(viewMatrix*vec4(-wk.x, 0.0, -wk.y, 0.0)).xyz);`); };
     for(const [x, z, ry] of [[1256, SH+7.5, 0.4],[1258.5, SH+8.6, -0.2],[1254.2, SH+9.4, 1.2],[1260.4, SH+6.4, 2.6],[1257.6, SH+11.0, 0.9]]) goose(x, z, ry, false);
     for(const [x, z, ry] of [[1310, SH-12, -1.2],[1312.5, SH-13.5, -1.3],[1308.8, SH-15.2, -1.0],[1314.2, SH-16, -1.4]]) goose(x, z, ry, true); }
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.08}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.08}), "14n-lakeside");
 })();
 // the water's ripples drift, the boats ride a little, the geese on the lawn graze and the ones on the water paddle
 function updateLakeside(dt){

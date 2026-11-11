@@ -338,20 +338,24 @@ function _doorPath(st){
 const BODY_R=0.28;
 function _hitAt(x, z, y, r, self){
   const own=self && self.v ? self.v.col : null;                         // a driver's own car is not in the way
-  const hit=c=>{ if(c===own || c.y1<y+0.30 || c.y0>y+1.75) return false;  // a curb is stepped over
-    if(c.ob) return obNear(c.ob,x,z,r);
-    const qx=clamp(x,c.x0,c.x1), qz=clamp(z,c.z0,c.z1), dx=x-qx, dz=z-qz;
-    return dx*dx+dz*dz<r*r; };
-  const near=colsNear(x,z);
-  for(let i=0;i<near.length;i++) if(hit(near[i])) return true;
-  for(let i=0;i<COL_BIG.length;i++) if(hit(COL_BIG[i])) return true;
-  for(let i=0;i<COL_DYN.length;i++) if(hit(COL_DYN[i])) return true;
-  for(const k of KEEP_OFF) if(x>k.x0-r && x<k.x1+r && z>k.z0-r && z<k.z1+r) return true;
-  for(const q of PEOPLE){
-    if(q===self || !q.P || !q.P.g.visible || q.kind==="driver" && q.state!=="out" && q.state!=="back" && q.state!=="inside") continue;
-    if(q.sat) continue;                                                  // sat in a stall, behind its door
-    if(Math.abs(q.y-y)<1.2 && (q.x-x)*(q.x-x)+(q.z-z)*(q.z-z)<(r+BODY_R)*(r+BODY_R)) return true;
+  const lo=y+0.30, hi=y+1.75;                                            // (a curb is stepped over)
+  if(_hitList(colsNear(x,z), x, z, r, lo, hi, own) || _hitList(COL_BIG, x, z, r, lo, hi, own) || _hitList(COL_DYN, x, z, r, lo, hi, own)) return true;
+  for(let i=0;i<KEEP_OFF.length;i++){ const k=KEEP_OFF[i]; if(x>k.x0-r && x<k.x1+r && z>k.z0-r && z<k.z1+r) return true; }
+  const rr=(r+BODY_R)*(r+BODY_R);
+  for(let i=0;i<PEOPLE.length;i++){ const q=PEOPLE[i];
+    if(q===self || q.sat || !q.P || Math.abs(q.y-y)>=1.2 || (q.x-x)*(q.x-x)+(q.z-z)*(q.z-z)>=rr) continue;     // (sat in a stall, behind its door)
+    if(!q.P.g.visible || q.kind==="driver" && q.state!=="out" && q.state!=="back" && q.state!=="inside") continue;
+    return true;
   }
+  return false;
+}
+// (the boxes first by their bounds, which throws out nearly all of them, then the turned ones by their turn)
+function _hitList(L, x, z, r, lo, hi, own){
+  for(let i=0;i<L.length;i++){ const c=L[i];
+    if(x<c.x0-r || x>c.x1+r || z<c.z0-r || z>c.z1+r || c.y1<lo || c.y0>hi || c===own) continue;
+    if(c.ob){ if(obNear(c.ob,x,z,r)) return true; continue; }
+    const qx=x<c.x0 ? c.x0 : x>c.x1 ? c.x1 : x, qz=z<c.z0 ? c.z0 : z>c.z1 ? c.z1 : z, dx=x-qx, dz=z-qz;
+    if(dx*dx+dz*dz<r*r) return true; }
   return false;
 }
 // the nearest place to (x,z) at the same level where a person stands clear

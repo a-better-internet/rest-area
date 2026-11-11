@@ -691,6 +691,15 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
 /* The height of the ground you can SEE: find the finest ring that actually
    draws a triangle here and interpolate it. On a slope the drawn triangle and
    the field it was sampled from differ, and you stand on what is drawn. */
+/* The rings' corners, remembered: the field is fixed once the ground is built, and every foot, wheel and walker asks
+   after the same few corners frame after frame. Cleared when it grows past a quarter of a million. */
+const _GH=new Map();
+function _gh(x, z){
+  const k=Math.round(x*16+100000)*400009+Math.round(z*16+100000);       // (to a sixteenth of a metre: no two rings' corners are closer)
+  let h=_GH.get(k);
+  if(h===undefined){ if(_GH.size>250000) _GH.clear(); h=Terrain.heightAt(x, z); _GH.set(k, h); }
+  return h;
+}
 function groundAt(x,z){
   for(let r=0;r<TERRAIN_RINGS.length;r++){
     const R=TERRAIN_RINGS[r];
@@ -707,13 +716,9 @@ function groundAt(x,z){
     }
     if(holed) continue;
     const u=Math.min(1,Math.max(0,(x-cx0)/c)), v=Math.min(1,Math.max(0,(z-cz0)/c));
-    const ha=Terrain.heightAt(cx0, cz0);
-    if(u+v<=1){
-      const hb=Terrain.heightAt(cx0+c, cz0), hd=Terrain.heightAt(cx0, cz0+c);
-      return ha + (hb-ha)*u + (hd-ha)*v;
-    }
-    const he=Terrain.heightAt(cx0+c, cz0+c);
-    const hb=Terrain.heightAt(cx0+c, cz0), hd=Terrain.heightAt(cx0, cz0+c);
+    const hb=_gh(cx0+c, cz0), hd=_gh(cx0, cz0+c);
+    if(u+v<=1){ const ha=_gh(cx0, cz0); return ha + (hb-ha)*u + (hd-ha)*v; }
+    const he=_gh(cx0+c, cz0+c);
     return he + (hd-he)*(1-u) + (hb-he)*(1-v);
   }
   return Terrain.heightAt(x,z);

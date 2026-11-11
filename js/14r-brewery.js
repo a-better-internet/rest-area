@@ -604,8 +604,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
       ex-0.11, D+1.08, ez, -Math.PI/2, false, 220);
     addCol(ex-0.3, ex+0.4, ez-0.35, ez+0.35, D-0.5, D+1.4); }
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.15}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.15}), "14r-brewery");
 })();
 
 /* ---- the people: behind the bars, at the tables, round the fire, at the rail, and the servers going round ---- */

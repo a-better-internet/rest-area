@@ -343,8 +343,7 @@ const BOILERS={t:0, roar:0, wheel:null, door:null, fires:[], fireMat:null, gauge
       sign(w, h, (c, W, Hh)=>{ c.fillStyle="#5a5a3a"; c.fillRect(0, 0, W, Hh); say(c, t, W/2, Hh*0.52, W*0.80, Hh*0.58, "#e8e0b0", "900", "'Arial Black', Arial"); }, cx, y, z, 0);
     addCol(cx-0.47, cx+0.47, Z0, Z0+0.66, HF-0.5, HF+0.92); }
 
-  const mesh=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.25}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(E, new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.25}), "12e-boilers");
 })();
 // every frame: the wheel and what follows it, the fires, the gauges, the beacon, the steam, and how loud it is
 function updateBoilers(dt){

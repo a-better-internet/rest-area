@@ -644,8 +644,7 @@ const COFFEE={};
   const labels=new T.Mesh(mergeEntries(LBL), new T.MeshStandardMaterial({map:labelTex, roughness:0.55})); labels.receiveShadow=true; scene.add(labels);
   const stn=new T.Mesh(mergeEntries(STN), new T.MeshStandardMaterial({map:stencil, roughness:0.95, alphaTest:0.4})); scene.add(stn);
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.12}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.12}), "14u-coffee");
 })();
 
 /* ---- the people: Nana behind the counter, two inside, three out on the patio ---------------------------------------------- */

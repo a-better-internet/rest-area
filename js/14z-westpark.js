@@ -312,7 +312,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       const dn=F(inX1-0.45, 5.2, faceE), tc=["#e8e2d0","#6a4a2e","#c8c0b0"][(r()*3)|0];
       dn.b(0.75, 0.04, 1.0, 0, 0.74, 0, tc); dn.b(0.06, 0.72, 0.06, 0, 0.36, 0, "#8a8d90"); dn.col(0.75, 1.0, 0, 0, 0.76);
       for(const s2 of [-1,1]){ const ch=F(dn.x(0, s2*0.0)+0, 5.2+s2*0.75*dir*0, faceE); }
-      for(const s2 of [-1,1]){ const xx=inX1-0.45, d2=5.2+s2*0.78, chf=F(xx, d2, s2*dir>0 ? faceBack : faceLane);
+      for(const s2 of [-1,1]){ const xx=inX1-0.45, d2=5.2+s2*0.78, chf=F(xx, d2, s2>0 ? faceLane : faceBack);          // (each faces the table)
         chf.b(0.42, 0.05, 0.42, 0, 0.45, 0, "#8a3a2a"); chf.b(0.40, 0.42, 0.04, 0, 0.70, -0.19, "#8a8d90"); for(const a2 of [-0.18, 0.18]) for(const b2 of [-0.18, 0.18]) chf.b(0.025, 0.44, 0.025, a2, 0.22, b2, "#8a8d90");
         chf.col(0.44, 0.44, 0, 0, 0.5); chf.seat(0, 0.05, "A CHAIR AT THE TABLE"); }
       LAMPS.push({x:cx, y:CL-0.2, z:sd(5.5), color:0xfff0d8, intensity:0.55, dist:5, decay:1.5, indoor:true, vol:[x0, x1, z0, z1, FY-0.5, CL+0.2]}); }
@@ -357,7 +357,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       for(const s2 of [-1,1]){ for(let k=0;k<2;k++) RB(0.125, 0.04, 1.8, tx2+s2*(0.55+k*0.135), Y+0.44, tz, "#8a6a4a", 0, 0.012);
         for(const e of [-0.7, 0.7]){ tubeE(V3(tx2+s2*0.72, Y, tz+e), V3(tx2+s2*0.06, Y+0.72, tz+e), 0.035, "#6a4a32"); } }
       for(const e of [-0.7, 0.7]) RB(1.5, 0.06, 0.08, tx2, Y+0.40, tz+e, "#6a4a32", 0, 0.015);
-      addCol(tx2-0.4, tx2+0.4, tz-0.9, tz+0.9, Y-0.5, Y+0.76); for(const s2 of [-1,1]) addSeat(tx2+s2*0.62, tz, Y, s2>0 ? -Math.PI/2 : Math.PI/2, "THE PICNIC TABLE", false, 0.72);
+      addCol(tx2-0.4, tx2+0.4, tz-0.9, tz+0.9, Y-0.5, Y+0.76); for(const s2 of [-1,1]) addSeat(tx2+s2*0.62, tz, Y, s2>0 ? Math.PI/2 : -Math.PI/2, "THE PICNIC TABLE", false, 0.72);
       const cl=["#c84a2a","#e8e2d0","#2a6a9a"][(r()*3)|0]; B(0.72, 0.004, 1.2, tx2, Y+0.768, tz, cl); }
     // string lights from a hook under the west eave out over the fire ring to a post at its far side
     { const a=V3(x0-0.06, CL-0.05, sd(0.8)), b=V3(x0-3.8, Y+2.4, sd(5.4)); B(0.04, 0.04, 0.10, x0-0.03, CL-0.05, sd(0.8), "#3a3a3c");
@@ -538,18 +538,25 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     sign(3.4, 0.5, (c,Wd,Hh)=>{ c.fillStyle="#f2ece0"; c.fillRect(0,0,Wd,Hh); c.strokeStyle="#2e4a32"; c.lineWidth=5; c.strokeRect(6,6,Wd-12,Hh-12);
       say(c, "MONTHLY MEETING · SECOND TUESDAY · 7 PM", Wd/2, Hh*0.52, Wd*0.80, Hh*0.42, "#2e4a32", "800", "Arial"); }, ix0+0.02, HFY+2.25, (iz0+iz1)/2, Math.PI/2, false, 720);
     // the rows of folding chairs, an aisle down the middle
+    // (each a real folding chair, facing the officers' table: a padded seat, a curved back on two uprights that run down
+    // into the back legs, the front legs crossing up under the seat, spreaders low between them, rubber feet)
     for(let rr=0; rr<5; rr++) for(const side of [-1,1]) for(let k=0;k<4;k++){
-      const sx=rx0+rr*1.25, sz=(iz0+iz1)/2+side*(0.9+k*0.62);
-      RB(0.40, 0.03, 0.40, sx, HFY+0.45, sz, "#5a5e62", 0, 0.01); B(0.03, 0.36, 0.40, sx+0.19, HFY+0.68, sz, "#5a5e62");
-      for(const dz of [-0.18, 0.18]){ tubeE(V3(sx-0.18, HFY, sz+dz), V3(sx+0.18, HFY+0.45, sz+dz), 0.008, "#3a3e42"); tubeE(V3(sx+0.18, HFY, sz+dz), V3(sx-0.1, HFY+0.45, sz+dz), 0.008, "#3a3e42"); }
-      addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, HFY-0.06, HFY+0.48); addSeat(sx, sz, HFY, -Math.PI/2, "A FOLDING CHAIR"); }
+      const sx=rx0+rr*1.3, sz=(iz0+iz1)/2+side*(0.95+k*0.72), fr="#8a7e6e", pad="#5a4a3e", fy=HFY;
+      RB(0.40, 0.035, 0.41, sx, fy+0.455, sz, fr, 0, 0.012); RB(0.36, 0.035, 0.37, sx-0.005, fy+0.485, sz, pad, 0, 0.016);
+      ent(rboxGeo(0.03, 0.2, 0.40, 0.012, 2), sx+0.215, fy+0.76, sz, fr, 0, 0, 0.14);
+      for(const dz of [-0.19, 0.19]){ tubeE(V3(sx+0.15, fy, sz+dz), V3(sx+0.235, fy+0.87, sz+dz), 0.011, fr);
+        tubeE(V3(sx-0.2, fy, sz+dz*0.97), V3(sx+0.08, fy+0.44, sz+dz*0.97), 0.011, fr);
+        S(0.016, sx+0.15, fy+0.012, sz+dz, "#1a1a1a"); S(0.016, sx-0.2, fy+0.012, sz+dz*0.97, "#1a1a1a"); }
+      tubeE(V3(sx-0.17, fy+0.1, sz-0.185), V3(sx-0.17, fy+0.1, sz+0.185), 0.009, fr); tubeE(V3(sx+0.16, fy+0.12, sz-0.19), V3(sx+0.16, fy+0.12, sz+0.19), 0.009, fr);
+      addCol(sx-0.2, sx+0.24, sz-0.21, sz+0.21, HFY-0.06, HFY+0.5); addSeat(sx, sz, HFY, Math.PI/2, "A FOLDING CHAIR"); }
     // the bulletin board on the south wall, its notices
-    { const bx3=-1124.2, bz=iz1-0.03; B(2.4, 1.2, 0.03, bx3, HFY+1.55, bz, "#6a4a2e"); B(2.3, 1.1, 0.02, bx3, HFY+1.55, bz-0.02, "#b89a6a");
+    { const bx3=-1123.0, bz=iz1-0.03;            // (between the south windows, clear of their trim)
+      B(2.4, 1.2, 0.03, bx3, HFY+1.55, bz, "#6a4a2e"); B(2.3, 1.1, 0.02, bx3, HFY+1.55, bz-0.02, "#b89a6a");
       const NOTES=[["POTLUCK","SAT 5PM · BRING A DISH","#f2f0ea"],["EUCHRE NIGHT","EVERY THURS · 7PM","#f2e88a"],["BINGO","FRI · DOORS 6PM","#c8e8f2"],["LOST CAT","GREY · ANSWERS TO 'BEANS'","#f2d8d8"],
                    ["POOL OPENS","MEMORIAL DAY","#d8f2d8"],["QUIET HOURS","10PM – 7AM","#f2f0ea"],["FIREWOOD","$6 A BUNDLE · LOT 3","#f2e0c8"]];
       NOTES.forEach(([h1, h2, bg], k)=>{ const nx=bx3-0.9+(k%4)*0.6, ny=HFY+1.85-Math.floor(k/4)*0.55;
         sign(0.46, 0.36, (c,Wd,Hh)=>{ c.fillStyle=bg; c.fillRect(0,0,Wd,Hh); say(c, h1, Wd/2, Hh*0.34, Wd*0.80, Hh*0.24, "#1a1a1a", "800", "Arial"); say(c, h2, Wd/2, Hh*0.68, Wd*0.80, Hh*0.14, "#2a2a2a", "600", "Arial"); },
-          nx, ny, bz-0.035, Math.PI, false, 200); C(0.012, 0.01, nx, ny+0.15, bz-0.04, "#c41a1a", 8, Math.PI/2); }); }
+          nx, ny, bz-0.042, Math.PI, false, 200); C(0.012, 0.012, nx, ny+0.15, bz-0.05, "#c41a1a", 8, Math.PI/2); }); }
     // the coffee table by the pass-through: an urn, cups, a plate of cookies under wrap
     { const cx3=PX-0.6, cz3=(PASS.a+PASS.b)/2; B(0.7, 0.04, 1.6, cx3, HFY+0.74, cz3, "#e8e2d0"); for(const dz of [-0.7, 0.7]) B(0.04, 0.72, 0.04, cx3, HFY+0.36, cz3+dz, "#8a8d90");
       addCol(cx3-0.36, cx3+0.36, cz3-0.82, cz3+0.82, HFY-0.06, HFY+0.76);
@@ -578,6 +585,9 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       B(SWX1-SWX0-0.004, y-(BF-0.05), Math.abs(RUN)-0.002, (SWX0+SWX1)/2, (y+BF-0.05)/2, (za2+zb2)/2, k%2 ? "#5a3a24" : "#55361f"); }
     addRamp(SWX0, SWX1, SWZ0, SWZ1, "z", SWZ0, SWZ1, BF, HFY);
     addVoid(SWX0, SWX1, SWZ0, SWZ1, BF-1, HFY+0.6, BF);
+    // (the stairwell is underground by degrees, a few steps down to the lounge's ceiling, so the light goes as you go down)
+    addBuried(SWX0-0.25, SWX1+0.25, SWZ0-0.3, SWZ1+0.1, BF+1.0, HFY+1.6, 0.55, 0x6a4a2a, [HFY+1.55, BF+1.75]);   // (by degrees the whole way down)
+    LAMPS.push({x:(SWX0+SWX1)/2, y:BCL+0.4, z:-1176.5, color:0xffc890, intensity:0.35, dist:4.5, decay:1.6, indoor:true, under:true, vol:[SWX0-0.3, SWX1+0.3, SWZ0-0.3, SWZ1+0.2, BF-0.5, HFY+1.3]});
     // the rail round the well on the stair room's side, open at the top step
     for(const [a, b, c2] of [[SWZ0, SWZ1, SWX0-0.03],[SWZ0, SWZ1, SWX1+0.03]]){ B(0.05, 0.05, b-a, c2, HFY+0.92, (a+b)/2, "#5a3a24");
       for(let z=a+0.1; z<b; z+=0.4) B(0.03, 0.9, 0.03, c2, HFY+0.45, z, "#5a3a24"); addCol(c2-0.04, c2+0.04, a, b, HFY-0.2, HFY+0.95); }
@@ -618,7 +628,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     B(BX1-BX0, 0.03, 0.03, (BX0+BX1)/2, BF+0.18, BZ+0.34, "#c8a050");
     addCol(BX0, BX1, BZ-0.3, BZ+0.42, BF-0.5, BF+1.1);
     for(let k=0;k<8;k++){ const sx=BX0+0.6+k*1.25, sz=BZ+0.82; C(0.19, 0.07, sx, BF+0.76, sz, "#5a1e14", 18); C(0.025, 0.72, sx, BF+0.37, sz, "#c8ccd0", 8); C(0.17, 0.02, sx, BF+0.012, sz, "#c8ccd0", 16);
-      addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, BF-0.5, BF+0.8); addSeat(sx, sz, BF, Math.PI, "A STOOL AT THE BAR", false, 0.34); WESTPARK.stools=(WESTPARK.stools||[]).concat([[sx, sz]]); }
+      addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, BF-0.5, BF+0.8); addSeat(sx, sz, BF, 0, "A STOOL AT THE BAR", false, 0.34); WESTPARK.stools=(WESTPARK.stools||[]).concat([[sx, sz]]); }
     // the back bar
     B(BX1-BX0, 0.9, 0.5, (BX0+BX1)/2, BF+0.45, QZ0+0.25, "#3a2414"); B(BX1-BX0, 0.04, 0.54, (BX0+BX1)/2, BF+0.92, QZ0+0.27, "#2a1a0e");
     push("mirror", planeGeo(BX1-BX0-1.2, 0.8, 0), (BX0+BX1)/2, BF+1.6, QZ0+0.012, 0, "#ffffff");
@@ -634,7 +644,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     for(let k=0;k<6;k++){ const tx3=(BX0+BX1)/2-0.75+k*0.3; C(0.012, 0.12, tx3, BF+1.17, BZ-0.12, "#c8ccd0", 8); C(0.018, 0.16, tx3, BF+1.31, BZ-0.12, ["#c8a050","#1a1a1a","#7a1a1a","#2a4a6a","#2e6a3a","#e8e2d0"][k], 8); }
     // the TV over the end of the bar, the game on
     B(1.1, 0.64, 0.06, BX1-0.6, BF+2.05, QZ0+0.05, "#141618"); push("lk_tvon", planeGeo(1.02, 0.56, 0), BX1-0.6, BF+2.05, QZ0+0.082, 0, "#ffffff");
-    for(const lx of [-1129, -1125.5, -1122]){ lampU({x:lx, y:BCL-0.3, z:BZ, color:0xffc070, intensity:0.55, dist:5.5, decay:1.5, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]});
+    for(const lx of [-1129, -1125.5, -1122]){ lampU({x:lx, y:BCL-0.3, z:BZ, color:0xffc070, intensity:0.55, dist:5.5, decay:1.5, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]});
       CT(0.12, 0.18, 0.18, lx, BCL-0.25, BZ, "#5a1e14", 16); push("cafe_bulb", new T.SphereGeometry(0.04, 8, 6), lx, BCL-0.33, BZ, 0, "#ffffff"); } }
   // the tables: four-tops with red-check cloths down the middle, their chairs
   for(const [tx3, tz] of [[-1129.0, -1178.0],[-1126.0, -1178.0],[-1123.0, -1178.0],[-1120.0, -1178.0]]){
@@ -645,8 +655,8 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       qq(0.42, 0.05, 0.42, 0, 0.46, 0, "#5a1e14"); qq(0.40, 0.40, 0.04, 0, 0.70, -0.19, "#3a2414"); for(const a2 of [-0.18, 0.18]) for(const b2 of [-0.18, 0.18]) qq(0.03, 0.44, 0.03, a2, 0.22, b2, "#3a2414");
       addCol(sx-0.22, sx+0.22, sz-0.22, sz+0.22, BF-0.5, BF+0.5); addSeat(sx, sz, BF, ry+Math.PI, "A CHAIR AT A TABLE"); }
     C(0.04, 0.1, tx3+0.2, BF+0.82, tz+0.1, "#c41a1a", 10); C(0.03, 0.12, tx3-0.2, BF+0.83, tz-0.1, "#f2f0ea", 10); }
-  for(const lx of [-1129.0, -1124.0]) lampU({x:lx, y:BCL-0.3, z:-1174.6, color:0xffd8a8, intensity:0.45, dist:5, decay:1.5, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]});
-  for(const lx of [-1127.5, -1121.5]) lampU({x:lx, y:BCL-0.3, z:-1178, color:0xffd8a8, intensity:0.5, dist:6, decay:1.5, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]});
+  for(const lx of [-1129.0, -1124.0]) lampU({x:lx, y:BCL-0.3, z:-1174.6, color:0xffd8a8, intensity:0.45, dist:5, decay:1.5, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]});
+  for(const lx of [-1127.5, -1121.5]) lampU({x:lx, y:BCL-0.3, z:-1178, color:0xffd8a8, intensity:0.5, dist:6, decay:1.5, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]});
   // the walls: the honour roll, the plaques, the photos, the flags, the meat raffle wheel, the tip boards, the bingo board,
   // the jukebox, the dartboard, the beer signs
   { // the honour roll on the west wall: names in gold on brown
@@ -675,7 +685,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     { const jx=QX1-0.6, jz=QZ1-0.5; RB(0.9, 1.5, 0.6, jx, BF+0.75, jz, "#6a3a1a", 0, 0.12); B(0.7, 0.4, 0.02, jx, BF+1.15, jz-0.31, "#f2c41c");
       ent(new T.CylinderGeometry(0.45, 0.45, 0.6, 18, 1, false, -Math.PI/2, Math.PI), jx, BF+1.5, jz, "#e88a2a", 0, 0, Math.PI/2);
       addCol(jx-0.46, jx+0.46, jz-0.31, QZ1, BF-0.5, BF+1.9);
-      lampU({x:jx, y:BF+1.2, z:jz-0.6, color:0xff9a3a, intensity:0.4, dist:3.5, decay:1.6, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]});
+      lampU({x:jx, y:BF+1.2, z:jz-0.6, color:0xff9a3a, intensity:0.4, dist:3.5, decay:1.6, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]});
       addUse(jx, jz-1.0, BF, "THE JUKEBOX", ()=>toast(["YOU PUT IN A QUARTER. SOMETHING WITH A STEEL GUITAR","D-4: 'THE REGULARS' FAVOURITE', SAYS A NOTE TAPED ON","THREE PLAYS FOR A DOLLAR. YOU PICK THE SAME ONE THREE TIMES"][(Math.random()*3)|0], "#ffb070"), 1.2); }
     // the dartboard on the west wall by the honour roll, the line on the floor
     { const dz=-1180.6; const g=new T.CylinderGeometry(0.23, 0.23, 0.04, 28); g.rotateZ(Math.PI/2); ent(g, QX0+0.04, BF+1.73, dz, "#1a1a1a");
@@ -712,7 +722,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
                       screenY:BF+1.34, screen:{x:mx, z:mz-0.33}, floor:BF, slot:true};
       addUse(mx, mz-1.1, BF, "PLAY THE SLOTS · "+NAMES[k], ()=>{ if(typeof CABS!=="undefined") CABS.start(i); }, 0.6).game=true;
       WESTPARK.slots.push(i);
-      lampU({x:mx, y:BF+1.6, z:mz-0.7, color:k%2 ? 0x6a9aff : 0xff6a5a, intensity:0.25, dist:2.5, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]}); } }
+      lampU({x:mx, y:BF+1.6, z:mz-0.7, color:k%2 ? 0x6a9aff : 0xff6a5a, intensity:0.25, dist:2.5, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]}); } }
 
   /* ======================================================================
      DRESSING: what people have put out and put up. Each lot gets its own run of things (its welcome mat and its
@@ -803,7 +813,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     { RB(0.48, 0.014, 0.82, x1+0.36, FY+0.016, (t.da+t.db)/2, ["#6a4a2e","#2a4a3a","#7a2a22"][no%3], 0, 0.006);
       const pcz=t.rz-dir*0.32, pcx=x1+0.32; CT(0.17, 0.13, 0.30, pcx, FY+0.15, pcz, "#b8643a", 14); S(0.2, pcx, FY+0.40, pcz, "#3e6a2a");
       for(let k=0;k<5;k++) S(0.06, pcx+Math.cos(k*1.3)*0.13, FY+0.50, pcz+Math.sin(k*1.3)*0.13, ["#e8282a","#f05a8a","#e8282a"][k%3]); addCol(pcx-0.2, pcx+0.2, pcz-0.2, pcz+0.2, FY-0.1, FY+0.5);
-      const chx=dk.x1-0.45, chz=t.rz-dir*0.42, ry=-Math.PI/2+(dir>0 ? 0.35 : -0.35), f=XF(chx, chz, ry), cc=["#2a6a5a","#c84a2a","#e8c030","#2a4a8a"][no%4];
+      const chx=dk.x1-0.45, chz=t.rz-dir*0.42, ry=Math.PI/2+dir*0.35, f=XF(chx, chz, ry), cc=["#2a6a5a","#c84a2a","#e8c030","#2a4a8a"][no%4];
       const qq=(w,h,d,lx,ly,lz,c)=>RB(w,h,d, f.x(lx,lz), FY+ly, f.z(lx,lz), c, ry, 0.012);
       qq(0.5, 0.05, 0.48, 0, 0.42, 0, cc); qq(0.5, 0.58, 0.05, 0, 0.72, -0.24, cc); for(const s2 of [-1,1]){ qq(0.05, 0.42, 0.05, s2*0.22, 0.21, 0.2, cc); qq(0.05, 0.42, 0.05, s2*0.22, 0.21, -0.2, cc); qq(0.06, 0.04, 0.5, s2*0.25, 0.62, 0, cc); }
       addCol(chx-0.3, chx+0.3, chz-0.3, chz+0.3, FY-0.1, FY+0.6); addSeat(chx, chz, FY, ry+Math.PI, "A CHAIR ON THE DECK");
@@ -914,7 +924,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     for(let k=0;k<m;k++){ const t=k/(m-1), x=xa+(xb2-xa)*t, sag=Math.abs(Math.sin(t*Math.PI*6))*0.12; push("wp_xmas", new T.SphereGeometry(0.022, 6, 5), x, BF+2.06-0.12+sag, QZ0+0.27, 0, cols[k%cols.length]); }
     for(let k=0;k<m-1;k++){ const t0=k/(m-1), t1=(k+1)/(m-1), y0=BF+1.94+Math.abs(Math.sin(t0*Math.PI*6))*0.12+0.015, y1=BF+1.94+Math.abs(Math.sin(t1*Math.PI*6))*0.12+0.015;
       tubeE(V3(xa+(xb2-xa)*t0, y0, QZ0+0.27), V3(xa+(xb2-xa)*t1, y1, QZ0+0.27), 0.003, "#1a2a1a"); }
-    lampU({x:(xa+xb2)/2, y:BF+1.9, z:QZ0+0.6, color:0xff9ac0, intensity:0.25, dist:4, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]});
+    lampU({x:(xa+xb2)/2, y:BF+1.9, z:QZ0+0.6, color:0xff9ac0, intensity:0.25, dist:4, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]});
     // on the bar: a jar of pickled eggs, a cash register at the back, bowls of pretzels, coasters and a pint or two, ashtrays
     const bt=BF+1.10; C(0.10, 0.24, BX0+0.5, bt+0.12, BZ-0.1, "#e8e0b0", 16); C(0.105, 0.03, BX0+0.5, bt+0.255, BZ-0.1, "#c82a1a", 16);
         RB(0.40, 0.22, 0.36, -1126.4, BF+1.05, QZ0+0.30, "#2a2a2c", 0, 0.03); B(0.3, 0.1, 0.02, -1126.4, BF+1.2, QZ0+0.475, "#1a3a2a");
@@ -924,7 +934,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     // the popcorn machine at the end of the bar, lit from inside
     { const px=BX1-0.38, pz=BZ-0.08; RB(0.44, 0.22, 0.34, px, bt+0.11, pz, "#b81a14", 0, 0.03); push("wp_popcorn", boxGeo(0.38, 0.30, 0.28), px, bt+0.38, pz, 0, "#ffffff");
       RB(0.44, 0.08, 0.34, px, bt+0.60, pz, "#b81a14", 0, 0.03);
-      lampU({x:px, y:bt+0.5, z:pz+0.4, color:0xffc860, intensity:0.2, dist:2.2, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]}); }
+      lampU({x:px, y:bt+0.5, z:pz+0.4, color:0xffc860, intensity:0.2, dist:2.2, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]}); }
     // the beer cooler by the east wall: glass doors, its shelves lit, cans and bottles on them
     { const cx3=-1116.9, cz0=QZ0+0.01, cw=1.4, ch=2.0, cd=0.68, cz1=cz0+cd;
       B(cw, 0.12, cd, cx3, BF+0.06+0.005, cz0+cd/2, "#2a2a2c"); B(cw, 0.14, cd, cx3, BF+ch-0.07, cz0+cd/2, "#2a2a2c"); for(const s2 of [-1,1]) B(0.05, ch, cd, cx3+s2*(cw/2-0.025), BF+ch/2, cz0+cd/2, "#2a2a2c");
@@ -934,7 +944,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       push("glass", planeGeo(cw/2-0.06, ch-0.28, 0), cx3-cw/4, BF+ch/2+0.01, cz1+0.004, 0, "#ffffff"); push("glass", planeGeo(cw/2-0.06, ch-0.28, 0), cx3+cw/4, BF+ch/2+0.01, cz1+0.004, 0, "#ffffff");
       B(0.03, ch-0.2, 0.03, cx3, BF+ch/2, cz1+0.01, "#3a3a3c"); for(const s2 of [-1,1]) B(0.02, 0.5, 0.03, cx3+s2*0.07, BF+1.1, cz1+0.03, "#c8ccd0");
       addCol(cx3-cw/2, cx3+cw/2, QZ0, cz1+0.04, BF-0.5, BF+ch);
-      lampU({x:cx3, y:BF+1.2, z:cz1+0.5, color:0xe8f4ff, intensity:0.3, dist:3, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]}); }
+      lampU({x:cx3, y:BF+1.2, z:cz1+0.5, color:0xe8f4ff, intensity:0.3, dist:3, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]}); }
     // the pool table in the south-east corner, its lamp over it
     { const px=-1121.5, pz=-1174.85, L=2.36, Wd=1.32;
       RB(L, 0.16, Wd, px, BF+0.70, pz, "#4a2814", 0, 0.05); B(L-0.24, 0.03, Wd-0.24, px, BF+0.785, pz, "#1e6a3a"); for(const s2 of [-1,1]){ RB(L-0.1, 0.06, 0.13, px, BF+0.82, pz+s2*(Wd/2-0.065), "#5a3018", 0, 0.025); RB(0.13, 0.06, Wd-0.1, px+s2*(L/2-0.065), BF+0.82, pz, "#5a3018", 0, 0.025); }
@@ -945,7 +955,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       addCol(px-L/2, px+L/2, pz-Wd/2, pz+Wd/2, BF-0.5, BF+0.86);
       RB(1.4, 0.16, 0.36, px, BCL-0.55, pz, "#1e4a2a", 0, 0.05); push("wp_glowbox", boxGeo(1.3, 0.02, 0.3), px, BCL-0.635, pz, 0, "#ffffff");
       for(const s2 of [-1,1]) tubeE(V3(px+s2*0.6, BCL-0.47, pz), V3(px+s2*0.6, BCL-0.005, pz), 0.004, "#2a2a2c");
-      lampU({x:px, y:BCL-0.7, z:pz, color:0xfff0d0, intensity:0.6, dist:3.6, decay:1.6, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, BCL+0.3]});
+      lampU({x:px, y:BCL-0.7, z:pz, color:0xfff0d0, intensity:0.6, dist:3.6, decay:1.6, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]});
       const cr=QX1-0.03; for(let k=0;k<4;k++) tubeE(V3(cr-0.03, BF+0.25, -1176.8+k*0.1), V3(cr-0.03, BF+1.55, -1176.8+k*0.1), 0.011, "#c8a070"); B(0.04, 0.06, 0.5, cr-0.02, BF+1.2, -1176.65, "#3a2414"); }
     // troffers in the drop ceiling over the tables, a fan turning, the dart scores on a chalkboard
     for(const [x, z] of [[-1129.2, -1176.2],[-1125.0, -1176.2],[-1118.5, -1180.6]]) push("tube", boxGeo(1.2, 0.02, 0.6, 0), x, BCL-0.012, z, 0, "#ffffff");
@@ -976,7 +986,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       [0.6, 2.4].forEach((a, k)=>{ const sx=fx+Math.cos(a)*1.5, sz=frz+Math.sin(a)*1.5, ry=Math.atan2(fx-sx, frz-sz);
         crowdAdd(G2, {look:guest({female:(t.no+k)%2===0}), x:sx, z:sz, y:Y, yaw:ry, mode:"sit", sitY:0.44, held:(t.no+k)%3 ? "can" : null, drink:(t.no+k)%3!==0, when:()=>WESTPARK.nightCrowd}); }); }
     { const t=WESTPARK.trailers[1]; crowdAdd(G2, {look:guest({cap:"#1f3b6e"}), x:t.dk.x1+0.75-0.62, z:t.sd(6.1), y:Y, yaw:Math.PI/2, mode:"stand", held:"can", drink:true, dayOnly:true}); }
-    { const t=WESTPARK.trailers[5], chx=t.dk.x1-0.45, chz=t.rz-t.dir*0.42; crowdAdd(G2, {look:guest({female:true}), x:chx, z:chz, y:t.FY, yaw:-Math.PI/2+(t.dir>0 ? 0.35 : -0.35), mode:"sit", sitY:0.50, held:"cup", drink:true, dayOnly:true}); }
+    { const t=WESTPARK.trailers[5], chx=t.dk.x1-0.45, chz=t.rz-t.dir*0.42; crowdAdd(G2, {look:guest({female:true}), x:chx, z:chz, y:t.FY, yaw:Math.PI/2+t.dir*0.35, mode:"sit", sitY:0.50, held:"cup", drink:true, dayOnly:true}); }
     crowdAdd(G2, {look:guest({}), path:crowdRound ? crowdRound([[-1210, LZ-1.2],[-990, LZ-1.2],[-990, LZ+1.2],[-1210, LZ+1.2],[-1210, LZ-1.2]], 2) : [[-1210, LZ-1.2],[-990, LZ-1.2]], mode:"walk", loop:true, speed:1.0, dog:"#c9a066"});
   }
 
@@ -997,8 +1007,8 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   // (the wall kit, for 14z2's house further on: outlines less their openings, in world terms)
   WESTPARK.kit={pieces:pieces, vslab:vslab, vliner:vliner, holesIn:holesIn, addFace:addFace, flush:flush, face:face};
   // the merged meshes: the site, each trailer, the hall, the lounge
-  for(const k in groups){ if(!groups[k].length) continue; const m=new T.Mesh(mergeEntries(groups[k]), new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.05}));
-    m.castShadow=k!=="lounge"; m.receiveShadow=true; m.name="westpark-"+k; scene.add(m); }
+  { const wm=new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.05});
+    for(const k in groups) if(groups[k].length) detailMesh(groups[k], wm, "westpark-"+k, k!=="lounge"); }
   WESTPARK.hall={x0:hx0, x1:hx1, z0:hz0, z1:hz1, FY:HFY, BF:BF, door:ND};
 })();
 /* the park's frame: the fires flicker (the common one always, the lots' after dark), the fans turn, and whether the lots'

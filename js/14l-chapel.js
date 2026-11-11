@@ -638,7 +638,6 @@
     "MARTHA J., WIFE OF THOMAS · 1855–1902 · GONE HOME","DOROTHY & EARL KANTZ · 1921–2008 · 1919–2011 · TOGETHER","THE OLDEST ONES AT THE BACK HAVE WEATHERED SMOOTH. NOBODY KNOWS WHOSE THEY ARE"][(Math.random()*6)|0], "#d8d4c8"), 1.4);
   addZone(G.x0, G.x1, G.z0, G.z1+0.6, Y-2, Y+10, "THE OLD GRAVEYARD");
 
-  const mesh=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.08}));
-  mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.08}), "14l-chapel");
   EDIN_PLACES.chapel={stones:nst};
 })();

@@ -25,6 +25,10 @@
    EDIN.y under every one of them). The hedgerows between are 07's.
    ---------------------------------------------------------------------- */
 const EDIN_RT={};
+// the west farms' crops, a mesh a 64 m tile; a tile further off than its kind's `far` is not drawn (from 19's frame)
+const CROP_TILES=[];
+function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;        // (further from the air)
+  for(const t of CROP_TILES) t.m.visible=Math.hypot(t.x-p.x, t.z-p.z)-t.r<t.far*k; }
 (function edinboro(){
   const E=EDIN, Z=E.z, Y=E.y, HW=E.hw, DW=HW+0.45;            // DW: the deck's half width, parapets and all
   /* ---- US 6N -------------------------------------------------------------- */
@@ -298,9 +302,20 @@ const EDIN_RT={};
       for(let k=0;k<26;k++){ c.fillStyle=q()<0.5 ? "#3a1a3a" : "#4a2a4a"; c.globalAlpha=0.9; c.beginPath(); c.arc(q()*Wd, Hh*0.55+q()*Hh*0.35, 2+q()*1.5, 0, 7); c.fill(); } });
     leaf.wrapS=leaf.wrapT=T.RepeatWrapping;
     bucketOf("vine_leaf", ()=>new T.MeshStandardMaterial({map:leaf, roughness:0.95}));
-    const inst=(geo, mat, list)=>{ if(!list.length) return; const m=new T.InstancedMesh(geo, mat, list.length), M=new T.Matrix4(), q=new T.Quaternion(), e=new T.Euler();
-      list.forEach((o,i)=>{ e.set(o.rx||0, o.ry||0, 0); q.setFromEuler(e); M.compose(V3(o.x, o.y, o.z), q, V3(o.s, o.sy||o.s, o.s)); m.setMatrixAt(i, M); if(o.c) m.setColorAt(i, new T.Color(o.c)); });
-      m.instanceMatrix.needsUpdate=true; if(m.instanceColor) m.instanceColor.needsUpdate=true; m.frustumCulled=false; m.castShadow=false; m.receiveShadow=true; scene.add(m); return m; };
+    /* Each kind is cut into 64 m tiles, a mesh a tile with its own bounding sphere (r128 culls an InstancedMesh by
+       its geometry's sphere and knows nothing of where its instances are), and a tile further off than `far` is not
+       drawn at all (updateCrops, from 19). Uncut, the five kinds were 1.4 million triangles every frame wherever you
+       stood. */
+    const inst=(geo, mat, list, far)=>{ if(!list.length) return; const tiles=new Map(), M=new T.Matrix4(), q=new T.Quaternion(), e=new T.Euler();
+      for(const o of list){ const k=Math.floor(o.x/64)+","+Math.floor(o.z/64); let L=tiles.get(k); if(!L){ L=[]; tiles.set(k, L); } L.push(o); }
+      for(const L of tiles.values()){ let x0=1e9, x1=-1e9, z0=1e9, z1=-1e9, y0=1e9, y1=-1e9;
+        for(const o of L){ x0=Math.min(x0, o.x); x1=Math.max(x1, o.x); z0=Math.min(z0, o.z); z1=Math.max(z1, o.z); y0=Math.min(y0, o.y); y1=Math.max(y1, o.y); }
+        const g=new T.BufferGeometry(); for(const k2 in geo.attributes) g.setAttribute(k2, geo.attributes[k2]); g.setIndex(geo.index);
+        const c=V3((x0+x1)/2, (y0+y1)/2, (z0+z1)/2); g.boundingSphere=new T.Sphere(c, Math.hypot(x1-x0, y1-y0+3, z1-z0)/2+3);
+        const m=new T.InstancedMesh(g, mat, L.length);
+        L.forEach((o,i)=>{ e.set(o.rx||0, o.ry||0, 0); q.setFromEuler(e); M.compose(V3(o.x, o.y, o.z), q, V3(o.s, o.sy||o.s, o.s)); m.setMatrixAt(i, M); if(o.c) m.setColorAt(i, new T.Color(o.c)); });
+        m.instanceMatrix.needsUpdate=true; if(m.instanceColor) m.instanceColor.needsUpdate=true; m.castShadow=false; m.receiveShadow=true; m.name="crops";
+        CROP_TILES.push({m, x:c.x, z:c.z, r:g.boundingSphere.radius, far}); scene.add(m); } };
     const pumpkins=[], heads=[], stalks=[], trees=[], trunks=[];
     for(const F of W){ const q=_trng(Math.round(-F.x0*7+F.z0)), fw=F.x1-F.x0, fd=F.z1-F.z0, front=F.z0>Z ? F.z0 : F.z1, back=F.z0>Z ? F.z1 : F.z0, sd=F.z0>Z ? 1 : -1;
       if(F.crop==="grape"){
@@ -327,11 +342,11 @@ const EDIN_RT={};
           trees.push({x:x+(q()-0.5)*0.4, y:Y+0.12+h/2, z:z+(q()-0.5)*0.4, s:h*0.36, sy:h, ry:q()*6, c:["#2e4a2a","#3a5a32","#28442a","#33502e"][(q()*4)|0]});
           trunks.push({x:x, y:Y+0.06, z:z, s:1, sy:1});
           if(h>1.4) addCol(x-0.3, x+0.3, z-0.3, z+0.3, Y-0.5, Y+h); } } }
-    inst(new T.SphereGeometry(0.24, 12, 8), new T.MeshStandardMaterial({roughness:0.6}), pumpkins);
-    inst(new T.CylinderGeometry(0.018, 0.026, 1, 6), new T.MeshStandardMaterial({color:0x4e6e2a, roughness:0.9}), stalks);
-    inst(new T.CylinderGeometry(0.16, 0.13, 0.05, 12), new T.MeshStandardMaterial({roughness:0.8, emissive:0x2a1a00}), heads);
-    inst(new T.ConeGeometry(1, 1, 8), new T.MeshStandardMaterial({roughness:0.95}), trees);
-    inst(new T.CylinderGeometry(0.05, 0.06, 0.12, 6), new T.MeshStandardMaterial({color:0x5a4030, roughness:0.9}), trunks); }
+    inst(new T.SphereGeometry(0.24, 10, 7), new T.MeshStandardMaterial({roughness:0.6}), pumpkins, 260);
+    inst(new T.CylinderGeometry(0.018, 0.026, 1, 5, 1, true), new T.MeshStandardMaterial({color:0x4e6e2a, roughness:0.9}), stalks, 220);
+    inst(new T.CylinderGeometry(0.16, 0.13, 0.05, 10), new T.MeshStandardMaterial({roughness:0.8, emissive:0x2a1a00}), heads, 420);
+    inst(new T.ConeGeometry(1, 1, 8), new T.MeshStandardMaterial({roughness:0.95}), trees, 700);
+    inst(new T.CylinderGeometry(0.05, 0.06, 0.12, 6, 1, true), new T.MeshStandardMaterial({color:0x5a4030, roughness:0.9}), trunks, 120); }
   /* the farm stand by the road between the pumpkins and the grapes: a shed roof on posts over a counter and bins, the
      sign on the front, pumpkins and mums along the front, hay bales either side; an honour box on the counter */
   { const sx=E.stand.x, sz=E.stand.z, f=XF(sx, sz, Math.PI), q=(w,h,d,lx,ly,lz,c,bk)=>lbx(f, bk||"wood", w,h,d, lx,Y+ly,lz, 0.4, c);
