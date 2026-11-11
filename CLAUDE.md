@@ -567,6 +567,18 @@ No lettering touches or runs past the edge of its board or its border.
   ceiling fans (`WESTPARK.fans`) and sets `WESTPARK.nightCrowd` only while
   you are well away. `WESTPARK.radios` join 20's `nearRadio`. Wall signs in
   the trailers are one atlas (`homeSign`, bucket `wp_homesign`).
+- US 6N now runs west to `EDIN.x0` (−1600), and `WEST.ranch` (04) is the
+  stone house's lot. 14z2 builds it with 14z's wall kit (`WESTPARK.kit`:
+  `pieces`, `vslab`, `vliner`, `holesIn`, `addFace`, `flush`), its basement
+  and its pool each a `WEST_HOLES` entry on `RING_WEST`'s 4 m lattice
+  (x −1440..−1420, z −1164..−1152, and the pool's x −1440..−1424, z
+  −1152..−1140), covered by the foundation and the deck. `RANCH` holds the
+  routes, the pool's mesh and the `flow` its normals drift by (`updateRanch`,
+  from 14's `updateLife`), and the radio in the garage. The pool's water
+  reuses the lake's normal map (14n) through `onBeforeCompile`, transparent
+  over the plaster. The inside of the oval is solid, so you walk round it.
+- Keep every fire clear of crowns: 14z plants no tree within 8.5 m of a
+  lot's fire ring or 11 m of the common fire.
 
 ## The machine it must run on
 

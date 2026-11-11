@@ -569,6 +569,7 @@ function updateLife(dt, now, dark, dn){
   if(typeof updateCrowd==="function") updateCrowd(dt, now, dark);
   if(typeof updateBrewery==="function") updateBrewery(dt, dark);
   if(typeof updateWestPark==="function") updateWestPark(dt, dark);
+  if(typeof updateRanch==="function") updateRanch(dt, dark);
   if(typeof updateCoffee==="function") updateCoffee(dt, dark);
   if(typeof updatePretzel==="function") updatePretzel(dt, dark);
   if(typeof updateEdinSub==="function") updateEdinSub(dt, now);

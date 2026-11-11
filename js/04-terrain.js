@@ -50,7 +50,7 @@ const RAMP_ENTRY=smoothPath([
 const EDIN=(function(){
   const z=-1200, y=roadY(z)+7.0;                 // the crossroad, level, 7 m over the interstate
   // (the bridge's ends, bw0 and bw1, are on the 8 m ground's lattice past the top of the cut, where it is level)
-  const E={z:z, y:y, hw:5.2, rw:2.45, x0:-1330, x1:1470, bw0:-192, bw1:-80, piers:[-167.0, -135.0, -103.2],     // (x1: on east to the lake, EAST below;
+  const E={z:z, y:y, hw:5.2, rw:2.45, x0:-1600, x1:1470, bw0:-192, bw1:-80, piers:[-167.0, -135.0, -103.2],     // (x1: on east to the lake, EAST below;
            plain:{x0:-890, x1:610, z0:z-260, z1:z+340}};                                                          //  x0: on west to the trailer park, WEST)
   // the northbound off-ramp's centre line, from the highway to the crossroad (x, z from the crossroad)
   const nb=[[-106.4,560],[-104.2,470],[-100.0,380],[-94.0,290],[-87.5,200],[-81.0,120],[-74.0,60],[-63.0,22],
@@ -128,7 +128,8 @@ const WEST=(function(){
     park:{x0:-1240, x1:-960, z0:z+hw+3, z1:z+150},                     // the park, south of the road
     hall:{x0:-1132, x1:-1112, z0:-1184, z1:-1172},                     // the community hall, by the way in (on RING_WEST's 4 m lattice)
     lane:z+50, gate:-1100,                                             // the park's lane, and the drive in from the road
-    can:{x0:-1344, x1:-512, z0:-1504, z1:-896} };                      // the 8 m canopy over it all (on the 32 m lattice)
+    ranch:{x0:-1484, x1:-1392, z0:z+hw+3, z1:-1100},                   // the stone ranch house's lot, further on, in the woods (14z2)
+    can:{x0:-1632, x1:-512, z0:-1504, z1:-896} };                      // the 8 m canopy over it all (on the 32 m lattice)
 })();
 /* ---- the weigh station ----------------------------------------------------
    A mile north of the US 6N bridge, on the northbound side, where the road
@@ -302,7 +303,7 @@ const Terrain=(function(){
         if(h>lo && ls<90) h=lo+(h-lo)*smoothstep(0, run, ls);
         h=Math.max(h, lo+Math.min(ls, 40)*0.02); } }                   // (so nowhere off the lake is under its water)
     // west along US 6N: the same, the road's clearing and the park's level with the road
-    { const wd=Math.min(boxDist(WEST.corr,x,z), boxDist(WEST.park,x,z));
+    { const wd=Math.min(boxDist(WEST.corr,x,z), boxDist(WEST.park,x,z), boxDist(WEST.ranch,x,z));
       if(wd<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, wd));
       if(wd<50) h=toward(h, EDIN.y, wd, 0, 46); }
     // the interstate corridors, cut and filled to the road's own grade (a steep cut through the plain)
@@ -427,7 +428,7 @@ const Terrain=(function(){
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
     d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3);
-    d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z));
+    d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z), boxSD(WEST.ranch,x,z));
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
     d=Math.min(d, boxSD(WEIGH.pad,x,z)-6);
@@ -457,7 +458,7 @@ const Terrain=(function(){
      hwyS    2 m   x -272..-48, z 344..568      the interstate south: the exit ramp's diverge, the third crossover
      kirk    2 m   x 80..96, z -1248..-1216      round the chapel at Edinboro, holed over its hall and the stair down (00)
      east    4 m   x 640..1472, z -1344..-1056  US 6N east of the fields: the outlet, the street, the park, the shore
-     west    4 m   x -1344..-512, z -1344..-1040  US 6N west of the fields: its woods and French Creek Pines (WEST)
+     west    4 m   x -1616..-512, z -1344..-1040  US 6N west of the fields: its woods and French Creek Pines (WEST)
      outer  32 m   x -2400..4096, z -4608..2400 round the far one, north and east: the hills past the lake and up the road
      midN    8 m   x -448..192, z -4224..-1760  the interstate north of Edinboro, out to the road's end
      weigh   2 m   x -176..-16, z -3424..-2496  the weigh station and its ramps (WEIGH) */
@@ -475,8 +476,9 @@ const RING_HWYN={x0:-272, x1:-48, z0:-1752, z1:-336}, RING_HWYS={x0:-272, x1:-48
 const RING_EAST={x0:640, x1:1472, z0:-1344, z1:-1056};
 // and one at 4 m west along US 6N past the west fields: the road through the woods and French Creek Pines (WEST), holed
 // under the community hall, whose basement lounge is under it (the hall's floor and its skirting cover the hole's edges)
-const RING_WEST={x0:-1344, x1:-512, z0:-1344, z1:-1040};
-const WEST_HOLES=[Object.assign({bare:true}, WEST.hall)];
+const RING_WEST={x0:-1616, x1:-512, z0:-1344, z1:-1040};
+// (holed under the hall's lounge, and under the ranch house's basement and its pool, 14z2)
+const WEST_HOLES=[Object.assign({bare:true}, WEST.hall), {bare:true, x0:-1440, x1:-1420, z0:-1164, z1:-1152}, {bare:true, x0:-1440, x1:-1424, z0:-1152, z1:-1140}];
 // and let into that, a half-metre patch round the Perky Loon (14u), holed over its roastery under the house and over the
 // stair down to it behind (on RING_EAST's 4 m lattice; the holes on its own, so the house and the stair's walls and
 // apron cover their edges)

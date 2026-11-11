@@ -776,6 +776,9 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     // and round French Creek Pines and along the road to it, which 14z lines with real trees the same way
     if(fine && typeof WEST!=="undefined"){ const P=WEST.park, ex=Math.max(0, x-(P.x1+40), (P.x0-40)-x), ez=Math.max(0, z-(P.z1+44), (P.z0-60)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
+    // and along the road on west of the park to the ranch house and the end of the road, lined the same way (14z2)
+    if(fine && typeof WEST!=="undefined"){ const C=WEST.corr, R=WEST.ranch, ex=Math.max(0, x-(WEST.park.x0+4), (C.x0-30)-x), ez=Math.max(0, z-(R.z1+44), (C.z0-50)-z);
+      const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
     // and round the weigh station's clearing, which 14w lines with real trees the same way
     if(fine && typeof WEIGH!=="undefined"){ const P=WEIGH.pad, ex=Math.max(0, x-(P.x1+30), (P.x0-6)-x), ez=Math.max(0, z-(P.z1+120), (P.z0-150)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }

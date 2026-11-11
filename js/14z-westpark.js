@@ -435,7 +435,10 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       if(Math.abs(z-LZ)<6 || (Math.abs(x-GX)<5 && z<LZ)) return false;
       if(x>W.hall.x0-6 && x<W.hall.x1+6 && z<W.hall.z1+6) return false;
       if(z<P.z0+3) return false;
-      for(const [cx3, cz3, rr] of [[-1220,-1100,5],[-1196,-1088,5],[-1172,-1100,5],[-1140,-1092,4],[-1000,-1100,6],[-1040,-1088,8],[-1070,-1080,4]]) if(Math.hypot(x-cx3, z-cz3)<rr) return false;
+      for(const [cx3, cz3, rr] of [[-1220,-1100,5],[-1196,-1088,5],[-1172,-1100,5],[-1140,-1092,4],[-1000,-1100,11],[-1040,-1088,8],[-1070,-1080,4]]) if(Math.hypot(x-cx3, z-cz3)<rr) return false;
+      // (no crown over a fire: every lot's ring and the tent pads' rings, eight metres clear)
+      for(const t of WESTPARK.trailers) if(Math.hypot(x-(t.x0-2.4), z-t.sd(3.0))<8.5) return false;
+      for(const [tx2, tz] of [[-1220, -1100],[-1196, -1088],[-1172, -1100]]) if(Math.hypot(x-(tx2+3.0), z-tz)<7) return false;
       return true; };
     const qt=_trng(9393);
     for(let x=P.x0+2; x<P.x1-2; x+=7) for(let z=P.z0+3; z<P.z1-2; z+=7){ const xx=x+(qt()-0.5)*4, zz=z+(qt()-0.5)*4; if(qt()<0.45 || !clear(xx, zz)) continue;
@@ -443,7 +446,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     // the belt round the clearing and along the road's clearing to it, forty metres deep
     for(let x=P.x0-40; x<P.x1+40; x+=6.5) for(let z=P.z0-50; z<P.z1+44; z+=6.5){
       const xx=x+(qt()-0.5)*3, zz=z+(qt()-0.5)*3, inP=xx>P.x0-1 && xx<P.x1+1 && zz>P.z0-4 && zz<P.z1+1, inR=Math.abs(zz-Z)<HW+7;
-      if(inP || inR || qt()<0.18) continue; tree(qt()<0.35 ? "hemlock" : "hard", xx, zz, 0.9+qt()*0.5); } }
+      if(inP || inR || qt()<0.18 || Math.hypot(xx+1000, zz+1100)<11) continue; tree(qt()<0.35 ? "hemlock" : "hard", xx, zz, 0.9+qt()*0.5); } }
 
   /* ======================================================================
      THE COMMUNITY HALL
@@ -526,7 +529,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   // the bulletin board, a coffee urn on a table by the pass-through, a piano, the euchre tables pushed back
   { const rx0=ix0+2.6;
     // the officers' table and its chairs, the podium
-    B(0.76, 0.04, 3.6, ix0+1.0, HFY+0.74, (iz0+iz1)/2, "#7a5a3a"); for(const dz of [-1.7, 1.7]) for(const dx of [-0.32, 0.32]) B(0.04, 0.72, 0.04, ix0+1.0+dx, HFY+0.36, (iz0+iz1)/2+dz, "#5a3a22");
+    RB(0.76, 0.04, 3.6, ix0+1.0, HFY+0.74, (iz0+iz1)/2, "#7a5a3a"); for(const dz of [-1.7, 1.7]) for(const dx of [-0.32, 0.32]) B(0.04, 0.72, 0.04, ix0+1.0+dx, HFY+0.36, (iz0+iz1)/2+dz, "#5a3a22");
     B(0.78, 0.6, 3.62, ix0+1.0, HFY+0.42, (iz0+iz1)/2, "#2e4a32"); addCol(ix0+0.6, ix0+1.4, (iz0+iz1)/2-1.82, (iz0+iz1)/2+1.82, HFY-0.06, HFY+0.76);
     for(const dz of [-1.2, 0, 1.2]){ const sx=ix0+0.4, sz=(iz0+iz1)/2+dz; B(0.42, 0.04, 0.42, sx, HFY+0.46, sz, "#5a3a22"); B(0.04, 0.5, 0.42, sx-0.2, HFY+0.72, sz, "#5a3a22");
       addCol(sx-0.22, sx+0.22, sz-0.22, sz+0.22, HFY-0.06, HFY+0.5); }
@@ -537,7 +540,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     // the rows of folding chairs, an aisle down the middle
     for(let rr=0; rr<5; rr++) for(const side of [-1,1]) for(let k=0;k<4;k++){
       const sx=rx0+rr*1.25, sz=(iz0+iz1)/2+side*(0.9+k*0.62);
-      B(0.40, 0.03, 0.40, sx, HFY+0.45, sz, "#5a5e62"); B(0.03, 0.36, 0.40, sx+0.19, HFY+0.68, sz, "#5a5e62");
+      RB(0.40, 0.03, 0.40, sx, HFY+0.45, sz, "#5a5e62", 0, 0.01); B(0.03, 0.36, 0.40, sx+0.19, HFY+0.68, sz, "#5a5e62");
       for(const dz of [-0.18, 0.18]){ tubeE(V3(sx-0.18, HFY, sz+dz), V3(sx+0.18, HFY+0.45, sz+dz), 0.008, "#3a3e42"); tubeE(V3(sx+0.18, HFY, sz+dz), V3(sx-0.1, HFY+0.45, sz+dz), 0.008, "#3a3e42"); }
       addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, HFY-0.06, HFY+0.48); addSeat(sx, sz, HFY, -Math.PI/2, "A FOLDING CHAIR"); }
     // the bulletin board on the south wall, its notices
@@ -610,7 +613,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     B(w, 0.06, d, x, BF+0.95, z, "#3a2414"); B(w, 0.12, d, x, BF+0.06, z, "#2a1a0e"); }
   // the bar: along the north wall, a padded rail, stools; the back bar with the mirror, the bottles, the taps
   const BX0=-1130.6, BX1=-1120.4, BZ=QZ0+1.55;
-  { B(BX1-BX0, 1.04, 0.6, (BX0+BX1)/2, BF+0.52, BZ, "#4a2e1a"); push("wp_wood", boxGeo(BX1-BX0+0.1, 0.06, 0.74, 0.8), (BX0+BX1)/2, BF+1.07, BZ+0.04, 0, "#c8a890");
+  { RB(BX1-BX0, 1.04, 0.6, (BX0+BX1)/2, BF+0.52, BZ, "#4a2e1a", 0, 0.02); push("wp_wood", boxGeo(BX1-BX0+0.1, 0.06, 0.74, 0.8), (BX0+BX1)/2, BF+1.07, BZ+0.04, 0, "#c8a890");
     RB(BX1-BX0, 0.10, 0.12, (BX0+BX1)/2, BF+1.12, BZ+0.34, "#5a1e14", 0, 0.04);
     B(BX1-BX0, 0.03, 0.03, (BX0+BX1)/2, BF+0.18, BZ+0.34, "#c8a050");
     addCol(BX0, BX1, BZ-0.3, BZ+0.42, BF-0.5, BF+1.1);
@@ -635,10 +638,10 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       CT(0.12, 0.18, 0.18, lx, BCL-0.25, BZ, "#5a1e14", 16); push("cafe_bulb", new T.SphereGeometry(0.04, 8, 6), lx, BCL-0.33, BZ, 0, "#ffffff"); } }
   // the tables: four-tops with red-check cloths down the middle, their chairs
   for(const [tx3, tz] of [[-1129.0, -1178.0],[-1126.0, -1178.0],[-1123.0, -1178.0],[-1120.0, -1178.0]]){
-    B(0.9, 0.04, 0.9, tx3, BF+0.74, tz, "#7a1a1a"); B(0.92, 0.006, 0.92, tx3, BF+0.763, tz, "#e8e2d0"); for(let k=0;k<4;k++) B(0.9, 0.0062, 0.11, tx3, BF+0.7665, tz-0.39+k*0.26, "#b82a22");
+    RB(0.9, 0.04, 0.9, tx3, BF+0.74, tz, "#7a1a1a", 0, 0.012); B(0.92, 0.006, 0.92, tx3, BF+0.763, tz, "#e8e2d0"); for(let k=0;k<4;k++) B(0.9, 0.0062, 0.11, tx3, BF+0.7665, tz-0.39+k*0.26, "#b82a22");
     C(0.05, 0.72, tx3, BF+0.36, tz, "#2a2a2c", 8); C(0.3, 0.02, tx3, BF+0.01, tz, "#2a2a2c", 16); addCol(tx3-0.46, tx3+0.46, tz-0.46, tz+0.46, BF-0.5, BF+0.76);
     for(const [dx, dz, ry] of [[0, -0.72, 0],[0, 0.72, Math.PI],[-0.72, 0, Math.PI/2],[0.72, 0, -Math.PI/2]]){ const sx=tx3+dx, sz=tz+dz, f=XF(sx, sz, ry);
-      const qq=(w,h,d,lx,ly,lz,c)=>B(w,h,d, f.x(lx,lz), BF+ly, f.z(lx,lz), c, ry);
+      const qq=(w,h,d,lx,ly,lz,c)=>RB(w,h,d, f.x(lx,lz), BF+ly, f.z(lx,lz), c, ry, 0.012);
       qq(0.42, 0.05, 0.42, 0, 0.46, 0, "#5a1e14"); qq(0.40, 0.40, 0.04, 0, 0.70, -0.19, "#3a2414"); for(const a2 of [-0.18, 0.18]) for(const b2 of [-0.18, 0.18]) qq(0.03, 0.44, 0.03, a2, 0.22, b2, "#3a2414");
       addCol(sx-0.22, sx+0.22, sz-0.22, sz+0.22, BF-0.5, BF+0.5); addSeat(sx, sz, BF, ry+Math.PI, "A CHAIR AT A TABLE"); }
     C(0.04, 0.1, tx3+0.2, BF+0.82, tz+0.1, "#c41a1a", 10); C(0.03, 0.12, tx3-0.2, BF+0.83, tz-0.1, "#f2f0ea", 10); }
@@ -980,7 +983,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   /* ---- the walls round it all: the road's clearing from the fields to the end of the road, and round the park ---- */
   { const C0=W.corr, wallz=(z, a, b, msg)=>{ const c=addCol(a, b, z-0.4, z+0.4, -40, 300); if(msg) c.msg=msg; return c; };
     wallz(C0.z0, C0.x0, C0.x1);                                                  // north side of the road, all the way
-    wallz(C0.z1, P.x1, C0.x1); wallz(C0.z1, C0.x0, P.x0);                          // south side, either side of the park
+    const RL=W.ranch; wallz(C0.z1, P.x1, C0.x1); wallz(C0.z1, RL.x1, P.x0); wallz(C0.z1, C0.x0, RL.x0);   // (south side: open to the park and to the ranch house's lot, 14z2, which walls itself)                          // south side, either side of the park
     addCol(P.x0-0.4, P.x0+0.4, C0.z1, P.z1, -40, 300); addCol(P.x1-0.4, P.x1+0.4, C0.z1, P.z1, -40, 300); addCol(P.x0, P.x1, P.z1-0.4, P.z1+0.4, -40, 300);
     addCol(C0.x0-0.4, C0.x0+0.4, C0.z0, C0.z1, -40, 300).msg="US 6N RUNS ON WEST FROM HERE. THIS IS AS FAR AS THE MAP GOES"; }
 
@@ -991,6 +994,8 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       "french creek pines: the hall and the lounge":[[(ND.a+ND.b)/2, Z+HW+1.5],[(ND.a+ND.b)/2, hz0-2.0],[(ND.a+ND.b)/2, hz0+1.5],[-1118.5, (SD.a+SD.b)/2],[-1116.35, (SD.a+SD.b)/2],[-1116.35, SWZ1+0.45],
         [(SWX0+SWX1)/2, SWZ1+0.45],[(SWX0+SWX1)/2, SWZ1-0.3],[(SWX0+SWX1)/2, SWZ0-0.6],[-1118.0, -1180.6],[-1125.5, -1180.6]]}; }
 
+  // (the wall kit, for 14z2's house further on: outlines less their openings, in world terms)
+  WESTPARK.kit={pieces:pieces, vslab:vslab, vliner:vliner, holesIn:holesIn, addFace:addFace, flush:flush, face:face};
   // the merged meshes: the site, each trailer, the hall, the lounge
   for(const k in groups){ if(!groups[k].length) continue; const m=new T.Mesh(mergeEntries(groups[k]), new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.05}));
     m.castShadow=k!=="lounge"; m.receiveShadow=true; m.name="westpark-"+k; scene.add(m); }

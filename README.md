@@ -1559,6 +1559,34 @@ If the scene runs hot on your machine, start there (see below).
   and a cricket chalkboard by the dartboard. Out on the farms there is a
   scarecrow and bales in the pumpkin patch, and signs for U-pick pumpkins,
   choose-and-cut trees, the sunflower maze and the vineyard's tastings.
+- **The stone house.** Past French Creek Pines US 6N runs on through the
+  woods, and on the south side a circle of concrete drive goes round an
+  island of boulders and tall grass to a long brown ranch house: fieldstone
+  on the garage's gable, round the front porch and on the bump-out of the
+  bedroom wing, brown siding everywhere else, a dark shingle roof whose
+  middle meets the wing and the garage in valleys. A weeping cherry stands
+  in a stone planter by the porch, the flag is on its pole on the west lawn,
+  and there are cars in the drive and one in the garage that you can drive
+  out. Everything inside is walkable:
+  - the two-car garage, with lift doors, the bench and pegboard, shelves of
+    bins, a fridge, bikes on hooks and a kayak on the ceiling joists;
+  - the mudroom and laundry, the dining room, and the living room with its
+    stone fireplace, sectional and the TV over the mantel;
+  - the kitchen with its island, stools and pendant lights;
+  - the bedroom wing's office, two bedrooms (one with a reading chair in the
+    bump-out) and two baths.
+  From the mudroom a stair goes down to the finished basement: a rec room
+  with a big sectional and TV, a wet bar with stools, a ping-pong table, a
+  dartboard and a little arcade cabinet, plus a guest room, a bath, storage
+  and the mechanical room. It is underground and lit the same at every hour.
+  Out the patio door is the pool deck, fenced in black aluminium, with an
+  oval in-ground pool. The pool's water is the lake's own kind: the same
+  wind ripples, read twice and drifting, with the sky in them, but clear,
+  so you see the plaster, the waterline tile and the dark lane line on the
+  floor under it. There are steps at the shallow end, a ladder and a board
+  at the deep end, a float turning on the water and a light in the wall at
+  night, plus lounges, a table under an umbrella and a grill. The fire
+  rings in the trailer park are kept clear of the trees now.
 - **Sound** is synthesized, with no audio files: road noise that pans with
   the highway, wind, cardinals, chickadees, a wood thrush and crows by day,
   at night a chorus of tree crickets (soft, pulsing, in the 2.6 to 2.9 kHz
@@ -1818,6 +1846,7 @@ js/14v-lakewoods.js the woods behind Lake Street (its trail and the old boats in
 js/14w-weigh.js     the weigh station: the scale, the scale house's rooms and its officer, the shed and the listening room under it, the signal and readout, the OPEN sign, the apron and its rigs, the trucks that come in
 js/14x-watertower.js Edinboro's water tower: its legs, tank and lettering, the caged ladder and the catwalk
 js/14z-westpark.js  French Creek Pines: the trailers, the lane, the community hall and the Pine Knot under it, the slot machines' cabinets
+js/14z2-ranch.js    the stone house past the park: shell and roofs, rooms, garage, finished basement, pool, drive and grounds
 js/14y-wear.js      wear and small things: oil, crack sealant, drains and lids, fallen leaves, the historical marker, the condensers, the poles and wires along US 6N
 js/15-bake.js       emissive materials, bucket baking, collision grid
 js/16-lighting.js   the pooled point lights
