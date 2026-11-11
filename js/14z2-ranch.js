@@ -107,7 +107,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     for(const [ww, hh, ds, dy] of [[w+0.18, 0.08, 0, h/2+0.04],[w+0.18, 0.07, 0, -h/2-0.035],[0.08, h, -w/2-0.04, 0],[0.08, h, w/2+0.04, 0]]){
       const [px, pz]=P(m+ds, fo); RB(ax==="x" ? ww : 0.045, hh, ax==="x" ? 0.045 : ww, px, ym+dy, pz, trim, 0, 0.012); }
     // the muntins: a cross in each sash
-    { const [px, pz]=P(m, c+out*0.01); B(ax==="x" ? w-0.04 : 0.02, 0.025, ax==="x" ? 0.02 : w-0.04, px, ym, pz, "#f2efe8"); B(ax==="x" ? 0.025 : 0.02, h-0.04, ax==="x" ? 0.02 : 0.025, px, ym, pz, "#f2efe8"); }
+    { const [px, pz]=P(m, c+out*0.022); B(ax==="x" ? w-0.04 : 0.02, 0.025, ax==="x" ? 0.02 : w-0.04, px, ym, pz, "#f2efe8"); B(ax==="x" ? 0.025 : 0.02, h-0.04, ax==="x" ? 0.02 : 0.025, px, ym, pz, "#f2efe8"); }
     { const [px, pz]=P(m, fi-out*0.035); RB(ax==="x" ? w+0.08 : 0.12, 0.035, ax==="x" ? 0.12 : w+0.08, px, o.sill-0.018, pz, "#efe9de", 0, 0.01); }
     if(cur) for(const sd of [-1,1]){ const [px, pz]=P(m+sd*(w/2-0.02), fi-out*0.07); RB(ax==="x" ? 0.30 : 0.05, h+0.3, ax==="x" ? 0.05 : 0.30, px, ym+0.08, pz, cur, 0, 0.02); }
     if(cur){ const [px, pz]=P(m, fi-out*0.09); C(0.012, w+0.7, px, o.head+0.2, pz, "#5a4a3a", 8, ax==="x" ? 0 : Math.PI/2, 0, ax==="x" ? Math.PI/2 : 0); } }
@@ -135,7 +135,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   /* ---- the openings, by wall ---- */
   const o=(a, b, sill, head)=>({a:a, b:b, sill:sill, head:head});
   const W_WEST=[o(-1162.4, -1161.0, FY+0.9, FY+2.2), o(-1158.0, -1157.2, FY+1.5, FY+2.1), o(-1154.6, -1153.6, FY+1.5, FY+2.1)];
-  const W_FRONT=[o(BX0+0.2, BX1-0.2, FY-0.01, CL-0.05), o(-1434.5, -1433.1, FY+0.9, FY+2.2)];
+  const W_FRONT=[o(BX0+0.21, BX1-0.21, FY-0.01, CL-0.05), o(-1434.5, -1433.1, FY+0.9, FY+2.2)];
   const BACK_H=[o(-1439.3, -1438.4, FY+1.5, FY+2.1), o(-1435.6, -1433.6, FY+0.9, FY+2.2), o(-1430.2, -1428.6, FY+1.1, FY+2.1), o(-1427.2, -1425.2, FY-0.01, FY+2.1), o(-1422.6, -1421.7, FY-0.01, FY+2.05)];
   addZone(R.x0, R.x1, R.z0-3, R.z1, Y-3, Y+14, "THE STONE HOUSE · THE YARD");                  // (the general zone first: the house's own are added after it)
   const C_FRONT=[o(-1430.7, -1429.1, FY+0.9, FY+2.2), o(-1427.6, -1426.6, FY-0.01, FY+2.1), o(-1425.8, -1424.5, FY+0.9, FY+2.2), o(-1423.0, -1421.2, FY+0.9, FY+2.2)];
@@ -152,7 +152,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   // the foundation: fieldstone where it shows above the grade, block down to the basement floor (round 04's hole, WEST_HOLES)
   wall("rn_stone", "x", WZ0+WT/2, WT, WX0, WX1, BF-0.1, FY-0.15, [], STN, BF);
   wall("rn_stone", "x", WZ0+WT/2, WT, WX1, CX1, BF-0.1, PY-0.08, [], STN, BF);
-  wall("rn_stone", "x", WZ1-WT/2, WT, WX0, CX1, BF-0.1, FY-0.15, [], STN, BF);
+  wall("rn_stone", "x", WZ1-WT/2, WT, WX0, CX1-0.1, BF-0.1, FY-0.15, [], STN, BF);
   wall("rn_stone", "z", WX0+WT/2, WT, WZ0+WT, WZ1-WT, BF-0.1, FY-0.15, [], STN, BF);
   wall("rn_stone", "z", CX1-0.1, WT, WZ0+WT, WZ1-WT, BF-0.1, GY-0.02, [], STN, BF);
   // the wing: siding, its front gable and back gable; the bump-out in fieldstone
@@ -169,7 +169,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   // the garage: fieldstone front and gable, siding on its sides
   wall("rn_stone", "x", GZ0+WT/2, WT, GX0+0.1, GX1-WT, GY-0.15, EV, G_FRONT, STN, GY);
   wall("rn_siding", "z", GX1-WT/2, WT, GZ0, GZ1, GY-0.15, EV, G_EAST, SID, GY);
-  wall("rn_siding", "z", GX0, WT, GZ0, GZ1, GY-0.15, EV, G_WEST, SID, GY);
+  wall("rn_siding", "z", GX0, WT, GZ0, GZ1-0.15, GY-0.16, EV-0.01, G_WEST, SID, GY);
   gable("rn_stone", "x", GZ0+WT/2, WT, GX0, GX1, EV, EV+2.10, STN);
   gable("rn_siding", "x", GZ1-WT/2, WT, GX0, GX1, EV, EV+2.10, SID);
   // the bump-out: three walls of fieldstone to a lower eave, its own little gable
@@ -177,7 +177,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   wall("rn_stone", "x", BZ0+WT/2, WT, BX0+WT, BX1-WT, FY-0.15, EVB, B_FRONT, STN, FY);
   wall("rn_stone", "z", BX0+WT/2, WT, BZ0, WZ0+0.1, Y-0.1, EVB, [], STN, FY);
   wall("rn_stone", "z", BX1-WT/2, WT, BZ0, WZ0+0.1, Y-0.1, EVB, [], STN, FY);
-  B(BX1-BX0-2*WT, FY-0.15-(Y-0.1), WZ0-BZ0-WT+0.1, (BX0+BX1)/2, (FY-0.15+Y-0.1)/2, (BZ0+WT+WZ0+0.1)/2, "#7a6a5a");
+  B(BX1-BX0-2*WT, FY-0.15-(Y-0.1), WZ0-BZ0-WT-0.005, (BX0+BX1)/2, (FY-0.15+Y-0.1)/2, (BZ0+WT+WZ0-0.005)/2, "#7a6a5a");
   gable("rn_stone", "x", BZ0+WT/2, WT, BX0, BX1, EVB, EVB+1.08, STN);
   // stone wainscot round the wing's west side and the back, below the windows
   for(const [x0, x1, z0, z1] of [[WX0-0.09, WX0-0.01, WZ0+0.15, WZ1-0.15]]) push("rn_stone", boxGeo(x1-x0, FY+0.6-(Y-0.05), z1-z0, 0.5), (x0+x1)/2, (FY+0.6+Y-0.05)/2, (z0+z1)/2, 0, STN);
@@ -210,7 +210,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     tubeE(V3(x, EV-0.38, z), V3(x, Y+0.3, z), 0.035, "#4a3a32"); tubeE(V3(x, Y+0.3, z), V3(x+(x<-1430 ? -0.35 : 0.35), Y+0.06, z), 0.035, "#4a3a32"); }
   // the porch: a slab under the middle's roof, two steps down to the walk, square posts, its ceiling of beadboard
   { const z0=WZ0-0.6, z1=CZ0;
-    B(CX1-CX0-0.1, PY-(Y-0.1), z1-z0-0.05, (CX0+CX1)/2-0.05, (PY+Y-0.1)/2, (z0+z1)/2-0.025, "#c8c2b6");
+    B(CX1-CX0-0.05, PY-(Y-0.1), z1-z0-0.05, (CX0+CX1)/2, (PY+Y-0.1)/2, (z0+z1)/2-0.025, "#c8c2b6");
     addFlat(CX0, CX1, z0, z1, PY);
     RB(1.3, FY-PY, 0.6, -1427.1, (FY+PY)/2, CZ0-0.3, "#c8c2b6", 0, 0.02); addRamp(-1427.75, -1426.45, CZ0-0.6, CZ0, "z", CZ0-0.6, CZ0, PY, FY);      // (the step up to the door's sill)
     for(let k=0;k<2;k++){ const h=(PY-Y)*(2-k)/3; RB(3.2, h, 0.32, -1427.1, Y+h/2, z0-0.16-k*0.32, "#c8c2b6", 0, 0.02); }
@@ -241,9 +241,9 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
      ====================================================================== */
   use("house");
   // the floor's frame between the basement and the rooms (its underside the basement's ceiling), round the stair's well
-  for(const [x0, x1, z0, z1] of [[WX0+WT, SWX0, CZ0, WZ1-WT],[SWX1, CX1-0.1, CZ0, WZ1-WT],[SWX0, SWX1, CZ0, SWZ0],[WX0+WT, WX1, WZ0+WT, CZ0]])
+  for(const [x0, x1, z0, z1] of [[WX0+WT, SWX0, CZ0+0.01, WZ1-WT],[SWX1, CX1-0.12, CZ0+0.01, WZ1-WT],[SWX0, SWX1, CZ0+0.01, SWZ0],[WX0+WT, WX1-0.01, WZ0+WT+0.01, CZ0-0.01]])
     B(x1-x0, FY-BCL-0.004, z1-z0, (x0+x1)/2, (FY+BCL)/2-0.002, (z0+z1)/2, "#f0ece4");
-  B(CX1-WX1-0.1, PY-BCL-0.1, CZ0-WZ0-WT, (WX1+CX1-0.1)/2, (PY-0.1+BCL)/2, (WZ0+WT+CZ0)/2, "#f0ece4");
+  B(CX1-WX1-0.15, PY-BCL-0.1, CZ0-WZ0-WT, (WX1+CX1-0.15)/2, (PY-0.1+BCL)/2, (WZ0+WT+CZ0)/2, "#f0ece4");
   const floor=(bk, x0, x1, z0, z1, col, s)=>{ const g=planeGeo(x1-x0, z1-z0, 0), U=g.attributes.uv; for(let i=0;i<U.count;i++) U.setXY(i, U.getX(i)*(x1-x0)*(s||0.5), U.getY(i)*(z1-z0)*(s||0.5));
     push(bk, g, (x0+x1)/2, FY+0.004, (z0+z1)/2, 0, col||"#ffffff", -Math.PI/2, 0); };
   floor("rn_wood", WX1+0.06, CX1-0.1, CZ0+0.1, -1157.06);                                 // living and dining
@@ -258,7 +258,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   addFlat(CX0, SWX0, CZ0, CZ1-0.1, FY); addFlat(SWX1, CX1-0.1, CZ0, CZ1-0.1, FY); addFlat(SWX0, SWX1, CZ0, SWZ0, FY);
   addFlat(CX0+1, CX1-1, CZ0-0.15, CZ0+0.15, FY);                                          // (the front door's sill)
   // the ceilings
-  for(const [x0, x1, z0, z1] of [[WX0+0.1, WX1-0.06, WZ0+0.1, WZ1-0.1],[WX1+0.06, CX1-0.1, CZ0+0.1, WZ1-0.1],[BX0+0.2, BX1-0.2, BZ0+0.2, WZ0+0.1]])
+  for(const [x0, x1, z0, z1] of [[WX0+0.1, WX1-0.06, WZ0+0.1, WZ1-0.1],[WX1+0.06, CX1-0.1, CZ0+0.1, WZ1-0.1],[BX0+0.2, BX1-0.2, BZ0+0.2, WZ0-0.005]])
     push("wp_wall", planeGeo(x1-x0, z1-z0, 0.5), (x0+x1)/2, z0<WZ0 ? CL-0.05 : CL, (z0+z1)/2, 0, "#f6f2ea", Math.PI/2, 0);
   // the exterior walls' inner faces
   liner("wp_wall", "z", WX0+WT, 1, WZ0+WT, WZ1-WT, FY, CL, W_WEST, WALLC);
@@ -272,14 +272,14 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   // the partitions
   const pw=(ax, c2, a, b, ops)=>wall("wp_wall", ax, c2, PT, a, b, FY, CL, ops, WALLC, FY);
   const D=(a, b)=>o(a, b, FY-0.01, FY+2.05);
-  pw("z", -1435, WZ0+WT, -1156, [D(-1160.35, -1159.45), D(-1158.4, -1157.5)]);              // the wing's hall: to the second bedroom, to the bath
+  pw("z", -1435, WZ0+WT, -1156.06, [D(-1160.35, -1159.45), D(-1158.4, -1157.5)]);              // the wing's hall: to the second bedroom, to the bath
   pw("x", -1159, WX0+WT, -1435.06, []);                                                    // the second bedroom | the hall bath
   pw("x", -1160.5, -1434.94, WX1-0.06, [D(-1434.6, -1433.75)]);                            // the office | the hall
-  pw("x", -1156, WX0+WT, WX1, [D(-1434.65, -1433.75)]);                                    // the hall and bath | the main bedroom and its bath
+  pw("x", -1156, WX0+WT, WX1-0.06, [D(-1434.65, -1433.75)]);                                    // the hall and bath | the main bedroom and its bath
   pw("z", -1437, -1155.94, WZ1-WT, [D(-1155.4, -1154.5)]);                                 // the main bedroom | its bath
   wall("wp_wall", "z", -1432, PT, CZ0+WT, WZ1-WT, FY, CL, [o(-1160.2, -1157.2, FY-0.01, FY+2.15)], WALLC, FY);   // the wing | the middle, a cased opening to the living room
   pw("x", -1157, WX1+0.06, CX1-0.1, [o(-1431.0, -1425.2, FY-0.01, FY+2.2), D(-1422.3, -1421.4)]);              // living | kitchen (open), dining | mudroom
-  pw("z", -1424, CZ0+WT, WZ1-WT, [o(-1161.2, -1157.3, FY-0.01, FY+2.15)]);                // living | dining (open), kitchen | mudroom (the stair against it)
+  pw("z", -1424, CZ0+WT, -1157.06, [o(-1161.2, -1157.3, FY-0.01, FY+2.15)]); pw("z", -1424, -1156.94, WZ1-WT, []);                // living | dining (open), kitchen | mudroom (the stair against it)
   const doorIn=(xf, label, ajar)=>makeDoor(xf, 0, FY+0.01, 0, label, true, ajar||0.3, "closet", 0xf2eee6);
   doorIn(XF(-1435, -1160.33, -Math.PI/2), "THE SECOND BEDROOM", 0.4); doorIn(XF(-1435, -1158.38, -Math.PI/2), "THE BATHROOM", 0.2);
   doorIn(XF(-1434.58, -1160.5, 0), "THE OFFICE", 0.5); doorIn(XF(-1433.77, -1156, Math.PI), "THE MAIN BEDROOM", 0.45); doorIn(XF(-1437, -1155.38, -Math.PI/2), "THE MAIN BATH", 0.25);
@@ -320,9 +320,9 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     else { RB(0.03, h+0.08, w+0.08, x+dir*0.016, y, z, "#3a2a1a", 0, 0.01); B(0.02, h, w, x+dir*0.032, y, z, c); } };
   // ---- the living room: a stone fireplace on the wing's wall, the TV over it, the sectional, the coffee table, a rug, lamps ----
   { const fx=WX1+0.06, fz=-1161.05;
-    push("rn_stone", boxGeo(0.5, CL-FY-0.02, 1.7, 0.5), fx+0.25, (FY+CL)/2, fz, 0, STN);
-    RB(0.62, 0.1, 1.84, fx+0.31, FY+0.95, fz, "#5a3a22", 0, 0.03); B(0.06, 0.6, 0.9, fx+0.5, FY+0.42, fz, "#1a1612");
-    RB(0.5, 0.12, 1.9, fx+0.25, FY+0.06, fz, "#8a7a64", 0, 0.02);
+    push("rn_stone", boxGeo(0.49, CL-FY-0.02, 1.6, 0.5), fx+0.255, (FY+CL)/2, fz, 0, STN);
+    RB(0.6, 0.1, 1.74, fx+0.32, FY+0.95, fz, "#5a3a22", 0, 0.03); B(0.06, 0.6, 0.9, fx+0.5, FY+0.42, fz, "#1a1612");
+    RB(0.6, 0.12, 1.7, fx+0.3, FY+0.06, fz, "#8a7a64", 0, 0.02);
     B(0.04, 0.62, 1.12, fx+0.53, FY+1.62, fz, "#121416"); push("lk_tv", planeGeo(1.04, 0.56, 0), fx+0.556, FY+1.62, fz, Math.PI/2, "#ffffff");
     addCol(fx, fx+0.62, fz-0.92, fz+0.92, FY-0.06, CL);
     RANCH.fire={x:fx+0.62, y:FY+0.3, z:fz};
