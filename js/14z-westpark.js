@@ -409,7 +409,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     { const fx=-1000, fz=-1100;
       for(let k=0;k<16;k++){ const a=k/16*6.283; push("rock", rockGeo(0.16, 700+k), fx+Math.cos(a)*1.0, Y+0.07, fz+Math.sin(a)*1.0, a, "#7a766d"); }
       C(0.85, 0.03, fx, Y+0.02, fz, "#2a2624", 22); addCol(fx-1.1, fx+1.1, fz-1.1, fz+1.1, Y-0.5, Y+0.3);
-      for(let k=0;k<5;k++){ const a=k/5*6.283+0.3, bx3=fx+Math.cos(a)*3.0, bz=fz+Math.sin(a)*3.0, ry=Math.atan2(fx-bx3, fz-bz)+Math.PI/2;
+      for(let k=0;k<5;k++){ const a=k/5*6.283+0.3, bx3=fx+Math.cos(a)*3.0, bz=fz+Math.sin(a)*3.0, ry=Math.atan2(fx-bx3, fz-bz);
         push("logbark", FOREST.barkCyl(0.2, 0.2, 2.2, 9), bx3, Y+0.2, bz, ry, "#5a4a3a", 0, Math.PI/2);
         const sx=Math.cos(ry), sz=-Math.sin(ry); addCol(bx3-Math.abs(sx)*1.1-0.25, bx3+Math.abs(sx)*1.1+0.25, bz-Math.abs(sz)*1.1-0.25, bz+Math.abs(sz)*1.1+0.25, Y-0.5, Y+0.42);
         addSeat(bx3, bz, Y+0.0, Math.atan2(fx-bx3, fz-bz)+Math.PI, "THE LOG BENCH", false, 0.86); } }
@@ -621,7 +621,11 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     push("mirror", planeGeo(BX1-BX0-1.2, 0.8, 0), (BX0+BX1)/2, BF+1.6, QZ0+0.012, 0, "#ffffff");
     for(const y of [1.3, 1.72]) B(BX1-BX0-1.0, 0.03, 0.22, (BX0+BX1)/2, BF+y, QZ0+0.13, "#2a1a0e");
     const qb=_trng(2626); for(const y of [0.942, 1.316, 1.736]) for(let x=BX0+0.6; x<BX1-0.6; x+=0.16+qb()*0.10){ const h=0.22+qb()*0.12;
-      ent(new T.CylinderGeometry(0.034, 0.038, h, 10), x, BF+y+h/2, QZ0+0.14, ["#3a5a2a","#6a3a12","#2a2018","#c8b088","#7a1a1a","#e8e2d0","#2a3a6a"][(qb()*7)|0]); }
+      const bc=["#3a5a2a","#6a3a12","#2a2018","#c8b088","#7a1a1a","#e8e2d0","#2a3a6a"][(qb()*7)|0], hb=h*0.58, sq=qb()<0.3;
+      if(sq) RB(0.075, hb, 0.05, x, BF+y+hb/2, QZ0+0.14, bc, 0, 0.012); else ent(new T.CylinderGeometry(0.034, 0.036, hb, 10), x, BF+y+hb/2, QZ0+0.14, bc);
+      CT(0.012, 0.034, h*0.14, x, BF+y+hb+h*0.07, QZ0+0.14, bc, 10); C(0.012, h*0.22, x, BF+y+hb+h*0.14+h*0.11, QZ0+0.14, bc, 8);
+      C(0.014, 0.02, x, BF+y+h*0.94+0.008, QZ0+0.14, ["#c8a050","#1a1a1a","#b82a22"][(qb()*3)|0], 8);
+      B(sq ? 0.06 : 0.05, hb*0.4, 0.004, x, BF+y+hb*0.5, QZ0+0.14+(sq ? 0.027 : 0.036), ["#f2e8d0","#e8d8a0","#1a1a1a","#c82a1a"][(qb()*4)|0]); }
     addCol(BX0, BX1, QZ0, QZ0+0.52, BF-0.5, BF+2.0);
     // the taps on the bar, a row of handles
     for(let k=0;k<6;k++){ const tx3=(BX0+BX1)/2-0.75+k*0.3; C(0.012, 0.12, tx3, BF+1.17, BZ-0.12, "#c8ccd0", 8); C(0.018, 0.16, tx3, BF+1.31, BZ-0.12, ["#c8a050","#1a1a1a","#7a1a1a","#2a4a6a","#2e6a3a","#e8e2d0"][k], 8); }
