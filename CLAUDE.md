@@ -471,6 +471,12 @@ No lettering touches or runs past the edge of its board or its border.
   soot drawn over, and two `fire` lamps in 16's pool. A zombie's `burn` is
   seconds left alight; `hurtZombie`'s sixth argument marks fire (no blood,
   no knockback, and a kill pays `bonus`).
+  The jet starts at the nozzle as you see it: the muzzle in the gun's own
+  scene is projected by `vm.cam` and the jet starts on the world camera's
+  ray through that pixel, aimed at the point under the crosshair. What it
+  reaches is tested as a line from the nozzle (widening with distance)
+  against each zombie as a capsule (`segSeg`), and the jet's particles in
+  flight set alight whatever they pass through (`ignite`).
 - A ramp that runs into a crossroad along x (US 6N's four) is given a
   `stop` carrying `mouth: {z, e, meet}` (08b's `onX()`, one per ramp).
   `rampPave` then paves it only to the crossroad's edge line, runs its

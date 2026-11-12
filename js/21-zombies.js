@@ -917,6 +917,18 @@ const ZOMBIE=(function(){
   function smokePuff(x, y, z, sz){
     const p=FL.sm[FL.mi++%FL.sm.length]; p.s.position.set(x, y, z); p.v.set((Math.random()-0.5)*0.5, 0.7+Math.random()*0.6, (Math.random()-0.5)*0.5);
     p.t=0; p.life=1.6+Math.random()*1.2; p.sz=sz||1; p.s.visible=true; p.s.material.rotation=Math.random()*6.28; }
+  // the closest two points of segments a0-a1 and b0-b1: their distance, and how far along the first (0..1)
+  const _sa=new T.Vector3(), _sb=new T.Vector3(), _sr=new T.Vector3();
+  function segSeg(a0, a1, b0, b1){
+    _sa.subVectors(a1, a0); _sb.subVectors(b1, b0); _sr.subVectors(a0, b0);
+    const A=_sa.dot(_sa), E=_sb.dot(_sb), F=_sb.dot(_sr), C=_sa.dot(_sr), B=_sa.dot(_sb), D=A*E-B*B;
+    let s2=D>1e-9 ? clamp((B*F-C*E)/D, 0, 1) : 0, t2=(B*s2+F)/E;
+    if(t2<0){ t2=0; s2=clamp(-C/A, 0, 1); } else if(t2>1){ t2=1; s2=clamp((B-C)/A, 0, 1); }
+    const dx=_sr.x+_sa.x*s2-_sb.x*t2, dy=_sr.y+_sa.y*s2-_sb.y*t2, dz=_sr.z+_sa.z*s2-_sb.z*t2;
+    return {d:Math.hypot(dx, dy, dz), s:s2}; }
+  const _fn=new T.Vector3(), _fw=new T.Vector3(), _fa=new T.Vector3(), _fb=new T.Vector3(), _fz0=new T.Vector3(), _fz1=new T.Vector3();
+  // a zombie touched by the fire: alight for a while, and hurt (fire marks it: no blood, no knockback)
+  function ignite(zb, dmg, dir){ _v3.set(zb.x, zb.y+1.0, zb.z); zb.burn=Math.max(zb.burn||0, 3.5); hurtZombie(zb, dmg, false, _v3, dir, true); }
   function flameOut(g){
     flameBuild();
     camera.getWorldDirection(_v1); _o.copy(camera.position);
@@ -924,17 +936,29 @@ const ZOMBIE=(function(){
     // glass: it holds the fire back, and the heat cracks it and then breaks it
     const GH=glassRay(_o, _v1, reach+0.3);
     if(GH && !GH.P.broke){ reach=GH.t; GH.P.heat=(GH.P.heat||0)+1; if(GH.P.heat%8===0) hitGlass(GH.P, _o, _v1, GH.t, 1); }
-    _v2.set(0, 1, 0).cross(_v1).normalize();
+    /* Where the jet starts: the nozzle as you see it. The gun is drawn in its own scene with its own camera (vm), so its
+       tip is put on the screen by that camera and the jet starts on the world camera's ray through the same pixel, as
+       far out as the tip is from the eye; and it is aimed at the point under the crosshair, so it leaves the nozzle and
+       goes where you point. */
+    const gm=vm.guns && vm.guns[g.id];
+    let od=0.62;
+    if(gm && gm.visible){ gm.updateMatrixWorld(true); gm.userData.muzzle.getWorldPosition(_fn); od=Math.max(0.3, _fn.length());
+      _fn.project(vm.cam); _fw.set(_fn.x, _fn.y, 0.5).unproject(camera).sub(camera.position).normalize(); }
+    else _fw.copy(_v1).addScaledVector(_v2.set(0, 1, 0).cross(_v1).normalize(), -0.16).add(_v3.set(0, -0.2, 0)).normalize();
+    _fa.copy(_o).addScaledVector(_fw, od);                                           // the nozzle, in the world
+    _fb.copy(_o).addScaledVector(_v1, reach);                                        // where the crosshair is on what it meets
+    _v2.subVectors(_fb, _fa); const jl=Math.max(0.5, _v2.length()); _v2.divideScalar(jl);
     for(let k=0;k<3;k++){ const sp=12+Math.random()*3;
-      flameParticle(_o.x+_v1.x*0.55+_v2.x*0.10, _o.y+_v1.y*0.55-0.13, _o.z+_v1.z*0.55+_v2.z*0.10,
-        _v1.x*sp+(Math.random()-0.5)*1.6, _v1.y*sp+(Math.random()-0.5)*1.2+0.3, _v1.z*sp+(Math.random()-0.5)*1.6, 0.55+Math.random()*0.25, reach, 1); }
-    const L=Math.min(3.5, reach*0.6); FL.lamp.x=_o.x+_v1.x*L; FL.lamp.y=_o.y+_v1.y*L; FL.lamp.z=_o.z+_v1.z*L; FL.t=0.12; FL.roarT=0.12;
-    // what it reaches: a cone a hand wide at the nozzle, a metre and a half across at the end
+      flameParticle(_fa.x, _fa.y, _fa.z, _v2.x*sp+(Math.random()-0.5)*1.4, _v2.y*sp+(Math.random()-0.5)*1.0+0.3, _v2.z*sp+(Math.random()-0.5)*1.4, 0.55+Math.random()*0.25, jl, 1); }
+    const L=Math.min(3.5, jl*0.6); FL.lamp.x=_fa.x+_v2.x*L; FL.lamp.y=_fa.y+_v2.y*L; FL.lamp.z=_fa.z+_v2.z*L; FL.t=0.12; FL.roarT=0.12;
+    // what it reaches: the jet's line from the nozzle to what it meets, fattening from a hand wide to a metre and a half
+    // across, against each of them as a body (a capsule from the shins to the top of the head, not one point at the chest)
     for(const zb of ZS){ if(!zb.live || zb.state==="dead") continue;
-      const dx=zb.x-_o.x, dy=(zb.y+1.0)-_o.y, dz=zb.z-_o.z, d=Math.hypot(dx, dy, dz); if(d>reach+0.8) continue;
-      const al=dx*_v1.x+dy*_v1.y+dz*_v1.z; if(al<0.3) continue;
-      if(Math.sqrt(Math.max(0, d*d-al*al))>0.45+al*0.12) continue;
-      _v3.set(zb.x, zb.y+1.0, zb.z); zb.burn=Math.max(zb.burn||0, 3.5); hurtZombie(zb, 6, false, _v3, _v1, true); }
+      if(Math.hypot(zb.x-_fa.x, zb.z-_fa.z)>jl+1.5) continue;
+      const lie=zb.down || zb.fly;
+      _fz0.set(zb.x, zb.y+(lie ? 0.15 : 0.25), zb.z); _fz1.set(zb.x, zb.y+(lie ? 0.45 : 1.75), zb.z);
+      const r=segSeg(_fa, _fb, _fz0, _fz1);
+      if(r.d<0.32+0.06+r.s*jl*0.11) ignite(zb, 6, _v2); }
     for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-player.pos.x, zb.z-player.pos.z)<40) zb.alert=true;
   }
   function updateFlame(dt, now){
@@ -943,6 +967,13 @@ const ZOMBIE=(function(){
     for(const p of FL.sp){ if(!p.s.visible) continue; p.t+=dt; const u=p.t/p.life;
       if(u>=1){ p.s.visible=false; continue; }
       const st=p.v.length()*dt; p.go+=st;
+      // (the jet's own fire, while it is still going: whatever of them it passes through catches, so what you see reach
+      // one of them is what burns it, round a corner of the cone or at the end where it splashes)
+      if(p.reach!==99 && u<0.75){ const P=p.s.position, rr=0.4+0.35*u;
+        for(const zb of ZS){ if(!zb.live || zb.state==="dead" || (zb.flT||0)>now) continue;
+          const lie=zb.down || zb.fly, top=zb.y+(lie ? 0.5 : 1.8);
+          if(P.y<zb.y-0.1 || P.y>top+rr || Math.hypot(P.x-zb.x, P.z-zb.z)>0.3+rr) continue;
+          zb.flT=now+0.12; ignite(zb, 3, p.v.clone().normalize()); } }
       if(p.go>p.reach && st>0){ p.v.multiplyScalar(0.15); p.v.y+=1.2; p.go=-1e9; }          // (it splashes on what it meets)
       // the fuel drops a little at first, then what burns goes up
       p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.max(0, 1-dt*1.2)); p.v.y+=(u<0.35 ? -2.5 : 2.6)*dt;
