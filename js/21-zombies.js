@@ -1731,8 +1731,11 @@ const ZOMBIE=(function(){
     scene.fog.near=lerp(scene.fog.near, 3+up*1.5, k); scene.fog.far=lerp(scene.fog.far, 95+75*(1-night)+40*night+up*9, k);
     _bg.copy(scene.background && scene.background.isColor ? scene.background : _c1).lerp(_c1, 0.8*k); scene.background=_bg;
     HAZE_U.w*=1-k;
+    // the gloom's shape (03's GLOOM_U): thinner with height over the ground under you, in drifting banks, graded in
+    // colour with distance, and never wholly closed on a far ridge, so nothing off in it is one flat colour
+    GLOOM_U.x=k; GLOOM_U.y=groundY(camera.position.x, camera.position.z); GLOOM_U.z+=dt; GLOOM_U.w=scene.fog.far;
     hemi.intensity*=1-0.38*k; hemi.color.lerp(_c3.setHex(0xa9b59a), 0.45*k); hemi.groundColor.lerp(_c4.setHex(0x2a2a1e), 0.4*k);
-    key.intensity*=1-0.62*k; key.color.lerp(_c5.setHex(0xb8c0a0), 0.5*k);
+    key.intensity*=1-0.52*k; key.color.lerp(_c5.setHex(0xb8c0a0), 0.5*k);       // (enough sun through it that a slope still shades)
     amb.intensity*=1-0.2*k;
     // a fill at night so it is gloom and not blackout: what the moon would give through cloud, cold and green
     hemi.intensity+=0.16*night*k; amb.intensity+=0.07*night*k; hemi.color.lerp(_c3.setHex(0x8fa294), 0.3*night*k);

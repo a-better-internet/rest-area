@@ -112,12 +112,20 @@ const MIST_U={x:0, y:1.7, z:0, w:0}, MIST_C={x:0.86, y:0.88, z:0.90, w:0};
    much of that tint there is (19-loop: less of it in weather fog and at
    night, when the haze is the weather's grey or the night's dark). */
 const HAZE_U={x:0.64, y:0.72, z:0.86, w:1};
-for(const k in T.ShaderLib){ const u=T.ShaderLib[k].uniforms; if(u && u.fogColor){ u.uMist={value:MIST_U}; u.uMistC={value:MIST_C}; u.uHaze={value:HAZE_U}; } }
-T.UniformsLib.fog.uMist={value:MIST_U}; T.UniformsLib.fog.uMistC={value:MIST_C}; T.UniformsLib.fog.uHaze={value:HAZE_U};
+/* ZOMBIE MODE'S GLOOM (21's atmos sets it). Its fog is thick and near, and a thick fog done plainly turns everything
+   past its far end into one flat colour: hills and woods as cut-outs against the sky. So while it is on: the fog is
+   thinner with height above the ground under you, so ridges and crowns stand up out of a thicker layer in the low
+   ground; it never quite closes on anything (a far ridge keeps a fifth of its own light and shade, more higher up);
+   it is denser and thinner in slow-drifting banks; and its colour is graded with distance, a darker green gloom
+   close by easing to a paler grey toward the horizon, so each distance is its own shade.
+     GLOOM_U: how much (0 off, 1 full), the ground's height under the camera, the drift clock, the far end in m */
+const GLOOM_U={x:0, y:0, z:0, w:200};
+for(const k in T.ShaderLib){ const u=T.ShaderLib[k].uniforms; if(u && u.fogColor){ u.uMist={value:MIST_U}; u.uMistC={value:MIST_C}; u.uHaze={value:HAZE_U}; u.uGloom={value:GLOOM_U}; } }
+T.UniformsLib.fog.uMist={value:MIST_U}; T.UniformsLib.fog.uMistC={value:MIST_C}; T.UniformsLib.fog.uHaze={value:HAZE_U}; T.UniformsLib.fog.uGloom={value:GLOOM_U};
 T.ShaderChunk.fog_pars_vertex += "\n#ifdef USE_FOG\n\tvarying vec3 vFogWorld;\n#endif";
 T.ShaderChunk.fog_vertex += "\n#ifdef USE_FOG\n\t{ mat3 vr=mat3(viewMatrix); vec3 v=mvPosition.xyz;"+
   " vFogWorld=cameraPosition+vec3(dot(vr[0],v),dot(vr[1],v),dot(vr[2],v)); }\n#endif";
-T.ShaderChunk.fog_pars_fragment += "\n#ifdef USE_FOG\n\tvarying vec3 vFogWorld;\n\tuniform vec4 uMist;\n\tuniform vec4 uMistC;\n\tuniform vec4 uHaze;\n#endif";
+T.ShaderChunk.fog_pars_fragment += "\n#ifdef USE_FOG\n\tvarying vec3 vFogWorld;\n\tuniform vec4 uMist;\n\tuniform vec4 uMistC;\n\tuniform vec4 uHaze;\n\tuniform vec4 uGloom;\n#endif";
 T.ShaderChunk.fog_fragment = [
   "#ifdef USE_FOG",
   "if(uMistC.w>0.001){",
@@ -149,6 +157,19 @@ T.ShaderChunk.fog_fragment = [
     // (and a long way off the haze is a blue-grey a shade under the sky's, the colour far ridges are, easing to the
     // sky's own only at the world's very edge)
     "vec3 hazeC = fogColor*mix(vec3(1.0), mix(uHaze.rgb, vec3(0.74,0.81,0.93), fogFactor*fogFactor), uHaze.w*(1.0-edgeK));\n"+
+    // (zombie mode's gloom: see GLOOM_U above)
+    "if(uGloom.x>0.001){\n"+
+    "  float gd=distance(vFogWorld, cameraPosition), gh=smoothstep(3.0, 70.0, vFogWorld.y-uGloom.y);\n"+
+    "  vec2 gq=vFogWorld.xz*0.0045+vec2(uGloom.z*0.004, -uGloom.z*0.0027), gi=floor(gq), gf2=fract(gq); gf2=gf2*gf2*(3.0-2.0*gf2);\n"+
+    "  float g00=fract(sin(dot(gi,vec2(127.1,311.7)))*43758.5453), g10=fract(sin(dot(gi+vec2(1.0,0.0),vec2(127.1,311.7)))*43758.5453);\n"+
+    "  float g01=fract(sin(dot(gi+vec2(0.0,1.0),vec2(127.1,311.7)))*43758.5453), g11=fract(sin(dot(gi+vec2(1.0,1.0),vec2(127.1,311.7)))*43758.5453);\n"+
+    "  float gn=mix(mix(g00,g10,gf2.x),mix(g01,g11,gf2.x),gf2.y);\n"+
+    "  float gu=1.0-exp(-gd/uGloom.w*(0.75+0.55*gn)*(1.0-0.45*gh)*1.8);\n"+
+    "  gu=min(gu, 0.78-0.16*gh);\n"+
+    "  float gF=mix(gu, 1.0, edgeK);\n"+
+    "  vec3 gC=fogColor*mix(vec3(0.78,0.85,0.78), vec3(1.12,1.12,1.09), clamp(0.6*smoothstep(30.0, 900.0, gd)+0.5*gh, 0.0, 1.0));\n"+
+    "  fogFactor=mix(fogFactor, gF, uGloom.x); hazeC=mix(hazeC, mix(gC, fogColor, edgeK), uGloom.x);\n"+
+    "}\n"+
     "\tgl_FragColor.rgb = mix( gl_FragColor.rgb, hazeC, fogFactor );")].join("\n");
 if(T.ShaderChunk.fog_fragment.indexOf("hazeC")<0) console.warn("fog: the haze tint did not take");
 renderer.toneMapping=T.CustomToneMapping;

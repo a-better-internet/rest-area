@@ -259,6 +259,7 @@ function frame(){
   { const D=DRAW_LEVELS[GFX.draw];
     if(scene.fog.far>D.fog){ scene.fog.far=D.fog; scene.fog.near=Math.min(scene.fog.near, D.fog*0.25); } }
   // zombie mode's gloom (21): the fog in close and grey-green, the light flat and dim; never underground
+  GLOOM_U.x=0;                                             // (03's gloom is zombie mode's alone: off unless atmos sets it)
   if(typeof ZOMBIE!=="undefined" && ZOMBIE.on) ZOMBIE.atmos(delta, dn, under);
 
   /* ---- artificial light: emissives ramp, real lights follow the player -- */

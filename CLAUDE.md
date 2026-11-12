@@ -653,3 +653,10 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - Where a ramp's line is carried along a crossroad onto its edge line
   (08's `lineRun` tail), it eases from the ramp's heading to land on the
   edge line exactly, so the solid line carries straight on from it.
+- Zombie mode's fog is 03's `GLOOM_U` (21's `atmos` sets it each frame;
+  19 clears it first, so it is off whenever the mode is): exponential,
+  thinner with height over the ground under the camera, in drifting
+  banks, its colour graded darker and greener near and low to paler grey
+  far and high, and never above 0.78 on anything short of the world's
+  edge, so a far ridge keeps its own light and shade. Never fog anything
+  in that mode to one flat colour.
