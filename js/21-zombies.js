@@ -220,7 +220,8 @@ const ZOMBIE=(function(){
     Object.assign(zb, {live:true, state:"alive", x:x, z:z, y:y, yaw:yaw===undefined ? Math.random()*Math.PI*2 : yaw, hp:K.hp*(1+Z.level*0.03),
       speed:(K.sp[0]+Math.random()*(K.sp[1]-K.sp[0]))*(1+Math.min(0.3, Z.level*0.025)), alert:false, ph:Math.random(), t:Math.random()*10,
       atk:0, hit:false, cd:0, hitT:0, losT:Math.random()*0.4, los:false, ti:-1, tiT:0, wT:0, wA:0, wS:0, stuck:0, side:0, kx:0, kz:0,
-      dieT:0, fall:-1, roll:0, pooled:false, corpseT:0, groanT:2+Math.random()*8, down:null, fly:null, flung:false, tumble:0});
+      dieT:0, fall:-1, roll:0, pooled:false, corpseT:0, groanT:2+Math.random()*8, down:null, fly:null, flung:false, tumble:0,
+      fan:Math.random()*2-1, sf:0.8+Math.random()*0.9, lean:0, jost:0, fl:null, stareT:0});
     const P=zb.P; P.B[P.j.head].scale.set(1,1,1); P.g.rotation.set(0, zb.yaw, 0); P.g.position.set(x, y, z); P.g.visible=true;
     return zb;
   }
@@ -271,6 +272,27 @@ const ZOMBIE=(function(){
   }
   // a pipe bomb beeping within thirty metres: they go to it, and leave you be
   function lureFor(zb){ for(const b of BOMBS) if(b.live && Math.abs(b.y-zb.y)<5 && Math.hypot(b.x-zb.x, b.z-zb.z)<30) return b; return null; }
+  /* THE SWARM (looks only: none of it makes them faster, keener or more of them). Once a frame each of them notes its
+     neighbours: a push away from any closer than a metre and a half, the heading of those within five, where those
+     within six stand, whether one in front is in its way, and the nearest that has seen you. stepZombie then steers
+     by it: a crowd that keeps a little apart and flows round itself instead of stacking up in a file, herds that drift
+     and pause together while they have not seen you and turn as one to stare when one of them has, a pack that comes
+     at you across a broad front from far off and closes straight over the last few metres, and a pace that surges and
+     drags about each one's own (the same on average). */
+  const _FL=[];
+  function flockPass(L){
+    for(const a of L){ const f=a.fl||(a.fl={}); f.sx=f.sz=f.ax=f.az=f.cx=f.cz=0; f.n=f.nc=0; f.ahead=false; f.alertNear=null; f.wS=null; f.wd=1e9; }
+    for(let i=0;i<L.length;i++){ const a=L[i];
+      for(let j=i+1;j<L.length;j++){ const b=L[j]; if(Math.abs(a.y-b.y)>1.5) continue;
+        const dx=b.x-a.x, dz=b.z-a.z, d2=dx*dx+dz*dz; if(d2>36 || d2<1e-6) continue; const d=Math.sqrt(d2), ux=dx/d, uz=dz/d;
+        for(const [p, q, sg] of [[a, b, 1], [b, a, -1]]){ const f=p.fl;
+          if(d<1.6){ const w=(1.6-d)/1.6; f.sx-=sg*ux*w; f.sz-=sg*uz*w;
+            if(d<0.95 && (Math.sin(p.yaw)*ux+Math.cos(p.yaw)*uz)*sg>0.65) f.ahead=true; }
+          if(d<5){ f.ax+=Math.sin(q.yaw); f.az+=Math.cos(q.yaw); f.n++; }
+          f.cx+=q.x; f.cz+=q.z; f.nc++;
+          if(d<f.wd){ f.wd=d; f.wS=q.wS; }
+          if(q.alert && d<7 && !p.alert) f.alertNear=q; } } }
+  }
   function stepZombie(zb, dt){
     zb.t+=dt; zb.cd=Math.max(0, zb.cd-dt); zb.hitT=Math.max(0, zb.hitT-dt);
     // on the ground, knocked flat: slid along by the blow, and up again after a while
@@ -304,12 +326,32 @@ const ZOMBIE=(function(){
         else { tx=px; tz=pz; }
       }
       speed=d<reach*0.9 ? 0 : zb.speed*(zb.hitT>0 ? 0.25 : 1);
+      // (the swarm: a surge and a drag about its own pace, the same on average; held back a little by one in front)
+      if(speed>0){ speed*=1+0.16*Math.sin(zb.t*zb.sf+zb.P.seed*3); if(zb.fl && zb.fl.ahead) speed*=0.72; }
     }else{
-      zb.wT-=dt; if(zb.wT<=0){ zb.wA=zb.yaw+(Math.random()-0.5)*2.4; zb.wT=3+Math.random()*5; zb.wS=Math.random()<0.35 ? 0 : 0.32; }
-      tx=zb.x+Math.sin(zb.wA)*5; tz=zb.z+Math.cos(zb.wA)*5; speed=zb.wS;
+      const F=zb.fl;
+      if(F && F.alertNear){ zb.stareT=1.5+Math.random(); }
+      if(zb.stareT>0){ zb.stareT-=dt; tx=px; tz=pz; speed=0; }                        // (one of them has seen you: they stop and look)
+      else{
+        zb.wT-=dt; if(zb.wT<=0){ zb.wA=zb.yaw+(Math.random()-0.5)*2.4; zb.wT=3+Math.random()*5;
+          // (a herd pauses and moves off together: most often as the one nearest it is doing)
+          zb.wS=F && F.wS!==null && Math.random()<0.7 ? F.wS : (Math.random()<0.35 ? 0 : 0.32); }
+        let wx=Math.sin(zb.wA), wz=Math.cos(zb.wA);
+        if(F && F.nc>0){ if(F.n>0){ const al=Math.hypot(F.ax, F.az)||1; wx+=F.ax/al*0.7; wz+=F.az/al*0.7; }
+          const cx=F.cx/F.nc-zb.x, cz=F.cz/F.nc-zb.z, cd=Math.hypot(cx, cz); if(cd>2.5){ wx+=cx/cd*0.45; wz+=cz/cd*0.45; }
+          wx+=F.sx*1.4; wz+=F.sz*1.4; }
+        tx=zb.x+wx*5; tz=zb.z+wz*5; speed=zb.wS;
+      }
     }
     let moving=false;
     let want=Math.atan2(tx-zb.x, tz-zb.z);
+    // the swarm's steering while it comes for you: fanned out across a broad front from far off (each its own side of
+    // the line, gone over the last seven metres, so it gets to you when it would have), and kept a little apart
+    if(zb.alert && !lure && zb.atk<=0 && speed>0){
+      if(zb.los) want+=zb.fan*0.42*smoothstep(7, 30, d);
+      const F=zb.fl; if(F && (F.sx || F.sz)){ let ux=Math.sin(want), uz=Math.cos(want); ux+=F.sx*1.1; uz+=F.sz*1.1; want=Math.atan2(ux, uz); zb.jost=clamp((F.sx*Math.cos(zb.yaw)-F.sz*Math.sin(zb.yaw))*0.6, -0.35, 0.35); }
+      else zb.jost*=Math.max(0, 1-dt*3);
+    }else zb.jost*=Math.max(0, 1-dt*3);
     if(speed>0){
       // a stride ahead: if that is blocked, bend the line a little at a time, the side already taken first
       const look=0.7, free=a=>!zHit(zb.x+Math.sin(a)*look, zb.z+Math.cos(a)*look, zb.y, 0.3);
@@ -318,7 +360,8 @@ const ZOMBIE=(function(){
         if(!found){ speed=0; zb.stuck+=dt; } }
       else if(zb.side && Math.random()<dt*0.3) zb.side=0;
     }
-    zb.yaw+=clamp(wrapA(want-zb.yaw), -K.turn*dt, K.turn*dt);
+    { const dy2=clamp(wrapA(want-zb.yaw), -K.turn*dt, K.turn*dt); zb.yaw+=dy2;
+      zb.lean+=(clamp(dy2/Math.max(dt, 1e-3)*0.07, -0.16, 0.16)-zb.lean)*Math.min(1, dt*5); }     // (leaning into the turn)
     if(speed>0){
       const step=speed*dt, nx=zb.x+Math.sin(zb.yaw)*step, nz=zb.z+Math.cos(zb.yaw)*step;
       if(!zHit(nx, nz, zb.y, 0.28)){ const ny=surfaceY(nx, nz, zb.y+0.45);
@@ -370,7 +413,10 @@ const ZOMBIE=(function(){
       B[J.shL].rotation.x=B[J.shR].rotation.x=-1.3-up*1.0+sw*1.0; B[J.elL].rotation.x=B[J.elR].rotation.x=-0.2-up*0.6;
       B[J.spine].rotation.x=0.2+sw*0.35; B[J.head].rotation.x=0.1+sw*0.3; }
     if(zb.hitT>0){ B[J.spine].rotation.x-=zb.hitT*1.5; B[J.head].rotation.x-=zb.hitT*1.3; }
-    P.g.rotation.set(0, zb.yaw, 0); P.g.position.set(zb.x, zb.y, zb.z);
+    // (the swarm's body language: a shoulder turned away from one pressing beside it, a roll with the stride, a lean into the turn)
+    B[J.spine].rotation.y+=zb.jost||0;
+    const roll=(moving ? Math.sin(zb.ph*Math.PI*2)*(zb.kind==="runner" ? 0.03 : 0.055)*(zb.limp ? 1.6 : 1) : 0)-(zb.lean||0);
+    P.g.rotation.set(0, zb.yaw, roll); P.g.position.set(zb.x, zb.y, zb.z);
   }
 
   /* ======================================================================
@@ -1892,6 +1938,7 @@ const ZOMBIE=(function(){
     // the dead: move, pose, and are seen to
     _poseFrame++;
     const px=player.pos.x, pz=player.pos.z;
+    _FL.length=0; for(const q of ZS) if(q.live && q.state!=="dead" && !q.down && !q.fly) _FL.push(q); flockPass(_FL);
     for(const zb of ZS){ if(!zb.live) continue;
       const d=Math.hypot(zb.x-px, zb.z-pz);
       if(zb.state==="dead"){

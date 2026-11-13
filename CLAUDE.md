@@ -666,3 +666,13 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   far and high, and never above 0.78 on anything short of the world's
   edge, so a far ridge keeps its own light and shade. Never fog anything
   in that mode to one flat colour.
+- The dead move as a swarm (21's `flockPass`, once a frame before
+  `stepZombie`): each notes its neighbours (a push from any within 1.6 m,
+  the heading of those within 5, where those within 6 stand, one in its
+  way in front, the nearest alert one). Unalerted herds drift and pause
+  together and stop to stare when one nearby has seen you; chasers fan
+  out (`fan`) while they can see you, gone within 7 m, keep a little
+  apart, surge and drag about their own pace and slow behind one in
+  front; they lean into turns and roll with the stride (`lean`, `jost`).
+  None of it may make them faster, keener or more of them: check arrival
+  times against the old code when changing it.
