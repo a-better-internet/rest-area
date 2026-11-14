@@ -676,3 +676,12 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   front; they lean into turns and roll with the stride (`lean`, `jost`).
   None of it may make them faster, keener or more of them: check arrival
   times against the old code when changing it.
+- Anything that hangs on a door (a wreath, a sign, a knocker) is added to
+  the group `makeDoor` returns, so it swings with the leaf (14z2's front
+  door). Never merge it into a place's static mesh in front of the door.
+- 14o's `dress()` finishes every house's rooms: a baseboard along each
+  wall in `h.walls` (stopped 7.5 cm past each doorway's opening, short of
+  its casing; an x wall's 2 mm taller than a z wall's), and curtains on a
+  rod either side of the windows of living, dining and bedrooms. Pictures
+  keep 0.36 m clear of every opening (`clearRuns`) so they miss the
+  curtains.
