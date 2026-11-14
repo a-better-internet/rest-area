@@ -874,7 +874,7 @@ const LAKE_HOUSES={routes:{}, stairs:[], fridges:[], clocks:[], radios:[], cats:
     const cut=(a,b)=>{ const o=[]; for(const [p,q,y] of iv){ if(b<=p || a>=q){ o.push([p,q,y]); continue; } if(a>p+0.01) o.push([p,a,y]); if(b<q-0.01) o.push([b,q,y]); } iv=o; };
     const lift=(a,b,yb)=>{ const o=[]; for(const [p,q,y] of iv){ if(b<=p || a>=q){ o.push([p,q,y]); continue; }
       if(a>p+0.01) o.push([p,a,y]); o.push([Math.max(p,a), Math.min(q,b), Math.max(y,yb)]); if(b<q-0.01) o.push([b,q,y]); } iv=o; };
-    for(const o of w.ops) if(o.head>Y0 && o.sill<Y1) cut(o.a-0.25, o.b+0.25);
+    for(const o of w.ops) if(o.head>Y0 && o.sill<Y1) cut(o.a-0.36, o.b+0.36);              // (clear of the casing, and of the curtains either side)
     const anchors=[];
     const test=(b, onWall)=>{ const u=((w.ax==="x" ? b.z0 : b.x0)-w.fc)*w.dir, v=((w.ax==="x" ? b.z1 : b.x1)-w.fc)*w.dir;
       if(Math.max(u,v)<0.004 || Math.min(u,v)>0.75 || b.y1<w.fy+0.3 || b.y0>w.cl) return;
@@ -917,6 +917,35 @@ const LAKE_HOUSES={routes:{}, stairs:[], fridges:[], clocks:[], radios:[], cats:
         // over the piece in front of it if it has room there, else in the middle of the stretch
         const c=s.over.find(c=>c-W/2>s.a-0.001 && c+W/2<s.b+0.001);
         hang(s.w, c!==undefined ? c : (s.a+s.b)/2, yc, W, H, tile); tile=(tile+3)%8; used.add(s.w); placed++; } }
+    /* Finished as rooms are: a baseboard along every wall, stopped short of each doorway's casing (an x wall's 2 mm
+       taller than a z wall's, so where two meet in a corner their tops are not one plane); and at the windows of the
+       rooms people sit and sleep in, a rod over the casing and a pair of curtains drawn back either side of it, each
+       a few soft folds, in a colour of this house's. The pictures keep clear of them (clearRuns). */
+    { const CUR=[["#8a3a2a","#c8a868","#3a5a6a"],["#4a5a3a","#e8dcc0","#6a3a4a"],["#2a3a5a","#c8b8a0","#7a6a4a"],["#7a5a3a","#d8c8b0","#4a4a5a"]][h.no%4];
+      let ci=0;
+      for(const w of h.walls){ if(w.well || /GARAGE/.test(w.room)) continue;
+        const ry=w.ax==="x" ? 0 : Math.PI/2, at=(s2, off)=>w.ax==="x" ? [s2, w.fc+w.dir*off] : [w.fc+w.dir*off, s2];
+        const bh=w.ax==="x" ? 0.10 : 0.098;
+        // the baseboard, in the runs between the doorways
+        let runs=[[w.lo, w.hi]];
+        for(const op of w.ops) if(op.sill<w.fy+0.15){ const a=op.a-0.075, b=op.b+0.075, nr=[];
+          for(const [p0, p1] of runs){ if(b<=p0 || a>=p1){ nr.push([p0, p1]); continue; } if(a>p0+0.05) nr.push([p0, a]); if(b<p1-0.05) nr.push([b, p1]); } runs=nr; }
+        for(const [p0, p1] of runs){ const [x, z]=at((p0+p1)/2, 0.006);
+          if(w.ax==="x") B(p1-p0, bh, 0.018, x, w.fy+bh/2, z, TRM); else B(0.018, bh, p1-p0, x, w.fy+bh/2, z, TRM); }
+        // the curtains
+        if(!/LIVING|DINING|BEDROOM|KIDS|DEN|FAMILY|SUN/.test(w.room)) continue;
+        const col=CUR[ci++%3];
+        for(const op of w.ops){ if(op.door || op.sill<w.fy+0.3 || op.head>w.cl-0.05) continue;
+          const rl=op.a-0.34, rr=op.b+0.34; if(rl<w.lo+0.03 || rr>w.hi-0.03) continue;
+          const ry2=Math.min(op.head+0.14, w.cl-0.06), yb=Math.max(w.fy+0.06, op.sill-0.32), ph=ry2-0.03-yb;
+          // the rod, its finials, two brackets
+          { const [x, z]=at((rl+rr)/2, 0.10); const g=new T.CylinderGeometry(0.011, 0.011, rr-rl, 8); g.rotateZ(Math.PI/2); ent(g, x, ry2, z, "#3a3430", 0, ry, 0); }
+          for(const e of [rl, rr]){ const [x, z]=at(e, 0.10); ent(new T.SphereGeometry(0.022, 8, 6), x, ry2, z, "#3a3430"); }
+          for(const e of [op.a-0.12, op.b+0.12]){ const [x, z]=at(e, 0.055); if(w.ax==="x") B(0.015, 0.02, 0.09, x, ry2, z, "#3a3430"); else B(0.09, 0.02, 0.015, x, ry2, z, "#3a3430"); }
+          // each panel a few folds hung from the rod, from just outside the casing out to near the rod's end
+          for(const [p0, p1] of [[rl+0.04, op.a-0.085], [op.b+0.085, rr-0.04]]){ const n=4, st=(p1-p0)/n;
+            for(let k=0;k<n;k++){ const [x, z]=at(p0+st*(k+0.5), 0.07+(k%2)*0.012); const g=new T.CylinderGeometry(st*0.62, st*0.62, ph, 7); g.scale(1, 1, 0.55);
+              ent(g, x, yb+ph/2, z, col, 0, ry, 0); } } } } }
     // a cat asleep at the foot of a bed, in every third house
     if(h.no%3===0 && h.beds.length){ const b=h.beds[h.no%h.beds.length], o=b.o, col=["#d8862e","#2a2a2a","#9a9a96","#e8e0d0"][(h.no/3|0)%4];
       const m=new T.MeshStandardMaterial({color:col, roughness:0.95}), g=new T.Group();
