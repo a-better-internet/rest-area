@@ -498,18 +498,35 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     // the horseshoe pit: two stakes in sand boxes forty feet apart
     { const hx=-1040, hz=-1088; for(const dz of [-6.1, 6.1]){ B(1.2, 0.12, 1.4, hx, Y+0.04, hz+dz, "#c8b48a"); C(0.015, 0.4, hx, Y+0.25, hz+dz, "#5a5e60", 6); }
       for(let k=0;k<4;k++) ent(new T.TorusGeometry(0.09, 0.012, 6, 14, 5.2), hx+0.3+k*0.2, Y+0.11+0.012, hz+6.4, k%2 ? "#8a8d90" : "#c8a050", Math.PI/2, k, 0); }
-    // the swing set: an A-frame, three swings
-    { const sx=-1070, sz=-1080, Wd=4.2, Hh=2.4;
-      for(const dx of [-Wd/2, Wd/2]) for(const dz of [-0.8, 0.8]) tubeE(V3(sx+dx, Y, sz+dz), V3(sx+dx, Y+Hh, sz), 0.04, "#2a6a3a");
-      tubeE(V3(sx-Wd/2, Y+Hh, sz), V3(sx+Wd/2, Y+Hh, sz), 0.045, "#2a6a3a");
-      for(const dx of [-1.2, 0, 1.2]){ for(const e of [-0.22, 0.22]) tubeE(V3(sx+dx+e, Y+Hh, sz), V3(sx+dx+e, Y+0.5, sz), 0.006, "#8a8d90"); B(0.5, 0.03, 0.2, sx+dx, Y+0.5, sz, ["#c84a2a","#2a6a9a","#e8c030"][(dx+1.2)/1.2]); }
+    // the swing set: two A-frames of green tube, the top beam in their brackets, three swings on chains (links in pairs, so they read as
+    // chain), a belt seat on each; worn dirt under them; a slide's ladder at one end
+    { const sx=-1070, sz=-1080, Wd=4.2, Hh=2.4, GR="#2a6a3a";
+      for(const dx of [-Wd/2, Wd/2]){ for(const dz of [-0.85, 0.85]) tubeE(V3(sx+dx, Y, sz+dz), V3(sx+dx, Y+Hh, sz), 0.042, GR);
+        RB(0.14, 0.18, 0.18, sx+dx, Y+Hh-0.02, sz, "#1e4a2a", 0, 0.03); tubeE(V3(sx+dx, Y+0.9, sz-0.53), V3(sx+dx, Y+0.9, sz+0.53), 0.025, GR); }
+      tubeE(V3(sx-Wd/2-0.05, Y+Hh+0.02, sz), V3(sx+Wd/2+0.05, Y+Hh+0.02, sz), 0.05, GR);
+      const chain=(p0, p1)=>{ const n=Math.round(p0.distanceTo(p1)/0.06); for(let k=0;k<n;k++){ const a2=p0.clone().lerp(p1, k/n), b2=p0.clone().lerp(p1, (k+0.8)/n);
+          a2.x+=(k%2 ? 0.006 : -0.006); b2.x+=(k%2 ? 0.006 : -0.006); tubeE(a2, b2, 0.005, "#9a9da0"); } };
+      for(const [dx, c] of [[-1.25, "#c84a2a"],[0, "#2a6a9a"],[1.25, "#e8c030"]]){
+        for(const e of [-0.22, 0.22]){ C(0.025, 0.06, sx+dx+e, Y+Hh-0.03, sz, "#5a5e60", 8, 0, 0, Math.PI/2); chain(V3(sx+dx+e, Y+Hh-0.04, sz), V3(sx+dx+e, Y+0.5, sz)); }
+        for(const i of [-1, 0, 1]) ent(boxGeo(0.17, 0.014, 0.19), sx+dx+i*0.155, Y+0.5+Math.abs(i)*0.024, sz, c, 0, 0, i*0.3);     // (the belt, sagging)
+        push("mulch", planeGeo(1.0, 2.2, 0), sx+dx, Y+0.012, sz, 0, "#6a5a42", -Math.PI/2, 0); }
       addCol(sx-Wd/2-0.1, sx+Wd/2+0.1, sz-0.9, sz+0.9, Y-0.5, Y+0.3); for(const dx of [-Wd/2, Wd/2]) addCol(sx+dx-0.12, sx+dx+0.12, sz-0.9, sz+0.9, Y-0.5, Y+Hh); }
     // a few pole lights along the lane
     for(const lx of [-1200, -1130, -1060, -995]){ const lz=LZ-3.4; C(0.07, 4.2, lx, Y+2.1, lz, "#5a4a36", 10); B(0.6, 0.06, 0.06, lx+0.3, Y+4.0, lz, "#5a4a36");
       CT(0.05, 0.16, 0.12, lx+0.58, Y+3.9, lz, "#3a3a3c"); push("cafe_string", new T.SphereGeometry(0.05, 8, 6), lx+0.58, Y+3.82, lz, 0, "#ffffff");
       addCol(lx-0.1, lx+0.1, lz-0.1, lz+0.1, Y-0.5, Y+4.2); LAMPS.push({x:lx+0.58, y:Y+3.8, z:lz, color:0xffd8a0, intensity:0.9, dist:16, decay:1.5}); }
-    // the dumpster by the hall's lot
-    { const dx=-1144, dz=-1188.5; B(1.8, 1.25, 1.2, dx, Y+0.63, dz, "#2a5a3a"); B(1.84, 0.06, 1.24, dx, Y+1.29, dz, "#1a3a2a"); addCol(dx-0.92, dx+0.92, dz-0.62, dz+0.62, Y-0.5, Y+1.3); } }
+    // the dumpster by the hall's lot: a sloped front, two black lids on their hinges, the fork pockets, skids, the hauler's name, a few dents
+    { const dx=-1144, dz=-1188.5, GN="#2a5a3a";
+      const sh=new T.Shape(); sh.moveTo(-0.6, 0); sh.lineTo(0.6, 0); sh.lineTo(0.75, 1.22); sh.lineTo(-0.6, 1.22); sh.closePath();
+      const g=new T.ExtrudeGeometry(sh, {depth:1.8, bevelEnabled:true, bevelThickness:0.02, bevelSize:0.02, bevelSegments:1}); g.translate(0, 0, -0.9); g.rotateY(Math.PI/2);
+      ent(g, dx, Y+0.1, dz, GN);
+      for(const sd of [-1,1]) RB(0.9, 0.05, 1.44, dx+sd*0.46, Y+1.37, dz-0.075, "#1a1a1c", 0, 0.015);
+      tubeE(V3(dx-0.92, Y+1.35, dz+0.62), V3(dx+0.92, Y+1.35, dz+0.62), 0.025, "#1e4a2e");
+      for(const sd of [-1,1]) RB(0.06, 0.16, 1.5, dx+sd*0.95, Y+0.62, dz, "#1e4a2e", 0, 0.01);
+      for(const sd of [-1,1]) B(1.95, 0.1, 0.12, dx, Y+0.05, dz+sd*0.48, "#3a3a3c");
+      sign(0.8, 0.26, (c, W, H)=>{ c.fillStyle="#2a5a3a"; c.fillRect(0, 0, W, H); c.fillStyle="#f2f0ea"; fitText(c, "CRAWFORD HAULING", W*0.84, H*0.5, W/2, H*0.36, "800", "Arial");
+        fitText(c, "814 · ROLL-OFF & CANS", W*0.8, H*0.3, W/2, H*0.74, "600", "Arial"); }, dx+0.94, Y+1.0, dz, Math.PI/2, false, 320);
+      addCol(dx-0.98, dx+0.98, dz-0.8, dz+0.66, Y-0.5, Y+1.4); } }
   // the trees: tall white pines and hemlocks and maples between the lots and round the back, and the woods' edge real
   // several rows deep all the way round (07's shell stays low under it), each with a trunk you cannot walk through
   { const tree=(sp, x, z, s)=>{ if(typeof FOREST==="undefined") return; FOREST.plant(sp, x, z, {scale:s}); const g=Terrain.groundAt(x,z), rr=0.22*s; addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };

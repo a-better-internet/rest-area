@@ -685,3 +685,27 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   rod either side of the windows of living, dining and bedrooms. Pictures
   keep 0.36 m clear of every opening (`clearRuns`) so they miss the
   curtains.
+
+## Round 30 notes
+
+- The stone house's basement stair (14z2) is 15 risers at a 24.5 cm run
+  from `SWZ0`, ending at `STZ1` with a landing before the back wall; the
+  well upstairs stays `SWZ0`..`SWZ1`. Its rec-room side is closed (the
+  steps' painted bodies) under a stringer and a guard that stops two steps
+  up, so you can step off sideways at the foot.
+- The old mechanical room is the game room, open to the rec room; the
+  furnace and the rest are in the pocket east of the stair, behind a door
+  in the `x = -1157` wall.
+- A house door stands shut (`ajar` 0) or well open (0.95), never a few
+  degrees ajar. 14z2's `doorIn` takes 0 as shut.
+- 14z2 trims its rooms with `trim` (upstairs: baseboard and crown, each run
+  stopped 7.5 cm past a doorway, the crown at any opening reaching the
+  ceiling), `wains` (the basement's oak wainscot) and `based` (its
+  baseboards). An x wall's pieces sit 2 mm taller or deeper than a z wall's
+  so where two runs cross at a corner no faces share a plane. Add a wall's
+  run when you add a wall.
+- 14z's woods camp kit: `campChair`, `picnic`, `cooler`, `fireRing` (with a
+  grate and logs) and `tent` (an inner dome, a fly with its door open, poles,
+  guylines). The canned-ham camper is a side profile extruded across it, cream
+  over a turquoise skirt; anything on its sides sits within 3 cm of the body
+  (x = ±1.0 cream, ±1.012 skirt).
