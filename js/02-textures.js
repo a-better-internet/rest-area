@@ -439,8 +439,36 @@ function fitText(x, str, maxW, size, cx, cy, weight, family){
   return s+1;
 }
 // highway lettering: a wide, plain face, the way a guide sign is set
+// (set a little open, as a guide sign is: letters tracked out by a twentieth of their height, never crowded into the board)
 function fitHwy(x, str, maxW, size, cx, cy){
-  return fitText(x, str, maxW, size, cx, cy, "600", "'Arial', 'Helvetica Neue', Helvetica, sans-serif");
+  const had=x.letterSpacing; let s=Math.round(size);
+  [maxW, s]=_fitBox(x, maxW, s);
+  const F="'Arial', 'Helvetica Neue', Helvetica, sans-serif";
+  x.textAlign="center"; x.textBaseline="middle";
+  do{ x.font="600 "+s+"px "+F; if(had!==undefined) x.letterSpacing=(s*0.05).toFixed(1)+"px"; s-=1; } while(x.measureText(str).width>maxW && s>6);
+  // (a tracked line's measure carries the space after its last letter: draw it that much right, so it sits centred)
+  const tr=had!==undefined ? (s+1)*0.05 : 0; x.fillText(str, cx+tr/2, cy);
+  if(had!==undefined) x.letterSpacing=had||"0px";
+  return s+1;
+}
+// a guide sign's legend: every line at one height, a third of the board's height between their middles at most, the board's
+// edges well clear (a tenth of its height and an eighth of its width); "Erie   37" (three spaces) sets the place left, the miles right
+function hwyLegend(c, W, H, lines, opt){
+  opt=opt||{}; const n=lines.length, pad=Math.max(H*0.16, W*0.11), F="'Arial', 'Helvetica Neue', Helvetica, sans-serif";
+  const words=lines.filter(L=>!/^[↑↖↗]$/.test(L));
+  let s=Math.round(Math.min(H*(n===1 ? 0.30 : n===2 ? 0.20 : 0.155), opt.max||1e9));
+  const wide=(L)=>{ c.font="600 "+s+"px "+F; if(c.letterSpacing!==undefined) c.letterSpacing=(s*0.05).toFixed(1)+"px";
+    const p=L.split(/\s{3,}/); return p.length>1 ? c.measureText(p[0]).width+c.measureText(p[1]).width+s*1.4 : c.measureText(L).width; };
+  while(s>8 && words.some(L=>wide(L)>W-2*pad)) s-=1;
+  const gap=Math.min(H*0.32, (H-2*pad*0.8)/n), y0=H/2-gap*(n-1)/2;
+  lines.forEach((L, i)=>{ const cy=y0+gap*i;
+    if(/^[↑↖↗]$/.test(L)){ c.save(); c.translate(W/2, cy); c.rotate(L==="↖" ? -0.785 : L==="↗" ? 0.785 : 0);
+      const a=Math.min(s*0.62, gap*0.38); c.beginPath(); c.moveTo(0, -a*1.4); c.lineTo(a, 0); c.lineTo(a*0.36, 0); c.lineTo(a*0.36, a*1.2); c.lineTo(-a*0.36, a*1.2); c.lineTo(-a*0.36, 0); c.lineTo(-a, 0);
+      c.closePath(); c.fill(); c.restore(); return; }
+    const p=L.split(/\s{3,}/);
+    if(p.length>1){ const w=Math.max(...words.filter(q=>q.split(/\s{3,}/).length>1).map(wide)); c.textBaseline="middle"; c.textAlign="left"; c.fillText(p[0], W/2-w/2, cy); c.textAlign="right"; c.fillText(p[1], W/2+w/2-s*0.05, cy); }
+    else fitHwy(c, L, W-2*pad, s, W/2, cy); });
+  if(c.letterSpacing!==undefined) c.letterSpacing="0px"; c.textAlign="center";
 }
 function signTex(w,h,draw){
   const c=cvs(w,h), x=c.getContext("2d");

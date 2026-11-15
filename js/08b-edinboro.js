@@ -136,11 +136,7 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
       c.strokeStyle=opts.fg||"#eeece4"; c.lineWidth=Math.max(3,H*0.03);
       rrect(c,H*0.04,H*0.04,W-H*0.08,H-H*0.08,Math.min(W,H)*0.05); c.stroke();
       c.fillStyle=opts.fg||"#eeece4";
-      const n=lines.length, sz=H*(n===1?0.5:0.68/n*1.25);
-      // one size for every line (the smallest any of them needs), inside the border with room to spare
-      c.font="600 "+sz+"px Arial"; let s=sz;
-      for(const L of lines){ const wd=c.measureText(L).width; if(wd>W*0.80) s=Math.min(s, sz*W*0.80/wd); }
-      lines.forEach((L,i)=>fitHwy(c, L, W*0.80, s, W/2, H*(n===1?0.5:(0.28+0.44*i/(n-1)))));
+      hwyLegend(c, W, H, lines, opts);
     });
     const posts=w>2.4 ? 2 : 1;
     for(let k=0;k<posts;k++){

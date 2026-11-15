@@ -394,16 +394,7 @@ function guideSign(x, z, w, h, ry, lines, opts){
     c.strokeStyle=opts.fg||"#eeece4"; c.lineWidth=Math.max(3,H*0.03);
     rrect(c,H*0.04,H*0.04,W-H*0.08,H-H*0.08,Math.min(W,H)*0.05); c.stroke();
     c.fillStyle=opts.fg||"#eeece4";
-    const n=lines.length;
-    lines.forEach((L,i)=>{
-      const cy=H*(n===1?0.5:(0.30+0.42*i/(n-1)));
-      if(L==="↑" || L==="↖" || L==="↗"){
-        c.save(); c.translate(W/2, cy); c.rotate(L==="↖"?-0.785:L==="↗"?0.785:0);
-        const s=H*0.16; c.beginPath(); c.moveTo(0,-s*1.4); c.lineTo(s,0); c.lineTo(s*0.36,0);
-        c.lineTo(s*0.36,s*1.2); c.lineTo(-s*0.36,s*1.2); c.lineTo(-s*0.36,0); c.lineTo(-s,0);
-        c.closePath(); c.fill(); c.restore();
-      }else fitHwy(c, L, W*0.84, H*(n===1?0.5:0.68/n*1.25), W/2, cy);
-    });
+    if(opts.draw) opts.draw(c, W, H); else hwyLegend(c, W, H, lines, opts);
   });
   const f=ry===0?1:-1, cz=z;
   const top=y0+clear+h;
@@ -428,7 +419,8 @@ function guideSign(x, z, w, h, ry, lines, opts){
   guideSign(west, -380, 4.6, 2.2, Math.PI, ["Meadville   6","Pittsburgh   89"]);
   // speed limits, black on white
   const limit=(x,z,ry)=>guideSign(x, z, 0.92, 1.18, ry, ["SPEED","LIMIT","70"],
-                                  {bg:"#ecebe4", fg:"#1a1a1a", clear:1.6, posts:1});
+                                  {bg:"#ecebe4", fg:"#1a1a1a", clear:1.6, posts:1,
+                                   draw:(c, W, H)=>{ fitHwy(c, "SPEED", W*0.72, H*0.12, W/2, H*0.21); fitHwy(c, "LIMIT", W*0.72, H*0.12, W/2, H*0.35); fitHwy(c, "70", W*0.72, H*0.36, W/2, H*0.66); }});
   limit(east, -1880, 0); limit(west, 640, Math.PI);          // (northbound: past Edinboro's on-ramp and its taper, not beside it)
   // on the ramp: where the trucks go and where the cars go
   guideSign(-85.2, 140, 2.4, 1.5, 0, ["TRUCKS","↑"], {y:0, clear:1.5, posts:1});
