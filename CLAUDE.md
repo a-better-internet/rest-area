@@ -727,3 +727,13 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   `updateGames`, and 21's `atGame` puts the gun away while you play.
   Darts stand nose down where they land (`stick`). Walt's spread in
   `himThrow` gives a ringer about three throws in ten.
+- The radio station is 14s2 (`RADIO` in 04: its pad, graded level and
+  cut into the rise north of the substation; the tower's footing ring at
+  `RADIO.ty`; the feed line's cut). A mown bank and meadow round both
+  (`siteDist`), real trees ringed round them several rows deep, and 07's
+  `canopyY` holds the shell low there. The tower (a diamond cantilever,
+  150 m, its guys from the widest point) is one plain mesh, a landmark;
+  its lamps are balls close to and fixed-size points far off, flashed by
+  `updateRadioStation` (from 14's `updateLife`), which also lights the
+  glass block after dark. Its guys run north, south, east and west, clear
+  of the power cut.

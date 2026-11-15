@@ -161,6 +161,10 @@ const DRIVE=smoothPath([
   {x:38,z:-159,y:1.85},{x:52,z:-166,y:2.45},{x:60.5,z:-169,y:SITE.sub.y}], 2.0);
 // a cleared right-of-way north from the compound, poles every ninety metres
 const POWER={x0:84, z0:-184, x1:136, z1:-1500};
+// the radio station (14s2): its pad cut into the foot of the rise north of the substation, and its tower on the hill behind,
+// a level ring round the tower's base; the feed line between them a cut through the trees
+const RADIO={pad:{x0:-6, x1:48, z0:-1500, z1:-1458}, tower:{x:100, z:-1522}, ty:undefined,
+             feed:{x0:27, z0:-1483, x1:96, z1:-1516}};
 /* ---- the back woods: a path, and a camp at the end of it ---------------
    Behind the building a path the kids have worn runs east off the loop walk,
    a quarter of a kilometre through the trees to a clearing where somebody
@@ -306,6 +310,10 @@ const Terrain=(function(){
     { const wd=Math.min(boxDist(WEST.corr,x,z), boxDist(WEST.park,x,z), boxDist(WEST.ranch,x,z));
       if(wd<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, wd));
       if(wd<50) h=toward(h, EDIN.y, wd, 0, 46); }
+    // the radio station's pad, level with the plain, cut back into the rise; the tower's footing level on the hill
+    { const rd=boxDist(RADIO.pad,x,z); if(rd<40) h=toward(h, EDIN.y, rd, 0, 34);
+      const T=RADIO.tower, td=Math.hypot(x-T.x, z-T.z);
+      if(td<30){ if(RADIO.ty===undefined) RADIO.ty=natural(T.x, T.z); h=toward(h, RADIO.ty, td, 11, 16); } }
     // the interstate corridors, cut and filled to the road's own grade (a steep cut through the plain)
     const ry=roadY(z), wI=pd<40 ? 1-smoothstep(0,40,pd) : 0, hh=19-2*wI, hb=34-24*wI;
     h=toward(h, ry, Math.abs(x-HWY.nb), hh, hb);
@@ -433,6 +441,10 @@ const Terrain=(function(){
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
     d=Math.min(d, boxSD(WEIGH.pad,x,z)-6);
     d=Math.min(d, boxSD(GARAGE.yard,x,z)+2);
+    // the radio station's pad, the ring round its tower, the feed line's cut between them
+    d=Math.min(d, boxSD(RADIO.pad,x,z)-22, Math.hypot(x-RADIO.tower.x, z-RADIO.tower.z)-22);          // (a mown bank behind the station, a meadow round the tower)
+    { const F=RADIO.feed, ex=F.x1-F.x0, ez=F.z1-F.z0, t=clamp(((x-F.x0)*ex+(z-F.z0)*ez)/(ex*ex+ez*ez), 0, 1);
+      d=Math.min(d, Math.hypot(x-(F.x0+ex*t), z-(F.z0+ez*t))-4); }
     // the power line's right of way, a straight cut north through everything
     {
       const ex=POWER.x1-POWER.x0, ez=POWER.z1-POWER.z0, L2=ex*ex+ez*ez;

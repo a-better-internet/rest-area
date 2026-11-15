@@ -55,7 +55,9 @@ const WARP=(function(){
     ["THE STONE HOUSE",       -1427.1, -1170.0,   Math.PI,     x=>g(x[1], x[2])],
     ["THE STONE HOUSE'S KITCHEN", -1426.0, -1156.3, Math.PI,   x=>surfaceY(x[1], x[2], RANCH.box.FY)],
     ["THE STONE HOUSE'S BASEMENT", -1426.0, -1157.6, Math.PI/2, x=>surfaceY(x[1], x[2], RANCH.box.BF), true],
-    ["THE STONE HOUSE'S POOL", -1425.0, -1144.0,  Math.PI/2,   x=>surfaceY(x[1], x[2], EDIN.y+0.06)]];
+    ["THE STONE HOUSE'S POOL", -1425.0, -1144.0,  Math.PI/2,   x=>surfaceY(x[1], x[2], EDIN.y+0.06)],
+    ["THE RADIO STATION",     14.0, -1466.0,     0,           x=>g(x[1], x[2])],
+    ["THE RADIO TOWER",       100.0, -1511.0,    0,           x=>g(x[1], x[2])]];
   const KEYS="1234567890ABCDFGHIJKLMNOPQRTUV";            // (E and S left out: E is your hand, S is a step back)
   // the hoop: in front of the first one there is, facing it
   const hoopAt=()=>{ const H=(typeof YARD_HOOPS!=="undefined" && YARD_HOOPS[0]) || null; if(!H) return null;
