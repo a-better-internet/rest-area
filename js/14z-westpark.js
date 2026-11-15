@@ -395,20 +395,98 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
      OUT THE BACK: tent pads and a camper, the common fire, the horseshoe pit, the swing set; trees between the lots
      ====================================================================== */
   use("site");
-  { // the tent pads in the south-west: a tent, a fire ring, a table each
-    for(const [tx2, tz] of [[-1220, -1100],[-1196, -1088],[-1172, -1100]]){
-      const tc=["#2e6a3a","#c8641a","#2a5a8a"][((tx2+tz)|0)%3>=0 ? ((-tx2)|0)%3 : 0];
-      const g=new T.SphereGeometry(1.4, 16, 8, 0, Math.PI*2, 0, Math.PI/2); g.scale(1.1, 0.85, 0.95); ent(g, tx2, Y+0.01, tz, tc);
-      B(0.6, 0.9, 0.02, tx2, Y+0.45, tz-1.32, "#1a2a1a"); addCol(tx2-1.5, tx2+1.5, tz-1.3, tz+1.3, Y-0.5, Y+1.2);
-      for(let k=0;k<8;k++){ const a=k/8*6.283; push("rock", rockGeo(0.12, 900+k+Math.abs(tx2|0)%97), tx2+3.0+Math.cos(a)*0.5, Y+0.05, tz+Math.sin(a)*0.5, a, "#8d887e"); }
-      addCol(tx2+2.4, tx2+3.6, tz-0.6, tz+0.6, Y-0.5, Y+0.3); }
-    // the camper: a canned-ham trailer, two-tone, rounded, its door and its windows
-    { const cx2=-1140, cz2=-1092, L=4.6, Wd=2.1, H=2.2, f=XF(cx2, cz2, 0.3);
-      ent(rboxGeo(Wd, H-0.4, L, 0.5, 3), f.x(0,0), Y+0.45+(H-0.4)/2, f.z(0,0), "#e8e2d0", 0, 0.3, 0);
-      ent(rboxGeo(Wd+0.02, 0.62, L+0.02, 0.28, 3), f.x(0,0), Y+0.75, f.z(0,0), "#2a8a8a", 0, 0.3, 0);
-      for(const lz of [-1.2, 1.2]) C(0.3, 0.2, f.x(Wd/2+0.05, lz), Y+0.3, f.z(Wd/2+0.05, lz), "#1a1a1a", 16, 0, 0.3, Math.PI/2);
-      B(0.04, 0.5, 0.9, f.x(Wd/2+0.01, -0.6), Y+1.6, f.z(Wd/2+0.01, -0.6), "#1e2a36", 0.3); B(0.04, 1.5, 0.6, f.x(Wd/2+0.01, 1.0), Y+1.25, f.z(Wd/2+0.01, 1.0), "#c8c4b8", 0.3);
-      addCol(cx2-1.8, cx2+1.8, cz2-2.6, cz2+2.6, Y-0.5, Y+H); }
+  { // a camp chair (canvas sagging between its arms, the X of its legs) and a picnic table, as the lots have them; a cooler
+    const campChair=(sx, sz, ry, ch, label)=>{ const f=XF(sx, sz, ry), qq=(w,h,d,lx,ly,lz,c,rd)=>RB(w,h,d, f.x(lx,lz), Y+ly, f.z(lx,lz), c, ry, rd||0.012);
+      qq(0.48, 0.05, 0.44, 0, 0.35, 0, ch, 0.02); qq(0.48, 0.55, 0.05, 0, 0.68, -0.25, ch, 0.02);
+      for(const s2 of [-1,1]){ qq(0.06, 0.03, 0.46, s2*0.27, 0.58, -0.01, "#2a2a2c"); tubeE(V3(f.x(s2*0.26, 0.22), Y, f.z(s2*0.26, 0.22)), V3(f.x(s2*0.26, -0.24), Y+0.58, f.z(s2*0.26, -0.24)), 0.011, "#5a5e60");
+        tubeE(V3(f.x(s2*0.26, -0.24), Y, f.z(s2*0.26, -0.24)), V3(f.x(s2*0.26, 0.22), Y+0.58, f.z(s2*0.26, 0.22)), 0.011, "#5a5e60"); }
+      C(0.04, 0.06, f.x(0.27, 0.16), Y+0.57, f.z(0.27, 0.16), "#2a2a2c", 10);
+      addCol(sx-0.3, sx+0.3, sz-0.3, sz+0.3, Y-0.5, Y+0.5); addSeat(sx, sz, Y, ry+Math.PI, label||"A CAMP CHAIR BY THE FIRE"); };
+    const picnic=(tx2, tz)=>{ for(let k=0;k<5;k++) RB(0.152, 0.05, 1.8, tx2-0.32+k*0.16, Y+0.74, tz, ["#8a6a4a","#84644a","#8e6e4c"][k%3], 0, 0.015);
+      for(const s2 of [-1,1]){ for(let k=0;k<2;k++) RB(0.125, 0.04, 1.8, tx2+s2*(0.55+k*0.135), Y+0.44, tz, "#8a6a4a", 0, 0.012);
+        for(const e of [-0.7, 0.7]) tubeE(V3(tx2+s2*0.72, Y, tz+e), V3(tx2+s2*0.06, Y+0.72, tz+e), 0.035, "#6a4a32"); }
+      for(const e of [-0.7, 0.7]) RB(1.5, 0.06, 0.08, tx2, Y+0.40, tz+e, "#6a4a32", 0, 0.015);
+      addCol(tx2-0.4, tx2+0.4, tz-0.9, tz+0.9, Y-0.5, Y+0.76); for(const s2 of [-1,1]) addSeat(tx2+s2*0.62, tz, Y, s2>0 ? Math.PI/2 : -Math.PI/2, "THE PICNIC TABLE", false, 0.72); };
+    const cooler=(x, z, ry, c)=>{ RB(0.62, 0.36, 0.4, x, Y+0.19, z, c, ry, 0.04); RB(0.64, 0.07, 0.42, x, Y+0.4, z, "#f2f0ea", ry, 0.03); const f=XF(x, z, ry);
+      for(const s2 of [-1,1]) RB(0.04, 0.03, 0.12, f.x(s2*0.33, 0), Y+0.3, f.z(s2*0.33, 0), "#2a2a2c", ry, 0.01); addCol(x-0.36, x+0.36, z-0.36, z+0.36, Y-0.5, Y+0.45); };
+    const fireRing=(fx, fz, seed)=>{ for(let k=0;k<11;k++){ const a=k/11*6.283; push("rock", rockGeo(0.12, seed+k), fx+Math.cos(a)*0.52, Y+0.05, fz+Math.sin(a)*0.52, a, "#8d887e"); }
+      C(0.4, 0.03, fx, Y+0.02, fz, "#2a2624", 18);
+      for(let k=0;k<4;k++){ const a=k*1.3+0.4; ent(FOREST.barkCyl(0.05, 0.045, 0.5, 7), fx+Math.cos(a)*0.08, Y+0.08, fz+Math.sin(a)*0.08, "#4a3a2a", 0, a, Math.PI/2-0.25); }
+      // (the grate on its legs, over one side)
+      for(let k=0;k<6;k++) B(0.012, 0.012, 0.5, fx-0.15+k*0.06, Y+0.32, fz, "#2a2a2c"); for(const e of [-0.25, 0.25]) B(0.34, 0.014, 0.014, fx, Y+0.32, fz+e, "#2a2a2c");
+      for(const [a2, b2] of [[-0.17,-0.24],[0.17,-0.24],[-0.17,0.24],[0.17,0.24]]) B(0.014, 0.3, 0.014, fx+a2, Y+0.16, fz+b2, "#2a2a2c");
+      addCol(fx-0.62, fx+0.62, fz-0.62, fz+0.62, Y-0.5, Y+0.35); };
+    // a dome tent: the inner tent, two poles crossed over it, the fly over that with its door rolled back, guylines out to stakes, a mat
+    const tent=(tx2, tz, ry, body, fly)=>{ const f=XF(tx2, tz, ry), R=1.25, Ht=1.25;
+      const g=new T.SphereGeometry(1, 20, 10, 0, Math.PI*2, 0, Math.PI/2); g.scale(R*1.05, Ht, R*0.92); ent(g, tx2, Y+0.01, tz, body, 0, ry, 0);
+      const g2=new T.SphereGeometry(1, 20, 8, Math.PI*0.62, Math.PI*1.76, 0, Math.PI*0.42); g2.scale(R*1.1, Ht*1.06, R*0.98); ent(g2, tx2, Y+0.02, tz, fly, 0, ry, 0);
+      // the door: a dark arch, its zip and the rolled fly over it
+      const dg=new T.CircleGeometry(0.42, 16, 0, Math.PI); dg.scale(1, 1.75, 1); ent(dg, f.x(0, 1.24), Y+0.03, f.z(0, 1.24), "#14180f", -0.29, ry, 0);
+      tubeE(V3(f.x(-0.32, 0.93), Y+0.8, f.z(-0.32, 0.93)), V3(f.x(0.32, 0.93), Y+0.8, f.z(0.32, 0.93)), 0.035, fly);
+      // the poles: two arcs corner to corner
+      for(const sd of [-1,1]){ let prev=null; for(let k=0;k<=12;k++){ const t=k/12, a=Math.PI*t, lx=sd*Math.cos(a)*R*0.98*0.72, lz=Math.cos(a)*R*0.9*0.72,
+          y=Y+0.02+Math.sin(a)*Ht*1.07, p=V3(f.x(lx, lz), y, f.z(lx, lz)); if(prev) tubeE(prev, p, 0.008, "#3a3a3c"); prev=p; } }
+      // guylines and stakes from the fly's corners
+      for(const [a2, b2] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const p0=V3(f.x(a2*0.75, b2*0.65), Y+0.85, f.z(a2*0.75, b2*0.65)), p1=V3(f.x(a2*1.55, b2*1.4), Y+0.04, f.z(a2*1.55, b2*1.4));
+        tubeE(p0, p1, 0.003, "#e8e0c8"); B(0.02, 0.1, 0.02, p1.x, Y+0.04, p1.z, "#8a8d90"); }
+      addCol(tx2-1.45, tx2+1.45, tz-1.35, tz+1.35, Y-0.5, Y+1.3); };
+    let si=0;
+    for(const [tx2, tz] of [[-1220, -1100],[-1196, -1088],[-1172, -1100]]){ const k=si++;
+      tent(tx2, tz, [0.2, -0.15, 0.35][k], ["#2e6a3a","#c8641a","#2a5a8a"][k], ["#3a7a48","#d8782a","#3a6a9a"][k]);
+      fireRing(tx2+3.0, tz, 900+k*13);
+      campChair(tx2+3.0+1.3, tz+0.6, Math.atan2(-1.3, -0.6), ["#2a6a9a","#c84a2a","#3a7a3a"][k]); campChair(tx2+3.0-0.4, tz+1.35, Math.atan2(0.4, -1.35), ["#e8b030","#2a2a2c","#8a2a4a"][k]);
+      picnic(tx2+3.2, tz-3.0); cooler(tx2+1.9, tz+1.9, 0.4, ["#2a6ad8","#c82a1a","#2a8a5a"][k]);
+      // a lantern on the table, a water jug
+      CT(0.05, 0.06, 0.14, tx2+3.2, Y+0.84, tz-3.3, "#2a6a3a", 10); S(0.045, tx2+3.2, Y+0.95, tz-3.3, "#f2e8c8");
+      RB(0.2, 0.3, 0.2, tx2+3.15, Y+0.92, tz-2.6, "#2a5aa8", 0, 0.03); }
+    // the camper: a canned-ham trailer. Its side is one profile (a rounded nose and tail, a crowned roof) extruded across it, cream over a
+    // turquoise skirt with a chrome strip between; framed windows, the wrap window at the nose under its little awning, the door with its
+    // window and handle, a single axle in its fender, the A-frame tongue with a jack, two propane tanks; a striped awning on poles, a mat.
+    { const cx2=-1140, cz2=-1092, ry=0.3, f=XF(cx2, cz2, ry), y0=Y+0.42, HW2=1.0, CR="#ece4cc", TQ="#2a9a94";
+      const prof=(top)=>{ const sh=new T.Shape(); if(top){ sh.moveTo(-2.2, 0.25); sh.quadraticCurveTo(-2.24, 0.0, -1.95, 0.0); sh.lineTo(1.95, 0.0); sh.quadraticCurveTo(2.25, 0.0, 2.25, 0.35);
+          sh.quadraticCurveTo(2.25, 1.6, 1.5, 1.85); sh.quadraticCurveTo(0, 2.0, -1.5, 1.85); sh.quadraticCurveTo(-2.25, 1.6, -2.2, 0.25); }
+        else { sh.moveTo(-2.21, 0.85); sh.lineTo(-2.2, 0.25); sh.quadraticCurveTo(-2.24, 0.0, -1.95, 0.0); sh.lineTo(1.95, 0.0); sh.quadraticCurveTo(2.25, 0.0, 2.25, 0.35); sh.lineTo(2.245, 0.85); }
+        sh.closePath(); const bv=top ? 0.05 : 0.062;
+        const g=new T.ExtrudeGeometry(sh, {depth:2*HW2-0.1, bevelEnabled:true, bevelThickness:bv, bevelSize:bv, bevelSegments:3, curveSegments:18}); g.translate(0, 0, -(2*HW2-0.1)/2); g.rotateY(-Math.PI/2); return g; };
+      ent(prof(true), cx2, y0, cz2, CR, 0, ry, 0); ent(prof(false), cx2, y0-0.006, cz2, TQ, 0, ry, 0);
+      const P=(lx, ly, lz)=>V3(f.x(lx, lz), y0+ly, f.z(lx, lz)), LB=(w, h, d, lx, ly, lz, c, rd)=>RB(w, h, d, f.x(lx, lz), y0+ly, f.z(lx, lz), c, ry, rd||0.01);
+      // the chrome strip on both sides and round the tail
+      for(const sd of [-1,1]) LB(0.02, 0.035, 4.3, sd*(HW2+0.022), 0.9, 0, "#d8dce0", 0.008);
+      // side windows: a chrome frame, the glass dark, a curtain's edge inside
+      for(const [sd, lz, w] of [[1, 0.75, 0.85],[-1, 0.9, 1.0],[-1, -1.0, 0.7],[1, -1.65, 0.5]]){ LB(0.02, 0.5, w, sd*(HW2+0.006), 1.33, lz, "#1a2630", 0.006);
+        for(const e of [-1,1]){ LB(0.03, 0.04, w+0.08, sd*(HW2+0.012), 1.33+e*0.27, lz, "#c8ccd0", 0.008); LB(0.03, 0.5, 0.04, sd*(HW2+0.012), 1.33, lz+e*(w/2+0.02), "#c8ccd0", 0.008); } }
+      // the wrap window at the nose, tilted with the curve, and its awning
+      ent(rboxGeo(1.36, 0.56, 0.035, 0.012, 2), f.x(0, 2.09+0.03), y0+1.363, f.z(0, 2.09+0.03), "#c8ccd0", -0.4636, ry, 0);
+      ent(rboxGeo(1.26, 0.47, 0.03, 0.008, 2), f.x(0, 2.105+0.03), y0+1.37, f.z(0, 2.105+0.03), "#1a2630", -0.4636, ry, 0);
+      ent(boxGeo(1.5, 0.02, 0.42), f.x(0, 2.0), y0+1.72, f.z(0, 2.0), TQ, 0.35, ry, 0);
+      // the tail lights, the roof vent, the propane and the tongue
+      for(const sd of [-1,1]) LB(0.14, 0.09, 0.04, sd*0.72, 0.5, -2.285, "#a8141a", 0.015); LB(0.36, 0.08, 0.36, 0, 2.0, -0.6, "#d8dce0", 0.02);
+      for(const sd of [-1,1]){ tubeE(P(sd*0.55, 0.06, 2.1), P(0, 0.08, 3.15), 0.04, "#2a2a2c"); }
+      LB(0.16, 0.12, 0.3, 0, 0.08, 3.2, "#2a2a2c", 0.02);
+      C(0.04, 0.5, f.x(0, 2.85), Y+0.28, f.z(0, 2.85), "#2a2a2c", 10); LB(0.18, 0.1, 0.3, 0, -0.38, 2.85, "#7a5a3a", 0.01);       // (the jack, on a block of wood)
+      LB(0.62, 0.03, 0.38, 0, 0.1, 2.55, "#2a2a2c", 0.006);
+      for(const sd of [-1,1]){ C(0.15, 0.48, f.x(sd*0.18, 2.55), y0+0.36, f.z(sd*0.18, 2.55), "#f2f0ea", 16); S(0.15, f.x(sd*0.18, 2.55), y0+0.6, f.z(sd*0.18, 2.55), "#f2f0ea"); C(0.05, 0.08, f.x(sd*0.18, 2.55), y0+0.78, f.z(sd*0.18, 2.55), "#8a8d90", 10); }
+      // the axle: a tyre and rim each side in a turquoise fender
+      for(const sd of [-1,1]){ C(0.3, 0.19, f.x(sd*0.86, -0.3), Y+0.3, f.z(sd*0.86, -0.3), "#1a1a1a", 20, 0, ry, Math.PI/2); C(0.17, 0.2, f.x(sd*0.87, -0.3), Y+0.3, f.z(sd*0.87, -0.3), "#d8dce0", 18, 0, ry, Math.PI/2);
+        const tg=new T.TorusGeometry(0.4, 0.035, 6, 18, Math.PI); ent(tg, f.x(sd*(HW2+0.03), -0.3), Y+0.36, f.z(sd*(HW2+0.085), -0.3), TQ, 0, ry+Math.PI/2, 0); }
+      // the door on the curb side: its frame, the leaf, a little window, the handle; the step under it
+      for(const e of [-1,1]){ LB(0.02, 1.62, 0.04, HW2+0.025, 0.92, -0.95+e*0.33, "#c8ccd0", 0.006); } LB(0.02, 0.04, 0.7, HW2+0.025, 1.73, -0.95, "#c8ccd0", 0.006);
+      LB(0.025, 1.54, 0.6, HW2+0.022, 0.92, -0.95, CR, 0.008); LB(0.02, 0.32, 0.6, HW2+0.03, 0.32, -0.95, TQ, 0.006);
+      LB(0.02, 0.3, 0.32, HW2+0.03, 1.36, -0.95, "#1a2630", 0.006); C(0.025, 0.04, f.x(HW2+0.06, -0.72), y0+0.95, f.z(HW2+0.06, -0.72), "#d8dce0", 10, 0, ry, Math.PI/2);
+      LB(0.34, 0.03, 0.58, HW2+0.3, -0.16, -0.95, "#8a8d90", 0.006); for(const e of [-0.26, 0.26]) LB(0.03, 0.2, 0.03, HW2+0.3, -0.27, -0.95+e, "#5a5e60", 0.005);
+      // the awning: stripes of canvas out from the roof's edge, sloping down to two poles
+      for(let k=0;k<10;k++){ const lz=-1.85+k*0.3+0.15; ent(boxGeo(1.9, 0.012, 0.3), f.x(HW2+1.02, lz), y0+1.55, f.z(HW2+1.02, lz), k%2 ? "#f2ece0" : "#2a8a84", 0, ry, -0.16); }
+      for(const lz of [-1.82, 1.12]){ const p=P(HW2+1.92, 1.4, lz); tubeE(V3(p.x, Y, p.z), p, 0.016, "#c8ccd0"); tubeE(p, V3(f.x(HW2+3.0, lz), Y+0.02, f.z(HW2+3.0, lz)), 0.003, "#e8e0c8"); }
+      tubeE(P(HW2+1.92, 1.41, -1.85), P(HW2+1.92, 1.41, 1.15), 0.016, "#c8ccd0");
+      // a mat under the awning, a string of lights along its edge
+      ent(boxGeo(1.8, 0.012, 2.6), f.x(HW2+1.15, -0.35), Y+0.03, f.z(HW2+1.15, -0.35), "#3a5a6a", 0, ry, 0);
+      for(let k=0;k<12;k++){ const t=k/11, lz=-1.8+t*2.9; push("cafe_string", new T.SphereGeometry(0.03, 8, 6), f.x(HW2+1.9, lz), y0+1.33-Math.sin(t*Math.PI)*0.12, f.z(HW2+1.9, lz), 0, "#ffffff"); }
+      addColOB(cx2, cz2, ry, HW2+0.12, 2.32, Y-0.5, Y+2.5); addColOB(f.x(0, 2.75), f.z(0, 2.75), ry, 0.45, 0.45, Y-0.5, Y+1.2);
+      for(const lz of [-1.82, 1.12]){ const p=P(HW2+1.92, 0, lz); addCol(p.x-0.05, p.x+0.05, p.z-0.05, p.z+0.05, Y-0.5, Y+2.0); }
+      // its own camp: a fire ring out front, two chairs, a cooler, a picnic table
+      const fr=P(HW2+3.4, 0, 0.9); fireRing(fr.x, fr.z, 960);
+      campChair(fr.x-1.0, fr.z-0.9, Math.atan2(1.0, 0.9), "#c84a2a"); campChair(fr.x+0.2, fr.z-1.35, Math.atan2(-0.2, 1.35), "#2a6a9a");
+      cooler(f.x(HW2+0.7, 1.5), f.z(HW2+0.7, 1.5), ry, "#2a6ad8"); const pt=P(HW2+2.8, 0, -2.6); picnic(pt.x, pt.z); }
     // the common fire in the south-east: a big ring, log benches round it
     { const fx=-1000, fz=-1100;
       for(let k=0;k<16;k++){ const a=k/16*6.283; push("rock", rockGeo(0.16, 700+k), fx+Math.cos(a)*1.0, Y+0.07, fz+Math.sin(a)*1.0, a, "#7a766d"); }
@@ -439,10 +517,10 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       if(Math.abs(z-LZ)<6 || (Math.abs(x-GX)<5 && z<LZ)) return false;
       if(x>W.hall.x0-6 && x<W.hall.x1+6 && z<W.hall.z1+6) return false;
       if(z<P.z0+3) return false;
-      for(const [cx3, cz3, rr] of [[-1220,-1100,5],[-1196,-1088,5],[-1172,-1100,5],[-1140,-1092,4],[-1000,-1100,11],[-1040,-1088,8],[-1070,-1080,4]]) if(Math.hypot(x-cx3, z-cz3)<rr) return false;
+      for(const [cx3, cz3, rr] of [[-1220,-1100,6.5],[-1196,-1088,6.5],[-1172,-1100,6.5],[-1140,-1092,6.5],[-1135.5,-1092.5,9],[-1000,-1100,11],[-1040,-1088,8],[-1070,-1080,4]]) if(Math.hypot(x-cx3, z-cz3)<rr) return false;
       // (no crown over a fire: every lot's ring and the tent pads' rings, eight metres clear)
       for(const t of WESTPARK.trailers) if(Math.hypot(x-(t.x0-2.4), z-t.sd(3.0))<8.5) return false;
-      for(const [tx2, tz] of [[-1220, -1100],[-1196, -1088],[-1172, -1100]]) if(Math.hypot(x-(tx2+3.0), z-tz)<7) return false;
+      for(const [tx2, tz] of [[-1220, -1100],[-1196, -1088],[-1172, -1100]]) if(Math.hypot(x-(tx2+3.0), z-tz)<8.5) return false;
       return true; };
     const qt=_trng(9393);
     for(let x=P.x0+2; x<P.x1-2; x+=7) for(let z=P.z0+3; z<P.z1-2; z+=7){ const xx=x+(qt()-0.5)*4, zz=z+(qt()-0.5)*4; if(qt()<0.45 || !clear(xx, zz)) continue;
