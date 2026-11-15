@@ -272,6 +272,10 @@ function crowdRound(pts, R, closed){
   const look=(o)=>Object.assign({h:1.0, skin:SKINS[1], hair:HAIRS[1], shirt:"#4a6a8a", pants:"#3b4a66", shoes:"#f2f0ea"}, o);
   const ME=[], ent=(geo,x,y,z,c)=>ME.push({geo:geo, matrix:new T.Matrix4().makeTranslation(x,y,z), color:new T.Color(c)});
   const propMesh=(build)=>{ ME.length=0; build(); const m=new T.Mesh(mergeEntries(ME), new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, metalness:0.2})); m.castShadow=true; return m; };
+  // Walt, by the lawn darts' yellow ring with the darts' crate, waiting on a game (18r)
+  if(LAKESIDE.darts){ const A=LAKESIDE.darts.A;
+    LAKESIDE.darts.opp=crowdAdd(PK, {look:look({h:0.98, skin:SKINS[0], hair:HAIRS[5], shirt:"#8a3a2a", pants:"#6a6252", cap:"#2a4a3a", long:true}),
+      x:A.x-1.4, z:A.z+1.3, yaw:Math.PI/2, mode:"stand", job:"toss"}); LAKESIDE.darts.opp.cornSwing=0.5; }
   // the man mowing his front lawn (No. 2 across the street's, the two-storey), up and back in stripes
   { const h=H[7], x0=h.x0+0.8, x1=h.x1-0.8, zs=[]; for(let z=Z+HW+2.0; z<h.zf-1.0; z+=0.9) zs.push(z);
     const path=[]; zs.forEach((z,k)=>{ path.push(k%2 ? [x1, z] : [x0, z]); path.push(k%2 ? [x0, z] : [x1, z]); });

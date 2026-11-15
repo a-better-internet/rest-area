@@ -720,3 +720,10 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   limit) passes `draw` to `guideSign`.
 - Zombie mode's screen blood (`hud.splat`) is a few faint flecks toward the
   edges; keep it light.
+- Lawn darts are 18r's `LDARTS`, on Lakeside Park's level lawn behind the
+  lot (14n's `LAKESIDE.darts`: the yellow ring `A` you throw from, the
+  blue `B` 35 ft out, and Walt, 14q's `opp`, on the `toss` job with
+  `cornSwing`). Keys through 17's chain, the frame through 18e's
+  `updateGames`, and 21's `atGame` puts the gun away while you play.
+  Darts stand nose down where they land (`stick`). Walt's spread in
+  `himThrow` gives a ringer about three throws in ten.

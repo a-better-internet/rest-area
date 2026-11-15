@@ -39,6 +39,7 @@ addEventListener("keydown",e=>{
   // on the disc golf course with the disc in your hand, Space winds up the throw (18i)
   if(typeof DGOLF!=="undefined" && DGOLF.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(typeof CORN!=="undefined" && CORN.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
+  if(typeof LDARTS!=="undefined" && LDARTS.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(typeof DOGBALL!=="undefined" && DOGBALL.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   if(typeof YARDHOOP!=="undefined" && YARDHOOP.key(e)){ e.preventDefault(); keys[e.code]=false; return; }
   // Z for zombie mode, and in it the guns' keys (21)
@@ -77,7 +78,7 @@ addEventListener("keydown",e=>{
   // the key that gets you out of it
   if((e.code==="KeyE" || (e.code==="Space" && !driving && !(typeof BOAT!=="undefined" && BOAT.on))) && !droneMode) interact();
 });
-addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); if(typeof CORN!=="undefined") CORN.keyup(e); if(typeof DOGBALL!=="undefined") DOGBALL.keyup(e); if(typeof YARDHOOP!=="undefined") YARDHOOP.keyup(e); });
+addEventListener("keyup",e=>{ keys[e.code]=false; if(typeof DGOLF!=="undefined") DGOLF.keyup(e); if(typeof CORN!=="undefined") CORN.keyup(e); if(typeof LDARTS!=="undefined") LDARTS.keyup(e); if(typeof DOGBALL!=="undefined") DOGBALL.keyup(e); if(typeof YARDHOOP!=="undefined") YARDHOOP.keyup(e); });
 // Alt-tab away mid-stride and the keyup for whatever you were holding never
 // arrives, so the key stays down for good. Drop everything when the window
 // stops listening.

@@ -533,6 +533,12 @@ const YARD_HOOPS=[];
     for(const dx of [-3.0, 0, 3.0]) picnic(cx+dx, cz, Math.PI/2, "#8a6a44", g+0.12);
     LAMPS.push({x:cx, y:yP-0.3, z:cz, color:0xffe2b8, intensity:0.5, dist:9, decay:1.6, mothy:true}); B(0.3, 0.1, 0.3, cx, yP+0.1, cz, "#2a2a2c"); push("lk_porch", new T.SphereGeometry(0.10, 10, 8), cx, yP-0.02, cz, 0, "#ffffff");
     addZone(cx-w/2, cx+w/2, cz-d/2, cz+d/2, g-1, yP, "THE PAVILION"); }
+  // lawn darts on the level lawn behind the lot (18r plays them): two rings thirty-five feet apart, yellow at the throwing end, blue out
+  // toward the water, a rope ring each on the grass; a crate for the darts by the yellow
+  { const z=Z-HW-40, A={x:1306.6, z:z}, RG={x:1306.6+10.67, z:z};
+    for(const [P, c] of [[A, "#e8c020"],[RG, "#2a6ad8"]]){ P.y=gy(P.x, P.z); const g=new T.TorusGeometry(0.38, 0.016, 8, 40); g.rotateX(Math.PI/2); ent(g, P.x, P.y+0.022, P.z, c); }
+    { const cx=A.x-0.9, cz=z+1.6, g=gy(cx, cz); B(0.42, 0.24, 0.30, cx, g+0.12, cz, "#8a6a42"); B(0.40, 0.02, 0.28, cx, g+0.245, cz, "#6a4a2c"); addCol(cx-0.22, cx+0.22, cz-0.16, cz+0.16, g-0.5, g+0.3); }
+    LAKESIDE.darts={A:A, B:RG, opp:null}; }
   // swings and a slide for the kids, on wood chips
   { const cx=1348, cz=Z-HW-27, g=gy(cx,cz);
     flat("mulch", cx-6, cx+6, cz-4.5, cz+4.5, g+0.02, "#7a5a3a", 0.5); swingSet(cx-2.6, cz, 0);
