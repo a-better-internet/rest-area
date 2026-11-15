@@ -362,8 +362,8 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     addCol(x-0.18*s2, x+0.18*s2, z-0.18*s2, z+0.18*s2, FY-0.06, FY+0.8*s2); };
   // ---- the living room's comforts: a side table and lamp at the sectional's end, a throw over its back, the log basket and fire tools,
   // candles on the mantel, a plant in the corner, books stacked on the coffee table ----
-  { const st=[-1428.05, -1158.3]; RB(0.46, 0.55, 0.46, st[0], FY+0.275, st[1], "#5a3a22", 0, 0.02); C(0.06, 0.24, st[0], FY+0.67, st[1], "#8a6a4a", 12); CT(0.11, 0.18, 0.22, st[0], FY+0.9, st[1], "#efe2c4", 16);
-    addCol(st[0]-0.23, st[0]+0.23, st[1]-0.23, st[1]+0.23, FY-0.06, FY+0.6); lampIn(st[0], FY+0.95, st[1], [WX1, -1424, CZ0, -1157, FY-0.5, CL+0.2], 0.3, 0xffd6a0);
+  { const st=[-1428.05, -1161.53]; RB(0.4, 0.55, 0.4, st[0], FY+0.275, st[1], "#5a3a22", 0, 0.02); C(0.06, 0.24, st[0], FY+0.67, st[1], "#8a6a4a", 12); CT(0.11, 0.18, 0.22, st[0], FY+0.9, st[1], "#efe2c4", 16);
+    addCol(st[0]-0.2, st[0]+0.2, st[1]-0.2, st[1]+0.2, FY-0.06, FY+0.6); lampIn(st[0], FY+0.95, st[1], [WX1, -1424, CZ0, -1157, FY-0.5, CL+0.2], 0.3, 0xffd6a0);
     RB(0.26, 0.035, 0.9, -1427.94, FY+0.925, -1160.1, "#8a3a2a", 0, 0.012); RB(0.03, 0.4, 0.9, -1427.815, FY+0.72, -1160.1, "#8a3a2a", 0, 0.01);        // (the throw, over the back)
     const fx=WX1+0.06; C(0.22, 0.32, fx+0.85, FY+0.16, -1159.55, "#8a6a42", 14); for(let k=0;k<5;k++) ent(new T.CylinderGeometry(0.06, 0.06, 0.42, 8), fx+0.78+(k%3)*0.08, FY+0.34+((k/3)|0)*0.09, -1159.55, "#6a4a32", Math.PI/2, 0.15*k, 0);
     C(0.1, 0.02, fx+0.85, FY+0.01, -1160.0, "#2a2a2c", 12); C(0.012, 0.7, fx+0.85, FY+0.36, -1160.0, "#2a2a2c", 6); for(let k=0;k<3;k++) tubeE(V3(fx+0.85, FY+0.68, -1160.0), V3(fx+0.8+k*0.05, FY+0.1, -1159.95+k*0.03), 0.008, "#3a3a3c");
@@ -688,7 +688,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     B(0.03, 0.9, 0.7, -1434.94+0.02, BF+1.5, -1162.4, "#3a2a1a"); B(0.02, 0.8, 0.6, -1434.94+0.04, BF+1.5, -1162.4, "#e8b030");
     // THE GAME ROOM (where the mechanical room was, open to the rec room): a pool table under its lamp, a cue rack, the wine rack,
     // the arcade cabinet, a shelf of board games, two leather club chairs and a lamp table between them
-    { const tx=-1422.1, tz=-1160.4, wood="#4a2a16";
+    { const tx=-1422.25, tz=-1160.4, wood="#4a2a16";
       RB(1.5, 0.16, 2.7, tx, BF+0.62, tz, wood, 0, 0.03); B(1.27, 0.06, 2.47, tx, BF+0.73, tz, "#1e6a3e");
       for(const sd of [-1,1]){ RB(0.13, 0.08, 2.7, tx+sd*0.69, BF+0.78, tz, wood, 0, 0.02); RB(1.25, 0.08, 0.13, tx, BF+0.78, tz+sd*1.285, wood, 0, 0.02);
         B(0.025, 0.05, 2.47, tx+sd*0.623, BF+0.785, tz, "#1a5a34"); B(1.22, 0.05, 0.025, tx, BF+0.785, tz+sd*1.223, "#1a5a34"); }
@@ -915,7 +915,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     "the stone house: the basement's guest room and bath":[[-1427.1, WZ0-1.6],[-1427.1, CZ0+0.6],[-1426.4, -1159.0],[-1421.85, -1157.9],[-1421.85, -1156.3],[-1423.35, -1156.3],[-1423.35, -1155.0],[-1423.35, -1152.56],[-1425.2, -1152.56],[-1425.6, -1157.6],
       [-1433.6, -1157.8],[-1433.6, -1159.2],[-1436.2, -1159.2],[-1436.6, -1160.6],[-1436.2, -1159.2],[-1433.6, -1159.2],[-1433.6, -1155.95],[-1436.2, -1155.95],[-1437.0, -1156.8]],
     "the stone house: the game room and the mechanical room":[[-1427.1, WZ0-1.6],[-1427.1, CZ0+0.6],[-1426.4, -1159.0],[-1421.85, -1157.9],[-1421.85, -1156.3],[-1423.35, -1156.3],[-1423.35, -1155.0],
-      [-1423.35, -1152.56],[-1424.4, -1152.56],[-1424.4, -1156.4],[-1423.6, -1157.6],[-1423.6, -1161.0],[-1424.0, -1162.4],[-1421.1, -1162.45],[-1420.95, -1159.6],[-1421.45, -1157.6],[-1421.45, -1156.3],[-1421.2, -1155.4]]};
+      [-1423.35, -1152.56],[-1424.5, -1152.56],[-1424.5, -1157.6],[-1423.6, -1157.6],[-1423.6, -1161.0],[-1424.0, -1162.4],[-1421.03, -1162.45],[-1421.03, -1159.6],[-1421.03, -1158.5],[-1421.45, -1157.6],[-1421.45, -1156.3],[-1421.2, -1155.4]]};
 
   { const rm=new T.MeshStandardMaterial({vertexColors:true, roughness:0.68, metalness:0.04});
     for(const k in groups) if(groups[k].length) detailMesh(groups[k], rm, "ranch-"+k, k!=="basement"); }
