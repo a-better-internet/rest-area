@@ -543,7 +543,7 @@ const ZOMBIE=(function(){
       }else{ n+=zb.kind==="brute" ? 3 : 1;
         if(sp>0.3){ const side=lx>=0 ? 1 : -1; zb.kx+=fz*side*0.06; zb.kz+=-fx*side*0.06; } }   // (shoved along by the bumper)
     }
-    if(hit){ Z.ts=0.15; S.tsT=0.08; S.shake=Math.min(1, S.shake+0.5+0.15*hit); S.splat=Math.min(1, S.splat+0.55); snd.crunch(); }
+    if(hit){ Z.ts=0.15; S.tsT=0.08; S.shake=Math.min(1, S.shake+0.5+0.15*hit); S.splat=Math.min(1, S.splat+0.4); snd.crunch(); }
     if(n>0 && sp<5.5){ const k=Math.exp(-dt*(0.75*n+(n>=4 ? 7 : 0))); b.velocity.x*=k; b.velocity.z*=k; S.crowdT=0.4; }
   }
 
@@ -626,7 +626,7 @@ const ZOMBIE=(function(){
     blood.scorch(b.x, b.z, surfaceY(b.x, b.z, b.y+0.3));
     snd.boom(b.x, b.z);
     for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-b.x, zb.z-b.z)<90) zb.alert=true;
-    if(pdist<4) S.splat=Math.min(1, S.splat+0.5);
+    if(pdist<3) S.splat=Math.min(1, S.splat+0.4);
   }
 
   /* ---- the rocket launcher: one in the tube, a back-blast of smoke behind you as it goes, and the rocket itself out along
@@ -820,7 +820,7 @@ const ZOMBIE=(function(){
   function hurtPlayer(n, fx, fz){
     if(Z.dead) return;
     if(Z.god){ S.dmgFlash=Math.min(0.3, S.dmgFlash+n/90); S.shake=Math.min(0.35, S.shake+n/70); return; }     // (NINELIVES: you feel it, it takes nothing)
-    Z.hp=Math.max(0, Z.hp-n); S.dmgFlash=Math.min(1, S.dmgFlash+n/28); S.shake=Math.min(1, S.shake+n/25);
+    Z.hp=Math.max(0, Z.hp-n); S.dmgFlash=Math.min(0.75, S.dmgFlash+n/40); S.shake=Math.min(1, S.shake+n/25);
     // from which side, on the screen
     const a=Math.atan2(fx-player.pos.x, fz-player.pos.z), view=Math.atan2(-Math.sin(player.yaw), -Math.cos(player.yaw));
     S.dmgDir=-wrapA(a-view); S.dmgDirT=1.4;
@@ -1702,7 +1702,7 @@ const ZOMBIE=(function(){
       #zslots span.cur{color:#14120e;background:#c8b070;border-color:#c8b070}
       #zfeed{position:absolute;right:30px;top:42%;text-align:right;font-size:15px;letter-spacing:.18em;text-shadow:0 2px 5px #000}
       #zfeed div{transition:opacity .6s}
-      #zdmg{position:absolute;inset:0;opacity:0;background:radial-gradient(110% 105% at 50% 50%, rgba(120,0,0,0) 52%, rgba(150,8,4,.85) 100%)}
+      #zdmg{position:absolute;inset:0;opacity:0;background:radial-gradient(110% 105% at 50% 50%, rgba(120,0,0,0) 62%, rgba(140,10,6,.5) 100%)}
       #zdir{position:absolute;left:50%;top:50%;width:0;height:0;opacity:0}
       #zdir:before{content:"";position:absolute;left:-150px;top:-150px;width:300px;height:300px;border-radius:50%;box-sizing:border-box;
         border:6px solid transparent;border-top-color:rgba(220,30,18,.9);filter:drop-shadow(0 0 6px rgba(0,0,0,.8))}
@@ -1734,10 +1734,12 @@ const ZOMBIE=(function(){
       banner:$("zbanner"), deadEl:$("zdead"), dstats:$("zdstats"), score:$("zscore"), mult:$("zmult"), bombsEl:$("zbombs"), splatEl:$("zsplat"), zoomEl:$("zzoom"), cheatEl:$("zcheat"), last:{}});
     // blood on the screen: a few blotches, thrown somewhere new each time it starts
     let _sp=0;
-    hud.splat=(v)=>{ if(v>0.3 && _sp<0.05){ const g=[]; for(let k=0;k<7;k++){ const x=(Math.random()*100).toFixed(0), y=(Math.random()*100).toFixed(0), r=(8+Math.random()*16).toFixed(0);
-        g.push("radial-gradient(circle at "+x+"% "+y+"%, rgba(90,4,2,.9) 0, rgba(70,2,0,.75) "+(r*0.5).toFixed(0)+"vmin, rgba(60,0,0,0) "+r+"vmin)"); }
-      hud.splatEl.style.background=g.join(","); }
-      _sp=v; hud.splatEl.style.opacity=Math.min(0.9, v); };
+    // (a light touch: three or four small flecks out toward the edges, never over the middle of the view, faint and soon gone)
+    hud.splat=(v)=>{ if(v>0.3 && _sp<0.05){ const g=[], n=3+(Math.random()*2|0); for(let k=0;k<n;k++){ const a=Math.random()*Math.PI*2, d=34+Math.random()*14;
+          const x=(50+Math.cos(a)*d*1.2).toFixed(0), y=(50+Math.sin(a)*d).toFixed(0), r=(3+Math.random()*5).toFixed(1);
+          g.push("radial-gradient(circle at "+x+"% "+y+"%, rgba(80,6,4,.55) 0, rgba(60,4,2,.35) "+(r*0.45).toFixed(1)+"vmin, rgba(50,0,0,0) "+r+"vmin)"); }
+        hud.splatEl.style.background=g.join(","); }
+      _sp=v; hud.splatEl.style.opacity=Math.min(0.42, v*0.5); };
     hud.cross.ch=[...hud.cross.children];
     hud.gun=()=>{ hud.last.g=null; };
     hud.dead=(on)=>{ hud.deadEl.style.display=on ? "flex" : "none";
@@ -1768,7 +1770,7 @@ const ZOMBIE=(function(){
     const ch=hud.cross.ch; ch[0].style.top=(-gap-9)+"px"; ch[1].style.top=gap+"px"; ch[2].style.left=(-gap-9)+"px"; ch[3].style.left=gap+"px"; hud.cross.style.opacity=op;
     S.hitT=Math.max(0, S.hitT-dt); hud.hit.style.opacity=S.hitT>0 ? 1 : 0; hud.hit.className=S.hitKill && S.hitT>0 ? "kill" : ""; if(S.hitT<=0) S.hitKill=false;
     S.dmgFlash=Math.max(0, S.dmgFlash-dt*1.2);
-    const low=Z.hp<30 && !Z.dead ? (0.25+0.2*Math.sin(Z.t*6))*(1-Z.hp/30) : 0;
+    const low=Z.hp<30 && !Z.dead ? (0.18+0.12*Math.sin(Z.t*6))*(1-Z.hp/30) : 0;
     hud.dmg.style.opacity=Math.min(1, S.dmgFlash+low+(Z.dead ? 0.7 : 0));
     S.dmgDirT=Math.max(0, S.dmgDirT-dt); hud.dirEl.style.opacity=Math.min(1, S.dmgDirT); hud.dirEl.style.transform="rotate("+S.dmgDir+"rad)";
     hud.scope.style.display=g.zoom && S.ads>0.85 && !Z.dead ? "block" : "none";
@@ -1980,7 +1982,7 @@ const ZOMBIE=(function(){
     // the ADS view: tighter, a lot tighter through the rifle's scope
     { const g=G(), want=fov*(1-S.ads*(1-aimFov(g))); if(Math.abs(camera.fov-want)>0.01){ camera.fov=want; camera.updateProjectionMatrix(); } }
     // the blood on the screen from a hit close to, or a car through them
-    S.splat=Math.max(0, S.splat-dt*0.55); hud.splat(S.splat);
+    S.splat=Math.max(0, S.splat-dt*0.9); hud.splat(S.splat);
     // hit: the view jolts; down: the view goes to the ground
     if(S.shake>0){ S.shake=Math.max(0, S.shake-dt*2.5); const k=S.shake*S.shake*0.06; camera.position.x+=(Math.random()-0.5)*k; camera.position.y+=(Math.random()-0.5)*k; camera.position.z+=(Math.random()-0.5)*k; }
     if(Z.dead){ const k=Math.min(1, S.deadT/0.9); camera.position.y-=k*1.35; camera.rotateZ(k*0.9); camera.rotateX(-k*0.25); }
