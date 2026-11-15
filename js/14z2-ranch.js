@@ -279,10 +279,11 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   wall("wp_wall", "z", -1432, PT, CZ0+WT, WZ1-WT, FY, CL, [o(-1160.2, -1157.2, FY-0.01, FY+2.15)], WALLC, FY);   // the wing | the middle, a cased opening to the living room
   pw("x", -1157, WX1+0.06, CX1-0.1, [o(-1431.0, -1425.2, FY-0.01, FY+2.2), D(-1422.3, -1421.4)]);              // living | kitchen (open), dining | mudroom
   pw("z", -1424, CZ0+WT, -1157.06, [o(-1161.2, -1157.3, FY-0.01, FY+2.15)]); pw("z", -1424, -1156.94, WZ1-WT, []);                // living | dining (open), kitchen | mudroom (the stair against it)
-  const doorIn=(xf, label, ajar)=>makeDoor(xf, 0, FY+0.01, 0, label, true, ajar||0.3, "closet", 0xf2eee6);
-  doorIn(XF(-1435, -1160.33, -Math.PI/2), "THE SECOND BEDROOM", 0.4); doorIn(XF(-1435, -1158.38, -Math.PI/2), "THE BATHROOM", 0.2);
-  doorIn(XF(-1434.58, -1160.5, 0), "THE OFFICE", 0.5); doorIn(XF(-1433.77, -1156.5, Math.PI), "THE MAIN BEDROOM", 0.45); doorIn(XF(-1437, -1155.38, -Math.PI/2), "THE MAIN BATH", 0.25);
-  doorIn(XF(-1422.28, -1157, 0), "THE MUDROOM", 0.6);
+  const doorIn=(xf, label, ajar)=>makeDoor(xf, 0, FY+0.01, 0, label, true, ajar===undefined ? 0.3 : ajar, "closet", 0xf2eee6);
+  // (each door shut or standing well open, never a few degrees ajar)
+  doorIn(XF(-1435, -1160.33, -Math.PI/2), "THE SECOND BEDROOM", 0.95); doorIn(XF(-1435, -1158.38, -Math.PI/2), "THE BATHROOM", 0);
+  doorIn(XF(-1434.58, -1160.5, 0), "THE OFFICE", 0.95); doorIn(XF(-1433.77, -1156.5, Math.PI), "THE MAIN BEDROOM", 0.95); doorIn(XF(-1437, -1155.38, -Math.PI/2), "THE MAIN BATH", 0);
+  doorIn(XF(-1422.28, -1157, 0), "THE MUDROOM", 0.95);
   { // the front door, and the wreath on it: hung on the leaf itself (its group), so it swings with the door
     const fd=makeDoor(XF(-1427.58, CZ0+WT/2, 0), 0, FY+0.01, 0, "THE FRONT DOOR", true, 0, null, 0x4a3a30);
     const W=[], add=(geo, x, y, z, c, rx)=>W.push({geo:geo, matrix:new T.Matrix4().compose(V3(x, y, z), new T.Quaternion().setFromEuler(new T.Euler(rx||0, 0, 0)), V3(1,1,1)), color:new T.Color(c)});
