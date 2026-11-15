@@ -328,6 +328,51 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   const rug=(x0, x1, z0, z1, c)=>push("wp_rug", boxGeo(x1-x0, 0.010, z1-z0), (x0+x1)/2, FY+0.017, (z0+z1)/2, 0, c||"#ffffff");
   const art=(ax, x, z, y, w, h, c, dir)=>{ if(ax==="x"){ RB(w+0.08, h+0.08, 0.03, x, y, z+dir*0.016, "#3a2a1a", 0, 0.01); B(w, h, 0.02, x, y, z+dir*0.032, c); }
     else { RB(0.03, h+0.08, w+0.08, x+dir*0.016, y, z, "#3a2a1a", 0, 0.01); B(0.02, h, w, x+dir*0.032, y, z, c); } };
+  // ---- the trim upstairs: a painted baseboard along every wall and a crown at the ceiling, each run stopped at a doorway (7.5 cm past it)
+  // and the crown at any opening that runs up to it; an x wall's pieces 2 mm taller (and the crown 2 mm deeper) than a z wall's ----
+  { const TR="#f6f2ea", along=(ax, fc, dir, u0, u1, d0, d1, y0, y1)=>{ const um=(u0+u1)/2, dm=fc+dir*(d0+d1)/2;
+      if(ax==="x") B(u1-u0, y1-y0, d1-d0, um, (y0+y1)/2, dm, TR); else B(d1-d0, y1-y0, u1-u0, dm, (y0+y1)/2, um, TR); };
+    const runs=(a, b, gaps)=>{ const out=[]; let s0=a; for(const [g0, g1] of gaps.slice().sort((p, q)=>p[0]-q[0])){ if(g0-0.075>s0+0.02) out.push([s0, g0-0.075]); s0=Math.max(s0, g1+0.075); } if(b>s0+0.02) out.push([s0, b]); return out; };
+    const trim=(ax, fc, dir, a, b, ops, top)=>{ const e=ax==="x" ? 0.002 : 0, T0=top||CL;
+      for(const [u0, u1] of runs(a, b, (ops||[]).filter(q=>q.sill<FY+0.2).map(q=>[q.a, q.b]))){ along(ax, fc, dir, u0, u1, -0.002, 0.018, FY, FY+0.13+e); along(ax, fc, dir, u0, u1, -0.002, 0.024, FY+0.13+e, FY+0.145+e*2); }
+      for(const [u0, u1] of runs(a, b, (ops||[]).filter(q=>q.head>T0-0.2).map(q=>[q.a, q.b]))){ along(ax, fc, dir, u0, u1, -0.002, 0.03+e, T0-0.11-e, T0-0.002); along(ax, fc, dir, u0, u1, -0.002, 0.065+e, T0-0.05-e, T0-0.002);
+        along(ax, fc, dir, u0, u1, -0.002, 0.05+e, T0-0.085-e, T0-0.05-e); } };
+    const P2=(ax, c2, a, b, ops)=>{ trim(ax, c2-PT/2, -1, a, b, ops); trim(ax, c2+PT/2, 1, a, b, ops); };
+    trim("z", WX0+WT, 1, WZ0+WT, WZ1-WT, W_WEST); trim("x", WZ0+WT, 1, WX0+WT, WX1-WT, W_FRONT); trim("x", WZ1-WT, -1, WX0+WT, CX1-0.1, BACK_H);
+    trim("x", CZ0+WT, 1, WX1+0.06, CX1-0.1, C_FRONT); trim("z", WX1-WT, -1, WZ0+WT, CZ0, []); trim("z", CX1-0.1, -1, CZ0+WT, WZ1-WT, G_WEST);
+    P2("z", -1435, WZ0+WT, -1156.56, [D(-1160.35, -1159.45), D(-1158.4, -1157.5)]); P2("x", -1159, WX0+WT, -1435.06, []);
+    P2("x", -1160.5, -1434.94, WX1-0.06, [D(-1434.6, -1433.75)]); P2("x", -1156.5, WX0+WT, WX1-0.06, [D(-1434.65, -1433.75)]);
+    P2("z", -1437, -1156.44, WZ1-WT, [D(-1155.4, -1154.5)]); P2("z", -1432, CZ0+WT, WZ1-WT, [o(-1160.2, -1157.2, FY-0.01, FY+2.15)]);
+    P2("x", -1157, WX1+0.06, CX1-0.1, [o(-1431.0, -1425.2, FY-0.01, FY+2.2), D(-1422.3, -1421.4)]);
+    P2("z", -1424, CZ0+WT, -1157.06, [o(-1161.2, -1157.3, FY-0.01, FY+2.15)]); trim("z", -1424-PT/2, -1, -1156.94, WZ1-WT, []); }
+  // a potted plant: a clay pot, the soil, leaves in clumps
+  const plant=(x, z, s2, pot)=>{ CT(0.17*s2, 0.13*s2, 0.34*s2, x, FY+0.17*s2, z, pot||"#a8583a", 16); C(0.155*s2, 0.01, x, FY+0.335*s2, z, "#3a2a1e", 14);
+    for(let k=0;k<7;k++){ const a=k*2.4, r=(k ? 0.12 : 0)*s2; S(0.15*s2*(k ? 1 : 1.2), x+Math.cos(a)*r, FY+(0.5+((k*3)%4)*0.09)*s2, z+Math.sin(a)*r, ["#3a6a2e","#2e5a26","#4a7a36"][k%3]); }
+    addCol(x-0.18*s2, x+0.18*s2, z-0.18*s2, z+0.18*s2, FY-0.06, FY+0.8*s2); };
+  // ---- the living room's comforts: a side table and lamp at the sectional's end, a throw over its back, the log basket and fire tools,
+  // candles on the mantel, a plant in the corner, books stacked on the coffee table ----
+  { const st=[-1428.05, -1158.3]; RB(0.46, 0.55, 0.46, st[0], FY+0.275, st[1], "#5a3a22", 0, 0.02); C(0.06, 0.24, st[0], FY+0.67, st[1], "#8a6a4a", 12); CT(0.11, 0.18, 0.22, st[0], FY+0.9, st[1], "#efe2c4", 16);
+    addCol(st[0]-0.23, st[0]+0.23, st[1]-0.23, st[1]+0.23, FY-0.06, FY+0.6); lampIn(st[0], FY+0.95, st[1], [WX1, -1424, CZ0, -1157, FY-0.5, CL+0.2], 0.3, 0xffd6a0);
+    RB(0.26, 0.035, 0.9, -1427.94, FY+0.925, -1160.1, "#8a3a2a", 0, 0.012); RB(0.03, 0.4, 0.9, -1427.815, FY+0.72, -1160.1, "#8a3a2a", 0, 0.01);        // (the throw, over the back)
+    const fx=WX1+0.06; C(0.22, 0.32, fx+0.85, FY+0.16, -1159.55, "#8a6a42", 14); for(let k=0;k<5;k++) ent(new T.CylinderGeometry(0.06, 0.06, 0.42, 8), fx+0.78+(k%3)*0.08, FY+0.34+((k/3)|0)*0.09, -1159.55, "#6a4a32", Math.PI/2, 0.15*k, 0);
+    C(0.1, 0.02, fx+0.85, FY+0.01, -1160.0, "#2a2a2c", 12); C(0.012, 0.7, fx+0.85, FY+0.36, -1160.0, "#2a2a2c", 6); for(let k=0;k<3;k++) tubeE(V3(fx+0.85, FY+0.68, -1160.0), V3(fx+0.8+k*0.05, FY+0.1, -1159.95+k*0.03), 0.008, "#3a3a3c");
+    addCol(fx+0.62, fx+1.08, -1160.12, -1159.3, FY-0.06, FY+0.4);
+    for(const dz of [-0.62, -0.5, 0.55]) { C(0.035, dz>0 ? 0.24 : 0.16, fx+0.56, FY+1.012+(dz>0 ? 0.12 : 0.08), -1161.05+dz, "#f2ecd8", 12); C(0.045, 0.012, fx+0.56, FY+1.006, -1161.05+dz, "#b8902a", 12); }
+    plant(-1424.5, -1157.5, 1.2);
+    for(let k=0;k<3;k++) RB(0.3-k*0.03, 0.04, 0.22-k*0.02, -1430.0, FY+0.485+0.04*k, -1159.13, ["#7a2a22","#2a3a5a","#e8dcc0"][k], 0.1*k, 0.008); }
+  // ---- the dining room: a rug under the table, a bowl and candlesticks on the runner; the office's rug and desk lamp; the hall's console
+  // under the pictures; a bench at the foot of the big bed; plants ----
+  { push("wp_rug", boxGeo(2.1, 0.010, 2.9), -1422.2, FY+0.017, -1160.15, 0, "#a83a2a");
+    S(0.16, -1422.2, FY+0.82, -1160.15, "#c8a050", 1, 0.4, 1); for(let k=0;k<4;k++) S(0.045, -1422.2+Math.cos(k*1.6)*0.06, FY+0.86, -1160.15+Math.sin(k*1.6)*0.06, ["#c82a1a","#e8b030","#7ab02a"][k%3]);
+    for(const dz of [-0.5, 0.5]){ C(0.04, 0.02, -1422.2, FY+0.792, -1160.15+dz, "#b8902a", 12); C(0.012, 0.22, -1422.2, FY+0.91, -1160.15+dz, "#b8902a", 8); C(0.016, 0.16, -1422.2, FY+1.1, -1160.15+dz, "#f2ecd8", 10); }
+    plant(-1423.5, -1161.4, 1.0, "#3a4a5a");
+    push("wp_rug", boxGeo(1.9, 0.010, 1.5), -1433.35, FY+0.017, -1162.2, 0, "#5a3a5a");
+    C(0.07, 0.02, -1433.0, FY+0.785, -1163.6, "#2a2a2c", 12); tubeE(V3(-1433.0, FY+0.79, -1163.6), V3(-1432.95, FY+1.15, -1163.55), 0.01, "#2a2a2c"); tubeE(V3(-1432.95, FY+1.15, -1163.55), V3(-1433.12, FY+1.2, -1163.4), 0.01, "#2a2a2c");
+    CT(0.04, 0.09, 0.12, -1433.15, FY+1.16, -1163.38, "#1e4a2e", 14); lampIn(-1433.15, FY+1.1, -1163.38, [-1435, WX1, WZ0, -1160.5, FY-0.5, CL+0.2], 0.25, 0xffe0b0);
+    const bn=Fr(-1434.4, WZ1-WT-2.42, faceN, FY); bn.f(1.5, 0.08, 0.42, 0, 0.44, 0, "#6a4a3a", 0.03); bn.f(1.44, 0.06, 0.38, 0, 0.5, 0, "#c8b8a0", 0.025);
+    for(const a of [-0.66, 0.66]) for(const b of [-0.16, 0.16]) bn.f(0.05, 0.42, 0.05, a, 0.21, b, "#4a3020", 0.012); bn.col(1.5, 0.42, 0, 0, 0.55); bn.seat(0, 0.0, "THE BENCH AT THE FOOT OF THE BED");
+    RB(1.9, 0.03, 0.5, -1434.4, FY+0.665, WZ1-WT-1.75, "#c8b088", 0, 0.012);
+    plant(-1432.5, WZ1-WT-0.3, 1.1); plant(WX0+WT+0.3, -1163.5, 1.0, "#3a4a5a"); }
   // ---- the living room: a stone fireplace on the wing's wall, the TV over it, the sectional, the coffee table, a rug, lamps ----
   { const fx=WX1+0.06, fz=-1161.05;
     push("rn_stone", boxGeo(0.49, CL-FY-0.02, 1.6, 0.5), fx+0.255, (FY+CL)/2, fz, 0, STN);
@@ -406,7 +451,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     addCol(-1434.94, -1434.56, -1162.05, -1161.15, FY-0.06, FY+1.9);
     lampIn(-1433.5, CL-0.25, -1162.3, [-1435, WX1, WZ0, -1160.5, FY-0.5, CL+0.2], 0.5);
     // the hall: a runner, two pictures, its light
-    push("wp_rug", boxGeo(0.9, 0.01, 3.2), -1433.5, FY+0.017, -1158.5, 0, "#7a3a2a"); art("z", -1432.06, -1158.9, FY+1.55, 0.5, 0.7, "#8aa0a8", -1); art("z", -1434.94, -1156.9, FY+1.55, 0.4, 0.5, "#c8a070", 1);
+    push("wp_rug", boxGeo(0.9, 0.01, 3.2), -1433.5, FY+0.017, -1158.5, 0, "#7a3a2a"); art("z", -1432.06, -1156.86, FY+1.55, 0.4, 0.5, "#8aa0a8", -1); art("z", -1434.94, -1156.9, FY+1.55, 0.4, 0.5, "#c8a070", 1);
     lampIn(-1433.5, CL-0.25, -1158.5, [-1435, WX1, -1160.5, -1156.5, FY-0.5, CL+0.2], 0.4);
     // the second bedroom: a bed against the hall wall, a dresser, the reading chair in the bump-out
     const bd=Fr(-1437.4, -1160.95, faceS, FY), qc="#2a4a6a";
@@ -690,7 +735,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     addCol(-1439.75, -1436.35, QZ1-0.47, QZ1, BF-0.5, BF+1.8); }
   // the mechanical room, in the pocket east of the stair: the furnace and its duct, the water heater, the softener, the panel, the sump, a bare bulb
   { const fx=-1420.65, fz=-1153.0;
-    RB(0.7, 1.5, 0.8, fx, BF+0.75, fz, "#d8d8d4", 0, 0.03); B(0.42, BCL-0.3-(BF+1.5), 0.42, fx, (BCL-0.3+BF+1.5)/2, fz, "#a8acb0"); B(0.42, 0.3, 0.42, fx, BCL-0.19, fz+0.0, "#a8acb0"); B(0.32, 0.28, 3.4, fx, BCL-0.19, -1155.0, "#a8acb0");
+    RB(0.7, 1.5, 0.8, fx, BF+0.75, fz, "#d8d8d4", 0, 0.03); B(0.42, BCL-0.05-(BF+1.5), 0.42, fx, (BCL-0.05+BF+1.5)/2, fz, "#a8acb0"); B(0.32, 0.28, 3.7, fx, BCL-0.19, -1154.85, "#a8acb0");
     C(0.28, 1.55, -1422.2, BF+0.78, -1152.62, "#e8e8e4", 18); C(0.04, BCL-(BF+1.55), -1422.2, (BCL+BF+1.55)/2, -1152.62, "#8a8d90", 8);
     C(0.16, 1.1, -1422.35, BF+0.55, -1153.55, "#2a3a5a", 14); C(0.2, 0.8, -1422.35, BF+0.4, -1154.1, "#2a2a2c", 14);
     B(0.1, 0.8, 0.5, QX1-0.05, BF+1.5, -1155.3, "#a8acb0"); C(0.24, 0.02, -1421.3, BF+0.012, -1154.5, "#3a3a3c", 16);
