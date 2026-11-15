@@ -89,6 +89,17 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
       c.strokeStyle="rgba(60,56,50,0.3)"; c.lineWidth=1; c.beginPath(); c.moveTo(30,40); c.lineTo(90,70); c.lineTo(120,140); c.moveTo(180,200); c.lineTo(230,180); c.stroke(); });
     t.wrapS=t.wrapT=T.RepeatWrapping; return new T.MeshStandardMaterial(Object.assign({map:t, roughness:0.92}, _po(-2))); });
   bucketOf("rn_drive2", ()=>{ const b=BUCKETS.get("rn_drive"); const m=b.makeMat(); m.polygonOffsetFactor=-3; m.polygonOffsetUnits=-6; return m; });
+  // a wool rug in the old pattern: a deep field, a lozenge medallion, small guls scattered, a border of bands; tinted by the vertex colour
+  bucketOf("rn_rug", ()=>{ const t=signTex(512, 512, (c, W, H)=>{ const r=_trng(77);
+      c.fillStyle="#2a2440"; c.fillRect(0, 0, W, H); c.fillStyle="#e8d8b0"; c.fillRect(14, 14, W-28, H-28); c.fillStyle="#7a1e1a"; c.fillRect(22, 22, W-44, H-44);
+      c.fillStyle="#2a2440"; c.fillRect(44, 44, W-88, H-88); c.fillStyle="#c89a4a"; c.fillRect(50, 50, W-100, H-100); c.fillStyle="#8a2420"; c.fillRect(58, 58, W-116, H-116);
+      for(let i=0;i<20;i++){ c.fillStyle=i%2 ? "#e8d8b0" : "#c89a4a"; c.save(); c.translate(33+(i+0.5)*(W-66)/20, 33); c.rotate(Math.PI/4); c.fillRect(-4, -4, 8, 8); c.restore();
+        c.save(); c.translate(33+(i+0.5)*(W-66)/20, H-33); c.rotate(Math.PI/4); c.fillRect(-4, -4, 8, 8); c.restore(); }
+      const loz=(cx, cy, rx, ry, col)=>{ c.fillStyle=col; c.beginPath(); c.moveTo(cx, cy-ry); c.lineTo(cx+rx, cy); c.lineTo(cx, cy+ry); c.lineTo(cx-rx, cy); c.closePath(); c.fill(); };
+      loz(W/2, H/2, 120, 170, "#2a2440"); loz(W/2, H/2, 104, 150, "#c89a4a"); loz(W/2, H/2, 88, 128, "#5a1a18"); loz(W/2, H/2, 46, 66, "#e8d8b0"); loz(W/2, H/2, 26, 38, "#2a4a5a");
+      for(const [x, y] of [[110,110],[W-110,110],[110,H-110],[W-110,H-110],[110,H/2],[W-110,H/2]]){ loz(x, y, 22, 22, "#2a2440"); loz(x, y, 12, 12, "#c89a4a"); }
+      for(let k=0;k<5000;k++){ c.fillStyle="rgba("+(r()<0.5 ? "0,0,0," : "255,240,210,")+(r()*0.08).toFixed(3)+")"; c.fillRect(r()*W, r()*H, 2, 1); } });
+    t.anisotropy=4; return new T.MeshStandardMaterial({map:t, roughness:1.0, vertexColors:true}); });
   bucketOf("rn_glow", ()=>emitMat(0xfff2dc, 0.95, "indoor"));
   bucketOf("rn_lamp", ()=>emitMat(0xffdca8, 1.0, "night"));
 
@@ -325,7 +336,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
      THE ROOMS
      ====================================================================== */
   const RUG=["#7a2a22","#2a4a5a","#c8a070","#5a6a4a"];
-  const rug=(x0, x1, z0, z1, c)=>push("wp_rug", boxGeo(x1-x0, 0.010, z1-z0), (x0+x1)/2, FY+0.017, (z0+z1)/2, 0, c||"#ffffff");
+  const rug=(x0, x1, z0, z1, c)=>push("rn_rug", boxGeo(x1-x0, 0.010, z1-z0), (x0+x1)/2, FY+0.017, (z0+z1)/2, 0, c||"#ffffff");
   const art=(ax, x, z, y, w, h, c, dir)=>{ if(ax==="x"){ RB(w+0.08, h+0.08, 0.03, x, y, z+dir*0.016, "#3a2a1a", 0, 0.01); B(w, h, 0.02, x, y, z+dir*0.032, c); }
     else { RB(0.03, h+0.08, w+0.08, x+dir*0.016, y, z, "#3a2a1a", 0, 0.01); B(0.02, h, w, x+dir*0.032, y, z, c); } };
   // ---- the trim upstairs: a painted baseboard along every wall and a crown at the ceiling, each run stopped at a doorway (7.5 cm past it)
@@ -362,11 +373,11 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     for(let k=0;k<3;k++) RB(0.3-k*0.03, 0.04, 0.22-k*0.02, -1430.0, FY+0.485+0.04*k, -1159.13, ["#7a2a22","#2a3a5a","#e8dcc0"][k], 0.1*k, 0.008); }
   // ---- the dining room: a rug under the table, a bowl and candlesticks on the runner; the office's rug and desk lamp; the hall's console
   // under the pictures; a bench at the foot of the big bed; plants ----
-  { push("wp_rug", boxGeo(2.1, 0.010, 2.9), -1422.2, FY+0.017, -1160.15, 0, "#a83a2a");
+  { push("rn_rug", boxGeo(2.1, 0.010, 2.9), -1422.2, FY+0.017, -1160.15, 0, "#f0e4dc");
     S(0.16, -1422.2, FY+0.82, -1160.15, "#c8a050", 1, 0.4, 1); for(let k=0;k<4;k++) S(0.045, -1422.2+Math.cos(k*1.6)*0.06, FY+0.86, -1160.15+Math.sin(k*1.6)*0.06, ["#c82a1a","#e8b030","#7ab02a"][k%3]);
     for(const dz of [-0.5, 0.5]){ C(0.04, 0.02, -1422.2, FY+0.792, -1160.15+dz, "#b8902a", 12); C(0.012, 0.22, -1422.2, FY+0.91, -1160.15+dz, "#b8902a", 8); C(0.016, 0.16, -1422.2, FY+1.1, -1160.15+dz, "#f2ecd8", 10); }
     plant(-1423.5, -1161.4, 1.0, "#3a4a5a");
-    push("wp_rug", boxGeo(1.9, 0.010, 1.5), -1433.35, FY+0.017, -1162.2, 0, "#5a3a5a");
+    push("rn_rug", boxGeo(1.9, 0.010, 1.5), -1433.35, FY+0.017, -1162.2, 0, "#c8d0e0");
     C(0.07, 0.02, -1433.0, FY+0.785, -1163.6, "#2a2a2c", 12); tubeE(V3(-1433.0, FY+0.79, -1163.6), V3(-1432.95, FY+1.15, -1163.55), 0.01, "#2a2a2c"); tubeE(V3(-1432.95, FY+1.15, -1163.55), V3(-1433.12, FY+1.2, -1163.4), 0.01, "#2a2a2c");
     CT(0.04, 0.09, 0.12, -1433.15, FY+1.16, -1163.38, "#1e4a2e", 14); lampIn(-1433.15, FY+1.1, -1163.38, [-1435, WX1, WZ0, -1160.5, FY-0.5, CL+0.2], 0.25, 0xffe0b0);
     const bn=Fr(-1434.4, WZ1-WT-2.42, faceN, FY); bn.f(1.5, 0.08, 0.42, 0, 0.44, 0, "#6a4a3a", 0.03); bn.f(1.44, 0.06, 0.38, 0, 0.5, 0, "#c8b8a0", 0.025);
@@ -444,7 +455,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   { // the office: a desk under the window, a chair, a bookcase, a computer
     const d=Fr(-1433.6, WZ0+WT+0.32, faceS, FY); d.f(1.4, 0.05, 0.64, 0, 0.75, 0, "#6a4428", 0.02); for(const a of [-0.62, 0.62]) d.f(0.05, 0.72, 0.6, a, 0.36, 0, "#5a3a22", 0.01); d.col(1.4, 0.64, 0, 0, 0.78);
     d.f(0.55, 0.34, 0.03, 0, 1.0, -0.12, "#141618", 0.01); d.f(0.45, 0.02, 0.15, 0, 0.785, 0.12, "#2a2a2c", 0.006); d.c(0.03, 0.2, 0, 0.87, -0.14, "#2a2a2c", 8);
-    const ch=Fr(-1433.6, -1162.8, faceN, FY); ch.f(0.5, 0.08, 0.5, 0, 0.48, 0, "#1a1a1c", 0.04); ch.f(0.46, 0.6, 0.08, 0, 0.86, -0.22, "#1a1a1c", 0.04); ch.c(0.03, 0.42, 0, 0.22, 0, "#3a3a3c", 8); ch.c(0.26, 0.03, 0, 0.03, 0, "#3a3a3c", 10);
+    const ch=Fr(-1433.6, -1162.8, faceN, FY); ch.f(0.5, 0.08, 0.5, 0, 0.48, 0, "#5a2e1a", 0.04); ch.f(0.46, 0.6, 0.08, 0, 0.86, -0.22, "#5a2e1a", 0.04); art("z", WX1-WT, -1162.2, FY+1.55, 0.7, 0.5, "#6a8a5a", -1); ch.c(0.03, 0.42, 0, 0.22, 0, "#3a3a3c", 8); ch.c(0.26, 0.03, 0, 0.03, 0, "#3a3a3c", 10);
     ch.col(0.5, 0.5, 0, 0, 0.6); ch.seat(0, 0.05, "THE DESK CHAIR");
     B(0.34, 1.9, 0.9, -1434.74, FY+0.95, -1161.6, "#5a3a22"); for(let k=0;k<5;k++){ B(0.32, 0.02, 0.86, -1434.74, FY+0.2+k*0.42, -1161.6, "#4a3020");
       for(let j=0;j<6;j++) B(0.22, 0.24, 0.05, -1434.72, FY+0.34+k*0.42, -1161.95+j*0.13, ["#2a4a6a","#7a2a22","#c8a070","#3a5a3a","#e8e2d0","#5a3a6a"][(j*2+k)%6]); }
@@ -617,7 +628,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     so.col(3.0, 0.95, 0, 0, 0.9); addCol(so.x(1.05, 1.25)-0.48, so.x(1.05, 1.25)+0.48, so.z(1.05, 1.25)-0.9, so.z(1.05, 1.25)+0.9, BF-0.5, BF+0.9);
     for(const lx of [-1.0, 0, 1.0]) so.seat(lx, 0.1, "THE BIG SECTIONAL"); for(const lx of [-0.9, 0.3]) so.f(0.45, 0.4, 0.14, lx, 0.82, -0.2, "#c8a070", 0.06);
     RB(1.2, 0.4, 0.6, tvx+0.35, BF+0.2, -1160.6, "#5a3a22", 0, 0.05); addCol(tvx-0.25, tvx+0.95, -1160.9, -1160.3, BF-0.5, BF+0.42);
-    push("wp_rug", boxGeo(3.4, 0.010, 2.6), tvx, BF+0.017, -1160.4, 0, "#c8b8a0");
+    push("rn_rug", boxGeo(3.4, 0.010, 2.6), tvx, BF+0.017, -1160.4, 0, "#c8b8a0");
     // the bar along the back wall: a counter with a padded front, stools, the back counter with a mini-fridge and shelves of glasses
     const bx0=-1434.4, bx1=-1431.0, bz=QZ1-1.4;
     RB(bx1-bx0, 1.04, 0.55, (bx0+bx1)/2, BF+0.52, bz, "#4a2e1a", 0, 0.02); push("wp_wood", boxGeo(bx1-bx0+0.1, 0.06, 0.7, 0.8), (bx0+bx1)/2, BF+1.07, bz+0.04, 0, "#ffffff");
@@ -717,7 +728,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
         f.col(0.86, 0.8, 0, 0, 0.9); f.seat(0, 0.1, "A LEATHER CLUB CHAIR"); }
       { const lx=-1422.55, lz=QZ0+0.32; RB(0.44, 0.58, 0.44, lx, BF+0.29, lz, "#3a2414", 0, 0.02); C(0.05, 0.22, lx, BF+0.69, lz, "#b8902a", 10); CT(0.1, 0.17, 0.2, lx, BF+0.9, lz, "#efe0c0", 16);
         addCol(lx-0.22, lx+0.22, QZ0, lz+0.22, BF-0.5, BF+0.6); lampU(lx, BF+0.95, lz+0.1, 0.3, 0xffd6a0, 3.5); }
-      push("wp_rug", boxGeo(2.6, 0.010, 3.6), tx, BF+0.017, tz, 0, "#8a2a22"); } }
+      push("rn_rug", boxGeo(2.6, 0.010, 3.6), tx, BF+0.017, tz, 0, "#e8dccc"); } }
   // the guest room: a bed, a nightstand, a lamp; the bath; the storage room's shelves
   { const g=Fr(-1437.6, QZ0+1.05, faceS, BF); g.f(1.4, 0.3, 2.0, 0, 0.17, 0, "#6a4428", 0.03); g.f(1.34, 0.22, 1.94, 0, 0.42, 0.02, "#f2f0ea", 0.07); g.f(1.4, 0.07, 1.4, 0, 0.56, 0.3, "#5a6a4a", 0.03);
     for(const s2 of [-1,1]) g.f(0.55, 0.13, 0.32, s2*0.33, 0.6, -0.72, "#f4f2ec", 0.06); g.col(1.42, 2.05, 0, 0, 0.7); g.seat(0, 0.2, "THE GUEST BED");
