@@ -136,6 +136,19 @@ If the scene runs hot on your machine, start there (see below).
   - Cars park in a two-aisle lot. There are about 34, thinning out with
     distance from the door, and any of them can be driven: `E`, then `WASD`,
     with `Space` as handbrake.
+  - **How a car drives.** It pulls hard off the line and runs out of breath
+    toward a hundred (sixty in about seven seconds). Lift off and it slows on
+    the engine. `S` brakes, and backs up once you have stopped; `W` does the
+    same when you are rolling backwards. The tyres hold about 0.9 g on a dry
+    road, less in the rain, less again on gravel and a good deal less on
+    grass, which is also rough and slow: past their limit the car slides and
+    can be caught. Full lock is a tight circle in the lot and, at seventy,
+    as much as the tyres will take and no more. The body dips under the
+    brakes, sits back under power and leans in a bend. The handbrake locks
+    the rear wheels, which brake and let go sideways. Hit a wall on the slant
+    and you scrape along it; hit it square and you stop. You hear the engine
+    go up through its gears, the tyres on the road, the wind, a squeal when
+    they let go and a knock when you hit something.
   - By the walk are three accessible stalls inside the stall lines, with
     hatched access aisles between them, signs and blue curb.
   - The lots are worn: oil in the car stalls under where the engines stand,
@@ -315,6 +328,18 @@ If the scene runs hot on your machine, start there (see below).
     between the fields and along the road is rank and dull, never the rest
     area's watered green. There are hedgerows between the fields, a big lone oak, and the
     pole line crossing.
+  - **The corn stands.** It is over your head: the outer ten rows of each
+    corn field are real rows of stalks, leaves, ears and tassels that you
+    can walk down between, and from the road the field is a wall of them.
+    Past those rows the corn is too thick to push through. From the bridge
+    or the air the field is its top, leaf and tassel in rows. The beans are
+    knee high, a ragged edge of leaf round each field, and you (or a car)
+    wade through them.
+  - **Where the fields meet the woods** the first forty metres of woods are
+    real trees, all the way round the farm country: edge trees crowned to
+    the ground with shrubs at their feet, hardwoods, hemlock and pine behind
+    them. The hedgerow trees are the low, wide kind that grows in the open,
+    and the oak in the hay field is a broad one.
   - **French Creek Fuel & Mart**, on the north side by the bridge. A lot,
     a canopy with its lights over two islands of pumps (somebody filling
     up; a squeegee in its bucket and a towel box at each island), a pickup
@@ -1610,6 +1635,7 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Door · drive · use | `E` |
 | Play an arcade game | `Enter` |
 | Codes (zombie mode) | `/` |
+| Throttle · brake and reverse · steer (driving) | `W` · `S` · `A` `D` |
 | Handbrake (driving) | `Space` |
 | Throttle · reverse · steer (the boat) | `W` · `S` · `A` `D` |
 | Sit / stand | `C` |
@@ -1703,12 +1729,13 @@ being drawn and the draw calls.
 
 | Setting | Choices | What it does |
 | --- | --- | --- |
-| Preset | Low · Medium · High · Ultra | Sets resolution, shadows, draw distance and lights. High is how the scene has always looked. Low and Medium put the resolution on auto. |
+| Preset | Low · Medium · High · Ultra | Sets resolution, shadows, draw distance, lights and surface detail. High is how the scene has always looked. Low and Medium put the resolution on auto, and Low sets surface detail to plain. |
 | Resolution | auto · 0.5× · 0.75× · 1× · 1.5× · 2× · native | Pixels drawn per screen point. Native is the screen's own density, up to 2×. On a Retina Mac, 1× draws a quarter of the pixels that native does, and is the biggest single saving. Auto starts at 1× and moves between 0.5× and native. It steps down when frames run long for a second, and creeps back up after eight seconds with room to spare. |
 | Frame-rate cap | 30 · 60 · off | 60 by default. A 120 Hz ProMotion screen draws twice as many frames with the cap off. |
-| Shadows | Off · Low · Medium · High · Ultra | The sun's shadow map: 1024 to 4096 texels, over 76 to 116 m. Low uses hard-edged filtering. Off skips the shadow pass entirely: everything near you is no longer drawn a second time, into the map. |
+| Shadows | Off · Low · Medium · High · Ultra | The sun's two shadow maps, a near one and a wide one: 1024 to 4096 texels each. On Low and Medium the wide one is drawn every other frame (what is in it is thirteen metres off and more). Off skips the shadow passes entirely. |
 | Draw distance | Near · Medium · Far · Max | How far full trees reach (54 to 120 m) and, on Near and Medium, a limit past which nothing is drawn (620 m and 1150 m). The haze closes in to meet the limit, so nothing is seen to vanish. Far is the original. |
-| Lights | 4 · 6 · 8 · 12 · 16 · 24 | How many real point lights follow you round the lamps. Every lit pixel pays for each one, lit or not. The rest of the lamps only glow. |
+| Lights | 4 · 6 · 8 · 12 · 16 · 24 | How many real point lights follow you round the lamps. A pixel pays only for the lamps that reach it. The rest of the lamps only glow. |
+| Surface detail | full · plain | Full works out, for every pixel, the crowns of the far woods, the lumps of leaf on a far tree and the lawn's second grain. Plain leaves them smooth. Takes effect at once. |
 | Antialiasing | on · off | Smooths edges with four samples a pixel. Takes effect on the next reload, because the canvas is made with it or without it. On a chip built into the processor at Retina resolution it costs nearly as much as the resolution does. |
 | Frame meter | off · on | Frames per second, frame time and draw calls in the top corner. The figure after "script" is how much of each frame the page's own work took. Frame time well over it means the graphics chip is behind, and auto resolution only steps down then. |
 
@@ -1720,8 +1747,8 @@ MacBook Pro with both an Intel and an AMD chip otherwise gives a web page the
 Intel one. The page then reads which chip it got. The menu's resolution note
 names it. If nothing has been saved yet and the chip is one built into the
 processor (Intel UHD or Iris, or a software renderer), the page starts at
-Medium with auto resolution. Any other chip starts at High. Whatever you
-choose in the menu after that is kept.
+Medium with auto resolution and antialiasing off. Any other chip starts at
+High. Whatever you choose in the menu after that is kept.
 
 **No freezes mid-game.** Every shader the world uses is compiled once at
 load, behind the sign, and so is everything zombie mode adds the first time
@@ -1750,12 +1777,32 @@ A door at rest is not drawn again. Fireflies ask where the lawn is a tenth
 of them a frame. A crowd's collision test throws out every box by its
 bounds before it looks closer.
 
+**What a frame costs now.** At the car lot on Medium, looking up the lot, a
+frame was 2,550 draws and 3.6 million triangles (the view and both shadow
+maps). It is about 1,300 draws and 2.1 million. In the woods it went from
+3.3 million triangles to 1.9, and on Lake Street from 2.9 to 1.5.
+- **Lights that reach nothing cost nothing.** Each lamp's shading is skipped
+  at any pixel its light does not reach: by day that is every lamp, the
+  flashlight and both headlamps.
+- **Each shadow map is read only where it is used.** Inside the near map's
+  square the wide one is not looked up at all.
+- **The ground and the far woods' shell are in tiles**, so the lawn behind
+  you is not drawn with the lawn in front of you.
+- **The woods.** Whole trees are drawn only in the 48 m chunks within reach
+  (they were 96 m). A far tree is four soft balls of twelve corners each;
+  past a couple of hundred metres it is one ball and a stick, and those are
+  drawn sixteen chunks to a draw.
+- **Loose things have a distance.** A door, a sign, a prop, a squirrel, a
+  parked car: each is not drawn past a distance set by its size. From the
+  car lot, the doors of Lake Street a mile off used each to be a draw.
+
 **Where the time still goes**, on a chip built into the processor:
-- **Lights** are the biggest cost per pixel. Each lit pixel pays for every
-  point light in the pool, lit or not, so 6 instead of 8 is a real saving.
-- **Resolution** comes next. Auto is the right setting.
-- **The far woods** (about half a million triangles of crown blobs) and
-  the fine 2 m ground near the interstate are the largest meshes left in
+- **Resolution** first. Auto is the right setting, and antialiasing off
+  gives it more room.
+- **The shadow maps** next: Low or Off if frames are still long.
+- **Draw calls.** About a third of what is left at the rest area is the baked
+  world itself, a mesh to each material in each 96 m tile.
+- **The fine 2 m ground near the interstate** is the largest mesh left in
   view.
 
 ## Layout
@@ -1916,9 +1963,11 @@ The engine comes from the Low Desert Motel and keeps its conventions:
 - a fixed 1/60 s simulation step.
 
 Several systems were added for this world:
-- **Instanced forest.** About 15,700 trees, saplings, shrubs and ferns in
-  chunks, each with near and far levels of detail. Wind and leaf colour are
-  patched into the shaders.
+- **Instanced forest.** About 32,900 trees, saplings, shrubs and ferns in
+  48 m chunks, each with three levels of detail: the whole tree, a few soft
+  balls, and past a couple of hundred metres one ball and a stick, drawn
+  sixteen chunks at a time. Wind and leaf colour are patched into the
+  shaders.
 - **Paving.** Polygon-offset skins over the terrain, with a 1 m raster so the
   player and cars ride on the pavement rather than the ground under it.
 - **Traffic.** Highway vehicles follow (IDM) and pass on the interstate,
@@ -1940,7 +1989,7 @@ Several systems were added for this world:
 
 ## Tools
 
-All four tools use Playwright with SwiftShader. Before running them, copy
+All five tools use Playwright with SwiftShader. Before running them, copy
 `three.min.js` (r128) into `tools/`; it is git-ignored.
 
 ```
@@ -1948,6 +1997,7 @@ NODE_PATH=$(npm root -g) node tools/shot.js shots.json outDir 960 540
 NODE_PATH=$(npm root -g) node tools/walk.js
 NODE_PATH=$(npm root -g) node tools/zfight.js '{"x0":-10,"x1":17,"z0":-21,"z1":21,"y0":-0.6,"y1":10,"near":0.0011}'
 NODE_PATH=$(npm root -g) node tools/signaudit.js
+NODE_PATH=$(npm root -g) node tools/drive.js
 ```
 
 **`shot.js`** renders a list of views. Each entry in `shots.json` looks like
@@ -2059,6 +2109,14 @@ measures every piece of lettering as it is drawn, and lists any that comes
 within 3% of its canvas's edge (or runs off it), with the line that drew
 it. It then plays a few seconds in the lobby, the arcade and by the
 dartboard, to catch what is drawn at run time too.
+
+**`drive.js`** takes the first car in the lot and drives it with the keys
+and the game's own fixed step, without drawing anything: off the line, flat
+out, the brakes from sixty, a coast, full lock at a walk and at forty and
+seventy, the same in the wet, a lane change, the handbrake, reverse, a grass
+field, and a wall met on the slant. It prints each figure and fails any
+that is outside what the car is meant to do (the `LIMITS` at its top). Run
+it after changing `CARC` or `GRIP` (10) or the handling model (11).
 
 The `window.REST` handle exposes the world for scripting. For example:
 - `REST.go(x,z,yaw)` and `REST.hour(h)`;

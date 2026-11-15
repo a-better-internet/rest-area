@@ -286,6 +286,105 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
       }
     }
   }
+  /* ---- the corn and the beans, standing ----
+     East of the interchange the fields were paint on the ground: corn you looked across the top of from the road.
+     Corn in August is over your head. So each corn field is what it looks like from outside one: the outer ten rows
+     real rows, a card to each the length of the field with stalks, leaves, ears and tassels cut out of it (and the
+     last eight metres of every row along the two ends where the rows come out at you); behind them a wall of the
+     same, close-set and dark, where the eye gives up; and over the middle of the field a lid of leaf and tassel at
+     the height of the crop, which is all a corn field is from the bridge or the air. The middle is solid: nobody
+     walks through standing corn past the first rows. The cards take one normal, up and a little out, on both
+     faces, so a row is lit as a mass of leaf and not as a board.
+     The beans are knee high: a lid of leaf over the whole field at that height, and a ragged skirt of it round the
+     edge. You wade through them; so does a car. */
+  { const H=2.3, SP=0.76, NB=10, ENDS=8.0;
+    const rowTex=signTex(512, 256, (c, W, Hh)=>{ const q=_trng(9191); c.clearRect(0, 0, W, Hh);
+      // eleven plants along 2.4 m, seen side on: the stalk, a leaf every hand's breadth arching out and down each way,
+      // an ear at the waist, the tassel; the bottom leaves gone dry
+      // (a leaf goes up and out from the stalk, arches over and hangs: long and narrow, to a point)
+      const leaf=(x0, y0, dir, L, w, col)=>{ const x1=x0+dir*L*0.45, y1=y0-L*0.50, x2=x0+dir*L, y2=y0+L*0.22;
+        c.fillStyle=col; c.beginPath(); c.moveTo(x0, y0+w*0.5); c.quadraticCurveTo(x1, y1+w*0.9, x2, y2); c.quadraticCurveTo(x1, y1-w*0.5, x0, y0-w*0.5); c.fill(); };
+      for(let pass=0;pass<2;pass++) for(let k=0;k<11;k++){ const x=(k+0.5)*W/11+(q()-0.5)*14, top=Hh*(0.10+q()*0.07), dk=pass ? 1 : 0.72;
+        const G=(l)=>"rgb("+((50+l*44)*dk|0)+","+((82+l*52)*dk|0)+","+((30+l*22)*dk|0)+")";
+        c.strokeStyle=G(0.5); c.lineWidth=5; c.beginPath(); c.moveTo(x, Hh); c.lineTo(x+(q()-0.5)*5, top+10); c.stroke();
+        for(let y=Hh-10; y>top+30; y-=15+q()*9){ const t=(Hh-y)/Hh, dry=t<0.20 && q()<0.6, dir=q()<0.5 ? -1 : 1;
+          leaf(x, y+(q()-0.5)*6, dir, (62+q()*52)*(1-t*0.35), 9+q()*4, dry ? "rgb("+((128+q()*26)*dk|0)+","+((112+q()*20)*dk|0)+","+((62+q()*14)*dk|0)+")" : G(q()));
+          if(q()<0.55) leaf(x, y-6+(q()-0.5)*6, -dir, (54+q()*46)*(1-t*0.35), 8+q()*4, G(q())); }
+        if(q()<0.75){ const ey=Hh*(0.50+q()*0.12), dir=q()<0.5 ? -1 : 1;                      // the ear, in its husk, silk at the tip
+          c.fillStyle="rgb("+((112*dk)|0)+","+((132*dk)|0)+","+((62*dk)|0)+")"; c.beginPath(); c.ellipse(x+dir*7, ey, 6, 17, dir*0.35, 0, 7); c.fill();
+          c.strokeStyle="rgb("+((112*dk)|0)+","+((72*dk)|0)+","+((36*dk)|0)+")"; c.lineWidth=2; c.beginPath(); c.moveTo(x+dir*10, ey-15); c.lineTo(x+dir*15, ey-24); c.stroke(); }
+        c.strokeStyle="rgb("+((188*dk)|0)+","+((166*dk)|0)+","+((98*dk)|0)+")"; c.lineWidth=2.5;                 // the tassel
+        for(let i=0;i<7;i++){ c.beginPath(); c.moveTo(x, top+16); c.lineTo(x+(i-3)*5+(q()-0.5)*4, top-2+Math.abs(i-3)*3); c.stroke(); } } });
+    rowTex.wrapS=T.RepeatWrapping; rowTex.anisotropy=MAXANISO;
+    const massTex=signTex(256, 256, (c, W, Hh)=>{ const q=_trng(9292);
+      const g=c.createLinearGradient(0, 0, 0, Hh); g.addColorStop(0, "#40582a"); g.addColorStop(0.5, "#2c3f1e"); g.addColorStop(1, "#3a3622"); c.fillStyle=g; c.fillRect(0, 0, W, Hh);
+      for(let k=0;k<900;k++){ const y=q()*Hh, t=y/Hh; c.strokeStyle=t>0.8 && q()<0.5 ? "rgba(150,130,74,0.5)" : "rgba("+(52+q()*50|0)+","+(84+q()*56|0)+","+(30+q()*24|0)+",0.6)"; c.lineWidth=2+q()*4;
+        const x=q()*W, L=10+q()*22, d=q()<0.5 ? -1 : 1; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x+d*L*0.5, y-L*0.4, x+d*L, y+L*0.15); c.stroke(); }
+      for(let k=0;k<26;k++){ c.strokeStyle="rgba(170,152,90,0.7)"; c.lineWidth=2; const x=q()*W; c.beginPath(); c.moveTo(x, 4+q()*8); c.lineTo(x+(q()-0.5)*10, 20+q()*8); c.stroke(); } });
+    massTex.wrapS=T.RepeatWrapping; massTex.anisotropy=MAXANISO;
+    const topTex=(kind)=>{ const t=signTex(256, 256, (c, W, Hh)=>{ const q=_trng(kind==="corn" ? 9393 : 9494), corn=kind==="corn", n=corn ? 8 : 12;
+      c.fillStyle=corn ? "#3e5a26" : "#365426"; c.fillRect(0, 0, W, Hh);
+      for(let i=0;i<n;i++){ const y=(i+0.5)*Hh/n;
+        c.fillStyle="rgba(24,34,14,0.55)"; c.fillRect(0, y+Hh/n*0.30, W, Hh/n*0.22);                         // the shade between two rows
+        for(let k=0;k<(corn ? 90 : 120);k++){ const px=q()*W, py=y+(q()-0.5)*Hh/n*0.8, l=q();
+          c.fillStyle="rgb("+(70+l*58|0)+","+(104+l*62|0)+","+(38+l*28|0)+")"; c.globalAlpha=0.85;
+          if(corn){ c.save(); c.translate(px, py); c.rotate(q()*6.28); c.beginPath(); c.ellipse(0, 0, 9+q()*7, 2.2+q()*1.6, 0, 0, 7); c.fill(); c.restore(); }
+          else { c.beginPath(); c.arc(px, py, 2.5+q()*3, 0, 7); c.fill(); } }
+        c.globalAlpha=1;
+        if(corn) for(let k=0;k<26;k++){ c.fillStyle=q()<0.5 ? "#c8b06a" : "#b89a56"; c.fillRect(q()*W, y+(q()-0.5)*8, 3+q()*3, 2); } } });   // tassels, down each row
+      t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=MAXANISO; return t; };
+    // (their colour held down as the fields' own is, FIELD_TINT: in full sun raw leaf green reads lime)
+    const leafy=(tex, tint)=>{ const m=new T.MeshStandardMaterial({map:tex, alphaTest:0.45, side:T.DoubleSide, roughness:0.95, color:tint});
+      // (one normal on both faces, as the woods' crowns have, 07)
+      m.onBeforeCompile=(sh)=>{ sh.fragmentShader=sh.fragmentShader.replace("#include <normal_fragment_begin>",
+        T.ShaderChunk.normal_fragment_begin.replace("normal = normal * faceDirection;", "")); };
+      m.customProgramCacheKey=()=>"crop-card"; return m; };
+    const skirtTex=signTex(256, 64, (c, W, Hh)=>{ const q=_trng(9595); c.clearRect(0, 0, W, Hh);
+      for(let k=0;k<520;k++){ const px=q()*W, py=Hh*(0.12+Math.pow(q(), 0.6)*0.88), l=q();
+        c.fillStyle="rgb("+(54+l*56|0)+","+(88+l*60|0)+","+(32+l*26|0)+")"; c.beginPath(); c.ellipse(px, py, 4+q()*5, 3+q()*3.5, q()*3, 0, 7); c.fill(); }
+      c.fillStyle="#2e4a20"; c.fillRect(0, Hh*0.55, W, Hh*0.45); for(let k=0;k<160;k++){ const l=q(); c.fillStyle="rgb("+(50+l*50|0)+","+(84+l*56|0)+","+(30+l*24|0)+")"; c.beginPath(); c.ellipse(q()*W, Hh*(0.5+q()*0.5), 4+q()*4, 3+q()*3, q()*3, 0, 7); c.fill(); } });
+    skirtTex.wrapS=T.RepeatWrapping; skirtTex.anisotropy=MAXANISO;
+    bucketOf("corn_row", ()=>leafy(rowTex, 0xa2a898)); bucketOf("soy_skirt", ()=>leafy(skirtTex, 0x8e9588));
+    bucketOf("corn_mass", ()=>new T.MeshStandardMaterial({map:massTex, roughness:1.0}));
+    const cornTop=topTex("corn"), soyTop=topTex("soy");
+    bucketOf("corn_top", ()=>new T.MeshStandardMaterial({map:cornTop, roughness:1.0, color:0x888e7e}));        // (a shade under the fields' own tint: it is seen beside its rows' shaded sides)
+    bucketOf("soy_top", ()=>new T.MeshStandardMaterial({map:soyTop, roughness:1.0, color:FIELD_TINT.soy}));
+    // a standing card L long and h high, its face across `ax` ("x": it runs along z), lit from above and from the side it faces
+    const card=(bk, ax, a, b0, b1, y0, h, rep, uo, out, col)=>{ const L=b1-b0, g=new T.PlaneGeometry(L, h), uv=g.attributes.uv, nr=g.attributes.normal;
+      for(let i=0;i<uv.count;i++) uv.setX(i, uv.getX(i)*L/rep+uo);
+      for(let i=0;i<nr.count;i++) nr.setXYZ(i, 0, 0.86, 0.5*out);                         // (in the plane's own frame: +z is its face)
+      if(ax==="x") push(bk, g, a, y0+h/2, (b0+b1)/2, Math.PI/2, col||"#ffffff"); else push(bk, g, (b0+b1)/2, y0+h/2, a, 0, col||"#ffffff"); };
+    // a level sheet at y over a rectangle, its rows laid the way the field's are
+    const lid=(bk, x0, x1, z0, z1, y, tile, turn)=>{ const w=x1-x0, d=z1-z0, g=new T.PlaneGeometry(w, d), a=g.attributes.uv;
+      for(let i=0;i<a.count;i++){ const u=a.getX(i)*w/tile+x0/tile, v=a.getY(i)*d/tile-z0/tile; a.setXY(i, turn ? v : u, turn ? u : v); }
+      push(bk, g, (x0+x1)/2, y, (z0+z1)/2, 0, "#ffffff", -Math.PI/2, 0); };
+    for(const F of E.fields.filter(f=>f.crop==="corn")){
+      const turn=F.z0>Z, G=0.55;                             // (rows north-south south of the road, east-west north of it; G: the headland left bare round the field)
+      // in the field's own terms: `a` across the rows, `b` along them
+      const a0=(turn ? F.x0 : F.z0)+G, a1=(turn ? F.x1 : F.z1)-G, b0=(turn ? F.z0 : F.x0)+G, b1=(turn ? F.z1 : F.x1)-G, ax=turn ? "x" : "z";
+      const n=Math.floor((a1-a0)/SP), wall=(NB-0.5)*SP;      // (the wall stands between the tenth row and the eleventh)
+      for(let i=0;i<=n;i++){ const a=a0+i*SP, h=H*(0.93+0.12*hash2(a, b0)), uo=hash2(b0, a)*7, out=i<n/2 ? -1 : 1;
+        const tone=["#ffffff","#f0f2e8","#e6ecd8"][(hash2(a*1.7, b1)*3)|0];
+        if(i<NB || i>n-NB) card("corn_row", ax, a, b0, b1, Y+0.02, h, 2.4, uo, out, tone);
+        else { card("corn_row", ax, a, b0, b0+ENDS+0.3, Y+0.02, h, 2.4, uo, out, tone); card("corn_row", ax, a, b1-ENDS-0.3, b1, Y+0.02, h, 2.4, uo+3.1, out, tone); } }
+      // the wall behind them, facing out all four ways, and the lid over what it encloses
+      const wa0=a0+wall, wa1=a0+n*SP-wall, wb0=b0+ENDS, wb1=b1-ENDS, hw=H-0.16;
+      const X0=turn ? wa0 : wb0, X1=turn ? wa1 : wb1, Z0=turn ? wb0 : wa0, Z1=turn ? wb1 : wa1;
+      const face=(x, z, L, ry)=>{ const g=new T.PlaneGeometry(L, hw), uv=g.attributes.uv; for(let i=0;i<uv.count;i++) uv.setX(i, uv.getX(i)*L/2.6);
+        push("corn_mass", g, x, Y+0.02+hw/2, z, ry, "#ffffff"); };
+      face((X0+X1)/2, Z0, X1-X0, Math.PI); face((X0+X1)/2, Z1, X1-X0, 0); face(X0, (Z0+Z1)/2, Z1-Z0, -Math.PI/2); face(X1, (Z0+Z1)/2, Z1-Z0, Math.PI/2);
+      lid("corn_top", X0, X1, Z0, Z1, Y+hw, TILE.corn, turn);
+      addCol(X0+0.3, X1-0.3, Z0+0.3, Z1-0.3, Y-0.5, Y+H);
+    }
+    for(const F of E.fields.filter(f=>f.crop==="soy")){
+      const turn=F.z0>Z, G=0.5, hh=0.56, x0=F.x0+G, x1=F.x1-G, z0=F.z0+G, z1=F.z1-G;
+      lid("soy_top", x0+0.2, x1-0.2, z0+0.2, z1-0.2, Y+hh, TILE.soy, turn);
+      // the skirt: two ragged rows of leaf round the edge, the outer a little lower
+      for(const [d, h] of [[0, hh-0.06], [0.42, hh+0.05]]){
+        card("soy_skirt", "z", z0+d, x0+d, x1-d, Y+0.02, h, 1.9, d*3, -1); card("soy_skirt", "z", z1-d, x0+d, x1-d, Y+0.02, h, 1.9, d*3+0.7, 1);
+        card("soy_skirt", "x", x0+d, z0+d, z1-d, Y+0.02, h, 1.9, d*3+1.3, -1); card("soy_skirt", "x", x1-d, z0+d, z1-d, Y+0.02, h, 1.9, d*3+0.4, 1); }
+    }
+  }
   /* ---- the west farms' crops, standing up out of their fields ----
      The vineyard in rows running north and south, a post every seven metres and the vines trained along the wires
      between in a hedge of leaf; the pumpkins lying out in the vines, orange and here and there a white one; the

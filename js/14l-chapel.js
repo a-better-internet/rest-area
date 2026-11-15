@@ -627,7 +627,7 @@
       // a flag by a veteran's stone
       if(r()<0.05){ const fx=x+0.45, fz=z+0.25; tubeE(V3(fx, Y, fz), V3(fx, Y+0.62, fz), 0.006, "#c8c4b8");
         B(0.005, 0.18, 0.28, fx, Y+0.53, fz+0.145, "#b22234"); B(0.006, 0.09, 0.12, fx, Y+0.575, fz+0.065, "#2a3a6a"); } } }
-  for(const [x,z,s] of TREES) tree("hard", x, z, s);
+  for(const [x,z,s] of TREES) tree("lawn", x, z, s*1.05);          // (churchyard maples, grown in the open: broad and low, not the woods' bare poles)
   // a bench under the near maple, looking over them
   { const bx0=105.4, bz0=Z-46.2;
     B(1.5, 0.05, 0.42, bx0, Y+0.45, bz0, "#6a5038"); B(1.5, 0.30, 0.04, bx0, Y+0.70, bz0+0.21, "#6a5038");

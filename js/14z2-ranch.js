@@ -893,7 +893,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   // the lawn's trees and the woods round the lot, rows deep, and along the road both ways (07's shell stays low behind them)
   { const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const g=Terrain.groundAt(x,z), rr=0.22*s; addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
     const qt=_trng(1437);
-    for(const [x, z, s] of [[-1462, -1178, 1.35],[-1466, -1146, 1.25],[-1402, -1178, 1.2],[-1398, -1130, 1.3],[-1458, -1124, 1.2]]) tree("hard", x, z, s);
+    for(const [x, z, s] of [[-1462, -1178, 1.35],[-1466, -1146, 1.25],[-1402, -1178, 1.2],[-1398, -1130, 1.3],[-1458, -1124, 1.2]]) tree("lawn", x, z, s*1.05);      // (lawn trees: broad and low)
     const inLot=(x, z)=>x>R.x0-1 && x<R.x1+1 && z>R.z0-4 && z<R.z1+1;
     const nearHouse=(x, z)=>x>WX0-14 && x<GX1+16 && z>DCZ-10 && z<-1134;
     for(let x=WEST.corr.x0-30; x<WEST.park.x0-38; x+=6.5) for(let z=WEST.corr.z0-50; z<R.z1+44; z+=6.5){

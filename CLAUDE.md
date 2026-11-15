@@ -618,6 +618,10 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - `tools/zfight.js '{"x0":..,"x1":..,"z0":..,"z1":..,"y0":..,"y1":..}'`
   finds coplanar faces in a box.
 - `tools/signaudit.js [pad]` finds sign text too close to an edge.
+- `tools/drive.js` drives the first car in the lot with the keys, headless
+  and without drawing, and fails any figure (0–60, top speed, braking,
+  lateral g dry, wet and on grass, the lane change, the wall) outside its
+  `LIMITS`. Run it after touching `CARC`, `GRIP` or 11's handling.
 
 ## Round 28 notes
 
@@ -774,3 +778,69 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   play; 19 moves keyNear with the camera on its own texels (`NEAR_SNAP`),
   `keyShadow` draws in both far planes. Every level filters with plain
   PCF and its `radius`: three's PCFSoft smeared the texel steps into blobs.
+
+## Round 31 notes
+
+- A big flat sheet (a ground ring, a canopy shell) is cut with 01's
+  `tileSheet(geo, tile, make)`: tiles that share the sheet's vertex buffers,
+  each with its own index list and bounding sphere, so the frustum culls
+  them. Never add a sheet hundreds of metres across as one mesh.
+- Anything that never moves sets `matrixAutoUpdate=false` (the baked tiles,
+  the detail tiles, the ground, the canopy and every tree mesh do).
+- 03 steps over a light's shading wherever its light at the pixel is
+  nothing. A light turned down to intensity 0 is free; one out of range of
+  a pixel is free at that pixel. Keep a lamp's `dist` honest: it is what
+  bounds its cost.
+- 03's cascade reads each shadow map only where it is used. On LOW and
+  MEDIUM the wide map is drawn every other frame (`SHADOW_LEVELS.every`,
+  19's `_keyTurn`): the key is only moved on a frame its map is drawn, so
+  map and matrix stay a pair. Anything that must force the wide map to be
+  drawn sets `key.shadow.needsUpdate=true` (`keyShadow` does).
+- The woods (07) are 48 m chunks in the zone (96 by 160 outside it), each
+  with a NEAR mesh to a variant and a FAR mesh to a species; chunks pair
+  into QUADS, which draw the far set for all four when none is near, and
+  into BLOCKS of sixteen, which draw the DISTANT set (one ball and a
+  stick, `far2`) past `tree*2.2+50` metres. A new species needs `far` and
+  `far2` from its builder unless it is in `SMALL`. The far material reads
+  no texture; a far ball is 12 shared corners.
+- Loose meshes (anything in the scene that is not baked, instanced, a
+  sprite or a light) are culled by distance in 18c's `cullLoose`: past
+  `max(70, radius × LOOSE_K)` metres, never past the draw distance's
+  `cull`. It moves a mesh to layer 1 and back, and never touches
+  `visible`. A thing that must be seen from any distance sets
+  `userData.noCull` on its top-level object; glowing materials (`GLOW`,
+  `NEON`, emissive, `toneMapped:false`) are left alone already. Only what
+  is in the scene at the first frame is on the list. No camera here may
+  enable layer 1.
+- A parked car far off is its coarse shell with the plain wheels merged in
+  (two draws); the four wheels that steer and roll show only with the full
+  shell (10's `updateParkedLOD`).
+- `GFX.fx` (the menu's SURFACE DETAIL) is the uniform `FX_U` (03). A
+  material that works something costly out for every pixel (07's canopy
+  crowns and far-tree lumps, 04's lawn) reads `uFx` and, at 0, steps over
+  it and takes the mean it would have come to. New per-pixel work of that
+  kind does the same.
+- The car (10's `CARC` and `GRIP`, 11): each axle's grip is the weight on
+  it times what it stands on (15's `GROUND_KIND.at(x, z)`: 0 grass, 1
+  paving, 2 gravel, from the paving buckets as laid; a new paving bucket
+  goes in its `KIND`), through a curve that peaks and falls a little.
+  Full lock is `maxSteer` at a walk and `steerOver` times the tyres' limit
+  at speed. The forces along and across the car are fed to the springs as
+  a torque, which is all the lean and dive there is. A `Vehicle` is built
+  from its car's own `spec` (04b): wheelbase, track, and the points round
+  its shell that `carHits` tests. Do not change `mass`, `springK`,
+  `restLength` or `wheelRadius` without `CAR_SAG` / `CAR_RIDE`.
+- The car's sound is 20's `car` voice: it reads `driving.veh` (`vf`,
+  `throttle`, `slide`, `kind`, `hit`, `anyGrounded`).
+- A standing crop (08b's corn) is a block: its outer rows real cards
+  (`card`, one up-and-out normal on both faces, colour held down like
+  `FIELD_TINT`), a wall of the same behind them, a lid of the crop seen
+  from above over the middle, and a collider under the lid. Never fill a
+  field with cards from edge to edge: seen across the rows that is a
+  hundred layers of alpha-tested leaf on every pixel. A low crop (the
+  beans) is a lid at its height and a skirt round its edge, not solid.
+- The edge of the farm country (`EDIN.plain`) is ringed with real trees
+  forty metres deep (07's `hedgerows`), and `canopyY` holds the shell low
+  over the same ground. A tree in the open is an `edge` or a `lawn`, never
+  a `hard`: the woods' tall bare trunk with a tuft on top is a lollipop
+  in a field.
