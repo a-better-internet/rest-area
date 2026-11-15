@@ -34,13 +34,15 @@ function parkCar(x, z, yaw, kind, paint, y0){
   const near=new T.Group(), farG=new T.Group();
   const body=new T.Mesh(mergeEntries(sh(parts.OP)), VEH_MAT); body.castShadow=true; body.receiveShadow=true;
   near.add(body); near.add(new T.Mesh(mergeEntries(sh(parts.GL)), parts.glassMat||VEH_GLASS));
-  const fb=new T.Mesh(mergeEntries(sh(far.OP)), VEH_MAT); fb.castShadow=true;
+  /* Far off a parked car is two draws, not six: its plain wheels are part of the coarse shell, standing as they stood
+     when it was parked, and the four that steer and roll are only shown with the full shell. */
+  const wheels=[], wg=wheelGeoCached(S.wr, S.tw, false), wf=wheelFarGeo(S.wr, S.tw, false);
+  const REST_DROP=S.wr-CAR_RIDE, WP=[[-S.track, S.axles[0]],[S.track, S.axles[0]],[-S.track, S.axles[1]],[S.track, S.axles[1]]];
+  const fb=new T.Mesh(mergeEntries(sh(far.OP).concat(WP.map(w=>({geo:wf, matrix:new T.Matrix4().makeTranslation(w[0], REST_DROP, w[1])})))), VEH_MAT); fb.castShadow=true;
   farG.add(fb); farG.add(new T.Mesh(mergeEntries(sh(far.GL)), VEH_GLASS));
   farG.visible=false;
   g.add(near); g.add(farG);
-  const wheels=[], wg=wheelGeoCached(S.wr, S.tw, false), wf=wheelFarGeo(S.wr, S.tw, false);
-  const REST_DROP=S.wr-CAR_RIDE;
-  for(const w of [[-S.track, S.axles[0]],[S.track, S.axles[0]],[-S.track, S.axles[1]],[S.track, S.axles[1]]]){
+  for(const w of WP){
     const wm=new T.Mesh(wg, VEH_MAT);
     wm.rotation.order="YXZ";
     wm.position.set(w[0], REST_DROP, w[1]);
@@ -54,18 +56,20 @@ function parkCar(x, z, yaw, kind, paint, y0){
   const cc={x0:x-hx, x1:x+hx, z0:z-hz, z1:z+hz, y0:base, y1:base+S.ht};
   COL_DYN.push(cc);
   const car={g:g, wheels:wheels, kind:kind, col:cc, home:{x:x, z:z, yaw:yaw}, veh:null, spin:0,
-             lod:{near:near, far:farG, wg:wg, wf:wf, isNear:true}};
+             lod:{near:near, far:farG, isNear:true, shown:true}};
   CARS.push(car);
   return car;
 }
-// the lot's cars past fifty metres are drawn coarse, wheels and all
+// the lot's cars past fifty metres are drawn coarse, wheels and all; and a car too far off to make out is not drawn
+// (half a mile and more, or the draw distance's own limit if that is nearer)
 function updateParkedLOD(cam){
+  const lim=Math.min(900, DRAW_LEVELS[GFX.draw].cull);
   for(const c of CARS){
-    const L=c.lod, dx=c.g.position.x-cam.x, dz=c.g.position.z-cam.z;
-    const nr = c===driving || dx*dx+dz*dz < (L.isNear?56*56:50*50);
-    if(nr===L.isNear) continue;
-    L.isNear=nr; L.near.visible=nr; L.far.visible=!nr;
-    for(const w of c.wheels) w.geometry=nr?L.wg:L.wf;
+    const L=c.lod, dx=c.g.position.x-cam.x, dz=c.g.position.z-cam.z, d2=dx*dx+dz*dz;
+    const nr = c===driving || d2 < (L.isNear?56*56:50*50), shown = nr || d2<lim*lim;
+    if(nr===L.isNear && shown===L.shown) continue;
+    L.isNear=nr; L.shown=shown; L.near.visible=nr; L.far.visible=!nr && shown;
+    for(const w of c.wheels) w.visible=nr;
   }
 }
 

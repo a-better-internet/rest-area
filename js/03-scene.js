@@ -28,11 +28,14 @@ const GFX=(function(){
 // Two maps, a cascade: a wide one for the trees and the buildings round about, and a near one, a quarter of its width
 // or less, for what is close to you (a ledge, a car, a railing), its texels a centimetre or so; the near one is used
 // inside the middle of its square and gives way to the wide one before its own edge (03's lights_fragment_begin)
+// `every`: the wide map is drawn again only every so many frames (19-loop): what is in it is thirteen metres off and
+// more, where a shadow a frame old cannot be told from a fresh one, and drawing it is most of the shadow pass. The
+// near map, which has your own car and whoever walks past you in it, is drawn every frame at every level.
 const SHADOW_LEVELS=[null,
-  {name:"LOW",    map:1024, half:40, soft:false, radius:1.0, near:{map:1024, half:13}},
-  {name:"MEDIUM", map:2048, half:52, soft:true,  radius:1.3, near:{map:2048, half:16}},
-  {name:"HIGH",   map:3072, half:60, soft:true,  radius:1.4, near:{map:3072, half:19}},
-  {name:"ULTRA",  map:4096, half:64, soft:true,  radius:1.5, near:{map:4096, half:22}}];
+  {name:"LOW",    map:1024, half:40, soft:false, radius:1.0, every:2, near:{map:1024, half:13}},
+  {name:"MEDIUM", map:2048, half:52, soft:true,  radius:1.3, every:2, near:{map:2048, half:16}},
+  {name:"HIGH",   map:3072, half:60, soft:true,  radius:1.4, every:1, near:{map:3072, half:19}},
+  {name:"ULTRA",  map:4096, half:64, soft:true,  radius:1.5, every:1, near:{map:4096, half:22}}];
 // draw distance: how far the near trees reach, how far anything is drawn, how far a place's hand-merged detail is
 // drawn (01's detailMesh),
 // and where the haze closes in so nothing is seen to vanish
@@ -116,6 +119,16 @@ T.ShaderChunk.lights_physical_fragment=
     "\t\t#endif\n"+
     "\t\tdirectLight.color *= shK;\n"+
     "\t\t#endif\n"); }
+/* A LIGHT THAT DOES NOT REACH A PIXEL COSTS IT NOTHING. three works out the whole of a light's shading (the GGX lobe,
+   the diffuse) for every light in the scene at every pixel, and then multiplies it by a colour that is nothing at all
+   wherever the light is off, out of range or outside its cone: by day that is every lamp in the pool, the torch, the
+   headlamps and the near cascade's own light, a dozen and more lobes a pixel thrown away. So each light's shading is
+   stepped over when its light at that pixel is nothing. The picture is the same to the last bit; the saving is most
+   of the cost of the pool by day and, at night, of every lamp but the one or two that reach a given pixel. */
+{ const _lf=T.ShaderChunk.lights_fragment_begin, _re="RE_Direct( directLight, geometry, material, reflectedLight );";
+  if(_lf.split(_re).length!==4) console.warn("light skip: chunk not as expected");
+  else T.ShaderChunk.lights_fragment_begin=_lf.split(_re).join(
+    "if( directLight.visible && ( directLight.color.r + directLight.color.g + directLight.color.b ) > 0.0 ){ "+_re+" }"); }
 /* GROUND MIST, IN THE FOG ITSELF. Every lit surface already mixes in the
    haze by its distance; it now also mixes in a mist whose density is
    thickest at the ground and thins out over a metre or two above it,
@@ -252,7 +265,7 @@ const key=new T.DirectionalLight(0xfff3df, 1.10);
 key.position.set(70,110,50); key.castShadow=GFX.shadows>0;
 const ksc=key.shadow.camera;
 const KEY_D=120;
-let SHADOW_SNAP=0.07, NEAR_SNAP=0.02;
+let SHADOW_SNAP=0.07, NEAR_SNAP=0.02, SHADOW_EVERY=1, _keyFresh=true;
 // the near cascade's light: the same sun, no light of its own, just its shadow map (03's lights_fragment_begin)
 const keyNear=new T.DirectionalLight(0xffffff, 0); keyNear.castShadow=GFX.shadows>0;
 const nsc=keyNear.shadow.camera; nsc.near=KEY_D-110; nsc.far=KEY_D+110;
@@ -269,6 +282,7 @@ function setShadowLevel(lv){
   ksc.left=-L.half; ksc.right=L.half; ksc.top=L.half; ksc.bottom=-L.half;
   ksc.updateProjectionMatrix();
   SHADOW_SNAP=(ksc.right-ksc.left)/L.map*2;
+  SHADOW_EVERY=L.every||1; _keyFresh=true;                  // (and the next frame draws the wide map, whatever its turn)
 }
 ksc.near=KEY_D-110; ksc.far=KEY_D+110;
 setShadowLevel(GFX.shadows);
@@ -293,4 +307,5 @@ function keyShadow(on){
   ksc.updateProjectionMatrix(); nsc.far=on ? KEY_D+110 : nsc.near+0.001; nsc.updateProjectionMatrix();
   renderer.shadowMap.autoUpdate=on;
   renderer.shadowMap.needsUpdate=true;
+  key.shadow.needsUpdate=true;                               // (the wide map with it, though it may not be its turn)
 }

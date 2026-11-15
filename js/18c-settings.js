@@ -13,10 +13,12 @@
    Four times a second is plenty: the haze has already closed over a tile by
    the time it goes. The back woods' tiles also answer to updateDeep. */
 let _cullT=1e9;
+const _cullAt=new T.Vector3(1e9, 0, 0);
 function cullBaked(cam, dt, force){
   _cullT+=dt||0;
-  if(!force && _cullT<0.25) return;
-  _cullT=0;
+  // (at once after a jump, a warp or a seat in the drone: nothing near you waits a quarter second to be drawn)
+  if(!force && _cullT<0.25 && Math.abs(cam.x-_cullAt.x)+Math.abs(cam.z-_cullAt.z)<30) return;
+  _cullT=0; _cullAt.copy(cam);
   const lim=DRAW_LEVELS[GFX.draw].cull;
   for(const m of BAKED){
     const g=m.geometry;
@@ -29,6 +31,54 @@ function cullBaked(cam, dt, force){
   for(const m of DETAIL){
     const bs=m.geometry.boundingSphere || (m.geometry.computeBoundingSphere(), m.geometry.boundingSphere);
     m.visible = Math.hypot(bs.center.x-cam.x, bs.center.y-cam.y, bs.center.z-cam.z)-bs.radius<dl;
+  }
+  cullLoose(cam, lim, cam.y-Terrain.heightAt(cam.x, cam.z)>40 ? 1.4 : 1);
+}
+
+/* --- and the loose things: doors, cars, signs, people, props ---------------
+   Whatever is not baked into a tile is a mesh of its own in the scene, several thousand of them, and the camera's
+   frustum is all that ever stopped one being drawn: from the car lot, looking north, the doors of Lake Street a mile
+   off, the arcade's cabinets under the hill and every sign in Edinboro were each a draw. So each of them is given a
+   distance by its size (LOOSE_K metres for each metre of its radius, never less than 140 m, never more than the draw
+   distance's own limit) and past it is not drawn.
+   Not by `visible`, which a hundred other things switch for their own reasons: a culled mesh is moved to layer 1,
+   which no camera here looks at, and back to 0. Neither the view nor the shadow maps draw it, and whatever else
+   shows and hides it goes on doing so undisturbed. Sprites are left alone (a lamp's glow is meant to be seen from a
+   long way off), and so is anything instanced, anything bigger than 45 m (the lake, the sky, a run of wire) and
+   anything with userData.noCull. Things that move are measured where they are now. Only what is in the scene when
+   the world is first drawn is on the list: what a mode builds later is its own affair. */
+const LOOSE=[], LOOSE_K=[200, 260, 340, 480];
+let _looseBuilt=false;
+const _lv=new T.Vector3();
+function _looseBuild(){
+  _looseBuilt=true;
+  const skip=new Set(BAKED); for(const m of DETAIL) skip.add(m);
+  const box=new T.Box3(), sp=new T.Sphere(), inv=new T.Matrix4();
+  for(const o of scene.children){
+    if(skip.has(o) || o.isLight || o.isInstancedMesh || o.isSprite || o.isPoints || o.isLine || o.userData.noCull) continue;
+    const list=[]; box.makeEmpty();
+    o.traverse(m=>{
+      if(!m.isMesh || m.isInstancedMesh || !m.geometry || !m.geometry.attributes.position) return;
+      const g=m.geometry; if(!g.boundingSphere) g.computeBoundingSphere();
+      sp.copy(g.boundingSphere).applyMatrix4(m.matrixWorld);
+      if(!(sp.radius>=0) || !isFinite(sp.center.x+sp.center.y+sp.center.z)) return;
+      box.expandByPoint(_lv.copy(sp.center).addScalar(sp.radius)); box.expandByPoint(_lv.copy(sp.center).addScalar(-sp.radius));
+      list.push(m); });
+    if(!list.length) continue;
+    const r=box.min.distanceTo(box.max)/2/Math.sqrt(3)*1.2;            // (the box of spheres is roomy: about the things' own reach)
+    if(r>45) continue;
+    const c=box.getCenter(new T.Vector3()).applyMatrix4(inv.copy(o.matrixWorld).invert());
+    LOOSE.push({o:o, list:list, c:c, r:r, off:false});
+  }
+}
+function cullLoose(cam, lim, air){
+  if(!_looseBuilt) _looseBuild();
+  const K=LOOSE_K[GFX.draw]*air;
+  for(let i=0;i<LOOSE.length;i++){
+    const L=LOOSE[i];
+    _lv.copy(L.c).applyMatrix4(L.o.matrixWorld);
+    const off=Math.hypot(_lv.x-cam.x, _lv.y-cam.y, _lv.z-cam.z)-L.r > Math.min(lim, Math.max(140, L.r*K));
+    if(off!==L.off){ L.off=off; const n=off ? 1 : 0; for(let k=0;k<L.list.length;k++) L.list[k].layers.set(n); }
   }
 }
 

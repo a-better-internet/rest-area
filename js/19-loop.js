@@ -64,7 +64,7 @@ function updateWind(t, dt){
   Wind.gust += (Math.pow(raw,0.8)-Wind.gust)*Math.min(1, dt*0.55);
 }
 
-let acc=0, last=performance.now()/1000, _lastDraw=0;
+let acc=0, last=performance.now()/1000, _lastDraw=0, _keyTurn=0;
 let _wasChase=false, _handT=0; const _handFrom=new T.Vector3();
 const _sunDir=new T.Vector3();
 function frame(){
@@ -181,8 +181,13 @@ function frame(){
         kz=Math.round(camera.position.z/SHADOW_SNAP)*SHADOW_SNAP;
   const kty=camera.position.y*0.3;
   _sunDir.set(Math.cos(ang)*R, Math.max(14, Math.sin(ang)*R+6)-kty, 70).normalize();
-  key.position.set(kx+_sunDir.x*KEY_D, kty+_sunDir.y*KEY_D, kz+_sunDir.z*KEY_D);
-  key.target.position.set(kx, kty, kz);
+  /* THE WIDE MAP TAKES TURNS (03's SHADOW_LEVELS.every). On a frame that is not its turn it is not drawn, and the key
+     is left exactly where it stood when it last was: the map and the matrix the shaders read it through stay a
+     pair, so nothing swims. The sun's own direction is a frame late with it, which nobody can see. */
+  { const turn=_keyFresh || SHADOW_EVERY<=1 || !key.shadow.map || (++_keyTurn)%SHADOW_EVERY===0;
+    key.shadow.autoUpdate=false; key.shadow.needsUpdate=turn; _keyFresh=false;
+    if(turn){ key.position.set(kx+_sunDir.x*KEY_D, kty+_sunDir.y*KEY_D, kz+_sunDir.z*KEY_D);
+      key.target.position.set(kx, kty, kz); } }
   { const nx=Math.round(camera.position.x/NEAR_SNAP)*NEAR_SNAP, nz=Math.round(camera.position.z/NEAR_SNAP)*NEAR_SNAP;      // (the near cascade, on its own texels)
     keyNear.position.set(nx+_sunDir.x*KEY_D, kty+_sunDir.y*KEY_D, nz+_sunDir.z*KEY_D); keyNear.target.position.set(nx, kty, nz); }
   // at night the light is the moon's, as much of it as there is

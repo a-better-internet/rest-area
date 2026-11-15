@@ -686,8 +686,9 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
       TERRAIN_MAT.extensions={derivatives:true};
       TERRAIN_MAT.customProgramCacheKey=()=>"terrain-lawn";
     }
-    const mesh=new T.Mesh(g,TERRAIN_MAT); mesh.receiveShadow=true; mesh.name=name;
-    scene.add(mesh); return mesh;
+    // (cut into tiles sixty-four cells across, 01's tileSheet: only the ground in view is drawn)
+    return tileSheet(g, cell*64, (tg)=>{ const mesh=new T.Mesh(tg, TERRAIN_MAT); mesh.receiveShadow=true; mesh.name=name; mesh.matrixAutoUpdate=false;
+      scene.add(mesh); return mesh; });
   }
   TERRAIN_TINT=tint;
   grid(GROUND_EDGE, 32, [RING_FAR, RING_MIDN], "ground-outer", 60);

@@ -15,11 +15,17 @@
    How it is drawn:
    * Every tree is one of a handful of VARIANTS — trunk, limbs and a crown of
      alpha-cut leaf cards — built once and instanced thousands of times.
-   * The instances are bucketed by 96 m CHUNKS, each with its own bounding
+   * The instances are bucketed by 48 m CHUNKS, each with its own bounding
      sphere (r128 culls an InstancedMesh by its geometry's sphere and knows
-     nothing of where the instances are), and each chunk has a NEAR set and
-     a cheap FAR set: a few soft blobs where the leaf cards were. The loop
-     picks one per chunk by distance.
+     nothing of where the instances are), and each chunk has three sets:
+     NEAR, the whole tree; FAR, a few soft blobs where the leaf cards were,
+     one shape to a species; and DISTANT, one blob and a stick. The far
+     and distant sets are also kept by blocks of four and of sixteen
+     chunks, so the far side of the woods is a handful of draws. The loop
+     picks one by distance. Small chunks are
+     what keep the whole trees few: only those within reach of you are
+     drawn in full, and the sun's shadow maps draw only the chunks they
+     actually cover.
    * Past the walkable zone the woods are a CANOPY: one lumpy surface laid
      over the hills at crown height, which is all a forest ever is from a
      car at seventy or a drone at two hundred feet.
@@ -241,7 +247,12 @@ const FOREST=(function(){
     }
     return _tex(c);
   })();
-  const FAR_MAT=new T.MeshStandardMaterial({map:FAR_TEX, vertexColors:true, roughness:0.92, metalness:0});
+  /* (the far set took a speckled map once, and at the distance it is drawn from the speckle was only ever its own
+     mean: so the mean is the material's colour, no texture is read, and a far ball can share its corners between
+     its faces, twelve to a ball where it was sixty) */
+  const FAR_MEAN=(function(){ const d=FAR_TEX.image.getContext("2d").getImageData(0,0,128,128).data; let r=0, g=0, b=0;
+    for(let i=0;i<d.length;i+=4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; } const n=d.length/4*255; return new T.Color(r/n, g/n, b/n); })();
+  const FAR_MAT=new T.MeshStandardMaterial({color:FAR_MEAN, vertexColors:true, roughness:0.92, metalness:0});
   /* A far crown is a few twenty-sided balls, and lit as balls they are polygons on sticks. So over the leaves
      (aLeaf) each pixel takes a clump from a noise in the world: its normal leans with the noise's slope, so the
      crown is lumps lit and shaded under the sun, the hollows between them darker; and where the ball turns away
@@ -279,6 +290,11 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
   };
   FAR_MAT.customProgramCacheKey=()=>"far-crowns";
 
+  // an icosahedron's corners (on the unit sphere) and faces
+  const ICO_V=(function(){ const t=(1+Math.sqrt(5))/2, v=[-1,t,0, 1,t,0, -1,-t,0, 1,-t,0, 0,-1,t, 0,1,t, 0,-1,-t, 0,1,-t, t,0,-1, t,0,1, -t,0,-1, -t,0,1],
+    L=Math.hypot(1, t); return v.map(a=>a/L); })();
+  const ICO_F=[0,11,5, 0,5,1, 0,1,7, 0,7,10, 0,10,11, 1,5,9, 5,11,4, 11,10,2, 10,7,6, 7,1,8,
+               3,9,4, 3,4,2, 3,2,6, 3,6,8, 3,8,9, 4,9,5, 2,4,11, 6,2,10, 8,6,7, 9,8,1];
   /* ---- a tree, built by hand: limbs and cards ---------------------------- */
   class TG{
     constructor(){ this.P=[]; this.N=[]; this.U=[]; this.C=[]; this.S=[]; this.L=[]; this.I=[]; }
@@ -316,16 +332,16 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
       this.I.push(base,base+1,base+2, base,base+2,base+3);
     }
     // a soft ball for the far set: radial normals, so twenty triangles shade round
+    // (twelve corners shared by its twenty faces: the normals are radial, so a corner is the same for every face on it)
     blob(c, r, sy, col, leaf){
-      const g=new T.IcosahedronGeometry(1, 0), p=g.attributes.position, uv=g.attributes.uv;
       const base=this.P.length/3;
-      for(let i=0;i<p.count;i++){
-        const x=p.getX(i), y=p.getY(i), z=p.getZ(i), L=Math.hypot(x,y,z)||1;
+      for(let i=0;i<12;i++){
+        const x=ICO_V[i*3], y=ICO_V[i*3+1], z=ICO_V[i*3+2];
         const jit=0.85+0.3*hash2(c.x*7+x*3, c.z*5+z*3+y);
-        this.v(new T.Vector3(c.x+x*r*jit, c.y+y*r*sy*jit, c.z+z*r*jit), new T.Vector3(x/L,y/L+0.25,z/L).normalize(),
-               uv.getX(i)*2, uv.getY(i)*2, col, 0, leaf);
-        this.I.push(base+i);
+        this.v(new T.Vector3(c.x+x*r*jit, c.y+y*r*sy*jit, c.z+z*r*jit), new T.Vector3(x,y+0.25,z).normalize(),
+               0, 0, col, 0, leaf);
       }
+      for(let i=0;i<ICO_F.length;i++) this.I.push(base+ICO_F[i]);
     }
     cone(c, r, h, col, seg){                        // for the far conifers
       const base=this.P.length/3, tip=new T.Vector3(c.x, c.y+h, c.z);
@@ -439,7 +455,11 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
       if(used.some(u=>u.c.distanceTo(o2.cl.c)<R*0.8)) continue;
       used.push(o2.cl); far.blob(o2.cl.c, o2.cl.r*1.2, 0.85, WHITEISH, 1);
     }
-    return {near:near.geo(), far:far.geo(), trunkR:r0*1.1};
+    /* And the distant set, past a couple of hundred metres: the crown as one ball, the trunk a three-sided stick. */
+    const far2=new TG(), cr=R*1.14;
+    far2.limb(new T.Vector3(0,-0.2,0), pts[3], r0*1.2, r0*0.5, 3, bark, brg);
+    far2.blob(ctr, cr, clamp((1-cb)*H*0.52/cr, 0.62, 1.15), WHITEISH, 1);
+    return {near:near.geo(), far:far.geo(), far2:far2.geo(), trunkR:r0*1.1};
   }
   /* --- eastern hemlock: a dark cone of drooping, flat sprays ------------ */
   function hemlock(seed, o){
@@ -486,7 +506,10 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     }
     far.cone(new T.Vector3(0,base,0), R*1.02, (H-base)*0.62, WHITEISH, 7);
     far.cone(new T.Vector3(0,base+(H-base)*0.36,0), R*0.72, (H-base)*0.66, WHITEISH, 7);
-    return {near:near.geo(), far:far.geo(), trunkR:o.r0*1.2};
+    const far2=new TG();
+    far2.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,base+1,0), o.r0*1.2, o.r0*0.9, 3, bark, RG.bark);
+    far2.cone(new T.Vector3(0,base,0), R*0.98, (H-base)*0.98, WHITEISH, 6);
+    return {near:near.geo(), far:far.geo(), far2:far2.geo(), trunkR:o.r0*1.2};
   }
   /* --- white pine: tiers of horizontal limbs with tufts at the ends ----- */
   function pine(seed, o){
@@ -519,7 +542,10 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     far.blob(new T.Vector3(0.2,H*0.9,0), 2.4, 0.8, WHITEISH, 1);
     far.blob(new T.Vector3(0.6,H*0.74,-0.4), o.R*0.75, 0.42, WHITEISH, 1);
     far.blob(new T.Vector3(-0.6,H*0.58,0.5), o.R*0.85, 0.40, WHITEISH, 1);
-    return {near:near.geo(), far:far.geo(), trunkR:o.r0*1.15};
+    const far2=new TG();
+    far2.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.75,0), o.r0*1.2, o.r0*0.5, 3, bark, RG.bark);
+    far2.blob(new T.Vector3(0.1,H*0.74,0), o.R*0.82, H*0.27/(o.R*0.82), WHITEISH, 1);
+    return {near:near.geo(), far:far.geo(), far2:far2.geo(), trunkR:o.r0*1.15};
   }
   /* --- a shrub: dense, down to the ground -------------------------------- */
   function shrub(seed, o){
@@ -592,7 +618,7 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     SPV[name]=[];
     for(const seed of SPECIES[name].seeds){
       const b=SPECIES[name].build(seed);
-      const v={sp:name, near:b.near, far:b.far, trunkR:b.trunkR, idx:VARIANTS.length};
+      const v={sp:name, near:b.near, far:b.far, far2:b.far2, trunkR:b.trunkR, idx:VARIANTS.length};
       VARIANTS.push(v); SPV[name].push(v);
     }
   }
@@ -902,9 +928,9 @@ vec4 canCrown(vec2 p, out float id){
       const colAttr=new T.Float32BufferAttribute(CS.slice(),3);
       g.setAttribute("color", colAttr);
       g.setIndex(IDX); g.computeVertexNormals();
-      const mesh=new T.Mesh(g, mat2); mesh.receiveShadow=true; mesh.name="canopy";
-      scene.add(mesh);
-      CAN.meshes.push(mesh); CAN.colS.push(new Float32Array(CS)); CAN.colA.push(new Float32Array(CA));
+      // (in tiles, 01's tileSheet, so only the woods in view are drawn; they share the one colour buffer the season repaints)
+      const tiles=tileSheet(g, cell*48, (tg)=>{ const mesh=new T.Mesh(tg, mat2); mesh.receiveShadow=true; mesh.name="canopy"; mesh.matrixAutoUpdate=false; scene.add(mesh); return mesh; });
+      if(tiles.length){ CAN.meshes.push(tiles[0]); CAN.colS.push(new Float32Array(CS)); CAN.colA.push(new Float32Array(CA)); }
     }
     shell(RING_MID, 8, [Z], true);
     shell(EAST.can, 8, [], true);                                   // (east along US 6N: the woods the road goes through, close to)
@@ -1051,20 +1077,37 @@ vec4 canCrown(vec2 p, out float id){
     addCol(EP.x1-0.4, EP.x1+0.4, EP.z0, EAST.corr.z0, -40, 300); addCol(EP.x1-0.4, EP.x1+0.4, EAST.corr.z1, EP.z1, -40, 300);
   })();
 
-  /* ---- build the instanced chunks ---------------------------------------- */
-  const CHUNKS=[];
-  const CH=96, CHO=320;
+  /* ---- build the instanced chunks ----------------------------------------
+     A chunk is 48 m square in the zone and 96 by 160 outside it (the treelines along the roads). Its NEAR set is a
+     mesh to each variant that grows in it; its FAR set a mesh to each species, in that species' first shape (turned
+     and scaled tree by tree, the three or so shapes of a species are not to be told apart at seventy metres).
+     Chunks go two by two into a QUAD, which has the same far set over all four: where none of a quad's chunks is
+     near, the quad draws for them, a quarter of the draws. And quads go two by two into a BLOCK, which has the
+     DISTANT set, shown in place of everything in it once all of it is far enough off. They stand still for good,
+     so none of them works its matrix out again each frame. */
+  const CHUNKS=[], QUADS=[], BLOCKS=[];
+  const CH=48, CHOX=96, CHOZ=160;
+  const SMALL={fern:1, shrub:1, bush:1, sapling:1};
   function finish(){
-    const map=new Map();
+    const map=new Map(), quads=new Map(), blocks=new Map();
+    const group=(M, k, n, cx, cz, sx, sz)=>{ const gx=Math.floor(cx/n), gz=Math.floor(cz/n), gk=k+gx+":"+gz; let G=M.get(gk);
+      if(!G){ G={key:gk, x0:gx*sx*n, x1:(gx+1)*sx*n, z0:gz*sz*n, z1:(gz+1)*sz*n, species:new Map(), far:[], far2:[], chunks:[], ymin:1e9, ymax:-1e9, on:null}; M.set(gk, G); }
+      return G; };
+    const note=(G, it)=>{ let L=G.species.get(it.v.sp); if(!L){ L=[]; G.species.set(it.v.sp, L); } L.push(it);
+      G.ymin=Math.min(G.ymin, it.y); G.ymax=Math.max(G.ymax, it.y+26*it.s); };
     for(const it of INST){
-      const out=!it.zone;
-      const cx=Math.floor(it.x/CH), cz=Math.floor(it.z/(out?CHO:CH));
+      const out=!it.zone, sx=out?CHOX:CH, sz=out?CHOZ:CH;
+      const cx=Math.floor(it.x/sx), cz=Math.floor(it.z/sz);
       const k=(out?"o":"z")+cx+":"+cz;
       let c=map.get(k);
-      if(!c){ c={key:k, x0:cx*CH, x1:cx*CH+CH, z0:cz*(out?CHO:CH), z1:cz*(out?CHO:CH)+(out?CHO:CH),
-                 lists:new Map(), near:[], far:[], ymin:1e9, ymax:-1e9, mode:-1}; map.set(k,c); }
+      if(!c){ c={key:k, x0:cx*sx, x1:cx*sx+sx, z0:cz*sz, z1:cz*sz+sz,
+                 lists:new Map(), species:new Map(), near:[], far:[], ymin:1e9, ymax:-1e9, mode:-1}; map.set(k,c);
+        c.quad=group(quads, out?"o":"z", 2, cx, cz, sx, sz); c.quad.chunks.push(c);
+        c.block=group(blocks, out?"o":"z", 4, cx, cz, sx, sz); c.block.chunks.push(c); }
       let L=c.lists.get(it.v.idx); if(!L){ L=[]; c.lists.set(it.v.idx, L); }
       L.push(it);
+      if(!SMALL[it.v.sp]){ let S2=c.species.get(it.v.sp); if(!S2){ S2=[]; c.species.set(it.v.sp, S2); } S2.push(it);
+        note(c.quad, it); note(c.block, it); }
       c.ymin=Math.min(c.ymin,it.y); c.ymax=Math.max(c.ymax,it.y+26*it.s);
       // a trunk you can walk into is a trunk you cannot walk through
       if(it.solid && it.zone && it.v.trunkR>0){
@@ -1073,60 +1116,93 @@ vec4 canCrown(vec2 p, out float id){
       }
     }
     const m4=new T.Matrix4(), q=new T.Quaternion(), e=new T.Euler(), p=new T.Vector3(), s=new T.Vector3();
-    for(const c of map.values()){
-      const cx=(c.x0+c.x1)/2, cz=(c.z0+c.z1)/2, cy=(c.ymin+c.ymax)/2;
-      const rad=Math.hypot(c.x1-c.x0, c.z1-c.z0, c.ymax-c.ymin)/2+12;
-      c.sphere=new T.Sphere(new T.Vector3(cx,cy,cz), rad);
+    const sphereOf=(c)=>new T.Sphere(new T.Vector3((c.x0+c.x1)/2, (c.ymin+c.ymax)/2, (c.z0+c.z1)/2),
+                                     Math.hypot(c.x1-c.x0, c.z1-c.z0, c.ymax-c.ymin)/2+12);
+    let c=null;
+    const make=(base, mat, cast, list)=>{
+        const g=new T.BufferGeometry();
+        for(const k2 in base.attributes) g.setAttribute(k2, base.attributes[k2]);
+        g.setIndex(base.index);
+        g.boundingSphere=c.sphere;
+        const im=new T.InstancedMesh(g, mat, list.length);
+        for(let i=0;i<list.length;i++){
+          const it=list[i];
+          e.set(it.rx, it.ry, it.rz, "YXZ"); q.setFromEuler(e);
+          p.set(it.x, it.y, it.z); s.set(it.s, it.s, it.s);
+          m4.compose(p,q,s); im.setMatrixAt(i, m4);
+          im.setColorAt(i, autumn ? it.ca : it.cs);
+        }
+        im.instanceMatrix.needsUpdate=true;
+        if(im.instanceColor) im.instanceColor.needsUpdate=true;
+        // (the far sets stand past the reach of the sun's map: they neither cast into it nor look anything up in it)
+        im.castShadow=cast; im.receiveShadow=cast;
+        im.userData.list=list;
+        im.visible=false; im.matrixAutoUpdate=false;
+        scene.add(im);
+        return im;
+    };
+    for(c of map.values()){
+      c.sphere=sphereOf(c);
       for(const [vi, list] of c.lists){
         const V=VARIANTS[vi];
-        const make=(base, mat, cast)=>{
-          const g=new T.BufferGeometry();
-          for(const k2 in base.attributes) g.setAttribute(k2, base.attributes[k2]);
-          g.setIndex(base.index);
-          g.boundingSphere=c.sphere;
-          const im=new T.InstancedMesh(g, mat, list.length);
-          for(let i=0;i<list.length;i++){
-            const it=list[i];
-            e.set(it.rx, it.ry, it.rz, "YXZ"); q.setFromEuler(e);
-            p.set(it.x, it.y, it.z); s.set(it.s, it.s, it.s);
-            m4.compose(p,q,s); im.setMatrixAt(i, m4);
-            im.setColorAt(i, autumn ? it.ca : it.cs);
-          }
-          im.instanceMatrix.needsUpdate=true;
-          if(im.instanceColor) im.instanceColor.needsUpdate=true;
-          im.castShadow=cast; im.receiveShadow=true;
-          im.userData.list=list;
-          im.visible=false;
-          scene.add(im);
-          return im;
-        };
-        const nm=make(V.near, NEAR_MAT, true);
+        const nm=make(V.near, NEAR_MAT, true, list);
         nm.customDepthMaterial=DEPTH_MAT;
         c.near.push(nm);
         // shrubs and ferns have no far set worth drawing: past the near
         // distance they are simply not there, under the trees' far set
-        if(V.sp!=="fern" && V.sp!=="shrub" && V.sp!=="bush" && V.sp!=="sapling") c.far.push(make(V.far, FAR_MAT, false));
-        if(V.sp==="fern"||V.sp==="shrub"||V.sp==="bush"||V.sp==="sapling") nm.userData.small=true;
+        if(SMALL[V.sp]) nm.userData.small=true;
       }
+      for(const [sp, list] of c.species) c.far.push(make(SPV[sp][0].far, FAR_MAT, false, list));
       CHUNKS.push(c);
+    }
+    for(c of quads.values()){
+      c.sphere=sphereOf(c);
+      // (a quad of one chunk has nothing to save: the chunk's own far set does)
+      if(c.chunks.length>1) for(const [sp, list] of c.species) c.far.push(make(SPV[sp][0].far, FAR_MAT, false, list));
+      QUADS.push(c);
+    }
+    for(c of blocks.values()){
+      if(!c.species.size) continue;
+      c.sphere=sphereOf(c);
+      for(const [sp, list] of c.species) c.far2.push(make(SPV[sp][0].far2, FAR_MAT, false, list));
+      BLOCKS.push(c);
     }
   }
   /* Which set each chunk shows. Near within 58 m of the chunk's footprint
      (more from the air, where a chunk's crowns are all you see), far
-     beyond; the small stuff only within 40 m of the camera's chunk edge.
+     beyond, distant past a couple of hundred metres; the small stuff only
+     within 40 m of the camera's chunk edge.
      The back woods (east of DEEP_X) are not drawn at all from the site at
      eye height: a hundred metres and more of trees stand in front of them. */
   const DEEP_X=176;
-  /* The two radii, and how far anything is drawn at all, come from the
+  /* The radii, and how far anything is drawn at all, come from the
      draw-distance setting (03-scene); FAR is what they always were. */
   function update(cam){
     const alt=Math.max(0, cam.y-30), hideDeep=cam.x<60 && cam.y<25;
-    const D=DRAW_LEVELS[GFX.draw];
+    const D=DRAW_LEVELS[GFX.draw], d2=D.tree*2.2+50;
+    // a block all of which is past the distant line shows its distant set, and its chunks nothing
+    for(const B of BLOCKS){
+      const dx=Math.max(B.x0-cam.x, 0, cam.x-B.x1), dz=Math.max(B.z0-cam.z, 0, cam.z-B.z1);
+      const d=Math.hypot(dx,dz,alt*0.6);
+      const on = d>d2 && d<=D.cull && !(hideDeep && B.x0>=DEEP_X && B.key[0]==="z");
+      B.distant=d>d2;
+      if(on!==B.on){ B.on=on; for(const m of B.far2) m.visible=on; }
+    }
+    for(const Q of QUADS) Q.n=0;
     for(const c of CHUNKS){
       const dx=Math.max(c.x0-cam.x, 0, cam.x-c.x1), dz=Math.max(c.z0-cam.z, 0, cam.z-c.z1);
       const d=Math.hypot(dx,dz,alt*0.6);
-      const mode = (hideDeep && c.x0>=DEEP_X && c.key[0]==="z") ? 2 : d<D.tree ? 1 : d>D.cull ? 2 : 0;
-      const small = d<D.small;
+      c.want = (c.block.distant || (hideDeep && c.x0>=DEEP_X && c.key[0]==="z")) ? 2 : d<D.tree ? 1 : d>D.cull ? 2 : 0;
+      c.wsmall = d<D.small;
+      if(c.want===0) c.quad.n++;
+    }
+    // a quad whose chunks are all far draws their far set as one
+    for(const Q of QUADS){
+      const on=Q.far.length>0 && Q.n===Q.chunks.length;
+      if(on!==Q.on){ Q.on=on; for(const m of Q.far) m.visible=on; }
+    }
+    for(const c of CHUNKS){
+      const mode=(c.want===0 && c.quad.on) ? 4 : c.want, small=c.wsmall;      // (4: far, and the quad is drawing it)
       if(mode!==c.mode || small!==c.small){
         c.mode=mode; c.small=small;
         for(const m of c.near) m.visible = mode===1 && (!m.userData.small || small);
@@ -1136,7 +1212,7 @@ vec4 canCrown(vec2 p, out float id){
   }
   function setSeason(a){
     autumn=!!a;
-    for(const c of CHUNKS) for(const m of c.near.concat(c.far)){
+    for(const c of CHUNKS.concat(QUADS, BLOCKS)) for(const m of (c.near||[]).concat(c.far||[], c.far2||[])){
       const list=m.userData.list;
       for(let i=0;i<list.length;i++) m.setColorAt(i, autumn ? list[i].ca : list[i].cs);
       m.instanceColor.needsUpdate=true;
@@ -1148,6 +1224,6 @@ vec4 canCrown(vec2 p, out float id){
   }
   function canopyAt(x,z){ return inZone(x,z) ? -1e9 : canopyY(x,z,true); }
   return {plant:plant, finish:finish, update:update, setSeason:setSeason, isAutumn:()=>autumn,
-          inst:INST, chunks:CHUNKS, variants:VARIANTS, atlas:ATLAS, canopyAt:canopyAt, canopy:CAN, barkCyl:barkCyl,
+          inst:INST, chunks:CHUNKS, blocks:BLOCKS, variants:VARIANTS, atlas:ATLAS, canopyAt:canopyAt, canopy:CAN, barkCyl:barkCyl,
           nearMat:NEAR_MAT, farMat:FAR_MAT};
 })();

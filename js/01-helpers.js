@@ -571,6 +571,34 @@ function detailMesh(ents, mat, name, cast){
   return out;
 }
 
+/* --- one big sheet, drawn only where you are looking ----------------------
+   A ground ring or a canopy shell is one mesh hundreds of metres across, and a mesh is drawn whole or not at all:
+   the lawn behind you was drawn with the lawn in front of you. tileSheet cuts a sheet's triangles into square tiles
+   by where each one's middle is, and makes a mesh for each. The tiles share the sheet's own vertex buffers (they are
+   sent to the card once) and each has its own index list and its own bounding sphere, so the camera's frustum throws
+   out every tile it cannot see. `make(geometry)` builds each tile's mesh; the meshes are returned. */
+function tileSheet(geo, tile, make){
+  const pos=geo.attributes.position, ix=geo.index.array, tiles=new Map(), out=[];
+  for(let t=0;t<ix.length;t+=3){
+    const a=ix[t], b=ix[t+1], c=ix[t+2];
+    const k=Math.floor((pos.getX(a)+pos.getX(b)+pos.getX(c))/3/tile)+":"+Math.floor((pos.getZ(a)+pos.getZ(b)+pos.getZ(c))/3/tile);
+    let L=tiles.get(k); if(!L) tiles.set(k, L=[]);
+    L.push(a, b, c);
+  }
+  for(const L of tiles.values()){
+    const g=new T.BufferGeometry();
+    for(const n in geo.attributes) g.setAttribute(n, geo.attributes[n]);
+    g.setIndex(L);
+    let x0=1e9, x1=-1e9, y0=1e9, y1=-1e9, z0=1e9, z1=-1e9;
+    for(let i=0;i<L.length;i++){ const v=L[i], x=pos.getX(v), y=pos.getY(v), z=pos.getZ(v);
+      if(x<x0) x0=x; if(x>x1) x1=x; if(y<y0) y0=y; if(y>y1) y1=y; if(z<z0) z0=z; if(z>z1) z1=z; }
+    g.boundingBox=new T.Box3(new T.Vector3(x0, y0, z0), new T.Vector3(x1, y1, z1));
+    g.boundingSphere=new T.Sphere(new T.Vector3((x0+x1)/2, (y0+y1)/2, (z0+z1)/2), Math.hypot(x1-x0, y1-y0, z1-z0)/2);
+    out.push(make(g));
+  }
+  return out;
+}
+
 /* --- local frames ------------------------------------------------------
    three.js's rotation.y = t sends a local offset (dx, dz) to
    (dx·cos t + dz·sin t, −dx·sin t + dz·cos t). Written the other way round
