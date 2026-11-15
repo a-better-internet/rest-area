@@ -23,11 +23,16 @@ const GFX=(function(){
 })();
 // shadow levels: 0 is none at all; the map covers a square the player stands
 // in the middle of, and a smaller map is spread over a smaller square
+// (all filtered the same way, 03's plain PCF: a fixed 4x4 of taps over `radius` texels, each tap the card's own
+//  hardware compare. three's "soft" PCF blurred the map's texel steps into wavy blobs along every shadow edge)
+// Two maps, a cascade: a wide one for the trees and the buildings round about, and a near one, a quarter of its width
+// or less, for what is close to you (a ledge, a car, a railing), its texels a centimetre or so; the near one is used
+// inside the middle of its square and gives way to the wide one before its own edge (03's lights_fragment_begin)
 const SHADOW_LEVELS=[null,
-  {name:"LOW",    map:1024, half:38, soft:false},
-  {name:"MEDIUM", map:2048, half:48, soft:true},
-  {name:"HIGH",   map:3072, half:54, soft:true},
-  {name:"ULTRA",  map:4096, half:58, soft:true}];
+  {name:"LOW",    map:1024, half:40, soft:false, radius:1.0, near:{map:1024, half:13}},
+  {name:"MEDIUM", map:2048, half:52, soft:true,  radius:1.3, near:{map:2048, half:16}},
+  {name:"HIGH",   map:3072, half:60, soft:true,  radius:1.4, near:{map:3072, half:19}},
+  {name:"ULTRA",  map:4096, half:64, soft:true,  radius:1.5, near:{map:4096, half:22}}];
 // draw distance: how far the near trees reach, how far anything is drawn, how far a place's hand-merged detail is
 // drawn (01's detailMesh),
 // and where the haze closes in so nothing is seen to vanish
@@ -56,7 +61,7 @@ if(!GFX.saved && GFX.tier==="integrated"){ GFX.res=-1; GFX.auto=1; GFX.shadows=1
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(gfxPixelRatio());
 renderer.shadowMap.enabled=GFX.shadows>0;
-renderer.shadowMap.type=(SHADOW_LEVELS[GFX.shadows]||SHADOW_LEVELS[3]).soft ? T.PCFSoftShadowMap : T.PCFShadowMap;
+renderer.shadowMap.type=T.PCFShadowMap;
 try{ renderer.outputColorSpace=T.SRGBColorSpace; }catch(e){ renderer.outputEncoding=T.sRGBEncoding; }
 /* A SHOULDER, NOT A CURVE. Below 0.76 the output is the input to the last
    bit, so every painted hex arrives as painted; above it each channel rolls
@@ -89,6 +94,28 @@ T.ShaderChunk.lights_physical_fragment=
   T.ShaderChunk.shadowmap_pars_fragment=_sc.replace(_from,
     "\t\t}\n\t\tfloat shEdge = min( min( shadowCoord.x, 1.0 - shadowCoord.x ), min( shadowCoord.y, 1.0 - shadowCoord.y ) );\n"+
     "\t\treturn mix( 1.0, shadow, smoothstep( 0.0, 0.13, shEdge ) );\n\t}\n\tvec2 cubeToUV"); }
+/* THE CASCADE. The sun is two directional lights: the key (index 0, every bit of the light, the wide map) and keyNear
+   (index 1, no light of its own, the near map). Lit by the key, a fragment takes its shade from the near map wherever
+   it is inside the middle of that map's square (past its own edge fade, 0.13), easing to the wide map's over the
+   band outside that; keyNear itself adds nothing and is never shadow-sampled for its own sake. */
+{ const _lf=T.ShaderChunk.lights_fragment_begin, _sh="\t\tdirectionalLightShadow = directionalLightShadows[ i ];\n\t\tdirectLight.color *= all( bvec2( directLight.visible, receiveShadow ) ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n";
+  if(_lf.indexOf(_sh)<0) console.warn("shadow cascade: chunk not found");
+  else T.ShaderChunk.lights_fragment_begin=_lf.replace(_sh,
+    "\t\t#if ( UNROLLED_LOOP_INDEX == 1 ) && ( NUM_DIR_LIGHT_SHADOWS > 1 )\n"+
+    "\t\tdirectLight.color *= 0.0;\n"+
+    "\t\t#else\n"+
+    "\t\tdirectionalLightShadow = directionalLightShadows[ i ];\n"+
+    "\t\tfloat shK = all( bvec2( directLight.visible, receiveShadow ) ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n"+
+    "\t\t#if ( UNROLLED_LOOP_INDEX == 0 ) && ( NUM_DIR_LIGHT_SHADOWS > 1 )\n"+
+    "\t\tif( all( bvec2( directLight.visible, receiveShadow ) ) ){\n"+
+    "\t\t\tvec4 nc = vDirectionalShadowCoord[ 1 ]; vec3 ncp = nc.xyz / nc.w;\n"+
+    "\t\t\tfloat nE = min( min( ncp.x, 1.0 - ncp.x ), min( ncp.y, 1.0 - ncp.y ) );\n"+
+    "\t\t\tfloat nW = smoothstep( 0.14, 0.24, nE ) * step( ncp.z, 1.0 ) * step( 0.0, ncp.z );\n"+
+    "\t\t\tif( nW > 0.0 ){ float shN = getShadow( directionalShadowMap[ 1 ], directionalLightShadows[ 1 ].shadowMapSize, directionalLightShadows[ 1 ].shadowBias, directionalLightShadows[ 1 ].shadowRadius, nc ); shK = mix( shK, shN, nW ); }\n"+
+    "\t\t}\n"+
+    "\t\t#endif\n"+
+    "\t\tdirectLight.color *= shK;\n"+
+    "\t\t#endif\n"); }
 /* GROUND MIST, IN THE FOG ITSELF. Every lit surface already mixes in the
    haze by its distance; it now also mixes in a mist whose density is
    thickest at the ground and thins out over a metre or two above it,
@@ -225,12 +252,19 @@ const key=new T.DirectionalLight(0xfff3df, 1.10);
 key.position.set(70,110,50); key.castShadow=GFX.shadows>0;
 const ksc=key.shadow.camera;
 const KEY_D=120;
-let SHADOW_SNAP=0.07;
+let SHADOW_SNAP=0.07, NEAR_SNAP=0.02;
+// the near cascade's light: the same sun, no light of its own, just its shadow map (03's lights_fragment_begin)
+const keyNear=new T.DirectionalLight(0xffffff, 0); keyNear.castShadow=GFX.shadows>0;
+const nsc=keyNear.shadow.camera; nsc.near=KEY_D-110; nsc.far=KEY_D+110;
 // the map's size and the square it covers, from the settings; the frustum
 // still follows the player in whole texels, so the step is recomputed too
 function setShadowLevel(lv){
   const L=SHADOW_LEVELS[lv]||SHADOW_LEVELS[3];
-  key.shadow.mapSize.set(L.map, L.map);
+  key.shadow.mapSize.set(L.map, L.map); key.shadow.radius=L.radius||1;
+  const N=L.near; keyNear.shadow.mapSize.set(N.map, N.map); keyNear.shadow.radius=L.radius||1;
+  if(keyNear.shadow.map){ keyNear.shadow.map.dispose(); keyNear.shadow.map=null; }
+  nsc.left=-N.half; nsc.right=N.half; nsc.top=N.half; nsc.bottom=-N.half; nsc.updateProjectionMatrix();
+  NEAR_SNAP=N.half*2/N.map*2;
   if(key.shadow.map){ key.shadow.map.dispose(); key.shadow.map=null; }
   ksc.left=-L.half; ksc.right=L.half; ksc.top=L.half; ksc.bottom=-L.half;
   ksc.updateProjectionMatrix();
@@ -242,7 +276,8 @@ setShadowLevel(GFX.shadows);
    its bounds without this and the world is shadowed through the stock 10 m
    box (setShadowLevel does). */
 key.shadow.bias=-0.00005; key.shadow.normalBias=0.014;
-scene.add(key); scene.add(key.target);
+keyNear.shadow.bias=-0.00003; keyNear.shadow.normalBias=0.005;
+scene.add(key); scene.add(key.target); scene.add(keyNear); scene.add(keyNear.target);     // (in this order: the key is light 0, keyNear 1)
 /* THE SHADOW STAYS ON. A light that starts or stops casting changes every lit shader in the world, and three builds
    them all again at once: a freeze of a second or more on a slow card, at dusk, at dawn and whenever the cloud
    closed in. So the key casts for as long as shadows are on in the menu, and when its shade should go (the sun
@@ -255,7 +290,7 @@ function keyShadow(on){
   if(on===_keyShade) return;
   _keyShade=on;
   ksc.far=on ? KEY_D+110 : ksc.near+0.001;
-  ksc.updateProjectionMatrix();
+  ksc.updateProjectionMatrix(); nsc.far=on ? KEY_D+110 : nsc.near+0.001; nsc.updateProjectionMatrix();
   renderer.shadowMap.autoUpdate=on;
   renderer.shadowMap.needsUpdate=true;
 }

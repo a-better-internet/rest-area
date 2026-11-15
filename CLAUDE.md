@@ -764,3 +764,13 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   the ground has grown over does not count. A canvas texture laid along a
   strip sets `flipY=false` if its rows are drawn top-down. A new paving
   bucket that should blend goes in its `SRC` list with its width.
+- The sun's shadow is a two-map cascade (03): `key` (light 0, all the
+  light, the wide map) and `keyNear` (light 1, intensity 0, only a near
+  map a third the width or less, about a centimetre a texel on ULTRA).
+  The patched `lights_fragment_begin` takes the key's shade from the near
+  map inside the middle of its square and eases to the wide map outside
+  it; keyNear adds no light. Both are added to the scene in that order and
+  both cast while shadows are on, so the light count never changes in
+  play; 19 moves keyNear with the camera on its own texels (`NEAR_SNAP`),
+  `keyShadow` draws in both far planes. Every level filters with plain
+  PCF and its `radius`: three's PCFSoft smeared the texel steps into blobs.

@@ -76,8 +76,8 @@ const GFX_ROWS=[
    show:i=>i===0 ? "OFF" : SHADOW_LEVELS[i].name,
    set:i=>{ GFX.shadows=i; },
    note:()=>{ const L=SHADOW_LEVELS[GFX.shadows];
-     return L ? "The sun's shadow map: "+L.map+"×"+L.map+" over "+(L.half*2)+" m around you"+(L.soft?", soft-edged.":", hard-edged.")
-              : "No shadow map at all: the scene is drawn once a frame instead of twice."; }},
+     return L ? "The sun's shadows: a near map "+L.near.map+"×"+L.near.map+" over "+(L.near.half*2)+" m for what is close, sharp to about "+Math.round(L.near.half*2/L.near.map*1000)+" mm, and "+L.map+"×"+L.map+" over "+(L.half*2)+" m beyond it."
+              : "No shadow maps at all: the scene is drawn once a frame instead of three times."; }},
   {k:"draw", label:"DRAW DISTANCE",
    get:()=>GFX.draw, n:()=>DRAW_LEVELS.length,
    show:i=>DRAW_LEVELS[i].name,
@@ -172,9 +172,9 @@ function applyGraphics(){
   if(A.shadows!==GFX.shadows){
     const was=A.shadows===null ? null : SHADOW_LEVELS[A.shadows], now=SHADOW_LEVELS[GFX.shadows];
     renderer.shadowMap.enabled=!!now;
-    key.castShadow=!!now;
-    if(now){ setShadowLevel(GFX.shadows); renderer.shadowMap.type=now.soft ? T.PCFSoftShadowMap : T.PCFShadowMap; }
-    if(A.shadows!==null && (!was!==!now || (was && now && was.soft!==now.soft))) _rebuildMaterials();
+    key.castShadow=!!now; keyNear.castShadow=!!now;
+    if(now){ setShadowLevel(GFX.shadows); renderer.shadowMap.type=T.PCFShadowMap; }
+    if(A.shadows!==null && !was!==!now) _rebuildMaterials();                                    // (only on or off changes the shaders: every level is two maps, PCF)
     A.shadows=GFX.shadows;
   }
   if(A.lights!==GFX.lights){ setLightCount(GFX.lights); A.lights=GFX.lights; }

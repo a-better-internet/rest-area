@@ -183,6 +183,8 @@ function frame(){
   _sunDir.set(Math.cos(ang)*R, Math.max(14, Math.sin(ang)*R+6)-kty, 70).normalize();
   key.position.set(kx+_sunDir.x*KEY_D, kty+_sunDir.y*KEY_D, kz+_sunDir.z*KEY_D);
   key.target.position.set(kx, kty, kz);
+  { const nx=Math.round(camera.position.x/NEAR_SNAP)*NEAR_SNAP, nz=Math.round(camera.position.z/NEAR_SNAP)*NEAR_SNAP;      // (the near cascade, on its own texels)
+    keyNear.position.set(nx+_sunDir.x*KEY_D, kty+_sunDir.y*KEY_D, nz+_sunDir.z*KEY_D); keyNear.target.position.set(nx, kty, nz); }
   // at night the light is the moon's, as much of it as there is
   key.intensity=dn.sunIntensity-dn.nightAmount*0.30*(1-(0.25+0.75*MOON.bright));
   keyShadeWant = dn.sunHeight > 0.04;                                     // (16b clears it in heavy cloud; keyShadow, 03)
