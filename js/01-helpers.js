@@ -517,6 +517,7 @@ function bakeBuckets(scene){
         mesh.castShadow=cast;
         mesh.receiveShadow = !NO_SHADOW_IN.has(name);
         mesh.name="bucket:"+name+":"+k+(cast?"":":flat");
+        mesh.matrixAutoUpdate=false;                        // (it never moves: nothing to work out again each frame)
         scene.add(mesh); out.push(mesh);
       }
     }
@@ -567,7 +568,7 @@ function detailMesh(ents, mat, name, cast){
   for(const e of ents){ _c.setFromMatrixPosition(e.matrix); const k=Math.floor(_c.x/64)+":"+Math.floor(_c.z/64);
     let L=tiles.get(k); if(!L){ L=[]; tiles.set(k, L); } L.push(e); }
   for(const [k, L] of tiles){ const m=new T.Mesh(mergeEntries(L), mat);
-    m.castShadow=cast!==false; m.receiveShadow=true; m.name=(name||"detail")+":"+k; scene.add(m); DETAIL.push(m); out.push(m); }
+    m.castShadow=cast!==false; m.receiveShadow=true; m.name=(name||"detail")+":"+k; m.matrixAutoUpdate=false; scene.add(m); DETAIL.push(m); out.push(m); }
   return out;
 }
 

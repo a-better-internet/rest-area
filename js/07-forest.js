@@ -259,7 +259,7 @@ const FOREST=(function(){
      from you its edge thins out raggedly (it is discarded against the noise), so the outline is leaves and not a
      facet. Where a pixel is wider than a clump both fade, so nothing sparkles. */
   FAR_MAT.extensions={derivatives:true};
-  FAR_MAT.onBeforeCompile=(sh)=>{ patchColour(sh);
+  FAR_MAT.onBeforeCompile=(sh)=>{ patchColour(sh); sh.uniforms.uFx=FX_U;
     sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vFarW;\nvarying float vFarLeaf;")
       .replace("#include <begin_vertex>", `#include <begin_vertex>
   { vec4 fw=vec4(transformed, 1.0);
@@ -270,18 +270,21 @@ const FOREST=(function(){
     sh.fragmentShader=sh.fragmentShader.replace("#include <common>", `#include <common>
 varying vec3 vFarW;
 varying float vFarLeaf;
+uniform float uFx;
 float farH(vec3 p){ p=fract(p*0.3183099+0.1); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
 float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
   return mix(mix(mix(farH(i), farH(i+vec3(1.0,0.0,0.0)), f.x), mix(farH(i+vec3(0.0,1.0,0.0)), farH(i+vec3(1.0,1.0,0.0)), f.x), f.y),
              mix(mix(farH(i+vec3(0.0,0.0,1.0)), farH(i+vec3(1.0,0.0,1.0)), f.x), mix(farH(i+vec3(0.0,1.0,1.0)), farH(i+vec3(1.0,1.0,1.0)), f.x), f.y), f.z); }`)
       .replace("#include <color_fragment>", `#include <color_fragment>
   float farK=0.0, farN0=0.5; vec3 farP=vFarW*1.05;
-  if(vFarLeaf>0.5){
-    farK=1.0-smoothstep(0.30, 0.95, length(fwidth(vFarW)));
-    farN0=farN(farP); float n1=farN(farP*2.3+vec3(7.1, 3.3, 1.7));
-    // the ragged edge: thin where the ball turns away from you, against the noise
-    float facing=abs(dot(normalize(vNormal), normalize(vViewPosition)));
-    if(farK>0.0 && facing<0.42*farK*(0.35+0.65*(farN0*0.6+n1*0.5))) discard;
+  // (with the surface detail off, 03's FX_U, a far crown is its plain ball at its mean tone)
+  if(vFarLeaf>0.5){ float n1=0.5;
+    if(uFx>0.5){
+      farK=1.0-smoothstep(0.30, 0.95, length(fwidth(vFarW)));
+      farN0=farN(farP); n1=farN(farP*2.3+vec3(7.1, 3.3, 1.7));
+      // the ragged edge: thin where the ball turns away from you, against the noise
+      float facing=abs(dot(normalize(vNormal), normalize(vViewPosition)));
+      if(farK>0.0 && facing<0.42*farK*(0.35+0.65*(farN0*0.6+n1*0.5))) discard; }
     diffuseColor.rgb*=mix(0.93, 0.66+0.5*farN0*(0.75+0.5*n1), farK); }`)
       .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
   if(farK>0.0){ const float e=0.3;
@@ -404,10 +407,12 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
       const y=trunkTop*k/4;
       pts.push(new T.Vector3(lean.x*y+(r()-0.5)*0.25*k/4, y, lean.z*y+(r()-0.5)*0.25*k/4));
     }
-    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,0.5,0), r0*1.42, r0*0.99, 8, bark, brg);
+    // (as many sides as its girth can show: seven to a trunk you could put your arms round, four to a sapling's stem)
+    const big=r0>=0.2, sd0=big?7:4, sd1=big?5:4;
+    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,0.5,0), r0*1.42, r0*0.99, sd0, bark, brg);
     for(let k=0;k<4;k++){
       const ra=r0*(1-k/4*0.78), rb=r0*(1-(k+1)/4*0.78);
-      near.limb(pts[k], pts[k+1], ra, rb, k<2?8:6, bark, brg, k/4*0.15, (k+1)/4*0.15);
+      near.limb(pts[k], pts[k+1], ra, rb, k<2?sd0:sd1, bark, brg, k/4*0.15, (k+1)/4*0.15);
     }
     far.limb(new T.Vector3(0,-0.2,0), pts[3], r0*1.1, r0*0.42, 4, bark, brg);
     // the crown: limbs out to clump centres, a clump of cards at each end
@@ -422,8 +427,8 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
       const dir=new T.Vector3(Math.cos(yaw)*Math.cos(el), Math.sin(el), Math.sin(yaw)*Math.cos(el));
       const b=a.clone().addScaledVector(dir, L);
       const mid=a.clone().addScaledVector(dir, L*0.55).add(new T.Vector3(0, L*0.08, 0));
-      near.limb(a, mid, r0*0.42*(1-t*0.5), r0*0.25, 5, bark, brg, 0.15, 0.35);
-      near.limb(mid, b, r0*0.25, 0.04, 4, bark, brg, 0.35, 0.6);
+      near.limb(a, mid, r0*0.42*(1-t*0.5), r0*0.25, big?4:3, bark, brg, 0.15, 0.35);
+      near.limb(mid, b, r0*0.25, 0.04, 3, bark, brg, 0.35, 0.6);
       clumps.push({c:b, r:(o.clump||2.3)*(1.05-t*0.25)*(0.85+r()*0.3)});
       // a secondary clump part way along the bigger limbs
       if(t<0.6 && r()<0.7) clumps.push({c:mid.clone().add(new T.Vector3(0,0.6,0)), r:(o.clump||2.3)*0.8});
@@ -459,7 +464,14 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     const far2=new TG(), cr=R*1.14;
     far2.limb(new T.Vector3(0,-0.2,0), pts[3], r0*1.2, r0*0.5, 3, bark, brg);
     far2.blob(ctr, cr, clamp((1-cb)*H*0.52/cr, 0.62, 1.15), WHITEISH, 1);
-    return {near:near.geo(), far:far.geo(), far2:far2.geo(), trunkR:r0*1.1};
+    /* Out of the woods (a hedgerow, a treeline along a road, a yard) a tree is seen whole against the sky, and one
+       ball on a stick is a lollipop: there the distant set keeps the crown's biggest clump beside the ball and a
+       trunk with some girth, and takes over further off. */
+    const far2o=new TG();
+    far2o.limb(new T.Vector3(0,-0.2,0), pts[3], r0*1.3, r0*0.6, 4, bark, brg);
+    far2o.blob(ctr, R*0.98, 0.84, WHITEISH, 1);
+    if(used[0]) far2o.blob(used[0].c, used[0].r*1.3, 0.85, WHITEISH, 1);
+    return {near:near.geo(), far:far.geo(), far2:far2.geo(), far2o:far2o.geo(), trunkR:r0*1.1};
   }
   /* --- eastern hemlock: a dark cone of drooping, flat sprays ------------ */
   function hemlock(seed, o){
@@ -527,7 +539,7 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
         const yaw=r()*6.283, L=o.R*(1-t*0.55)*(0.6+r()*0.6);
         const a=new T.Vector3(0,y,0), dir=new T.Vector3(Math.cos(yaw), 0.18+r()*0.18, Math.sin(yaw)).normalize();
         const b=a.clone().addScaledVector(dir, L);
-        near.limb(a, b, 0.07, 0.02, 4, bark, RG.bark, 0.1, 0.5);
+        near.limb(a, b, 0.07, 0.02, 3, bark, RG.bark, 0.1, 0.5);
         // two or three soft tufts along the outer half, near horizontal
         for(let q=0;q<3;q++){
           const c=a.clone().addScaledVector(dir, L*(0.45+q*0.27)).add(new T.Vector3(0,0.15,0));
@@ -618,7 +630,7 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     SPV[name]=[];
     for(const seed of SPECIES[name].seeds){
       const b=SPECIES[name].build(seed);
-      const v={sp:name, near:b.near, far:b.far, far2:b.far2, trunkR:b.trunkR, idx:VARIANTS.length};
+      const v={sp:name, near:b.near, far:b.far, far2:b.far2, far2o:b.far2o||b.far2, trunkR:b.trunkR, idx:VARIANTS.length};
       VARIANTS.push(v); SPV[name].push(v);
     }
   }
@@ -748,14 +760,16 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
      big lone oak left standing in a hay field for the shade. The fields are
      out of the woods' zone, so their trunks are given colliders here. */
   (function hedgerows(){
+    // (a tree that grew in the open is crowned low and wide: the hedgerows are edge trees, not the woods' tall bare
+    //  poles with a tuft on top, and the oak in the hay field is the broad one a lawn has, grown old)
     const E=EDIN, tree=(sp, x, z, s)=>{ if(Terrain.clearDist(x,z)>-1 && sp!=="oak") return;
-      plant(sp==="oak"?"hard":sp, x, z, {scale:s});
+      plant(sp==="oak"?"lawn":sp, x, z, {scale:sp==="oak" ? s*1.25 : s});
       const y=Terrain.groundAt(x,z), r=0.22*s; addCol(x-r, x+r, z-r, z+r, y-0.5, y+6); };
     const row=(x0,z0,x1,z1,seed)=>{ const L=Math.hypot(x1-x0,z1-z0), n=Math.floor(L/6.5);
       for(let i=0;i<=n;i++){ const t=i/n, h=hash2(seed+i*1.7, seed*0.3);
         if(h<0.22) continue;                                     // a gap where a tree came down
         const x=lerp(x0,x1,t)+(hash2(i,seed)-0.5)*3, z=lerp(z0,z1,t)+(hash2(seed,i*2.1)-0.5)*3;
-        tree(h<0.32 ? "hemlock" : "hard", x, z, 0.75+h*0.5);
+        tree(h<0.32 ? "hemlock" : "edge", x, z, 0.8+h*0.5);
         if(h>0.6) plant("shrub", x+2.0, z+1.1, {scale:0.9+h*0.5, solid:false}); } };
     // between neighbouring fields, the length of the shorter edge
     for(const a of E.fields) for(const b of E.fields){
@@ -765,6 +779,26 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     // and along the back of each, where it meets the woods
     for(const f of E.fields){ const zb=f.z0<E.z ? f.z0-5 : f.z1+5; row(f.x0+4, zb, f.x1-4, zb, f.x0*0.7+zb); }
     tree("oak", E.fields[3].x0+96, E.fields[3].z0+170, 1.45);
+    /* And round the whole of the farm country, where the fields stop and the woods begin. You can walk and drive to
+       the plain's very edge, and all that stood past it was the canopy's shell, a smooth green bank with a dark wall
+       under it. So the first forty metres of the woods are real trees: edge trees crowned to the ground along the
+       front with shrubs at their feet, the woods' own tall hardwoods, hemlock and pine behind, thinning with depth
+       (the shell, held low over the same ground by canopyY below, takes over behind them). Not where the interstate's
+       own treelines stand, nor the two roads' out east and west (14m, 14z), nor the radio station's ring (14s2). */
+    const EP=E.plain, SP=6.6, D=42;
+    for(let gx=EP.x0-D; gx<EP.x1+D; gx+=SP) for(let gz=EP.z0-D; gz<EP.z1+D; gz+=SP){
+      if(gx>EP.x0+1 && gx<EP.x1-1 && gz>EP.z0+1 && gz<EP.z1-1) continue;
+      const x=gx+(hash2(gx, gz)-0.5)*SP*0.85, z=gz+(hash2(gz*1.3, gx*0.7)-0.5)*SP*0.85, d=Terrain.clearDist(x, z);
+      if(d<0.8 || d>D) continue;
+      if(Math.min(Math.abs(x-HWY.nb), Math.abs(x-HWY.sb))<38) continue;
+      if(Math.abs(z-E.z)<36 && (x>EP.x1-6 || x<EP.x0+6)) continue;
+      if(typeof RADIO!=="undefined" && x>-84 && x<198 && z<EP.z0+4) continue;
+      const q=hash2(x*0.77, z*1.13);
+      if(hash2(x*3.3, z*1.9)>1-0.45*smoothstep(8, D, d)) continue;
+      const front=d<7;
+      plant(front ? (q<0.16 ? "hemlock" : "edge") : (q<0.20 ? "hemlock" : q<0.29 ? "pine" : q<0.40 ? "beech" : "hard"), x, z, {scale:0.84+hash2(x*7, z*5)*0.36});
+      if(front && q>0.45){ const sx=x+(hash2(z, x)-0.5)*3, sz=z+(hash2(x, z*2)-0.5)*3; if(Terrain.clearDist(sx, sz)>0.4) plant("shrub", sx, sz, {scale:0.85+q*0.6, solid:false}); }
+    }
   })();
 
   /* ---- the canopy past the zone -----------------------------------------
@@ -808,6 +842,10 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     // and round the weigh station's clearing, which 14w lines with real trees the same way
     if(fine && typeof WEIGH!=="undefined"){ const P=WEIGH.pad, ex=Math.max(0, x-(P.x1+30), (P.x0-6)-x), ez=Math.max(0, z-(P.z1+120), (P.z0-150)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
+    // and round Edinboro's farm country, whose edge the hedgerows above line with real trees the same way (the far
+    // 32 m shell too: west of the interchange the plain's edge is on it)
+    if(typeof EDIN!=="undefined"){ const P=EDIN.plain, ex=Math.max(0, x-(P.x1+46), (P.x0-46)-x), ez=Math.max(0, z-(P.z1+46), (P.z0-46)-z);
+      const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
     // and round the radio station and its tower, which 14s2 rings with real trees the same way
     if(fine && typeof RADIO!=="undefined"){ const ex=Math.max(0, x-185, -70-x), ez=Math.max(0, z-(-1455), (-1625)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
@@ -843,10 +881,12 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
        crowns, which are laid out across the ground, leave off. */
     mat2.extensions={derivatives:true};
     mat2.onBeforeCompile=(sh)=>{
+      sh.uniforms.uFx=FX_U;
       sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vCanW;")
         .replace("#include <begin_vertex>", "#include <begin_vertex>\nvCanW=(modelMatrix*vec4(transformed, 1.0)).xyz;");
       sh.fragmentShader=sh.fragmentShader.replace("#include <common>", `#include <common>
 varying vec3 vCanW;
+uniform float uFx;
 vec2 canH(vec2 p){ vec3 q=fract(vec3(p.xyx)*vec3(0.1031, 0.1030, 0.0973)); q+=dot(q, q.yzx+33.33); return fract((q.xx+q.yz)*q.zy); }
 // the nearest crown's middle to p (in cells): xy from it to p, z how far, w how far to the next one
 vec4 canCrown(vec2 p, out float id){
@@ -858,7 +898,9 @@ vec4 canCrown(vec2 p, out float id){
   return vec4(-d1, sqrt(f1), sqrt(f2)); }`)
         .replace("#include <color_fragment>", `#include <color_fragment>
   vec3 canOff=vec3(0.0); float canK=0.0;
-  { vec2 wp=vCanW.xz; float fw=length(fwidth(wp)), idA, idB, idC;
+  // (with the surface detail off, 03's FX_U, the shell is its mean tone and its own smooth normal)
+  if(uFx<0.5) diffuseColor.rgb*=0.82*0.95/0.85;
+  else { vec2 wp=vCanW.xz; float fw=length(fwidth(wp)), idA, idB, idC;
     vec3 wn=normalize(cross(dFdx(vCanW), dFdy(vCanW))); wn*=sign(wn.y);
     float steep=smoothstep(0.45, 0.8, wn.y);
     float k1=(1.0-smoothstep(1.2, 3.4, fw))*steep, k2=(1.0-smoothstep(0.45, 1.3, fw))*steep;
@@ -1164,7 +1206,8 @@ vec4 canCrown(vec2 p, out float id){
     for(c of blocks.values()){
       if(!c.species.size) continue;
       c.sphere=sphereOf(c);
-      for(const [sp, list] of c.species) c.far2.push(make(SPV[sp][0].far2, FAR_MAT, false, list));
+      // (in the zone's own woods one ball to a tree; out of it the fuller distant shape, far2o)
+      for(const [sp, list] of c.species) c.far2.push(make(c.key[0]==="z" ? SPV[sp][0].far2 : SPV[sp][0].far2o, FAR_MAT, false, list));
       BLOCKS.push(c);
     }
   }
@@ -1184,8 +1227,9 @@ vec4 canCrown(vec2 p, out float id){
     for(const B of BLOCKS){
       const dx=Math.max(B.x0-cam.x, 0, cam.x-B.x1), dz=Math.max(B.z0-cam.z, 0, cam.z-B.z1);
       const d=Math.hypot(dx,dz,alt*0.6);
-      const on = d>d2 && d<=D.cull && !(hideDeep && B.x0>=DEEP_X && B.key[0]==="z");
-      B.distant=d>d2;
+      const lim=B.key[0]==="z" ? d2 : d2*1.6;                  // (out in the open a tree keeps its far shape further)
+      const on = d>lim && d<=D.cull && !(hideDeep && B.x0>=DEEP_X && B.key[0]==="z");
+      B.distant=d>lim;
       if(on!==B.on){ B.on=on; for(const m of B.far2) m.visible=on; }
     }
     for(const Q of QUADS) Q.n=0;

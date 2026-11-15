@@ -930,6 +930,7 @@ const WHEEL_POOL=(function(){
     const truck=S.wr>0.45, type=truck?"truck":"car", T0=types[type];
     v.wheelSlots=wheelSlots(S).map(([x,z])=>({x:x, z:z, y:S.wr, s:S.wr/T0.r, type:type}));
     v.spin=v.spin||0;
+    if(v.g) v.g.userData.noCull=true;                       // (its shell goes by the distances below, with its wheels, not by 18c's cullLoose)
     slots.push(v);
   }
   function build(){

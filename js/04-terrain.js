@@ -653,17 +653,18 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
          shows near or far; and where it is mown, bands down the lawn along z that go light and dark as you look
          along them one way or the other, the way grass laid over by a mower does, and fade side on */
       TERRAIN_MAT.onBeforeCompile=(sh)=>{
-        sh.uniforms.lawnMap={value:TEX.lawn};
+        sh.uniforms.lawnMap={value:TEX.lawn}; sh.uniforms.uFx=FX_U;
         sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec2 grass;\nvarying vec2 vGrass;\nvarying vec3 vWPos;")
           .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGrass=grass; vWPos=(modelMatrix*vec4(transformed,1.0)).xyz;");
-        sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform sampler2D lawnMap;\nvarying vec2 vGrass;\nvarying vec3 vWPos;")
+        sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform sampler2D lawnMap;\nuniform float uFx;\nvarying vec2 vGrass;\nvarying vec3 vWPos;")
           .replace("#include <map_fragment>", `
             vec4 texelColor = mapTexelToLinear( texture2D( map, vUv ) );
             if(vGrass.x > 0.003){
               float fd = smoothstep(6.0, 60.0, distance(vWPos, cameraPosition));
               vec3 l1 = mapTexelToLinear(texture2D(lawnMap, vWPos.xz*0.625)).rgb;
-              vec3 l2 = mapTexelToLinear(texture2D(lawnMap, vWPos.xz*0.137 + vec2(0.37, 0.71))).rgb;
-              vec3 lw = mix(l1, l1*l2*1.32, 0.35 + 0.45*fd);
+              vec3 lw = l1;
+              if(uFx > 0.5){ vec3 l2 = mapTexelToLinear(texture2D(lawnMap, vWPos.xz*0.137 + vec2(0.37, 0.71))).rgb;
+                lw = mix(l1, l1*l2*1.32, 0.35 + 0.45*fd); }
               texelColor.rgb = mix(texelColor.rgb, lw*1.06, vGrass.x);
               float band = smoothstep(0.38, 0.62, abs(fract(vWPos.x/2.6) - 0.5)*2.0) - 0.5;
               vec3 vd = normalize(vWPos - cameraPosition);
@@ -675,7 +676,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
              metres, in no line with the grid) and finer hummocks; it is fainter on what is walked on close to, and
              fades where a pixel is wider than a hummock so the far fields don't shimmer */
           .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
-            { vec2 p=vWPos.xz; float fw=length(fwidth(p)); vec2 gr=vec2(0.0);
+            if(uFx > 0.5){ vec2 p=vWPos.xz; float fw=length(fwidth(p)); vec2 gr=vec2(0.0);
               const vec2 D0=vec2(0.83, 0.56), D1=vec2(-0.41, 0.91), D2=vec2(0.97, -0.24), D3=vec2(-0.71, -0.70);
               gr+=0.050*cos(dot(p, D0)*0.157+1.3)*D0+0.045*cos(dot(p, D1)*0.149+4.1)*D1;
               gr+=0.060*cos(dot(p, D2)*0.311+2.2)*D2*(1.0-smoothstep(4.0, 10.0, fw));

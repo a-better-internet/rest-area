@@ -12,7 +12,7 @@ const app=document.getElementById("app");
    resolution and shadow size; the menu that changes them is 18c-settings.
    res 0 is "native": the screen's own pixel density, up to 2x. */
 const GFX=(function(){
-  const D={res:0, fps:60, shadows:3, draw:2, lights:12, meter:false, aa:true};
+  const D={res:0, fps:60, shadows:3, draw:2, lights:12, meter:false, aa:true, fx:true};
   let s=null;
   try{ s=JSON.parse(localStorage.getItem("restarea.gfx")||"null"); }catch(e){}
   const o=Object.assign({}, D, (s && typeof s==="object") ? s : {});
@@ -54,13 +54,27 @@ GFX.draw=Math.max(0, Math.min(DRAW_LEVELS.length-1, GFX.draw|0));
    unless the page asks for the other: so ask. Then read which one we got, and on the first run (nothing saved) set
    the graphics to suit it: a chip built into the processor starts at MEDIUM with the resolution on AUTO; anything
    else keeps HIGH. Whatever is chosen in the menu after that is kept, and the menu says which card is drawing. */
+const _gpuOf=(gl)=>{ try{ const x=gl.getExtension("WEBGL_debug_renderer_info");
+  return String(x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)||""); }catch(e){ return ""; } };
+const _tierOf=(gpu)=>/intel|uhd|iris|hd graphics|mali|adreno|powervr|swiftshader|llvmpipe|software|microsoft basic/i.test(gpu) ? "integrated"
+        : /nvidia|geforce|quadro|rtx|gtx|radeon|amd|apple/i.test(gpu) ? "dedicated" : "unknown";
+/* Antialiasing is the canvas's own (it is made with it or without it), so which card this is has to be known before
+   the canvas is: a throwaway context is asked, and let go. On a first run on a chip built into the processor the
+   canvas is made without it: four samples a pixel cost such a chip nearly what the resolution does, and AUTO
+   resolution puts the saving back into sharper pixels. */
+if(!GFX.saved){ try{ const gl=document.createElement("canvas").getContext("webgl", {powerPreference:"high-performance"});
+  if(gl){ if(_tierOf(_gpuOf(gl))==="integrated") GFX.aa=false; const l=gl.getExtension("WEBGL_lose_context"); if(l) l.loseContext(); } }catch(e){} }
 const renderer=new T.WebGLRenderer({antialias:GFX.aa, powerPreference:"high-performance"});
 GFX.aa0=GFX.aa;                                              // (what the canvas was made with: a change takes a reload, 18c)
-GFX.gpu=(function(){ try{ const gl=renderer.getContext(), x=gl.getExtension("WEBGL_debug_renderer_info");
-  return String(x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)||""); }catch(e){ return ""; } })();
-GFX.tier=/intel|uhd|iris|hd graphics|mali|adreno|powervr|swiftshader|llvmpipe|software|microsoft basic/i.test(GFX.gpu) ? "integrated"
-        : /nvidia|geforce|quadro|rtx|gtx|radeon|amd|apple/i.test(GFX.gpu) ? "dedicated" : "unknown";
+GFX.gpu=_gpuOf(renderer.getContext());
+GFX.tier=_tierOf(GFX.gpu);
 if(!GFX.saved && GFX.tier==="integrated"){ GFX.res=-1; GFX.auto=1; GFX.shadows=1; GFX.draw=1; GFX.lights=8; }
+/* SURFACE DETAIL (GFX.fx, the menu's row). A few materials work a good deal out for every pixel: the crowns on the
+   canopy shell (07), the lumps of leaf on a far tree (07), the lawn's second grain and the ground's swells (04).
+   Each reads this one number and steps over that work when it is 0, taking the mean it would have come to: the
+   woods across a valley are then smooth and evenly lit, and a slow chip draws them for a fraction of the cost.
+   A uniform, so switching it compiles nothing. */
+const FX_U={value:GFX.fx ? 1 : 0};
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(gfxPixelRatio());
 renderer.shadowMap.enabled=GFX.shadows>0;
@@ -108,14 +122,19 @@ T.ShaderChunk.lights_physical_fragment=
     "\t\tdirectLight.color *= 0.0;\n"+
     "\t\t#else\n"+
     "\t\tdirectionalLightShadow = directionalLightShadows[ i ];\n"+
-    "\t\tfloat shK = all( bvec2( directLight.visible, receiveShadow ) ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n"+
+    "\t\tfloat shK = 1.0;\n"+
+    // (each map is only looked up where it is used: inside the near map's own square the wide one is not read at
+    //  all, outside it the near one is not, and only in the band between are both. A lookup is seventeen taps.)
     "\t\t#if ( UNROLLED_LOOP_INDEX == 0 ) && ( NUM_DIR_LIGHT_SHADOWS > 1 )\n"+
     "\t\tif( all( bvec2( directLight.visible, receiveShadow ) ) ){\n"+
     "\t\t\tvec4 nc = vDirectionalShadowCoord[ 1 ]; vec3 ncp = nc.xyz / nc.w;\n"+
     "\t\t\tfloat nE = min( min( ncp.x, 1.0 - ncp.x ), min( ncp.y, 1.0 - ncp.y ) );\n"+
     "\t\t\tfloat nW = smoothstep( 0.14, 0.24, nE ) * step( ncp.z, 1.0 ) * step( 0.0, ncp.z );\n"+
+    "\t\t\tif( nW < 1.0 ) shK = getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] );\n"+
     "\t\t\tif( nW > 0.0 ){ float shN = getShadow( directionalShadowMap[ 1 ], directionalLightShadows[ 1 ].shadowMapSize, directionalLightShadows[ 1 ].shadowBias, directionalLightShadows[ 1 ].shadowRadius, nc ); shK = mix( shK, shN, nW ); }\n"+
     "\t\t}\n"+
+    "\t\t#else\n"+
+    "\t\tshK = all( bvec2( directLight.visible, receiveShadow ) ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n"+
     "\t\t#endif\n"+
     "\t\tdirectLight.color *= shK;\n"+
     "\t\t#endif\n"); }

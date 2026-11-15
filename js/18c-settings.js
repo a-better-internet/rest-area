@@ -39,13 +39,15 @@ function cullBaked(cam, dt, force){
    Whatever is not baked into a tile is a mesh of its own in the scene, several thousand of them, and the camera's
    frustum is all that ever stopped one being drawn: from the car lot, looking north, the doors of Lake Street a mile
    off, the arcade's cabinets under the hill and every sign in Edinboro were each a draw. So each of them is given a
-   distance by its size (LOOSE_K metres for each metre of its radius, never less than 140 m, never more than the draw
-   distance's own limit) and past it is not drawn.
+   distance by its size (LOOSE_K metres for each metre of its radius, never less than 70 m, never more than the draw
+   distance's own limit) and past it is not drawn: a door is gone at three hundred metres on MEDIUM, a squirrel
+   (twenty meshes of its own) at eighty.
    Not by `visible`, which a hundred other things switch for their own reasons: a culled mesh is moved to layer 1,
    which no camera here looks at, and back to 0. Neither the view nor the shadow maps draw it, and whatever else
    shows and hides it goes on doing so undisturbed. Sprites are left alone (a lamp's glow is meant to be seen from a
-   long way off), and so is anything instanced, anything bigger than 45 m (the lake, the sky, a run of wire) and
-   anything with userData.noCull. Things that move are measured where they are now. Only what is in the scene when
+   long way off), and so is anything that glows (a lamp's lens, a lit sign: a point of light across a valley),
+   anything instanced, anything bigger than 45 m (the lake, the sky, a run of wire) and anything with
+   userData.noCull. Things that move are measured where they are now. Only what is in the scene when
    the world is first drawn is on the list: what a mode builds later is its own affair. */
 const LOOSE=[], LOOSE_K=[200, 260, 340, 480];
 let _looseBuilt=false;
@@ -53,12 +55,15 @@ const _lv=new T.Vector3();
 function _looseBuild(){
   _looseBuilt=true;
   const skip=new Set(BAKED); for(const m of DETAIL) skip.add(m);
+  const glow=new Set(); for(const g of GLOW) glow.add(g.m); for(const n of NEON) if(n.material) glow.add(n.material);
+  const lit=(mt)=>glow.has(mt) || mt.toneMapped===false || (mt.emissive && mt.emissiveIntensity>0 && mt.emissive.r+mt.emissive.g+mt.emissive.b>0.05);
   const box=new T.Box3(), sp=new T.Sphere(), inv=new T.Matrix4();
   for(const o of scene.children){
     if(skip.has(o) || o.isLight || o.isInstancedMesh || o.isSprite || o.isPoints || o.isLine || o.userData.noCull) continue;
     const list=[]; box.makeEmpty();
     o.traverse(m=>{
-      if(!m.isMesh || m.isInstancedMesh || !m.geometry || !m.geometry.attributes.position) return;
+      if(!m.isMesh || m.isInstancedMesh || m.frustumCulled===false || !m.geometry || !m.geometry.attributes.position || !m.material) return;
+      if(Array.isArray(m.material) ? m.material.some(lit) : lit(m.material)) return;
       const g=m.geometry; if(!g.boundingSphere) g.computeBoundingSphere();
       sp.copy(g.boundingSphere).applyMatrix4(m.matrixWorld);
       if(!(sp.radius>=0) || !isFinite(sp.center.x+sp.center.y+sp.center.z)) return;
@@ -77,16 +82,16 @@ function cullLoose(cam, lim, air){
   for(let i=0;i<LOOSE.length;i++){
     const L=LOOSE[i];
     _lv.copy(L.c).applyMatrix4(L.o.matrixWorld);
-    const off=Math.hypot(_lv.x-cam.x, _lv.y-cam.y, _lv.z-cam.z)-L.r > Math.min(lim, Math.max(140, L.r*K));
+    const off=Math.hypot(_lv.x-cam.x, _lv.y-cam.y, _lv.z-cam.z)-L.r > Math.min(lim, Math.max(70, L.r*K));
     if(off!==L.off){ L.off=off; const n=off ? 1 : 0; for(let k=0;k<L.list.length;k++) L.list[k].layers.set(n); }
   }
 }
 
 const GFX_PRESETS=[
-  {name:"LOW",    res:-1,   shadows:0, draw:0, lights:4},
-  {name:"MEDIUM", res:-1,   shadows:1, draw:1, lights:8},
-  {name:"HIGH",   res:0,    shadows:3, draw:2, lights:12},
-  {name:"ULTRA",  res:0,    shadows:4, draw:3, lights:16}];
+  {name:"LOW",    res:-1,   shadows:0, draw:0, lights:6,  fx:false},
+  {name:"MEDIUM", res:-1,   shadows:1, draw:1, lights:8,  fx:true},
+  {name:"HIGH",   res:0,    shadows:3, draw:2, lights:12, fx:true},
+  {name:"ULTRA",  res:0,    shadows:4, draw:3, lights:16, fx:true}];
 const _RES=[-1, 0.5, 0.75, 1, 1.5, 2, 0];
 const _FPS=[30, 60, 0];
 const _LIGHTS=[4, 6, 8, 12, 16, 24];
@@ -97,7 +102,7 @@ function _resName(r){
 function _presetIndex(){
   for(let i=0;i<GFX_PRESETS.length;i++){
     const p=GFX_PRESETS[i];
-    if(p.res===GFX.res && p.shadows===GFX.shadows && p.draw===GFX.draw && p.lights===GFX.lights) return i;
+    if(p.res===GFX.res && p.shadows===GFX.shadows && p.draw===GFX.draw && p.lights===GFX.lights && p.fx===GFX.fx) return i;
   }
   return -1;
 }
@@ -106,8 +111,8 @@ const GFX_ROWS=[
   {k:"preset", label:"PRESET",
    get:()=>_presetIndex(), n:()=>GFX_PRESETS.length,
    show:i=>i<0 ? "CUSTOM" : GFX_PRESETS[i].name,
-   set:i=>{ const p=GFX_PRESETS[i]; GFX.res=p.res; GFX.shadows=p.shadows; GFX.draw=p.draw; GFX.lights=p.lights; },
-   note:()=>"Sets resolution, shadows, draw distance and lights at once. The frame cap and antialiasing are left as they are."},
+   set:i=>{ const p=GFX_PRESETS[i]; GFX.res=p.res; GFX.shadows=p.shadows; GFX.draw=p.draw; GFX.lights=p.lights; GFX.fx=p.fx; },
+   note:()=>"Sets resolution, shadows, draw distance, lights and surface detail at once. The frame cap and antialiasing are left as they are."},
   {k:"res", label:"RESOLUTION",
    get:()=>Math.max(0,_RES.indexOf(GFX.res)), n:()=>_RES.length,
    show:i=>_resName(_RES[i]),
@@ -126,7 +131,7 @@ const GFX_ROWS=[
    show:i=>i===0 ? "OFF" : SHADOW_LEVELS[i].name,
    set:i=>{ GFX.shadows=i; },
    note:()=>{ const L=SHADOW_LEVELS[GFX.shadows];
-     return L ? "The sun's shadows: a near map "+L.near.map+"×"+L.near.map+" over "+(L.near.half*2)+" m for what is close, sharp to about "+Math.round(L.near.half*2/L.near.map*1000)+" mm, and "+L.map+"×"+L.map+" over "+(L.half*2)+" m beyond it."
+     return L ? "The sun's shadows: a near map "+L.near.map+"×"+L.near.map+" over "+(L.near.half*2)+" m for what is close, sharp to about "+Math.round(L.near.half*2/L.near.map*1000)+" mm, and "+L.map+"×"+L.map+" over "+(L.half*2)+" m beyond it"+(L.every>1 ? ", drawn every other frame." : ".")
               : "No shadow maps at all: the scene is drawn once a frame instead of three times."; }},
   {k:"draw", label:"DRAW DISTANCE",
    get:()=>GFX.draw, n:()=>DRAW_LEVELS.length,
@@ -138,7 +143,12 @@ const GFX_ROWS=[
    get:()=>Math.max(0,_LIGHTS.indexOf(GFX.lights)), n:()=>_LIGHTS.length,
    show:i=>_LIGHTS[i]+" AT ONCE",
    set:i=>{ GFX.lights=_LIGHTS[i]; },
-   note:()=>"Real lights on the nearest lamps; the rest only glow. Every lit pixel pays for each one, lit or not."},
+   note:()=>"Real lights on the nearest lamps; the rest only glow. A pixel pays only for the lamps that reach it, so by day they cost next to nothing."},
+  {k:"fx", label:"SURFACE DETAIL",
+   get:()=>GFX.fx?1:0, n:()=>2,
+   show:i=>i ? "FULL" : "PLAIN",
+   set:i=>{ GFX.fx=!!i; },
+   note:()=>"FULL works out, for every pixel, the crowns of the far woods, the lumps of leaf on a far tree and the lawn's second grain. PLAIN leaves them smooth, which a chip built into the processor draws a good deal faster. Takes effect at once."},
   {k:"aa", label:"ANTIALIASING",
    get:()=>GFX.aa?1:0, n:()=>2,
    show:i=>(i ? "ON" : "OFF")+(!!i!==GFX.aa0 ? " · ON RELOAD" : ""),
@@ -228,10 +238,11 @@ function applyGraphics(){
     A.shadows=GFX.shadows;
   }
   if(A.lights!==GFX.lights){ setLightCount(GFX.lights); A.lights=GFX.lights; }
+  FX_U.value=GFX.fx ? 1 : 0;
   _fpsEl.style.display=GFX.meter ? "block" : "none";
   cullBaked(camera.position, 0, true);
   try{ localStorage.setItem("restarea.gfx", JSON.stringify({res:GFX.res, fps:GFX.fps, shadows:GFX.shadows,
-         draw:GFX.draw, lights:GFX.lights, meter:GFX.meter, aa:GFX.aa})); }catch(e){}
+         draw:GFX.draw, lights:GFX.lights, meter:GFX.meter, aa:GFX.aa, fx:GFX.fx})); }catch(e){}
 }
 // what the renderer was built with is already in effect
 _gfxApplied={res:GFX.res, shadows:GFX.shadows, lights:GFX.lights};
