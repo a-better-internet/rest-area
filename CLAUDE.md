@@ -709,3 +709,14 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   guylines). The canned-ham camper is a side profile extruded across it, cream
   over a turquoise skirt; anything on its sides sits within 3 cm of the body
   (x = ±1.0 cream, ±1.012 skirt).
+- Video poker (18q, `POKER`) is cabinet 12 in `ARCADE.cabs` / `_CBG`, a
+  machine set into the Pine Knot's bar (14z, where the fifth stool was),
+  Jacks or Better on the full-pay table. It takes and pays the slots'
+  wallet (`SLOTS.credits`). `POKER.evaluate(hand)` gives the table's line
+  (0 royal … 8 jacks or better, −1 nothing); a card is `rank*4+suit`.
+- Guide signs' legends are 02's `hwyLegend`: one letter height per sign,
+  even spacing, wide margins, `"Place   12"` (three spaces) as a name and a
+  right-hand column of miles. A sign that needs its own layout (the speed
+  limit) passes `draw` to `guideSign`.
+- Zombie mode's screen blood (`hud.splat`) is a few faint flecks toward the
+  edges; keep it light.
