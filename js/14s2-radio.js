@@ -15,11 +15,11 @@
    the station's name in steel letters, an ON AIR lamp by the door. A gravel
    lot in front with the manager's car, a flagpole, a drive round the
    substation's east fence from its lane.
-   The tower: a diamond cantilever, the shape the 1930s built for the big
-   AM stations, 150 m of lattice standing on its point on a single
-   porcelain insulator, widest two fifths of the way up where four guys run
-   out to anchors in the woods. Painted in seven bands, orange and white,
-   red lamps at its top and at its two marks, flashing after dark. At its
+   The tower: a guyed mast 124 m tall, a triangle of lattice the same
+   width all the way up on a porcelain base insulator, guyed in three
+   directions at four heights, the guys broken by strain insulators.
+   Painted in seven bands, orange and white, red lamps at its top and its
+   thirds, flashing after dark. At its
    foot the tuning house in a fenced square, and the feed line coming in
    on short poles from the station, two wires on each crossarm.
    PLAN (world): RADIO (04): the pad x -6..48, z -1500..-1458 at EDIN.y; the
@@ -149,47 +149,56 @@ const RADIO_ST={beacons:[], glow:null, lamp:null, t:0};
     sign(0.6, 0.4, (c, W, H)=>{ c.fillStyle="#f2f0e8"; c.fillRect(0, 0, W, H); c.fillStyle="#b3151b"; c.fillRect(0, 0, W, H*0.34); say(c, "DANGER", W/2, H*0.17, W*0.72, H*0.24, "#f2f0e8", "800", "Arial");
       say(c, "HIGH VOLTAGE · RF", W/2, H*0.52, W*0.80, H*0.16, "#1a1a1a", "800", "Arial"); say(c, "KEEP OUT", W/2, H*0.78, W*0.66, H*0.16, "#1a1a1a", "800", "Arial"); },
       x-3.5, g(x-3.5, z+F)+1.4, z+F+0.03, 0, false, 240);
-    addZone(x-F, x+F, z-F, z+F, TY-3, TY+160, "THE TOWER · 1340 KC"); }
+    addZone(x-F, x+F, z-F, z+F, TY-3, TY+140, "THE TOWER · 1340 KC"); }
 
-  /* ---- the tower: a diamond of lattice on its point, its guys, its lamps ---- */
-  const H=150, HM=H*0.40, WM=14, HP=H*0.88, x=T0.x, z=T0.z, y0=TY+2.7;
-  // half its width at a height: from the point up to the widest, in again to the mast at the top
-  const half=y=>y<HM ? WM/2*Math.pow(y/HM, 0.95) : Math.max(0.35, WM/2*(1-Math.pow((y-HM)/(HP-HM), 1.15))+0.35*Math.pow((y-HM)/(HP-HM), 3));
+  /* ---- the tower: a guyed mast, the kind nearly every AM station put up: a triangle of lattice the same width all the way up,
+     1.8 m a face, the three legs tapered in over the bottom three metres to stand on the base insulator (the whole steel mast is the
+     aerial, so it must not touch the ground); zig-zag bracing up every face, a horizontal at every panel; painted in seven bands,
+     orange and white, from the bottom. Guyed in three directions at four heights, each guy broken by strain insulators so it does not
+     ring at the station's frequency, all of a side's guys to one anchor. A lamp on top, three at each third, flashing after dark. ---- */
+  const H=124, FW=1.8, RI=FW/Math.sqrt(3), x=T0.x, z=T0.z, y0=TY+2.7, PAN=1.5, BASE=3.0;
   const band=y=>Math.min(6, Math.floor(y/(H/7)))%2 ? "#f2eee6" : "#d4542a";
-  const TL=[]; const N=34;
-  // the corners at each level: turned so they point north, south, east and west (the guys go out that way, clear of the power cut)
-  const corner=(k, y)=>{ const r=half(y)*Math.SQRT2, a=k*Math.PI/2; return V3(x+Math.cos(a)*r, y0+y, z+Math.sin(a)*r); };
-  const lv=[]; for(let i=0;i<=N;i++){ const y=0.4+(HP-0.4)*i/N; lv.push(y); }
-  for(let i=0;i<N;i++){ const ya=lv[i], yb=lv[i+1], col=band((ya+yb)/2);
-    for(let k=0;k<4;k++){ const a=corner(k, ya), b=corner(k, yb), a2=corner((k+1)%4, ya), b2=corner((k+1)%4, yb);
-      tube(a, b, 0.16, col, 5, TL); tube(a, b2, 0.06, col, 4, TL); tube(a2, b, 0.06, col, 4, TL); tube(b, b2, 0.07, col, 4, TL); } }
-  for(let k=0;k<4;k++) tube(V3(x, y0-0.4, z), corner(k, lv[0]), 0.16, band(0), 5, TL);
-  // the mast at the top, and the lamps on it; the lamps at the two marks
-  tube(V3(x, y0+HP-2, z), V3(x, y0+H, z), 0.3, band(H-1), 8, TL);
-  // (each lamp a ball close to, and a point of a few pixels whatever the distance, the way a lamp reads at night miles off)
-  const bmat=new T.MeshBasicMaterial({color:0x3a0806, toneMapped:false}), bg=new T.SphereGeometry(0.45, 12, 9), bp=[];
-  for(const [by, k0] of [[H+0.4, 0],[HM, 1],[H*0.7, 1]]){
-    const n=k0 ? 4 : 1; for(let k=0;k<n;k++){ const p=k0 ? corner(k, by) : V3(x, y0+by, z); if(k0){ p.x+=(p.x-x)*0.04; p.z+=(p.z-z)*0.04; }
-      const m=new T.Mesh(bg, bmat); m.position.copy(p); scene.add(m); bp.push(p.x, p.y, p.z); } }
+  const TL=[], GB=RADIO.guys;                                          // (the guys' bearings from north, clockwise: 04)
+  // leg k points out toward guy k
+  const leg=(k, y)=>{ const a=GB[k], r=y<BASE ? RI*y/BASE : RI; return V3(x+Math.sin(a)*r, y0+y, z-Math.cos(a)*r); };
+  for(let k=0;k<3;k++) tube(V3(x, y0, z), leg(k, BASE), 0.08, band(1), 6, TL);
+  for(let k=0;k<3;k++) tube(leg(k, BASE*0.5), leg((k+1)%3, BASE*0.5), 0.03, band(1), 4, TL);
+  const NP=Math.floor((H-BASE)/PAN);
+  for(let i=0;i<NP;i++){ const ya=BASE+i*PAN, yb=ya+PAN, col=band((ya+yb)/2);
+    for(let k=0;k<3;k++){ const k2=(k+1)%3;
+      tube(leg(k, ya), leg(k, yb), 0.07, col, 6, TL);                                   // (the leg)
+      tube(leg(k, yb), leg(k2, yb), 0.028, col, 4, TL);                                 // (the panel's horizontal)
+      i%2 ? tube(leg(k, ya), leg(k2, yb), 0.024, col, 4, TL) : tube(leg(k2, ya), leg(k, yb), 0.024, col, 4, TL); } }   // (the zig-zag)
+  const yTop=BASE+NP*PAN;
+  tube(V3(x, y0+yTop, z), V3(x, y0+yTop+2.6, z), 0.05, "#2a2a2c", 6, TL);           // (the lightning rod and the top lamp's mast)
+  for(let k=0;k<3;k++) tube(leg(k, yTop), V3(x, y0+yTop+0.6, z), 0.03, band(H-1), 4, TL);
+  // the lamps: on top, and at each third one on every leg, outboard (each a ball close to, a point of a few pixels far off)
+  const bmat=new T.MeshBasicMaterial({color:0x3a0806, toneMapped:false}), bg=new T.SphereGeometry(0.22, 12, 9), bp=[];
+  const lampAt=(p)=>{ const m=new T.Mesh(bg, bmat); m.position.copy(p); scene.add(m); bp.push(p.x, p.y, p.z);
+    ent(new T.CylinderGeometry(0.16, 0.16, 0.16, 10), p.x, p.y-0.2, p.z, "#2a2a2c"); };
+  lampAt(V3(x, y0+yTop+2.85, z));
+  for(const f of [1/3, 2/3]) for(let k=0;k<3;k++){ const p=leg(k, yTop*f), a=GB[k]; p.x+=Math.sin(a)*0.35; p.z-=Math.cos(a)*0.35; lampAt(p); }
   { const gg=new T.BufferGeometry(); gg.setAttribute("position", new T.Float32BufferAttribute(bp, 3));
     RADIO_ST.pmat=new T.PointsMaterial({color:0x000000, size:5, sizeAttenuation:false, toneMapped:false, depthWrite:false, transparent:true, opacity:0.95});
     const pts=new T.Points(gg, RADIO_ST.pmat); pts.frustumCulled=false; pts.renderOrder=5; scene.add(pts); }
   RADIO_ST.bmat=bmat;
-  // the guys: from the widest corners out to anchors in the woods, three to a side, each with its insulators
-  for(let k=0;k<4;k++){ const a=k*Math.PI/2, top=corner(k, HM);
-    for(const [r, hy] of [[66, HM],[56, HM*0.55]]){ const ax=x+Math.cos(a)*r, az=z+Math.sin(a)*r, ag=g(ax, az), from=hy===HM ? top : corner(k, hy);
-      const to=V3(ax, ag+0.6, az), GL=[]; tube(from, to, 0.025, "#4a4a4c", 4, GL);
-      for(const t of [0.08, 0.5]){ const p=from.clone().lerp(to, t), q=from.clone().lerp(to, t+0.01); tube(p, q, 0.12, "#e8e2d4", 8, GL); }
+  // the guys: four to a side, from the leg at 27, 52, 76 and 97 per cent of the height down to the side's anchor; each broken by
+  // strain insulators (a white egg near the mast, two more along it); the anchor a block of concrete, the guys' turnbuckles on it
+  for(let k=0;k<3;k++){ const a=GB[k], ax=x+Math.sin(a)*RADIO.gr, az=z-Math.cos(a)*RADIO.gr, ag=g(ax, az), A=V3(ax, ag+0.9, az);
+    for(const f of [0.27, 0.52, 0.76, 0.97]){ const from=leg(k, yTop*f), GL=[]; tube(from, A, 0.016, "#3e3e40", 4, GL);
+      for(const t of [0.03, 0.34, 0.67]){ const p=from.clone().lerp(A, t), q=from.clone().lerp(A, t+0.004); tube(p, q, 0.07, "#e8e2d4", 8, GL); }
       for(const e of GL) TL.push(e); }
-    const ax=x+Math.cos(a)*66, az=z+Math.sin(a)*66, ag=g(ax, az); B(1.6, 1.2, 1.6, ax, ag+0.2, az, "#9a968c"); addCol(ax-0.8, ax+0.8, az-0.8, az+0.8, ag-1, ag+0.9);
-    const ax2=x+Math.cos(a)*56, az2=z+Math.sin(a)*56, ag2=g(ax2, az2); B(1.2, 1.0, 1.2, ax2, ag2+0.15, az2, "#9a968c"); addCol(ax2-0.6, ax2+0.6, az2-0.6, az2+0.6, ag2-1, ag2+0.8); }
-
+    B(2.2, 1.4, 2.2, ax, ag+0.2, az, "#9a968c"); addCol(ax-1.1, ax+1.1, az-1.1, az+1.1, ag-1, ag+1.0);
+    for(let j=0;j<4;j++){ const d=V3(x-ax, 0, z-az).normalize(); C(0.03, 0.5, ax+d.x*0.9+(j-1.5)*0.12*d.z, ag+1.0, az+d.z*0.9-(j-1.5)*0.12*d.x, "#6a6d70", 6); } }
+  // at the foot, the lighting choke: a grey box the lamps' power crosses the insulator by, on a stand
+  B(0.6, 0.8, 0.5, x+2.6, TY+1.0, z-1.5, "#8a8d90"); for(const sd of [-0.22, 0.22]) C(0.03, 0.6, x+2.6+sd, TY+0.3, z-1.5, "#5a5d60", 6);
+  addCol(x+2.25, x+2.95, z-1.8, z-1.2, TY-1, TY+1.4);
   // (the tower and its guys one plain mesh: a landmark, seen from miles off, never tiled or culled with the detail)
   const tower=new T.Mesh(mergeEntries(TL), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.2})); tower.name="radio-tower"; scene.add(tower);
   // the woods round it all: real trees several rows deep out from the clearing's edge (07 keeps the shell low under them),
   // none on the guys' anchors, each with a trunk you cannot walk through
   if(typeof FOREST!=="undefined"){ const q=_trng(1340), anchors=[];
-    for(let k=0;k<4;k++){ const a=k*Math.PI/2; for(const r of [56, 66]) anchors.push([x+Math.cos(a)*r, z+Math.sin(a)*r]); }
+    for(let k=0;k<3;k++){ const a=GB[k]; anchors.push([x+Math.sin(a)*RADIO.gr, z-Math.cos(a)*RADIO.gr]); }
     for(let gz=-1622; gz<-1452; gz+=6.6) for(let gx=-66; gx<182; gx+=6.6){ const tx=gx+(q()-0.5)*5, tz=gz+(q()-0.5)*5, cd=Terrain.clearDist(tx, tz);
       if(cd<2 || cd>34 || q()<0.18 || anchors.some(([ax, az])=>Math.hypot(tx-ax, tz-az)<4)) continue;
       if(tz>-1462 && tx<52) continue;                                                       // (not on the plain by the drive)

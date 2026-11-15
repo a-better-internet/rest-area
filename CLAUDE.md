@@ -733,9 +733,12 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   cut into the rise north of the substation; the tower's footing ring at
   `RADIO.ty`; the feed line's cut). A mown bank and meadow round both
   (`siteDist`), real trees ringed round them several rows deep, and 07's
-  `canopyY` holds the shell low there. The tower (a diamond cantilever,
-  150 m, its guys from the widest point) is one plain mesh, a landmark;
+  `canopyY` holds the shell low there. The tower (a guyed mast, 124 m, a
+  triangle of lattice 1.8 m a face on its base insulator, guyed at four
+  heights to one anchor on each of `RADIO.guys`' bearings at `RADIO.gr`, each
+  guy's line cleared) is one plain mesh, a landmark;
   its lamps are balls close to and fixed-size points far off, flashed by
   `updateRadioStation` (from 14's `updateLife`), which also lights the
-  glass block after dark. Its guys run north, south, east and west, clear
-  of the power cut.
+  glass block after dark. Its guys run north-east, south and north-west,
+  clear of the power cut. The fields' north wall (07) goes out round
+  `RADIO.walk`, so all of it is walkable.

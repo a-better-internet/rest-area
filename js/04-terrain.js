@@ -164,7 +164,9 @@ const POWER={x0:84, z0:-184, x1:136, z1:-1500};
 // the radio station (14s2): its pad cut into the foot of the rise north of the substation, and its tower on the hill behind,
 // a level ring round the tower's base; the feed line between them a cut through the trees
 const RADIO={pad:{x0:-6, x1:48, z0:-1500, z1:-1458}, tower:{x:100, z:-1522}, ty:undefined,
-             feed:{x0:27, z0:-1483, x1:96, z1:-1516}};
+             feed:{x0:27, z0:-1483, x1:96, z1:-1516},
+             walk:{x0:-30, x1:178, z0:-1602},
+             guys:[Math.PI/3, Math.PI, Math.PI*5/3], gr:66};                       // (the tower's guys: bearings from north, clockwise, and how far out)                     // (the ground you may walk: 07 opens the fields' north wall round it)
 /* ---- the back woods: a path, and a camp at the end of it ---------------
    Behind the building a path the kids have worn runs east off the loop walk,
    a quarter of a kilometre through the trees to a clearing where somebody
@@ -445,6 +447,9 @@ const Terrain=(function(){
     d=Math.min(d, boxSD(RADIO.pad,x,z)-22, Math.hypot(x-RADIO.tower.x, z-RADIO.tower.z)-22);          // (a mown bank behind the station, a meadow round the tower)
     { const F=RADIO.feed, ex=F.x1-F.x0, ez=F.z1-F.z0, t=clamp(((x-F.x0)*ex+(z-F.z0)*ez)/(ex*ex+ez*ez), 0, 1);
       d=Math.min(d, Math.hypot(x-(F.x0+ex*t), z-(F.z0+ez*t))-4); }
+    // (and each guy's line, cleared as a utility keeps it, and round its anchor)
+    { const T=RADIO.tower; for(const a of RADIO.guys){ const ex=Math.sin(a)*RADIO.gr, ez=-Math.cos(a)*RADIO.gr, t=clamp(((x-T.x)*ex+(z-T.z)*ez)/(ex*ex+ez*ez), 0, 1);
+        d=Math.min(d, Math.hypot(x-(T.x+ex*t), z-(T.z+ez*t))-3.5-2.5*t); } }
     // the power line's right of way, a straight cut north through everything
     {
       const ex=POWER.x1-POWER.x0, ez=POWER.z1-POWER.z0, L2=ex*ex+ez*ez;

@@ -1041,7 +1041,10 @@ vec4 canCrown(vec2 p, out float id){
     // round the fields: north and south from the woods' edge to the cut, and the two far ends
     for(const zz of [EP.z0, EP.z1]){
       addCol(EP.x0, HWY.sb-19.1, zz-0.4, zz+0.4, -40, 300);
-      addCol(HWY.nb+19.1, EP.x1, zz-0.4, zz+0.4, -40, 300);
+      if(zz===EP.z0 && typeof RADIO!=="undefined"){ const R=RADIO.walk;        // (north of the substation the wall goes out round the radio station, its tower and its guys)
+        addCol(HWY.nb+19.1, R.x0+0.4, zz-0.4, zz+0.4, -40, 300); addCol(R.x1-0.4, EP.x1, zz-0.4, zz+0.4, -40, 300);
+        addCol(R.x0-0.4, R.x0+0.4, R.z0, zz+0.4, -40, 300); addCol(R.x1-0.4, R.x1+0.4, R.z0, zz+0.4, -40, 300); addCol(R.x0-0.4, R.x1+0.4, R.z0-0.4, R.z0+0.4, -40, 300); }
+      else addCol(HWY.nb+19.1, EP.x1, zz-0.4, zz+0.4, -40, 300);
     }
     // (open at both ends where US 6N goes on through the woods: 14m walls its way east from there, 14z west)
     addCol(EP.x0-0.4, EP.x0+0.4, EP.z0, WEST.corr.z0, -40, 300); addCol(EP.x0-0.4, EP.x0+0.4, WEST.corr.z1, EP.z1, -40, 300);
