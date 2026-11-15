@@ -709,7 +709,9 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   guylines). The canned-ham camper is a side profile extruded across it, cream
   over a turquoise skirt; anything on its sides sits within 3 cm of the body
   (x = ±1.0 cream, ±1.012 skirt).
-- Video poker (18q, `POKER`) is cabinet 12 in `ARCADE.cabs` / `_CBG`, a
+- Video poker (18q, `POKER`) is cabinet 12 in `ARCADE.cabs` / `_CBG` (its `fov`
+  closes the view in on the screen while you play, 18g; its canvas is
+  drawn at twice the arcade's size through a scaled context), a
   machine set into the Pine Knot's bar (14z, where the fifth stool was),
   Jacks or Better on the full-pay table. It takes and pays the slots'
   wallet (`SLOTS.credits`). `POKER.evaluate(hand)` gives the table's line

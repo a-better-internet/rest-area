@@ -824,19 +824,19 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       lampU({x:mx, y:BF+1.6, z:mz-0.7, color:k%2 ? 0x6a9aff : 0xff6a5a, intensity:0.25, dist:2.5, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]}); } }
   // the video poker machine set into the bar where the fifth stool was (18q plays it): a low cabinet on the bar top, its screen tilted
   // up to whoever stands at it, HOLD buttons along its front edge, a lit name across its back
-  { const mx=BX0+0.6+4*1.25, bt=BF+1.10, mz=BZ+0.05, i=12, th=-0.75, n=V3(0, -Math.sin(th), Math.cos(th));
+  { const mx=BX0+0.6+4*1.25, bt=BF+1.10, mz=BZ+0.05, i=12, th=-0.45, n=V3(0, -Math.sin(th), Math.cos(th));
     RB(0.46, 0.10, 0.42, mx, bt+0.05, mz, "#1a1a20", 0, 0.02);
-    const sc=V3(mx, bt+0.245, mz-0.03);
+    const sc=V3(mx, bt+0.272, mz-0.03);                                    // (tilted back a quarter turn and a bit, not so far)
     ent(rboxGeo(0.44, 0.36, 0.08, 0.02, 2), sc.x, sc.y-n.y*0.045, sc.z-n.z*0.045, "#2a2a32", th, 0, 0);
-    ent(rboxGeo(0.46, 0.09, 0.07, 0.02, 2), mx, bt+0.42, mz-0.16, "#b8902a", 0, 0, 0);
+    ent(rboxGeo(0.46, 0.09, 0.07, 0.02, 2), mx, bt+0.475, mz-0.17, "#b8902a", 0, 0, 0);
     sign(0.40, 0.06, (c,Wd,Hh)=>{ c.fillStyle="#0a0a0c"; c.fillRect(0,0,Wd,Hh); c.shadowColor="#ffd23a"; c.shadowBlur=6; say(c, "PINE KNOT POKER", Wd/2, Hh/2, Wd*0.80, Hh*0.60, "#ffd23a", "900", "'Arial Black', Arial"); c.shadowBlur=0; },
-      mx, bt+0.42, mz-0.16+0.045, 0, true, 320);
+      mx, bt+0.475, mz-0.17+0.045, 0, true, 320);
     for(let b=0;b<6;b++){ const bx2=mx-0.175+b*0.07; RB(0.05, 0.02, 0.035, bx2, bt+0.11, mz+0.165, b<5 ? "#e8e2d0" : "#c8281e", 0, 0.006); }
-    const c=cvs(336, 280), tex=setSRGB(new T.CanvasTexture(c)); tex.minFilter=T.LinearFilter;
+    const c=cvs(672, 560), cx2=c.getContext("2d"), tex=setSRGB(new T.CanvasTexture(c)); tex.minFilter=T.LinearFilter; cx2.scale(2, 2);     // (twice the arcade's: you look at it close to)
     const scr=new T.Mesh(new T.PlaneGeometry(0.36, 0.30), new T.MeshBasicMaterial({map:tex, toneMapped:false})); scr.position.copy(sc).addScaledVector(n, 0.002); scr.rotation.x=th; scene.add(scr);
     const st=new T.Group(); st.position.set(mx+0.175, bt+0.12, mz+0.165); scene.add(st);
-    ARCADE.cabs[i]={name:"VIDEO POKER", c:c, x:c.getContext("2d"), tex:tex, mesh:scr, stick:st, stand:{x:mx, z:BZ+0.80}, ry:0,
-                    screenY:sc.y, screen:{x:mx, z:sc.z}, floor:BF, slot:true};
+    ARCADE.cabs[i]={name:"VIDEO POKER", c:c, x:cx2, tex:tex, mesh:scr, stick:st, stand:{x:mx, z:BZ+0.80}, ry:0,
+                    screenY:sc.y, screen:{x:mx, z:sc.z}, floor:BF, slot:true, fov:30};          // (the view closes in on its screen while you play: 18g)
     addUse(mx, BZ+0.85, BF, "PLAY VIDEO POKER", ()=>{ if(typeof CABS!=="undefined") CABS.start(i); }, 0.6).game=true;
     WESTPARK.slots.push(i);
     lampU({x:mx, y:bt+0.5, z:mz+0.4, color:0x6a8aff, intensity:0.18, dist:1.8, decay:1.8, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]}); }

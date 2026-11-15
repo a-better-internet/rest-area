@@ -408,6 +408,12 @@ addEventListener("keyup", e=>{ CABS.keys[e.code]=false; });
 function updateCabs(dt){
   if(!ARCADE.cabs) return;
   CABS.t+=dt;
+  // a cabinet with a view of its own (the bar-top poker machine, R.fov): the view closes in on its screen while you play, and opens
+  // out again after, eased both ways
+  { const R=CABS.on ? ARCADE.cabs[CABS.i] : null, want=R && R.fov ? 1 : 0, was=CABS.zk||0;
+    if(R && R.fov) CABS.zf=R.fov;
+    CABS.zk=was+(want-was)*Math.min(1, dt*5); if(want===0 && CABS.zk<0.003) CABS.zk=0;
+    if(CABS.zk>0 || was>0){ camera.fov=fov+((CABS.zf||fov)-fov)*CABS.zk; camera.updateProjectionMatrix(); } }
   const cam=camera.position;
   for(const i of Object.keys(_CBG).map(Number)){                 // (every cabinet with a game: 18m adds two, and the new breakout)
     const R=ARCADE.cabs[i], G=_CBG[i]; if(!R || !G) continue;
