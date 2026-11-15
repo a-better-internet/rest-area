@@ -742,3 +742,15 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   glass block after dark. Its guys run north-east, south and north-west,
   clear of the power cut. The fields' north wall (07) goes out round
   `RADIO.walk`, so all of it is walkable.
+- The radio station is hollow (14s2): its straight walls are pieces round
+  each opening (`wallX` / `wallZ`, colliders with them), the round end a
+  ring with turned box colliders; the base, speed lines and coping are
+  rings outside the wall, the roof deck's underside the ceiling (`CEIL`),
+  the floor at `FL`. Inside: the lobby, Studio A (a viewing window from the
+  lobby), the control room (its window into the studio), the office and
+  record library, the transmitter room in the round end; each room an
+  indoor zone `FRENCH CREEK BROADCASTING · ROOM`. Its people (the night man
+  at the board, the receptionist by day) are added in 14s2 itself, since
+  14q's crowd is built before it; `RADIO_ST.radios` joins 20's `nearRadio`
+  (the lobby's monitor, the jazz trio), and `RADIO_ST.routes` joins
+  `tools/walk.js`.
