@@ -65,7 +65,7 @@ function updateWind(t, dt){
 }
 
 let acc=0, last=performance.now()/1000, _lastDraw=0, _keyTurn=0;
-let _wasChase=false, _handT=0; const _handFrom=new T.Vector3();
+let _wasChase=false, _handT=0, _driveFov=0; const _handFrom=new T.Vector3();
 const _sunDir=new T.Vector3();
 function frame(){
   requestAnimationFrame(frame);
@@ -131,6 +131,9 @@ function frame(){
     _carLook.lerp(cp, 1-Math.exp(-15*delta));
     camera.up.set(0,1,0);
     camera.lookAt(_carLook.x, _carLook.y+0.85, _carLook.z);
+    // and the view opens a little as the speed builds, which is most of what seventy feels like from behind a car
+    _driveFov+=(sp3*sp3*8-_driveFov)*Math.min(1, delta*2.5);
+    camera.fov=fov+_driveFov; camera.updateProjectionMatrix();
   }else{
     // just out of a car, off the boat or down from the drone: the camera comes down from the chase view to your eyes over
     // half a second, instead of jumping there (a jump from four metres up reads as having shrunk). Your eyes are where
@@ -153,6 +156,8 @@ function frame(){
     if(VEND.shake>0){ const k=VEND.shake*VEND.shake;
       camera.position.x+=(Math.random()-0.5)*0.05*k; camera.position.y+=(Math.random()-0.5)*0.03*k; camera.position.z+=(Math.random()-0.5)*0.05*k; }
   }
+
+  if(!driving && _driveFov!==0){ _driveFov=0; applyFov(); }      // (out of the car: the view as it was)
 
   /* ---- the flashlight follows the eye ---- */
   {

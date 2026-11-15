@@ -136,6 +136,33 @@ const VERGES={};
     push("verge", g, c.x, c.y, c.z, 0, null); }
   VERGES.kept=kept; VERGES.edges=edges.length;
 })();
+/* WHAT IS UNDER A WHEEL. Every paved surface, looked at as it was laid (its up-facing triangles, as above), marked
+   into a 1.5 m grid: 1 where there is paving, 2 where there is gravel and no paving, nothing where there is neither,
+   which is grass. 11's cars ask it wheel by wheel: tyres hold less on gravel and less again on grass, roll harder
+   there, and less of everything in the wet. A bucket of paving that should count goes in KIND. */
+const GROUND_KIND=(function(){
+  const KIND={road:1, asphalt:1, lotpave:1, lotlid:1, wp_road:1, rn_drive:1, rn_drive2:1, padflat:1, walkflat:1, gravelbed:2, wp_gravel:2};
+  const CELL=1.5, M=new Map(), key=(ix, iz)=>(ix+8192)*16384+(iz+8192);
+  const A=new T.Vector3(), B=new T.Vector3(), C=new T.Vector3();
+  for(const name in KIND){ const b=BUCKETS.get(name), kd=KIND[name]; if(!b) continue;
+    for(const e of b.entries){ const g=e.geo, pos=g.attributes.position, ix=g.index ? g.index.array : null, n=ix ? ix.length : pos.count;
+      for(let t=0;t<n;t+=3){
+        A.fromBufferAttribute(pos, ix ? ix[t] : t).applyMatrix4(e.matrix); B.fromBufferAttribute(pos, ix ? ix[t+1] : t+1).applyMatrix4(e.matrix);
+        C.fromBufferAttribute(pos, ix ? ix[t+2] : t+2).applyMatrix4(e.matrix);
+        const ux=B.x-A.x, uy=B.y-A.y, uz=B.z-A.z, vx=C.x-A.x, vy=C.y-A.y, vz=C.z-A.z;
+        const ny=uz*vx-ux*vz, nl=Math.hypot(uy*vz-uz*vy, ny, ux*vy-uy*vx);
+        if(nl<1e-9 || Math.abs(ny)/nl<0.8) continue;                                      // (up-facing only: not a curb's side)
+        const i0=Math.floor(Math.min(A.x, B.x, C.x)/CELL), i1=Math.floor(Math.max(A.x, B.x, C.x)/CELL);
+        const j0=Math.floor(Math.min(A.z, B.z, C.z)/CELL), j1=Math.floor(Math.max(A.z, B.z, C.z)/CELL);
+        if((i1-i0+1)*(j1-j0+1)>40000) continue;
+        for(let i=i0;i<=i1;i++) for(let j=j0;j<=j1;j++){
+          const x=(i+0.5)*CELL, z=(j+0.5)*CELL;
+          const d1=(x-B.x)*(A.z-B.z)-(A.x-B.x)*(z-B.z), d2=(x-C.x)*(B.z-C.z)-(B.x-C.x)*(z-C.z), d3=(x-A.x)*(C.z-A.z)-(C.x-A.x)*(z-A.z);
+          if((d1<0 || d2<0 || d3<0) && (d1>0 || d2>0 || d3>0)) continue;
+          const k=key(i, j), was=M.get(k);
+          if(was!==1) M.set(k, kd===1 ? 1 : (was||kd)); } } } }
+  return {at:(x, z)=>M.get(key(Math.floor(x/CELL), Math.floor(z/CELL)))||0, cells:M.size};
+})();
 const BAKED=bakeBuckets(scene);
 buildColGrid();                     // everything solid is in place by now
 if(typeof _igBuild==="function") _igBuild();   // the building's floor grid for the people inside (14b), now, not at the first visitor

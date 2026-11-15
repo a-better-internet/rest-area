@@ -27,7 +27,7 @@ const AUDIO=(function(){
   // the garage (14g): the radio on the bench, and the mower or the blower out on the grounds
   let radio={}, eng={}, rBeat=null, rTalkT=1, rSwellT=8;
   // the boiler hall (12e): the burners' roar and the room's rumble; the boat's outboard (14p)
-  let boil={}, obd={};
+  let boil={}, obd={}, car={}, carHit=0;
   // a house on Lake Street (14o): the fridge's compressor, cycling; the kitchen clock
   let fr={}, frOn=true, frT=20, tickT=1, tk=false;
   function noise(sec, color){
@@ -103,6 +103,22 @@ const AUDIO=(function(){
       const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=520; bp.Q.value=0.6; loop(noise(4,"pink")).connect(bp); const g2=ctx.createGain(); g2.gain.value=0.35; bp.connect(g2); g2.connect(boil.g);
       for(const [f,a] of [[60,0.20],[120,0.10]]){ const o=ctx.createOscillator(); o.frequency.value=f; const og=ctx.createGain(); og.gain.value=a; o.connect(og); og.connect(boil.g); o.start(); } }
     // the outboard: a firing buzz at its revs through a low-pass, and the hull's slap and hiss on the water
+    /* the car you are driving (11): the engine, two saws a fifth of a tone apart and a sub under them, through a
+       filter that opens with the revs and the throttle; the tyres on the road, a hiss that grows with speed and
+       is rougher off the paving; the wind past the glass; and the squeal when they let go. Heard from inside, so
+       straight to the master and not through the outdoors' filter. */
+    { const C=car; C.g=ctx.createGain(); C.g.gain.value=0; C.g.connect(master);
+      C.lp=ctx.createBiquadFilter(); C.lp.type="lowpass"; C.lp.frequency.value=300; C.lp.Q.value=1.2; C.lp.connect(C.g); C.osc=[];
+      for(const [type, mul, a] of [["sawtooth", 1, 0.5], ["sawtooth", 1.012, 0.4], ["square", 0.5, 0.35], ["triangle", 2.0, 0.18]]){
+        const o=ctx.createOscillator(); o.type=type; o.frequency.value=30*mul;
+        const g=ctx.createGain(); g.gain.value=a; o.connect(g); g.connect(C.lp); o.start(); C.osc.push({o:o, m:mul}); }
+      C.tyre=ctx.createGain(); C.tyre.gain.value=0; C.tyre.connect(master);
+      C.tbp=ctx.createBiquadFilter(); C.tbp.type="bandpass"; C.tbp.frequency.value=700; C.tbp.Q.value=0.6; loop(pink).connect(C.tbp); C.tbp.connect(C.tyre);
+      C.wind=ctx.createGain(); C.wind.gain.value=0; C.wind.connect(master);
+      { const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=900; loop(noise(3,"white")).connect(hp); hp.connect(C.wind); }
+      C.sq=ctx.createGain(); C.sq.gain.value=0; C.sq.connect(master);
+      { const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1500; bp.Q.value=7; loop(noise(2,"white")).connect(bp); bp.connect(C.sq); C.sqf=bp; }
+      C.rpm=0.1; C.gear=0; }
     obd.g=ctx.createGain(); obd.g.gain.value=0; obd.g.connect(outLP);
     { obd.lp=ctx.createBiquadFilter(); obd.lp.type="lowpass"; obd.lp.frequency.value=600; obd.lp.connect(obd.g); obd.osc=[];
       for(const [f,a,ty] of [[42,0.5,"sawtooth"],[84,0.3,"square"],[126,0.12,"sawtooth"]]){ const o=ctx.createOscillator(); o.type=ty; o.frequency.value=f;
@@ -195,6 +211,32 @@ const AUDIO=(function(){
     const inside=indoorsAt(cam.x, cam.z, cam.y);
     outLP.frequency.setTargetAtTime(inside?700:16000, t, 0.15);
     outBus.gain.setTargetAtTime(inside?0.45:1, t, 0.15);
+    // the car you are in: revs from its speed through five gears, falling back at each change
+    if(car.g){
+      const v=(typeof driving!=="undefined" && driving) ? driving.veh : null;
+      if(!v){ car.g.gain.setTargetAtTime(0, t, 0.08); car.tyre.gain.setTargetAtTime(0, t, 0.08); car.wind.gain.setTargetAtTime(0, t, 0.08); car.sq.gain.setTargetAtTime(0, t, 0.05); car.rpm=0.1; car.gear=0; carHit=0; }
+      else{
+        const sp=Math.abs(v.vf), TOP=[9, 17, 26, 36, 50], th=Math.abs(v.throttle);
+        if(sp>TOP[car.gear]*0.93 && car.gear<4) car.gear++; else if(car.gear>0 && sp<TOP[car.gear-1]*0.62) car.gear--;
+        const want=v.anyGrounded ? clamp(0.12+0.88*sp/TOP[car.gear], 0.12, 1) : Math.min(1, car.rpm+0.3*th);     // (wheels off the ground: it races)
+        car.rpm+=(want-car.rpm)*Math.min(1, dt*(want>car.rpm ? 5 : 9));
+        const f=26+car.rpm*108;
+        for(const q of car.osc) q.o.frequency.setTargetAtTime(f*q.m, t, 0.04);
+        car.lp.frequency.setTargetAtTime(170+car.rpm*520+th*620, t, 0.06);
+        car.g.gain.setTargetAtTime(0.030+0.050*th+0.022*car.rpm, t, 0.06);
+        const kind=v.kind, on=v.anyGrounded ? 1 : 0, s1=Math.min(1, v.speed/40);
+        car.tbp.frequency.setTargetAtTime(kind===1 ? 620+s1*500 : 300+s1*260, t, 0.1);
+        car.tyre.gain.setTargetAtTime(on*s1*(kind===1 ? 0.11 : kind===2 ? 0.26 : 0.20), t, 0.1);
+        car.wind.gain.setTargetAtTime(s1*s1*0.045, t, 0.2);
+        // the squeal is paving's: on grass and gravel a slide is a hiss, which the tyres' own noise already is
+        car.sq.gain.setTargetAtTime(on*(kind===1 ? v.slide*v.slide*0.07*(1-0.6*WEATHER.wet) : 0), t, 0.05);
+        car.sqf.frequency.setTargetAtTime(1300+v.speed*14, t, 0.1);
+        // and a knock against something solid: once, as it lands
+        if(v.hit>carHit+1.2 && v.hit>1.5){ const k=Math.min(1, v.hit/14);
+          tone("triangle", 110, 48, 0.16, 0.10+0.22*k, t, 0, master); burst(t, 0.09+0.1*k, 900, 0.7, 0.05+0.20*k, master); }
+        carHit=v.hit;
+      }
+    }
     // the road: every vehicle contributes by distance, trucks double
     let L=0, px=0;
     camera.getWorldDirection(_r);

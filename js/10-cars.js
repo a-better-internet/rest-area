@@ -12,13 +12,35 @@
    ---------------------------------------------------------------------- */
 const CARS=[];
 let driving=null;
-/* Tuning, unchanged from the engine: the parked cars stand at exactly the
-   height the springs will hold them at, so nothing jumps when you get in. */
-const CARC={ mass:1200, engineForce:9000, brakeConstant:12000, dragConstant:5.0,
-             rollingResist:15.0, corneringFront:-5.0, corneringRear:-5.2,
-             maxGrip:2.6, maxSteer:0.42, steerSpeedBias:40,
-             restLength:0.34, springK:34000, damping:4200, wheelRadius:0.36,
-             gravity:9.81 };
+/* Tuning. The suspension's numbers are the engine's own, and the parked cars stand at exactly the height the springs
+   will hold them at, so nothing jumps when you get in: do not change mass, springK, restLength or wheelRadius
+   without looking at CAR_SAG and CAR_RIDE below. The rest is 11-driving's handling model:
+     driveForce / power   the push at the wheels: all of driveForce up to about 35 mph, then as much as the engine's
+                          power gives at that speed (force = power / speed), so it pulls hard off the line and runs
+                          out of breath toward a hundred
+     revForce / revSpeed  reverse, and how fast it will go backwards
+     engineBrake          what holds it back with your foot off (N, plus a little with speed)
+     brakeG               the brakes, as a share of what the tyres can hold
+     drag / roll / rollK  air (N per (m/s)^2), and the tyres' own resistance (N, and N per m/s)
+     mu                   what a tyre holds on dry paving, as a share of the weight on it; GRIP is the same on
+                          gravel and on grass, and what a wet road takes off each
+     stiff / shape        the tyre's curve: grip builds at `stiff` per radian of slip, peaks, and falls a little
+                          once it lets go (shape 1.35 leaves 85% of the peak in a full slide)
+     rearBias             the rear tyres hold this much more than the front: it is what makes the car straighten
+     maxSteer             full lock, at walking pace; faster, full lock is whatever asks the tyres for about their
+                          limit at that speed (steerOver times it), so the wheel never does nothing and never
+                          throws the car off the road
+     cgH                  the height of the centre of mass: how far it leans in a bend and dips under the brakes */
+const CARC={ mass:1200, gravity:9.81,
+             driveForce:6400, power:104000, revForce:3400, revSpeed:9, engineBrake:260, brakeG:0.96,
+             drag:0.9, roll:160, rollK:4,
+             mu:1.02, stiff:13, shape:1.35, rearBias:1.07, maxSteer:0.56, steerOver:1.6, cgH:0.52,
+             restLength:0.34, springK:34000, damping:4200, wheelRadius:0.36 };
+// what is under the wheels (15's GROUND_KIND: 0 grass, 1 paving, 2 gravel): grip, how much a wet day takes off it,
+// how hard it is to roll on, how much drag it adds with speed, and how rough it is
+const GRIP=[{mu:0.66, wet:0.30, roll:3.2, k:36, rough:0.030},
+            {mu:1.00, wet:0.24, roll:1.0, k:0,  rough:0},
+            {mu:0.80, wet:0.12, roll:2.2, k:12, rough:0.010}];
 const CAR_WHEEL_Y=-0.35;
 const CAR_SAG=CARC.mass*CARC.gravity/(4*CARC.springK);
 const CAR_RIDE=(CARC.restLength-CAR_SAG+CARC.wheelRadius)-CAR_WHEEL_Y;
@@ -55,7 +77,7 @@ function parkCar(x, z, yaw, kind, paint, y0){
   const hz=Math.abs(Math.sin(yaw))*(S.hw+0.08)+Math.abs(Math.cos(yaw))*(S.len/2);
   const cc={x0:x-hx, x1:x+hx, z0:z-hz, z1:z+hz, y0:base, y1:base+S.ht};
   COL_DYN.push(cc);
-  const car={g:g, wheels:wheels, kind:kind, col:cc, home:{x:x, z:z, yaw:yaw}, veh:null, spin:0,
+  const car={g:g, wheels:wheels, kind:kind, spec:S, col:cc, home:{x:x, z:z, yaw:yaw}, veh:null, spin:0,
              lod:{near:near, far:farG, isNear:true, shown:true}};
   CARS.push(car);
   return car;
