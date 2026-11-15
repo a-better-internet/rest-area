@@ -754,3 +754,13 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   14q's crowd is built before it; `RADIO_ST.radios` joins 20's `nearRadio`
   (the lobby's monitor, the jazz trio), and `RADIO_ST.routes` joins
   `tools/walk.js`.
+- Paving's edges are softened at bake (15's `verges`): every up-facing
+  triangle of the paving buckets (`road`, `asphalt`, `lotpave`, `wp_road`,
+  `rn_drive`, `gravelbed`, `wp_gravel`) is looked at as laid; an edge only
+  one of its triangles has, with no visible paving, no indoor zone and no
+  water just past it, gets a strip of worn ground (bucket `verge`,
+  transparent, its own polygon offset) from just inside the edge out over
+  the grass, starting where the ground actually meets the paving. Paving
+  the ground has grown over does not count. A canvas texture laid along a
+  strip sets `flipY=false` if its rows are drawn top-down. A new paving
+  bucket that should blend goes in its `SRC` list with its width.
