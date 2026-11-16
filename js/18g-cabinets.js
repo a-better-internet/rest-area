@@ -408,10 +408,18 @@ addEventListener("keyup", e=>{ CABS.keys[e.code]=false; });
 function updateCabs(dt){
   if(!ARCADE.cabs) return;
   CABS.t+=dt;
-  // a cabinet with a view of its own (the bar-top poker machine, R.fov): the view closes in on its screen while you play, and opens
-  // out again after, eased both ways
-  { const R=CABS.on ? ARCADE.cabs[CABS.i] : null, want=R && R.fov ? 1 : 0, was=CABS.zk||0;
-    if(R && R.fov) CABS.zf=R.fov;
+  /* THE VIEW CLOSES IN ON THE SCREEN while you play, at every cabinet, and opens out again after, eased both ways.
+     From where you stand a cabinet's screen is a third of the height of the view, and its game is drawn for somebody
+     with their nose to the glass. So the view is narrowed until the screen all but fills it, top to bottom or side to
+     side, whichever comes first: worked out from the screen's own size and how far your eyes are from it. A cabinet
+     may give its own (`fov`, the bar-top poker machine). 18f's cabinet, which is not one of these, gets the same. */
+  { const R=CABS.on ? ARCADE.cabs[CABS.i] : (typeof RAIDERS!=="undefined" && RAIDERS.on ? ARCADE.raiders : null), want=R ? 1 : 0, was=CABS.zk||0;
+    if(R){
+      if(!R.zfov){ const P=R.mesh && R.mesh.geometry && R.mesh.geometry.parameters, w=P && P.width ? P.width*R.mesh.scale.x : 0.48, h=P && P.height ? P.height*R.mesh.scale.y : 0.40;
+        const d=Math.hypot(R.stand.x-R.screen.x, R.stand.z-R.screen.z, R.floor+EYE-R.screenY);
+        R.zfov=[w, h, d]; }
+      const half=Math.max(R.zfov[1]/2, R.zfov[0]/2/Math.max(0.5, camera.aspect));
+      CABS.zf=R.fov || clamp(2*Math.atan(half/R.zfov[2])*180/Math.PI*1.16, 18, fov); }
     CABS.zk=was+(want-was)*Math.min(1, dt*5); if(want===0 && CABS.zk<0.003) CABS.zk=0;
     if(CABS.zk>0 || was>0){ camera.fov=fov+((CABS.zf||fov)-fov)*CABS.zk; camera.updateProjectionMatrix(); } }
   const cam=camera.position;

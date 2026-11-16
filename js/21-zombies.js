@@ -38,9 +38,11 @@
    are down. ENTER to go again, Z to leave.
    THE LAUNCHER and THE CODES: a rocket launcher to find (ROCKETS, blast);
    / for a code box, NINELIVES endless health, BOTTOMLESS endless ammo.
-   Keys in the mode: click to fire (hold it for the carbine), the right
-   button to aim (the wheel zooms while it is held; + and - too), 1-6 or the
-   wheel for the guns, R to reload, V to shove.
+   Keys in the mode: click to fire (hold it for the carbine); X brings the
+   sights up and X again lowers them (or hold the right button); + and -
+   zoom in and out, and + brings the sights up if they are down (the wheel
+   zooms too while you aim); 1-6 or the wheel for the guns, R to reload, V
+   to shove.
    ---------------------------------------------------------------------- */
 const ZOMBIE=(function(){
   const Z={on:false, dead:false, hp:100, t:0, kills:0, level:1, fade:0, freeze:false, ts:1, score:0};
@@ -64,7 +66,7 @@ const ZOMBIE=(function(){
   const AMMO_BOX={"9MM":24, "12 GAUGE":8, "5.56":30, ".30-06":5, "FUEL":100, "ROCKETS":3};
   const BOMB_MAX=6;
   const S={have:{}, mag:{}, ammo:{}, cur:"pistol", next:null, cool:0, reloadT:0, reloading:false, switchT:0, fired:false,
-           fireHeld:false, aimHeld:false, ads:0, kick:0, kickR:0, bloom:0, melee:0, meleeHit:false, sprint:0, cycle:0,
+           fireHeld:false, aimHeld:false, aimOn:false, ads:0, kick:0, kickR:0, bloom:0, melee:0, meleeHit:false, sprint:0, cycle:0,
            flashT:0, dmgFlash:0, dmgDir:0, dmgDirT:0, shake:0, hitT:0, hitKill:false, bobA:0, swX:0, swY:0, rl:0,
            lastYaw:0, lastPitch:0, spawnT:6, supplyT:20, levelShown:1, deadT:0, heartT:0, groanT:4, rehideT:0, trailAt:null,
            bombs:0, throwT:0, streak:0, streakT:0, splat:0, tsT:0, horde:null, crowdT:0, zoomBy:{}, zoomT:0, cheated:false};
@@ -831,7 +833,7 @@ const ZOMBIE=(function(){
   function loadBest(){ try{ return JSON.parse(localStorage.getItem("restarea.zombies.best")||"null"); }catch(e){ return null; } }
   function saveBest(b){ try{ localStorage.setItem("restarea.zombies.best", JSON.stringify(b)); }catch(e){} }
   function die(){
-    Z.dead=true; S.deadT=0; S.fireHeld=false; S.aimHeld=false; S.horde=null;
+    Z.dead=true; S.deadT=0; S.fireHeld=false; S.aimHeld=false; S.aimOn=false; S.horde=null;
     const best=loadBest(); Z.newBest=!S.cheated && (!best || Z.score>best.score); if(Z.newBest) saveBest({score:Z.score, t:Z.t, kills:Z.kills}); Z.best=Z.newBest ? null : best;
     if(driving) exitCar(); if(seated) standUp();
     hud.dead(true); snd.die(player.pos.x, player.pos.z, true);
@@ -1106,7 +1108,7 @@ const ZOMBIE=(function(){
     const g=GUNS.find(q=>q.slot===slot); if(!g || Z.dead) return;
     if(!S.have[g.id]){ feed("NO "+g.name+" YET", "#8a8a7a"); return; }
     if(g.id===S.cur && !S.next) return;
-    S.next=g.id; S.switchT=0.45; S.reloading=false; S.reloadT=0;
+    S.next=g.id; S.switchT=0.45; S.reloading=false; S.reloadT=0; S.aimOn=false;       // (a new gun comes up from the hip)
   }
   function cycleGun(dir){
     const owned=GUNS.filter(g=>S.have[g.id]); if(owned.length<2) return;
@@ -1130,7 +1132,8 @@ const ZOMBIE=(function(){
     const g=G();
     S.cool=Math.max(0, S.cool-dt); S.cycle=Math.max(0, S.cycle-dt); S.flashT=Math.max(0, S.flashT-dt);
     S.bloom=Math.max(0, S.bloom-dt*(g.auto ? 0.05 : 0.08));
-    S.ads=approach(S.ads, (S.aimHeld && !Z.dead && !atGame() && S.switchT<=0 && !S.reloading && S.sprint<0.5) ? 1 : 0, dt*(g.zoom ? 5 : 8));
+    if(S.aimOn && (g.flame || atGame() || (keys.KeyQ && player.moving))) S.aimOn=false;        // (a sprint lowers the sights, and they stay down)
+    S.ads=approach(S.ads, ((S.aimHeld || S.aimOn) && !Z.dead && !atGame() && S.switchT<=0 && !S.reloading && S.sprint<0.5) ? 1 : 0, dt*(g.zoom ? 5 : 8));
     const sprinting=keys.KeyQ && player.moving && !S.aimHeld;
     S.sprint=approach(S.sprint, sprinting ? 1 : 0, dt*6);
     if(S.switchT>0){ const was=S.switchT; S.switchT-=dt;
@@ -1153,17 +1156,41 @@ const ZOMBIE=(function(){
     if(S.cycle<=0) S.pumped=false;
   }
   const approach=(v,t,r)=>v+clamp(t-v,-r,r);
-  /* ---- the zoom: down the sights the view closes in (the rifle's scope a lot), and the wheel while you aim, or + and -,
-     takes it further in or back out, from the sights' own to six times that. Each gun keeps its own. The look slows with
-     it, so the crosshair moves the same distance across what you are aiming at whatever the zoom. ---- */
+  /* ---- the zoom ----
+     Down the sights the view closes in: 1.6 times for a gun with iron sights, 2.5 for the rifle's scope, and from
+     there + and - (or the wheel, while you aim) take it further in or back out, to six times that. Each gun keeps
+     its own. The look slows with it, so the crosshair moves the same distance across what you are aiming at
+     whatever the zoom.
+     The sights come up three ways, because the right button of a laptop's trackpad is no thing to hold down while
+     you scroll: X puts them up and X again lowers them; + puts them up if they are down (so "zoom in" is one key
+     from anywhere), and - at the least zoom lowers them; and the right button, held, as it always was. A sprint, a
+     change of gun or a game puts them down. ---- */
   const ZOOMS=[1, 1.5, 2, 3, 4, 6];
   const zoomOf=g=>S.zoomBy[g.id]||1;
-  const aimFov=g=>(g.zoom ? g.zoom : 0.8)/zoomOf(g);                        // (the view down the sights, as a part of the open one)
+  const aimFov=g=>(g.zoom ? g.zoom : 0.62)/zoomOf(g);                       // (the view down the sights, as a part of the open one)
+  const aiming=()=>S.aimHeld || S.aimOn;
+  function aimToggle(on){
+    const g=G(); if(g.flame || Z.dead) return;
+    S.aimOn=on===undefined ? !S.aimOn : on; S.zoomT=1.6; snd.tick();
+  }
   function zoomStep(d){
     const g=G(); if(g.flame || Z.dead) return;
+    if(!aiming()){ if(d>0) aimToggle(true); return; }
     const i=ZOOMS.indexOf(zoomOf(g)), j=clamp((i<0 ? 0 : i)+d, 0, ZOOMS.length-1);
-    if(ZOOMS[j]===zoomOf(g)) return;
+    if(ZOOMS[j]===zoomOf(g)){ if(d<0 && S.aimOn) aimToggle(false); return; }
     S.zoomBy[g.id]=ZOOMS[j]; S.zoomT=1.6; snd.tick();
+  }
+  /* A wheel is a notch at a time; a trackpad's two fingers are forty little events and then a long tail of them as
+     the scroll coasts. Taken one step an event, a single swipe went through every gun twice over. So the scroll is
+     added up and a step is taken for each good stretch of it, no sooner than a moment after the last. */
+  const _wh={acc:0, at:0, step:0};
+  function wheelStep(e){
+    const now=performance.now(), dy=e.deltaY*(e.deltaMode===1 ? 32 : e.deltaMode===2 ? 300 : 1);
+    if(now-_wh.at>220) _wh.acc=0;
+    _wh.at=now; _wh.acc+=dy;
+    const notch=Math.abs(dy)>=60;                                           // (a wheel's own click; a trackpad's are a few pixels each)
+    if(Math.abs(_wh.acc)<(notch ? 50 : 90) || now-_wh.step<(notch ? 80 : 260)) return 0;
+    const d=Math.sign(_wh.acc); _wh.acc=0; _wh.step=now; return d;
   }
   Z.lookScale=()=>1-S.ads*(1-Math.min(1, aimFov(G())*0.92));
 
@@ -1776,7 +1803,7 @@ const ZOMBIE=(function(){
     hud.scope.style.display=g.zoom && S.ads>0.85 && !Z.dead ? "block" : "none";
     // the zoom, while you are down the sights (and a moment after you change it)
     S.zoomT=Math.max(0, S.zoomT-dt);
-    const zt=g.flame ? "" : (S.ads>0.5 || S.zoomT>0) ? (+(1/aimFov(g)).toFixed(1))+"×"+(S.ads>0.5 ? "  ·  WHEEL ZOOMS" : "  ·  WHEN AIMING") : "";
+    const zt=g.flame ? "" : (S.ads>0.5 || S.zoomT>0) ? (+(1/aimFov(g)).toFixed(1))+"×  ·  + AND − ZOOM  ·  X "+(aiming() ? "LOWERS" : "AIMS") : "";
     if(L.zt!==zt){ L.zt=zt; hud.zoomEl.textContent=zt; } hud.zoomEl.style.opacity=zt ? (S.ads>0.5 ? 0.85 : 0.65) : 0;
     for(let i=FEED.length-1;i>=0;i--){ const f=FEED[i]; f.t-=dt; if(f.t<0.6) f.e.style.opacity=Math.max(0, f.t/0.6); if(f.t<=0){ f.e.remove(); FEED.splice(i,1); } }
     if(bannerT>0){ bannerT-=dt; if(bannerT<=0) hud.banner.style.opacity=0; }
@@ -1838,7 +1865,7 @@ const ZOMBIE=(function(){
     S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null; mendGlass(); S.cheated=!!(Z.god || Z.infAmmo);
     for(const b of BOMBS) scene.remove(b.g); BOMBS.length=0; BOOM.mod.v=0; stopRockets();
     S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0, flamer:0, rocket:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0, "FUEL":0, "ROCKETS":0}; stopFlame();
-    S.cur="pistol"; S.next=null; S.reloading=false; S.switchT=0; S.cool=0; S.ads=0; S.fired=false; S.melee=0; S.dmgFlash=0; S.spawnT=8; S.supplyT=20; S.levelShown=1;
+    S.cur="pistol"; S.next=null; S.reloading=false; S.switchT=0; S.cool=0; S.ads=0; S.aimOn=false; S.aimHeld=false; S.fired=false; S.melee=0; S.dmgFlash=0; S.spawnT=8; S.supplyT=20; S.levelShown=1;
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ const p=PK[i]; if(p.dyn){ dropMesh(p.g); PK.splice(i,1); }
       else if(p.cache){ if(p.kind!==p.kind0){ dropMesh(p.g); p.kind=p.kind0; p.g=pickupMesh(p.kind); p.g.position.set(p.x, p.y, p.z); p.g.userData.glow.position.y=0.03; scene.add(p.g); }
@@ -1859,7 +1886,7 @@ const ZOMBIE=(function(){
     dom.addEventListener("mousedown", e=>{ if(!Z.on || Z.dead) return; if(e.button===0) S.fireHeld=true; else if(e.button===2) S.aimHeld=true; });
     addEventListener("mouseup", e=>{ if(e.button===0){ S.fireHeld=false; } else if(e.button===2) S.aimHeld=false; });
     dom.addEventListener("contextmenu", e=>{ if(Z.on){ e.preventDefault(); e.stopPropagation(); } });
-    addEventListener("wheel", e=>{ if(!Z.on || Z.dead || !e.deltaY) return; if(S.aimHeld) zoomStep(-Math.sign(e.deltaY)); else cycleGun(Math.sign(e.deltaY)); }, {passive:true});
+    addEventListener("wheel", e=>{ if(!Z.on || Z.dead || !e.deltaY) return; const d=wheelStep(e); if(!d) return; if(aiming()) zoomStep(-d); else cycleGun(d); }, {passive:true});
   }
   Z.start=function(){
     if(Z.on) return;
@@ -1880,7 +1907,7 @@ const ZOMBIE=(function(){
     S.lastYaw=player.yaw; S.lastPitch=player.pitch;
     snd.ambience(true);
     const best=loadBest();
-    banner("THEY'RE COMING", "CLICK TO SHOOT  ·  R RELOAD  ·  RIGHT BUTTON AIMS, THE WHEEL ZOOMS  ·  F PIPE BOMB  ·  L LIGHT"+
+    banner("THEY'RE COMING", "CLICK TO SHOOT  ·  R RELOAD  ·  X AIMS  ·  + AND − ZOOM  ·  F PIPE BOMB  ·  L LIGHT"+
            (best ? "\nYOUR BEST  "+best.score+"  ·  "+clock(best.t) : ""));
   };
   Z.stop=function(){
@@ -1912,7 +1939,8 @@ const ZOMBIE=(function(){
     if(k==="Minus" || k==="NumpadSubtract"){ zoomStep(-1); return true; }
     if(k==="KeyV"){ melee(); return true; }
     if(k==="KeyF"){ throwBomb(); return true; }                                  // (a pipe bomb; no drone in this)
-    if(k==="KeyX" || k==="KeyP" || k==="KeyT"){ return true; }               // (no wrecks, power cuts or storms on top of it)
+    if(k==="KeyX"){ if(!e.repeat) aimToggle(); return true; }                 // (the sights up, the sights down; no wrecks in this)
+    if(k==="KeyP" || k==="KeyT"){ return true; }                             // (no power cuts or storms on top of it)
     return false;
   };
 
@@ -1980,7 +2008,7 @@ const ZOMBIE=(function(){
     FLASH.x=camera.position.x+_v1.x*0.7; FLASH.y=camera.position.y+_v1.y*0.7; FLASH.z=camera.position.z+_v1.z*0.7;
     FLASH.under=buriedAt(camera.position.x, camera.position.z, camera.position.y); FLASH.mod.v=S.flashT>0 ? 1 : 0;
     // the ADS view: tighter, a lot tighter through the rifle's scope
-    { const g=G(), want=fov*(1-S.ads*(1-aimFov(g))); if(Math.abs(camera.fov-want)>0.01){ camera.fov=want; camera.updateProjectionMatrix(); } }
+    if(!atGame()){ const g=G(), want=fov*(1-S.ads*(1-aimFov(g))); if(Math.abs(camera.fov-want)>0.01){ camera.fov=want; camera.updateProjectionMatrix(); } }   // (at a cabinet the view is the cabinet's, 18g)
     // the blood on the screen from a hit close to, or a car through them
     S.splat=Math.max(0, S.splat-dt*0.9); hud.splat(S.splat);
     // hit: the view jolts; down: the view goes to the ground

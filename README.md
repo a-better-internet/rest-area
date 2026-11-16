@@ -1447,15 +1447,19 @@ If the scene runs hot on your machine, start there (see below).
     maintenance garage, at the treatment plant, at the Weirs' machine shed
     and down in the weigh station's listening room, and later more turn up
     near you. Each takes its own ammunition. Click to fire (hold it down
-    for the carbine), the right button aims down the sights (the rifle has
-    a scope), `R` reloads, `1`–`6` or the wheel change guns, and `V` shoves
+    for the carbine), `X` brings the sights up and lowers them (the rifle
+    has a scope), `R` reloads, `1`–`6` or the wheel change guns, and `V` shoves
     them back with the gun.
-  - **Zoom.** Down the sights the view closes in (the rifle's scope a lot).
-    While you hold the right button the wheel zooms further in or back out,
-    and `+` and `-` do the same at any time. The steps go from the sights'
-    own up to six times that. Each gun keeps its own zoom, the mouse slows
-    with it so your aim stays steady, and the zoom shows under the
-    crosshair.
+  - **Zoom.** `X` puts the sights up and `X` again lowers them; holding
+    the right button does the same while it is held. Down the sights the
+    view closes in, 1.6 times for iron sights and 2.5 for the rifle's
+    scope. `+` zooms further in (and brings the sights up first if they
+    are down, so it works from anywhere), `-` zooms back out and at the
+    least zoom lowers them; the wheel does the same while you aim. The
+    steps go up to six times the sights' own. Each gun keeps its zoom, the
+    mouse slows with it so your aim stays steady, and the zoom shows under
+    the crosshair. A sprint or a change of gun lowers the sights. On a
+    trackpad a two-finger scroll is one step a swipe, not forty.
   - **The rocket launcher** (`6`) is in the boiler hall's stores, up on the
     roof of the Edinboro substation's control house, and later it turns up
     near you. One rocket in the tube: it goes where the crosshair is, at
@@ -1642,7 +1646,7 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Walk / look | `WASD` / drag or mouse |
 | Run · sprint | `Shift` · `Q` |
 | Door · drive · use | `E` |
-| Play an arcade game | `Enter` |
+| Play an arcade game (the view closes in on its screen) | `Enter` |
 | Codes (zombie mode) | `/` |
 | Throttle · brake and reverse · steer (driving) | `W` · `S` · `A` `D` |
 | Handbrake (driving) | `Space` |
@@ -1661,8 +1665,8 @@ quieter and slower in October, the hum of the building and the generators, the h
 | Zombie mode on / off | `Z` |
 
 In zombie mode: click to fire (hold for the carbine and the flamethrower),
-the right button to aim down the sights (the wheel zooms while you hold
-it, and `+` / `-` zoom at any time), `R` to reload, `1`–`6` or the
+`X` to bring the sights up and lower them (or hold the right button),
+`+` / `-` to zoom in and out (the wheel too, while you aim), `R` to reload, `1`–`6` or the
 wheel to change guns, `V`
 to shove with the gun, `F` to throw a pipe bomb, and `ENTER` to go again
 when you are down. The drone,
