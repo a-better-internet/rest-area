@@ -160,7 +160,8 @@ const DRIVE=smoothPath([
   {x:-26.3,z:-141.6,y:0},{x:-22,z:-142.2,y:0},{x:-12,z:-145.4,y:0},{x:4,z:-151,y:0.35},{x:22,z:-154,y:1.05},
   {x:38,z:-159,y:1.85},{x:52,z:-166,y:2.45},{x:60.5,z:-169,y:SITE.sub.y}], 2.0);
 // a cleared right-of-way north from the compound, poles every ninety metres
-const POWER={x0:84, z0:-184, x1:136, z1:-1500};
+// (H: the height of its poles, the 0.8 m set in the ground included: 12 builds them, 14s taps the line off one)
+const POWER={x0:84, z0:-184, x1:136, z1:-1500, H:18.5};
 // the radio station (14s2): its pad cut into the foot of the rise north of the substation, and its tower on the hill behind,
 // a level ring round the tower's base; the feed line between them a cut through the trees
 const RADIO={pad:{x0:-6, x1:48, z0:-1500, z1:-1458}, tower:{x:100, z:-1522}, ty:undefined,

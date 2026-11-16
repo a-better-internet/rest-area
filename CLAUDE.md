@@ -874,3 +874,23 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   with distance. New ground cover, crops and wire do the same.
 - The haze starts at 60 m by day (19), not 150: the middle distance is
   where a view gets its depth.
+
+## Round 32 notes
+
+- In zombie mode the sights are a toggle (`X`, 21's `aimToggle`) as well
+  as the right button held; `+` brings them up if they are down. The wheel
+  goes through `wheelStep`, which adds a trackpad's stream of events up
+  into steps. Anything new that takes the wheel does the same.
+- At a cabinet the view narrows onto its screen (18g's `updateCabs`, from
+  the screen mesh's size and the eye's distance; a cabinet's own `fov`
+  wins). 21 leaves `camera.fov` alone while `atGame()`.
+- Pole heights: the substation's line is `POWER.H` (04; 12 builds it, 14s
+  taps it), the roadside poles 14y's `PH`, with the street lights `LD`
+  below their tops. A lamp or a can on a pole goes at its own real height,
+  not a fixed drop from the top.
+- The radio tower (14s2) is three meshes: the lattice (`radio-tower`), its
+  guys (`radio-guys`, fading with distance) and a sheet to each face and
+  band that is clear close to and fills in far off (`radio-tower-far`), so
+  a lattice finer than a pixel reads as a banded line. Its beacons (top,
+  and a pair half way up) flash; its side lights (a quarter and three
+  quarters up) burn steady; all are out by day.

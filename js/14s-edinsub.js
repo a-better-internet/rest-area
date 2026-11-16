@@ -114,10 +114,10 @@ const HUM_POS=[];                                   // transformers that hum and
     let src=null;
     for(let s=4; s<L; s+=90){ const x=POWER.x0+ux*s, z=POWER.z0+uz*s; if(Math.hypot(x,z)>1500) break; if(!src || Math.abs(z+1402)<Math.abs(src.z+1402)) src={x:x, z:z}; }
     src.y=Terrain.groundAt(src.x, src.z);
-    const top=[-1.1, 0, 1.1].map(o=>V3(src.x+Math.cos(ry)*o, src.y+12.5-0.84+(o===0?0.3:0), src.z-Math.sin(ry)*o));
+    const top=[-1.1, 0, 1.1].map(o=>V3(src.x+Math.cos(ry)*o, src.y+POWER.H-0.84+(o===0?0.3:0), src.z-Math.sin(ry)*o));
     top.sort((a,b)=>a.z-b.z);
     // two poles, the crossarm along z, three pins
-    const poles=[lerp(src.x, DEX, 0.36), lerp(src.x, DEX, 0.70)].map(x=>{ const z=-1402.0, y=Terrain.groundAt(x, z), H=12.0;
+    const poles=[lerp(src.x, DEX, 0.36), lerp(src.x, DEX, 0.70)].map(x=>{ const z=-1402.0, y=Terrain.groundAt(x, z), H=15.5;
       cyl("pole", 0.15, 0.19, H, 8, x, y+H/2-0.8, z, "#7a6248"); push("pole", boxGeo(0.12, 0.12, 6.0, 0.5), x, y+H-1.4, z, 0, "#6e5840");
       for(const sd of [-1,1]) tube("pole", V3(x, y+H-2.3, z), V3(x, y+H-1.47, z+sd*1.3), 0.03, 4, "#6e5840");
       addCol(x-0.22, x+0.22, z-0.22, z+0.22, y-1, y+H);

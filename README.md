@@ -531,6 +531,18 @@ If the scene runs hot on your machine, start there (see below).
     catwalk round the tank, 26 m up. From there you can see the interstate
     and its bridge, the fields and the farm, the chapel, and the woods
     going away toward the lake.
+  - **The radio tower** on the hill north of the substation is a guyed AM
+    mast of 124 m, marked and lit the way one that height has to be: seven
+    bands of aviation orange and white, a flashing red beacon on top and a
+    pair half way up, steady red side lights at a quarter and three
+    quarters of the height, all of them out by day. Its guys are broken
+    every twenty-odd metres by strain insulators, and it stands on a
+    porcelain base insulator with a ball gap across it. From a long way
+    off it is a thin banded line against the sky, not a column of dots.
+  - The power lines are carried at real heights: the line that feeds the
+    rest area's substation on sixty-foot poles, its conductors seventeen
+    metres up, and the roadside poles along US 6N forty-five feet, with
+    the street lights hung at nine metres.
   - A pole line runs along US 6N on the north side, and a tap crosses the
     road and goes up the Weirs' lane, with a transformer on its last pole
     and drops to the house and the barn. The poles and wires go on east

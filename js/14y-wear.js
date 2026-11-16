@@ -205,32 +205,34 @@ const WEAR={leaves:[], autumn:null};
   /* ---- along US 6N at Edinboro: the poles and the wires, a tap across the road and up the Weirs' lane ---- */
   { const E=EDIN, Z=E.z, Y=E.y, WOOD="#6b5a46", WIRE="#2a2a2a";
     const pole=(x,z,h,arm)=>{ const gy=Terrain.groundAt(x,z);
-      ent(new T.CylinderGeometry(0.12, 0.16, h, 14), x, gy+h/2, z, WOOD);
+      ent(new T.CylinderGeometry(0.12, 0.19, h, 14), x, gy+h/2, z, WOOD);
       if(arm){ B(0.12, 0.10, 2.4, x, gy+h-0.35, z, WOOD); for(const dz of [-1.05,0,1.05]) C(0.035, 0.12, x, gy+h-0.24, z+dz, "#7a8a6a", 12); }
       addCol(x-0.17, x+0.17, z-0.17, z+0.17, gy-0.5, gy+h); return gy+h; };
     // a wire hangs in a curve: cut into pieces that sag to the middle
     const wire=(a,b,sag,rad)=>{ const n=10; let p=a.clone();
       for(let k=1;k<=n;k++){ const t=k/n, q=new T.Vector3().lerpVectors(a,b,t); q.y-=sag*4*t*(1-t); tubeE(p, q, rad||0.010, WIRE, 5); p=q; } };
-    const zN=Z-8.2, tops=[];
+    // (forty-five-foot poles: the primary thirteen metres up, clear of a hay wagon and a house's eaves by a long way;
+    //  the street's lights hang at nine, where a street light does, not up at the wires)
+    const zN=Z-8.2, tops=[], PH=13.5, LD=4.5;
     // (on east along the road to the street's end, each moved clear of a lot's mouth or a drive, EAST.noPole)
     for(let x0=40; x0<=EAST.x1-24; x0+=45){ let x=x0;
       for(const [a,b] of EAST.noPole) if(x>a && x<b) x=(x-a<b-x) ? a : b;
       if(tops.length && x-tops[tops.length-1][0]<8) continue;                        // (two moved to the same gap's edge: one pole)
-      const top=pole(x, zN, 10.5, true); tops.push([x, top]); }
+      const top=pole(x, zN, PH, true); tops.push([x, top]); }
     // along the street, a light out over the road from each pole
     for(const [x,t] of tops){ if(x<EAST.town.x0 || x>EAST.town.x1) continue;
-      tubeE(V3(x, t-2.7, zN+0.1), V3(x, t-2.2, zN+2.8), 0.04, "#8a8d90"); B(0.30, 0.14, 0.62, x, t-2.24, zN+3.05, "#7a7d80");
-      push("lk_porch", boxGeo(0.22, 0.012, 0.46, 0), x, t-2.317, zN+3.05, 0, "#ffffff");
-      LAMPS.push({x:x, y:t-2.6, z:zN+3.05, color:0xffe0b0, intensity:0.9, dist:22, decay:1.3, mothy:true}); }
+      tubeE(V3(x, t-LD-0.5, zN+0.1), V3(x, t-LD, zN+2.8), 0.04, "#8a8d90"); B(0.30, 0.14, 0.62, x, t-LD-0.04, zN+3.05, "#7a7d80");
+      push("lk_porch", boxGeo(0.22, 0.012, 0.46, 0), x, t-LD-0.117, zN+3.05, 0, "#ffffff");
+      LAMPS.push({x:x, y:t-LD-0.4, z:zN+3.05, color:0xffe0b0, intensity:0.9, dist:22, decay:1.3, mothy:true}); }
     for(let i=1;i<tops.length;i++){ const [x0,t0]=tops[i-1], [x1,t1]=tops[i];
       for(const dz of [-1.05,0,1.05]) wire(V3(x0, t0-0.18, zN+dz), V3(x1, t1-0.18, zN+dz), 0.75);
-      wire(V3(x0, t0-1.6, zN), V3(x1, t1-1.6, zN), 0.9, 0.012); }
-    for(const [x,t] of tops) B(0.06, 0.06, 0.10, x, t-1.6, zN, "#3a3a3a");
+      wire(V3(x0, t0-2.2, zN), V3(x1, t1-2.2, zN), 0.9, 0.012); }
+    for(const [x,t] of tops) B(0.06, 0.06, 0.10, x, t-2.2, zN, "#3a3a3a");
     // the tap: across the road to a pole by the lane, up the lane, a can on it, and drops to the house and the barn
     const t130=tops.find(p=>p[0]===130)[1], S1={x:153.0, z:Z+6.6}, S2={x:153.0, z:Z+30.0};
-    const h1=pole(S1.x, S1.z, 9.5, false), h2=pole(S2.x, S2.z, 9.5, false);
+    const h1=pole(S1.x, S1.z, 12.0, false), h2=pole(S2.x, S2.z, 12.0, false);
     B(0.10, 0.10, 1.0, S1.x, h1-0.4, S1.z, WOOD); B(0.10, 0.10, 1.0, S2.x, h2-0.4, S2.z, WOOD);
-    wire(V3(130, t130-0.18, zN+1.05), V3(S1.x, h1-0.30, S1.z), 0.6); wire(V3(130, t130-1.6, zN), V3(S1.x, h1-1.4, S1.z), 0.7);
+    wire(V3(130, t130-0.18, zN+1.05), V3(S1.x, h1-0.30, S1.z), 0.6); wire(V3(130, t130-2.2, zN), V3(S1.x, h1-1.4, S1.z), 0.7);
     wire(V3(S1.x, h1-0.30, S1.z), V3(S2.x, h2-0.30, S2.z), 0.5); wire(V3(S1.x, h1-1.4, S1.z), V3(S2.x, h2-1.4, S2.z), 0.6);
     C(0.26, 0.75, S2.x+0.32, h2-2.2, S2.z, "#8a8d8a", 20); C(0.27, 0.05, S2.x+0.32, h2-1.80, S2.z, "#7a7d7a", 20);
     tubeE(V3(S2.x+0.32, h2-1.78, S2.z), V3(S2.x, h2-0.30, S2.z), 0.008, WIRE, 5);

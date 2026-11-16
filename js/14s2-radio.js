@@ -18,7 +18,7 @@
    The tower: a guyed mast 124 m tall, a triangle of lattice the same
    width all the way up on a porcelain base insulator, guyed in three
    directions at four heights, the guys broken by strain insulators.
-   Painted in seven bands, orange and white, red lamps at its top and its
+   Painted in seven bands, orange and white, a red beacon at its top and its
    thirds, flashing after dark. At its
    foot the tuning house in a fenced square, and the feed line coming in
    on short poles from the station, two wires on each crossarm.
@@ -406,11 +406,20 @@ const RADIO_ST={beacons:[], glow:null, glowIn:null, lamp:null, t:0, radios:[], d
   /* ---- the tower: a guyed mast, the kind nearly every AM station put up: a triangle of lattice the same width all the way up,
      1.8 m a face, the three legs tapered in over the bottom three metres to stand on the base insulator (the whole steel mast is the
      aerial, so it must not touch the ground); zig-zag bracing up every face, a horizontal at every panel; painted in seven bands,
-     orange and white, from the bottom. Guyed in three directions at four heights, each guy broken by strain insulators so it does not
-     ring at the station's frequency, all of a side's guys to one anchor. A lamp on top, three at each third, flashing after dark. ---- */
+     aviation orange and white, orange at the foot and at the top. Guyed in three directions at four heights, each guy broken every
+     twenty-odd metres by a strain insulator so that no length of it rings at the station's frequency, all of a side's guys to one
+     anchor.
+     LIT AS THE RULES HAVE IT for a mast of four hundred feet: a flashing red beacon on top and a pair of them half way up, on
+     opposite sides so one is seen from anywhere; and between, at a quarter and at three quarters of the height, steady red
+     obstruction lights, one on each leg. The beacons flash together, thirty times a minute; the side lights do not flash. All of
+     them are out by day, when the paint is the marking. The conduit that feeds them runs up one leg from the choke at the foot.
+     FROM A LONG WAY OFF a lattice mast is a thin banded line, not a column of dots: its braces are finer than a pixel at a couple
+     of hundred metres and would come and go. So each face also has a plain sheet in the bands' colours that is not there close to
+     and fills in with distance (TOWER_FAR), and the guys, a centimetre and a half of steel, fade as real ones do into the sky. ---- */
   const H=124, FW=1.8, RI=FW/Math.sqrt(3), x=T0.x, z=T0.z, y0=TY+2.7, PAN=1.5, BASE=3.0;
-  const band=y=>Math.min(6, Math.floor(y/(H/7)))%2 ? "#f2eee6" : "#d4542a";
-  const TL=[], GB=RADIO.guys;                                          // (the guys' bearings from north, clockwise: 04)
+  const ORANGE="#d9501e", WHITE="#f0ece4";
+  const band=y=>Math.min(6, Math.floor(y/(H/7)))%2 ? WHITE : ORANGE;
+  const TL=[], GL=[], FL2=[], GB=RADIO.guys;                           // (the guys' bearings from north, clockwise: 04)
   // leg k points out toward guy k
   const leg=(k, y)=>{ const a=GB[k], r=y<BASE ? RI*y/BASE : RI; return V3(x+Math.sin(a)*r, y0+y, z-Math.cos(a)*r); };
   for(let k=0;k<3;k++) tube(V3(x, y0, z), leg(k, BASE), 0.08, band(1), 6, TL);
@@ -422,26 +431,52 @@ const RADIO_ST={beacons:[], glow:null, glowIn:null, lamp:null, t:0, radios:[], d
       tube(leg(k, yb), leg(k2, yb), 0.028, col, 4, TL);                                 // (the panel's horizontal)
       i%2 ? tube(leg(k, ya), leg(k2, yb), 0.024, col, 4, TL) : tube(leg(k2, ya), leg(k, yb), 0.024, col, 4, TL); } }   // (the zig-zag)
   const yTop=BASE+NP*PAN;
-  tube(V3(x, y0+yTop, z), V3(x, y0+yTop+2.6, z), 0.05, "#2a2a2c", 6, TL);           // (the lightning rod and the top lamp's mast)
+  tube(V3(x, y0+yTop, z), V3(x, y0+yTop+3.4, z), 0.03, "#2a2a2c", 6, TL);           // (the lightning rod, over the beacon)
   for(let k=0;k<3;k++) tube(leg(k, yTop), V3(x, y0+yTop+0.6, z), 0.03, band(H-1), 4, TL);
-  // the lamps: on top, and at each third one on every leg, outboard (each a ball close to, a point of a few pixels far off)
-  const bmat=new T.MeshBasicMaterial({color:0x3a0806, toneMapped:false}), bg=new T.SphereGeometry(0.22, 12, 9), bp=[];
-  const lampAt=(p)=>{ const m=new T.Mesh(bg, bmat); m.position.copy(p); scene.add(m); bp.push(p.x, p.y, p.z);
-    ent(new T.CylinderGeometry(0.16, 0.16, 0.16, 10), p.x, p.y-0.2, p.z, "#2a2a2c"); };
-  lampAt(V3(x, y0+yTop+2.85, z));
-  for(const f of [1/3, 2/3]) for(let k=0;k<3;k++){ const p=leg(k, yTop*f), a=GB[k]; p.x+=Math.sin(a)*0.35; p.z-=Math.cos(a)*0.35; lampAt(p); }
-  { const gg=new T.BufferGeometry(); gg.setAttribute("position", new T.Float32BufferAttribute(bp, 3));
-    RADIO_ST.pmat=new T.PointsMaterial({color:0x000000, size:5, sizeAttenuation:false, toneMapped:false, depthWrite:false, transparent:true, opacity:0.95});
-    const pts=new T.Points(gg, RADIO_ST.pmat); pts.frustumCulled=false; pts.renderOrder=5; scene.add(pts); }
-  RADIO_ST.bmat=bmat;
+  { const c=leg(0, BASE), d=leg(0, yTop); c.x+=0.09; d.x+=0.09; tube(c, d, 0.022, "#8a8d90", 4, TL); }     // (the lights' conduit, up one leg)
+  // the far sheets: one to a face and a band, a hair inside the lattice
+  { const yb=[BASE]; for(let i=1;i<7;i++) yb.push(H*i/7); yb.push(yTop);
+    const P=[], C2=[], I=[], cc=new T.Color();
+    for(let i=0;i<yb.length-1;i++){ cc.set(band((yb[i]+yb[i+1])/2));
+      for(let k=0;k<3;k++){ const a=leg(k, yb[i]), b2=leg((k+1)%3, yb[i]), c=leg((k+1)%3, yb[i+1]), d=leg(k, yb[i+1]), n=P.length/3;
+        for(const q of [a, b2, c, d]){ P.push(x+(q.x-x)*0.97, q.y, z+(q.z-z)*0.97); C2.push(cc.r, cc.g, cc.b); }
+        I.push(n, n+1, n+2, n, n+2, n+3); } }
+    const fg=new T.BufferGeometry(); fg.setAttribute("position", new T.Float32BufferAttribute(P, 3)); fg.setAttribute("color", new T.Float32BufferAttribute(C2, 3)); fg.setIndex(I); fg.computeVertexNormals();
+    const fm=new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, side:T.DoubleSide, transparent:true, depthWrite:false});
+    fm.onBeforeCompile=(sh)=>{ sh.fragmentShader=sh.fragmentShader.replace("#include <alphatest_fragment>",
+      "diffuseColor.a *= 0.72 * smoothstep( 70.0, 320.0, length( vViewPosition ) );\n#include <alphatest_fragment>"); };
+    fm.customProgramCacheKey=()=>"tower-far";
+    const far=new T.Mesh(fg, fm); far.name="radio-tower-far"; far.userData.noCull=true; scene.add(far); }
+  /* the lamps: each a red lens close to and a point of a few pixels far off. `flash`: a beacon; the rest burn steady */
+  const bg=new T.SphereGeometry(1, 14, 10), mk=()=>new T.MeshBasicMaterial({color:0x3a0806, toneMapped:false});
+  const BM=mk(), SM=mk(), bp=[], sp=[];
+  const lampAt=(p, r, flash)=>{ const m=new T.Mesh(bg, flash ? BM : SM); m.position.copy(p); m.scale.set(r, r*(flash ? 1.5 : 1.1), r); m.userData.noCull=true; scene.add(m);
+    (flash ? bp : sp).push(p.x, p.y, p.z);
+    ent(new T.CylinderGeometry(r*0.8, r*0.8, r*0.7, 10), p.x, p.y-r*(flash ? 1.75 : 1.3), p.z, "#2a2a2c"); };
+  lampAt(V3(x, y0+yTop+1.15, z), 0.30, true);                                              // the top beacon, a 300 mm code beacon
+  for(const sd of [0, Math.PI]){ const a=GB[0]+sd+Math.PI/6, p=V3(x+Math.sin(a)*(RI+0.55), y0+yTop*0.5, z-Math.cos(a)*(RI+0.55));
+    tube(V3(x+Math.sin(a)*RI*0.5, p.y-0.5, z-Math.cos(a)*RI*0.5), V3(p.x, p.y-0.5, p.z), 0.03, "#2a2a2c", 4, TL); lampAt(p, 0.27, true); }   // the pair half way up, on their arms
+  for(const f of [0.25, 0.75]) for(let k=0;k<3;k++){ const p=leg(k, yTop*f), a=GB[k]; p.x+=Math.sin(a)*0.28; p.z-=Math.cos(a)*0.28; lampAt(p, 0.12, false); }   // the side lights
+  const dots=(arr, size)=>{ const gg=new T.BufferGeometry(); gg.setAttribute("position", new T.Float32BufferAttribute(arr, 3));
+    const pm=new T.PointsMaterial({color:0x000000, size:size, sizeAttenuation:false, toneMapped:false, depthWrite:false, transparent:true, opacity:0});
+    const pts=new T.Points(gg, pm); pts.frustumCulled=false; pts.renderOrder=5; scene.add(pts); return pm; };
+  RADIO_ST.pmat=dots(bp, 6); RADIO_ST.smat2=dots(sp, 3.5);
+  RADIO_ST.bmat=BM; RADIO_ST.smat=SM;
   // the guys: four to a side, from the leg at 27, 52, 76 and 97 per cent of the height down to the side's anchor; each broken by
-  // strain insulators (a white egg near the mast, two more along it); the anchor a block of concrete, the guys' turnbuckles on it
+  // strain insulators (a white egg every twenty-two metres or so, the first close in by the mast); the anchor a block of
+  // concrete, the guys' turnbuckles on it
   for(let k=0;k<3;k++){ const a=GB[k], ax=x+Math.sin(a)*RADIO.gr, az=z-Math.cos(a)*RADIO.gr, ag=g(ax, az), A=V3(ax, ag+0.9, az);
-    for(const f of [0.27, 0.52, 0.76, 0.97]){ const from=leg(k, yTop*f), GL=[]; tube(from, A, 0.016, "#3e3e40", 4, GL);
-      for(const t of [0.03, 0.34, 0.67]){ const p=from.clone().lerp(A, t), q=from.clone().lerp(A, t+0.004); tube(p, q, 0.07, "#e8e2d4", 8, GL); }
-      for(const e of GL) TL.push(e); }
+    for(const f of [0.27, 0.52, 0.76, 0.97]){ const from=leg(k, yTop*f), L=from.distanceTo(A), n=Math.max(2, Math.round(L/22)); tube(from, A, 0.016, "#3e3e40", 4, GL);
+      for(let j=0;j<n;j++){ const t=j===0 ? 2.5/L : j/n, p=from.clone().lerp(A, t), q=from.clone().lerp(A, t+0.42/L); tube(p, q, 0.075, "#e8e2d4", 8, GL); } }
     B(2.2, 1.4, 2.2, ax, ag+0.2, az, "#9a968c"); addCol(ax-1.1, ax+1.1, az-1.1, az+1.1, ag-1, ag+1.0);
     for(let j=0;j<4;j++){ const d=V3(x-ax, 0, z-az).normalize(); C(0.03, 0.5, ax+d.x*0.9+(j-1.5)*0.12*d.z, ag+1.0, az+d.z*0.9-(j-1.5)*0.12*d.x, "#6a6d70", 6); } }
+  { const gm=new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, metalness:0.2, transparent:true});
+    gm.onBeforeCompile=(sh)=>{ sh.fragmentShader=sh.fragmentShader.replace("#include <alphatest_fragment>",
+      "diffuseColor.a *= 1.0 - 0.8 * smoothstep( 60.0, 380.0, length( vViewPosition ) );\n#include <alphatest_fragment>"); };
+    gm.customProgramCacheKey=()=>"tower-guys";
+    const guys=new T.Mesh(mergeEntries(GL), gm); guys.name="radio-guys"; guys.userData.noCull=true; scene.add(guys); }
+  // across the base insulator, the ball gap a lightning stroke jumps instead of going through the porcelain
+  for(const sd of [-1, 1]){ ent(new T.SphereGeometry(0.07, 12, 9), x+0.62, TY+2.0+sd*0.16, z+0.55, "#b8902a"); tube(V3(x+0.62, TY+2.0+sd*0.16, z+0.55), V3(x+0.30, TY+2.0+sd*0.62, z+0.27), 0.012, "#b8902a", 4, TL); }
   // at the foot, the lighting choke: a grey box the lamps' power crosses the insulator by, on a stand
   B(0.6, 0.8, 0.5, x+2.6, TY+1.0, z-1.5, "#8a8d90"); for(const sd of [-0.22, 0.22]) C(0.03, 0.6, x+2.6+sd, TY+0.3, z-1.5, "#5a5d60", 6);
   addCol(x+2.25, x+2.95, z-1.8, z-1.2, TY-1, TY+1.4);
@@ -466,12 +501,15 @@ const RADIO_ST={beacons:[], glow:null, glowIn:null, lamp:null, t:0, radios:[], d
   const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.72, metalness:0.05});
   detailMesh(ME, mat, "radio", true);
 })();
-/* the tower's lamps flash after dark, a second on and a second off; the glass block glows warm from inside, the door's lamp comes on */
+/* the tower's beacons flash after dark and its side lights burn; the glass block glows warm from inside, the door's lamp comes on */
 function updateRadioStation(dt, dark){
   const R=RADIO_ST; if(!R.bmat) return; R.t+=dt;
-  const on=dark>0.35 ? (R.t%2<1.1) : (R.t%2<0.15);
-  R.bmat.color.setHex(on ? (dark>0.35 ? 0xff2a1a : 0xc82214) : 0x3a0806);
-  R.pmat.color.setHex(on && dark>0.25 ? 0xff3a22 : 0x000000); R.pmat.opacity=on && dark>0.25 ? 0.95 : 0;
+  // (the beacons flash thirty times a minute, on a little longer than off; the side lights burn steady; all out by day)
+  const night=dark>0.3, on=night && R.t%2<1.1;
+  R.bmat.color.setHex(on ? 0xff2a1a : 0x3a0806);
+  R.pmat.color.setHex(on ? 0xff3a22 : 0x000000); R.pmat.opacity=on ? 0.95 : 0;
+  R.smat.color.setHex(night ? 0xe02416 : 0x3a0806);
+  R.smat2.color.setHex(night ? 0xe0301c : 0x000000); R.smat2.opacity=night ? 0.9 : 0;
   R.glow.emissiveIntensity=0.85*smoothstep(0.25, 0.6, dark); if(R.glowIn) R.glowIn.emissiveIntensity=0.25;
   R.lamp.intensity=1.1*smoothstep(0.3, 0.6, dark);
 }

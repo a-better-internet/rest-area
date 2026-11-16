@@ -358,7 +358,11 @@ let GATE_SIGN=null;          // where the drive gate's sign stands (set with the
 /* ---- the pole line --------------------------------------------------------
    Wooden poles every ninety metres up the right-of-way, a crossarm with
    three insulators each, and three conductors sagging between them. The
-   first pole carries the transformers and the riser down into the yard. */
+   first pole carries the transformers and the riser down into the yard.
+   A line that feeds a substation over ninety-metre spans is carried high:
+   sixty-foot poles (POWER.H, 04), the conductors seventeen metres up and
+   fifteen at the middle of a span, well over a truck, a tree or a barn.
+   They were the height of a street's poles, and looked like a fence. */
 (function poleLine(){
   const dx=POWER.x1-POWER.x0, dz=POWER.z1-POWER.z0, L=Math.hypot(dx,dz), ux=dx/L, uz=dz/L;
   const poles=[];
@@ -368,8 +372,8 @@ let GATE_SIGN=null;          // where the drive gate's sign stands (set with the
   }
   const ry=Math.atan2(ux, uz);
   poles.forEach((p,i)=>{
-    const H=12.5;
-    cyl("pole", 0.16,0.20,H,8, p.x, p.y+H/2-0.8, p.z, "#7a6248");
+    const H=POWER.H;
+    cyl("pole", 0.17,0.25,H,8, p.x, p.y+H/2-0.8, p.z, "#7a6248");
     push("pole", boxGeo(2.6,0.12,0.12,0.5), p.x, p.y+H-1.2, p.z, ry, "#6e5840");
     for(const o of [-1.1,0,1.1]){
       const ox=Math.cos(ry)*o, oz=-Math.sin(ry)*o;
@@ -381,9 +385,10 @@ let GATE_SIGN=null;          // where the drive gate's sign stands (set with the
     if(i===0){
       for(const o of [-0.5,0,0.5]){
         const ox=Math.cos(ry)*o, oz=-Math.sin(ry)*o;
-        cyl("paintm", 0.24,0.24,0.8,12, p.x+ox+0.3, p.y+H-3.0, p.z+oz, "#9ea4a6");
+        cyl("paintm", 0.24,0.24,0.8,12, p.x+ox+0.3, p.y+9.6, p.z+oz, "#9ea4a6");          // (the cans where a lineman's bucket reaches them, not at the wires)
+        tube("paintm", V3(p.x+ox+0.3, p.y+10.0, p.z+oz), V3(p.x+ox, p.y+H-0.9, p.z+oz), 0.012, 3, "#2a2a2a");
       }
-      tube("paintm", V3(p.x+0.25,p.y+0.0,p.z), V3(p.x+0.25,p.y+H-3.6,p.z), 0.05, 8, "#8a8f91");
+      tube("paintm", V3(p.x+0.25,p.y+0.0,p.z), V3(p.x+0.25,p.y+9.0,p.z), 0.05, 8, "#8a8f91");
     }
   });
   for(let i=1;i<poles.length;i++){
@@ -393,7 +398,7 @@ let GATE_SIGN=null;          // where the drive gate's sign stands (set with the
       const A=a["w"+o], B=b["w"+o], N=6;
       let prev=A;
       for(let k=1;k<=N;k++){
-        const t=k/N, sag=Math.sin(t*Math.PI)*1.6;
+        const t=k/N, sag=Math.sin(t*Math.PI)*2.0;
         const Pt=V3(A.x+(B.x-A.x)*t, A.y+(B.y-A.y)*t-sag, A.z+(B.z-A.z)*t);
         tube("paintm", prev, Pt, 0.012, 3, "#2a2a2a"); prev=Pt;
       }
