@@ -793,16 +793,36 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   bounds its cost.
 - 03's cascade reads each shadow map only where it is used. On LOW and
   MEDIUM the wide map is drawn every other frame (`SHADOW_LEVELS.every`,
-  19's `_keyTurn`): the key is only moved on a frame its map is drawn, so
-  map and matrix stay a pair. Anything that must force the wide map to be
-  drawn sets `key.shadow.needsUpdate=true` (`keyShadow` does).
-- The woods (07) are 48 m chunks in the zone (96 by 160 outside it), each
-  with a NEAR mesh to a variant and a FAR mesh to a species; chunks pair
-  into QUADS, which draw the far set for all four when none is near, and
-  into BLOCKS of sixteen, which draw the DISTANT set (one ball and a
-  stick, `far2`) past `tree*2.2+50` metres. A new species needs `far` and
-  `far2` from its builder unless it is in `SMALL`. The far material reads
-  no texture; a far ball is 12 shared corners.
+  19's `_keyTurn`), but only while nothing in it is quick: with you
+  driving, at the boat's helm, or traffic at speed within its reach it is
+  drawn every frame, or a fast thing's shadow is a frame behind it every
+  other frame and flashes. The key is only moved on a frame its map is
+  drawn, so map and matrix stay a pair. Anything that must force the wide
+  map to be drawn sets `key.shadow.needsUpdate=true` (`keyShadow` does).
+- Both shadow maps are centred on what you are looking at (19's `_shF`:
+  the car or the boat from a chase view, the camera on foot), never on a
+  chase camera, and each is moved in whole texels of its own measured
+  across the sun's line (`_shX`, `_shY`), not along world x and z.
+- A tree is ONE model at every distance (07): there is no near and far
+  set to swap, so nothing pops. Every card has a rank (`aLodC.w`, dealt
+  evenly within each clump), and the vertex shader keeps as much of a
+  crown as the tree's own distance from `uEye` allows (`lodKeep`: all of
+  it to `tree*0.45`, 28% at `tree*1.9`, a tenth far off), shrinking a card
+  to nothing as its turn comes and growing the rest to fill in. Limbs thin
+  away, a plain four-sided trunk stands in for the whole one, and the
+  leaf's alpha cut-off falls with distance so a far crown is soft masses.
+  The understory grows out of the ground over the last third of its own
+  distance (`aGone`, the species' `gone`). The index list is in rank order
+  and a group draws a prefix of it (`LEVELS`, `userData.levels`). Chunks
+  are 48 m everywhere; groups of 2, 4 and 8 chunks a side (`TIERS`) hold
+  the same trees and draw in place of their chunks further off, which is
+  only ever fewer draws: it is the same model under the same shader. Only
+  chunk meshes cast shadows. Never add a second look for a tree at a
+  distance, and never show or hide plants by chunk: thin or shrink them in
+  the shader by their own distance.
+- The same goes for anything else spread over the ground: 08b's instanced
+  crops shrink away over the last third of their `far` (`CROP_U`), never
+  appear by the tile.
 - Loose meshes (anything in the scene that is not baked, instanced, a
   sprite or a light) are culled by distance in 18c's `cullLoose`: past
   `max(70, radius × LOOSE_K)` metres, never past the draw distance's
@@ -817,7 +837,7 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   shell (10's `updateParkedLOD`).
 - `GFX.fx` (the menu's SURFACE DETAIL) is the uniform `FX_U` (03). A
   material that works something costly out for every pixel (07's canopy
-  crowns and far-tree lumps, 04's lawn) reads `uFx` and, at 0, steps over
+  crowns, 04's lawn) reads `uFx` and, at 0, steps over
   it and takes the mean it would have come to. New per-pixel work of that
   kind does the same.
 - The car (10's `CARC` and `GRIP`, 11): each axle's grip is the weight on
@@ -844,3 +864,13 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   over the same ground. A tree in the open is an `edge` or a `lawn`, never
   a `hard`: the woods' tall bare trunk with a tuft on top is a lollipop
   in a field.
+- A pattern finer than the pixels it is drawn with crawls and buzzes under
+  a moving eye. So: a field's texture (08b's `fieldMat`), the ground's
+  grain (04) and a crop card's picture (`leafy`) each ease to their own
+  average colour with distance, and a card's alpha cut-off falls until a
+  far row is a solid band. Textures of rows set `soft=true` and a low
+  `anisotropy` (19 leaves a `soft` texture alone). Anything thinner than
+  a pixel at twenty metres (a fence's wire: bucket `fencewire`) fades out
+  with distance. New ground cover, crops and wire do the same.
+- The haze starts at 60 m by day (19), not 150: the middle distance is
+  where a view gets its depth.

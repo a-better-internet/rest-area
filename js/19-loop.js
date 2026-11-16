@@ -17,6 +17,7 @@
     for(const m of (Array.isArray(o.material) ? o.material : [o.material]))
       for(const k of ["map", "roughnessMap", "bumpMap", "emissiveMap", "alphaMap"]){
         const t=m[k]; if(!t || !t.isTexture || seen.has(t)) continue; seen.add(t);
+        if(t.soft) continue;                                        // (a texture that asks to go soft with distance: a field's rows, 08b)
         if(t.anisotropy<MAXANISO){ t.anisotropy=MAXANISO; t.needsUpdate=true; } } }); }
 
 /* THE WARM-UP. The first time three draws with a material it compiles a shader program for it, and the first time it
@@ -66,7 +67,7 @@ function updateWind(t, dt){
 
 let acc=0, last=performance.now()/1000, _lastDraw=0, _keyTurn=0;
 let _wasChase=false, _handT=0, _driveFov=0; const _handFrom=new T.Vector3();
-const _sunDir=new T.Vector3();
+const _sunDir=new T.Vector3(), _shX=new T.Vector3(), _shY=new T.Vector3();
 function frame(){
   requestAnimationFrame(frame);
   /* THE CAP. A 120 Hz screen asks for a frame every 8 ms; with a cap of 60
@@ -182,19 +183,35 @@ function frame(){
   skyDome.position.copy(camera.position);
   starPivot.position.copy(camera.position);
   const ang=dn.t*Math.PI*2, R=190;
-  const kx=Math.round(camera.position.x/SHADOW_SNAP)*SHADOW_SNAP,
-        kz=Math.round(camera.position.z/SHADOW_SNAP)*SHADOW_SNAP;
-  const kty=camera.position.y*0.3;
-  _sunDir.set(Math.cos(ang)*R, Math.max(14, Math.sin(ang)*R+6)-kty, 70).normalize();
-  /* THE WIDE MAP TAKES TURNS (03's SHADOW_LEVELS.every). On a frame that is not its turn it is not drawn, and the key
-     is left exactly where it stood when it last was: the map and the matrix the shaders read it through stay a
-     pair, so nothing swims. The sun's own direction is a frame late with it, which nobody can see. */
-  { const turn=_keyFresh || SHADOW_EVERY<=1 || !key.shadow.map || (++_keyTurn)%SHADOW_EVERY===0;
+  /* WHERE THE SUN'S MAPS ARE CENTRED. On whatever you are looking at: yourself on foot, and from behind a car or the
+     boat the car or the boat, not the camera eight metres back of it. Centred on the camera, the car stood in the
+     band where the near map hands over to the wide one, drawn half from each; and the chase camera rises and falls
+     with the speed, which slid both maps a fraction of a texel every frame. */
+  const _shF=driving ? driving.g.position : (typeof BOAT!=="undefined" && BOAT.on && BOAT.g) ? BOAT.g.position : camera.position;
+  const kty=_shF.y*0.3;
+  _sunDir.set(Math.cos(ang)*R, Math.max(14, Math.sin(ang)*R+6), 70).normalize();
+  /* And they move in whole texels of their own: each map's middle is put on that map's own grid, measured across
+     the sun's line (its right and its up), not along the world's x and z, which are at a slant to it. So a
+     shadow's edge falls on the same texels from one frame to the next however you move, and does not crawl. */
+  _shX.set(_sunDir.z, 0, -_sunDir.x).normalize(); _shY.crossVectors(_sunDir, _shX);
+  const snap=(out, texel)=>{ out.set(_shF.x, kty, _shF.z); const a=out.dot(_shX), b=out.dot(_shY);
+    return out.addScaledVector(_shX, Math.round(a/texel)*texel-a).addScaledVector(_shY, Math.round(b/texel)*texel-b); };
+  /* THE WIDE MAP TAKES TURNS (03's SHADOW_LEVELS.every), but only while nothing in it is moving fast. On a frame
+     that is not its turn it is not drawn, and the key is left exactly where it stood when it last was: the map and
+     the matrix the shaders read it through stay a pair, so nothing swims. What a stale map cannot do is keep up
+     with something quick: a car at seventy is most of a metre on by the next frame, and its shadow, a frame old
+     every other frame, flashes back and forth under it. So with you at the wheel, or any traffic at speed within
+     the map's reach, it is drawn every frame like the near one. */
+  { let quick=!!driving || (typeof BOAT!=="undefined" && BOAT.on);
+    if(!quick && SHADOW_EVERY>1){ const reach=(ksc.right-ksc.left)/2+16, r2=reach*reach;
+      for(let i=0;i<TRAFFIC.length;i++){ const v=TRAFFIC[i]; if(!v.g.visible || v.speed<5) continue;
+        const dx=v.g.position.x-_shF.x, dz=v.g.position.z-_shF.z; if(dx*dx+dz*dz<r2){ quick=true; break; } } }
+    const turn=_keyFresh || quick || SHADOW_EVERY<=1 || !key.shadow.map || (++_keyTurn)%SHADOW_EVERY===0;
     key.shadow.autoUpdate=false; key.shadow.needsUpdate=turn; _keyFresh=false;
-    if(turn){ key.position.set(kx+_sunDir.x*KEY_D, kty+_sunDir.y*KEY_D, kz+_sunDir.z*KEY_D);
-      key.target.position.set(kx, kty, kz); } }
-  { const nx=Math.round(camera.position.x/NEAR_SNAP)*NEAR_SNAP, nz=Math.round(camera.position.z/NEAR_SNAP)*NEAR_SNAP;      // (the near cascade, on its own texels)
-    keyNear.position.set(nx+_sunDir.x*KEY_D, kty+_sunDir.y*KEY_D, nz+_sunDir.z*KEY_D); keyNear.target.position.set(nx, kty, nz); }
+    if(turn){ snap(key.target.position, (ksc.right-ksc.left)/key.shadow.mapSize.x);
+      key.position.copy(key.target.position).addScaledVector(_sunDir, KEY_D); } }
+  snap(keyNear.target.position, (nsc.right-nsc.left)/keyNear.shadow.mapSize.x);        // (the near cascade, on its own texels)
+  keyNear.position.copy(keyNear.target.position).addScaledVector(_sunDir, KEY_D);
   // at night the light is the moon's, as much of it as there is
   key.intensity=dn.sunIntensity-dn.nightAmount*0.30*(1-(0.25+0.75*MOON.bright));
   keyShadeWant = dn.sunHeight > 0.04;                                     // (16b clears it in heavy cloud; keyShadow, 03)
@@ -239,8 +256,10 @@ function frame(){
   }
   // haze: by day the horizon's own colour, at night darker than the sky
   scene.fog.color.copy(skyImg.hz).lerp(NIGHT_HAZE, dn.nightAmount*0.72);
-  scene.fog.near=150+dn.nightAmount*50;
-  scene.fog.far =1250+dn.nightAmount*300;
+  // (from sixty metres, not a hundred and fifty: the middle distance is where a view gets its depth, and with clear
+  //  air out to a hundred and fifty metres everything this side of the hills was equally sharp)
+  scene.fog.near=60+dn.nightAmount*90;
+  scene.fog.far =1150+dn.nightAmount*400;
   scene.background=skyImg.hz;
   applyWeather(delta, now, dn, dark);
   keyShadow(keyShadeWant);

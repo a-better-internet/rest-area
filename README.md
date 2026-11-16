@@ -335,6 +335,12 @@ If the scene runs hot on your machine, start there (see below).
     or the air the field is its top, leaf and tassel in rows. The beans are
     knee high, a ragged edge of leaf round each field, and you (or a car)
     wade through them.
+  - **Far off, a field is a colour.** Close to, a field is its rows; with
+    distance its texture eases to its own average colour, the corn's rows
+    close up into a solid band, and the fence's wire fades out and leaves
+    the posts. The haze starts at sixty metres. Driving through the farm
+    country, the middle distance is calm and has depth to it, where it
+    used to crawl.
   - **Where the fields meet the woods** the first forty metres of woods are
     real trees, all the way round the farm country: edge trees crowned to
     the ground with shrubs at their feet, hardwoods, hemlock and pine behind
@@ -1243,10 +1249,13 @@ If the scene runs hot on your machine, start there (see below).
   that hold out to the hills across the lake. Each crown is a dome lit on
   the sun's side and shaded on the far one, with soft dark gaps between.
   Far off, where a pixel is wider than a crown, it fades to the mean so
-  the skyline doesn't shimmer. The far trees in the woods you can walk in
-  are a few soft balls each; over their leaves each pixel takes a clump
-  from a noise, lit and shaded, and their edges thin out raggedly where
-  they turn away from you, so they read as leaves rather than polygons. The far ground is never one even slope either:
+  the skyline doesn't shimmer. The trees in the woods you can walk in are
+  the same tree at every distance: as one gets further off its crown is
+  thinned, leaf card by leaf card, each shrinking away while the ones left
+  grow to fill in, and the holes between its leaves close up, so a far
+  crown is soft masses in the same colour and light as a near one. No tree
+  is ever swapped for a simpler one, and the ferns, shrubs and saplings
+  grow out of the ground as you come up to them. The far ground is never one even slope either:
   it rolls a little in long crossing swells and finer hummocks.
 - **Time and season.**
   - A day lasts 22 minutes, with sunrise and sunset at Crawford County's
@@ -1732,10 +1741,10 @@ being drawn and the draw calls.
 | Preset | Low · Medium · High · Ultra | Sets resolution, shadows, draw distance, lights and surface detail. High is how the scene has always looked. Low and Medium put the resolution on auto, and Low sets surface detail to plain. |
 | Resolution | auto · 0.5× · 0.75× · 1× · 1.5× · 2× · native | Pixels drawn per screen point. Native is the screen's own density, up to 2×. On a Retina Mac, 1× draws a quarter of the pixels that native does, and is the biggest single saving. Auto starts at 1× and moves between 0.5× and native. It steps down when frames run long for a second, and creeps back up after eight seconds with room to spare. |
 | Frame-rate cap | 30 · 60 · off | 60 by default. A 120 Hz ProMotion screen draws twice as many frames with the cap off. |
-| Shadows | Off · Low · Medium · High · Ultra | The sun's two shadow maps, a near one and a wide one: 1024 to 4096 texels each. On Low and Medium the wide one is drawn every other frame (what is in it is thirteen metres off and more). Off skips the shadow passes entirely. |
-| Draw distance | Near · Medium · Far · Max | How far full trees reach (54 to 120 m) and, on Near and Medium, a limit past which nothing is drawn (620 m and 1150 m). The haze closes in to meet the limit, so nothing is seen to vanish. Far is the original. |
+| Shadows | Off · Low · Medium · High · Ultra | The sun's two shadow maps, a near one and a wide one: 1024 to 4096 texels each. On Low and Medium the wide one is drawn every other frame while nothing in it is moving fast (never while you drive). Off skips the shadow passes entirely. |
+| Draw distance | Near · Medium · Far · Max | How far a tree keeps its whole crown before it starts to thin (24 to 54 m; a quarter of it is left by 100 to 230 m) and, on Near and Medium, a limit past which nothing is drawn (620 m and 1150 m). The haze closes in to meet the limit, so nothing is seen to vanish. Far is the original. |
 | Lights | 4 · 6 · 8 · 12 · 16 · 24 | How many real point lights follow you round the lamps. A pixel pays only for the lamps that reach it. The rest of the lamps only glow. |
-| Surface detail | full · plain | Full works out, for every pixel, the crowns of the far woods, the lumps of leaf on a far tree and the lawn's second grain. Plain leaves them smooth. Takes effect at once. |
+| Surface detail | full · plain | Full works out, for every pixel, the crowns of the far woods' canopy and the lawn's second grain. Plain leaves them smooth. Takes effect at once. |
 | Antialiasing | on · off | Smooths edges with four samples a pixel. Takes effect on the next reload, because the canvas is made with it or without it. On a chip built into the processor at Retina resolution it costs nearly as much as the resolution does. |
 | Frame meter | off · on | Frames per second, frame time and draw calls in the top corner. The figure after "script" is how much of each frame the page's own work took. Frame time well over it means the graphics chip is behind, and auto resolution only steps down then. |
 
@@ -1778,9 +1787,9 @@ of them a frame. A crowd's collision test throws out every box by its
 bounds before it looks closer.
 
 **What a frame costs now.** At the car lot on Medium, looking up the lot, a
-frame was 2,550 draws and 3.6 million triangles (the view and both shadow
-maps). It is about 1,300 draws and 2.1 million. In the woods it went from
-3.3 million triangles to 1.9, and on Lake Street from 2.9 to 1.5.
+frame was 2,800 draws and 3.6 million triangles (the view and both shadow
+maps). It is about 1,800 draws and 2.6 million. In the woods it went from
+3.3 million triangles to 2.4, and on Lake Street from 2.9 to 1.9.
 - **Lights that reach nothing cost nothing.** Each lamp's shading is skipped
   at any pixel its light does not reach: by day that is every lamp, the
   flashlight and both headlamps.
@@ -1788,10 +1797,11 @@ maps). It is about 1,300 draws and 2.1 million. In the woods it went from
   square the wide one is not looked up at all.
 - **The ground and the far woods' shell are in tiles**, so the lawn behind
   you is not drawn with the lawn in front of you.
-- **The woods.** Whole trees are drawn only in the 48 m chunks within reach
-  (they were 96 m). A far tree is four soft balls of twelve corners each;
-  past a couple of hundred metres it is one ball and a stick, and those are
-  drawn sixteen chunks to a draw.
+- **The woods.** A tree is one model at every distance, thinned by the
+  shader as it gets further off: all of its crown close to, a quarter of
+  its leaf cards (grown to fill in) at 130 m, a tenth far off. Nothing is
+  swapped, so nothing pops. Far trees are drawn up to sixty-four chunks to
+  a draw.
 - **Loose things have a distance.** A door, a sign, a prop, a squirrel, a
   parked car: each is not drawn past a distance set by its size. From the
   car lot, the doors of Lake Street a mile off used each to be a draw.
@@ -1964,10 +1974,9 @@ The engine comes from the Low Desert Motel and keeps its conventions:
 
 Several systems were added for this world:
 - **Instanced forest.** About 32,900 trees, saplings, shrubs and ferns in
-  48 m chunks, each with three levels of detail: the whole tree, a few soft
-  balls, and past a couple of hundred metres one ball and a stick, drawn
-  sixteen chunks at a time. Wind and leaf colour are patched into the
-  shaders.
+  48 m chunks. One model to a tree at every distance, thinned continuously
+  in the vertex shader; groups of 4, 16 and 64 chunks draw the far ones.
+  Wind and leaf colour are patched into the shaders.
 - **Paving.** Polygon-offset skins over the terrain, with a 1 m raster so the
   player and cars ride on the pavement rather than the ground under it.
 - **Traffic.** Highway vehicles follow (IDM) and pass on the interstate,

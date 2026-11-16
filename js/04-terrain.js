@@ -654,11 +654,16 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
          along them one way or the other, the way grass laid over by a mower does, and fade side on */
       TERRAIN_MAT.onBeforeCompile=(sh)=>{
         sh.uniforms.lawnMap={value:TEX.lawn}; sh.uniforms.uFx=FX_U;
+        // (the ground's own grain, like a field's rows, eases to its average colour with distance: fine speckle a
+        //  hundred metres off is finer than the pixels it is drawn with, and crawls as you move)
+        sh.uniforms.uGMean={value:(function(){ try{ const c=TEX.ground.image, d=c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let r=0, g=0, b=0;
+          for(let i=0;i<d.length;i+=16){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; } const n=d.length/16*255; return new T.Color(r/n, g/n, b/n); }catch(e){ return new T.Color(0.5, 0.5, 0.5); } })()};
         sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec2 grass;\nvarying vec2 vGrass;\nvarying vec3 vWPos;")
           .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGrass=grass; vWPos=(modelMatrix*vec4(transformed,1.0)).xyz;");
-        sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform sampler2D lawnMap;\nuniform float uFx;\nvarying vec2 vGrass;\nvarying vec3 vWPos;")
+        sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform sampler2D lawnMap;\nuniform float uFx;\nuniform vec3 uGMean;\nvarying vec2 vGrass;\nvarying vec3 vWPos;")
           .replace("#include <map_fragment>", `
             vec4 texelColor = mapTexelToLinear( texture2D( map, vUv ) );
+            texelColor.rgb = mix( texelColor.rgb, uGMean, 0.85*smoothstep( 30.0, 220.0, distance( vWPos, cameraPosition ) ) );
             if(vGrass.x > 0.003){
               float fd = smoothstep(6.0, 60.0, distance(vWPos, cameraPosition));
               vec3 l1 = mapTexelToLinear(texture2D(lawnMap, vWPos.xz*0.625)).rgb;

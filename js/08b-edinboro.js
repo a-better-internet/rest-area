@@ -26,8 +26,11 @@
    ---------------------------------------------------------------------- */
 const EDIN_RT={};
 // the west farms' crops, a mesh a 64 m tile; a tile further off than its kind's `far` is not drawn (from 19's frame)
-const CROP_TILES=[];
+// (and nothing in a tile is there one frame and not the last: each plant shrinks away into the ground over the last
+//  third of its kind's distance, in the vertex shader, from where you are, CROP_U)
+const CROP_TILES=[], CROP_U={uCropEye:{value:new T.Vector3()}, uCropK:{value:1}};
 function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;        // (further from the air)
+  CROP_U.uCropEye.value.copy(p); CROP_U.uCropK.value=k;
   for(const t of CROP_TILES) t.m.visible=Math.hypot(t.x-p.x, t.z-p.z)-t.r<t.far*k; }
 (function edinboro(){
   const E=EDIN, Z=E.z, Y=E.y, HW=E.hw, DW=HW+0.45;            // DW: the deck's half width, parapets and all
@@ -240,8 +243,34 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
       for(let k=0;k<90;k++){ x.fillStyle=r()<0.8?"#76845a":"#9a8aa8"; x.globalAlpha=0.35; x.beginPath(); x.arc(r()*S, r()*S, 1+r()*1.5, 0, 7); x.fill(); }
     }
     x.globalAlpha=1;
-    const t=_tex(c); t.anisotropy=MAXANISO; return t;
+    // (not the card's sharpest filtering: rows kept crisp to the far end of a field crawl and buzz as you move. 19 leaves a `soft` texture as it is.)
+    const t=_tex(c); t.anisotropy=2; t.soft=true; return t;
   };
+  // the average colour of what is painted on a texture (of the painted part, if it has holes)
+  const texMean=(t)=>{ const c=t.image, d=c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let r=0, g=0, b=0, n=0;
+    for(let i=0;i<d.length;i+=16){ if(d[i+3]<128) continue; r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
+    n=Math.max(1, n)*255; return new T.Color(r/n, g/n, b/n); };
+  /* A FIELD FAR OFF IS A COLOUR, NOT A PATTERN. Close to, a field is its rows. Forty metres out the rows are finer
+     than the pixels they are drawn with, and a fine pattern under a moving eye is the buzz and crawl that makes the
+     farm country hard to look at from a car. So every field's texture eases to its own average colour with
+     distance (all of it by a hundred and seventy metres), and what is left out there is what a real field has: its
+     colour, the broad patches where the crop is doing better or worse, and the haze. */
+  const fieldMat=(tex, color, extra)=>{ const m=new T.MeshStandardMaterial(Object.assign({map:tex, roughness:1.0, color:color}, extra||{})), mean=texMean(tex);
+    m.onBeforeCompile=(sh)=>{
+      sh.uniforms.uMean={value:mean};
+      sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vFieldW;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFieldW=(modelMatrix*vec4(transformed, 1.0)).xyz;");
+      sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vFieldW;\nuniform vec3 uMean;")
+        .replace("#include <map_fragment>", `
+  { vec4 texelColor = mapTexelToLinear( texture2D( map, vUv ) );
+    texelColor.rgb = mix( texelColor.rgb, uMean, smoothstep( 22.0, 170.0, distance( vFieldW, cameraPosition ) ) );
+    diffuseColor *= texelColor;
+    vec2 p=vFieldW.xz;
+    float n=0.50*sin(p.x*0.031+1.3)*sin(p.y*0.027+0.4)+0.30*sin(p.x*0.083-p.y*0.061+2.1)+0.20*sin(p.x*0.013+p.y*0.019+0.7);
+    diffuseColor.rgb*=0.93+0.11*n;
+    diffuseColor.rgb=mix(diffuseColor.rgb, vec3(dot(diffuseColor.rgb, vec3(0.30, 0.55, 0.15)))*vec3(1.04, 1.0, 0.92), 0.12+0.10*max(-n, 0.0)); }`);
+    };
+    m.customProgramCacheKey=()=>"field"; return m; };
   const TILE={corn:6.1, soy:4.6, hay:22, pasture:9, grape:10.4, pumpkin:7, sunflower:5.2, xmas:9};
   /* Each crop's green is held down (in full sun the raw ones read lime) and pulled a little toward its own: the
      corn a deep blue-green, the beans darker, the hay gone to gold and olive, the pasture grazed dull. And across a
@@ -250,18 +279,7 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
   const FIELD_TINT={corn:0x9ca394, soy:0x989f92, hay:0xb9a888, pasture:0xa0a290, grape:0xa0a492, pumpkin:0xa4a294, sunflower:0xb4ac94, xmas:0x9ea290};
   for(const kind of ["corn","soy","hay","pasture","grape","pumpkin","sunflower","xmas"]){
     const tex=cropTex(kind);
-    bucketOf("field_"+kind, ()=>{ const m=new T.MeshStandardMaterial(Object.assign({map:tex, roughness:1.0, color:FIELD_TINT[kind]}, _po(-2)));
-      m.onBeforeCompile=(sh)=>{
-        sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vFieldW;")
-          .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFieldW=(modelMatrix*vec4(transformed, 1.0)).xyz;");
-        sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vFieldW;")
-          .replace("#include <map_fragment>", `#include <map_fragment>
-  { vec2 p=vFieldW.xz;
-    float n=0.50*sin(p.x*0.031+1.3)*sin(p.y*0.027+0.4)+0.30*sin(p.x*0.083-p.y*0.061+2.1)+0.20*sin(p.x*0.013+p.y*0.019+0.7);
-    diffuseColor.rgb*=0.93+0.11*n;
-    diffuseColor.rgb=mix(diffuseColor.rgb, vec3(dot(diffuseColor.rgb, vec3(0.30, 0.55, 0.15)))*vec3(1.04, 1.0, 0.92), 0.12+0.10*max(-n, 0.0)); }`);
-      };
-      m.customProgramCacheKey=()=>"field-"+kind; return m; });
+    bucketOf("field_"+kind, ()=>fieldMat(tex, FIELD_TINT[kind], _po(-2)));
   }
   for(const F of E.fields){
     const w=F.x1-F.x0, d=F.z1-F.z0, g=new T.PlaneGeometry(w, d), a=g.attributes.uv, t=TILE[F.crop];
@@ -315,13 +333,13 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
           c.strokeStyle="rgb("+((112*dk)|0)+","+((72*dk)|0)+","+((36*dk)|0)+")"; c.lineWidth=2; c.beginPath(); c.moveTo(x+dir*10, ey-15); c.lineTo(x+dir*15, ey-24); c.stroke(); }
         c.strokeStyle="rgb("+((188*dk)|0)+","+((166*dk)|0)+","+((98*dk)|0)+")"; c.lineWidth=2.5;                 // the tassel
         for(let i=0;i<7;i++){ c.beginPath(); c.moveTo(x, top+16); c.lineTo(x+(i-3)*5+(q()-0.5)*4, top-2+Math.abs(i-3)*3); c.stroke(); } } });
-    rowTex.wrapS=T.RepeatWrapping; rowTex.anisotropy=MAXANISO;
+    rowTex.wrapS=T.RepeatWrapping; rowTex.anisotropy=2; rowTex.soft=true;
     const massTex=signTex(256, 256, (c, W, Hh)=>{ const q=_trng(9292);
       const g=c.createLinearGradient(0, 0, 0, Hh); g.addColorStop(0, "#40582a"); g.addColorStop(0.5, "#2c3f1e"); g.addColorStop(1, "#3a3622"); c.fillStyle=g; c.fillRect(0, 0, W, Hh);
       for(let k=0;k<900;k++){ const y=q()*Hh, t=y/Hh; c.strokeStyle=t>0.8 && q()<0.5 ? "rgba(150,130,74,0.5)" : "rgba("+(52+q()*50|0)+","+(84+q()*56|0)+","+(30+q()*24|0)+",0.6)"; c.lineWidth=2+q()*4;
         const x=q()*W, L=10+q()*22, d=q()<0.5 ? -1 : 1; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x+d*L*0.5, y-L*0.4, x+d*L, y+L*0.15); c.stroke(); }
       for(let k=0;k<26;k++){ c.strokeStyle="rgba(170,152,90,0.7)"; c.lineWidth=2; const x=q()*W; c.beginPath(); c.moveTo(x, 4+q()*8); c.lineTo(x+(q()-0.5)*10, 20+q()*8); c.stroke(); } });
-    massTex.wrapS=T.RepeatWrapping; massTex.anisotropy=MAXANISO;
+    massTex.wrapS=T.RepeatWrapping; massTex.anisotropy=2; massTex.soft=true;
     const topTex=(kind)=>{ const t=signTex(256, 256, (c, W, Hh)=>{ const q=_trng(kind==="corn" ? 9393 : 9494), corn=kind==="corn", n=corn ? 8 : 12;
       c.fillStyle=corn ? "#3e5a26" : "#365426"; c.fillRect(0, 0, W, Hh);
       for(let i=0;i<n;i++){ const y=(i+0.5)*Hh/n;
@@ -332,23 +350,32 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
           else { c.beginPath(); c.arc(px, py, 2.5+q()*3, 0, 7); c.fill(); } }
         c.globalAlpha=1;
         if(corn) for(let k=0;k<26;k++){ c.fillStyle=q()<0.5 ? "#c8b06a" : "#b89a56"; c.fillRect(q()*W, y+(q()-0.5)*8, 3+q()*3, 2); } } });   // tassels, down each row
-      t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=MAXANISO; return t; };
+      t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=2; t.soft=true; return t; };
     // (their colour held down as the fields' own is, FIELD_TINT: in full sun raw leaf green reads lime)
-    const leafy=(tex, tint)=>{ const m=new T.MeshStandardMaterial({map:tex, alphaTest:0.45, side:T.DoubleSide, roughness:0.95, color:tint});
+    /* (and far off a card is not a lace of single leaves, which sparkles: its cut-off falls with distance until the
+       row is a solid band, and its picture eases to its own average colour, as the fields' do) */
+    const leafy=(tex, tint)=>{ const m=new T.MeshStandardMaterial({map:tex, alphaTest:0.45, side:T.DoubleSide, roughness:0.95, color:tint}), mean=texMean(tex);
       // (one normal on both faces, as the woods' crowns have, 07)
-      m.onBeforeCompile=(sh)=>{ sh.fragmentShader=sh.fragmentShader.replace("#include <normal_fragment_begin>",
-        T.ShaderChunk.normal_fragment_begin.replace("normal = normal * faceDirection;", "")); };
+      m.onBeforeCompile=(sh)=>{ sh.uniforms.uMean={value:mean};
+        sh.fragmentShader="uniform vec3 uMean;\n"+sh.fragmentShader.replace("#include <normal_fragment_begin>",
+          T.ShaderChunk.normal_fragment_begin.replace("normal = normal * faceDirection;", ""))
+          .replace("#include <map_fragment>", `
+  float cardD = length( vViewPosition );
+  { vec4 texelColor = mapTexelToLinear( texture2D( map, vUv ) );
+    texelColor.rgb = mix( texelColor.rgb, uMean, smoothstep( 14.0, 90.0, cardD ) );
+    diffuseColor *= texelColor; }`)
+          .replace("#include <alphatest_fragment>", "if ( diffuseColor.a < ALPHATEST * mix( 1.0, 0.12, smoothstep( 16.0, 80.0, cardD ) ) ) discard;"); };
       m.customProgramCacheKey=()=>"crop-card"; return m; };
     const skirtTex=signTex(256, 64, (c, W, Hh)=>{ const q=_trng(9595); c.clearRect(0, 0, W, Hh);
       for(let k=0;k<520;k++){ const px=q()*W, py=Hh*(0.12+Math.pow(q(), 0.6)*0.88), l=q();
         c.fillStyle="rgb("+(54+l*56|0)+","+(88+l*60|0)+","+(32+l*26|0)+")"; c.beginPath(); c.ellipse(px, py, 4+q()*5, 3+q()*3.5, q()*3, 0, 7); c.fill(); }
       c.fillStyle="#2e4a20"; c.fillRect(0, Hh*0.55, W, Hh*0.45); for(let k=0;k<160;k++){ const l=q(); c.fillStyle="rgb("+(50+l*50|0)+","+(84+l*56|0)+","+(30+l*24|0)+")"; c.beginPath(); c.ellipse(q()*W, Hh*(0.5+q()*0.5), 4+q()*4, 3+q()*3, q()*3, 0, 7); c.fill(); } });
-    skirtTex.wrapS=T.RepeatWrapping; skirtTex.anisotropy=MAXANISO;
+    skirtTex.wrapS=T.RepeatWrapping; skirtTex.anisotropy=2; skirtTex.soft=true;
     bucketOf("corn_row", ()=>leafy(rowTex, 0xa2a898)); bucketOf("soy_skirt", ()=>leafy(skirtTex, 0x8e9588));
-    bucketOf("corn_mass", ()=>new T.MeshStandardMaterial({map:massTex, roughness:1.0}));
+    bucketOf("corn_mass", ()=>fieldMat(massTex, 0xffffff));
     const cornTop=topTex("corn"), soyTop=topTex("soy");
-    bucketOf("corn_top", ()=>new T.MeshStandardMaterial({map:cornTop, roughness:1.0, color:0x888e7e}));        // (a shade under the fields' own tint: it is seen beside its rows' shaded sides)
-    bucketOf("soy_top", ()=>new T.MeshStandardMaterial({map:soyTop, roughness:1.0, color:FIELD_TINT.soy}));
+    bucketOf("corn_top", ()=>fieldMat(cornTop, 0x888e7e));        // (a shade under the fields' own tint: it is seen beside its rows' shaded sides)
+    bucketOf("soy_top", ()=>fieldMat(soyTop, FIELD_TINT.soy));
     // a standing card L long and h high, its face across `ax` ("x": it runs along z), lit from above and from the side it faces
     const card=(bk, ax, a, b0, b1, y0, h, rep, uo, out, col)=>{ const L=b1-b0, g=new T.PlaneGeometry(L, h), uv=g.attributes.uv, nr=g.attributes.normal;
       for(let i=0;i<uv.count;i++) uv.setX(i, uv.getX(i)*L/rep+uo);
@@ -402,6 +429,13 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
        drawn at all (updateCrops, from 19). Uncut, the five kinds were 1.4 million triangles every frame wherever you
        stood. */
     const inst=(geo, mat, list, far)=>{ if(!list.length) return; const tiles=new Map(), M=new T.Matrix4(), q=new T.Quaternion(), e=new T.Euler();
+      mat.onBeforeCompile=(sh)=>{ sh.uniforms.uCropEye=CROP_U.uCropEye; sh.uniforms.uCropK=CROP_U.uCropK; sh.uniforms.uCropFar={value:far};
+        sh.vertexShader="uniform vec3 uCropEye;\nuniform float uCropK;\nuniform float uCropFar;\n"+sh.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
+  #ifdef USE_INSTANCING
+  { float cd=distance(vec3(instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2]), uCropEye)/uCropK;
+    transformed*=1.0-smoothstep(uCropFar*0.66, uCropFar, cd); }
+  #endif`); };
+      mat.customProgramCacheKey=()=>"crop-inst";
       for(const o of list){ const k=Math.floor(o.x/64)+","+Math.floor(o.z/64); let L=tiles.get(k); if(!L){ L=[]; tiles.set(k, L); } L.push(o); }
       for(const L of tiles.values()){ let x0=1e9, x1=-1e9, z0=1e9, z1=-1e9, y0=1e9, y1=-1e9;
         for(const o of L){ x0=Math.min(x0, o.x); x1=Math.max(x1, o.x); z0=Math.min(z0, o.z); z1=Math.max(z1, o.z); y0=Math.min(y0, o.y); y1=Math.max(y1, o.y); }
@@ -437,11 +471,11 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
           trees.push({x:x+(q()-0.5)*0.4, y:Y+0.12+h/2, z:z+(q()-0.5)*0.4, s:h*0.36, sy:h, ry:q()*6, c:["#2e4a2a","#3a5a32","#28442a","#33502e"][(q()*4)|0]});
           trunks.push({x:x, y:Y+0.06, z:z, s:1, sy:1});
           if(h>1.4) addCol(x-0.3, x+0.3, z-0.3, z+0.3, Y-0.5, Y+h); } } }
-    inst(new T.SphereGeometry(0.24, 10, 7), new T.MeshStandardMaterial({roughness:0.6}), pumpkins, 260);
-    inst(new T.CylinderGeometry(0.018, 0.026, 1, 5, 1, true), new T.MeshStandardMaterial({color:0x4e6e2a, roughness:0.9}), stalks, 220);
-    inst(new T.CylinderGeometry(0.16, 0.13, 0.05, 10), new T.MeshStandardMaterial({roughness:0.8, emissive:0x2a1a00}), heads, 420);
+    inst(new T.SphereGeometry(0.24, 10, 7), new T.MeshStandardMaterial({roughness:0.6}), pumpkins, 210);
+    inst(new T.CylinderGeometry(0.018, 0.026, 1, 5, 1, true), new T.MeshStandardMaterial({color:0x4e6e2a, roughness:0.9}), stalks, 80);              // (a stalk is thinner than a pixel past twenty metres: a field of them far off is only shimmer)
+    inst(new T.CylinderGeometry(0.16, 0.13, 0.05, 10), new T.MeshStandardMaterial({roughness:0.8, emissive:0x2a1a00}), heads, 210);
     inst(new T.ConeGeometry(1, 1, 8), new T.MeshStandardMaterial({roughness:0.95}), trees, 700);
-    inst(new T.CylinderGeometry(0.05, 0.06, 0.12, 6, 1, true), new T.MeshStandardMaterial({color:0x5a4030, roughness:0.9}), trunks, 120); }
+    inst(new T.CylinderGeometry(0.05, 0.06, 0.12, 6, 1, true), new T.MeshStandardMaterial({color:0x5a4030, roughness:0.9}), trunks, 70); }
   /* the farm stand by the road between the pumpkins and the grapes: a shed roof on posts over a counter and bins, the
      sign on the front, pumpkins and mums along the front, hay bales either side; an honour box on the counter */
   { const sx=E.stand.x, sz=E.stand.z, f=XF(sx, sz, Math.PI), q=(w,h,d,lx,ly,lz,c,bk)=>lbx(f, bk||"wood", w,h,d, lx,Y+ly,lz, 0.4, c);
@@ -463,10 +497,18 @@ function updateCrops(p){ const k=p.y-Terrain.heightAt(p.x, p.z)>40 ? 1.5 : 1;   
     addCol(sx-3.4, sx+3.4, sz-1.4, sz+2.2, Y-0.5, Y+1.0);
     addUse(sx, sz-3.0, Y, "THE HONOUR BOX", ()=>toast(["PUMPKINS $5 · BIG ONES $8 · MUMS $10 · PAY IN THE BOX, GOD IS WATCHING","A HANDWRITTEN NOTE: 'BACK AT 4 · CIDER IN THE COOLER'","YOU DROP A DOLLAR IN FOR LUCK"][(Math.random()*3)|0], "#e8c070"), 1.6); }
   // a farm fence along the road's right of way, posts and three strands, in front of each field
+  /* (a strand of wire is a centimetre: narrower than a pixel from twenty metres off, and three of them a hundred
+     metres long along every field were lines of crawling dashes all the way down the road. So the wire has its own
+     material, which fades out between eighteen and fifty-five metres: close to it is wire, further off there are
+     the posts, which is all anyone sees of a wire fence from a car.) */
+  bucketOf("fencewire", ()=>{ const m=new T.MeshStandardMaterial({roughness:0.5, metalness:0.4, transparent:true, depthWrite:false});
+    m.onBeforeCompile=(sh)=>{ sh.fragmentShader=sh.fragmentShader.replace("#include <alphatest_fragment>",
+      "diffuseColor.a *= 1.0 - smoothstep( 18.0, 55.0, length( vViewPosition ) );\n#include <alphatest_fragment>"); };
+    m.customProgramCacheKey=()=>"fencewire"; return m; });
   for(const F of E.fields){
     const zf=F.z0>Z ? F.z0-3 : F.z1+3;
     for(let x=F.x0; x<=F.x1+0.01; x+=4.0) bx("wood", 0.12, 1.25, 0.12, x, Y+0.55, zf, 0.4, 0, "#6d5c48");
-    for(const h of [0.45, 0.80, 1.10]) bx("metal", F.x1-F.x0, 0.012, 0.012, (F.x0+F.x1)/2, Y+h, zf, 1, 0, "#8a8d8e");
+    for(const h of [0.45, 0.80, 1.10]) bx("fencewire", F.x1-F.x0, 0.012, 0.012, (F.x0+F.x1)/2, Y+h, zf, 1, 0, "#8a8d8e");
     addCol(F.x0, F.x1, zf-0.08, zf+0.08, Y-0.5, Y+1.2);
   }
   EDIN_RT.ready=true;

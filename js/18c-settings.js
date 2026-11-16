@@ -131,14 +131,14 @@ const GFX_ROWS=[
    show:i=>i===0 ? "OFF" : SHADOW_LEVELS[i].name,
    set:i=>{ GFX.shadows=i; },
    note:()=>{ const L=SHADOW_LEVELS[GFX.shadows];
-     return L ? "The sun's shadows: a near map "+L.near.map+"×"+L.near.map+" over "+(L.near.half*2)+" m for what is close, sharp to about "+Math.round(L.near.half*2/L.near.map*1000)+" mm, and "+L.map+"×"+L.map+" over "+(L.half*2)+" m beyond it"+(L.every>1 ? ", drawn every other frame." : ".")
+     return L ? "The sun's shadows: a near map "+L.near.map+"×"+L.near.map+" over "+(L.near.half*2)+" m for what is close, sharp to about "+Math.round(L.near.half*2/L.near.map*1000)+" mm, and "+L.map+"×"+L.map+" over "+(L.half*2)+" m beyond it"+(L.every>1 ? ", drawn every other frame while nothing in it is moving fast." : ".")
               : "No shadow maps at all: the scene is drawn once a frame instead of three times."; }},
   {k:"draw", label:"DRAW DISTANCE",
    get:()=>GFX.draw, n:()=>DRAW_LEVELS.length,
    show:i=>DRAW_LEVELS[i].name,
    set:i=>{ GFX.draw=i; },
    note:()=>{ const D=DRAW_LEVELS[GFX.draw];
-     return "Full trees to "+D.tree+" m"+(D.cull<1e8 ? ", nothing past "+D.cull+" m (the haze closes in to hide the edge)." : ", the whole valley to the horizon."); }},
+     return "Whole crowns to "+Math.round(D.tree*0.45)+" m, thinning to a quarter by "+Math.round(D.tree*1.9)+" m"+(D.cull<1e8 ? ", nothing past "+D.cull+" m (the haze closes in to hide the edge)." : ", the whole valley to the horizon."); }},
   {k:"lights", label:"LIGHTS",
    get:()=>Math.max(0,_LIGHTS.indexOf(GFX.lights)), n:()=>_LIGHTS.length,
    show:i=>_LIGHTS[i]+" AT ONCE",
@@ -148,7 +148,7 @@ const GFX_ROWS=[
    get:()=>GFX.fx?1:0, n:()=>2,
    show:i=>i ? "FULL" : "PLAIN",
    set:i=>{ GFX.fx=!!i; },
-   note:()=>"FULL works out, for every pixel, the crowns of the far woods, the lumps of leaf on a far tree and the lawn's second grain. PLAIN leaves them smooth, which a chip built into the processor draws a good deal faster. Takes effect at once."},
+   note:()=>"FULL works out, for every pixel, the crowns of the far woods' canopy and the lawn's second grain. PLAIN leaves them smooth, which a chip built into the processor draws faster. Takes effect at once."},
   {k:"aa", label:"ANTIALIASING",
    get:()=>GFX.aa?1:0, n:()=>2,
    show:i=>(i ? "ON" : "OFF")+(!!i!==GFX.aa0 ? " · ON RELOAD" : ""),

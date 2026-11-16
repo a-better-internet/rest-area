@@ -36,14 +36,14 @@ const SHADOW_LEVELS=[null,
   {name:"MEDIUM", map:2048, half:52, soft:true,  radius:1.3, every:2, near:{map:2048, half:16}},
   {name:"HIGH",   map:3072, half:60, soft:true,  radius:1.4, every:1, near:{map:3072, half:19}},
   {name:"ULTRA",  map:4096, half:64, soft:true,  radius:1.5, every:1, near:{map:4096, half:22}}];
-// draw distance: how far the near trees reach, how far anything is drawn, how far a place's hand-merged detail is
-// drawn (01's detailMesh),
-// and where the haze closes in so nothing is seen to vanish
+// draw distance: `tree` is the scale of the woods' thinning (07: a crown is whole to 0.45 of it and down to a quarter
+// by 1.9 of it; the understory's own distances go by it too), `cull` how far anything is drawn, `detail` how far a
+// place's hand-merged detail is drawn (01's detailMesh), `fog` where the haze closes in so nothing is seen to vanish
 const DRAW_LEVELS=[
-  {name:"NEAR",   tree:54,  small:26, cull:620,  fog:600,  detail:360},
-  {name:"MEDIUM", tree:70,  small:34, cull:1150, fog:1120, detail:520},
-  {name:"FAR",    tree:84,  small:40, cull:1e9,  fog:1e9,  detail:800},
-  {name:"MAX",    tree:120, small:56, cull:1e9,  fog:1e9,  detail:1200}];
+  {name:"NEAR",   tree:54,  cull:620,  fog:600,  detail:360},
+  {name:"MEDIUM", tree:70,  cull:1150, fog:1120, detail:520},
+  {name:"FAR",    tree:84,  cull:1e9,  fog:1e9,  detail:800},
+  {name:"MAX",    tree:120, cull:1e9,  fog:1e9,  detail:1200}];
 /* res: a fixed scale, 0 the screen's own (up to 2x), or -1 AUTO: 18c moves GFX.auto between half and the screen's own,
    down when frames run long and slowly back up when there is room, so a fast card stays sharp and a slow one stays
    smooth */
@@ -70,7 +70,7 @@ GFX.gpu=_gpuOf(renderer.getContext());
 GFX.tier=_tierOf(GFX.gpu);
 if(!GFX.saved && GFX.tier==="integrated"){ GFX.res=-1; GFX.auto=1; GFX.shadows=1; GFX.draw=1; GFX.lights=8; }
 /* SURFACE DETAIL (GFX.fx, the menu's row). A few materials work a good deal out for every pixel: the crowns on the
-   canopy shell (07), the lumps of leaf on a far tree (07), the lawn's second grain and the ground's swells (04).
+   canopy shell (07), the lawn's second grain and the ground's swells (04).
    Each reads this one number and steps over that work when it is 0, taking the mean it would have come to: the
    woods across a valley are then smooth and evenly lit, and a slow chip draws them for a fraction of the cost.
    A uniform, so switching it compiles nothing. */

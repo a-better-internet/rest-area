@@ -15,21 +15,36 @@
    How it is drawn:
    * Every tree is one of a handful of VARIANTS — trunk, limbs and a crown of
      alpha-cut leaf cards — built once and instanced thousands of times.
+   * ONE MODEL, AT EVERY DISTANCE. There is no near tree and far tree to
+     swap between, so nothing ever pops. Every card in a crown has a rank,
+     and the vertex shader works out for each tree, from how far off it is,
+     how much of its crown to keep: all of it close to, a quarter at a
+     hundred and thirty metres, a tenth at four hundred. A card whose turn
+     has come shrinks away to nothing over a dozen metres of your walking
+     while the ones left grow to fill in for it, and the ranks are dealt
+     clump by clump so every part of the crown keeps some. Limbs thin to
+     nothing the same way. Far off, the leaf texture's own holes close up
+     (the cut-off falls with distance), so a far crown is soft round masses
+     in the same colour and the same light as the near one, because it is
+     the near one. The understory does not appear either: a fern, a shrub,
+     a sapling each grows out of the ground over the last third of its own
+     distance.
+   * The cards are in the index list in rank order, so a tree further off
+     is drawn with a shorter list (six lengths, LEVELS): what the shader
+     has already shrunk to nothing is not sent at all.
    * The instances are bucketed by 48 m CHUNKS, each with its own bounding
      sphere (r128 culls an InstancedMesh by its geometry's sphere and knows
-     nothing of where the instances are), and each chunk has three sets:
-     NEAR, the whole tree; FAR, a few soft blobs where the leaf cards were,
-     one shape to a species; and DISTANT, one blob and a stick. The far
-     and distant sets are also kept by blocks of four and of sixteen
-     chunks, so the far side of the woods is a handful of draws. The loop
-     picks one by distance. Small chunks are
-     what keep the whole trees few: only those within reach of you are
-     drawn in full, and the sun's shadow maps draw only the chunks they
-     actually cover.
+     nothing of where the instances are). Chunks go two by two, four by
+     four and eight by eight into bigger groups (TIERS), each with the same
+     trees in meshes of its own: further off, a group is drawn in place of
+     its chunks, a quarter, a sixteenth or a sixty-fourth of the draws. It
+     is the same model under the same shader, so which is drawing can not
+     be seen. Only a chunk's own meshes cast shadows; by the time a bigger
+     group takes over the sun's map does not reach.
    * Past the walkable zone the woods are a CANOPY: one lumpy surface laid
      over the hills at crown height, which is all a forest ever is from a
      car at seventy or a drone at two hundred feet.
-   * One material for every near tree: bark and leaves share an atlas. A
+   * One material for every tree: bark and leaves share an atlas. A
      card's normal is pointed out from the middle of its crown rather than
      off its own face, so a crown shades as one soft volume. Leaves sway.
    * A tree's leaves take their colour from the instance and its bark does
@@ -212,12 +227,27 @@ const FOREST=(function(){
        "  vColor *= mix( vec3( 1.0 ), instanceColor, aLeaf );",
        "#endif"].join("\n"));
   }
+  /* THE THINNING, and the wind. LOD_U is shared by the tree material and its shadow twin and set each frame by
+     update(): uEye where you are looking from (the shadow pass has its own camera, the sun's, so cameraPosition
+     will not do), uLod = (the distance a crown starts to thin at, the distance it is down to 28%, -, a scale on
+     the understory's own distances). aLodC is each vertex's own centre to shrink toward (a card's middle, a limb's
+     axis) and in w what it is: a card's rank 0..1, 2 a limb, 3 the whole trunk, -1 the plain four-sided trunk that
+     stands in for it far off. aGone is how far off the whole plant has shrunk away to nothing (trees: never). */
+  const LOD_U={uEye:{value:new T.Vector3()}, uLod:{value:new T.Vector4(32, 133, 0, 1)}};
+  const LOD_KEEP="float lodKeep( float d ){ return 1.0 - 0.72*smoothstep( uLod.x, uLod.y, d ) - 0.11*smoothstep( uLod.y, uLod.y*1.6, d ) - 0.07*smoothstep( uLod.y*1.6, uLod.y*3.0, d ); }";
   const WIND_GLSL=["#include <begin_vertex>",
     "#ifdef USE_INSTANCING",
     "  vec3 ip = vec3( instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2] );",
     "#else",
     "  vec3 ip = vec3( 0.0 );",
     "#endif",
+    "  { float ld = distance( ip, uEye ), keep = lodKeep( ld ), code = aLodC.w, sc;",
+    "    if( code < -0.5 ) sc = step( keep, 0.72 );",
+    "    else if( code > 2.5 ) sc = 1.0 - step( keep, 0.72 );",
+    "    else if( code > 1.5 ) sc = smoothstep( 0.70, 0.90, keep );",
+    "    else sc = smoothstep( 0.0, min( 0.08, 0.45*keep ), keep*1.08 - code ) * pow( keep, -0.34 );",
+    "    transformed = aLodC.xyz + ( transformed - aLodC.xyz ) * sc;",
+    "    transformed *= 1.0 - smoothstep( aGone*0.66, aGone, ld*uLod.w ); }",
     "  float ph = ip.x*0.071 + ip.z*0.093;",
     "  float sw = aSway * ( 0.55 + uGust ) * ( sin( uTime*1.15 + ph ) * 0.6 + sin( uTime*2.9 + ph*2.3 + position.y*0.4 ) * 0.28 );",
     "  transformed.x += sw * 0.16;",
@@ -225,150 +255,87 @@ const FOREST=(function(){
     "  transformed.y += sw * 0.03;"].join("\n");
   function patchWind(shader){
     shader.uniforms.uTime=WIND_U.uTime; shader.uniforms.uGust=WIND_U.uGust;
-    shader.vertexShader="attribute float aSway;\nuniform float uTime;\nuniform float uGust;\n"+
+    shader.uniforms.uEye=LOD_U.uEye; shader.uniforms.uLod=LOD_U.uLod;
+    shader.vertexShader="attribute float aSway;\nattribute vec4 aLodC;\nattribute float aGone;\nuniform float uTime;\nuniform float uGust;\nuniform vec3 uEye;\nuniform vec4 uLod;\n"+LOD_KEEP+"\n"+
       shader.vertexShader.replace("#include <begin_vertex>", WIND_GLSL);
   }
   // the crown shades as one volume: keep the radial normal on both faces
   const NOFLIP=T.ShaderChunk.normal_fragment_begin.replace("normal = normal * faceDirection;", "");
   const NEAR_MAT=new T.MeshStandardMaterial({map:ATLAS, alphaTest:0.42, side:T.DoubleSide,
     vertexColors:true, roughness:0.82, metalness:0});
+  /* Far off the leaf's own holes close up: the cut-off falls with distance, so a crown a hundred metres away is soft
+     round masses and not a sparkle of single leaves coming and going from one frame to the next. */
   NEAR_MAT.onBeforeCompile=(sh)=>{ patchColour(sh); patchWind(sh);
-    sh.fragmentShader=sh.fragmentShader.replace("#include <normal_fragment_begin>", NOFLIP); };
+    if(sh.fragmentShader.indexOf("#include <alphatest_fragment>")<0) console.warn("trees: alpha test chunk not found");
+    sh.fragmentShader="uniform vec4 uLod;\n"+sh.fragmentShader.replace("#include <normal_fragment_begin>", NOFLIP)
+      .replace("#include <alphatest_fragment>", "if ( diffuseColor.a < ALPHATEST * mix( 1.0, 0.30, smoothstep( uLod.x*0.8, uLod.y, length( vViewPosition ) ) ) ) discard;"); };
   const DEPTH_MAT=new T.MeshDepthMaterial({map:ATLAS, alphaTest:0.42, depthPacking:T.RGBADepthPacking,
     side:T.DoubleSide});
   DEPTH_MAT.onBeforeCompile=(sh)=>{ patchWind(sh); };
-  const FAR_TEX=(function(){
-    const c=cvs(128,128), x=c.getContext("2d"), r=_trng(5150);
-    x.fillStyle="#b8bcb0"; x.fillRect(0,0,128,128);
-    for(let i=0;i<420;i++){
-      const l=0.35+r()*0.65;
-      x.fillStyle="rgba("+(l*240|0)+","+(l*250|0)+","+(l*228|0)+",0.6)";
-      x.beginPath(); x.arc(r()*128, r()*128, 1.5+r()*5, 0, 7); x.fill();
-    }
-    return _tex(c);
-  })();
-  /* (the far set took a speckled map once, and at the distance it is drawn from the speckle was only ever its own
-     mean: so the mean is the material's colour, no texture is read, and a far ball can share its corners between
-     its faces, twelve to a ball where it was sixty) */
-  const FAR_MEAN=(function(){ const d=FAR_TEX.image.getContext("2d").getImageData(0,0,128,128).data; let r=0, g=0, b=0;
-    for(let i=0;i<d.length;i+=4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; } const n=d.length/4*255; return new T.Color(r/n, g/n, b/n); })();
-  const FAR_MAT=new T.MeshStandardMaterial({color:FAR_MEAN, vertexColors:true, roughness:0.92, metalness:0});
-  /* A far crown is a few twenty-sided balls, and lit as balls they are polygons on sticks. So over the leaves
-     (aLeaf) each pixel takes a clump from a noise in the world: its normal leans with the noise's slope, so the
-     crown is lumps lit and shaded under the sun, the hollows between them darker; and where the ball turns away
-     from you its edge thins out raggedly (it is discarded against the noise), so the outline is leaves and not a
-     facet. Where a pixel is wider than a clump both fade, so nothing sparkles. */
-  FAR_MAT.extensions={derivatives:true};
-  FAR_MAT.onBeforeCompile=(sh)=>{ patchColour(sh); sh.uniforms.uFx=FX_U;
-    sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vFarW;\nvarying float vFarLeaf;")
-      .replace("#include <begin_vertex>", `#include <begin_vertex>
-  { vec4 fw=vec4(transformed, 1.0);
-  #ifdef USE_INSTANCING
-    fw=instanceMatrix*fw;
-  #endif
-    vFarW=(modelMatrix*fw).xyz; vFarLeaf=aLeaf; }`);
-    sh.fragmentShader=sh.fragmentShader.replace("#include <common>", `#include <common>
-varying vec3 vFarW;
-varying float vFarLeaf;
-uniform float uFx;
-float farH(vec3 p){ p=fract(p*0.3183099+0.1); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
-float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
-  return mix(mix(mix(farH(i), farH(i+vec3(1.0,0.0,0.0)), f.x), mix(farH(i+vec3(0.0,1.0,0.0)), farH(i+vec3(1.0,1.0,0.0)), f.x), f.y),
-             mix(mix(farH(i+vec3(0.0,0.0,1.0)), farH(i+vec3(1.0,0.0,1.0)), f.x), mix(farH(i+vec3(0.0,1.0,1.0)), farH(i+vec3(1.0,1.0,1.0)), f.x), f.y), f.z); }`)
-      .replace("#include <color_fragment>", `#include <color_fragment>
-  float farK=0.0, farN0=0.5; vec3 farP=vFarW*1.05;
-  // (with the surface detail off, 03's FX_U, a far crown is its plain ball at its mean tone)
-  if(vFarLeaf>0.5){ float n1=0.5;
-    if(uFx>0.5){
-      farK=1.0-smoothstep(0.30, 0.95, length(fwidth(vFarW)));
-      farN0=farN(farP); n1=farN(farP*2.3+vec3(7.1, 3.3, 1.7));
-      // the ragged edge: thin where the ball turns away from you, against the noise
-      float facing=abs(dot(normalize(vNormal), normalize(vViewPosition)));
-      if(farK>0.0 && facing<0.42*farK*(0.35+0.65*(farN0*0.6+n1*0.5))) discard; }
-    diffuseColor.rgb*=mix(0.93, 0.66+0.5*farN0*(0.75+0.5*n1), farK); }`)
-      .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
-  if(farK>0.0){ const float e=0.3;
-    vec3 g=vec3(farN(farP+vec3(e,0.0,0.0))-farN0, farN(farP+vec3(0.0,e,0.0))-farN0, farN(farP+vec3(0.0,0.0,e))-farN0)/e;
-    normal=normalize(normal-mat3(viewMatrix)*g*0.85*farK); }`);
-  };
-  FAR_MAT.customProgramCacheKey=()=>"far-crowns";
 
-  // an icosahedron's corners (on the unit sphere) and faces
-  const ICO_V=(function(){ const t=(1+Math.sqrt(5))/2, v=[-1,t,0, 1,t,0, -1,-t,0, 1,-t,0, 0,-1,t, 0,1,t, 0,-1,-t, 0,1,-t, t,0,-1, t,0,1, -t,0,-1, -t,0,1],
-    L=Math.hypot(1, t); return v.map(a=>a/L); })();
-  const ICO_F=[0,11,5, 0,5,1, 0,1,7, 0,7,10, 0,10,11, 1,5,9, 5,11,4, 11,10,2, 10,7,6, 7,1,8,
-               3,9,4, 3,4,2, 3,2,6, 3,6,8, 3,8,9, 4,9,5, 2,4,11, 6,2,10, 8,6,7, 9,8,1];
-  /* ---- a tree, built by hand: limbs and cards ---------------------------- */
+  /* ---- a tree, built by hand: limbs and cards ----------------------------
+     Its index list is laid out for the thinning: the plain trunk, then the cards in the order of their ranks, with
+     the limbs and the whole trunk let in where the rank passes LEVELS' last but one (they are only drawn close to).
+     geo() notes how long the list is at each of LEVELS, and update() draws that much of it. */
+  const LEVELS=[0.11, 0.19, 0.31, 0.45, 0.70, 1.2];
   class TG{
-    constructor(){ this.P=[]; this.N=[]; this.U=[]; this.C=[]; this.S=[]; this.L=[]; this.I=[]; }
-    v(p,n,u,v,c,s,l){ this.P.push(p.x,p.y,p.z); this.N.push(n.x,n.y,n.z); this.U.push(u,v);
-      this.C.push(c.r,c.g,c.b); this.S.push(s); this.L.push(l); return this.P.length/3-1; }
-    // a tapered limb from a to b; the bark tile runs once along it
-    limb(a,b,r0,r1,seg,col,rg,s0,s1){
+    constructor(){ this.P=[]; this.N=[]; this.U=[]; this.C=[]; this.S=[]; this.L=[]; this.K=[];
+      this.iFar=[]; this.iNear=[]; this.cards=[]; }
+    v(p,n,u,v,c,s,l,k,code){ this.P.push(p.x,p.y,p.z); this.N.push(n.x,n.y,n.z); this.U.push(u,v);
+      this.C.push(c.r,c.g,c.b); this.S.push(s); this.L.push(l); this.K.push(k.x,k.y,k.z,code); return this.P.length/3-1; }
+    // a tapered limb from a to b; the bark tile runs once along it. kind: "limb" (thins away with distance),
+    // "trunk" (the whole trunk, close to) or "far" (the plain one that stands in for it)
+    limb(a,b,r0,r1,seg,col,rg,s0,s1,kind){
       const d=new T.Vector3().subVectors(b,a), L=d.length(); if(L<1e-3) return;
       d.multiplyScalar(1/L);
       const u=Math.abs(d.y)<0.9 ? new T.Vector3(0,1,0).cross(d).normalize() : new T.Vector3(1,0,0).cross(d).normalize();
       const w=new T.Vector3().crossVectors(d,u);
-      const base=this.P.length/3, vr=Math.min(1, L/6);
+      const base=this.P.length/3, vr=Math.min(1, L/6), code=kind==="far" ? -1 : kind==="trunk" ? 3 : 2, I=kind==="far" ? this.iFar : this.iNear;
       for(let k=0;k<=seg;k++){
         const a2=k/seg*Math.PI*2, cs=Math.cos(a2), sn=Math.sin(a2);
         const n=new T.Vector3().addScaledVector(u,cs).addScaledVector(w,sn);
         const uu=rg.u0+(rg.u1-rg.u0)*(k/seg);
-        this.v(a.clone().addScaledVector(n,r0), n, uu, rg.v0, col, s0||0, 0);
-        this.v(b.clone().addScaledVector(n,r1), n, uu, rg.v0+(rg.v1-rg.v0)*vr, col, s1||0, 0);
+        this.v(a.clone().addScaledVector(n,r0), n, uu, rg.v0, col, s0||0, 0, a, code);
+        this.v(b.clone().addScaledVector(n,r1), n, uu, rg.v0+(rg.v1-rg.v0)*vr, col, s1||0, 0, b, code);
       }
       for(let k=0;k<seg;k++){
         const i0=base+k*2, i1=i0+1, i2=i0+2, i3=i0+3;
-        this.I.push(i0,i2,i1, i1,i2,i3);
+        I.push(i0,i2,i1, i1,i2,i3);
       }
     }
     // a card centred on c, spanning ±w/2 along ex and ±h/2 along ey; normals
-    // pointed out from `ctr`, the middle of the crown it belongs to
-    card(c, ex, ey, w, h, rg, col, sway, ctr, upB){
-      const base=this.P.length/3, n=new T.Vector3();
+    // pointed out from `ctr`, the middle of the crown it belongs to. rank: its turn to go, 0 (last) to 1 (first)
+    card(c, ex, ey, w, h, rg, col, sway, ctr, upB, rank){
+      const base=this.P.length/3, n=new T.Vector3(), rk=Math.min(0.999, Math.max(0, rank===undefined ? hash2(c.x*5.3+c.y, c.z*4.1) : rank));
       const cs=[[-1,-1,rg.u0,rg.v0],[1,-1,rg.u1,rg.v0],[1,1,rg.u1,rg.v1],[-1,1,rg.u0,rg.v1]];
       for(const q of cs){
         const p=c.clone().addScaledVector(ex,q[0]*w/2).addScaledVector(ey,q[1]*h/2);
         n.subVectors(p,ctr); n.y+= (upB===undefined?0.35:upB)*n.length(); n.normalize();
-        this.v(p, n, q[2], q[3], col, sway*(0.7+0.3*hash2(p.x*3.1,p.z*2.7)), 1);
+        this.v(p, n, q[2], q[3], col, sway*(0.7+0.3*hash2(p.x*3.1,p.z*2.7)), 1, c, rk);
       }
-      this.I.push(base,base+1,base+2, base,base+2,base+3);
+      this.cards.push({r:rk, i:[base,base+1,base+2, base,base+2,base+3]});
     }
-    // a soft ball for the far set: radial normals, so twenty triangles shade round
-    // (twelve corners shared by its twenty faces: the normals are radial, so a corner is the same for every face on it)
-    blob(c, r, sy, col, leaf){
-      const base=this.P.length/3;
-      for(let i=0;i<12;i++){
-        const x=ICO_V[i*3], y=ICO_V[i*3+1], z=ICO_V[i*3+2];
-        const jit=0.85+0.3*hash2(c.x*7+x*3, c.z*5+z*3+y);
-        this.v(new T.Vector3(c.x+x*r*jit, c.y+y*r*sy*jit, c.z+z*r*jit), new T.Vector3(x,y+0.25,z).normalize(),
-               0, 0, col, 0, leaf);
+    // gone: how far off (at the MEDIUM draw distance) the whole plant has shrunk away; none for a tree
+    geo(gone){
+      const g=new T.BufferGeometry(), nv=this.P.length/3, I=this.iFar.slice(), lv=[];
+      this.cards.sort((a,b)=>a.r-b.r);
+      let k=0;
+      for(let L=0;L<LEVELS.length;L++){
+        if(L===LEVELS.length-1) for(let i=0;i<this.iNear.length;i++) I.push(this.iNear[i]);
+        while(k<this.cards.length && this.cards[k].r<LEVELS[L]){ const q=this.cards[k++].i; I.push(q[0],q[1],q[2],q[3],q[4],q[5]); }
+        lv.push(I.length);
       }
-      for(let i=0;i<ICO_F.length;i++) this.I.push(base+ICO_F[i]);
-    }
-    cone(c, r, h, col, seg){                        // for the far conifers
-      const base=this.P.length/3, tip=new T.Vector3(c.x, c.y+h, c.z);
-      for(let k=0;k<seg;k++){
-        const a0=k/seg*6.2832, a1=(k+1)/seg*6.2832;
-        const p0=new T.Vector3(c.x+Math.cos(a0)*r, c.y, c.z+Math.sin(a0)*r);
-        const p1=new T.Vector3(c.x+Math.cos(a1)*r, c.y, c.z+Math.sin(a1)*r);
-        const n0=new T.Vector3(Math.cos(a0), r/h, Math.sin(a0)).normalize();
-        const n1=new T.Vector3(Math.cos(a1), r/h, Math.sin(a1)).normalize();
-        const nt=n0.clone().add(n1).normalize();
-        const i0=this.v(p0,n0,0,0,col,0,1), i1=this.v(p1,n1,1,0,col,0,1), i2=this.v(tip,nt,0.5,1,col,0,1);
-        this.I.push(i0,i2,i1);
-      }
-    }
-    geo(){
-      const g=new T.BufferGeometry();
       g.setAttribute("position", new T.Float32BufferAttribute(this.P,3));
       g.setAttribute("normal",   new T.Float32BufferAttribute(this.N,3));
       g.setAttribute("uv",       new T.Float32BufferAttribute(this.U,2));
       g.setAttribute("color",    new T.Float32BufferAttribute(this.C,3));
       g.setAttribute("aSway",    new T.Float32BufferAttribute(this.S,1));
       g.setAttribute("aLeaf",    new T.Float32BufferAttribute(this.L,1));
-      g.setIndex(this.I);
+      g.setAttribute("aLodC",    new T.Float32BufferAttribute(this.K,4));
+      g.setAttribute("aGone",    new T.Float32BufferAttribute(new Float32Array(nv).fill(gone||1e6),1));
+      g.setIndex(I);
       g.computeBoundingSphere();
+      g.userData.levels=lv; g.userData.gone=gone||1e6;
       return g;
     }
   }
@@ -388,16 +355,13 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     return [ex.clone().multiplyScalar(c).addScaledVector(ey,s), ey.clone().multiplyScalar(c).addScaledVector(ex,-s)];
   }
   const BARK=new T.Color(0x8a8378), BARK_D=new T.Color(0x6d675e), BARK_BEECH=new T.Color(0x8f8c85);
-  // the far set has no shadows in it and no holes, so it starts darker than
-  // the near set's leaves, or the woods brighten as you walk away from them
-  const WHITEISH=new T.Color(0x8c8c8c);
   function leafTone(r){ const k=0.86+r()*0.14; return new T.Color(k, k, k*(0.96+r()*0.06)); }
 
   /* --- broadleaf: maple, cherry, oak, beech ----------------------------
      H the nominal height, cb the crown base as a fraction of it, R the
      crown's radius; edge trees carry their crown much lower. */
   function broadleaf(seed, o){
-    const r=_trng(seed), near=new TG(), far=new TG();
+    const r=_trng(seed), near=new TG();
     const H=o.H, cb=o.cb, R=o.R, bark=o.bark||BARK, brg=o.smooth?RG.smooth:RG.bark;
     const trunkTop=H*0.86, r0=o.r0||0.30;
     // a trunk that wanders a little, in three pieces, with a root flare
@@ -409,12 +373,14 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
     }
     // (as many sides as its girth can show: seven to a trunk you could put your arms round, four to a sapling's stem)
     const big=r0>=0.2, sd0=big?7:4, sd1=big?5:4;
-    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,0.5,0), r0*1.42, r0*0.99, sd0, bark, brg);
+    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,0.5,0), r0*1.42, r0*0.99, sd0, bark, brg, 0, 0, "trunk");
     for(let k=0;k<4;k++){
       const ra=r0*(1-k/4*0.78), rb=r0*(1-(k+1)/4*0.78);
-      near.limb(pts[k], pts[k+1], ra, rb, k<2?sd0:sd1, bark, brg, k/4*0.15, (k+1)/4*0.15);
+      near.limb(pts[k], pts[k+1], ra, rb, k<2?sd0:sd1, bark, brg, k/4*0.15, (k+1)/4*0.15, "trunk");
     }
-    far.limb(new T.Vector3(0,-0.2,0), pts[3], r0*1.1, r0*0.42, 4, bark, brg);
+    // and the plain trunk that stands in for it past sixty metres or so: four sides, two lengths
+    near.limb(new T.Vector3(0,-0.2,0), pts[2], r0*1.15, r0*0.62, 4, bark, brg, 0, 0.07, "far");
+    near.limb(pts[2], pts[4], r0*0.62, r0*0.24, 4, bark, brg, 0.07, 0.15, "far");
     // the crown: limbs out to clump centres, a clump of cards at each end
     const ctr=new T.Vector3(lean.x*H*0.7, H*(cb+(1-cb)*0.55), lean.z*H*0.7);
     const clumps=[];
@@ -431,11 +397,11 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
       near.limb(mid, b, r0*0.25, 0.04, 3, bark, brg, 0.35, 0.6);
       clumps.push({c:b, r:(o.clump||2.3)*(1.05-t*0.25)*(0.85+r()*0.3)});
       // a secondary clump part way along the bigger limbs
-      if(t<0.6 && r()<0.7) clumps.push({c:mid.clone().add(new T.Vector3(0,0.6,0)), r:(o.clump||2.3)*0.8});
+      if(t<0.6 && r()<0.7) clumps.push({c:mid.clone().add(new T.Vector3(0,0.6,0)), r:(o.clump||2.3)*0.8, minor:true});
     }
     clumps.push({c:pts[4].clone().add(new T.Vector3(0,0.4,0)), r:(o.clump||2.3)*1.0});
     // and fill the middle so you never see through the whole crown
-    clumps.push({c:ctr.clone(), r:R*0.55});
+    clumps.push({c:ctr.clone(), r:R*0.55, core:true});
     for(const cl of clumps){
       const n=Math.round((o.cards||8)*(cl.r/2.3));
       for(let k=0;k<n;k++){
@@ -445,46 +411,29 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
         const nrm=randDir(r, out, 0.9);
         const [ex,ey]=cardAxes(nrm, r()*6.283);
         const s=cl.r*(1.05+r()*0.45);
-        near.card(c, ex, ey, s, s, RG.leaf, leafTone(r), 0.35+0.65*(c.y/H), ctr);
+        /* Its turn to go: the ranks are dealt out evenly within each clump, so however far the crown is thinned every
+           clump keeps its share and the tree keeps its outline. The clumps part way along a limb go sooner, and the
+           middle of the crown, which is what stops you seeing through it, later. */
+        const rank=(k+r())/n*(cl.minor ? 1 : cl.core ? 0.7 : 0.86)+(cl.minor ? 0.14 : 0);
+        near.card(c, ex, ey, s, s, RG.leaf, leafTone(r), 0.35+0.65*(c.y/H), ctr, undefined, rank);
       }
     }
-    /* The far set is the crown's mass and its silhouette, nothing else: one
-       big soft ball in the middle and the three clumps that stand furthest
-       out from it. Twenty triangles a ball; seven thousand trees of these
-       are what you see from the road. */
-    far.blob(ctr, R*0.92, 0.82, WHITEISH, 1);
-    const outer=clumps.slice(0,-1).map(cl=>({cl:cl, d:cl.c.distanceTo(ctr)})).sort((a2,b2)=>b2.d-a2.d);
-    const used=[];
-    for(const o2 of outer){
-      if(used.length>=3) break;
-      if(used.some(u=>u.c.distanceTo(o2.cl.c)<R*0.8)) continue;
-      used.push(o2.cl); far.blob(o2.cl.c, o2.cl.r*1.2, 0.85, WHITEISH, 1);
-    }
-    /* And the distant set, past a couple of hundred metres: the crown as one ball, the trunk a three-sided stick. */
-    const far2=new TG(), cr=R*1.14;
-    far2.limb(new T.Vector3(0,-0.2,0), pts[3], r0*1.2, r0*0.5, 3, bark, brg);
-    far2.blob(ctr, cr, clamp((1-cb)*H*0.52/cr, 0.62, 1.15), WHITEISH, 1);
-    /* Out of the woods (a hedgerow, a treeline along a road, a yard) a tree is seen whole against the sky, and one
-       ball on a stick is a lollipop: there the distant set keeps the crown's biggest clump beside the ball and a
-       trunk with some girth, and takes over further off. */
-    const far2o=new TG();
-    far2o.limb(new T.Vector3(0,-0.2,0), pts[3], r0*1.3, r0*0.6, 4, bark, brg);
-    far2o.blob(ctr, R*0.98, 0.84, WHITEISH, 1);
-    if(used[0]) far2o.blob(used[0].c, used[0].r*1.3, 0.85, WHITEISH, 1);
-    return {near:near.geo(), far:far.geo(), far2:far2.geo(), far2o:far2o.geo(), trunkR:r0*1.1};
+    return {near:near.geo(o.gone), trunkR:r0*1.1};
   }
   /* --- eastern hemlock: a dark cone of drooping, flat sprays ------------ */
   function hemlock(seed, o){
-    const r=_trng(seed), near=new TG(), far=new TG();
+    const r=_trng(seed), near=new TG();
     const H=o.H, base=o.cb*H, R=o.R, bark=BARK_D;
-    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.55,0), o.r0*1.3, o.r0*0.7, 7, bark, RG.bark);
-    near.limb(new T.Vector3(0,H*0.55,0), new T.Vector3((r()-0.5)*0.3,H,(r()-0.5)*0.3), o.r0*0.7, 0.03, 5, bark, RG.bark, 0.1, 0.5);
-    far.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,base+1,0), o.r0*1.1, o.r0*0.8, 5, bark, RG.bark);
+    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.55,0), o.r0*1.3, o.r0*0.7, 7, bark, RG.bark, 0, 0, "trunk");
+    near.limb(new T.Vector3(0,H*0.55,0), new T.Vector3((r()-0.5)*0.3,H,(r()-0.5)*0.3), o.r0*0.7, 0.03, 5, bark, RG.bark, 0.1, 0.5, "trunk");
+    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.96,0), o.r0*1.15, 0.05, 4, bark, RG.bark, 0, 0.4, "far");
     const tiers=o.tiers||13, ctrY=base+(H-base)*0.4;
     for(let i=0;i<tiers;i++){
       const t=i/(tiers-1), y=base+t*(H-base)*0.97;
       const rad=R*Math.pow(1-t,0.85)*(0.9+r()*0.3)+0.45;
       const per=Math.max(4, Math.round(8-t*4));
+      // (every other tier's sprays go first, then the rest of each ring one by one: the cone keeps its taper)
+      const tr=i%2 ? 0.34 : 0;
       for(let k=0;k<per;k++){
         const yaw=k/per*6.283+i*0.9+r()*0.5;
         const out=new T.Vector3(Math.cos(yaw),0,Math.sin(yaw));
@@ -494,10 +443,11 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
         const ey=new T.Vector3(-out.z,0,out.x);
         const c=new T.Vector3(0,y,0).addScaledVector(ex, rad*0.5);
         near.card(c, ex, ey, rad*1.15, rad*1.0, RG.conifer, leafTone(r), 0.2+0.6*t,
-                  new T.Vector3(0,ctrY,0), 0.6);
+                  new T.Vector3(0,ctrY,0), 0.6, 0.30+tr+((k*2+1)%per+r())/per*0.36);
       }
       // the skin of the cone: sprays standing on its surface, facing out, so
       // from the side a conifer is a wall of needles and not a set of spokes
+      // (these are its outline: the last to go)
       for(let k=0;k<3;k++){
         const yaw=k/3*6.283+i*1.7+r()*0.6, out=new T.Vector3(Math.cos(yaw),0,Math.sin(yaw));
         const c=new T.Vector3(0,y-0.2,0).addScaledVector(out, rad*0.62);
@@ -505,7 +455,7 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
         const ey=new T.Vector3(-out.x*0.35,1,-out.z*0.35).normalize();
         const ex=new T.Vector3().crossVectors(ey,nrm).normalize();
         near.card(c, ex, ey, rad*1.25, (H-base)/tiers*2.6, RG.conifer, leafTone(r), 0.25+0.5*t,
-                  new T.Vector3(0,ctrY,0), 0.4);
+                  new T.Vector3(0,ctrY,0), 0.4, (k+r())/3*0.30+(i%2 ? 0.02 : 0));
       }
       // and a flat spray across the trunk at every other tier, so that from
       // above (or from under) a hemlock is a mass and not a coat rack
@@ -513,23 +463,18 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
         const yaw=r()*6.283, ex=new T.Vector3(Math.cos(yaw),-0.12,Math.sin(yaw)).normalize(),
               ey=new T.Vector3(-Math.sin(yaw),0,Math.cos(yaw));
         near.card(new T.Vector3(0,y+0.1,0), ex, ey, rad*2.0, rad*1.5, RG.conifer, leafTone(r), 0.2+0.5*t,
-                  new T.Vector3(0,ctrY-3,0), 1.2);
+                  new T.Vector3(0,ctrY-3,0), 1.2, 0.20+r()*0.5);
       }
     }
-    far.cone(new T.Vector3(0,base,0), R*1.02, (H-base)*0.62, WHITEISH, 7);
-    far.cone(new T.Vector3(0,base+(H-base)*0.36,0), R*0.72, (H-base)*0.66, WHITEISH, 7);
-    const far2=new TG();
-    far2.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,base+1,0), o.r0*1.2, o.r0*0.9, 3, bark, RG.bark);
-    far2.cone(new T.Vector3(0,base,0), R*0.98, (H-base)*0.98, WHITEISH, 6);
-    return {near:near.geo(), far:far.geo(), far2:far2.geo(), trunkR:o.r0*1.2};
+    return {near:near.geo(o.gone), trunkR:o.r0*1.2};
   }
   /* --- white pine: tiers of horizontal limbs with tufts at the ends ----- */
   function pine(seed, o){
-    const r=_trng(seed), near=new TG(), far=new TG();
+    const r=_trng(seed), near=new TG();
     const H=o.H, bark=BARK_D;
-    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.6,0), o.r0*1.25, o.r0*0.7, 7, bark, RG.bark);
-    near.limb(new T.Vector3(0,H*0.6,0), new T.Vector3(0.3,H,0.1), o.r0*0.7, 0.05, 5, bark, RG.bark, 0.05, 0.4);
-    far.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.75,0), o.r0*1.1, o.r0*0.4, 5, bark, RG.bark);
+    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.6,0), o.r0*1.25, o.r0*0.7, 7, bark, RG.bark, 0, 0, "trunk");
+    near.limb(new T.Vector3(0,H*0.6,0), new T.Vector3(0.3,H,0.1), o.r0*0.7, 0.05, 5, bark, RG.bark, 0.05, 0.4, "trunk");
+    near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0.28,H*0.97,0.1), o.r0*1.1, 0.06, 4, bark, RG.bark, 0, 0.3, "far");
     const ctr=new T.Vector3(0,H*0.72,0);
     let y=H*o.cb;
     while(y<H*0.97){
@@ -540,28 +485,22 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
         const a=new T.Vector3(0,y,0), dir=new T.Vector3(Math.cos(yaw), 0.18+r()*0.18, Math.sin(yaw)).normalize();
         const b=a.clone().addScaledVector(dir, L);
         near.limb(a, b, 0.07, 0.02, 3, bark, RG.bark, 0.1, 0.5);
-        // two or three soft tufts along the outer half, near horizontal
+        // two or three soft tufts along the outer half, near horizontal (the one at the tip is the last to go)
         for(let q=0;q<3;q++){
           const c=a.clone().addScaledVector(dir, L*(0.45+q*0.27)).add(new T.Vector3(0,0.15,0));
           const n=randDir(r, UP, 2.2);
           const [ex,ey]=cardAxes(n, r()*6.283);
           const s=1.5+r()*0.9;
-          near.card(c, ex, ey, s, s, RG.pine, leafTone(r), 0.3+0.6*t, ctr, 0.6);
+          near.card(c, ex, ey, s, s, RG.pine, leafTone(r), 0.3+0.6*t, ctr, 0.6, q===2 ? r()*0.42 : 0.3+r()*0.7);
         }
       }
       y+=1.4+r()*1.6;
     }
-    far.blob(new T.Vector3(0.2,H*0.9,0), 2.4, 0.8, WHITEISH, 1);
-    far.blob(new T.Vector3(0.6,H*0.74,-0.4), o.R*0.75, 0.42, WHITEISH, 1);
-    far.blob(new T.Vector3(-0.6,H*0.58,0.5), o.R*0.85, 0.40, WHITEISH, 1);
-    const far2=new TG();
-    far2.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.75,0), o.r0*1.2, o.r0*0.5, 3, bark, RG.bark);
-    far2.blob(new T.Vector3(0.1,H*0.74,0), o.R*0.82, H*0.27/(o.R*0.82), WHITEISH, 1);
-    return {near:near.geo(), far:far.geo(), far2:far2.geo(), trunkR:o.r0*1.15};
+    return {near:near.geo(o.gone), trunkR:o.r0*1.15};
   }
   /* --- a shrub: dense, down to the ground -------------------------------- */
   function shrub(seed, o){
-    const r=_trng(seed), near=new TG(), far=new TG();
+    const r=_trng(seed), near=new TG();
     const ctr=new T.Vector3(0,o.h*0.45,0);
     for(let k=0;k<5;k++){
       const yaw=r()*6.28, b=new T.Vector3(Math.cos(yaw)*o.w*0.3, o.h*0.8, Math.sin(yaw)*o.w*0.3);
@@ -573,14 +512,13 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
       const nrm=randDir(r, new T.Vector3().subVectors(c,ctr).normalize(), 0.8);
       const [ex,ey]=cardAxes(nrm, r()*6.28);
       const s=o.w*(0.55+r()*0.25);
-      near.card(c, ex, ey, s, s, o.rg||RG.leaf, leafTone(r), 0.25, ctr, 0.4);
+      near.card(c, ex, ey, s, s, o.rg||RG.leaf, leafTone(r), 0.25, ctr, 0.4, (k+r())/n);
     }
-    far.blob(ctr, o.w*0.55, o.h/o.w*1.1, WHITEISH, 1);
-    return {near:near.geo(), far:far.geo(), trunkR:0};
+    return {near:near.geo(o.gone), trunkR:0};
   }
   // a fern: a fan of fronds arching out of one crown
-  function fern(seed){
-    const r=_trng(seed), near=new TG(), far=new TG();
+  function fern(seed, o){
+    const r=_trng(seed), near=new TG();
     const ctr=new T.Vector3(0,0.1,0);
     for(let k=0;k<7;k++){
       const yaw=k/7*6.283+r()*0.4, out=new T.Vector3(Math.cos(yaw),0,Math.sin(yaw));
@@ -590,16 +528,20 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
       const ey0=new T.Vector3(-out.z,0,out.x);
       const ex=ex0.clone().add(ey0).normalize(), ey=new T.Vector3().crossVectors(ex, new T.Vector3().crossVectors(ey0,ex0)).normalize();
       const s=0.62+r()*0.25;
-      near.card(new T.Vector3(0,0.05,0).addScaledVector(ex0, s*0.62), ex, ey, s, s, RG.fern, leafTone(r), 0.4, ctr, 0.8);
+      near.card(new T.Vector3(0,0.05,0).addScaledVector(ex0, s*0.62), ex, ey, s, s, RG.fern, leafTone(r), 0.4, ctr, 0.8, 0);
     }
-    return {near:near.geo(), far:far.geo(), trunkR:0};
+    return {near:near.geo(o.gone), trunkR:0};
   }
 
   /* ---- the species and their variants ---------------------------------
-     Each entry: builder, a few seeds, summer and autumn palettes. Colours
-     are what the instance multiplies the near-white leaves by. */
+     Each entry: builder, a seed or two, summer and autumn palettes. Colours
+     are what the instance multiplies the near-white leaves by. Turned and
+     scaled tree by tree, two shapes of a species are as many as anyone can
+     tell apart, and every shape less is a draw less in every chunk.
+     `gone` (the understory's): how far off, at the MEDIUM draw distance, the
+     plant has shrunk away into the ground; it starts at two thirds of that. */
   const SPECIES={
-    hard:  {build:(s)=>broadleaf(s,{H:22,cb:0.50,R:5.2,r0:0.30,limbs:7,cards:8}), seeds:[11,23,37],
+    hard:  {build:(s)=>broadleaf(s,{H:22,cb:0.50,R:5.2,r0:0.30,limbs:7,cards:8}), seeds:[11,23],
             summer:["#5f8a3a","#6a9440","#577f36","#729a44"],
             autumn:["#c23a22","#d9661f","#e09a26","#e6bb30","#b8471f","#8c5a2a","#d77f1f"]},
     edge:  {build:(s)=>broadleaf(s,{H:18,cb:0.16,R:5.4,r0:0.27,limbs:9,cards:8,clump:2.4}), seeds:[41,53],
@@ -607,30 +549,30 @@ float farN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
             autumn:["#d0461f","#e0821f","#e6b52c","#c23324","#9a5a26"]},
     beech: {build:(s)=>broadleaf(s,{H:19,cb:0.36,R:5.0,r0:0.27,limbs:8,cards:8,smooth:true,bark:BARK_BEECH}), seeds:[61],
             summer:["#78a24a","#82aa52"], autumn:["#c99a38","#b9862e","#d4ac40"]},
-    hemlock:{build:(s)=>hemlock(s,{H:19,cb:0.10,R:3.8,r0:0.28,tiers:17}), seeds:[71,83],
+    hemlock:{build:(s)=>hemlock(s,{H:19,cb:0.10,R:3.8,r0:0.28,tiers:17}), seeds:[71],
             summer:["#3f6138","#466a3c","#3a5833"], autumn:["#3f6138","#466a3c","#3a5833"]},
     pine:  {build:(s)=>pine(s,{H:25,cb:0.42,R:4.4,r0:0.32}), seeds:[97],
             summer:["#4f7446","#56794a"], autumn:["#4f7446","#56794a"]},
-    sapling:{build:(s)=>broadleaf(s,{H:7.5,cb:0.30,R:2.2,r0:0.07,limbs:5,cards:5,clump:1.3}), seeds:[101,113],
+    sapling:{build:(s)=>broadleaf(s,{H:7.5,cb:0.30,R:2.2,r0:0.07,limbs:5,cards:5,clump:1.3,gone:230}), seeds:[101], gone:230,
             summer:["#6f9b44","#7aa54a"], autumn:["#d8a52c","#c9522a","#9aa13c"]},
     lawn:  {build:(s)=>broadleaf(s,{H:15,cb:0.20,R:6.4,r0:0.34,limbs:10,cards:9,clump:2.7}), seeds:[131,149],
             summer:["#5c8a38","#668f3c"], autumn:["#cf3b24","#e0731e","#e4b02e"]},
     spruce:{build:(s)=>hemlock(s,{H:13,cb:0.04,R:3.0,r0:0.22,tiers:15}), seeds:[163],
             summer:["#4d6b5e"], autumn:["#4d6b5e"]},
-    shrub: {build:(s)=>shrub(s,{h:1.9,w:2.2,cards:13}), seeds:[171,181],
+    shrub: {build:(s)=>shrub(s,{h:1.9,w:2.2,cards:13,gone:125}), seeds:[171], gone:125,
             summer:["#5f8a3a","#6e9442","#587e34"], autumn:["#b8322a","#c9582a","#8e7a32"]},
-    bush:  {build:(s)=>shrub(s,{h:1.0,w:1.3,cards:11}), seeds:[191],       // clipped boxwood, the beds
+    bush:  {build:(s)=>shrub(s,{h:1.0,w:1.3,cards:11,gone:125}), seeds:[191], gone:125,       // clipped boxwood, the beds
             summer:["#4c6e32","#557a36"], autumn:["#4c6e32","#557a36"]},
-    fern:  {build:(s)=>fern(s), seeds:[201,211],
+    fern:  {build:(s)=>fern(s,{gone:46}), seeds:[201], gone:46,
             summer:["#7aa246","#86ab4c"], autumn:["#b99a46","#a8883e"]},
   };
-  const VARIANTS=[];                 // {sp, near, far, trunkR}
+  const VARIANTS=[];                 // {sp, near, trunkR, gone}
   const SPV={};
   for(const name in SPECIES){
     SPV[name]=[];
     for(const seed of SPECIES[name].seeds){
       const b=SPECIES[name].build(seed);
-      const v={sp:name, near:b.near, far:b.far, far2:b.far2, far2o:b.far2o||b.far2, trunkR:b.trunkR, idx:VARIANTS.length};
+      const v={sp:name, near:b.near, trunkR:b.trunkR, gone:SPECIES[name].gone||1e6, idx:VARIANTS.length};
       VARIANTS.push(v); SPV[name].push(v);
     }
   }
@@ -1120,37 +1062,28 @@ vec4 canCrown(vec2 p, out float id){
   })();
 
   /* ---- build the instanced chunks ----------------------------------------
-     A chunk is 48 m square in the zone and 96 by 160 outside it (the treelines along the roads). Its NEAR set is a
-     mesh to each variant that grows in it; its FAR set a mesh to each species, in that species' first shape (turned
-     and scaled tree by tree, the three or so shapes of a species are not to be told apart at seventy metres).
-     Chunks go two by two into a QUAD, which has the same far set over all four: where none of a quad's chunks is
-     near, the quad draws for them, a quarter of the draws. And quads go two by two into a BLOCK, which has the
-     DISTANT set, shown in place of everything in it once all of it is far enough off. They stand still for good,
-     so none of them works its matrix out again each frame. */
-  const CHUNKS=[], QUADS=[], BLOCKS=[];
-  const CH=48, CHOX=96, CHOZ=160;
-  const SMALL={fern:1, shrub:1, bush:1, sapling:1};
+     A chunk is 48 m square, in the zone and out of it, with a mesh to each variant that grows in it. Chunks go
+     into groups two, four and eight chunks a side, each with meshes of its own over all its trees (not the ferns,
+     which are gone long before a group draws; nor, past the first, the shrubs). Which of them draws a tree is only
+     a matter of how many draws: it is the same model either way. They stand still for good, so none of them works
+     its matrix out again each frame. */
+  const CHUNKS=[], TIERS=[[], [], [], []];          // TIERS[t]: groups of 1, 2, 4 and 8 chunks a side (TIERS[0] is CHUNKS)
+  const CH=48, SIDE=[1, 2, 4, 8];
   function finish(){
-    const map=new Map(), quads=new Map(), blocks=new Map();
-    const group=(M, k, n, cx, cz, sx, sz)=>{ const gx=Math.floor(cx/n), gz=Math.floor(cz/n), gk=k+gx+":"+gz; let G=M.get(gk);
-      if(!G){ G={key:gk, x0:gx*sx*n, x1:(gx+1)*sx*n, z0:gz*sz*n, z1:(gz+1)*sz*n, species:new Map(), far:[], far2:[], chunks:[], ymin:1e9, ymax:-1e9, on:null}; M.set(gk, G); }
+    const maps=SIDE.map(()=>new Map());
+    const group=(t, k, cx, cz)=>{ const n=SIDE[t], gx=Math.floor(cx/n), gz=Math.floor(cz/n), gk=k+gx+":"+gz; let G=maps[t].get(gk);
+      if(!G){ G={key:gk, t:t, x0:gx*CH*n, x1:(gx+1)*CH*n, z0:gz*CH*n, z1:(gz+1)*CH*n, lists:new Map(), meshes:[], kids:0, up:null, ymin:1e9, ymax:-1e9, level:-1, far:false, cov:false}; maps[t].set(gk, G); }
       return G; };
-    const note=(G, it)=>{ let L=G.species.get(it.v.sp); if(!L){ L=[]; G.species.set(it.v.sp, L); } L.push(it);
+    const note=(G, it)=>{ let L=G.lists.get(it.v.idx); if(!L){ L=[]; G.lists.set(it.v.idx, L); } L.push(it);
       G.ymin=Math.min(G.ymin, it.y); G.ymax=Math.max(G.ymax, it.y+26*it.s); };
     for(const it of INST){
-      const out=!it.zone, sx=out?CHOX:CH, sz=out?CHOZ:CH;
-      const cx=Math.floor(it.x/sx), cz=Math.floor(it.z/sz);
-      const k=(out?"o":"z")+cx+":"+cz;
-      let c=map.get(k);
-      if(!c){ c={key:k, x0:cx*sx, x1:cx*sx+sx, z0:cz*sz, z1:cz*sz+sz,
-                 lists:new Map(), species:new Map(), near:[], far:[], ymin:1e9, ymax:-1e9, mode:-1}; map.set(k,c);
-        c.quad=group(quads, out?"o":"z", 2, cx, cz, sx, sz); c.quad.chunks.push(c);
-        c.block=group(blocks, out?"o":"z", 4, cx, cz, sx, sz); c.block.chunks.push(c); }
-      let L=c.lists.get(it.v.idx); if(!L){ L=[]; c.lists.set(it.v.idx, L); }
-      L.push(it);
-      if(!SMALL[it.v.sp]){ let S2=c.species.get(it.v.sp); if(!S2){ S2=[]; c.species.set(it.v.sp, S2); } S2.push(it);
-        note(c.quad, it); note(c.block, it); }
-      c.ymin=Math.min(c.ymin,it.y); c.ymax=Math.max(c.ymax,it.y+26*it.s);
+      const cx=Math.floor(it.x/CH), cz=Math.floor(it.z/CH), k=it.zone ? "z" : "o";
+      let c=maps[0].get(k+cx+":"+cz);
+      if(!c){ c=group(0, k, cx, cz); let G=c;
+        for(let t=1;t<SIDE.length;t++){ const U=group(t, k, cx, cz); G.up=U; U.kids++; G=U; } }
+      note(c, it);
+      // (a fern is gone long before a quad draws for its chunk, a shrub before a block does)
+      for(let G=c.up; G; G=G.up) if(it.v.gone>(G.t===1 ? 60 : 200)) note(G, it);
       // a trunk you can walk into is a trunk you cannot walk through
       if(it.solid && it.zone && it.v.trunkR>0){
         const rr2=it.v.trunkR*it.s+0.04;
@@ -1158,15 +1091,15 @@ vec4 canCrown(vec2 p, out float id){
       }
     }
     const m4=new T.Matrix4(), q=new T.Quaternion(), e=new T.Euler(), p=new T.Vector3(), s=new T.Vector3();
-    const sphereOf=(c)=>new T.Sphere(new T.Vector3((c.x0+c.x1)/2, (c.ymin+c.ymax)/2, (c.z0+c.z1)/2),
-                                     Math.hypot(c.x1-c.x0, c.z1-c.z0, c.ymax-c.ymin)/2+12);
-    let c=null;
-    const make=(base, mat, cast, list)=>{
-        const g=new T.BufferGeometry();
+    const build=(G, cast)=>{
+      G.sphere=new T.Sphere(new T.Vector3((G.x0+G.x1)/2, (G.ymin+G.ymax)/2, (G.z0+G.z1)/2),
+                            Math.hypot(G.x1-G.x0, G.z1-G.z0, G.ymax-G.ymin)/2+14);       // (and room for a crown thinned and grown)
+      for(const [vi, list] of G.lists){
+        const V=VARIANTS[vi], base=V.near, g=new T.BufferGeometry();
         for(const k2 in base.attributes) g.setAttribute(k2, base.attributes[k2]);
         g.setIndex(base.index);
-        g.boundingSphere=c.sphere;
-        const im=new T.InstancedMesh(g, mat, list.length);
+        g.boundingSphere=G.sphere;
+        const im=new T.InstancedMesh(g, NEAR_MAT, list.length);
         for(let i=0;i<list.length;i++){
           const it=list[i];
           e.set(it.rx, it.ry, it.rz, "YXZ"); q.setFromEuler(e);
@@ -1176,87 +1109,59 @@ vec4 canCrown(vec2 p, out float id){
         }
         im.instanceMatrix.needsUpdate=true;
         if(im.instanceColor) im.instanceColor.needsUpdate=true;
-        // (the far sets stand past the reach of the sun's map: they neither cast into it nor look anything up in it)
+        // (a bigger group's trees stand past the reach of the sun's map: they neither cast into it nor look anything up in it)
         im.castShadow=cast; im.receiveShadow=cast;
-        im.userData.list=list;
+        im.customDepthMaterial=DEPTH_MAT;
+        im.userData.list=list; im.userData.levels=base.userData.levels; im.userData.gone=V.gone;
         im.visible=false; im.matrixAutoUpdate=false;
         scene.add(im);
-        return im;
-    };
-    for(c of map.values()){
-      c.sphere=sphereOf(c);
-      for(const [vi, list] of c.lists){
-        const V=VARIANTS[vi];
-        const nm=make(V.near, NEAR_MAT, true, list);
-        nm.customDepthMaterial=DEPTH_MAT;
-        c.near.push(nm);
-        // shrubs and ferns have no far set worth drawing: past the near
-        // distance they are simply not there, under the trees' far set
-        if(SMALL[V.sp]) nm.userData.small=true;
+        G.meshes.push(im);
       }
-      for(const [sp, list] of c.species) c.far.push(make(SPV[sp][0].far, FAR_MAT, false, list));
-      CHUNKS.push(c);
-    }
-    for(c of quads.values()){
-      c.sphere=sphereOf(c);
-      // (a quad of one chunk has nothing to save: the chunk's own far set does)
-      if(c.chunks.length>1) for(const [sp, list] of c.species) c.far.push(make(SPV[sp][0].far, FAR_MAT, false, list));
-      QUADS.push(c);
-    }
-    for(c of blocks.values()){
-      if(!c.species.size) continue;
-      c.sphere=sphereOf(c);
-      // (in the zone's own woods one ball to a tree; out of it the fuller distant shape, far2o)
-      for(const [sp, list] of c.species) c.far2.push(make(c.key[0]==="z" ? SPV[sp][0].far2 : SPV[sp][0].far2o, FAR_MAT, false, list));
-      BLOCKS.push(c);
-    }
+    };
+    for(const c of maps[0].values()){ build(c, true); CHUNKS.push(c); }
+    TIERS[0]=CHUNKS;
+    // (a group with one group under it has nothing to save: that one's own meshes do)
+    for(let t=1;t<SIDE.length;t++) for(const G of maps[t].values()){ if(G.kids>1 && G.lists.size) build(G, false); TIERS[t].push(G); }
   }
-  /* Which set each chunk shows. Near within 58 m of the chunk's footprint
-     (more from the air, where a chunk's crowns are all you see), far
-     beyond, distant past a couple of hundred metres; the small stuff only
-     within 40 m of the camera's chunk edge.
+  /* What draws each tree, and how much of it. A chunk draws its own trees while it is within reach (NEAR: the draw
+     distance's `tree`, and never less than the sun's map covers, since only a chunk's meshes cast). A quad all of
+     which is past that draws for its chunks; a block past FAR for its quads; the biggest groups past twice that.
+     Whichever it is draws as much of each tree's index list as the nearest tree in it could still be showing
+     (LEVELS), and leaves out the understory that has shrunk away by then. None of this can be seen: the shader
+     thins each tree by its own distance, whoever sends it.
      The back woods (east of DEEP_X) are not drawn at all from the site at
      eye height: a hundred metres and more of trees stand in front of them. */
   const DEEP_X=176;
-  /* The radii, and how far anything is drawn at all, come from the
-     draw-distance setting (03-scene); FAR is what they always were. */
+  const _keep=(d, A, B)=>1-0.72*smoothstep(A, B, d)-0.11*smoothstep(B, B*1.6, d)-0.07*smoothstep(B*1.6, B*3, d);
+  function show(G, on, d, A, B, k){
+    let level=-1;
+    if(on){ const kp=_keep(d, A, B)*1.08; level=0; while(level<LEVELS.length-1 && LEVELS[level]<kp) level++; }     // (1.08: as the shader has it, so close to every card is whole)
+    if(level<0 && G.level<0) return;
+    G.level=level;
+    for(const m of G.meshes){
+      const vis=level>=0 && d<m.userData.gone*k;           // (the understory, once it has shrunk away, is not sent at all)
+      if(vis!==m.visible) m.visible=vis;
+      if(vis && m.userData.lv!==level){ m.userData.lv=level; m.geometry.setDrawRange(0, m.userData.levels[level]); }
+    }
+  }
   function update(cam){
     const alt=Math.max(0, cam.y-30), hideDeep=cam.x<60 && cam.y<25;
-    const D=DRAW_LEVELS[GFX.draw], d2=D.tree*2.2+50;
-    // a block all of which is past the distant line shows its distant set, and its chunks nothing
-    for(const B of BLOCKS){
-      const dx=Math.max(B.x0-cam.x, 0, cam.x-B.x1), dz=Math.max(B.z0-cam.z, 0, cam.z-B.z1);
-      const d=Math.hypot(dx,dz,alt*0.6);
-      const lim=B.key[0]==="z" ? d2 : d2*1.6;                  // (out in the open a tree keeps its far shape further)
-      const on = d>lim && d<=D.cull && !(hideDeep && B.x0>=DEEP_X && B.key[0]==="z");
-      B.distant=d>lim;
-      if(on!==B.on){ B.on=on; for(const m of B.far2) m.visible=on; }
-    }
-    for(const Q of QUADS) Q.n=0;
-    for(const c of CHUNKS){
-      const dx=Math.max(c.x0-cam.x, 0, cam.x-c.x1), dz=Math.max(c.z0-cam.z, 0, cam.z-c.z1);
-      const d=Math.hypot(dx,dz,alt*0.6);
-      c.want = (c.block.distant || (hideDeep && c.x0>=DEEP_X && c.key[0]==="z")) ? 2 : d<D.tree ? 1 : d>D.cull ? 2 : 0;
-      c.wsmall = d<D.small;
-      if(c.want===0) c.quad.n++;
-    }
-    // a quad whose chunks are all far draws their far set as one
-    for(const Q of QUADS){
-      const on=Q.far.length>0 && Q.n===Q.chunks.length;
-      if(on!==Q.on){ Q.on=on; for(const m of Q.far) m.visible=on; }
-    }
-    for(const c of CHUNKS){
-      const mode=(c.want===0 && c.quad.on) ? 4 : c.want, small=c.wsmall;      // (4: far, and the quad is drawing it)
-      if(mode!==c.mode || small!==c.small){
-        c.mode=mode; c.small=small;
-        for(const m of c.near) m.visible = mode===1 && (!m.userData.small || small);
-        for(const m of c.far)  m.visible = mode===0;
-      }
+    const D=DRAW_LEVELS[GFX.draw], SL=SHADOW_LEVELS[GFX.shadows];
+    // where a crown starts to thin, where it is down to a quarter; the understory's distances go with the setting
+    const A=D.tree*0.45, B=D.tree*1.9, k=D.tree/70;
+    LOD_U.uEye.value.copy(cam); LOD_U.uLod.value.set(A, B, 0, 1/k);
+    const NEAR=Math.max(D.tree, SL ? SL.half+8 : 0), FAR=D.tree*2.4+40, PAST=[0, NEAR, FAR, FAR*2];
+    // from the biggest groups down: one that draws covers everything under it
+    for(let t=SIDE.length-1;t>=0;t--) for(const G of TIERS[t]){
+      const d=Math.hypot(Math.max(G.x0-cam.x, 0, cam.x-G.x1), Math.max(G.z0-cam.z, 0, cam.z-G.z1), alt*0.6);
+      G.cov=!!G.up && (G.up.far || G.up.cov);
+      G.far=!G.cov && (t===0 || (G.meshes.length>0 && d>PAST[t]));
+      show(G, G.far && d<=D.cull && !(hideDeep && G.x0>=DEEP_X && G.key[0]==="z"), d, A, B, k);
     }
   }
   function setSeason(a){
     autumn=!!a;
-    for(const c of CHUNKS.concat(QUADS, BLOCKS)) for(const m of (c.near||[]).concat(c.far||[], c.far2||[])){
+    for(const T2 of TIERS) for(const G of T2) for(const m of G.meshes){
       const list=m.userData.list;
       for(let i=0;i<list.length;i++) m.setColorAt(i, autumn ? list[i].ca : list[i].cs);
       m.instanceColor.needsUpdate=true;
@@ -1268,6 +1173,6 @@ vec4 canCrown(vec2 p, out float id){
   }
   function canopyAt(x,z){ return inZone(x,z) ? -1e9 : canopyY(x,z,true); }
   return {plant:plant, finish:finish, update:update, setSeason:setSeason, isAutumn:()=>autumn,
-          inst:INST, chunks:CHUNKS, blocks:BLOCKS, variants:VARIANTS, atlas:ATLAS, canopyAt:canopyAt, canopy:CAN, barkCyl:barkCyl,
-          nearMat:NEAR_MAT, farMat:FAR_MAT};
+          inst:INST, chunks:CHUNKS, tiers:TIERS, variants:VARIANTS, atlas:ATLAS, canopyAt:canopyAt, canopy:CAN, barkCyl:barkCyl,
+          nearMat:NEAR_MAT, lod:LOD_U};
 })();
