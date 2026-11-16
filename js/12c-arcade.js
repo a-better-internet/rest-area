@@ -16,9 +16,10 @@
    through a pair of sliding glass doors into a small room the crew filled
    with what came out of a closed arcade
    in Erie: a cosmic carpet, black walls with pink and blue neon along
-   them, ten upright cabinets round the walls running their attract
-   screens (each of them playable, 18f to 18t), a token changer, an air hockey table in the middle and a hoops
-   machine against the back wall, both of which you can play (18e). All of
+   them, twelve upright cabinets round the walls running their attract
+   screens (each of them playable, 18f to 18x), a token changer, an air hockey table in the middle and a hoops
+   machine against the back wall, both of which you can play (18e); and in the east end, built by their own
+   files, the coin dozer (18h), the chucks (18u) and the alley (18v). All of
    it BURIED: the same at any hour (19).
    ---------------------------------------------------------------------- */
 const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
@@ -28,9 +29,9 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   const CX0=71.0, CX1=73.0, LZ0=D.z, LZ1=D.z-0.80;                 // the corridor's width; the landing inside the door
   const STZ1=LZ1-(NS-1)*0.30;                                      // the foot of the stair
   const CZ1=-211.0;                                                // where the corridor meets the room
-  // the room: twelve metres by eight and a half (it was nine: the east wall went out three metres, into the hill, when
-  // the last two machines came, and the changer, the can, the dozer and the house rules went out with it)
-  const A={x0:67.5, x1:79.5, z0:-219.5, z1:CZ1, y:FH, h:3.0};
+  // the room: seventeen metres by eight and a half (it was nine, then twelve: the east wall has gone out into the hill
+  // twice as machines came, and the changer, the can, the dozer and the house rules went out with it each time)
+  const A={x0:67.5, x1:84.5, z0:-219.5, z1:CZ1, y:FH, h:3.0};
   const CEIL_HI=FB+2.05, CEIL_LO=FH+2.75, SOFFIT=LZ1-1.0;          // the ceiling over the landing, the corridor's, where it steps
   const LOW="#7d8f86", HIGH="#d9d4c4";
   const E=[];
@@ -196,7 +197,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
     B(1.70, 0.46, 0.02, (CX0+CX1)/2, A.y+2.70, A.z1-0.021, "#0a0a0c"); }
   // the light: low, coloured, from the ceiling corners; a white one over each game; and the screens themselves
   for(const [x,z,c] of [[69.0,-212.8,0x9a5cff],[75.4,-212.8,0x4fb8ff],[69.0,-218.2,0xff5fb0],[72.6,-218.0,0x7a6cff],[72.4,-214.2,0xfff0e0],[74.4,-217.6,0xfff0e0],
-                        [78.3,-213.0,0xff5fb0],[77.3,-217.7,0x4fd8ff]])                 // (and the new end: pink by the changer, blue over the last two machines)
+                        [77.6,-213.2,0xff5fb0],[77.3,-217.7,0x4fd8ff],                  // (and the east end: pink over the chucks, blue over the back wall's machines,
+                        [81.0,-217.6,0x9a5cff],[83.4,-216.6,0x4fb8ff]])                 //  violet and blue further on; the alley and the chucks have their own, 18u and 18v)
     lamp({x:x, y:A.y+2.25, z:z, color:c, intensity:c===0xfff0e0?0.62:0.80, dist:8, decay:1.4});
 
   /* ---- the cabinets: seven of them round the walls, every one of them played ----------- */
@@ -205,8 +207,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   // (the last two are 18s's and 18t's. A cabinet's place in this list is its marquee's cell; its number among the games,
   //  ARCADE.cabs and 18g's _CBG, is the same unless cab() is given another: 8 to 12 are the Pine Knot's machines, 14z)
   const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP","GROUNDHOG GULCH","TURNPIKE TURTLE","SUDS PATROL","ROUTE 6 RALLY",
-               "HORNWORM HAVOC","EXIT 166 RUMBLE"];
-  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8","#c8641a","#4a8a2a","#a83a2a"];
+               "HORNWORM HAVOC","EXIT 166 RUMBLE","SLIPPERY ROCK","SILO SCRAMBLE"];
+  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8","#c8641a","#4a8a2a","#a83a2a","#5a6a7a","#a8782a"];
   ARCADE.cabs=[];
   const marC=cvs(128*NAMES.length,96), mx=marC.getContext("2d");
   NAMES.forEach((n,i)=>{ const ox=i*128, oy=0, g=mx.createLinearGradient(0,oy,0,oy+96);
@@ -269,6 +271,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   cab(7, 72.95, A.z0+0.45, 0);
   // and the last two in the new end, on the back wall past the hoops: Hornworm Havoc (18s) and Exit 166 Rumble (18t)
   cab(8, 76.55, A.z0+0.45, 0, 13);      cab(9, 78.15, A.z0+0.45, 0, 14);
+  // and two more past those: Slippery Rock (18w) and Silo Scramble (18x)
+  cab(10, 79.75, A.z0+0.45, 0, 15);     cab(11, 81.35, A.z0+0.45, 0, 16);
   // the marquees: one mesh, one texture, every cabinet a cell of it
   scene.add(new T.Mesh(mergeEntries(marG), marM));
 
@@ -403,7 +407,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
     addUse(X, ZF+0.70, A.y, "PLAY HOOPS", ()=>{ if(typeof HOOPS!=="undefined") HOOPS.start(); }, 0.9).game=true; }
 
   // stools by the cabinets, a can by the door, the rules on the east wall
-  for(const [x,z] of [[69.3,-214.7],[70.6,-217.6],[77.35,-217.75]]){ C(0.17, 0.05, x, A.y+0.66, z, "#c42a1a", 16); C(0.025, 0.62, x, A.y+0.33, z, "#9a9da0", 8); C(0.20, 0.02, x, A.y+0.01, z, "#9a9da0", 16); }
+  for(const [x,z] of [[69.3,-214.7],[70.6,-217.6],[77.35,-217.75],[80.55,-217.75]]){ C(0.17, 0.05, x, A.y+0.66, z, "#c42a1a", 16); C(0.025, 0.62, x, A.y+0.33, z, "#9a9da0", 8); C(0.20, 0.02, x, A.y+0.01, z, "#9a9da0", 16); }
   // (the can a stride south of the token changer, not in it)
   swingCan(A.x1-0.4, A.z1-2.25, -Math.PI/2, A.y);
   addCol(A.x1-0.65, A.x1, A.z1-2.50, A.z1-2.00, A.y-0.5, A.y+0.9);

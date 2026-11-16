@@ -1019,16 +1019,19 @@ If the scene runs hot on your machine, start there (see below).
       Twenty-five metres on, under the hill, a pair of sliding glass doors
       parts as you come up to them, each leaf running into a pocket in the
       wall, onto an arcade with a cosmic carpet, black walls with pink
-      and blue neon, and a GAME ROOM sign. The room is twelve metres by
-      eight and a half: its east wall went out three metres into the hill
-      to make room for the last two machines. Ten upright cabinets stand
+      and blue neon, and a GAME ROOM sign. The room is seventeen metres by
+      eight and a half: its east wall has gone out into the hill twice,
+      three metres and then five, as machines came. Twelve upright cabinets stand
       round the walls, each running its own attract screen (ASTRO
       RAIDERS, MAZE MUNCHER, BRICKYARD BREAKOUT and BLOCK DROP on the west
       and back walls, SUDS PATROL in the back corner, ROUTE 6 RALLY by the
       hoops, GROUNDHOG GULCH and
       TURNPIKE TURTLE either side of the way in, and HORNWORM HAVOC and
-      EXIT 166 RUMBLE on the back wall of the new end, past the hoops),
+      EXIT 166 RUMBLE, SLIPPERY ROCK and SILO SCRAMBLE along the back
+      wall of the east end, past the hoops),
       with a token changer on the east wall, clear of the trash can.
+      Against the front wall of the east end are two machines you stand
+      at: WHACK-A-CHUCK and the ALLEY ROLL lane.
     - **MECH 2.** The first steel door opens on what its name says: the air
       handler that breathes for the corridor and the arcade (`E`), its duct
       away along the ceiling, a water heater, the sump under its grate, the
@@ -1178,20 +1181,73 @@ If the scene runs hot on your machine, start there (see below).
         sideways and you can step up and down it as well as along. You are
         Dale, a trucker who comes out of the rest area at two in the
         morning to find his diesel siphoned and a trail of it leading up
-        the ramp. Three stages: the truck lot, the fuel stop, and the
-        fireworks outlet's lot, where Big Earl of the Gravel Kings is
-        sitting on forty gallons of it. The street stops wherever they
-        come at you and lets you on (GO) when they are down. Punks come
-        straight in; the ones with a chain reach further and swing
-        slower; the big ones do not flinch at a jab; and Big Earl puts
-        his head down and runs the width of the screen, and can only be
-        put on his back in the moment after. No more than two of them
-        swing at once. `Space` (or `J`) punches, and three in a row is a
-        combo whose third puts a man down; `K` kicks, slower and longer;
-        `L` jumps, and a punch or a kick in the air is a flying kick.
-        Oil drums and crates break, and some have a soft pretzel in them,
-        which is health. Three Dales. The best five scores are kept.
-      - Both of those are their own games: each takes the way a kind of
+        the ramp. Nine stages, each a place in the world outside the
+        cabinet: the truck lot, the ramp up to I-79, the fuel stop, Weir's
+        farm, French Creek Pines, Lake Street, Lakeshore Brewing's deck,
+        the fireworks outlet and, under the mast, the radio tower, where
+        Big Earl of the Gravel Kings is sitting on forty gallons of it.
+        Behind each street the sky, the hills, the water tower, the lake
+        and the radio mast (a little nearer every stage, its beacon
+        flashing) slide by more slowly than the street does, and things
+        move: the traffic on I-79, a campfire, a rocket over the outlet.
+        The street stops wherever they come at you and lets you on (GO)
+        when they are down. Punks come straight in; the ones with a chain
+        reach further and swing slower; the big ones do not flinch at a
+        jab; Sluggers carry a ball bat that puts you on your back; Slim
+        throws knives along your row from across the street, so step out
+        of it; and Big Earl, and his little brother Dutch at the Pines
+        and the outlet, put their heads down and run the width of the
+        screen, and can only be put on their backs in the moment after.
+        No more than two of them swing at once. `Space` (or `J`) punches,
+        and three in a row is a combo whose third puts a man down; `K`
+        kicks, slower and longer; `L` jumps, and a punch or a kick in the
+        air is a flying kick. Drums, crates, bales, kegs and trash cans
+        break, and some have a soft pretzel in them, which is health.
+        Others have a WEAPON, and Sluggers and Slim drop theirs when they
+        go down: walk over a ball bat or a roll of throwing knives to
+        take it, and `Space` uses it. The bat reaches further and floors
+        what it meets, for seven hits; a knife flies the width of the
+        screen. Knocked down, you drop what you carry. Three Dales, and
+        one more after the third and sixth stages. The best five scores
+        are kept.
+      - **Slippery Rock** is a marble-rolling game seen from above and
+        to one side, against the clock. The stick pushes a glass
+        cat's-eye marble down four courses of cut stone (a limestone
+        quarry, a coal breaker's chutes, an ice house, a gorge at dusk).
+        Slopes run it away from you, ice gives you almost nothing to
+        push against, tilted ledges slide it toward the drop, there are
+        gaps to carry your speed over, and snapping turtles walk their
+        beats and knock it aside. Off the edge, or down too far onto
+        stone, and a new marble is put down at the last corner you
+        turned with the clock still running. Up to fifteen seconds left
+        at the bottom go with you to the next course. The best five
+        scores are kept.
+      - **Silo Scramble** is a climbing game. Bandit, a raccoon the size
+        of a calf, has the county fair's blue-ribbon pie up in the Weir
+        farm's haymow, and June the hired hand goes up the ladders after
+        him while he rolls round bales down the beams and lobs pumpkins
+        that drop through the floors. The haymow's beams slope and are
+        open at the low end; the silo's catwalks are level, each with a
+        gap to jump. The two take turns, quicker each time. `Space` (or
+        `J`) jumps: a hundred for a bale jumped. A pitchfork, where one
+        hangs, breaks bales for nine seconds (three hundred each), and
+        you can neither jump nor climb while you carry it. What is left
+        of the bonus clock is yours at the pie. Three Junes. The best
+        five scores are kept.
+      - **Whack-a-Chuck** is not a screen but a machine: a red box with
+        a patch of lawn for a top, six burrows and a woodchuck under
+        each. The mouse carries the mallet and a click brings it down, or
+        `Q` `W` `E` and `A` `S` `D` hit a burrow outright. Thirty
+        seconds, quicker as it goes; ten for a chuck, twenty-five for
+        the one in the hard hat.
+      - **Alley Roll** is a lane with a hump at the end and a sloped
+        board of rings under a cage: 10, 20 and 30 one inside another,
+        40 and 50 above them, and a 100 in each top corner. `A` and `D`
+        (or the mouse) set where the ball starts, `Q` and `R` turn your
+        hand, and holding `Space` (or the mouse button) runs the gauge
+        up and back: let go to roll. A ring on the board shows where
+        the ball would land. Nine balls.
+      - All of those are their own games: each takes the way a kind of
         arcade game plays and nothing else. Their names, people, stages
         and pictures are drawn here, as every cabinet's are.
       - **Block Drop** follows Jake Gordon's MIT-licensed
@@ -1758,7 +1814,8 @@ press is a hop; in Route 6 Rally up is the gas, down the brake, left and
 right steer and `Space` shifts; in Suds Patrol left and right walk, up (or `W`, `K`) jumps
 and `Space` (or `J`) blows a bubble; in Hornworm Havoc they move the gnome and `Space`
 (or `J`) shoots; in Exit 166 Rumble they walk Dale along the street and up and down it,
-`Space` (or `J`) punches, `K` kicks and `L` jumps. `N` (or `Space` or `Enter`, when the
+`Space` (or `J`) punches (or swings the bat, or throws a knife, when you have one), `K` kicks and `L` jumps; in Slippery Rock they
+push the marble; in Silo Scramble they walk and climb, and `Space` jumps. `N` (or `Space` or `Enter`, when the
 game is over) starts again, and `Esc` or `E` steps away.
 
 At a hoop over a drive on Lake Street, `E` in front of it takes the ball.
@@ -2018,6 +2075,10 @@ js/18o-racer.js     Route 6 Rally, the pseudo-3D road racer on the eighth cabine
 js/18p-slots.js     the Pine Knot's slot machines: five reels, nine lines, the pine wild
 js/18s-hornworm.js  Hornworm Havoc, the tomato-patch shooter on the ninth cabinet
 js/18t-rumble.js    Exit 166 Rumble, the walk-along brawler on the tenth cabinet
+js/18u-whack.js     Whack-a-Chuck, the machine with six woodchucks and a mallet
+js/18v-skee.js      Alley Roll, the lane with the hump and the board of rings
+js/18w-marble.js    Slippery Rock, the marble-rolling game on the eleventh cabinet
+js/18x-silo.js      Silo Scramble, the climbing game on the twelfth cabinet
 js/18c-settings.js  the graphics menu: resolution (and auto), frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience

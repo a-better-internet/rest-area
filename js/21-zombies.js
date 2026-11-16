@@ -846,7 +846,8 @@ const ZOMBIE=(function(){
   // at a game (a cabinet, the tables, the oche, a disc, a bag, a ball) the gun is put away: not drawn, not fired
   const atGame=()=>[typeof CABS!=="undefined" && CABS, typeof RAIDERS!=="undefined" && RAIDERS, typeof HOCKEY!=="undefined" && HOCKEY,
     typeof HOOPS!=="undefined" && HOOPS, typeof DOZER!=="undefined" && DOZER, typeof DARTS!=="undefined" && DARTS, typeof DGOLF!=="undefined" && DGOLF,
-    typeof CORN!=="undefined" && CORN, typeof YARDHOOP!=="undefined" && YARDHOOP, typeof LDARTS!=="undefined" && LDARTS].some(g=>g && g.on) || (typeof DOGBALL!=="undefined" && DOGBALL.held);
+    typeof CORN!=="undefined" && CORN, typeof YARDHOOP!=="undefined" && YARDHOOP, typeof LDARTS!=="undefined" && LDARTS,
+    typeof WHACK!=="undefined" && WHACK, typeof SKEE!=="undefined" && SKEE].some(g=>g && g.on) || (typeof DOGBALL!=="undefined" && DOGBALL.held);
   Z.stowed=atGame;
   function spreadNow(){
     const g=G(), mv=player.moving ? (keys.KeyQ ? 0.06 : (keys.ShiftLeft||keys.ShiftRight) ? 0.025 : 0.01) : 0;

@@ -912,13 +912,14 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - Leaf greens are deep and a little grey (`SPECIES.summer`, around
   `#40602e`). A per-plant `color` passed to `FOREST.plant` should sit in
   the same range; anything like `#7e9e4a` comes out lime in full sun.
-- The arcade (12c) is twelve metres by eight and a half (`A.x1` 79.5):
+- The arcade (12c) is seventeen metres by eight and a half (`A.x1` 84.5; it was 79.5):
   the east wall and everything on it (the changer, the can, 18h's dozer,
   the house rules) go by `A.x1`. `cab(i, x, z, ry, id)`: `i` is the place
   in `NAMES` (the marquee's cell) and `id` the cabinet's number in
   `ARCADE.cabs` and `_CBG` when that is not the same: 8 to 12 are the
   Pine Knot's machines (14z), so the arcade's ninth and tenth are 13
-  (18s, Hornworm Havoc) and 14 (18t, Exit 166 Rumble).
+  (18s, Hornworm Havoc) and 14 (18t, Exit 166 Rumble), and its eleventh
+  and twelfth 15 (18w, Slippery Rock) and 16 (18x, Silo Scramble).
 - A cabinet's game takes a KIND of game's way of playing and nothing
   more: its name, people, stages and pictures are made here and are its
   own, never another game's, whatever a reference offered to work from
@@ -930,3 +931,34 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   strokes from a table of poses (`POSES`). `turns()` lets two of them
   come at Dale at once. 18s's bed is a grid of plants (`hp`, `ripe`);
   `burst()` is the ripe tomato going off.
+
+## Round 33 notes
+
+- A machine you stand at (18u's Whack-a-Chuck, 18v's Alley Roll) is built
+  the way 18h's dozer is: its own group and meshes in its own file, an
+  object with `on`, `start`, `stop`, `key`, `mouse`, an `update…` called
+  from 18e's `updateGames`, a `.game` use, and its hooks in 17 (the keydown
+  chain, `look`, the prompt) and 21's `atGame`. Both stand against the
+  front wall turned to face the room (`rotation.y = π`), so the machine's
+  own +x is the player's right and its +z is toward the player.
+- 18v's ball is worked out, not played back: `SKEE.land(x, a, s)` gives
+  where a roll comes down on the board and what it scores, and the mark
+  on the board while you hold the gauge is the same call. Change `SK`
+  (the lane, the hump's `LIFT`, the board's `TILT`, the `RINGS`) and print
+  `SKEE.land(0, 0, s)` across `S0`..`S1` to see every ring can still be
+  reached.
+- 18t's street is two pictures (`backdrop(k)` gives `far` and `near`):
+  the stage's `sky` colours, its `far(x, Lf, S)` and `beacons` go on the
+  far one, which slides at `PX` of the camera; `paint` is the near one,
+  and leaves the sky clear. A stage's `live(x, cam, t, layer)` draws what
+  moves, after each picture. A prop is `[x, depth, kind, what is in it]`.
+  A kind with `thrower` throws along Dale's row (`G.shots`), one with
+  `floor` puts him down, `drop` is what it leaves, `wpn` what it is drawn
+  holding, `boss` and `sub` make it a boss with its own title.
+- 18w's courses are `COURSES`: stretches `[way, cells, width, drop, {ice,
+  rail, tilt, gap:[at, n], turtles}]` laid end to end by `build`. The
+  first and last three cells of a stretch are level; kerbs are laid in a
+  second pass so one never stands across the next stretch's way in.
+- 18x's floors are `layout(kind)`: `segs` (each end's height, the way a
+  bale rolls, `wl` / `wr` for a wall at an end), `lads` (x, the seg above,
+  the seg below, broken), forks, Bandit, the pie on a seg marked `shelf`.

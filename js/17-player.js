@@ -30,6 +30,9 @@ addEventListener("keydown",e=>{
   if(typeof CABS!=="undefined" && CABS.on){ e.preventDefault(); CABS.key(e); return; }
   // and at the coin dozer, its (18h-dozer)
   if(typeof DOZER!=="undefined" && DOZER.on){ e.preventDefault(); DOZER.key(e); return; }
+  // at the chucks and the alley, theirs (18u, 18v)
+  if(typeof WHACK!=="undefined" && WHACK.on){ e.preventDefault(); WHACK.key(e); return; }
+  if(typeof SKEE!=="undefined" && SKEE.on){ e.preventDefault(); SKEE.key(e); return; }
   // and in the graphics menu, the menu's (18c-settings)
   if(window.GFXMENU && GFXMENU.open){ e.preventDefault(); if(!e.repeat || e.code.startsWith("Arrow")) GFXMENU.key(e); return; }
   // the code box (21): / opens it; while it is open every key is its
@@ -102,6 +105,8 @@ function look(dx,dy){
   if(typeof RAIDERS!=="undefined" && RAIDERS.on) return;                          // your eyes stay on the screen
   if(typeof CABS!=="undefined" && CABS.on){ CABS.mouse(dx,dy); return; }           // (the bat, at Brickyard Breakout)
   if(typeof DOZER!=="undefined" && DOZER.on){ DOZER.mouse(dx,dy); return; }         // (the chute, at the coin dozer)
+  if(typeof WHACK!=="undefined" && WHACK.on){ WHACK.mouse(dx,dy); return; }         // (the mallet, 18u)
+  if(typeof SKEE!=="undefined" && SKEE.on){ SKEE.mouse(dx,dy); return; }            // (the ball across the lane, 18v)
   if(driving || (typeof BOAT!=="undefined" && BOAT.on)){   // orbit the car (or the boat, 14p) rather than turn a head
     carCamYaw   -= dx*0.0042;
     carCamPitch  = clamp(carCamPitch - dy*0.0032, -0.18, 1.05);
@@ -311,7 +316,8 @@ function updateDoors(dt){
   if(droneMode){ el.classList.remove("show"); return; }
   // at a game the toast has told you its keys, and the prompt would sit over what you are playing
   if((typeof DARTS!=="undefined" && DARTS.on) || (typeof HOCKEY!=="undefined" && HOCKEY.on) || (typeof HOOPS!=="undefined" && HOOPS.on) ||
-     (typeof RAIDERS!=="undefined" && RAIDERS.on) || (typeof CABS!=="undefined" && CABS.on) || (typeof DOZER!=="undefined" && DOZER.on)){ el.classList.remove("show"); return; }
+     (typeof RAIDERS!=="undefined" && RAIDERS.on) || (typeof CABS!=="undefined" && CABS.on) || (typeof DOZER!=="undefined" && DOZER.on) ||
+     (typeof WHACK!=="undefined" && WHACK.on) || (typeof SKEE!=="undefined" && SKEE.on)){ el.classList.remove("show"); return; }
   const bits=[];
   if(driving) bits.push("E  ·  GET OUT");
   else if(typeof BOAT!=="undefined" && BOAT.on) bits.push(BOAT.prompt ? BOAT.prompt() : "E  ·  STEP OFF");
