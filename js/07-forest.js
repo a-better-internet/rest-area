@@ -13,8 +13,20 @@
    and everything fills in down to the ground.
 
    How it is drawn:
-   * Every tree is one of a handful of VARIANTS — trunk, limbs and a crown of
-     alpha-cut leaf cards — built once and instanced thousands of times.
+   * Every tree is one of a handful of VARIANTS — trunk, limbs and a crown —
+     built once and instanced thousands of times.
+   * A CROWN IS PUFFS, NOT PLANES. It used to be a hundred flat cards of
+     leaf set at every angle, and looked it: planes, each with a dark rim
+     where its picture's edge was filtered against black. Now each clump of
+     leaves is a PUFF: a soft round mass of leaf that turns to face you
+     wherever you stand (so it is never seen edge on, and never reads as a
+     board), shaded as a ball (its normal leans out from its own middle as
+     well as from the crown's), a little darker underneath than on top. A
+     tree is sixty or seventy of them on its limbs. The leaf pictures are
+     pale and even, with no outlines, and their colour is carried out past
+     their edges into the clear part of the picture, so filtering an edge
+     blends leaf with leaf and never with black. Conifers are the same
+     thing in needles, laid up in a cone.
    * ONE MODEL, AT EVERY DISTANCE. There is no near tree and far tree to
      swap between, so nothing ever pops. Every card in a crown has a rank,
      and the vertex shader works out for each tree, from how far off it is,
@@ -26,7 +38,7 @@
      nothing the same way. Far off, the leaf texture's own holes close up
      (the cut-off falls with distance), so a far crown is soft round masses
      in the same colour and the same light as the near one, because it is
-     the near one. The understory does not appear either: a fern, a shrub,
+     the near one. (A "card" below is a puff.) The understory does not appear either: a fern, a shrub,
      a sapling each grows out of the ground over the last third of its own
      distance.
    * The cards are in the index list in rank order, so a tree further off
@@ -67,81 +79,65 @@ const FOREST=(function(){
              bark:[512,512,256,512], smooth:[768,512,256,256], fern:[768,768,256,256]};
   const R0=_trng(77777);
   function gauss(){ return Math.sqrt(-2*Math.log(R0()+1e-7))*Math.cos(6.2831853*R0()); }
+  /* A puff of broadleaf: a round mass of small leaves, close-set and whole in the middle (a soft ground of leaf under
+     them, so nobody sees through a puff's heart), loose and ragged at the rim where single leaves stand out against
+     the sky. Pale and even: the green is the tree's own, laid over it, and the light and shade are worked out for the
+     puff as a ball, not painted here. No twigs, no veins, no outlines. */
   (function drawLeaves(){
     const [ox,oy,S]=REG.leaf, c=S/2;
-    // twigs, so the holes in a crown have something in them
-    ax.lineCap="round";
-    for(let i=0;i<14;i++){
-      const a=R0()*6.283, L=S*(0.22+R0()*0.22);
-      ax.strokeStyle="rgba(78,66,50,1)"; ax.lineWidth=2.2;
-      ax.beginPath(); ax.moveTo(ox+c+Math.cos(a)*S*0.04, oy+c+Math.sin(a)*S*0.04);
-      ax.quadraticCurveTo(ox+c+Math.cos(a+0.3)*L*0.5, oy+c+Math.sin(a+0.3)*L*0.5,
-                          ox+c+Math.cos(a)*L, oy+c+Math.sin(a)*L); ax.stroke();
-    }
-    // three depths of leaf: the back ones darker, which is the crown shading itself
-    const layers=[[260,0.50],[240,0.68],[190,0.86]];
-    for(const [n,lum] of layers){
+    const g=ax.createRadialGradient(ox+c, oy+c, 0, ox+c, oy+c, S*0.36);
+    g.addColorStop(0, "rgba(160,172,146,1)"); g.addColorStop(0.62, "rgba(160,172,146,0.92)"); g.addColorStop(1, "rgba(160,172,146,0)");
+    ax.fillStyle=g; ax.beginPath(); ax.arc(ox+c, oy+c, S*0.36, 0, 7); ax.fill();
+    for(const [n, lum, spread] of [[230, 0.70, 0.150], [260, 0.80, 0.175], [220, 0.90, 0.190]]){
       for(let i=0;i<n;i++){
-        let px=gauss()*S*0.17, py=gauss()*S*0.17;
-        const d=Math.hypot(px,py); if(d>S*0.44){ px*=S*0.44/d; py*=S*0.44/d; }
-        const L=S*(0.020+R0()*0.018), W=L*(0.55+R0()*0.25), a=R0()*6.283;
-        const l=lum+(R0()-0.5)*0.16, warm=(R0()-0.5)*0.06;
+        let px=gauss()*S*spread, py=gauss()*S*spread;
+        const d=Math.hypot(px,py); if(d>S*0.45){ px*=S*0.45/d; py*=S*0.45/d; }
+        const L=S*(0.024+R0()*0.020), W=L*(0.58+R0()*0.22), a=R0()*6.283;
+        const l=Math.min(1, lum+(R0()-0.5)*0.10), warm=(R0()-0.5)*0.04;
         ax.save(); ax.translate(ox+c+px, oy+c+py); ax.rotate(a);
-        ax.fillStyle="rgb("+((l+warm)*236|0)+","+(l*244|0)+","+((l-warm)*214|0)+")";
+        ax.fillStyle="rgb("+((l+warm)*232|0)+","+(l*242|0)+","+((l-warm)*212|0)+")";
         ax.beginPath(); ax.moveTo(0,-L); ax.quadraticCurveTo(W,-L*0.1,0,L);
         ax.quadraticCurveTo(-W,-L*0.1,0,-L); ax.fill();
-        ax.strokeStyle="rgba(40,46,30,0.30)"; ax.lineWidth=0.8;
-        ax.beginPath(); ax.moveTo(0,-L*0.85); ax.lineTo(0,L*0.9); ax.stroke();
         ax.restore();
       }
     }
   })();
+  /* A puff of hemlock or spruce: sprays of short needles going out every way from the middle, whole at the heart and
+     spiky at the rim. */
   (function drawConifer(){
-    const [ox,oy,S]=REG.conifer;
-    // three fronds fanned from the left edge: a card's +u runs out from the
-    // trunk, so the frond's base is at u = 0
-    for(let f=0;f<5;f++){
-      const y0=oy+S*(0.22+f*0.14), droop=(f-2)*0.06;
-      let px=ox+6, py=y0;
-      const segs=24;
-      for(let k=0;k<segs;k++){
-        const t=k/segs, nx=px+S*0.95/segs, ny=py+S*droop/segs+(R0()-0.5)*2;
-        ax.strokeStyle="rgba(84,72,56,1)"; ax.lineWidth=2.6*(1-t)+0.6;
-        ax.beginPath(); ax.moveTo(px,py); ax.lineTo(nx,ny); ax.stroke();
-        // needles both sides, short and flat, shorter toward the tip
-        const nl=S*0.046*(1-t*0.5);
-        for(const sd of [-1,1]) for(let q=0;q<4;q++){
-          const bx2=px+(nx-px)*q/3, by2=py+(ny-py)*q/3;
-          const l=0.48+R0()*0.44;
-          ax.strokeStyle="rgb("+(l*214|0)+","+(l*236|0)+","+(l*214|0)+")";
-          ax.lineWidth=3.2;
-          ax.beginPath(); ax.moveTo(bx2,by2); ax.lineTo(bx2+nl*0.3, by2+sd*nl); ax.stroke();
-        }
-        // side shoots
-        if(k%4===2 && t<0.8) for(const sd of [-1,1]){
-          let sx=nx, sy=ny;
-          for(let j=0;j<5;j++){
-            const ex=sx+S*0.026, ey=sy+sd*S*0.024;
-            for(const s2 of [-1,1]){ const l=0.5+R0()*0.4;
-              ax.strokeStyle="rgb("+(l*214|0)+","+(l*236|0)+","+(l*214|0)+")"; ax.lineWidth=2.0;
-              ax.beginPath(); ax.moveTo(sx,sy); ax.lineTo(sx+S*0.012+s2*S*0.016, sy+s2*S*0.022); ax.stroke(); }
-            sx=ex; sy=ey;
-          }
-        }
-        px=nx; py=ny;
-      }
+    const [ox,oy,S]=REG.conifer, c=S/2;
+    const g=ax.createRadialGradient(ox+c, oy+c, 0, ox+c, oy+c, S*0.33);
+    g.addColorStop(0, "rgba(150,170,150,1)"); g.addColorStop(0.6, "rgba(150,170,150,0.9)"); g.addColorStop(1, "rgba(150,170,150,0)");
+    ax.fillStyle=g; ax.beginPath(); ax.arc(ox+c, oy+c, S*0.33, 0, 7); ax.fill();
+    ax.lineCap="round";
+    for(let i=0;i<150;i++){
+      const a=R0()*6.283, r0=S*(0.02+R0()*0.22), L=S*(0.10+R0()*0.13), l=0.74+R0()*0.24;
+      const x0=ox+c+Math.cos(a)*r0, y0=oy+c+Math.sin(a)*r0, x1=ox+c+Math.cos(a)*Math.min(S*0.46, r0+L), y1=oy+c+Math.sin(a)*Math.min(S*0.46, r0+L)+L*0.10;
+      // the shoot, and its needles either side, shorter toward the tip
+      ax.strokeStyle="rgb("+(l*200|0)+","+(l*226|0)+","+(l*204|0)+")"; ax.lineWidth=5;
+      ax.beginPath(); ax.moveTo(x0,y0); ax.lineTo(x1,y1); ax.stroke();
+      const nx=-(y1-y0), ny=x1-x0, nl=Math.hypot(nx, ny)||1;
+      ax.lineWidth=2.6;
+      for(let k=0;k<7;k++){ const t=k/7, bx2=x0+(x1-x0)*t, by2=y0+(y1-y0)*t, w=S*0.030*(1-t*0.55), l2=Math.min(1, l+(R0()-0.5)*0.12);
+        ax.strokeStyle="rgb("+(l2*204|0)+","+(l2*232|0)+","+(l2*208|0)+")";
+        for(const sd of [-1,1]){ ax.beginPath(); ax.moveTo(bx2, by2); ax.lineTo(bx2+sd*nx/nl*w+(x1-x0)*0.06, by2+sd*ny/nl*w+(y1-y0)*0.06); ax.stroke(); } }
     }
   })();
+  /* A tuft of white pine: bundles of long soft needles, fuller than a spray and loose at the ends. */
   (function drawPine(){
     const [ox,oy,S]=REG.pine, c=S/2;
-    for(let b=0;b<9;b++){
-      const bx2=ox+c+gauss()*S*0.10, by2=oy+c+gauss()*S*0.10;
+    const g=ax.createRadialGradient(ox+c, oy+c, 0, ox+c, oy+c, S*0.26);
+    g.addColorStop(0, "rgba(150,172,154,0.95)"); g.addColorStop(1, "rgba(150,172,154,0)");
+    ax.fillStyle=g; ax.beginPath(); ax.arc(ox+c, oy+c, S*0.26, 0, 7); ax.fill();
+    ax.lineCap="round";
+    for(let b=0;b<11;b++){
+      const bx2=ox+c+gauss()*S*0.09, by2=oy+c+gauss()*S*0.09;
       const dir=R0()*6.283;
-      for(let n=0;n<60;n++){
-        const a=dir+(R0()-0.5)*2.4, L=S*(0.14+R0()*0.16);
-        const l=0.52+R0()*0.42;
-        ax.strokeStyle="rgb("+(l*206|0)+","+(l*236|0)+","+(l*214|0)+")";
-        ax.lineWidth=1.8;
+      for(let n=0;n<70;n++){
+        const a=dir+(R0()-0.5)*2.6, L=S*(0.13+R0()*0.15);
+        const l=0.72+R0()*0.26;
+        ax.strokeStyle="rgb("+(l*200|0)+","+(l*232|0)+","+(l*210|0)+")";
+        ax.lineWidth=2.4;
         ax.beginPath(); ax.moveTo(bx2,by2);
         ax.quadraticCurveTo(bx2+Math.cos(a)*L*0.5, by2+Math.sin(a)*L*0.5+L*0.08,
                             bx2+Math.cos(a)*L, by2+Math.sin(a)*L+L*0.16); ax.stroke();
@@ -204,7 +200,26 @@ const FOREST=(function(){
     ax.strokeStyle="rgba(90,110,60,1)"; ax.lineWidth=2;
     ax.beginPath(); ax.moveTo(ox+8,oy+S-8); ax.lineTo(ox+S-16,oy+16); ax.stroke();
   })();
-  const ATLAS=setSRGB(new T.CanvasTexture(atlas));
+  /* NO DARK RIM. A canvas keeps no colour where it is clear, so the card took its picture with black under every
+     hole, and wherever the card filtered a leaf's edge (every edge, at every distance but the nearest) it blended leaf
+     with black: a dark line round every leaf and a dark border round every plane of them. So the pixels are taken
+     off the canvas and every clear or nearly clear one is given the colour of the leaf nearest to hand, its region's
+     own average, with its clearness left as it was; and the texture is made from those pixels, not from the canvas.
+     (Turned over row for row as it goes: a texture from pixels is not flipped as one from a canvas is.) */
+  const ATLAS=(function(){
+    const img=ax.getImageData(0, 0, ATL, ATL), d=img.data, out=new Uint8Array(ATL*ATL*4);
+    for(const name of ["leaf", "conifer", "pine", "fern"]){ const [rx, ry, rw, rh0]=REG[name], rh=rh0||rw;
+      let r=0, g=0, b=0, n=0;
+      for(let y=ry;y<ry+rh;y+=2) for(let x=rx;x<rx+rw;x+=2){ const i=(y*ATL+x)*4; if(d[i+3]>220){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; } }
+      n=Math.max(1, n); r=Math.round(r/n); g=Math.round(g/n); b=Math.round(b/n);
+      for(let y=ry;y<ry+rh;y++) for(let x=rx;x<rx+rw;x++){ const i=(y*ATL+x)*4, a=d[i+3];
+        if(a<60){ d[i]=r; d[i+1]=g; d[i+2]=b; }
+        else if(a<200){ const k=(a-60)/140; d[i]=r+(d[i]-r)*k; d[i+1]=g+(d[i+1]-g)*k; d[i+2]=b+(d[i+2]-b)*k; } } }
+    for(let y=0;y<ATL;y++) out.set(d.subarray(y*ATL*4, (y+1)*ATL*4), (ATL-1-y)*ATL*4);
+    const t=new T.DataTexture(out, ATL, ATL, T.RGBAFormat, T.UnsignedByteType);
+    t.generateMipmaps=true; t.minFilter=T.LinearMipmapLinearFilter; t.magFilter=T.LinearFilter; t.needsUpdate=true;
+    return setSRGB(t);
+  })();
   ATLAS.anisotropy=MAXANISO;
   // a region's UVs, inset two texels so mip filtering stays inside it
   function reg(name){
@@ -238,26 +253,51 @@ const FOREST=(function(){
   const WIND_GLSL=["#include <begin_vertex>",
     "#ifdef USE_INSTANCING",
     "  vec3 ip = vec3( instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2] );",
+    "  float isc = length( vec3( instanceMatrix[0][0], instanceMatrix[0][1], instanceMatrix[0][2] ) );",
     "#else",
-    "  vec3 ip = vec3( 0.0 );",
+    "  vec3 ip = vec3( 0.0 ); float isc = 1.0;",
     "#endif",
+    "  float puffS = 1.0;",
     "  { float ld = distance( ip, uEye ), keep = lodKeep( ld ), code = aLodC.w, sc;",
     "    if( code < -0.5 ) sc = step( keep, 0.72 );",
     "    else if( code > 2.5 ) sc = 1.0 - step( keep, 0.72 );",
     "    else if( code > 1.5 ) sc = smoothstep( 0.70, 0.90, keep );",
     "    else sc = smoothstep( 0.0, min( 0.08, 0.45*keep ), keep*1.08 - code ) * pow( keep, -0.34 );",
-    "    transformed = aLodC.xyz + ( transformed - aLodC.xyz ) * sc;",
-    "    transformed *= 1.0 - smoothstep( aGone*0.66, aGone, ld*uLod.w ); }",
+    // (a puff's corners are all at its middle here and are put out to its edge once it is in view space, below)
+    "    if( aPuff.z > 0.0 ) puffS = sc; else transformed = aLodC.xyz + ( transformed - aLodC.xyz ) * sc;",
+    "    float gf = 1.0 - smoothstep( aGone*0.66, aGone, ld*uLod.w );",
+    "    transformed *= gf; puffS *= gf * isc; }",
+    "  vPuff = vec3( aPuff.xy, aPuff.z > 0.0 ? 1.0 : 0.0 );",
     "  float ph = ip.x*0.071 + ip.z*0.093;",
     "  float sw = aSway * ( 0.55 + uGust ) * ( sin( uTime*1.15 + ph ) * 0.6 + sin( uTime*2.9 + ph*2.3 + position.y*0.4 ) * 0.28 );",
     "  transformed.x += sw * 0.16;",
     "  transformed.z += sw * 0.10;",
     "  transformed.y += sw * 0.03;"].join("\n");
+  /* A PUFF FACES YOU. Its four corners are put out from its middle once the middle is in view space: across your
+     line of sight to it and up, so it is square on to where you stand whichever way you look (it does not swing as
+     you turn your head, only, slowly, as you walk round it). In the sun's shadow pass (PUFF_DEPTH) it is square on
+     to the sun instead, and throws a whole puff's shade. */
+  const PUFF_GLSL=["vec4 mvPosition = vec4( transformed, 1.0 );",
+    "#ifdef USE_INSTANCING",
+    "  mvPosition = instanceMatrix * mvPosition;",
+    "#endif",
+    "mvPosition = modelViewMatrix * mvPosition;",
+    "if( aPuff.z > 0.0 ){ float hs = aPuff.z * puffS;",
+    "#ifdef PUFF_DEPTH",
+    "  mvPosition.xy += aPuff.xy * hs;",
+    "#else",
+    "  vec3 toEye = normalize( -mvPosition.xyz ), upV = normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );",
+    "  vec3 rt = cross( upV, toEye ); float rl = length( rt ); rt = rl > 0.06 ? rt / rl : vec3( 1.0, 0.0, 0.0 );",
+    "  mvPosition.xyz += ( rt * aPuff.x + cross( toEye, rt ) * aPuff.y ) * hs;",
+    "#endif",
+    "}",
+    "gl_Position = projectionMatrix * mvPosition;"].join("\n");
   function patchWind(shader){
     shader.uniforms.uTime=WIND_U.uTime; shader.uniforms.uGust=WIND_U.uGust;
     shader.uniforms.uEye=LOD_U.uEye; shader.uniforms.uLod=LOD_U.uLod;
-    shader.vertexShader="attribute float aSway;\nattribute vec4 aLodC;\nattribute float aGone;\nuniform float uTime;\nuniform float uGust;\nuniform vec3 uEye;\nuniform vec4 uLod;\n"+LOD_KEEP+"\n"+
-      shader.vertexShader.replace("#include <begin_vertex>", WIND_GLSL);
+    if(shader.vertexShader.indexOf("#include <project_vertex>")<0) console.warn("trees: project_vertex chunk not found");
+    shader.vertexShader="attribute float aSway;\nattribute vec4 aLodC;\nattribute float aGone;\nattribute vec3 aPuff;\nvarying vec3 vPuff;\nuniform float uTime;\nuniform float uGust;\nuniform vec3 uEye;\nuniform vec4 uLod;\n"+LOD_KEEP+"\n"+
+      shader.vertexShader.replace("#include <begin_vertex>", WIND_GLSL).replace("#include <project_vertex>", PUFF_GLSL);
   }
   // the crown shades as one volume: keep the radial normal on both faces
   const NOFLIP=T.ShaderChunk.normal_fragment_begin.replace("normal = normal * faceDirection;", "");
@@ -267,10 +307,25 @@ const FOREST=(function(){
      round masses and not a sparkle of single leaves coming and going from one frame to the next. */
   NEAR_MAT.onBeforeCompile=(sh)=>{ patchColour(sh); patchWind(sh);
     if(sh.fragmentShader.indexOf("#include <alphatest_fragment>")<0) console.warn("trees: alpha test chunk not found");
-    sh.fragmentShader="uniform vec4 uLod;\n"+sh.fragmentShader.replace("#include <normal_fragment_begin>", NOFLIP)
+    // (a puff is lit as a ball: its normal leans out from its own middle too, toward you in the middle and away at its
+    //  rim; and it is a little darker underneath than on top, the shade a mass of leaves keeps under itself)
+    sh.fragmentShader="uniform vec4 uLod;\nvarying vec3 vPuff;\n"+sh.fragmentShader.replace("#include <normal_fragment_begin>",
+        NOFLIP+"\n  if( vPuff.z > 0.5 ) normal = normalize( normal * 0.72 + vec3( vPuff.xy * 0.62, 0.36 ) );")
+      .replace("#include <color_fragment>", "#include <color_fragment>\n  if( vPuff.z > 0.5 ) diffuseColor.rgb *= 0.80 + 0.20 * smoothstep( -0.9, 0.6, vPuff.y );")
+      /* (and a puff takes only a part of the shade the sun's map says falls on it. Looked up whole, nearly every puff
+         of a crown is in the shadow of the puffs sunward of it, and a tree within the map's reach went dark all over
+         while the same tree past it, where there is no map, stood in full sun: near trees dull, far trees bright. The
+         crown's shade is in its puffs' own tones and the way they are lit; the map adds a third, enough for a tree
+         under a building's shadow to sit in it. The bark takes all of it.) */
+      .replace("#include <lights_fragment_begin>", T.ShaderChunk.lights_fragment_begin.split("directLight.color *= shK;").join("directLight.color *= mix( shK, 1.0, 0.66 * vPuff.z );")
+        /* (and leaves let the light through. The side of a puff turned from the sun, and the whole underside of a crown
+           seen from the lawn beneath it, is not black: it is lit from behind, yellower, the green of a leaf held up
+           to the light: most of all when you look up through it toward the sun, a little from any side.) */
+        +"\n#if NUM_DIR_LIGHTS > 0\n  if( vPuff.z > 0.5 ) reflectedLight.directDiffuse += 0.95 * ( 0.22 + 0.78 * max( 0.0, -dot( geometry.viewDir, directionalLights[ 0 ].direction ) ) ) * max( 0.0, -dot( geometry.normal, directionalLights[ 0 ].direction ) ) * directionalLights[ 0 ].color * material.diffuseColor * vec3( 1.10, 1.14, 0.60 );\n#endif\n")
       .replace("#include <alphatest_fragment>", "if ( diffuseColor.a < ALPHATEST * mix( 1.0, 0.30, smoothstep( uLod.x*0.8, uLod.y, length( vViewPosition ) ) ) ) discard;"); };
   const DEPTH_MAT=new T.MeshDepthMaterial({map:ATLAS, alphaTest:0.42, depthPacking:T.RGBADepthPacking,
     side:T.DoubleSide});
+  DEPTH_MAT.defines={PUFF_DEPTH:1};
   DEPTH_MAT.onBeforeCompile=(sh)=>{ patchWind(sh); };
 
   /* ---- a tree, built by hand: limbs and cards ----------------------------
@@ -279,10 +334,21 @@ const FOREST=(function(){
      geo() notes how long the list is at each of LEVELS, and update() draws that much of it. */
   const LEVELS=[0.11, 0.19, 0.31, 0.45, 0.70, 1.2];
   class TG{
-    constructor(){ this.P=[]; this.N=[]; this.U=[]; this.C=[]; this.S=[]; this.L=[]; this.K=[];
+    constructor(){ this.P=[]; this.N=[]; this.U=[]; this.C=[]; this.S=[]; this.L=[]; this.K=[]; this.F=[];
       this.iFar=[]; this.iNear=[]; this.cards=[]; }
-    v(p,n,u,v,c,s,l,k,code){ this.P.push(p.x,p.y,p.z); this.N.push(n.x,n.y,n.z); this.U.push(u,v);
-      this.C.push(c.r,c.g,c.b); this.S.push(s); this.L.push(l); this.K.push(k.x,k.y,k.z,code); return this.P.length/3-1; }
+    v(p,n,u,v,c,s,l,k,code,fx,fy,fh){ this.P.push(p.x,p.y,p.z); this.N.push(n.x,n.y,n.z); this.U.push(u,v);
+      this.C.push(c.r,c.g,c.b); this.S.push(s); this.L.push(l); this.K.push(k.x,k.y,k.z,code); this.F.push(fx||0, fy||0, fh||0); return this.P.length/3-1; }
+    // a puff d across, its middle at c: four corners all at c (the shader puts them out, facing you), each knowing
+    // which corner it is. Turned by its own angle and sometimes mirrored, so no two show the picture the same way up.
+    // Its normal is out from `ctr`, the middle of the crown. rank: its turn to go, 0 (last) to 1 (first)
+    puff(c, d, rg, col, sway, ctr, upB, rank){
+      const base=this.P.length/3, n=new T.Vector3().subVectors(c, ctr), rk=Math.min(0.999, Math.max(0, rank===undefined ? hash2(c.x*5.3+c.y, c.z*4.1) : rank));
+      if(n.lengthSq()<1e-6) n.set(0,1,0); n.y+=(upB===undefined?0.35:upB)*n.length(); n.normalize();
+      const th=hash2(c.x*3.7+c.y, c.z*2.9)*6.283, cs=Math.cos(th), sn=Math.sin(th), fl=hash2(c.z*5.1, c.x*1.7+c.y)<0.5 ? -1 : 1;
+      for(const q of [[-1,-1,rg.u0,rg.v0],[1,-1,rg.u1,rg.v0],[1,1,rg.u1,rg.v1],[-1,1,rg.u0,rg.v1]]){ const x=q[0]*fl, y=q[1];
+        this.v(c, n, q[2], q[3], col, sway, 1, c, rk, x*cs-y*sn, x*sn+y*cs, d/2); }
+      this.cards.push({r:rk, i:[base,base+1,base+2, base,base+2,base+3]});
+    }
     // a tapered limb from a to b; the bark tile runs once along it. kind: "limb" (thins away with distance),
     // "trunk" (the whole trunk, close to) or "far" (the plain one that stands in for it)
     limb(a,b,r0,r1,seg,col,rg,s0,s1,kind){
@@ -332,6 +398,7 @@ const FOREST=(function(){
       g.setAttribute("aSway",    new T.Float32BufferAttribute(this.S,1));
       g.setAttribute("aLeaf",    new T.Float32BufferAttribute(this.L,1));
       g.setAttribute("aLodC",    new T.Float32BufferAttribute(this.K,4));
+      g.setAttribute("aPuff",    new T.Float32BufferAttribute(this.F,3));
       g.setAttribute("aGone",    new T.Float32BufferAttribute(new Float32Array(nv).fill(gone||1e6),1));
       g.setIndex(I);
       g.computeBoundingSphere();
@@ -403,19 +470,20 @@ const FOREST=(function(){
     // and fill the middle so you never see through the whole crown
     clumps.push({c:ctr.clone(), r:R*0.55, core:true});
     for(const cl of clumps){
-      const n=Math.round((o.cards||8)*(cl.r/2.3));
+      const n=Math.max(2, Math.round((o.cards||5)*(cl.r/2.3)));
       for(let k=0;k<n;k++){
-        const off=randDir(r).multiplyScalar(cl.r*0.55*Math.cbrt(r()));
+        const off=randDir(r).multiplyScalar(cl.r*0.62*Math.cbrt(r()));
         const c=cl.c.clone().add(off);
-        const out=new T.Vector3().subVectors(c, ctr).normalize();
-        const nrm=randDir(r, out, 0.9);
-        const [ex,ey]=cardAxes(nrm, r()*6.283);
-        const s=cl.r*(1.05+r()*0.45);
         /* Its turn to go: the ranks are dealt out evenly within each clump, so however far the crown is thinned every
            clump keeps its share and the tree keeps its outline. The clumps part way along a limb go sooner, and the
            middle of the crown, which is what stops you seeing through it, later. */
         const rank=(k+r())/n*(cl.minor ? 1 : cl.core ? 0.7 : 0.86)+(cl.minor ? 0.14 : 0);
-        near.card(c, ex, ey, s, s, RG.leaf, leafTone(r), 0.35+0.65*(c.y/H), ctr, undefined, rank);
+        /* And its own shade. A crown is dark inside and underneath and bright only on its skin: a puff deep in it, or
+           low on it, is toned down, one out at the edge and up top left as it is. It is this, the same close to and
+           far off, that makes a crown a rounded thing and not a flat green patch. */
+        const out=clamp(c.distanceTo(ctr)/(R*1.05), 0, 1), up=clamp((c.y-H*cb)/(H*(1-cb)), 0, 1);
+        const tone=leafTone(r).multiplyScalar((0.60+0.40*smoothstep(0.15, 0.95, out))*(0.80+0.20*up));
+        near.puff(c, cl.r*(1.25+r()*0.45), RG.leaf, tone, 0.35+0.65*(c.y/H), ctr, undefined, rank);
       }
     }
     return {near:near.geo(o.gone), trunkR:r0*1.1};
@@ -427,45 +495,22 @@ const FOREST=(function(){
     near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.55,0), o.r0*1.3, o.r0*0.7, 7, bark, RG.bark, 0, 0, "trunk");
     near.limb(new T.Vector3(0,H*0.55,0), new T.Vector3((r()-0.5)*0.3,H,(r()-0.5)*0.3), o.r0*0.7, 0.03, 5, bark, RG.bark, 0.1, 0.5, "trunk");
     near.limb(new T.Vector3(0,-0.2,0), new T.Vector3(0,H*0.96,0), o.r0*1.15, 0.05, 4, bark, RG.bark, 0, 0.4, "far");
-    const tiers=o.tiers||13, ctrY=base+(H-base)*0.4;
+    /* Laid up in tiers, each a ring of puffs a little way out from the trunk and drooping, wide at the bottom and
+       coming in to a point; a puff on the trunk itself at every other tier so the middle is not hollow; and the leader
+       at the top. The outline goes last when it is thinned, every other tier first. */
+    const tiers=o.tiers||11, C0=new T.Vector3(0, base+(H-base)*0.4, 0);
     for(let i=0;i<tiers;i++){
-      const t=i/(tiers-1), y=base+t*(H-base)*0.97;
-      const rad=R*Math.pow(1-t,0.85)*(0.9+r()*0.3)+0.45;
-      const per=Math.max(4, Math.round(8-t*4));
-      // (every other tier's sprays go first, then the rest of each ring one by one: the cone keeps its taper)
-      const tr=i%2 ? 0.34 : 0;
+      const t=i/(tiers-1), y=base+t*(H-base)*0.95;
+      const rad=R*Math.pow(1-t,0.85)*(0.9+r()*0.25)+0.40;
+      const per=Math.max(3, Math.round(6-t*3)), tr=i%2 ? 0.40 : 0;
       for(let k=0;k<per;k++){
-        const yaw=k/per*6.283+i*0.9+r()*0.5;
-        const out=new T.Vector3(Math.cos(yaw),0,Math.sin(yaw));
-        // the frond runs out from the trunk and droops at its tip
-        const droop=0.18+r()*0.22+t*0.1;
-        const ex=new T.Vector3(out.x*Math.cos(droop), -Math.sin(droop), out.z*Math.cos(droop));
-        const ey=new T.Vector3(-out.z,0,out.x);
-        const c=new T.Vector3(0,y,0).addScaledVector(ex, rad*0.5);
-        near.card(c, ex, ey, rad*1.15, rad*1.0, RG.conifer, leafTone(r), 0.2+0.6*t,
-                  new T.Vector3(0,ctrY,0), 0.6, 0.30+tr+((k*2+1)%per+r())/per*0.36);
+        const yaw=k/per*6.283+i*0.9+r()*0.5, d=rad*(0.50+r()*0.12);
+        near.puff(new T.Vector3(Math.cos(yaw)*d, y-rad*0.16, Math.sin(yaw)*d), rad*(1.20+r()*0.25), RG.conifer, leafTone(r).multiplyScalar(0.86+0.14*t), 0.2+0.6*t,
+                  C0, 0.45, tr+((k*2+1)%per+r())/per*0.52);
       }
-      // the skin of the cone: sprays standing on its surface, facing out, so
-      // from the side a conifer is a wall of needles and not a set of spokes
-      // (these are its outline: the last to go)
-      for(let k=0;k<3;k++){
-        const yaw=k/3*6.283+i*1.7+r()*0.6, out=new T.Vector3(Math.cos(yaw),0,Math.sin(yaw));
-        const c=new T.Vector3(0,y-0.2,0).addScaledVector(out, rad*0.62);
-        const nrm=out.clone().add(new T.Vector3(0,0.35,0)).normalize();
-        const ey=new T.Vector3(-out.x*0.35,1,-out.z*0.35).normalize();
-        const ex=new T.Vector3().crossVectors(ey,nrm).normalize();
-        near.card(c, ex, ey, rad*1.25, (H-base)/tiers*2.6, RG.conifer, leafTone(r), 0.25+0.5*t,
-                  new T.Vector3(0,ctrY,0), 0.4, (k+r())/3*0.30+(i%2 ? 0.02 : 0));
-      }
-      // and a flat spray across the trunk at every other tier, so that from
-      // above (or from under) a hemlock is a mass and not a coat rack
-      if(i%2===0){
-        const yaw=r()*6.283, ex=new T.Vector3(Math.cos(yaw),-0.12,Math.sin(yaw)).normalize(),
-              ey=new T.Vector3(-Math.sin(yaw),0,Math.cos(yaw));
-        near.card(new T.Vector3(0,y+0.1,0), ex, ey, rad*2.0, rad*1.5, RG.conifer, leafTone(r), 0.2+0.5*t,
-                  new T.Vector3(0,ctrY-3,0), 1.2, 0.20+r()*0.5);
-      }
+      if(i%2===0) near.puff(new T.Vector3((r()-0.5)*0.3, y+0.1, (r()-0.5)*0.3), rad*1.15, RG.conifer, leafTone(r).multiplyScalar(0.70), 0.2+0.5*t, new T.Vector3(0, y-2, 0), 0.9, 0.45+r()*0.45);
     }
+    near.puff(new T.Vector3(0, H-0.5, 0), 1.3, RG.conifer, leafTone(r), 0.8, C0, 0.6, 0.02);
     return {near:near.geo(o.gone), trunkR:o.r0*1.2};
   }
   /* --- white pine: tiers of horizontal limbs with tufts at the ends ----- */
@@ -485,13 +530,10 @@ const FOREST=(function(){
         const a=new T.Vector3(0,y,0), dir=new T.Vector3(Math.cos(yaw), 0.18+r()*0.18, Math.sin(yaw)).normalize();
         const b=a.clone().addScaledVector(dir, L);
         near.limb(a, b, 0.07, 0.02, 3, bark, RG.bark, 0.1, 0.5);
-        // two or three soft tufts along the outer half, near horizontal (the one at the tip is the last to go)
-        for(let q=0;q<3;q++){
-          const c=a.clone().addScaledVector(dir, L*(0.45+q*0.27)).add(new T.Vector3(0,0.15,0));
-          const n=randDir(r, UP, 2.2);
-          const [ex,ey]=cardAxes(n, r()*6.283);
-          const s=1.5+r()*0.9;
-          near.card(c, ex, ey, s, s, RG.pine, leafTone(r), 0.3+0.6*t, ctr, 0.6, q===2 ? r()*0.42 : 0.3+r()*0.7);
+        // a tuft at the tip and one part way along (the one at the tip is the last to go)
+        for(let q=0;q<2;q++){
+          const c=a.clone().addScaledVector(dir, L*(0.58+q*0.40)).add(new T.Vector3(0,0.18,0));
+          near.puff(c, 2.1+r()*1.1, RG.pine, leafTone(r), 0.3+0.6*t, ctr, 0.6, q===1 ? r()*0.45 : 0.35+r()*0.64);
         }
       }
       y+=1.4+r()*1.6;
@@ -506,13 +548,10 @@ const FOREST=(function(){
       const yaw=r()*6.28, b=new T.Vector3(Math.cos(yaw)*o.w*0.3, o.h*0.8, Math.sin(yaw)*o.w*0.3);
       near.limb(new T.Vector3(0,0,0), b, 0.03, 0.012, 3, BARK_D, RG.bark, 0, 0.3);
     }
-    const n=o.cards||12;
+    const n=o.cards||7;
     for(let k=0;k<n;k++){
-      const c=new T.Vector3((r()-0.5)*o.w*0.7, o.h*(0.25+r()*0.55), (r()-0.5)*o.w*0.7);
-      const nrm=randDir(r, new T.Vector3().subVectors(c,ctr).normalize(), 0.8);
-      const [ex,ey]=cardAxes(nrm, r()*6.28);
-      const s=o.w*(0.55+r()*0.25);
-      near.card(c, ex, ey, s, s, o.rg||RG.leaf, leafTone(r), 0.25, ctr, 0.4, (k+r())/n);
+      const c=new T.Vector3((r()-0.5)*o.w*0.62, o.h*(0.30+r()*0.48), (r()-0.5)*o.w*0.62);
+      near.puff(c, o.w*(0.62+r()*0.26), o.rg||RG.leaf, leafTone(r), 0.25, ctr, 0.4, (k+r())/n);
     }
     return {near:near.geo(o.gone), trunkR:0};
   }
@@ -540,31 +579,33 @@ const FOREST=(function(){
      tell apart, and every shape less is a draw less in every chunk.
      `gone` (the understory's): how far off, at the MEDIUM draw distance, the
      plant has shrunk away into the ground; it starts at two thirds of that. */
+  /* (The greens are deep and a little grey, the colour of leaves in July seen across a lot, not of a lawn: the
+     brightest of them, lit by a 1.3 sun, used to come out lime.) */
   const SPECIES={
-    hard:  {build:(s)=>broadleaf(s,{H:22,cb:0.50,R:5.2,r0:0.30,limbs:7,cards:8}), seeds:[11,23],
-            summer:["#5f8a3a","#6a9440","#577f36","#729a44"],
+    hard:  {build:(s)=>broadleaf(s,{H:22,cb:0.50,R:5.2,r0:0.30,limbs:7,cards:5}), seeds:[11,23],
+            summer:["#40602e","#476732","#3c5a2a","#4d6c35"],
             autumn:["#c23a22","#d9661f","#e09a26","#e6bb30","#b8471f","#8c5a2a","#d77f1f"]},
-    edge:  {build:(s)=>broadleaf(s,{H:18,cb:0.16,R:5.4,r0:0.27,limbs:9,cards:8,clump:2.4}), seeds:[41,53],
-            summer:["#628d3b","#6e9842","#5a8538"],
+    edge:  {build:(s)=>broadleaf(s,{H:18,cb:0.16,R:5.4,r0:0.27,limbs:9,cards:5,clump:2.4}), seeds:[41,53],
+            summer:["#42632f","#496a34","#3e5d2c"],
             autumn:["#d0461f","#e0821f","#e6b52c","#c23324","#9a5a26"]},
-    beech: {build:(s)=>broadleaf(s,{H:19,cb:0.36,R:5.0,r0:0.27,limbs:8,cards:8,smooth:true,bark:BARK_BEECH}), seeds:[61],
-            summer:["#78a24a","#82aa52"], autumn:["#c99a38","#b9862e","#d4ac40"]},
-    hemlock:{build:(s)=>hemlock(s,{H:19,cb:0.10,R:3.8,r0:0.28,tiers:17}), seeds:[71],
-            summer:["#3f6138","#466a3c","#3a5833"], autumn:["#3f6138","#466a3c","#3a5833"]},
+    beech: {build:(s)=>broadleaf(s,{H:19,cb:0.36,R:5.0,r0:0.27,limbs:8,cards:5,smooth:true,bark:BARK_BEECH}), seeds:[61],
+            summer:["#4f7039","#55773d"], autumn:["#c99a38","#b9862e","#d4ac40"]},
+    hemlock:{build:(s)=>hemlock(s,{H:19,cb:0.10,R:3.8,r0:0.28,tiers:11}), seeds:[71],
+            summer:["#34513a","#3a593e","#2f4a35"], autumn:["#34513a","#3a593e","#2f4a35"]},
     pine:  {build:(s)=>pine(s,{H:25,cb:0.42,R:4.4,r0:0.32}), seeds:[97],
-            summer:["#4f7446","#56794a"], autumn:["#4f7446","#56794a"]},
-    sapling:{build:(s)=>broadleaf(s,{H:7.5,cb:0.30,R:2.2,r0:0.07,limbs:5,cards:5,clump:1.3,gone:230}), seeds:[101], gone:230,
-            summer:["#6f9b44","#7aa54a"], autumn:["#d8a52c","#c9522a","#9aa13c"]},
-    lawn:  {build:(s)=>broadleaf(s,{H:15,cb:0.20,R:6.4,r0:0.34,limbs:10,cards:9,clump:2.7}), seeds:[131,149],
-            summer:["#5c8a38","#668f3c"], autumn:["#cf3b24","#e0731e","#e4b02e"]},
-    spruce:{build:(s)=>hemlock(s,{H:13,cb:0.04,R:3.0,r0:0.22,tiers:15}), seeds:[163],
-            summer:["#4d6b5e"], autumn:["#4d6b5e"]},
-    shrub: {build:(s)=>shrub(s,{h:1.9,w:2.2,cards:13,gone:125}), seeds:[171], gone:125,
-            summer:["#5f8a3a","#6e9442","#587e34"], autumn:["#b8322a","#c9582a","#8e7a32"]},
-    bush:  {build:(s)=>shrub(s,{h:1.0,w:1.3,cards:11,gone:125}), seeds:[191], gone:125,       // clipped boxwood, the beds
-            summer:["#4c6e32","#557a36"], autumn:["#4c6e32","#557a36"]},
+            summer:["#40604a","#46664e"], autumn:["#40604a","#46664e"]},
+    sapling:{build:(s)=>broadleaf(s,{H:7.5,cb:0.30,R:2.2,r0:0.07,limbs:5,cards:3,clump:1.3,gone:230}), seeds:[101], gone:230,
+            summer:["#4c6c37","#53743b"], autumn:["#d8a52c","#c9522a","#9aa13c"]},
+    lawn:  {build:(s)=>broadleaf(s,{H:15,cb:0.20,R:6.4,r0:0.34,limbs:10,cards:6,clump:2.7}), seeds:[131,149],
+            summer:["#3f622d","#466831"], autumn:["#cf3b24","#e0731e","#e4b02e"]},
+    spruce:{build:(s)=>hemlock(s,{H:13,cb:0.04,R:3.0,r0:0.22,tiers:10}), seeds:[163],
+            summer:["#3e5852"], autumn:["#3e5852"]},
+    shrub: {build:(s)=>shrub(s,{h:1.9,w:2.2,cards:8,gone:125}), seeds:[171], gone:125,
+            summer:["#40602e","#4a6a33","#3b5729"], autumn:["#b8322a","#c9582a","#8e7a32"]},
+    bush:  {build:(s)=>shrub(s,{h:1.0,w:1.3,cards:7,gone:125}), seeds:[191], gone:125,        // clipped boxwood, the beds
+            summer:["#375129","#3f5a2d"], autumn:["#3e5a2e","#466432"]},
     fern:  {build:(s)=>fern(s,{gone:46}), seeds:[201], gone:46,
-            summer:["#7aa246","#86ab4c"], autumn:["#b99a46","#a8883e"]},
+            summer:["#547339","#5c7a3d"], autumn:["#b99a46","#a8883e"]},
   };
   const VARIANTS=[];                 // {sp, near, trunkR, gone}
   const SPV={};

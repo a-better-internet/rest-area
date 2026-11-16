@@ -894,3 +894,21 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   a lattice finer than a pixel reads as a banded line. Its beacons (top,
   and a pair half way up) flash; its side lights (a quarter and three
   quarters up) burn steady; all are out by day.
+- A crown is PUFFS (07's `TG.puff`), not flat cards: four corners at the
+  puff's middle with `aPuff` (which corner, half its size), put out in view
+  space by the vertex shader so the puff faces you (`PUFF_GLSL`; in the
+  shadow pass, `PUFF_DEPTH`, it faces the sun). The fragment shader leans
+  its normal out from the puff's own middle, darkens its underside, takes
+  only a third of the sun's cast shadow (or near trees go dull and far
+  ones bright) and adds light through the leaf from behind. Each puff's
+  tone carries the crown's own shade (inside and low darker), set in the
+  builder. Never build foliage from fixed planes at angles again: seen
+  edge on they read as boards.
+- The leaf atlas is a `DataTexture` made from the canvas's pixels with
+  every clear pixel given its region's average leaf colour (alpha kept),
+  so filtering an edge never blends leaf with black: that was the dark
+  border round every plane. Any other alpha-cut picture that shows a dark
+  rim wants the same.
+- Leaf greens are deep and a little grey (`SPECIES.summer`, around
+  `#40602e`). A per-plant `color` passed to `FOREST.plant` should sit in
+  the same range; anything like `#7e9e4a` comes out lime in full sun.

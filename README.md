@@ -1261,9 +1261,16 @@ If the scene runs hot on your machine, start there (see below).
   that hold out to the hills across the lake. Each crown is a dome lit on
   the sun's side and shaded on the far one, with soft dark gaps between.
   Far off, where a pixel is wider than a crown, it fades to the mean so
-  the skyline doesn't shimmer. The trees in the woods you can walk in are
+  the skyline doesn't shimmer. A tree's crown is made of puffs: soft round
+  masses of leaf, sixty or seventy to a tree, each of which turns to face
+  you, is shaded as a ball and is a little darker underneath, with the
+  inside and the underside of the crown darker than its skin. There are
+  no flat planes of leaves and no dark rims round them. The greens are
+  deep and a little grey. Leaves let the light through: look up through a
+  crown toward the sun and it glows. Conifers are the same thing in
+  needles, laid up in a cone. The trees in the woods you can walk in are
   the same tree at every distance: as one gets further off its crown is
-  thinned, leaf card by leaf card, each shrinking away while the ones left
+  thinned, puff by puff, each shrinking away while the ones left
   grow to fill in, and the holes between its leaves close up, so a far
   crown is soft masses in the same colour and light as a near one. No tree
   is ever swapped for a simpler one, and the ferns, shrubs and saplings
@@ -1815,7 +1822,7 @@ maps). It is about 1,800 draws and 2.6 million. In the woods it went from
   you is not drawn with the lawn in front of you.
 - **The woods.** A tree is one model at every distance, thinned by the
   shader as it gets further off: all of its crown close to, a quarter of
-  its leaf cards (grown to fill in) at 130 m, a tenth far off. Nothing is
+  its puffs of leaf (grown to fill in) at 130 m, a tenth far off. Nothing is
   swapped, so nothing pops. Far trees are drawn up to sixty-four chunks to
   a draw.
 - **Loose things have a distance.** A door, a sign, a prop, a squirrel, a

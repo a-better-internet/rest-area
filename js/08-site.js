@@ -701,8 +701,8 @@ function lampPost(x, z, h, y0){
   FOREST.plant("lawn", 22, 76, {scale:1.05});
   FOREST.plant("spruce", -7.0, 27.5, {scale:0.9});              // beside the path to the pet area, not on it
   FOREST.plant("spruce", 21, 34, {scale:1.0});
-  FOREST.plant("sapling", -16, 58, {scale:0.8, color:"#7e9e4a", autumn:"#c8342a"});
-  FOREST.plant("sapling", -2, 30, {scale:0.7, color:"#86a24e", autumn:"#d9a62c"});
+  FOREST.plant("sapling", -16, 58, {scale:0.8, color:"#627e3e", autumn:"#c8342a"});
+  FOREST.plant("sapling", -2, 30, {scale:0.7, color:"#688242", autumn:"#d9a62c"});
   // by the building: a maple each side of the plaza, the one with the flag
   FOREST.plant("lawn", -18, -29, {scale:0.85});
   FOREST.plant("lawn", 24, -6, {scale:1.1});
