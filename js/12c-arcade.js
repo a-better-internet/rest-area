@@ -16,8 +16,8 @@
    through a pair of sliding glass doors into a small room the crew filled
    with what came out of a closed arcade
    in Erie: a cosmic carpet, black walls with pink and blue neon along
-   them, four upright cabinets spread round the walls running their attract
-   screens (each of them playable, 18f and 18g), a token changer, an air hockey table in the middle and a hoops
+   them, ten upright cabinets round the walls running their attract
+   screens (each of them playable, 18f to 18t), a token changer, an air hockey table in the middle and a hoops
    machine against the back wall, both of which you can play (18e). All of
    it BURIED: the same at any hour (19).
    ---------------------------------------------------------------------- */
@@ -28,7 +28,9 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   const CX0=71.0, CX1=73.0, LZ0=D.z, LZ1=D.z-0.80;                 // the corridor's width; the landing inside the door
   const STZ1=LZ1-(NS-1)*0.30;                                      // the foot of the stair
   const CZ1=-211.0;                                                // where the corridor meets the room
-  const A={x0:67.5, x1:76.5, z0:-219.5, z1:CZ1, y:FH, h:3.0};      // the room: nine metres by eight and a half
+  // the room: twelve metres by eight and a half (it was nine: the east wall went out three metres, into the hill, when
+  // the last two machines came, and the changer, the can, the dozer and the house rules went out with it)
+  const A={x0:67.5, x1:79.5, z0:-219.5, z1:CZ1, y:FH, h:3.0};
   const CEIL_HI=FB+2.05, CEIL_LO=FH+2.75, SOFFIT=LZ1-1.0;          // the ceiling over the landing, the corridor's, where it steps
   const LOW="#7d8f86", HIGH="#d9d4c4";
   const E=[];
@@ -193,14 +195,18 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
     m.position.set((CX0+CX1)/2, A.y+2.70, A.z1-0.06); m.rotation.y=Math.PI; scene.add(m);
     B(1.70, 0.46, 0.02, (CX0+CX1)/2, A.y+2.70, A.z1-0.021, "#0a0a0c"); }
   // the light: low, coloured, from the ceiling corners; a white one over each game; and the screens themselves
-  for(const [x,z,c] of [[69.0,-212.8,0x9a5cff],[75.4,-212.8,0x4fb8ff],[69.0,-218.2,0xff5fb0],[72.6,-218.0,0x7a6cff],[72.4,-214.2,0xfff0e0],[74.4,-217.6,0xfff0e0]])
+  for(const [x,z,c] of [[69.0,-212.8,0x9a5cff],[75.4,-212.8,0x4fb8ff],[69.0,-218.2,0xff5fb0],[72.6,-218.0,0x7a6cff],[72.4,-214.2,0xfff0e0],[74.4,-217.6,0xfff0e0],
+                        [78.3,-213.0,0xff5fb0],[77.3,-217.7,0x4fd8ff]])                 // (and the new end: pink by the changer, blue over the last two machines)
     lamp({x:x, y:A.y+2.25, z:z, color:c, intensity:c===0xfff0e0?0.62:0.80, dist:8, decay:1.4});
 
   /* ---- the cabinets: seven of them round the walls, every one of them played ----------- */
   // (18f plays Astro Raiders; 18g Maze Muncher and Block Drop, 18m Brickyard Breakout, Groundhog Gulch and Turnpike Turtle,
   // 18n Suds Patrol, 18o Route 6 Rally, each on its own screen the same way. ENTER plays the one you are at (17), so E is only ever the door's)
-  const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP","GROUNDHOG GULCH","TURNPIKE TURTLE","SUDS PATROL","ROUTE 6 RALLY"];
-  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8","#c8641a"];
+  // (the last two are 18s's and 18t's. A cabinet's place in this list is its marquee's cell; its number among the games,
+  //  ARCADE.cabs and 18g's _CBG, is the same unless cab() is given another: 8 to 12 are the Pine Knot's machines, 14z)
+  const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP","GROUNDHOG GULCH","TURNPIKE TURTLE","SUDS PATROL","ROUTE 6 RALLY",
+               "HORNWORM HAVOC","EXIT 166 RUMBLE"];
+  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8","#c8641a","#4a8a2a","#a83a2a"];
   ARCADE.cabs=[];
   const marC=cvs(128*NAMES.length,96), mx=marC.getContext("2d");
   NAMES.forEach((n,i)=>{ const ox=i*128, oy=0, g=mx.createLinearGradient(0,oy,0,oy+96);
@@ -214,7 +220,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   const cellGeo=(w,h,i,rows,cols)=>{ const g=new T.PlaneGeometry(w,h), U=g.attributes.uv, cu=i%cols, cv=(i/cols)|0;
     for(let k=0;k<U.count;k++) U.setXY(k, (cu+0.02+U.getX(k)*0.96)/cols, 1-(cv+1)/rows+(0.02+U.getY(k)*0.96)/rows); return g; };
   const marG=[];
-  const cab=(i, x, z, ry)=>{
+  const cab=(i, x, z, ry, id)=>{
+    if(id===undefined) id=i;
     const c=Math.cos(ry), s=Math.sin(ry), L=(lx,lz)=>[x+lx*c+lz*s, z-lx*s+lz*c];     // local +z: out of the cabinet's front
     const q=(w,h,d,lx,ly,lz,col,rx)=>{ const p=L(lx,lz); ent(boxGeo(w,h,d), p[0], A.y+ly, p[1], col, rx||0, ry, 0); };
     const K="#141416", side=SIDE[i];
@@ -228,7 +235,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
     const pj=L(-0.14, 0.50), st=new T.Group(); st.position.set(pj[0], A.y+0.965, pj[1]); st.rotation.order="YXZ"; st.rotation.y=ry; scene.add(st);
     const sm=new T.Mesh(new T.CylinderGeometry(0.008,0.008,0.10,8), new T.MeshStandardMaterial({color:0x1a1a1a, roughness:0.5})); sm.position.y=0.045; st.add(sm);
     const bm=new T.Mesh(new T.SphereGeometry(0.022,14,10), new T.MeshStandardMaterial({color:0xc42a1a, roughness:0.35})); bm.position.y=0.105; st.add(bm);
-    if(i===0) ARCADE.stick=st;
+    if(id===0) ARCADE.stick=st;
     for(let b=0;b<3;b++){ const pb=L(0.04+b*0.07, 0.50-b*0.01); C(0.016, 0.02, pb[0], A.y+0.985, pb[1], ["#f2e23a","#3fa0ff","#ff3a3a"][b], 12); }
     q(0.60, 0.06, 0.40, 0, 1.79, 0.18, K);                             // the marquee's hood
     q(0.56, 0.02, 0.06, 0, 1.30-0.24, 0.355, K);                       // the bezel's lip
@@ -240,15 +247,15 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
       const m=new T.Mesh(new T.PlaneGeometry(0.48, 0.40), new T.MeshBasicMaterial({map:tex, toneMapped:false}));
       m.position.set(ps[0], A.y+1.30, ps[1]); m.quaternion.copy(scrQ); scene.add(m);
       const pf=L(0, 1.02);
-      ARCADE.cabs[i]={name:NAMES[i], c:c, x:c.getContext("2d"), tex:tex, mesh:m, stick:st, stand:{x:pf[0], z:pf[1]}, ry:ry,
+      ARCADE.cabs[id]={name:NAMES[i], c:c, x:c.getContext("2d"), tex:tex, mesh:m, stick:st, stand:{x:pf[0], z:pf[1]}, ry:ry,
                       screenY:A.y+1.30, screen:{x:ps[0], z:ps[1]}, floor:A.y};
-      if(i===0) ARCADE.raiders=ARCADE.cabs[0]; }
+      if(id===0) ARCADE.raiders=ARCADE.cabs[0]; }
     marG.push({geo:cellGeo(0.56, 0.16, i, 1, NAMES.length), matrix:new T.Matrix4().compose(V3(pm[0], A.y+1.68, pm[1]), new T.Quaternion().setFromEuler(new T.Euler(0, ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color(0xffffff)});
     const a0=L(-0.34,-0.42), a1=L(0.34,0.62);
     addCol(Math.min(a0[0],a1[0]), Math.max(a0[0],a1[0]), Math.min(a0[1],a1[1]), Math.max(a0[1],a1[1]), A.y-0.5, A.y+1.86);
     const pu=L(0, 1.15);
-    addUse(pu[0], pu[1], A.y, "PLAY "+NAMES[i], ()=>{ if(i===0){ if(typeof RAIDERS!=="undefined") RAIDERS.start(); }
-      else if(typeof CABS!=="undefined") CABS.start(i); }, 0.9).game=true;
+    addUse(pu[0], pu[1], A.y, "PLAY "+NAMES[i], ()=>{ if(id===0){ if(typeof RAIDERS!=="undefined") RAIDERS.start(); }
+      else if(typeof CABS!=="undefined") CABS.start(id); }, 0.9).game=true;
     ARCADE.games.push({name:NAMES[i], x:pu[0], z:pu[1]});
   };
   // two on the west wall facing in, two on the back wall facing the door
@@ -260,6 +267,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   cab(6, 68.25, A.z0+0.45, 0);
   // and the eighth on the back wall, between Block Drop and the hoops
   cab(7, 72.95, A.z0+0.45, 0);
+  // and the last two in the new end, on the back wall past the hoops: Hornworm Havoc (18s) and Exit 166 Rumble (18t)
+  cab(8, 76.55, A.z0+0.45, 0, 13);      cab(9, 78.15, A.z0+0.45, 0, 14);
   // the marquees: one mesh, one texture, every cabinet a cell of it
   scene.add(new T.Mesh(mergeEntries(marG), marM));
 
@@ -394,7 +403,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
     addUse(X, ZF+0.70, A.y, "PLAY HOOPS", ()=>{ if(typeof HOOPS!=="undefined") HOOPS.start(); }, 0.9).game=true; }
 
   // stools by the cabinets, a can by the door, the rules on the east wall
-  for(const [x,z] of [[69.3,-214.7],[70.6,-217.6]]){ C(0.17, 0.05, x, A.y+0.66, z, "#c42a1a", 16); C(0.025, 0.62, x, A.y+0.33, z, "#9a9da0", 8); C(0.20, 0.02, x, A.y+0.01, z, "#9a9da0", 16); }
+  for(const [x,z] of [[69.3,-214.7],[70.6,-217.6],[77.35,-217.75]]){ C(0.17, 0.05, x, A.y+0.66, z, "#c42a1a", 16); C(0.025, 0.62, x, A.y+0.33, z, "#9a9da0", 8); C(0.20, 0.02, x, A.y+0.01, z, "#9a9da0", 16); }
   // (the can a stride south of the token changer, not in it)
   swingCan(A.x1-0.4, A.z1-2.25, -Math.PI/2, A.y);
   addCol(A.x1-0.65, A.x1, A.z1-2.50, A.z1-2.00, A.y-0.5, A.y+0.9);

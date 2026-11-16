@@ -1018,14 +1018,17 @@ If the scene runs hot on your machine, start there (see below).
       them (`E`), and stay as you leave them.
       Twenty-five metres on, under the hill, a pair of sliding glass doors
       parts as you come up to them, each leaf running into a pocket in the
-      wall, onto a small arcade with a cosmic carpet, black walls with pink
-      and blue neon, and a GAME ROOM sign. Eight upright cabinets stand
+      wall, onto an arcade with a cosmic carpet, black walls with pink
+      and blue neon, and a GAME ROOM sign. The room is twelve metres by
+      eight and a half: its east wall went out three metres into the hill
+      to make room for the last two machines. Ten upright cabinets stand
       round the walls, each running its own attract screen (ASTRO
       RAIDERS, MAZE MUNCHER, BRICKYARD BREAKOUT and BLOCK DROP on the west
       and back walls, SUDS PATROL in the back corner, ROUTE 6 RALLY by the
       hoops, GROUNDHOG GULCH and
-      TURNPIKE TURTLE either side of the way in), with a token changer by
-      the door, clear of the trash can.
+      TURNPIKE TURTLE either side of the way in, and HORNWORM HAVOC and
+      EXIT 166 RUMBLE on the back wall of the new end, past the hoops),
+      with a token changer on the east wall, clear of the trash can.
     - **MECH 2.** The first steel door opens on what its name says: the air
       handler that breathes for the corridor and the arcade (`E`), its duct
       away along the ceiling, a water heater, the sump under its grate, the
@@ -1154,6 +1157,43 @@ If the scene runs hot on your machine, start there (see below).
         a sign or a car hit at speed spins you out. The clock runs down and
         each lap puts 45 seconds back on it. Points for the distance, for
         every car passed and for where you finish. The best five are kept.
+      - **Hornworm Havoc** is a shooter of the kind where something long
+        and segmented winds down the screen at you. The screen is a tomato
+        patch from above, the long thing is a tomato hornworm, and you are
+        the garden gnome at the bottom of the bed with a pea shooter. The
+        worm crawls along a row until a plant or the edge turns it down a
+        row and back; shoot a segment and it parts there, and a seedling
+        comes up where the segment fell. The plants are its own twist: a
+        seedling grows, a full plant sets a tomato, and the tomato ripens
+        green to red. Three peas strip a plant, but one pea into a ripe
+        tomato bursts it and takes everything in the eight squares round
+        it, worm, moth and crow, and any other ripe tomato, which bursts
+        in turn. A cabbage moth flutters down dropping seedlings; a crow
+        comes in low across your end of the bed and takes ripe tomatoes,
+        and you, if it touches you. Arrows or `WASD` move, `Space` (or
+        `J`) shoots, two peas at a time. Three gnomes, another at 12,000.
+        Each bed is quicker and sends lone heads after the worm. The best
+        five scores are kept.
+      - **Exit 166 Rumble** is a walk-along brawler: the street scrolls
+        sideways and you can step up and down it as well as along. You are
+        Dale, a trucker who comes out of the rest area at two in the
+        morning to find his diesel siphoned and a trail of it leading up
+        the ramp. Three stages: the truck lot, the fuel stop, and the
+        fireworks outlet's lot, where Big Earl of the Gravel Kings is
+        sitting on forty gallons of it. The street stops wherever they
+        come at you and lets you on (GO) when they are down. Punks come
+        straight in; the ones with a chain reach further and swing
+        slower; the big ones do not flinch at a jab; and Big Earl puts
+        his head down and runs the width of the screen, and can only be
+        put on his back in the moment after. No more than two of them
+        swing at once. `Space` (or `J`) punches, and three in a row is a
+        combo whose third puts a man down; `K` kicks, slower and longer;
+        `L` jumps, and a punch or a kick in the air is a flying kick.
+        Oil drums and crates break, and some have a soft pretzel in them,
+        which is health. Three Dales. The best five scores are kept.
+      - Both of those are their own games: each takes the way a kind of
+        arcade game plays and nothing else. Their names, people, stages
+        and pictures are drawn here, as every cabinet's are.
       - **Block Drop** follows Jake Gordon's MIT-licensed
         javascript-tetris: a well ten by twenty, the seven pieces from a
         bag, ten for a piece set down and a hundred for a row (doubling
@@ -1709,14 +1749,16 @@ new game, and `Esc` or `E` puts the darts down.
 
 At the Astro Raiders cabinet `A`/`D` or the arrows move, `Space` or a click
 fires, `N` (or `Enter`, once it is over) starts a new game and `Esc` or `E`
-steps away. At the other seven the arrows or `WASD` work the stick: in Maze Muncher they
+steps away. At the other nine the arrows or `WASD` work the stick: in Maze Muncher they
 steer; in Brickyard Breakout they (or the mouse) move the bat, `Space`
 serves, lets a glued ball go and fires the zapper, and `P` pauses; in Block
 Drop left and right move the piece, up turns it and down drops it faster;
 in Groundhog Gulch they dig and `Space` is the hose; in Turnpike Turtle each
 press is a hop; in Route 6 Rally up is the gas, down the brake, left and
 right steer and `Space` shifts; in Suds Patrol left and right walk, up (or `W`, `K`) jumps
-and `Space` (or `J`) blows a bubble. `N` (or `Space` or `Enter`, when the
+and `Space` (or `J`) blows a bubble; in Hornworm Havoc they move the gnome and `Space`
+(or `J`) shoots; in Exit 166 Rumble they walk Dale along the street and up and down it,
+`Space` (or `J`) punches, `K` kicks and `L` jumps. `N` (or `Space` or `Enter`, when the
 game is over) starts again, and `Esc` or `E` steps away.
 
 At a hoop over a drive on Lake Street, `E` in front of it takes the ball.
@@ -1856,7 +1898,7 @@ centred on the origin.
 | Substation | x 60 … 90, z −184 … −154 (2.6 m up the drive) |
 | Generator house and its cellar | x 77 … 87, z −182 … −176; the cellar floor 2.65 m below the house's |
 | The dug-out (darts, couch) | x 70.25 … 77, z −183.4 … −176, off the cellar's west side |
-| The corridor and the arcade | corridor x 71 … 73 from z −184 to −211; arcade x 67.5 … 76.5, z −219.5 … −211 |
+| The corridor and the arcade | corridor x 71 … 73 from z −184 to −211; arcade x 67.5 … 79.5, z −219.5 … −211 |
 | MECH 2 · the stores and the stair | x 73.25 … 78.25, z −193.75 … −188.25 · x 73.25 … 80.2, z −205.4 … −201.6 |
 | The sub-basement | x 58.4 … 100.8, z −258.6 … −183.4, its floor 3.42 m under the corridor's; the closet and passages to the wheel door x 91.2 … 101.2, z −259.4 … −242 |
 | The boiler hall | x 86 … 112, z −280.6 … −258.6, its floor 5 m under the sub-basement's |
@@ -1974,6 +2016,8 @@ js/18m-cabgames.js  the newer cabinets: Brickyard Breakout rebuilt, Groundhog Gu
 js/18n-suds.js      Suds Patrol, the bubble-trapping platform game on the seventh cabinet
 js/18o-racer.js     Route 6 Rally, the pseudo-3D road racer on the eighth cabinet
 js/18p-slots.js     the Pine Knot's slot machines: five reels, nine lines, the pine wild
+js/18s-hornworm.js  Hornworm Havoc, the tomato-patch shooter on the ninth cabinet
+js/18t-rumble.js    Exit 166 Rumble, the walk-along brawler on the tenth cabinet
 js/18c-settings.js  the graphics menu: resolution (and auto), frame cap, shadows, draw distance, light count; the frame meter
 js/19-loop.js       main loop and the window.REST debug handle
 js/20-audio.js      procedural WebAudio ambience

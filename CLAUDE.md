@@ -912,3 +912,21 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - Leaf greens are deep and a little grey (`SPECIES.summer`, around
   `#40602e`). A per-plant `color` passed to `FOREST.plant` should sit in
   the same range; anything like `#7e9e4a` comes out lime in full sun.
+- The arcade (12c) is twelve metres by eight and a half (`A.x1` 79.5):
+  the east wall and everything on it (the changer, the can, 18h's dozer,
+  the house rules) go by `A.x1`. `cab(i, x, z, ry, id)`: `i` is the place
+  in `NAMES` (the marquee's cell) and `id` the cabinet's number in
+  `ARCADE.cabs` and `_CBG` when that is not the same: 8 to 12 are the
+  Pine Knot's machines (14z), so the arcade's ninth and tenth are 13
+  (18s, Hornworm Havoc) and 14 (18t, Exit 166 Rumble).
+- A cabinet's game takes a KIND of game's way of playing and nothing
+  more: its name, people, stages and pictures are made here and are its
+  own, never another game's, whatever a reference offered to work from
+  has in it. Nothing is drawn from image files: every cabinet draws
+  itself.
+- 18t's street: a stage is `{n, sub, len, paint, props, waves}`, a wave
+  `{x0, f:[[kind, side, depth, delay], ...]}` where the street stops; a
+  body is `body(kind, x, z, dir)` and its picture `figure()`, limbs as
+  strokes from a table of poses (`POSES`). `turns()` lets two of them
+  come at Dale at once. 18s's bed is a grid of plants (`hp`, `ripe`);
+  `burst()` is the ripe tomato going off.
