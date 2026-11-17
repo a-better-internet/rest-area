@@ -46,7 +46,7 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
   B(X1-X0+0.02, 0.2, Z1-Z0, (X0+X1)/2, FB-0.1, (Z0+Z1)/2, "#5a5048"); B(X1-X0+0.02, 0.12, Z1-Z0, (X0+X1)/2, CB+0.05, (Z0+Z1)/2, "#2a0a10");      // (its underside 1 cm under the house slab's, which it meets by the north wall)
   addFlat(X0, X1, Z0, Z1, FB); addFlat(DA, DB, Z0-0.27, Z0+0.02, FB);
   B(DB-DA-0.004, 0.02, WT, (DA+DB)/2, FB+0.002, Z0-WT/2, "#b8963a");                         // (the brass threshold across the wall)
-  addVoid(X0, X1, Z0, Z1, FB-3, CB+0.2, FB); addVoid(DA, DB, Z0-0.27, Z0+0.02, FB-3, CB, FB);   // (and the doorway through the wall: not the yard's ground over it)
+  addVoid(X0, X1, Z0, Z1, FB-3, FB+1.5, FB); addVoid(DA, DB, Z0-0.27, Z0+0.02, FB-3, FB+1.5, FB);   // (only as high as feet go down here: the yard's ground is 20 cm over the ceiling)   // (and the doorway through the wall: not the yard's ground over it)
   addZone(X0, X1, Z0, Z1, FB-0.5, CB, "THE VELVET ROOM", true);
   addBuried(X0, X1, Z0, Z1, FB-0.5, CB+0.05, 0.3, 0x8a2a3a);
 
