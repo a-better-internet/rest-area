@@ -1018,3 +1018,11 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   `updateDoors` works out). The doorway has its own VOID, or the yard's
   ground over the wall's thickness lifts you onto it. Its record console
   is `VELVET.radios` in 20's `nearRadio`; its route is in `VELVET.routes`.
+- Zombie mode's roof gun (21's `RG`): a `roofgun` cache gives the kit
+  (`S.roofKit`, a belt `S.belt`, the second crate more belt). Behind the
+  wheel with the kit it rides the car's roof (the car's bounds measured
+  once level, `c._rgY`), is laid on the point under the middle of the
+  chase view, fires on the mouse (`rgFire`: the guns' own `rayWorld`,
+  `glassRay`, `rayZombie`, `hurtZombie`), runs hot (`S.rgHeat`), and
+  borrows `FLASH` at its muzzle. Built in `build()` with the rest, so the
+  warm-up sees it.

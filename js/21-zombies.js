@@ -1481,6 +1481,11 @@ const ZOMBIE=(function(){
       const w=sub==="5.56" ? 0.28 : 0.22, h=sub==="5.56" ? 0.16 : 0.11, d=sub==="5.56" ? 0.13 : 0.14;
       item.add(new T.Mesh(new T.BoxGeometry(w,h,d), mats));
       if(sub==="5.56") part(item, BOX(0.1,0.02,0.02), MAT.dark, 0, h/2+0.012, 0);
+    }else if(type==="roofgun"){
+      // a long olive crate, its lid off, the gun lying in it and a belt beside it
+      col=0xf0eccc; const wd=new T.MeshStandardMaterial({color:0x4a4e36, roughness:0.85});
+      part(item, BOX(0.7, 0.12, 0.26), wd, 0, 0, 0); part(item, BOX(0.5, 0.05, 0.07), MAT.dark, 0, 0.085, 0.03);
+      part(item, new T.CylinderGeometry(0.012, 0.012, 0.4, 8), MAT.metal, 0.35, 0.09, 0.03, 0, 0, Math.PI/2); part(item, BOX(0.12, 0.08, 0.08), new T.MeshStandardMaterial({color:0x6a6a3a, roughness:0.7}), -0.2, 0.1, -0.07);
     }else if(type==="bomb"){
       col=0xe86a2a; const mt=new T.MeshStandardMaterial({color:0x5a5e60, metalness:0.4, roughness:0.5});
       for(const dz of [-0.05, 0.05]){ part(item, new T.CylinderGeometry(0.035, 0.035, 0.22, 10), mt, 0, 0.035, dz, 0, 0, Math.PI/2);
@@ -1526,6 +1531,8 @@ const ZOMBIE=(function(){
     [34, 34, 0, "bomb"], [912, -1262, undefined, "bomb"], [152, -1112, undefined, "bomb"], [-48, -2968, undefined, "bomb"],
     // up on two of the roofs, for whoever climbs the ladders: shells on the fuel stop's, rifle rounds on the fireworks store's
     [-27, -1258, 4.42, "ammo:12 GAUGE"], [909, -1266, 6.67, "ammo:.30-06"],
+    // the roof gun's crates: by the garage, at the fuel stop's pumps, in the weigh station's lot, by the brewery (its belt the second time)
+    [27, 22, 0, "roofgun"], [-34, -1236, undefined, "roofgun"], [-52, -2958, undefined, "roofgun"], [1255, -1235, undefined, "roofgun"],
     // and up the water tower, for whoever gets up there
     [WATERTOWER.x+6.5, WATERTOWER.z+1.6, WATERTOWER.catwalk, "ammo:.30-06"],
     // the flamethrower at the fireworks outlet; fuel at the pumps, in the garage and by the farm's tank
@@ -1544,6 +1551,10 @@ const ZOMBIE=(function(){
   }
   function take(p){
     const [type, sub]=p.kind.split(":");
+    if(type==="roofgun"){ if(S.roofKit && S.belt>=BELT_MAX) return false;
+      if(!S.roofKit){ S.roofKit=true; S.belt=300; feed("A ROOF GUN  ·  IT GOES ON WHATEVER YOU DRIVE", "#f2efd8"); banner("ROOF GUN", "GET IN A CAR · CLICK TO FIRE"); }
+      else { const n=Math.min(200, BELT_MAX-S.belt); S.belt+=n; feed("+"+n+" ROOF GUN BELT", "#e8c860"); }
+      snd.pick(2); return true; }
     if(type==="bomb"){ if(S.bombs>=BOMB_MAX) return false; S.bombs++; feed("+1 PIPE BOMB  ·  F TO THROW", "#e8a060"); snd.pick(0); return true; }
     if(type==="bombs"){ if(S.bombs>=BOMB_MAX) return false; const n=BOMB_MAX-S.bombs; S.bombs=BOMB_MAX; feed("+"+n+" PIPE BOMBS  ·  F TO THROW", "#e8a060"); snd.pick(2); return true; }
     if(type==="ammo"){ if(S.ammo[sub]>=AMMO_MAX[sub]) return false; const n=Math.min(AMMO_BOX[sub], AMMO_MAX[sub]-S.ammo[sub]); S.ammo[sub]+=n; feed("+"+n+" "+sub, "#e8c860"); snd.pick(0); }
@@ -1783,12 +1794,16 @@ const ZOMBIE=(function(){
     const g=G(), L=hud.last;
     const hp=Math.ceil(Z.hp); if(L.hp!==hp){ L.hp=hp; hud.hp.textContent=hp; hud.bar.style.width=hp+"%"; hud.hp.style.color=hp<30 ? "#e0402a" : "#e8e2d0"; }
     const ammo=S.mag[g.id]+"|"+S.ammo[g.ammo]+"|"+g.id+"|"+(S.reloading?1:0)+"|"+(Z.infAmmo?1:0);
-    if(L.ammo!==ammo || L.g!==g.id){ L.ammo=ammo; L.g=g.id; hud.gunEl.textContent=g.name;
+    if((L.ammo!==ammo || L.g!==g.id) && !(driving && S.roofKit)){ L.ammo=ammo; L.g=g.id; hud.gunEl.textContent=g.name;
       hud.ammo.innerHTML=(S.reloading ? "<small>RELOADING</small>" : S.mag[g.id]+" <small>/ "+(Z.infAmmo ? "∞" : S.ammo[g.ammo])+"</small>");
       hud.atype.textContent=g.ammo;
       hud.slots.innerHTML=GUNS.map(q=>"<span class='"+(q.id===S.cur ? "cur" : S.have[q.id] ? "have" : "")+"'>"+q.slot+" "+q.name.split(" ").pop()+"</span>").join(""); }
     const lv=Z.level; if(L.lv!==lv){ L.lv=lv; hud.threat.textContent="■".repeat(Math.min(lv,12))+"□".repeat(Math.max(0,12-lv)); }
     const st=clock(Z.t)+"  ·  "+Z.kills+" KILLED"; if(L.st!==st){ L.st=st; hud.stats.textContent=st; }
+    // behind the wheel with the roof gun: its belt and its barrel in the gun's place
+    if(driving && S.roofKit){ const rt=S.belt+"|"+(S.rgHot ? 1 : 0)+"|"+(Z.infAmmo ? 1 : 0); if(L.rg!==rt){ L.rg=rt;
+        hud.gunEl.textContent="ROOF GUN"; hud.ammo.innerHTML=(S.rgHot ? "<small>TOO HOT</small>" : (Z.infAmmo ? "∞" : S.belt)+" <small>BELT</small>"); hud.atype.textContent="7.62"; } }
+    else if(L.rg){ L.rg=null; L.ammo=null; }
     if(L.sc!==Z.score){ L.sc=Z.score; hud.score.innerHTML="<small>SCORE</small>"+Z.score; }
     const mult=S.streakT>0 ? Math.min(5, 1+Math.floor((S.streak-1)/3)) : 1, mt=mult>1 ? "STREAK ×"+mult : ""; if(L.mt!==mt){ L.mt=mt; hud.mult.textContent=mt; }
     const bt=Z.infAmmo ? "F · PIPE BOMB ×∞" : S.bombs>0 ? "F · PIPE BOMB ×"+S.bombs : ""; if(L.bt!==bt){ L.bt=bt; hud.bombsEl.textContent=bt; }
@@ -1863,6 +1878,7 @@ const ZOMBIE=(function(){
      ====================================================================== */
   function resetRun(){
     Z.hp=100; Z.t=0; Z.kills=0; Z.level=1; Z.dead=false; Z.score=0; Z.ts=1;
+    S.roofKit=false; S.belt=0; S.rgHeat=0; S.rgHot=false; S.rgCool=0; S.rgDry=false;
     S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null; mendGlass(); S.cheated=!!(Z.god || Z.infAmmo);
     for(const b of BOMBS) scene.remove(b.g); BOMBS.length=0; BOOM.mod.v=0; stopRockets();
     S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0, flamer:0, rocket:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0, "FUEL":0, "ROCKETS":0}; stopFlame();
@@ -1878,9 +1894,84 @@ const ZOMBIE=(function(){
     if(hud.dead){ hud.dead(false); hud.last={}; }
   }
   let built=false;
+  /* ---- THE ROOF GUN: a kit (a crate at a few places) that mounts on whatever you drive. On the car's roof on a pintle, it swivels to
+     where the chase view looks (at the point under the middle of the view, the way a gunner would lay it) and fires on the mouse while you
+     drive: a belt of its own, a hot barrel after a long burst. Its shots are tested as the guns' are (the world, the glass, the dead). ---- */
+  const RG={g:null, sw:null, gun:null, muzzle:null, flash:null, barMat:null, tr:[], ti:0, yaw:0, pit:0, n:0};
+  const BELT_MAX=500;
+  function rgBuild(){
+    const g=new T.Group(); g.visible=false; scene.add(g); RG.g=g;
+    const olive=new T.MeshStandardMaterial({color:0x4a4e36, roughness:0.75, metalness:0.2}), steel=MAT.metal, dark=MAT.dark;
+    RG.barMat=new T.MeshStandardMaterial({color:0x2a2a2c, roughness:0.45, metalness:0.6, emissive:0x000000});
+    const M=(geo, mat, x, y, z, par, rx)=>{ const m=new T.Mesh(geo, mat); m.position.set(x, y, z); if(rx) m.rotation.x=rx; m.castShadow=true; (par||g).add(m); return m; };
+    for(const x of [-0.42, 0.42]) M(new T.BoxGeometry(0.04, 0.035, 1.3), steel, x, 0.018, 0);         // (the rack's rails)
+    for(const z of [-0.45, 0.45]) M(new T.BoxGeometry(0.9, 0.03, 0.05), steel, 0, 0.045, z);
+    M(new T.BoxGeometry(0.46, 0.03, 0.4), olive, 0, 0.075, 0); M(new T.CylinderGeometry(0.035, 0.045, 0.32, 12), steel, 0, 0.24, 0);
+    const sw=new T.Group(); sw.position.set(0, 0.42, 0); g.add(sw); RG.sw=sw;
+    M(new T.BoxGeometry(0.16, 0.1, 0.12), olive, 0, -0.03, 0, sw);
+    const gun=new T.Group(); sw.add(gun); RG.gun=gun;
+    M(new T.BoxGeometry(0.12, 0.13, 0.52), dark, 0, 0.05, 0.02, gun);
+    M(new T.CylinderGeometry(0.036, 0.036, 0.36, 12), RG.barMat, 0, 0.05, 0.44, gun, Math.PI/2);
+    M(new T.CylinderGeometry(0.019, 0.019, 0.72, 10), RG.barMat, 0, 0.05, 0.6, gun, Math.PI/2);
+    M(new T.CylinderGeometry(0.03, 0.026, 0.06, 10), dark, 0, 0.05, 0.98, gun, Math.PI/2);
+    M(new T.BoxGeometry(0.12, 0.17, 0.24), olive, -0.13, 0.0, 0.02, gun);                                  // (the ammunition can)
+    for(const x of [-0.07, 0.07]) M(new T.CylinderGeometry(0.016, 0.016, 0.12, 8), dark, x, 0.03, -0.3, gun);   // (the spade grips)
+    M(new T.BoxGeometry(0.5, 0.34, 0.02), olive, 0, 0.1, 0.28, gun);                                       // (the shield)
+    const mz=new T.Object3D(); mz.position.set(0, 0.05, 1.02); gun.add(mz); RG.muzzle=mz;
+    const fl=new T.Mesh(new T.ConeGeometry(0.09, 0.32, 8, 1, true), new T.MeshBasicMaterial({color:0xffc070, transparent:true, opacity:0.9, blending:T.AdditiveBlending, depthWrite:false, toneMapped:false}));
+    fl.rotation.x=Math.PI/2; fl.position.set(0, 0, 0.16); fl.visible=false; mz.add(fl); RG.flash=fl;
+    for(let k=0;k<6;k++){ const geo=new T.BufferGeometry(); geo.setAttribute("position", new T.Float32BufferAttribute([0,0,0, 0,0,1], 3));
+      const ln=new T.Line(geo, new T.LineBasicMaterial({color:0xffd890, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, toneMapped:false}));
+      ln.frustumCulled=false; ln.visible=false; scene.add(ln); RG.tr.push({ln:ln, t:0}); }
+  }
+  // the car's roof, in its own frame, measured once level
+  function rgRoof(c){ if(c._rgY!==undefined) return; const q=c.g.quaternion.clone(), p=c.g.position.clone();
+    c.g.quaternion.identity(); c.g.position.set(0, 0, 0); c.g.updateMatrixWorld(true); const b=new T.Box3().setFromObject(c.g);
+    c._rgY=b.max.y; c._rgZ=(b.min.z+b.max.z)/2; c.g.quaternion.copy(q); c.g.position.copy(p); c.g.updateMatrixWorld(true); }
+  const _rgq=new T.Quaternion();
+  function updateRoofGun(dt){
+    for(const T2 of RG.tr) if(T2.t>0){ T2.t-=dt; T2.ln.material.opacity=Math.max(0, T2.t/0.07)*0.9; if(T2.t<=0) T2.ln.visible=false; }
+    S.rgFlash=Math.max(0, (S.rgFlash||0)-dt); RG.flash.visible=S.rgFlash>0;
+    S.rgCool=Math.max(0, (S.rgCool||0)-dt); S.rgHeat=Math.max(0, (S.rgHeat||0)-dt*(S.rgHot ? 0.45 : 0.28)); if(S.rgHot && S.rgHeat<0.3){ S.rgHot=false; feed("THE ROOF GUN'S COOLED", "#c8d8a8"); }
+    RG.barMat.emissive.setRGB(S.rgHeat*0.85, S.rgHeat*0.28, 0);
+    const on=!!(driving && S.roofKit && !Z.dead);
+    RG.g.visible=on; if(!on) return;
+    const c=driving; rgRoof(c);
+    RG.g.position.copy(c.g.position); RG.g.quaternion.copy(c.g.quaternion); RG.g.translateY(c._rgY-0.005); RG.g.translateZ(c._rgZ-0.1); RG.g.updateMatrixWorld(true);
+    // laid on the point under the middle of the view
+    camera.getWorldDirection(_v1); const W=rayWorld(camera.position, _v1, 160), t=Math.max(5, W.t);
+    _v2.copy(camera.position).addScaledVector(_v1, t); RG.sw.getWorldPosition(_v3); _v2.sub(_v3).normalize();
+    _rgq.copy(RG.g.quaternion).invert(); _v2.applyQuaternion(_rgq);
+    const ty=Math.atan2(_v2.x, _v2.z), tp=clamp(Math.asin(clamp(_v2.y, -1, 1)), -0.3, 0.75);
+    let dy=ty-RG.yaw; dy=Math.atan2(Math.sin(dy), Math.cos(dy)); RG.yaw+=dy*Math.min(1, dt*12); RG.pit+=(tp-RG.pit)*Math.min(1, dt*12);
+    RG.sw.rotation.y=RG.yaw; RG.gun.rotation.x=-RG.pit; RG.g.updateMatrixWorld(true);
+    if(S.fireHeld && S.rgCool<=0 && !S.rgHot && !atGame()){
+      if(S.belt<=0 && !Z.infAmmo){ snd.click(); S.rgCool=0.35; if(!S.rgDry){ S.rgDry=true; feed("THE BELT'S EMPTY · FIND A ROOF GUN CRATE", "#8a8a7a"); } }
+      else rgFire(); }
+  }
+  function rgFire(){
+    S.rgCool=0.078; if(!Z.infAmmo) S.belt--; S.rgDry=false; RG.n++;
+    S.rgHeat+=0.021; if(S.rgHeat>=1){ S.rgHeat=1; S.rgHot=true; feed("THE BARREL'S TOO HOT · LET IT COOL", "#e8a060"); }
+    RG.muzzle.getWorldPosition(_o); RG.muzzle.getWorldDirection(_d);
+    _v2.set(0, 1, 0).cross(_d).normalize(); _v3.copy(_d).cross(_v2).normalize();
+    const sp=0.012*Math.sqrt(Math.random()), ph=Math.random()*Math.PI*2; _d.addScaledVector(_v2, sp*Math.cos(ph)).addScaledVector(_v3, sp*Math.sin(ph)).normalize();
+    let W=rayWorld(_o, _d, 160);
+    const GH=glassRay(_o, _d, Math.min(160, W.t+0.45)); if(GH && !GH.P.broke){ hitGlass(GH.P, _o, _d, GH.t, 1); W={t:GH.t, what:"glass"}; }
+    const L=[]; for(const zb of ZS){ if(!zb.live || zb.state==="dead") continue; if(Math.abs(zb.x-_o.x)>162 || Math.abs(zb.z-_o.z)>162) continue;
+      const h=rayZombie(_o, _d, zb, W.t); if(h) L.push({zb:zb, t:h.t, head:h.head}); }
+    L.sort((a, b)=>a.t-b.t); let endT=W.t, n=0;
+    for(const h of L){ if(n>=2) break; _v1.copy(_o).addScaledVector(_d, h.t); hurtZombie(h.zb, 30*(h.head ? 2.4 : 1)*(1-n*0.3), h.head, _v1.clone(), _d.clone()); n++; endT=h.t; }
+    if(n) S.hitT=0.14;
+    if(!n && W.what && W.what!=="glass"){ _v1.copy(_o).addScaledVector(_d, W.t-0.04); dust.puff(_v1, W.what==="ground"); }
+    if(RG.n%2===0){ const T2=RG.tr[RG.ti++%RG.tr.length], a=T2.ln.geometry.attributes.position; _v1.copy(_o).addScaledVector(_d, Math.min(endT, 160));
+      a.setXYZ(0, _o.x, _o.y, _o.z); a.setXYZ(1, _v1.x, _v1.y, _v1.z); a.needsUpdate=true; T2.ln.visible=true; T2.t=0.07; }
+    S.rgFlash=0.045; RG.flash.rotation.y=Math.random()*6;
+    snd.gun("carbine");
+    for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-_o.x, zb.z-_o.z)<100) zb.alert=true;
+  }
   function build(){
     if(built) return; built=true;
-    buildVM(); buildFX(); rocketBuild(); buildHUD(); buildCaches();
+    buildVM(); buildFX(); rocketBuild(); rgBuild(); buildHUD(); buildCaches();
     // a crowd of them made now, while you are looking at the start, not in the middle of a fight (each is a mesh of its own)
     for(const [kind, n] of [["walker", 14], ["runner", 4], ["brute", 2]]) for(let k=0;k<n;k++) ZS.push(buildZombie(kind));
     const dom=renderer.domElement;
@@ -1913,7 +2004,7 @@ const ZOMBIE=(function(){
   };
   Z.stop=function(){
     if(!Z.on) return;
-    Z.on=false; Z.dead=false; stopCops(); mendGlass(); stopFlame(); stopRockets();
+    Z.on=false; Z.dead=false; stopCops(); mendGlass(); stopFlame(); stopRockets(); if(RG.g){ RG.g.visible=false; for(const T2 of RG.tr){ T2.ln.visible=false; T2.t=0; } }
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ PK[i].g.visible=false; if(PK[i].dyn){ dropMesh(PK[i].g); PK.splice(i,1); } }
     if(blood.decals) for(const m of blood.decals) m.visible=false;
@@ -1999,7 +2090,7 @@ const ZOMBIE=(function(){
     // the pipe bombs, and a horde when one is coming
     updateBombs(dt); updateRockets(dt, light); updateHorde(dt); updateCops(dt, now, dark); updateGlass(dt); updateFlame(dt, now);
     S.streakT=Math.max(0, S.streakT-dt); if(S.streakT<=0) S.streak=0;
-    updateGun(dt);
+    updateGun(dt); updateRoofGun(dt);
     updateVM(dt);
     updatePickups(dt);
     updateFX(dt, light);
@@ -2008,6 +2099,7 @@ const ZOMBIE=(function(){
     camera.getWorldDirection(_v1);
     FLASH.x=camera.position.x+_v1.x*0.7; FLASH.y=camera.position.y+_v1.y*0.7; FLASH.z=camera.position.z+_v1.z*0.7;
     FLASH.under=buriedAt(camera.position.x, camera.position.z, camera.position.y); FLASH.mod.v=S.flashT>0 ? 1 : 0;
+    if(S.rgFlash>0){ RG.muzzle.getWorldPosition(_v2); FLASH.x=_v2.x; FLASH.y=_v2.y; FLASH.z=_v2.z; FLASH.mod.v=1; }     // (the roof gun's, at its muzzle)
     // the ADS view: tighter, a lot tighter through the rifle's scope
     if(!atGame()){ const g=G(), want=fov*(1-S.ads*(1-aimFov(g))); if(Math.abs(camera.fov-want)>0.01){ camera.fov=want; camera.updateProjectionMatrix(); } }   // (at a cabinet the view is the cabinet's, 18g)
     // the blood on the screen from a hit close to, or a car through them
@@ -2058,7 +2150,7 @@ const ZOMBIE=(function(){
   };
   setInterval(()=>{ if(CB.open) drawBox(); }, 400);
   // for tools and testing: put one down, and see what there is
-  Z.debug={ZS:ZS, PK:PK, S:S, place:(kind, x, z)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6); return placePickup(kind, x, z, y, {dyn:true, life:600}); }, clear:()=>{ for(const zb of ZS) recycle(zb); if(blood.decals) for(const m of blood.decals) m.visible=false; }, spawnAt:(x, z, kind, yaw, alert)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6), zb=spawnZombie(x, z, y, kind||"walker", yaw); if(zb && alert) zb.alert=true; return zb; },
+  Z.debug={ZS:ZS, PK:PK, S:S, RG:RG, roofGun:updateRoofGun, take:take, place:(kind, x, z)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6); return placePickup(kind, x, z, y, {dyn:true, life:600}); }, clear:()=>{ for(const zb of ZS) recycle(zb); if(blood.decals) for(const m of blood.decals) m.visible=false; }, spawnAt:(x, z, kind, yaw, alert)=>{ const y=surfaceY(x, z, groundY(x,z)+0.6), zb=spawnZombie(x, z, y, kind||"walker", yaw); if(zb && alert) zb.alert=true; return zb; },
            give:(id)=>{ const g=GUN(id); S.have[id]=true; S.mag[id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; select(g.slot); }, fire:fire, hurt:hurtPlayer, rayWorld:rayWorld, boom:BOOM, BOMBS:BOMBS, cops:COPS, copRun:copRun, glassRay:glassRay, broken:BROKEN,
            code:enterCode, rockets:ROCKETS, zoomStep:zoomStep, bomb:(x, z, fuse)=>{ S.bombs++; S.throwT=0; throwBomb(); const b=BOMBS[BOMBS.length-1]; if(!b) return null; b.x=x; b.z=z; b.y=surfaceY(x, z, groundY(x,z)+0.6)+0.05;
              b.vx=b.vy=b.vz=0; b.fuse=fuse||3.5; return b; }, kill:(zb, head)=>{ _v2.set(0,0,-1); killZombie(zb, !!head, _v2); }};
