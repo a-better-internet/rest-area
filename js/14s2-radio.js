@@ -24,7 +24,8 @@
    on short poles from the station, two wires on each crossarm.
    PLAN (world): RADIO (04): the pad x -6..48, z -1500..-1458 at EDIN.y; the
    building x 2..26, z -1486..-1474 (the round end centred x 20); the tower
-   at (100, -1522), its footing level at RADIO.ty.
+   at (100, -1522), its footing level at RADIO.ty. The tuning house by it,
+   its cellar and the shelter under that are 14s3's.
    ---------------------------------------------------------------------- */
 const RADIO_ST={beacons:[], glow:null, glowIn:null, lamp:null, t:0, radios:[], dj:null};
 (function radioStation(){
@@ -376,7 +377,8 @@ const RADIO_ST={beacons:[], glow:null, glowIn:null, lamp:null, t:0, radios:[], d
 
   /* ---- the feed line: short poles from the station's west... east end to the tuning house, two wires on each crossarm ---- */
   const T0=RADIO.tower, TY=Terrain.groundAt(T0.x, T0.z);
-  { const a=V3(XR+R+1.0, 0, ZC-1.5), b=V3(T0.x-7.5-3.2, 0, T0.z+5.6), n=6, dx=b.x-a.x, dz=b.z-a.z, L=Math.hypot(dx, dz), ox=-dz/L, oz=dx/L, pts=[];
+  { const a=V3(XR+R+1.0, 0, ZC-1.5), b=V3(85.0, 0, -1511.6), n=6,                 // (the last pole off the tuning house's south-west corner, 14s3)
+       dx=b.x-a.x, dz=b.z-a.z, L=Math.hypot(dx, dz), ox=-dz/L, oz=dx/L, pts=[];
     for(let k=0;k<=n;k++){ const t=k/n, x=a.x+dx*t, z=a.z+dz*t, gy=g(x, z), top=gy+3.2;
       C(0.11, top-gy+0.6, x, gy+(top-gy-0.6)/2, z, "#5a4a3a", 8); addCol(x-0.13, x+0.13, z-0.13, z+0.13, gy-1, top);
       B(0.09, 0.09, 1.0, x, top, z, "#4a3a2a", Math.atan2(ox, oz)); pts.push([V3(x+ox*0.38, top+0.1, z+oz*0.38), V3(x-ox*0.38, top+0.1, z-oz*0.38)]);
@@ -388,16 +390,13 @@ const RADIO_ST={beacons:[], glow:null, glowIn:null, lamp:null, t:0, radios:[], d
   { const x=T0.x, z=T0.z;
     B(3.2, 1.6, 3.2, x, TY+0.5, z, "#a8a49a"); ent(new T.CylinderGeometry(0.25, 0.9, 1.4, 16), x, TY+2.0, z, "#e8e2d4"); for(let k=0;k<5;k++) C(1.0-k*0.13, 0.08, x, TY+1.45+k*0.26, z, "#d8d2c4", 18);
     addCol(x-1.7, x+1.7, z-1.7, z+1.7, TY-1, TY+3);
-    const hx=x-7.5, hz=z+5.6; B(4.2, 3.2, 3.2, hx, TY+1.4, hz, "#8a4a36"); B(4.5, 0.2, 3.5, hx, TY+3.1, hz, "#5a5a5e"); B(0.9, 2.0, 0.06, hx+0.8, TY+1.0, hz+1.62, "#5a6a5a");
-    for(let k=0;k<6;k++) B(4.22, 0.012, 3.22, hx, TY+0.2+k*0.5, hz, "#7a4232");
-    addCol(hx-2.1, hx+2.1, hz-1.6, hz+1.6, TY-1, TY+3.2);
-    tube(V3(hx+2.1, TY+2.6, hz-0.6), V3(x-0.2, TY+3.0, z+0.3), 0.03, "#b8bcc0", 6);          // (the feed up to the tower's foot)
-    // the fence: a square of chain link on galvanized posts, a gate on the south
-    const F=9.5, FH=2.1; const run=(x0, z0, x1, z1)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.round(L/3)), ry=Math.atan2(x1-x0, z1-z0);
+    // (the tuning house is 14s3's: a hut you can go into, its cellar and the shelter under that)
+    // the fence: chain link on galvanized posts round the tower's square, its west side clear of the tuning house, a gate on the south
+    const FX0=x-5, F=9.5, FH=2.1; const run=(x0, z0, x1, z1)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.round(L/3)), ry=Math.atan2(x1-x0, z1-z0);
       for(let k=0;k<=n;k++){ const px=x0+(x1-x0)*k/n, pz=z0+(z1-z0)*k/n, gy=g(px, pz); C(0.04, FH+0.5, px, gy+FH/2-0.2, pz, "#a8acb0", 8); }
       const mx=(x0+x1)/2, mz=(z0+z1)/2, gy=g(mx, mz); push("chainlink", planeGeo(L, FH-0.05, 3.2), mx, gy+(FH-0.05)/2+0.05, mz, ry+Math.PI/2, "#ffffff");
       addCol(Math.min(x0, x1)-0.05, Math.max(x0, x1)+0.05, Math.min(z0, z1)-0.05, Math.max(z0, z1)+0.05, gy-1, gy+FH); };
-    run(x-F, z-F, x+F, z-F); run(x+F, z-F, x+F, z+F); run(x-F, z-F, x-F, z+F); run(x-F, z+F, x-1.5, z+F); run(x+1.5, z+F, x+F, z+F);
+    run(FX0, z-F, x+F, z-F); run(x+F, z-F, x+F, z+F); run(FX0, z-F, FX0, z+F); run(FX0, z+F, x-1.5, z+F); run(x+1.5, z+F, x+F, z+F);
     sign(0.6, 0.4, (c, W, H)=>{ c.fillStyle="#f2f0e8"; c.fillRect(0, 0, W, H); c.fillStyle="#b3151b"; c.fillRect(0, 0, W, H*0.34); say(c, "DANGER", W/2, H*0.17, W*0.72, H*0.24, "#f2f0e8", "800", "Arial");
       say(c, "HIGH VOLTAGE · RF", W/2, H*0.52, W*0.80, H*0.16, "#1a1a1a", "800", "Arial"); say(c, "KEEP OUT", W/2, H*0.78, W*0.66, H*0.16, "#1a1a1a", "800", "Arial"); },
       x-3.5, g(x-3.5, z+F)+1.4, z+F+0.03, 0, false, 240);

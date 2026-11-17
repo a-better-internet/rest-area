@@ -539,6 +539,14 @@ If the scene runs hot on your machine, start there (see below).
     every twenty-odd metres by strain insulators, and it stands on a
     porcelain base insulator with a ball gap across it. From a long way
     off it is a thin banded line against the sky, not a column of dots.
+  - **The tuning house** at the tower's foot, red brick with a flat roof,
+    is open: the feed line comes in through its wall to the tuning unit (a
+    copper coil and vacuum capacitors in a wire cage), the meters and the
+    engineer's desk. A stair goes down to the cellar, where the station's
+    first transmitter retired, and a second stair down from there ends at
+    a steel door to the 1953 shelter: the CONELRAD emergency desk, the
+    receiver rack, water and crackers, a hand-crank generator, and the
+    bunks through the partition.
   - The power lines are carried at real heights: the line that feeds the
     rest area's substation on sixty-foot poles, its conductors seventeen
     metres up, and the roadside poles along US 6N forty-five feet, with

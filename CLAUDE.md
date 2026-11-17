@@ -989,3 +989,12 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   ten) feed out of the slot as one plane whose texture repeats. Each ring
   has its own glow torus and the bulbs three materials: colours change,
   nothing is shown or hidden.
+- The tuning house by the tower is 14s3 (`TUNE`: `FL`, `BF`, `SF`): its
+  pad levelled by `RADIO.hut` (04), on `TUNE_RING`, a 2 m patch let into
+  the 8 m ground and holed over the cellar (`TUNE_HOLES`). The shelter
+  under that is deeper than any hole needs. The hut's VOID runs to head
+  height (over the stair's well the ground must not hold you), and each
+  stair's ramp overlaps the floors at its ends by 2 cm. The feed line
+  (14s2) ends at a pole off the hut's south-west corner. The steel door
+  to the shelter is latched; its route is `gate:true`.
+- The warp list has pages of thirty (arrows or Tab turn them over).

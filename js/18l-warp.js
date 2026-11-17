@@ -58,7 +58,10 @@ const WARP=(function(){
     ["THE STONE HOUSE'S POOL", -1425.0, -1144.0,  Math.PI/2,   x=>surfaceY(x[1], x[2], EDIN.y+0.06)],
     ["THE RADIO STATION",     14.0, -1466.0,     0,           x=>g(x[1], x[2])],
     ["THE RADIO STATION'S LOBBY", 7.0, -1477.0, Math.PI,     x=>surfaceY(x[1], x[2], EDIN.y+0.2)],
-    ["THE RADIO TOWER",       100.0, -1511.0,    0,           x=>g(x[1], x[2])]];
+    ["THE RADIO TOWER",       100.0, -1511.0,    0,           x=>g(x[1], x[2])],
+    ["THE TUNING HOUSE",       88.4, -1516.6,  -Math.PI/2,   x=>surfaceY(x[1], x[2], TUNE.FL+0.1)],
+    ["THE TUNING HOUSE'S CELLAR", 89.4, -1517.2, -Math.PI/2, x=>surfaceY(x[1], x[2], TUNE.BF+0.1), true],
+    ["THE SHELTER",            85.6, -1516.8,   Math.PI/2,   x=>surfaceY(x[1], x[2], TUNE.SF+0.1), true]];
   const KEYS="1234567890ABCDFGHIJKLMNOPQRTUV";            // (E and S left out: E is your hand, S is a step back)
   // the hoop: in front of the first one there is, facing it
   const hoopAt=()=>{ const H=(typeof YARD_HOOPS!=="undefined" && YARD_HOOPS[0]) || null; if(!H) return null;
@@ -74,7 +77,12 @@ const WARP=(function(){
     #warp .g b{display:inline-block;width:1.6em;color:#f2d27a}
     #warp p{margin:10px 0 0;font-size:11px;opacity:.6;letter-spacing:.2em}`;
   document.head.appendChild(st); document.body.appendChild(box);
-  box.innerHTML="<h4>WARP</h4><div class='g'>"+P.map((p, i)=>"<div><b>"+KEYS[i]+"</b>"+p[0]+"</div>").join("")+"</div><p>` OR ESC TO SHUT IT</p>";
+  // (thirty keys to a page; more places than that turn over onto the next page with the arrows or TAB)
+  let page=0; const PN=Math.ceil(P.length/KEYS.length);
+  const fill=()=>{ const o=page*KEYS.length;
+    box.innerHTML="<h4>WARP"+(PN>1 ? " · "+(page+1)+" OF "+PN : "")+"</h4><div class='g'>"+P.slice(o, o+KEYS.length).map((p, i)=>"<div><b>"+KEYS[i]+"</b>"+p[0]+"</div>").join("")+
+      "</div><p>"+(PN>1 ? "← → OR TAB · THE NEXT PAGE · " : "")+"` OR ESC TO SHUT IT</p>"; };
+  fill();
   const show=(on)=>{ W.open=on; box.style.display=on ? "block" : "none"; };
   function go(i){
     const p=P[i]; if(!p) return;
@@ -103,8 +111,10 @@ const WARP=(function(){
     if(!W.open) return false;
     if(e.code==="Escape"){ show(false); return true; }
     const k=e.code.startsWith("Digit") ? e.code.slice(5) : e.code.startsWith("Key") ? e.code.slice(3) : "";
+    if(e.code==="ArrowRight" || e.code==="Tab" || e.code==="ArrowDown"){ e.preventDefault(); page=(page+1)%PN; fill(); return true; }
+    if(e.code==="ArrowLeft" || e.code==="ArrowUp"){ page=(page+PN-1)%PN; fill(); return true; }
     const i=k ? KEYS.indexOf(k) : -1;
-    if(i>=0){ show(false); go(i); }
+    if(i>=0 && page*KEYS.length+i<P.length){ show(false); go(page*KEYS.length+i); }
     return true;                                                  // (anything else, while it is open, does nothing)
   };
   W.places=P; W.go=go;

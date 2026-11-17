@@ -165,9 +165,10 @@ const POWER={x0:84, z0:-184, x1:136, z1:-1500, H:18.5};
 // the radio station (14s2): its pad cut into the foot of the rise north of the substation, and its tower on the hill behind,
 // a level ring round the tower's base; the feed line between them a cut through the trees
 const RADIO={pad:{x0:-6, x1:48, z0:-1500, z1:-1458}, tower:{x:100, z:-1522}, ty:undefined,
-             feed:{x0:27, z0:-1483, x1:96, z1:-1516},
+             feed:{x0:27, z0:-1483, x1:85, z1:-1511.6},
              walk:{x0:-30, x1:178, z0:-1602},
-             guys:[Math.PI/3, Math.PI, Math.PI*5/3], gr:66};                       // (the tower's guys: bearings from north, clockwise, and how far out)                     // (the ground you may walk: 07 opens the fields' north wall round it)
+             guys:[Math.PI/3, Math.PI, Math.PI*5/3], gr:66,
+             hut:{x0:79.5, x1:94.5, z0:-1520.5, z1:-1508.5}};                      // (the tuning house and the shelter under the ground west of it, 14s3: level)                       // (the tower's guys: bearings from north, clockwise, and how far out)                     // (the ground you may walk: 07 opens the fields' north wall round it)
 /* ---- the back woods: a path, and a camp at the end of it ---------------
    Behind the building a path the kids have worn runs east off the loop walk,
    a quarter of a kilometre through the trees to a clearing where somebody
@@ -316,7 +317,8 @@ const Terrain=(function(){
     // the radio station's pad, level with the plain, cut back into the rise; the tower's footing level on the hill
     { const rd=boxDist(RADIO.pad,x,z); if(rd<40) h=toward(h, EDIN.y, rd, 0, 34);
       const T=RADIO.tower, td=Math.hypot(x-T.x, z-T.z);
-      if(td<30){ if(RADIO.ty===undefined) RADIO.ty=natural(T.x, T.z); h=toward(h, RADIO.ty, td, 11, 16); } }
+      if(td<30){ if(RADIO.ty===undefined) RADIO.ty=natural(T.x, T.z); h=toward(h, RADIO.ty, td, 11, 16); }
+      const hd=boxDist(RADIO.hut,x,z); if(hd<9){ if(RADIO.ty===undefined) RADIO.ty=natural(T.x, T.z); h=toward(h, RADIO.ty, hd, 1.5, 8); } }
     // the interstate corridors, cut and filled to the road's own grade (a steep cut through the plain)
     const ry=roadY(z), wI=pd<40 ? 1-smoothstep(0,40,pd) : 0, hh=19-2*wI, hb=34-24*wI;
     h=toward(h, ry, Math.abs(x-HWY.nb), hh, hb);
@@ -445,7 +447,7 @@ const Terrain=(function(){
     d=Math.min(d, boxSD(WEIGH.pad,x,z)-6);
     d=Math.min(d, boxSD(GARAGE.yard,x,z)+2);
     // the radio station's pad, the ring round its tower, the feed line's cut between them
-    d=Math.min(d, boxSD(RADIO.pad,x,z)-22, Math.hypot(x-RADIO.tower.x, z-RADIO.tower.z)-22);          // (a mown bank behind the station, a meadow round the tower)
+    d=Math.min(d, boxSD(RADIO.pad,x,z)-22, Math.hypot(x-RADIO.tower.x, z-RADIO.tower.z)-22, boxSD(RADIO.hut,x,z)-6);          // (a mown bank behind the station, a meadow round the tower)
     { const F=RADIO.feed, ex=F.x1-F.x0, ez=F.z1-F.z0, t=clamp(((x-F.x0)*ex+(z-F.z0)*ez)/(ex*ex+ez*ez), 0, 1);
       d=Math.min(d, Math.hypot(x-(F.x0+ex*t), z-(F.z0+ez*t))-4); }
     // (and each guy's line, cleared as a utility keeps it, and round its anchor)
@@ -502,6 +504,10 @@ const WEST_HOLES=[Object.assign({bare:true}, WEST.hall), {bare:true, x0:-1440, x
 // apron cover their edges)
 const LOON_RING={x0:1428, x1:1448, z0:-1192, z1:-1168};
 const LOON_HOLES=[{x0:1433.5, x1:1441.5, z0:-1186.5, z1:-1179.5, bare:true}, {x0:1438.5, x1:1441.0, z0:-1179.5, z1:-1175.0, bare:true}];
+// and a 2 m patch let into the 8 m ground round the tuning house by the tower (14s3), holed over its cellar (on its own 2 m
+// lattice; the hut's walls stand over the hole's edges). The shelter further down is under the whole ground and needs no hole.
+const TUNE_RING={x0:72, x1:104, z0:-1528, z1:-1504};
+const TUNE_HOLES=[{x0:86, x1:94, z0:-1520, z1:-1514, bare:true}];
 const TERRAIN_RINGS=[];
 let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point, for whatever lies on it: 14y)
 (function buildTerrain(){
@@ -702,7 +708,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   grid(RING_FAR, 16, [RING_MID, RING_EAST, RING_MIDN, RING_WEST], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
   grid(RING_MIDN, 8, [RING_WEIGH], "ground-midn", 24);
   grid(RING_WEIGH, 2, WEIGH_HOLES, "ground-weigh", 6);
-  grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS, KIRK_RING], "ground-mid", 24);
+  grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS, KIRK_RING, TUNE_RING], "ground-mid", 24);
   grid(RING_NEAR, 2, [GEN_HOLE], "ground-near", 6);
   grid(RING_HWYN, 2, [], "ground-hwyn", 6);
   grid(RING_HWYS, 2, [], "ground-hwys", 6);
@@ -710,6 +716,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   grid(RING_WEST, 4, WEST_HOLES, "ground-west", 6);
   grid(LOON_RING, 0.5, LOON_HOLES, "ground-loon", 0);       // (no apron: it meets the 4 m ground on the street's flat)
   grid(KIRK_RING, 2, KIRK_HOLES, "ground-kirk", 0);              // (no apron: it meets the 8 m ground on the flat, and one would hang through the hall)
+  grid(TUNE_RING, 2, TUNE_HOLES, "ground-tune", 4);              // (an apron: its edge is on the hill's slope, well away from the hut)
   TERRAIN_RINGS.sort((a,b)=>a.cell-b.cell);        // finest ring wins
 })();
 
