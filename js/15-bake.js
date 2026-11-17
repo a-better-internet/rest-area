@@ -161,7 +161,8 @@ const GROUND_KIND=(function(){
           if((d1<0 || d2<0 || d3<0) && (d1>0 || d2>0 || d3>0)) continue;
           const k=key(i, j), was=M.get(k);
           if(was!==1) M.set(k, kd===1 ? 1 : (was||kd)); } } } }
-  return {at:(x, z)=>M.get(key(Math.floor(x/CELL), Math.floor(z/CELL)))||0, cells:M.size};
+  return {at:(x, z)=>M.get(key(Math.floor(x/CELL), Math.floor(z/CELL)))||0, cells:M.size, CELL:CELL,
+          each:(fn)=>M.forEach((v, k)=>fn((Math.floor(k/16384)-8192)*CELL, ((k%16384)-8192)*CELL, v))};     // (every paved cell: 18y's map)
 })();
 const BAKED=bakeBuckets(scene);
 buildColGrid();                     // everything solid is in place by now

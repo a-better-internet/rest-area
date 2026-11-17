@@ -17,6 +17,8 @@ let started=false, hudOn=true, leaving=false;
 const WALK=3.05, RUN=5.6, SPRINT=10.4;
 
 addEventListener("keydown",e=>{
+  // the map open: every key is its own (18y-map)
+  if(typeof MAP!=="undefined" && MAP.open){ e.preventDefault(); MAP.key(e); return; }
   // at a vending machine the keys are its keypad's (18b-vending)
   if(VEND.open){ e.preventDefault(); VEND.key(e); return; }
   // on the oche the keys are the game's (18d-darts)
@@ -49,6 +51,7 @@ addEventListener("keydown",e=>{
   if(typeof ZOMBIE!=="undefined" && ZOMBIE.key(e)){ e.preventDefault(); return; }
   if(e.code==="Tab"){ e.preventDefault(); return; }
   if(e.code==="KeyG" && !e.repeat && window.GFXMENU){ GFXMENU.show(); return; }
+  if(e.code==="KeyB" && typeof MAP!=="undefined" && MAP.key(e)){ e.preventDefault(); return; }       // (the map, 18y)
   // ENTER plays the arcade game you are standing at, whatever door is by it (E is the door's)
   if((e.code==="Enter" || e.code==="NumpadEnter") && !e.repeat && started && !driving && !droneMode && !player.ladder){
     const g=nearestUse(true); if(g){ e.preventDefault(); g.fn(); return; } }

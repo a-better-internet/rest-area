@@ -75,15 +75,26 @@ const WHACK={on:false, t:0, g:null, cab:null, hi:0, acc:0, keys:{}, demoT:2};
       {geo:new T.CylinderGeometry(0.098, 0.098, 0.010, 18), matrix:new T.Matrix4().makeTranslation(0, 0.218, 0.012), color:new T.Color(1,1,1)}]; return mergeEntries(C); })();
   const DOWN=-0.275;                                                             // how far under the lawn one waits
   const chucks=HOLES.map(h=>{ const g=new T.Group(); g.position.set(h.x, TOP+DOWN, h.z);
-    const m=new T.Mesh(chuckGeo, fur); m.castShadow=true; g.add(m);
+    const fm=fur.clone(); fm.emissive=new T.Color(0xffffff); fm.emissiveIntensity=0; const m=new T.Mesh(chuckGeo, fm); m.castShadow=true; g.add(m);
     const hat=new T.Mesh(hatGeo, hatM); hat.scale.setScalar(0.001); g.add(hat);  // (the hard hat is always there, and nothing until it is worn)
-    G.add(g); return {g:g, hat:hat, x:h.x, z:h.z, u:0, st:0, t:0, hold:0, gold:false, hit:0}; });
+    G.add(g); return {g:g, hat:hat, fm:fm, x:h.x, z:h.z, u:0, st:0, t:0, hold:0, gold:false, hit:0, bonk:0}; });
   // the mallet
   const mal=new T.Group(); mal.rotation.order="YXZ";
   { const h=new T.Mesh(new T.CylinderGeometry(0.014, 0.016, 0.30, 10), new T.MeshStandardMaterial({color:0xc8a060, roughness:0.6})); h.rotation.x=Math.PI/2; h.position.z=0.17; mal.add(h);
     const hd=new T.Mesh(new T.CylinderGeometry(0.050, 0.050, 0.13, 18), new T.MeshStandardMaterial({color:0x1e1e22, roughness:0.5})); mal.add(hd);
     const band=new T.Mesh(new T.CylinderGeometry(0.052, 0.052, 0.03, 18), new T.MeshStandardMaterial({color:0xf2c81e, roughness:0.5})); mal.add(band); }
   G.add(mal);
+  // what a hit looks like: a burst of stars from the burrow, a ring across the lawn, the points rising; a miss kicks up dirt
+  const FX={stars:[], rings:[], pops:[], dust:[]};
+  { const star=signTex(64, 64, (c, Wc, Hc)=>{ c.clearRect(0,0,Wc,Hc); c.fillStyle="#fff2a0"; c.strokeStyle="#c87a10"; c.lineWidth=3; c.beginPath();
+        for(let k=0;k<10;k++){ const a=-Math.PI/2+k*Math.PI/5, r=k%2 ? 12 : 29; c.lineTo(32+Math.cos(a)*r, 32+Math.sin(a)*r); } c.closePath(); c.fill(); c.stroke(); });
+    const puff=signTex(64, 64, (c, Wc, Hc)=>{ c.clearRect(0,0,Wc,Hc); const g=c.createRadialGradient(32,32,2,32,32,30); g.addColorStop(0,"rgba(150,112,70,0.9)"); g.addColorStop(1,"rgba(150,112,70,0)"); c.fillStyle=g; c.fillRect(0,0,Wc,Hc); });
+    for(let i=0;i<16;i++){ const m=new T.Sprite(new T.SpriteMaterial({map:star, transparent:true, depthWrite:false})); m.visible=false; G.add(m); FX.stars.push({m:m, t:9, v:V3()}); }
+    for(let i=0;i<8;i++){ const m=new T.Sprite(new T.SpriteMaterial({map:puff, transparent:true, depthWrite:false})); m.visible=false; G.add(m); FX.dust.push({m:m, t:9, v:V3()}); }
+    for(let i=0;i<2;i++){ const m=new T.Mesh(new T.RingGeometry(0.8, 1, 32).rotateX(-Math.PI/2), new T.MeshBasicMaterial({color:0xfff0a0, transparent:true, depthWrite:false, toneMapped:false})); m.visible=false; G.add(m); FX.rings.push({m:m, t:9}); }
+    for(const v of ["+10", "+25"]){ const c=cvs(256, 128), x=c.getContext("2d"); x.textAlign="center"; x.textBaseline="middle"; x.font="900 84px 'Arial Black', Arial"; x.lineJoin="round";
+      x.lineWidth=14; x.strokeStyle="#3a1206"; x.strokeText(v, 128, 66); x.fillStyle=v==="+25" ? "#ffd21e" : "#ffffff"; x.fillText(v, 128, 66);
+      const t=setSRGB(new T.CanvasTexture(c)); const m=new T.Sprite(new T.SpriteMaterial({map:t, transparent:true, depthWrite:false, toneMapped:false})); m.scale.set(0.20, 0.10, 1); m.visible=false; G.add(m); FX.pops.push({m:m, t:9}); } }
   // the readout on the backboard, and the name over it
   const rc=cvs(512, 320), rtex=setSRGB(new T.CanvasTexture(rc)); rtex.minFilter=T.LinearFilter;
   { const m=new T.Mesh(new T.PlaneGeometry(0.96, 0.60), new T.MeshBasicMaterial({map:rtex, toneMapped:false})); m.position.set(0, TOP+0.50, -DP/2+0.092); G.add(m); }
@@ -96,7 +107,7 @@ const WHACK={on:false, t:0, g:null, cab:null, hi:0, acc:0, keys:{}, demoT:2};
   const st={x:P.x, z:P.z-DP/2-0.62};
   addUse(st.x, st.z-0.1, A.y, "PLAY WHACK-A-CHUCK", ()=>WHACK.start(), 0.9).game=true;
   ARCADE.games.push({name:"WHACK-A-CHUCK", x:st.x, z:st.z});
-  WHACK.cab={G:G, P:P, TOP:TOP, DOWN:DOWN, HR:HR, HX:LW/2-0.05, Z0:LZ-LD/2+0.05, Z1:LZ+LD/2-0.05, chucks:chucks, mal:mal, rest:{x:W/2-0.11, z:DP/2-0.13},
+  WHACK.cab={G:G, P:P, TOP:TOP, DOWN:DOWN, HR:HR, HX:LW/2-0.05, Z0:LZ-LD/2+0.05, Z1:LZ+LD/2-0.05, chucks:chucks, mal:mal, FX:FX, rest:{x:W/2-0.11, z:DP/2-0.13},
              read:{c:rc, x:rc.getContext("2d"), tex:rtex}, stand:st, floor:A.y};
 })();
 
@@ -115,8 +126,24 @@ WHACK.hitAt=function(x, z){
   const g=WHACK.g, C=WHACK.cab; if(!g || g.over || g.swing>0.10) return;
   g.swing=0.22; g.sx=x; g.sz=z;
   let best=null, bd=C.HR*1.25; for(const c of C.chucks){ const d=Math.hypot(c.x-x, c.z-z); if(d<bd && c.st>0 && c.st<3 && c.u>0.35){ bd=d; best=c; } }
-  if(best){ best.st=3; best.t=0; best.hit=1; const v=best.gold ? 25 : 10; g.score+=v; g.hits++; g.pop=v; g.popT=0.7; g.flash=1; _wkSnd(best.gold ? "jingle" : "thump"); }
-  else _wkSnd("tick"); };
+  if(best){ best.st=4; best.t=0; best.hit=1; best.bonk=0.20; const v=best.gold ? 25 : 10; g.score+=v; g.hits++; g.pop=v; g.popT=0.7; g.flash=1; g.shake=0.16; _wkSnd(best.gold ? "jingle" : "thump"); _wkBurst(best, v); }
+  else { _wkSnd("tick"); _wkDust(x, z); } };
+// the burst over a chuck you hit: stars thrown up and out, a ring out across the lawn, the points rising off it
+function _wkBurst(c, v){ const F=WHACK.cab.FX, y=WHACK.cab.TOP+0.20, n=v>10 ? 10 : 7; let k=0;
+  for(const s of F.stars){ if(k>=n) break; if(s.t<0.5) continue; const a=k/n*Math.PI*2+Math.random()*0.4; k++;
+    s.t=0; s.m.position.set(c.x, y, c.z); s.v.set(Math.cos(a)*1.1, 0.7+Math.random()*0.5, Math.sin(a)*1.1); s.m.material.rotation=Math.random()*6; s.m.visible=true; }
+  const r=F.rings[0].t<F.rings[1].t ? F.rings[1] : F.rings[0]; r.t=0; r.m.position.set(c.x, WHACK.cab.TOP+0.030, c.z); r.m.visible=true;
+  const p=F.pops[v>10 ? 1 : 0]; p.t=0; p.x=c.x; p.z=c.z; p.m.visible=true; }
+function _wkDust(x, z){ const F=WHACK.cab.FX; let k=0;
+  for(const d of F.dust){ if(k>=4) break; if(d.t<0.4) continue; const a=k*1.57+Math.random(); k++;
+    d.t=0; d.m.position.set(x, WHACK.cab.TOP+0.03, z); d.v.set(Math.cos(a)*0.25, 0.35, Math.sin(a)*0.25); d.m.visible=true; } }
+function _wkFx(dt){ const C=WHACK.cab, F=C.FX;
+  for(const s of F.stars) if(s.m.visible){ s.t+=dt; if(s.t>0.55){ s.m.visible=false; continue; } s.v.y-=3.2*dt; s.m.position.addScaledVector(s.v, dt);
+    const k=s.t/0.55, sz=0.085*(k<0.12 ? 0.4+5*k : 1-0.6*k); s.m.scale.set(sz, sz, 1); s.m.material.opacity=1-k*k; s.m.material.rotation+=dt*8; }
+  for(const d of F.dust) if(d.m.visible){ d.t+=dt; if(d.t>0.5){ d.m.visible=false; continue; } d.m.position.addScaledVector(d.v, dt); const k=d.t/0.5, sz=0.05+0.10*k; d.m.scale.set(sz, sz, 1); d.m.material.opacity=0.8*(1-k); }
+  for(const r of F.rings) if(r.m.visible){ r.t+=dt; if(r.t>0.3){ r.m.visible=false; continue; } const k=r.t/0.3, sz=0.11+0.24*k; r.m.scale.set(sz, 1, sz); r.m.material.opacity=0.9*(1-k); }
+  for(const p of F.pops) if(p.m.visible){ p.t+=dt; if(p.t>0.8){ p.m.visible=false; continue; } const k=p.t/0.8, up=0.30+0.16*(1-(1-k)*(1-k)), sc=k<0.1 ? 0.6+4*k : 1;
+    p.m.position.set(p.x, C.TOP+0.08+up, p.z-0.16); p.m.scale.set(0.30*sc, 0.15*sc, 1); p.m.material.opacity=k<0.65 ? 1 : 1-(k-0.65)/0.35; } }
 WHACK.start=function(){
   const C=WHACK.cab; if(!C || WHACK.on) return;
   for(const o of [typeof DARTS!=="undefined" && DARTS, typeof HOCKEY!=="undefined" && HOCKEY, typeof HOOPS!=="undefined" && HOOPS, typeof RAIDERS!=="undefined" && RAIDERS,
@@ -125,7 +152,7 @@ WHACK.start=function(){
   WHACK.on=true; WHACK.keys={}; clearKeys(); WHACK.g=WHACK.newGame(); _wkSnd("coin");
   toast("MOUSE · THE MALLET   CLICK · WHACK   Q W E / A S D · A BURROW   N · AGAIN   ESC · STEP AWAY","#ffd247");
 };
-WHACK.stop=function(){ WHACK.on=false; WHACK.keys={}; player.pitch=-0.1; WHACK.g=null; for(const c of WHACK.cab.chucks) if(c.st>0 && c.st<3){ c.st=3; c.t=0; } };
+WHACK.stop=function(){ for(const L of Object.values(WHACK.cab.FX)) for(const f of L) f.m.visible=false; WHACK.on=false; WHACK.keys={}; player.pitch=-0.1; WHACK.g=null; for(const c of WHACK.cab.chucks) if(c.st>0 && c.st<3){ c.st=3; c.t=0; } };
 WHACK.key=function(e){
   if(e.code==="Escape" || e.code==="Tab" || (e.code==="KeyE" && WHACK.g && WHACK.g.over)){ if(!e.repeat) WHACK.stop(); return; }
   if(e.repeat) return;
@@ -154,7 +181,7 @@ function _wkReadout(g){
   const led=(s, px, py, f, col, w)=>{ x.font="bold "+f+"px 'Courier New', monospace"; while(f>12 && x.measureText(s).width>w){ f-=2; x.font="bold "+f+"px 'Courier New', monospace"; } x.fillStyle=col; x.fillText(s, px, py); };
   if(g && !g.over){ led("SCORE "+("000"+g.score).slice(-3), 150, 212, 40, g.flash>0.3 ? "#fff3b0" : "#ffd247", 190);
     led("TIME "+("00"+Math.ceil(g.left)).slice(-2), 372, 212, 40, g.left<6 && ((t*4)|0)%2 ? "#ff5a3a" : "#3df3ff", 170);
-    led(g.popT>0 ? "+"+g.pop+(g.pop>10 ? " · THE FOREMAN" : "") : "BEST "+("000"+WHACK.hi).slice(-3), W/2, 262, 30, g.popT>0 ? "#7aff7a" : "#8a8aa0", 380); }
+    led(g.popT>0 ? (g.pop>10 ? "BONK! +25 THE FOREMAN" : "BONK! +10") : "BEST "+("000"+WHACK.hi).slice(-3), W/2, 262, 30, g.popT>0 ? "#7aff7a" : "#8a8aa0", 380); }
   else if(g){ led("TIME · "+g.score+" POINTS", W/2, 208, 38, "#ffd247", 400); led(g.hits+" OF "+g.ups+(g.score>=WHACK.hi && g.score>0 ? " · THE BEST YET" : " · BEST "+WHACK.hi), W/2, 248, 26, "#3df3ff", 400);
     led("SPACE TO PLAY AGAIN", W/2, 278, 20, ((t*2)|0)%2 ? "#ff3ecb" : "#8a8aa0", 400); }
   else { led("ENTER TO PLAY", W/2, 212, 40, ((t*2)|0)%2 ? "#ffd247" : "#ff3ecb", 400); led("BEST "+("000"+WHACK.hi).slice(-3), W/2, 262, 30, "#3df3ff", 380); }
@@ -171,21 +198,25 @@ function updateWhack(dt){
     if(g.left<=0){ g.left=0; g.over=true; g.overT=0; for(const c of C.chucks) if(c.st>0 && c.st<3){ c.st=2; c.t=9; }
       if(g.score>WHACK.hi){ WHACK.hi=g.score; try{ localStorage.setItem("restarea.arcade.whack", String(g.score)); }catch(e){} } _wkSnd("jingle"); } }
   else if(!WHACK.on){ WHACK.demoT-=dt; if(WHACK.demoT<=0){ WHACK.demoT=1.6+Math.random()*2.5; _wkUp(null, 1.3); } }
-  if(g){ g.swing=Math.max(0, g.swing-dt); g.popT=Math.max(0, g.popT-dt); g.flash=Math.max(0, g.flash-dt*3); if(g.over) g.overT+=dt; }
+  if(g){ g.shake=Math.max(0, (g.shake||0)-dt); g.swing=Math.max(0, g.swing-dt); g.popT=Math.max(0, g.popT-dt); g.flash=Math.max(0, g.flash-dt*3); if(g.over) g.overT+=dt; }
   // each chuck: up (1), looking round (2), knocked or going down (3)
   for(const c of C.chucks){ c.t+=dt;
     if(c.st===1){ c.u=Math.min(1, c.u+dt/0.11); if(c.u>=1){ c.st=2; c.t=0; } }
     else if(c.st===2){ if(c.t>c.hold){ c.st=3; c.t=0; } }
+    else if(c.st===4){ c.bonk-=dt; if(c.bonk<=0){ c.st=3; c.t=0; } }
     else if(c.st===3){ c.u=Math.max(0, c.u-dt/(c.hit ? 0.07 : 0.16)); if(c.u<=0){ c.st=0; c.hit=0; } }
     const bob=c.st===2 ? Math.sin(c.t*9)*0.006 : 0;
     c.g.position.y=C.TOP+C.DOWN*(1-c.u)+0.012+bob; c.g.rotation.y=c.st===2 ? Math.sin(c.t*3.1+c.x*9)*0.5 : 0;
-    c.g.scale.set(1+c.hit*0.12, 1-c.hit*0.25, 1+c.hit*0.12); }
+    const w=c.st===4 ? 0.45+0.1*Math.sin(c.t*60) : c.hit*0.12;
+    c.g.scale.set(1+w, c.st===4 ? 0.48 : 1-c.hit*0.25, 1+w); c.fm.emissiveIntensity=c.st===4 ? 0.9*c.bonk/0.20 : 0;
+    if(c.st===4) c.g.rotation.y=Math.sin(c.t*40)*0.25; }
+  _wkFx(dt);
   // the mallet: over the lawn in your hand, down and back when swung; on its rest when nobody has it
   { const m=C.mal;
     if(WHACK.on && g){ const s=g.swing>0 ? Math.sin((1-g.swing/0.22)*Math.PI) : 0, x=g.swing>0 ? g.sx : g.ax, z=g.swing>0 ? g.sz : g.az;
-      m.position.set(x, C.TOP+0.33-s*0.14, z+0.02); m.rotation.set(-0.25+s*0.25, 0, 0.0); }
+      const sh=g.shake>0 ? g.shake/0.16 : 0; m.position.set(x, C.TOP+0.33-s*0.14+sh*0.05, z+0.02); m.rotation.set(-0.25+s*0.25-sh*0.3, 0, Math.sin(sh*30)*0.08*sh); }
     else { m.position.set(C.rest.x, C.TOP+0.155, C.rest.z-0.10); m.rotation.set(0, 0, 0); } }
   WHACK.acc+=dt; if(WHACK.acc>1/12){ WHACK.acc=0; _wkReadout(g); }
-  if(WHACK.on){ player.pos.set(C.stand.x, 0, C.stand.z); player.feetY=C.floor; player.yaw=Math.PI; player.pitch=-0.60; }
+  if(WHACK.on){ player.pos.set(C.stand.x, 0, C.stand.z); player.feetY=C.floor; player.yaw=Math.PI+(g && g.shake>0 ? Math.sin(g.shake*90)*0.010*g.shake/0.16 : 0); player.pitch=-0.60-(g && g.shake>0 ? 0.018*g.shake/0.16 : 0); }
 }
 if(WHACK.cab){ updateWhack(0); _wkReadout(null); }

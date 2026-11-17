@@ -155,7 +155,7 @@ const _RB=(function(){
   /* ---- Dale ---- */
   function dale(G, K, i, dt){
     const p=G.p, Kd=p.K;
-    if(p.inv>0) p.inv-=dt; if(p.comboT>0){ p.comboT-=dt; if(p.comboT<=0) p.combo=0; }
+    if(p.flash>0) p.flash-=dt; if(p.inv>0) p.inv-=dt; if(p.comboT>0){ p.comboT-=dt; if(p.comboT<=0) p.combo=0; }
     if(G.in.punchT>0) G.in.punchT-=dt; if(G.in.kickT>0) G.in.kickT-=dt; if(G.in.jumpT>0) G.in.jumpT-=dt;
     const mx=(K.ArrowRight||K.KeyD?1:0)-(K.ArrowLeft||K.KeyA?1:0), mz=(K.ArrowDown||K.KeyS?1:0)-(K.ArrowUp||K.KeyW?1:0);
     const wantP=G.in.punchT>0, wantK=G.in.kickT>0, wantJ=G.in.jumpT>0;
@@ -407,8 +407,9 @@ const _RB=(function(){
     x.globalAlpha=0.55; ridge(116, 12, S.sky[2]); x.globalAlpha=1; if(S.far) S.far(x, Lf, S); if(!S.water) ridge(134, 16, S.sky[2]);
   }
   // far off: the rest area's water tower on its hill, and the radio mast, a little nearer every stage
-  function mastFar(x, px, y0, y1){ for(let y=y0, k=0; y<y1; y+=6, k++){ x.fillStyle=k%2 ? "#c8c8c0" : "#b03a2a"; x.fillRect(px, y, 1.5, 6); }
-    x.strokeStyle="rgba(170,176,190,0.28)"; x.lineWidth=0.6; for(const d of [-1, 1]) for(const f of [0.1, 0.45]){ x.beginPath(); x.moveTo(px+0.7, y0+(y1-y0)*f); x.lineTo(px+d*(y1-y0)*0.55, y1+6); x.stroke(); } }
+  function mastFar(x, px, y0, y1){ px=Math.round(px); const n=Math.max(4, Math.round((y1-y0)/7));
+    x.strokeStyle="rgba(150,158,176,0.26)"; x.lineWidth=0.6; for(const d of [-1, 1]) for(const f of [0.12, 0.45, 0.75]){ x.beginPath(); x.moveTo(px+1, y0+(y1-y0)*f); x.lineTo(px+1+d*(y1-y0)*(0.25+f*0.35), y1+6); x.stroke(); }
+    for(let k=0;k<n;k++){ const y=y0+(y1-y0)*k/n, h=(y1-y0)/n+0.5; x.fillStyle=(k>>1)%2 ? "#bdbdb4" : "#a83424"; x.fillRect(px, y, 1, h); x.fillRect(px+2, y, 1, h); x.globalAlpha=0.5; x.fillRect(px+1, y+h*0.5, 1, 1); x.globalAlpha=1; } }
   function farMast(x, Lf, S){ const b=S.beacons[0]; mastFar(x, b[0]*Lf, b[1], 132); }
   function farLot(x, Lf, S){ farMast(x, Lf, S); const px=Lf*0.22, y=104;
     x.strokeStyle="#5a6478"; x.lineWidth=1.2; for(const o of [-7, -2.5, 2.5, 7]){ x.beginPath(); x.moveTo(px+o*0.8, y); x.lineTo(px+o, 132); x.stroke(); } x.beginPath(); x.moveTo(px-6, 120); x.lineTo(px+6, 126); x.moveTo(px+6, 120); x.lineTo(px-6, 126); x.stroke();
@@ -622,8 +623,14 @@ const _RB=(function(){
       x.fillStyle="#3a3a3e"; x.fillRect(px+40, 106, 2, 8); x.fillRect(px+178, 106, 2, 8); x.fillStyle="#14101a"; x.fillRect(px+16, 92, 188, 15); say(x, "FRENCH CREEK BROADCASTING", px+110, 100, 172, 9, "#ffd890"); x.fillStyle="#1a0a0a"; x.fillRect(px+78, 132, 30, 8); say(x, "ON AIR", px+93, 136, 24, 5, "#ff3a2a"); }
     for(const [f, w] of [[0.16, 170], [0.42, 150], [0.70, 124]]) for(const d of [-1, 1]){ x.strokeStyle="rgba(190,196,208,0.45)"; x.lineWidth=0.8; x.beginPath(); x.moveTo(MAST, Y0+(170-Y0)*f); x.lineTo(MAST+d*w, 178); x.stroke(); }
     for(const d of [-1, 1]) for(const w of [170, 150, 124]){ x.fillStyle="#6a6a6e"; x.fillRect(MAST+d*w-3, 175, 6, 5); }
-    for(let y=Y0-4, k=0; y<166; y+=18, k++){ x.fillStyle=k%2 ? "#d8d8d0" : "#b8301e"; x.fillRect(MAST-4, y, 1.6, 18); x.fillRect(MAST+2.4, y, 1.6, 18); x.strokeStyle=k%2 ? "rgba(216,216,208,0.8)" : "rgba(184,48,30,0.8)"; x.lineWidth=0.8;
-      x.beginPath(); x.moveTo(MAST-3, y); x.lineTo(MAST+3, y+6); x.lineTo(MAST-3, y+12); x.lineTo(MAST+3, y+18); x.stroke(); }
+    { const top=Y0+10, bot=166, sec=9, band=36;
+      for(let y=top; y<bot; y+=sec){ const k=Math.floor((y-top)/band)%2, c=k ? "#dcdcd2" : "#c0321e", cd=k ? "#9a9a92" : "#7a1e12", h=Math.min(sec, bot-y);
+        x.fillStyle=cd; x.fillRect(MAST-0.5, y, 1, h);                                 // the leg behind
+        x.strokeStyle=cd; x.lineWidth=0.7; x.beginPath(); x.moveTo(MAST-4, y); x.lineTo(MAST+4, y+h); x.moveTo(MAST+4, y); x.lineTo(MAST-4, y+h); x.stroke();
+        x.fillStyle=c; x.fillRect(MAST-5, y, 2, h); x.fillRect(MAST+3, y, 2, h); x.fillRect(MAST-5, y, 10, 1); }
+      x.fillStyle="#1a1a1e"; x.fillRect(MAST-0.5, top-12, 1, 12); x.fillStyle="#c0321e"; x.fillRect(MAST-5, top-1, 10, 2);
+      // the guys' plates where they meet the mast
+      x.fillStyle="#8a8a8e"; for(const f of [0.16, 0.42, 0.70]) x.fillRect(MAST-6, Y0+(170-Y0)*f-1, 12, 2); }
     x.fillStyle="#e8e4d8"; x.beginPath(); x.moveTo(MAST-3, 166); x.lineTo(MAST+3, 166); x.lineTo(MAST+1, 172); x.lineTo(MAST-1, 172); x.closePath(); x.fill(); x.fillStyle="#8a8a8e"; x.fillRect(MAST-6, 172, 12, 6);
     x.fillStyle="#b8b8b0"; x.fillRect(MAST+26, 156, 30, 22); x.fillStyle="#8a8a84"; x.fillRect(MAST+24, 154, 34, 3); x.fillStyle="#3a3a3e"; x.fillRect(MAST+36, 162, 9, 16);
     x.strokeStyle="rgba(170,176,184,0.55)"; x.lineWidth=0.6; for(let q=-52;q<=72;q+=4){ x.beginPath(); x.moveTo(MAST+q, 152); x.lineTo(MAST+q+14, 180); x.moveTo(MAST+q, 152); x.lineTo(MAST+q-14, 180); x.stroke(); }
@@ -637,13 +644,26 @@ const _RB=(function(){
   // a red lamp that comes and goes, with its glow
   function beacon(x, X, Y, on, r){ if(X<-20 || X>W+20) return; x.fillStyle=on ? "#ff4030" : "#5a1a14"; x.fillRect(X-1, Y-1, r>1 ? 3 : 2, r>1 ? 3 : 2);
     if(on){ const g=x.createRadialGradient(X, Y, 0, X, Y, 9*r); g.addColorStop(0, "rgba(255,70,50,0.5)"); g.addColorStop(1, "rgba(255,70,50,0)"); x.fillStyle=g; x.fillRect(X-9*r, Y-9*r, 18*r, 18*r); } }
-  function liveTower(x, cam, t, layer){ if(!layer) return; const on=(t%1.6)<0.8; beacon(x, MAST-cam, Y0+3, on, 1.6); beacon(x, MAST-cam, Y0+(170-Y0)*0.42, true, 1.1); beacon(x, MAST-cam, Y0+(170-Y0)*0.70, on, 1.6); }
+  function liveTower(x, cam, t, layer){ if(!layer) return; const on=(t%1.6)<0.8; beacon(x, MAST-cam, Y0-1, on, 1.6); beacon(x, MAST-cam, Y0+(170-Y0)*0.42, true, 1.1); beacon(x, MAST-cam, Y0+(170-Y0)*0.70, on, 1.6); }
   // a rocket from behind the outlet, now and then
   function liveOutlet(x, cam, t, layer){ if(layer) return; const T=5.2, n=Math.floor(t/T), u=(t-n*T), sx=((n*97)%200)+60, sy=44+((n*53)%34), col=["#ff5fb0","#7ad8ff","#f2e23a","#9aff8a"][n%4];
     if(u<0.9){ const k=u/0.9; x.fillStyle="#ffe8a0"; x.fillRect(sx, GY0-40-(GY0-40-sy)*k, 1.5, 4); }
     else if(u<2.4){ const k=(u-0.9)/1.5, R=8+34*Math.sqrt(k); x.fillStyle=col; x.globalAlpha=1-k; for(let q=0;q<18;q++){ const a=q*0.349+n; x.fillRect(sx+Math.cos(a)*R, sy+Math.sin(a)*R+k*k*10, 2, 2); x.fillRect(sx+Math.cos(a+0.17)*R*0.6, sy+Math.sin(a+0.17)*R*0.6+k*k*10, 1, 1); } x.globalAlpha=1; } }
+  // what makes a stage read as a place lit at night: each building sits down on the street in its own shade, the street goes off
+  // into haze and comes up dark at your feet, every lit window and lamp throws a pool down on the ground, and a fine grain over all
+  function finish(x, L, S){ let s=17; const r=()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; };
+    const D=x.getImageData(0, GY0-70, L, 70).data, glow=new Float32Array(L);
+    for(let px=0;px<L;px++){ let g=0; for(let y=0;y<70;y+=2){ const o=(y*L+px)*4; if(D[o+3]<200) continue; const R=D[o], Gc=D[o+1], Bc=D[o+2]; if(R>200 && Gc>150 && R>=Bc) g+=(R+Gc-Bc-250)/255*(0.4+y/70); } glow[px]=g; }
+    x.save(); x.beginPath(); x.rect(0, GY0, L, H-GY0); x.clip(); x.globalCompositeOperation="lighter";
+    for(let px=0;px<L;px+=4){ let g=0; for(let q=0;q<4;q++) g+=glow[px+q]||0; if(g<1.2) continue; const a=Math.min(0.11, g*0.006);
+      const gr=x.createRadialGradient(px+2, GY0+6, 0, px+2, GY0+6, 46); gr.addColorStop(0, "rgba(255,190,110,"+a.toFixed(3)+")"); gr.addColorStop(1, "rgba(255,190,110,0)"); x.fillStyle=gr; x.fillRect(px-46, GY0, 96, 52); }
+    x.restore();
+    { const g=x.createLinearGradient(0, GY0, 0, GY0+12); g.addColorStop(0, "rgba(0,0,0,0.42)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle=g; x.fillRect(0, GY0, L, 12); }
+    { const g=x.createLinearGradient(0, GY0, 0, H); g.addColorStop(0, "rgba(120,140,200,0.07)"); g.addColorStop(0.45, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.30)"); x.fillStyle=g; x.fillRect(0, GY0, L, H-GY0); }
+    for(let k=0;k<L*1.4;k++){ x.fillStyle=r()<0.5 ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.10)"; x.fillRect((r()*L)|0, Y0+((r()*(H-Y0))|0), 1, 1); } }
+  function finishFar(x, Lf, S){ const g=x.createLinearGradient(0, 96, 0, 150); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(0.7, "rgba(110,120,160,0.10)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle=g; x.fillRect(0, 96, Lf, 54); }
   function backdrop(k){ if(BGS[k]) return BGS[k]; const S=STAGES[k], L=S.len+80, Lf=W+Math.ceil(L*PX)+4;
-    const far=cvs(Lf, H), near=cvs(L, H); skyPaint(far.getContext("2d"), Lf, S); S.paint(near.getContext("2d"), L); return BGS[k]={far:far, near:near, Lf:Lf}; }
+    const far=cvs(Lf, H), near=cvs(L, H); skyPaint(far.getContext("2d"), Lf, S); finishFar(far.getContext("2d"), Lf, S); S.paint(near.getContext("2d"), L); finish(near.getContext("2d"), L, S); return BGS[k]={far:far, near:near, Lf:Lf}; }
   // the street behind everybody: the far picture at a third of the camera's pace, what moves on it, the near one, what moves on that
   function back(x, k, cam, t){ const S=STAGES[k], B=backdrop(k), cf=Math.round(cam*PX);
     x.drawImage(B.far, cf, 0, W, H, 0, 0, W, H);

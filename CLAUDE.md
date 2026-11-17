@@ -962,3 +962,24 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - 18x's floors are `layout(kind)`: `segs` (each end's height, the way a
   bale rolls, `wl` / `wr` for a wall at an end), `lads` (x, the seg above,
   the seg below, broken), forks, Bandit, the pie on a seg marked `shelf`.
+
+## Round 34 notes
+
+- The map (`B`) is 18y's `MAP`: drawn from the world's own data, never a
+  render, in time-boxed slices after load (`MAP.pump` from 19's
+  `updateMap`, about 4 ms a frame): the ground sampled every 6 m and shaded
+  (woods eased in by `clearDist`, water by `lakeSD`), contours, the fields
+  in their crops, the creek, `GROUND_KIND`'s paving cells, indoor zones at
+  the ground as roofs and walls of 2 m and more. The underworld (`U` /
+  Tab) is vectors kept in `MAP.vec` (BURIED, underground rooms, floors
+  below ground, walls) drawn at the zoom over the surface faded back.
+  Names are the warp list's (`WARP.places`), so a place added there is on
+  the map; a room's name below ground comes from its zone's last part.
+  Keep any new pass sliced: no frame may stall on it.
+- 18t's stages are finished at bake by `finish` (contact shade under
+  everything at the street's edge, a depth grade, grain, and a pool of
+  light on the street under every warm lit pixel above it), so a new
+  stage's lamps and windows light the ground on their own.
+- 18u's hits: a chuck you hit is `st` 4 (squashed and flashing on its own
+  `fm` material for `bonk` seconds), with 18u's `FX` pools (stars, a ring,
+  the points rising, dust on a miss); nothing is made per hit.

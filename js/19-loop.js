@@ -414,6 +414,7 @@ function frame(){
   updateVending(delta);
   if(typeof updateDarts==="function") updateDarts(delta);
   if(typeof updateGames==="function") updateGames(delta);
+  if(typeof updateMap==="function") updateMap();
   if(typeof updateEdinboro==="function") updateEdinboro(delta);
   updateScreens(delta, now);
   if(typeof AUDIO!=="undefined") AUDIO.update(delta, dark);
