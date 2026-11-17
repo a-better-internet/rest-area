@@ -122,11 +122,11 @@ SKEE.land=function(x, a, s){
     const m=new T.Mesh(new T.PlaneGeometry(HW*2, SK.BL), new T.MeshStandardMaterial({map:tex, roughness:0.8})); m.rotation.x=-(Math.PI/2-SK.TILT);
     m.position.copy(onBoard(0, SK.BL/2, 0.006)); m.receiveShadow=true; G.add(m);
     const rg=[]; for(const r of SK.RINGS){ const q=new T.Quaternion().setFromEuler(new T.Euler(-(Math.PI/2-SK.TILT), 0, 0));
-      rg.push({geo:new T.TorusGeometry(r.r, 0.011, 8, 32), matrix:new T.Matrix4().compose(onBoard(r.u, r.v, 0.020), q, V3(1,1,1)), color:new T.Color(r.p>=100 ? "#f2c81e" : r.p>=40 ? "#e8402a" : "#e8e4d8")}); }
+      rg.push({geo:new T.TorusGeometry(r.r, 0.011, 8, 32), matrix:new T.Matrix4().compose(onBoard(r.u, r.v, 0.024), q, V3(1,1,1)), color:new T.Color(r.p>=100 ? "#f2c81e" : r.p>=40 ? "#e8402a" : "#e8e4d8")}); }
     const rm=new T.Mesh(mergeEntries(rg), new T.MeshStandardMaterial({vertexColors:true, roughness:0.45})); rm.castShadow=true; G.add(rm);
     // each ring's light, round its rim, lit when a ball drops in (one material each, turned up and down, never hidden)
     var glows=SK.RINGS.map(r=>{ const q=new T.Quaternion().setFromEuler(new T.Euler(-(Math.PI/2-SK.TILT), 0, 0));
-      const m=new T.Mesh(new T.TorusGeometry(r.r, 0.0135, 8, 32), new T.MeshBasicMaterial({color:0x000000, toneMapped:false})); m.position.copy(onBoard(r.u, r.v, 0.020)); m.quaternion.copy(q); G.add(m); return m; }); }
+      const m=new T.Mesh(new T.TorusGeometry(r.r, 0.0145, 8, 32), new T.MeshBasicMaterial({color:0x000000, toneMapped:false})); m.position.copy(onBoard(r.u, r.v, 0.024)); m.quaternion.copy(q); G.add(m); return m; }); }       // (round the rim on its own centre, 3.5 mm out from it all round and clear of the board)
   // the balls: one in play, the rest waiting in the trough at the right
   const ballM=new T.MeshStandardMaterial({color:0xb86a3a, roughness:0.45}), ballG=new T.SphereGeometry(SK.R, 18, 12);
   const ball=new T.Mesh(ballG, ballM); ball.castShadow=true; G.add(ball);

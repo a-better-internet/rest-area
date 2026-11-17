@@ -716,7 +716,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   grid(RING_WEST, 4, WEST_HOLES, "ground-west", 6);
   grid(LOON_RING, 0.5, LOON_HOLES, "ground-loon", 0);       // (no apron: it meets the 4 m ground on the street's flat)
   grid(KIRK_RING, 2, KIRK_HOLES, "ground-kirk", 0);              // (no apron: it meets the 8 m ground on the flat, and one would hang through the hall)
-  grid(TUNE_RING, 2, TUNE_HOLES, "ground-tune", 4);              // (an apron: its edge is on the hill's slope, well away from the hut)
+  grid(TUNE_RING, 2, TUNE_HOLES, "ground-tune", 0);              // (no apron: the 8 m ground's own skirt round the hole it is let into covers the seam, and one would lie in its plane)
   TERRAIN_RINGS.sort((a,b)=>a.cell-b.cell);        // finest ring wins
 })();
 
