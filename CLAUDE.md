@@ -692,8 +692,8 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 
 ## Round 30 notes
 
-- The stone house's basement stair (14z2) is 15 risers at a 24.5 cm run
-  from `SWZ0`, ending at `STZ1` with a landing before the back wall; the
+- The stone house's basement stair (14z2) is 15 risers at a 23 cm run
+  from `SWZ0`, ending at `STZ1` with a 0.95 m landing before the back wall; the
   well upstairs stays `SWZ0`..`SWZ1`. Its rec-room side is closed (the
   steps' painted bodies) under a stringer and a guard that stops two steps
   up, so you can step off sideways at the foot.

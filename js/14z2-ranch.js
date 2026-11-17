@@ -584,8 +584,8 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   wains("z", QX1, -1, QZ0, -1157.06, []); wains("x", -1157.06, -1, -1423.94, QX1, [[-1421.85, -1421.0]]);
   based("x", QZ0, 1, QX0, -1435.06, []); based("x", QZ1, -1, QX0, -1435.06, []); based("z", QX0, 1, QZ0, QZ1, []); based("z", -1435.06, -1, QZ0, QZ1, WD);
   for(const zc of [-1158.5, -1155]) for(const sd of [-1, 1]) based("x", zc+sd*0.06, sd, QX0, -1435.06, []);
-  // fifteen risers at a 24.5 cm run, so the foot of the stair leaves a landing before the back wall; the last two steps open to the rec room
-  const NR=15, RS=(FY-BF)/NR, RUN=0.245, STZ1=SWZ0+NR*RUN, SX=(SWX0+SWX1)/2, SW=SWX1-SWX0, nose=z=>FY-(z-SWZ0)*RS/RUN;
+  // fifteen risers at a 23 cm run, so the foot of the stair leaves a landing of 0.95 m before the back wall; the last two steps open to the rec room
+  const NR=15, RS=(FY-BF)/NR, RUN=0.23, STZ1=SWZ0+NR*RUN, SX=(SWX0+SWX1)/2, SW=SWX1-SWX0, nose=z=>FY-(z-SWZ0)*RS/RUN;
   { for(let k=0;k<NR;k++){ const y=FY-(k+1)*RS, za=SWZ0+k*RUN, zb=za+RUN;
       B(SW-0.004, y-0.03-(BF-0.05), RUN, SX, (y-0.03+BF-0.05)/2, (za+zb)/2, "#f2eee4");                      // (the riser and the closed side, painted)
       RB(SW, 0.03, RUN+0.03, SX, y-0.015, (za+zb)/2+0.015, k%2 ? "#8a5a32" : "#84562e", 0, 0.01); }       // (the oak tread, its nose over the riser below)
@@ -630,15 +630,16 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     RB(1.2, 0.4, 0.6, tvx+0.35, BF+0.2, -1160.6, "#5a3a22", 0, 0.05); addCol(tvx-0.25, tvx+0.95, -1160.9, -1160.3, BF-0.5, BF+0.42);
     push("rn_rug", boxGeo(3.4, 0.010, 2.6), tvx, BF+0.017, -1160.4, 0, "#c8b8a0");
     // the bar along the back wall: a counter with a padded front, stools, the back counter with a mini-fridge and shelves of glasses
-    const bx0=-1434.4, bx1=-1431.0, bz=QZ1-1.4;
+    // (east of the storage room's door, with two metres clear in front of it)
+    const bx0=-1433.0, bx1=-1430.2, bz=QZ1-1.4;
     RB(bx1-bx0, 1.04, 0.55, (bx0+bx1)/2, BF+0.52, bz, "#4a2e1a", 0, 0.02); push("wp_wood", boxGeo(bx1-bx0+0.1, 0.06, 0.7, 0.8), (bx0+bx1)/2, BF+1.07, bz+0.04, 0, "#ffffff");
     push("wp_vinylpad", boxGeo(bx1-bx0-0.06, 0.6, 0.04, 4), (bx0+bx1)/2, BF+0.6, bz-0.3, 0, "#3a4a6a");
     addCol(bx0, bx1, bz-0.32, bz+0.42, BF-0.5, BF+1.1);
-    for(let k=0;k<3;k++){ const sx=bx0+0.6+k*1.1, sz=bz-0.75; C(0.19, 0.07, sx, BF+0.76, sz, "#1a1a1c", 18); C(0.025, 0.72, sx, BF+0.37, sz, "#c8ccd0", 8); C(0.17, 0.02, sx, BF+0.012, sz, "#c8ccd0", 16);
+    for(let k=0;k<3;k++){ const sx=bx0+0.5+k*0.9, sz=bz-0.75; C(0.19, 0.07, sx, BF+0.76, sz, "#1a1a1c", 18); C(0.025, 0.72, sx, BF+0.37, sz, "#c8ccd0", 8); C(0.17, 0.02, sx, BF+0.012, sz, "#c8ccd0", 16);
       addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, BF-0.5, BF+0.8); addSeat(sx, sz, BF, Math.PI, "A STOOL AT THE BAR", false, 0.34); }
     RB(bx1-bx0, 0.9, 0.5, (bx0+bx1)/2, BF+0.45, QZ1-0.26, "#3a2414", 0, 0.02); RB(0.5, 0.8, 0.5, bx1-0.4, BF+0.4, QZ1-0.27, "#1a1a1c", 0, 0.02);
     for(const y of [1.45, 1.85]) B(bx1-bx0-0.6, 0.03, 0.22, (bx0+bx1)/2, BF+y, QZ1-0.12, "#3a2414");
-    for(let k=0;k<18;k++){ const x=bx0+0.5+k*0.2, y=k<9 ? 1.465 : 1.865; if(x>bx1-0.4) continue; CT(0.035, 0.03, 0.12, x, BF+y+0.06, QZ1-0.12, "#d8e8f0", 10); }
+    for(let k=0;k<18;k++){ const x=bx0+0.4+(k%9)*0.2, y=k<9 ? 1.465 : 1.865; if(x>bx1-0.4) continue; CT(0.035, 0.03, 0.12, x, BF+y+0.06, QZ1-0.12, "#d8e8f0", 10); }
     addCol(bx0, bx1, QZ1-0.52, QZ1, BF-0.5, BF+2.0);
     sign(1.4, 0.4, (c,Wd,Hh)=>{ c.fillStyle="#0a0a0c"; c.fillRect(0,0,Wd,Hh); c.shadowColor="#ff7a2a"; c.shadowBlur=14; say(c, "BASEMENT BAR", Wd/2, Hh/2, Wd*0.80, Hh*0.55, "#ff9a3a", "800", "'Arial Black', Arial"); c.shadowBlur=0; },
       (bx0+bx1)/2, BF+2.12, QZ1-0.03, Math.PI, true, 420);
@@ -914,6 +915,8 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     "the stone house: down to the basement":[[-1427.1, WZ0-1.6],[-1427.1, CZ0+0.6],[-1426.4, -1159.0],[-1421.85, -1157.9],[-1421.85, -1156.3],[-1423.35, -1156.3],[-1423.35, -1155.0],[-1423.35, -1152.56],[-1425.2, -1152.56],[-1425.6, -1157.6],[-1429.0, -1157.6]],
     "the stone house: the basement's guest room and bath":[[-1427.1, WZ0-1.6],[-1427.1, CZ0+0.6],[-1426.4, -1159.0],[-1421.85, -1157.9],[-1421.85, -1156.3],[-1423.35, -1156.3],[-1423.35, -1155.0],[-1423.35, -1152.56],[-1425.2, -1152.56],[-1425.6, -1157.6],
       [-1433.6, -1157.8],[-1433.6, -1159.2],[-1436.2, -1159.2],[-1436.6, -1160.6],[-1436.2, -1159.2],[-1433.6, -1159.2],[-1433.6, -1155.95],[-1436.2, -1155.95],[-1437.0, -1156.8]],
+    "the stone house: round the bar to the storage room":[[-1427.1, WZ0-1.6],[-1427.1, CZ0+0.6],[-1426.4, -1159.0],[-1421.85, -1157.9],[-1421.85, -1156.3],[-1423.35, -1156.3],[-1423.35, -1155.0],
+      [-1423.35, -1152.7],[-1429.6, -1152.7],[-1429.6, -1155.0],[-1434.0, -1155.0],[-1434.0, -1153.42],[-1436.4, -1153.42],[-1437.4, -1153.6]],
     "the stone house: the game room and the mechanical room":[[-1427.1, WZ0-1.6],[-1427.1, CZ0+0.6],[-1426.4, -1159.0],[-1421.85, -1157.9],[-1421.85, -1156.3],[-1423.35, -1156.3],[-1423.35, -1155.0],
       [-1423.35, -1152.56],[-1424.5, -1152.56],[-1424.5, -1157.6],[-1423.6, -1157.6],[-1423.6, -1161.0],[-1424.0, -1162.4],[-1421.03, -1162.45],[-1421.03, -1159.6],[-1421.03, -1158.5],[-1421.45, -1157.6],[-1421.45, -1156.3],[-1421.2, -1155.4]]};
 
