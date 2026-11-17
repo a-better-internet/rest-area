@@ -6,25 +6,26 @@
 /* ----------------------------------------------------------------------
    18u · WHACK-A-CHUCK
    A machine you stand at, not a screen: a red box against the arcade's
-   front wall (12c) with a patch of lawn for a top, six burrows in it and
+   front wall (12c) with a patch of lawn for a top, nine burrows in it and
    a woodchuck under each. They come up; you hit them with the mallet.
    Thirty seconds a game, quicker as it goes. Ten for a chuck, twenty-five
    for the one in the hard hat.
 
    The mouse carries the mallet over the lawn and a click brings it down;
-   or Q W E (the back row) and A S D (the front) hit a burrow outright.
+   or Q W E (the back row), A S D and Z X C (the front) hit a burrow
+   outright, or the number pad laid out the same way.
    N starts again, Esc or E steps away. ENTER plays it (17), as it does
    every game down here. Nobody at it, a chuck looks out now and then.
 
    Built here, after the room, the way 18h's dozer is: its own group and
-   meshes, the six chucks one geometry, the readout a canvas on the
+   meshes, the nine chucks one geometry, the readout a canvas on the
    backboard. The best score is kept in the browser.
    ---------------------------------------------------------------------- */
 const WHACK={on:false, t:0, g:null, cab:null, hi:0, acc:0, keys:{}, demoT:2};
 (function whackBuild(){
   const A=ARCADE.room; if(!A) return;
-  const P={x:77.3, z:A.z1-0.50, y:A.y};                    // its middle, half a metre off the front wall, its face to the room
-  const W=1.12, DP=0.84, TOP=0.84;
+  const P={x:77.3, z:A.z1-0.58, y:A.y};                    // its middle, its back 8 cm off the front wall, its face to the room
+  const W=1.12, DP=1.00, TOP=0.84;
   const G=new T.Group(); G.position.set(P.x, P.y, P.z); G.rotation.y=Math.PI; scene.add(G);   // local +z: out of its front
   const E=[];
   const ent=(geo,x,y,z,c,rx,ry,rz)=>E.push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
@@ -41,13 +42,13 @@ const WHACK={on:false, t:0, g:null, cab:null, hi:0, acc:0, keys:{}, demoT:2};
   B(W+0.06, 0.05, 0.14, 0, TOP+0.885, -DP/2+0.05, TRIM);
   for(const sx of [-1,1]) B(0.04, 0.86, 0.10, sx*(W/2+0.005), TOP+0.43, -DP/2+0.045, TRIM);
   // the mallet's rest, on the right
-  B(0.03, 0.10, 0.03, W/2-0.11, TOP+0.05, DP/2-0.06, DARK); B(0.03, 0.10, 0.03, W/2-0.11, TOP+0.05, DP/2-0.20, DARK);
+  B(0.03, 0.10, 0.03, W/2-0.045, TOP+0.05, DP/2-0.06, DARK); B(0.03, 0.10, 0.03, W/2-0.045, TOP+0.05, DP/2-0.20, DARK);   // (at the lawn's edge, clear of the burrows)
   const body=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, metalness:0.1}));
   body.castShadow=true; body.receiveShadow=true; G.add(body);
   // the lawn: a picture laid on the top, the burrows drawn in it, each burrow's mouth a dark disc clear of it
-  const HOLES=[]; for(const z of [-0.14, 0.17]) for(const x of [-0.34, 0, 0.34]) HOLES.push({x:x, z:z});
-  const HR=0.108, LW=W-0.12, LD=DP-0.16, LZ=0.03;
-  { const tex=signTex(512, 360, (c, Wc, Hc)=>{
+  const HOLES=[]; for(const z of [-0.22, 0.04, 0.30]) for(const x of [-0.34, 0, 0.34]) HOLES.push({x:x, z:z});   // (three rows of three, the back row first)
+  const HR=0.100, LW=W-0.12, LD=DP-0.16, LZ=0.03;
+  { const tex=signTex(512, 430, (c, Wc, Hc)=>{
       c.fillStyle="#3c6a2a"; c.fillRect(0,0,Wc,Hc);
       for(let i=0;i<900;i++){ c.strokeStyle=["#4a7a30","#2f5a22","#588a38","#35602a"][i%4]; c.lineWidth=1.5; const x=(i*197.3)%Wc, y=(i*89.7)%Hc;
         c.beginPath(); c.moveTo(x, y); c.lineTo(x+((i*7)%5)-2, y-5-((i*3)%4)); c.stroke(); }
@@ -107,12 +108,13 @@ const WHACK={on:false, t:0, g:null, cab:null, hi:0, acc:0, keys:{}, demoT:2};
   const st={x:P.x, z:P.z-DP/2-0.62};
   addUse(st.x, st.z-0.1, A.y, "PLAY WHACK-A-CHUCK", ()=>WHACK.start(), 0.9).game=true;
   ARCADE.games.push({name:"WHACK-A-CHUCK", x:st.x, z:st.z});
-  WHACK.cab={G:G, P:P, TOP:TOP, DOWN:DOWN, HR:HR, HX:LW/2-0.05, Z0:LZ-LD/2+0.05, Z1:LZ+LD/2-0.05, chucks:chucks, mal:mal, FX:FX, rest:{x:W/2-0.11, z:DP/2-0.13},
+  WHACK.cab={G:G, P:P, TOP:TOP, DOWN:DOWN, HR:HR, HX:LW/2-0.05, Z0:LZ-LD/2+0.05, Z1:LZ+LD/2-0.05, chucks:chucks, mal:mal, FX:FX, rest:{x:W/2-0.045, z:DP/2-0.13},
              read:{c:rc, x:rc.getContext("2d"), tex:rtex}, stand:st, floor:A.y};
 })();
 
 /* ---- the game ------------------------------------------------------------ */
-const _WK={LEN:30, KEYS:{KeyQ:0, KeyW:1, KeyE:2, KeyA:3, KeyS:4, KeyD:5}};
+const _WK={LEN:30, KEYS:{KeyQ:0, KeyW:1, KeyE:2, KeyA:3, KeyS:4, KeyD:5, KeyZ:6, KeyX:7, KeyC:8,
+  Numpad7:0, Numpad8:1, Numpad9:2, Numpad4:3, Numpad5:4, Numpad6:5, Numpad1:6, Numpad2:7, Numpad3:8}};
 function _wkSnd(k){ const C=WHACK.cab; if(typeof AUDIO!=="undefined" && C) AUDIO.blip(k, C.P.x, C.P.z); }
 try{ WHACK.hi=+(localStorage.getItem("restarea.arcade.whack")||0)||0; }catch(e){}
 WHACK.newGame=function(){ const C=WHACK.cab; for(const c of C.chucks){ c.st=0; c.hit=0; }
@@ -150,7 +152,7 @@ WHACK.start=function(){
                   typeof CABS!=="undefined" && CABS, typeof DOZER!=="undefined" && DOZER, typeof SKEE!=="undefined" && SKEE]) if(o && o.on) o.stop();
   if(seated) standUp();
   WHACK.on=true; WHACK.keys={}; clearKeys(); WHACK.g=WHACK.newGame(); _wkSnd("coin");
-  toast("MOUSE · THE MALLET   CLICK · WHACK   Q W E / A S D · A BURROW   N · AGAIN   ESC · STEP AWAY","#ffd247");
+  toast("MOUSE · THE MALLET   CLICK · WHACK   Q W E / A S D / Z X C · A BURROW   N · AGAIN   ESC · STEP AWAY","#ffd247");
 };
 WHACK.stop=function(){ for(const L of Object.values(WHACK.cab.FX)) for(const f of L) f.m.visible=false; WHACK.on=false; WHACK.keys={}; player.pitch=-0.1; WHACK.g=null; for(const c of WHACK.cab.chucks) if(c.st>0 && c.st<3){ c.st=3; c.t=0; } };
 WHACK.key=function(e){
@@ -194,7 +196,7 @@ function updateWhack(dt){
   if(!WHACK.on && !near) return;
   const g=WHACK.g, live=WHACK.on && g && !g.over;
   if(live){ g.left-=dt; const k=1-g.left/_WK.LEN;                                 // (0 at the start to 1 at the bell)
-    g.next-=dt; if(g.next<=0){ g.next=0.78-0.42*k+Math.random()*0.25; _wkUp(g, 1.15-0.55*k); if(k>0.55 && Math.random()<0.35) _wkUp(g, 0.95-0.4*k); }
+    g.next-=dt; if(g.next<=0){ g.next=0.78-0.42*k+Math.random()*0.25; _wkUp(g, 1.15-0.55*k); if(k>0.45 && Math.random()<0.45) _wkUp(g, 0.95-0.4*k); }
     if(g.left<=0){ g.left=0; g.over=true; g.overT=0; for(const c of C.chucks) if(c.st>0 && c.st<3){ c.st=2; c.t=9; }
       if(g.score>WHACK.hi){ WHACK.hi=g.score; try{ localStorage.setItem("restarea.arcade.whack", String(g.score)); }catch(e){} } _wkSnd("jingle"); } }
   else if(!WHACK.on){ WHACK.demoT-=dt; if(WHACK.demoT<=0){ WHACK.demoT=1.6+Math.random()*2.5; _wkUp(null, 1.3); } }
