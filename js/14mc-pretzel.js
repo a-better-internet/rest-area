@@ -115,11 +115,11 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
     for(const dx of [-1.5, 0, 1.5]) B(0.08, o.head-o.sill-0.01, WT-0.08, c+dx, (o.sill+o.head)/2, zc, "#4a4e52");
     B(o.b-o.a, 0.04, WT+0.1, c, o.sill+0.02, zc, "#8a8e90"); }
   for(const c of DOCKS){ const o=dockOp(c), zw=BZ1-WT/2;
-    if(c===OPEN){ B(3.0, 0.08, 3.0, c, FLS+3.4, zw-1.7, "#c8ccd0"); for(const s of [-1, 1]) B(0.06, 0.1, 3.2, c+s*1.53, FLS+3.4, zw-1.7, "#6a6e70"); }
+    if(c===OPEN){ B(3.0, 0.08, 3.0, c, FLS+3.4, zw-1.7, "#c8ccd0"); for(const s of [-1, 1]) B(0.06, 0.1, 3.1, c+s*1.53, FLS+3.4, zw-1.75, "#6a6e70"); }
     else { B(2.98, o.head-FLS-0.01, 0.06, c, (FLS+o.head)/2, zw, "#c8ccd0");
       for(let k=1;k<5;k++) for(const s of [-1, 1]) B(2.9, 0.025, 0.012, c, FLS+k*0.6, zw+s*0.036, "#a8acb0"); }
     // the seal round it outside, the bumpers, the light on its arm, the guide lines on the court
-    for(const s of [-1, 1]) B(0.25, 3.3, 0.3, c+s*1.68, FLS+1.6, BZ1+0.15, "#1a1a1a"); B(3.61, 0.4, 0.3, c, FLS+3.15, BZ1+0.15, "#1a1a1a");
+    for(const s of [-1, 1]) B(0.25, 2.95, 0.28, c+s*1.68, FLS+1.475, BZ1+0.14, "#1a1a1a"); B(3.61, 0.4, 0.3, c, FLS+3.15, BZ1+0.15, "#1a1a1a");
     for(const s of [-1, 1]) B(0.25, 0.42, 0.15, c+s*1.1, FLS-0.3, BZ1+0.125, "#1a1a1a");
     C(0.03, 0.9, c+2.3, FLS+3.6, BZ1+0.45, "#3a3a3a", 6, Math.PI/2, 0, 0); RB(0.3, 0.2, 0.25, c+2.3, FLS+3.55, BZ1+0.95, "#3a3a3a", 0, 0.03);
     for(const s of [-1, 1]) stripe(c+s*1.45, BZ1+0.8, c+s*1.45, BZ1+16, 0.12, "#e2b31c", LY); }
@@ -127,9 +127,9 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
   /* ---- the lobby: up five steps from the walk, a glass front, the desk, the case of everything they make, a window onto the floor ---- */
   const FD={a:-1580.5, b:-1579.5, sill:FLS-0.3, head:FLS+2.2}, W1={a:-1590.6, b:-1582.0, sill:FLS+0.75, head:FLS+2.6}, W2={a:-1578.0, b:-1569.4, sill:FLS+0.75, head:FLS+2.6};
   runW("z", LX0, LX0+LWT, LZ0, LZ1, FLS-0.05, LTOP, [FD, W1, W2]);
-  runW("x", LZ0, LZ0+LWT, LX0+LWT, BX0+0.02, FLS-0.05, LTOP, []);
-  runW("x", LZ1-LWT, LZ1, LX0+LWT, BX0+0.02, FLS-0.05, LTOP, []);
-  B(BX0-LX0+0.05, FLS-0.012-(LY-0.3), LZ1-LZ0+0.1, (LX0-0.05+BX0-0.05)/2, (FLS-0.012+LY-0.3)/2, (LZ0+LZ1)/2, "#a8a49a");
+  runW("x", LZ0, LZ0+LWT, LX0+LWT, BX0, FLS-0.05, LTOP, []);
+  runW("x", LZ1-LWT, LZ1, LX0+LWT, BX0, FLS-0.05, LTOP, []);
+  B(BX0-LX0, FLS-0.012-(LY-0.3), LZ1-LZ0+0.1, (LX0-0.05+BX0-0.05)/2, (FLS-0.012+LY-0.3)/2, (LZ0+LZ1)/2, "#a8a49a");
   addCol(LX0-0.05, BX0, LZ0-0.05, LZ1+0.05, LY-0.8, FLS-0.05);
   { const g=new T.PlaneGeometry(BX0-LX0, LZ1-LZ0); push("concrete", g, (LX0+BX0)/2, FLS, (LZ0+LZ1)/2, 0, "#b4ab98", -Math.PI/2, 0); }
   addFlat(LX0-2.4, BX0+WT+0.02, LZ0, LZ1, FLS);
@@ -179,7 +179,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
   push("glass", planeGeo(VW.b-VW.a-0.02, VW.head-VW.sill-0.02, 0), BX0+WT/2, (VW.sill+VW.head)/2, (VW.a+VW.b)/2, Math.PI/2, "#ffffff");
   B(0.36, 0.05, VW.b-VW.a, BX0+WT/2-0.03, VW.sill+0.025, (VW.a+VW.b)/2, "#3b3029");
   for(const [o, x] of [[LD, BX0-0.03]]){ for(const z of [o.a-0.05, o.b+0.05]) B(WT+0.1, o.head-FLS+0.05, 0.08, BX0+WT/2, FLS+(o.head-FLS+0.05)/2, z, "#3b3029");
-    B(WT+0.1, 0.08, o.b-o.a+0.18, BX0+WT/2, o.head+0.04, (o.a+o.b)/2, "#3b3029"); }
+    B(WT+0.1, 0.08, o.b-o.a+0.18, BX0+WT/2, o.head-0.03, (o.a+o.b)/2, "#3b3029"); }
   sign(0.9, 0.5, (c, W, H)=>{ c.fillStyle="#f4f2ec"; c.fillRect(0, 0, W, H); c.fillStyle="#1f5aa8"; c.fillRect(0, 0, W, H*0.32);
       say(c, "NOTICE", W/2, H*0.16, W*0.7, H*0.2, "#f4f2ec"); say(c, "HAIRNETS PAST THIS POINT", W/2, H*0.5, W*0.8, H*0.13, "#1a1a1a", "700", "Arial"); say(c, "WASH YOUR HANDS", W/2, H*0.74, W*0.8, H*0.13, "#1a1a1a", "700", "Arial"); },
     BX0-0.02, FLS+1.6, -1574.0, -Math.PI/2, false, 216);
@@ -466,7 +466,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
       [832.5, -1576.0],[836.5, -1576.0],[838.6, -1576.0]]},
     "pretzel works: across the warehouse's staging, into the trailer at the dock":{y0:FLS+0.1, pts:[[838.6, -1560.5],[850.0, -1560.0],[858.0, -1559.0],[858.0, -1548.0],[858.0, -1544.0],[858.0, -1538.0]]},
     "pretzel works: down the warehouse's aisles":{y0:FLS+0.1, pts:[[838.6, -1576.0],[838.6, -1611.0],[856.15, -1611.0],[856.15, -1590.0],[856.15, -1562.0]]},
-    "pretzel works: round the outside, the court and the silos":[[766.0, -1540.0],[790.0, -1525.0],[884.0, -1525.0],[886.0, -1600.0],[886.0, -1622.0],[820.0, -1640.0],[775.0, -1625.0],[760.0, -1600.0]]};
+    "pretzel works: round the outside, the court and the silos":[[766.0, -1540.0],[790.0, -1525.0],[884.0, -1525.0],[886.0, -1600.0],[886.0, -1622.0],[820.0, -1640.0],[784.0, -1640.0],[775.0, -1625.0],[760.0, -1600.0]]};
 })();
 /* the bulbs on the sign and the lamps in the lot come on after dark; the belts run and the pretzels go down them while you are near */
 function updatePretzelWorks(dt, dark){
