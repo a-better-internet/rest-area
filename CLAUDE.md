@@ -1026,3 +1026,13 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   `glassRay`, `rayZombie`, `hurtZombie`), runs hot (`S.rgHeat`), and
   borrows `FLASH` at its muzzle. Built in `build()` with the rest, so the
   warm-up sees it.
+- Hollow Road and Edinboro Beer (14mb, `BEER`; loaded after 14s3 so its
+  clerk can be one of 14q's crowd): `EAST.beer` (04) holds the road's
+  centre, its clearing, the lot's clearing and where the road runs off the
+  map; 04 grades both level and makes them meadow, 07 holds the shell low
+  round them, 14m keeps its trees out and opens its corridor wall at the
+  mouth, `EAST.noPole` keeps the wires off the mouth. The road, its mouth's
+  fillets and the lot are one `sdPaveGeo` surface with the building cut
+  out. The stock is one atlas (`BR`, laid out inside a margin) mapped onto
+  each stacked block. Drive through the aisle slowly and `updateBeer`
+  (from 14's `updateLife`) has the kid put a case in.

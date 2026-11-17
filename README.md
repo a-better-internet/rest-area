@@ -539,6 +539,14 @@ If the scene runs hot on your machine, start there (see below).
     every twenty-odd metres by strain insulators, and it stands on a
     porcelain base insulator with a ball gap across it. From a long way
     off it is a thin banded line against the sky, not a column of dots.
+  - **Hollow Road** turns north off US 6N between the farms and the
+    fireworks outlet, a left heading east, and runs up through the woods
+    off the map. The first thing on it is **Edinboro Beer**, a long white
+    block drive-thru: in at the west end under IN, between the cases
+    stacked head high on their pallets under strings of pennants, the
+    flags and the banners, past the counter and the kid in the green shirt
+    (go slowly and he puts a case in the back), and out the east end under
+    OUT. Mulch on pallets out front, the ice chest and the propane cage.
   - **The tuning house** at the tower's foot, red brick with a flat roof,
     is open: the feed line comes in through its wall to the tuning unit (a
     copper coil and vacuum capacitors in a wire cage), the meters and the

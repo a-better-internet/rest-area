@@ -53,7 +53,7 @@ function dartScore(dy, dr){
 const _gauss=()=>{ let u=0,v=0; while(!u) u=Math.random(); while(!v) v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
 DARTS.newGame=function(){
   const G={you:301, dale:301, turn:"you", dart:0, turnStart:301, histY:[301], histD:[301], over:null, thrown:[]};
-  DARTS.game=G; DARTS.B.game=G; DARTS.clearBoard(); DARTS.last="TOE THE LINE. YOU THROW FIRST."; DARTS.draw();
+  if(!DARTS.B) DARTS.B=HANGOUT.dart; DARTS.game=G; DARTS.B.game=G; DARTS.clearBoard(); DARTS.last="TOE THE LINE. YOU THROW FIRST."; DARTS.draw();
 };
 DARTS.clearBoard=function(){ for(const m of DARTS.stuck) scene.remove(m); DARTS.stuck.length=0; };
 DARTS.start=function(board){

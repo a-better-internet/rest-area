@@ -42,7 +42,8 @@ const FIREWORKS={};
     for(const t of L){ for(;;){ x.font=weight+" "+s+"px "+family; if(x.measureText(t).width<=Math.min(maxW, x.canvas.width*0.84) || s<=7) break; s-=1; } }
     return s; };
   const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*400), Math.round((cw||w*400)*h/w), draw), px,py,pz,ry,lit);
-  const tree=(sp, x, z, s, col)=>{ FOREST.plant(sp, x, z, {scale:s}); if(col){ const rr=0.24*s, gy=Terrain.groundAt(x,z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); } };
+  const inBeer=(x, z)=>{ const Bq=EAST.beer; return [Bq.road, Bq.lot].some(b=>x>b.x0-1.5 && x<b.x1+1.5 && z>b.z0-1.5 && z<b.z1+1.5); };   // (Hollow Road's clearings, 14mb)
+  const tree=(sp, x, z, s, col)=>{ if(inBeer(x, z)) return; FOREST.plant(sp, x, z, {scale:s}); if(col){ const rr=0.24*s, gy=Terrain.groundAt(x,z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); } };
   const pave=(bk, x0,x1,z0,z1, y, color)=>{ const TL=7.4;
     for(let x=x0; x<x1-0.02; x+=TL) for(let z=z0; z<z1-0.02; z+=TL){ const w=Math.min(TL,x1-x), d=Math.min(TL,z1-z); if(w<0.06||d<0.06) continue;
       const g=new T.PlaneGeometry(w,d), U=g.attributes.uv, ou=r()*97, ov=r()*97;
@@ -58,7 +59,7 @@ const FIREWORKS={};
       if(sd<0 && xx>S.x0-6 && xx<S.x1+6) continue;                                  // (the outlet's clearing)
       const q=hash2(xx*0.9, zz*1.1);
       tree(row<2 ? (q<0.2 ? "hemlock" : "edge") : (q<0.22 ? "hemlock" : q<0.30 ? "pine" : "hard"), xx, zz, 0.85+hash2(xx*3,zz)*0.35);
-      if(row<2 && q<0.55) FOREST.plant("shrub", xx-1.4, Z+sd*(12.0+q), {scale:0.9+q, solid:false}); }
+      if(row<2 && q<0.55 && !inBeer(xx-1.4, Z+sd*(12.0+q))) FOREST.plant("shrub", xx-1.4, Z+sd*(12.0+q), {scale:0.9+q, solid:false}); }
     // round the back and sides of the outlet's clearing
     for(let k=0;k<70;k++){ const w=S.x1-S.x0, h=(Z-13)-S.z0, d=k/70*(2*h+w);
       let x, z;
@@ -68,7 +69,7 @@ const FIREWORKS={};
         tree(row<2 ? "edge" : (hash2(xx,zz)<0.25 ? "hemlock" : "hard"), xx, zz, 0.85+hash2(zz,xx)*0.3); } }
     // and the walls: as far as you can push through, the trees' edge either side, round the outlet's clearing
     const W=(x0,x1,z0,z1)=>addCol(x0, x1, z0, z1, -40, 300);
-    W(E.plain.x1, S.x0, C0.z0-0.4, C0.z0+0.4); W(S.x1, A.town.x0, C0.z0-0.4, C0.z0+0.4);
+    W(E.plain.x1, A.beer.road.x0, C0.z0-0.4, C0.z0+0.4); W(A.beer.road.x1, S.x0, C0.z0-0.4, C0.z0+0.4); W(S.x1, A.town.x0, C0.z0-0.4, C0.z0+0.4);   // (open where Hollow Road goes north, 14mb)
     W(S.x0-0.4, S.x0+0.4, S.z0, C0.z0); W(S.x0, S.x1, S.z0-0.4, S.z0+0.4); W(S.x1-0.4, S.x1+0.4, S.z0, C0.z0);
     W(E.plain.x1, A.town.x0, C0.z1-0.4, C0.z1+0.4);
     addZone(C0.x0+24, A.town.x0, C0.z0, C0.z1, Y-2, Y+12, "US 6N"); }

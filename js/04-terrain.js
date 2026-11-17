@@ -113,7 +113,10 @@ const EAST=(function(){
     wy:y-2.6,                                                         // the water
     lake:{x0:980, x1:2260, z0:-2090, z1:z-96, r:190},                 // a rounded oblong, wandering off the street
     can:{x0:640, x1:1600, z0:-1504, z1:-896},                         // the 8 m canopy over it all (on the 32 m lattice)
-    noPole:[] };                                                      // where the wires along the road keep out (14m, 14n; 14y)
+    noPole:[[716, 748]],                                              // where the wires along the road keep out (14m, 14n; 14y): the road north's mouth
+    // Hollow Road, north off US 6N into the woods between the farms and the fireworks outlet, and Edinboro Beer's drive-thru
+    // on it (14mb): the road's clearing, the distributor's lot's, the road's centre line and where it runs off the map
+    beer:{rx:732, end:-1338, road:{x0:721, x1:743, z0:-1338, z1:z-13}, lot:{x0:733, x1:812, z0:-1316, z1:-1250}} };
 })();
 /* ---- west along US 6N -----------------------------------------------------
    Past the west fields the road goes on into the woods and comes to French Creek Pines, a campground and trailer
@@ -300,7 +303,7 @@ const Terrain=(function(){
     const pd=boxDist(EDIN.plain,x,z);
     if(pd<60) h=toward(h, EDIN.y, pd, 0, 60);
     // east along US 6N: the country lies lower and flatter toward the lake, and every clearing is level with the road
-    { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z));
+    { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z), boxDist(EAST.beer.road,x,z), boxDist(EAST.beer.lot,x,z));
       if(ed<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, ed));
       if(ed<50) h=toward(h, EDIN.y, ed, 0, 46);
       // the lake: its bed shelving off the shore to six metres; the banks brought down to the water, and never under it.
@@ -440,7 +443,7 @@ const Terrain=(function(){
     if(x>DRIVE_B.x0 && x<DRIVE_B.x1 && z>DRIVE_B.z0 && z<DRIVE_B.z1) d=Math.min(d, distToPath(DRIVE,x,z).d-4.6);
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
-    d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3);
+    d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3, boxSD(EAST.beer.road,x,z), boxSD(EAST.beer.lot,x,z));
     d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z), boxSD(WEST.ranch,x,z));
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
