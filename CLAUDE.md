@@ -983,3 +983,9 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - 18u's hits: a chuck you hit is `st` 4 (squashed and flashing on its own
   `fm` material for `bonk` seconds), with 18u's `FX` pools (stars, a ring,
   the points rising, dust on a miss); nothing is made per hit.
+- 18v's Alley Roll: a roll on the rim of a 40, 50 or 100 (`out.rim` from
+  `SKEE.land`) kicks out to the 10; back-to-back 40s and up are a HOT HAND,
+  the ninth ball scores double, and the tickets (`g.tix`, one for every
+  ten) feed out of the slot as one plane whose texture repeats. Each ring
+  has its own glow torus and the bulbs three materials: colours change,
+  nothing is shown or hidden.
