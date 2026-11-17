@@ -116,7 +116,11 @@ const EAST=(function(){
     noPole:[[716, 748]],                                              // where the wires along the road keep out (14m, 14n; 14y): the road north's mouth
     // Hollow Road, north off US 6N into the woods between the farms and the fireworks outlet, and Edinboro Beer's drive-thru
     // on it (14mb): the road's clearing, the distributor's lot's, the road's centre line and where it runs off the map
-    beer:{rx:732, end:-1338, road:{x0:721, x1:743, z0:-1338, z1:z-13}, lot:{x0:733, x1:812, z0:-1316, z1:-1250}} };
+    beer:{rx:732, end:-1700, road:{x0:721, x1:743, z0:-1700, z1:z-13}, lot:{x0:733, x1:812, z0:-1316, z1:-1250}},
+    // and a third of a kilometre on up it, east of the road, the Edinboro Pretzel Company's works (14mc): its clearing, graded
+    // level, and the 8 m canopy over the woods round it (on the 32 m lattice)
+    pretz:{site:{x0:743, x1:892, z0:-1652, z1:-1496}, mouth:{z0:-1552, z1:-1536}},
+    pcan:{x0:640, x1:960, z0:-1760, z1:-1504} };
 })();
 /* ---- west along US 6N -----------------------------------------------------
    Past the west fields the road goes on into the woods and comes to French Creek Pines, a campground and trailer
@@ -303,7 +307,7 @@ const Terrain=(function(){
     const pd=boxDist(EDIN.plain,x,z);
     if(pd<60) h=toward(h, EDIN.y, pd, 0, 60);
     // east along US 6N: the country lies lower and flatter toward the lake, and every clearing is level with the road
-    { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z), boxDist(EAST.beer.road,x,z), boxDist(EAST.beer.lot,x,z));
+    { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z), boxDist(EAST.beer.road,x,z), boxDist(EAST.beer.lot,x,z), boxDist(EAST.pretz.site,x,z));
       if(ed<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, ed));
       if(ed<50) h=toward(h, EDIN.y, ed, 0, 46);
       // the lake: its bed shelving off the shore to six metres; the banks brought down to the water, and never under it.
@@ -443,7 +447,7 @@ const Terrain=(function(){
     if(x>DRIVE_B.x0 && x<DRIVE_B.x1 && z>DRIVE_B.z0 && z<DRIVE_B.z1) d=Math.min(d, distToPath(DRIVE,x,z).d-4.6);
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
-    d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3, boxSD(EAST.beer.road,x,z), boxSD(EAST.beer.lot,x,z));
+    d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3, boxSD(EAST.beer.road,x,z), boxSD(EAST.beer.lot,x,z), boxSD(EAST.pretz.site,x,z));
     d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z), boxSD(WEST.ranch,x,z));
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
@@ -497,6 +501,8 @@ const RING_NEAR={x0:-256, x1:448, z0:-336,  z1:344};
 const RING_HWYN={x0:-272, x1:-48, z0:-1752, z1:-336}, RING_HWYS={x0:-272, x1:-48, z0:344, z1:568};
 // and one at 4 m east along US 6N: the outlet, the street, the park and the lake's near shore (EAST)
 const RING_EAST={x0:640, x1:1472, z0:-1344, z1:-1056};
+// and one at 4 m north of it up Hollow Road, round the pretzel works (EAST.pretz, 14mc)
+const RING_PRETZ={x0:640, x1:960, z0:-1760, z1:-1344};
 // and one at 4 m west along US 6N past the west fields: the road through the woods and French Creek Pines (WEST), holed
 // under the community hall, whose basement lounge is under it (the hall's floor and its skirting cover the hole's edges)
 const RING_WEST={x0:-1616, x1:-512, z0:-1344, z1:-1040};
@@ -708,7 +714,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   }
   TERRAIN_TINT=tint;
   grid(GROUND_EDGE, 32, [RING_FAR, RING_MIDN], "ground-outer", 60);
-  grid(RING_FAR, 16, [RING_MID, RING_EAST, RING_MIDN, RING_WEST], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
+  grid(RING_FAR, 16, [RING_MID, RING_EAST, RING_MIDN, RING_WEST, RING_PRETZ], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
   grid(RING_MIDN, 8, [RING_WEIGH], "ground-midn", 24);
   grid(RING_WEIGH, 2, WEIGH_HOLES, "ground-weigh", 6);
   grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS, KIRK_RING, TUNE_RING], "ground-mid", 24);
@@ -716,6 +722,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   grid(RING_HWYN, 2, [], "ground-hwyn", 6);
   grid(RING_HWYS, 2, [], "ground-hwys", 6);
   grid(RING_EAST, 4, [LOON_RING], "ground-east", 6);
+  grid(RING_PRETZ, 4, [], "ground-pretz", 6);
   grid(RING_WEST, 4, WEST_HOLES, "ground-west", 6);
   grid(LOON_RING, 0.5, LOON_HOLES, "ground-loon", 0);       // (no apron: it meets the 4 m ground on the street's flat)
   grid(KIRK_RING, 2, KIRK_HOLES, "ground-kirk", 0);              // (no apron: it meets the 8 m ground on the flat, and one would hang through the hall)

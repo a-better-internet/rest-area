@@ -565,6 +565,8 @@ function sdPaveGeo(sd, x0, x1, z0, z1, cell, uvm){
 const DETAIL=[];
 function detailMesh(ents, mat, name, cast){
   const tiles=new Map(), _c=new T.Vector3(), out=[];
+  if(typeof location!=="undefined" && /zdebug/.test(location.search))                 // (the checks see a place's own pieces too)
+    (window.ZDBG=window.ZDBG||[]).push(...ents.map(e=>({bucket:"detail:"+(name||"detail"), geo:e.geo, matrix:e.matrix})));
   for(const e of ents){ _c.setFromMatrixPosition(e.matrix); const k=Math.floor(_c.x/64)+":"+Math.floor(_c.z/64);
     let L=tiles.get(k); if(!L){ L=[]; tiles.set(k, L); } L.push(e); }
   for(const [k, L] of tiles){ const m=new T.Mesh(mergeEntries(L), mat);

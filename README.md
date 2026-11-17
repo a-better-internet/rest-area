@@ -544,9 +544,24 @@ If the scene runs hot on your machine, start there (see below).
     off the map. The first thing on it is **Edinboro Beer**, a long white
     block drive-thru: in at the west end under IN, between the cases
     stacked head high on their pallets under strings of pennants, the
-    flags and the banners, past the counter and the kid in the green shirt
-    (go slowly and he puts a case in the back), and out the east end under
-    OUT. Mulch on pallets out front, the ice chest and the propane cage.
+    flags and the banners, past the cashier's office and the kid in the
+    green shirt at its sliding window (go slowly and he puts a case in the
+    back), and out the east end under OUT. The office has its own door
+    round the side: the register, the desk and its monitor, the safe, the
+    files, the coffee on the little fridge and the game on the TV in the
+    corner. Mulch on pallets out front, the ice chest and the propane cage.
+  - A third of a kilometre on up Hollow Road is **the Edinboro Pretzel
+    Company's works**, behind a pretzel nine metres across on two steel
+    legs by the road, ringed with bulbs that come on at dusk. Up the steps
+    from the car lot is the lobby: the desk, a case of everything they
+    make, the old photographs, and a window onto the floor. On the floor
+    three lines run from the mixers through the twisters, the lye bath,
+    the salter and an eighteen-metre tunnel oven to the baggers, the belts
+    running and the pretzels going down them raw, dark from the bath and
+    baked brown. Through the wall at the end is the warehouse: racking to
+    the roof, cartons on every pallet, a forklift going round its loop
+    (it stops for you), five dock doors, and a trailer backed in at one,
+    half loaded, that you can walk into. Three flour silos stand out back.
   - **The tuning house** at the tower's foot, red brick with a flat roof,
     is open: the feed line comes in through its wall to the tuning unit (a
     copper coil and vacuum capacitors in a wire cage), the meters and the

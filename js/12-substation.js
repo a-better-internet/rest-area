@@ -108,7 +108,8 @@ let GATE_SIGN=null;          // where the drive gate's sign stands (set with the
   // on its own post on the right-hand shoulder, by the latch post, facing whoever drives up
   { const q=GATE_SIGN, y=Terrain.groundAt(q.x, q.z);
     bx("metal",0.06,2.4,0.06, q.x, y+0.95, q.z, 0.5, q.ry, "#a3a8aa");
-    signPanel(0.6,0.44,sign, q.x+Math.sin(q.ry)*0.04, y+1.85, q.z+Math.cos(q.ry)*0.04, q.ry);
+    bx("metal",0.62,0.46,0.02, q.x+Math.sin(q.ry)*0.05, y+1.85, q.z+Math.cos(q.ry)*0.05, 0.5, q.ry, "#8d9294");
+    signPanel(0.6,0.44,sign, q.x+Math.sin(q.ry)*0.08, y+1.85, q.z+Math.cos(q.ry)*0.08, q.ry);
     addCol(q.x-0.1,q.x+0.1,q.z-0.1,q.z+0.1,y-1,y+2.3); }
 })();
 

@@ -210,13 +210,41 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
                "HORNWORM HAVOC","EXIT 166 RUMBLE","SLIPPERY ROCK","SILO SCRAMBLE"];
   const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8","#c8641a","#4a8a2a","#a83a2a","#5a6a7a","#a8782a"];
   ARCADE.cabs=[];
-  const marC=cvs(128*NAMES.length,96), mx=marC.getContext("2d");
-  NAMES.forEach((n,i)=>{ const ox=i*128, oy=0, g=mx.createLinearGradient(0,oy,0,oy+96);
-    g.addColorStop(0,["#1a0a2e","#2e0a0a","#0a1a2e"][i%3]); g.addColorStop(1,"#000"); mx.fillStyle=g; mx.fillRect(ox,oy,128,96);
-    mx.strokeStyle=["#ff4fbf","#4fd8ff","#f2e23a","#7aff7a"][i%4]; mx.lineWidth=3; mx.strokeRect(ox+4,oy+4,120,88);
-    mx.shadowColor=mx.strokeStyle; mx.shadowBlur=8; mx.fillStyle="#fff6e8";
-    const words=n.split(" "); words.forEach((w,j)=>fitText(mx, w, 104, 30, ox+64, oy+48+(j-(words.length-1)/2)*30, "900", "'Arial Black', Arial"));
-    mx.shadowBlur=0; });
+  /* The marquees: each game lettered in its own face and colours, the way every maker had its own, on a cell shaped like
+     the lit panel it shows on (0.56 by 0.16, three and a half to one), so no letter is stretched. One line where the
+     name sits at a comfortable size, two where it would have to shrink; never more than about a third of the panel's
+     height a line. Three cells across, four down. */
+  const MQ=[ // [face, weight, fill, glow, ground top, ground bottom, border, tracking (of the size)]
+    ["'Futura', 'Century Gothic', 'Trebuchet MS', sans-serif", "italic 700", "#bff4ff", "#ff4fbf", "#1a0a2e", "#05020c", "#ff4fbf", 0.12],   // ASTRO RAIDERS
+    ["'Arial Rounded MT Bold', 'Avenir Next', Verdana, sans-serif", "700", "#ffe23a", "#ffb000", "#0a0a3a", "#000010", "#3a5aff", 0.04],   // MAZE MUNCHER
+    ["Rockwell, 'Roboto Slab', 'Courier New', serif", "700", "#ffd8b0", "#ff5a1a", "#3a1206", "#0e0402", "#d8642a", 0.02],             // BRICKYARD BREAKOUT
+    ["'Courier New', Courier, monospace", "700", "#7aff7a", "#2aff6a", "#04140a", "#000", "#2aa84a", 0.10],                           // BLOCK DROP
+    ["Georgia, 'Times New Roman', serif", "italic 700", "#f4dca0", "#c8782a", "#2e1a0a", "#0a0602", "#c8a050", 0.03],                 // GROUNDHOG GULCH
+    ["'Gill Sans', 'Trebuchet MS', sans-serif", "600", "#c8ffd8", "#2ad89a", "#06281e", "#010a08", "#5ad8a0", 0.08],                 // TURNPIKE TURTLE
+    ["'Marker Felt', 'Comic Sans MS', 'Trebuchet MS', sans-serif", "700", "#ffffff", "#4fb8ff", "#0a2a4e", "#020814", "#8ad8ff", 0.02], // SUDS PATROL
+    ["'Avenir Next', Verdana, sans-serif", "italic 800", "#fff0c8", "#ff8a1a", "#2e1206", "#060200", "#ffb040", 0.06],              // ROUTE 6 RALLY
+    ["'American Typewriter', Georgia, serif", "700", "#e0ff9a", "#7ad82a", "#14260a", "#030802", "#a8d84a", 0.02],                   // HORNWORM HAVOC
+    ["Arial, Helvetica, sans-serif", "700", "#f4f2ec", "#f2c41c", "#0e3a22", "#021008", "#f2c41c", 0.05],                          // EXIT 166 RUMBLE
+    ["Optima, Palatino, 'Palatino Linotype', serif", "italic 600", "#e8f8ff", "#7ad0ff", "#0a2238", "#02060c", "#bfe8ff", 0.08],     // SLIPPERY ROCK
+    ["Copperplate, 'Copperplate Gothic Light', 'Times New Roman', serif", "700", "#fff2e0", "#e0402a", "#3a0a08", "#0c0202", "#e8c060", 0.10]]; // SILO SCRAMBLE
+  const MC=3, MR=Math.ceil(NAMES.length/MC), CW=448, CH=128;
+  const marC=cvs(CW*MC, CH*MR), mx=marC.getContext("2d");
+  NAMES.forEach((n,i)=>{ const st=MQ[i%MQ.length], ox=(i%MC)*CW, oy=((i/MC)|0)*CH, g=mx.createLinearGradient(0,oy,0,oy+CH);
+    g.addColorStop(0, st[4]); g.addColorStop(1, st[5]); mx.fillStyle=g; mx.fillRect(ox,oy,CW,CH);
+    mx.strokeStyle=st[6]; mx.lineWidth=3; mx.strokeRect(ox+6,oy+6,CW-12,CH-12);
+    mx.globalAlpha=0.5; mx.lineWidth=1; mx.strokeRect(ox+11,oy+11,CW-22,CH-22); mx.globalAlpha=1;
+    // (one line if it sits at 30 px or more inside the border's padding; else the words split over two lines of 30 at most)
+    const maxW=CW*0.80, size=(s)=>{ mx.font=st[1]+" "+s+"px "+st[0]; mx.letterSpacing=(s*st[7]).toFixed(1)+"px"; return mx.measureText(n).width; };
+    let one=40; while(one>12 && size(one)>maxW) one--;
+    const words=n.split(" "), lines=[];
+    if(one>=30 || words.length<2) lines.push(n);
+    else { let best=null; for(let k=1;k<words.length;k++){ const a=words.slice(0,k).join(" "), b=words.slice(k).join(" "); const d=Math.abs(a.length-b.length); if(!best || d<best[2]) best=[a, b, d]; } lines.push(best[0], best[1]); }
+    // (lines of a name match: each is measured, and all are drawn at the smallest size any of them needs)
+    let s=lines.length>1 ? 32 : 40; for(const l of lines){ mx.font=st[1]+" "+s+"px "+st[0]; mx.letterSpacing=(s*st[7]).toFixed(1)+"px"; while(s>12 && mx.measureText(l).width>maxW){ s--; mx.font=st[1]+" "+s+"px "+st[0]; mx.letterSpacing=(s*st[7]).toFixed(1)+"px"; } }
+    mx.textAlign="center"; mx.textBaseline="middle"; mx.shadowColor=st[3]; mx.shadowBlur=10; mx.fillStyle=st[2];
+    const lh=s*1.12, tr=s*st[7];
+    lines.forEach((l,j)=>{ mx.fillText(l, ox+CW/2+tr/2, oy+CH/2+(j-(lines.length-1)/2)*lh); });
+    mx.shadowBlur=0; mx.letterSpacing="0px"; });
   const marTex=setSRGB(new T.CanvasTexture(marC));
   const marM=new T.MeshBasicMaterial({map:marTex, toneMapped:false});
   const cellGeo=(w,h,i,rows,cols)=>{ const g=new T.PlaneGeometry(w,h), U=g.attributes.uv, cu=i%cols, cv=(i/cols)|0;
@@ -252,7 +280,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
       ARCADE.cabs[id]={name:NAMES[i], c:c, x:c.getContext("2d"), tex:tex, mesh:m, stick:st, stand:{x:pf[0], z:pf[1]}, ry:ry,
                       screenY:A.y+1.30, screen:{x:ps[0], z:ps[1]}, floor:A.y};
       if(id===0) ARCADE.raiders=ARCADE.cabs[0]; }
-    marG.push({geo:cellGeo(0.56, 0.16, i, 1, NAMES.length), matrix:new T.Matrix4().compose(V3(pm[0], A.y+1.68, pm[1]), new T.Quaternion().setFromEuler(new T.Euler(0, ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color(0xffffff)});
+    marG.push({geo:cellGeo(0.56, 0.16, i, MR, MC), matrix:new T.Matrix4().compose(V3(pm[0], A.y+1.68, pm[1]), new T.Quaternion().setFromEuler(new T.Euler(0, ry, 0, "YXZ")), V3(1,1,1)), color:new T.Color(0xffffff)});
     const a0=L(-0.34,-0.42), a1=L(0.34,0.62);
     addCol(Math.min(a0[0],a1[0]), Math.max(a0[0],a1[0]), Math.min(a0[1],a1[1]), Math.max(a0[1],a1[1]), A.y-0.5, A.y+1.86);
     const pu=L(0, 1.15);

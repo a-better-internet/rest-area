@@ -477,6 +477,8 @@ function signTex(w,h,draw){
 }
 // A face is a plane a centimetre proud of its board, with polygonOffset so it
 // wins the depth test at every range; lit = an unlit basic material.
+// every sign face made, for the checks (tools: a face must stand in front of its own post, never behind it)
+const SIGN_FACES=[];
 function signPanel(w,h,tex,x,y,z,ry,lit,rx){
   const opts={map:tex, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4};
   const m=new T.Mesh(new T.PlaneGeometry(w,h),
@@ -484,7 +486,7 @@ function signPanel(w,h,tex,x,y,z,ry,lit,rx){
         : new T.MeshStandardMaterial(Object.assign({roughness:0.62}, opts)));
   m.position.set(x,y,z); m.rotation.order="YXZ"; m.rotation.y=ry; if(rx) m.rotation.x=rx;
   m.receiveShadow=true;
-  scene.add(m);
+  scene.add(m); SIGN_FACES.push({m:m, w:w, h:h});
   return m;
 }
 // the round-cornered rectangle every sign blank is cut as

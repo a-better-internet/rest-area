@@ -99,7 +99,7 @@ const WEAR={leaves:[], autumn:null};
       g.textAlign="center"; g.textBaseline="middle"; g.font="600 "+Math.min(px, H*0.055)+"px Georgia, serif";
       lines.forEach((t,i)=>g.fillText(t, W/2, H*(0.43+i*0.075)));
       fitText(g,"Pennsylvania Historical and Museum Commission",W*0.76,H*0.04,W/2,H*0.91,"500","Georgia, serif"); });
-    C(0.055, 2.0, x, y+1.0, z, "#2a3a6a", 14);
+    C(0.055, 1.84, x, y+0.92, z, "#2a3a6a", 14);                                     // (up to the board's foot, never through its faces)
     B(1.04, 0.98, 0.05, x, y+2.32, z, "#1d3a86", ry); B(1.10, 0.06, 0.08, x, y+2.84, z, "#d8b440", ry);
     for(const sd of [1,-1]) signPanel(1.0, 0.95, tex, x+s*sd*0.031, y+2.32, z+c*sd*0.031, sd>0?ry:ry+Math.PI, false);
     addCol(x-0.10, x+0.10, z-0.10, z+0.10, y-0.5, y+2.9);

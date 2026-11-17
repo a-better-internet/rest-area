@@ -1036,3 +1036,31 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   out. The stock is one atlas (`BR`, laid out inside a margin) mapped onto
   each stacked block. Drive through the aisle slowly and `updateBeer`
   (from 14's `updateLife`) has the kid put a case in.
+
+## Round 36 notes
+
+- A sign goes in front of what holds it up: its face is never behind a post,
+  pole or leg from the side it is read from. Posts stand behind the board or
+  beyond its ends; a two-sided board's posts go beyond its ends; street
+  blades sit on top of their pole, which stops under them. 02 keeps every
+  `signPanel` in `SIGN_FACES`, and under `?zdebug` 01's `detailMesh` reports
+  its entries to `ZDBG` too, so a checker can find thin uprights against
+  every face.
+- The arcade's marquees (12c) are one atlas of cells shaped like the panel
+  they show on (448 × 128 for 0.56 × 0.16, three across), each game in its
+  own face, colours and tracking (`MQ`, by place in `NAMES`), one line where
+  it sits at 30 px or more, else two matched lines.
+- Edinboro Beer's counter is the cashier's office (14mb): a booth with its
+  own ceiling, a sliding window and ledges onto the lane, its door on the
+  west side, its own indoor zone (`EDINBORO BEER · THE OFFICE`).
+- Hollow Road runs on to `EAST.beer.end` (−1700). 14mb paves it to its old
+  end (`PEND`, −1338) and 14mc on from there. The pretzel works (14mc,
+  `PRETZ`) is `EAST.pretz` (04): its `site` (graded, `siteDist`) and its
+  `mouth` (where Hollow Road's east edge line breaks), on `RING_PRETZ`
+  (4 m, holed out of `RING_FAR`), under its own 8 m canopy shell
+  (`EAST.pcan`, holed out of the 32 m one). The building's floor is
+  `PRETZ.FLS`, 1.2 m up on a plinth at dock height; the trailer at the open
+  dock is walkable. The belts' texture scrolls and the pretzels on them are
+  three InstancedMeshes, both run by `updatePretzelWorks` (from 14's
+  `updateLife`) only within 110 m. The forklift is a crowd driver with a
+  forklift `prop` and its own `COL_DYN` box, like the baler.

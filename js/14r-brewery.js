@@ -72,7 +72,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
     // the walk along the front, and the sign at the lot's mouth
     bx("concrete", BL.x1-BL.x0+4.0, 0.24, 2.85, (BL.x0+BL.x1)/2, Y, LOTZ-1.425, 0.6, 0, "#c3c0b8"); addFlat(BL.x0-2.0, BL.x1+2.0, LOTZ-2.9, LOTZ+0.01, Y+0.12);
     const sx=X0+1.2, sz=Z-HW-1.6;
-    for(const dx of [-1.1, 1.1]){ B(0.16, 2.6, 0.16, sx+dx, Y+1.3, sz, "#3a2a1c"); addCol(sx+dx-0.09, sx+dx+0.09, sz-0.09, sz+0.09, Y-0.5, Y+2.6); }
+    for(const dx of [-1.39, 1.39]){ B(0.16, 2.6, 0.16, sx+dx, Y+1.3, sz, "#3a2a1c"); addCol(sx+dx-0.09, sx+dx+0.09, sz-0.09, sz+0.09, Y-0.5, Y+2.6); }   // (flanking the board)
     B(2.6, 1.2, 0.12, sx, Y+1.95, sz, "#3a2a1c");
     for(const sd of [-1,1]) sign(2.4, 1.0, (c,W,H)=>{ c.fillStyle="#1e2a24"; c.fillRect(0,0,W,H); c.strokeStyle="#d8b880"; c.lineWidth=5; c.strokeRect(8,8,W-16,H-16);
         say(c, "LAKESHORE", W/2, H*0.30, W*0.78, H*0.24, "#e8d8b0", "900", "Georgia, serif"); say(c, "BREWING CO.", W/2, H*0.55, W*0.70, H*0.17, "#e8d8b0", "700", "Georgia, serif");

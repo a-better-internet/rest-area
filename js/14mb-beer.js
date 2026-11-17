@@ -37,20 +37,25 @@ const BEER={routes:{}, served:false, aisle:null};
   const B=(w,h,d,x,y,z,c,ry)=>ent(boxGeo(w,h,d),x,y,z,c,0,ry||0,0);
   const RB=(w,h,d,x,y,z,c,ry,rad)=>ent(rboxGeo(w,h,d,Math.min(rad||0.03,Math.min(w,h,d)*0.32),2),x,y,z,c,0,ry||0,0);
   const C=(r,h,x,y,z,c,seg,rx,ry,rz)=>ent(new T.CylinderGeometry(r,r,h,seg||12),x,y,z,c,rx,ry,rz);
+  const tubeE=(a, b, r, c)=>{ const d=b.clone().sub(a), L=d.length(); ME.push({geo:new T.CylinderGeometry(r, r, L, 6),
+      matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color(c)}); };
   const say=(c, s, cx, cy, w, h, col, weight, family)=>{ c.fillStyle=col; fitText(c, s, w, h, cx, cy, weight||"800", family||"'Arial Black', Arial"); };
   const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*240), Math.round((cw||w*240)*h/w), draw), px,py,pz,ry,lit);
   const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, gy=Terrain.groundAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
   const GREEN="#1f6a34", GOLD="#f2c230", WHITEW="#e4e2da";
 
   /* ---- the paving: the road, its mouth's rounded corners onto US 6N's shoulder, and the lot, as one surface; the building left out ---- */
-  { const road=SD_rect(RX-RW, RX+RW, END, Z-HW+0.6), mouth=SD_rect(RX-14, RX+14, Z-HW, Z-HW+0.6), lot=SD_rect(LX0, LX1, LZ0, LZ1), bld=SD_rect(BX0, BX1, BZ0, BZ1);
+  // (paved here to where the road ran off the map before the pretzel works; 14mc paves it on from there)
+  const PEND=-1338;
+  { const road=SD_rect(RX-RW, RX+RW, PEND, Z-HW+0.6), mouth=SD_rect(RX-14, RX+14, Z-HW, Z-HW+0.6), lot=SD_rect(LX0, LX1, LZ0, LZ1), bld=SD_rect(BX0, BX1, BZ0, BZ1);
     const U=sdUnion([road, mouth, lot], 6), sd=(x, z)=>Math.max(U(x, z), -bld(x, z));
-    push("lotpave", sdPaveGeo(sd, RX-17, LX1+1, END-0.5, Z-HW+1, 0.25, 3), 0, LY, 0, 0, "#9a9a96");
+    push("lotpave", sdPaveGeo(sd, RX-17, LX1+1, PEND, Z-HW+1, 0.25, 3), 0, LY, 0, 0, "#9a9a96");
     addPaveRect(RX-RW, RX+RW, END, Z-HW, Y); addPaveRect(LX0, LX1, LZ0, LZ1, Y); addPaveRect(RX-11, RX+11, Z-HW-6, Z-HW, Y); }
   // its lines: the double yellow up the middle, the white edges (open across the lot's mouth), the stop bar for the way out
   for(const o of [-0.12, 0.12]) stripe(RX+o, Z-HW-1.2, RX+o, END+0.6, 0.1, YELLOW_LINE, LY);
   stripe(RX-3.15, Z-HW-7.5, RX-3.15, END+0.6, 0.12, WHITE_LINE, LY);
-  stripe(RX+3.15, Z-HW-7.5, RX+3.15, LZ1-1.5, 0.12, WHITE_LINE, LY); stripe(RX+3.15, LZ0+1.5, RX+3.15, END+0.6, 0.12, WHITE_LINE, LY);
+  stripe(RX+3.15, Z-HW-7.5, RX+3.15, LZ1-1.5, 0.12, WHITE_LINE, LY); // (and on up past the beer distributor, broken only at the pretzel works' mouth, where its rounding starts and ends, 14mc)
+  { const PM=EAST.pretz.mouth; stripe(RX+3.15, LZ0+1.5, RX+3.15, PM.z1+4.2, 0.12, WHITE_LINE, LY); stripe(RX+3.15, PM.z0-4.2, RX+3.15, END+0.6, 0.12, WHITE_LINE, LY); }
   stripe(RX-3.05, Z-HW-3.2, RX-0.3, Z-HW-3.2, 0.45, WHITE_LINE, LY);
   // the lot's arrows, painted: in at the west door, out at the east
   for(const [x, ry] of [[742.5, -Math.PI/2],[788.5, -Math.PI/2]]){ stripe(x-1.2, (AZ0+AZ1)/2, x+0.6, (AZ0+AZ1)/2, 0.25, WHITE_LINE, LY);
@@ -58,7 +63,8 @@ const BEER={routes:{}, served:false, aisle:null};
 
   /* ---- the walls of the world here, as far as you can push through the trees ---- */
   { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300), L=Bq.lot, R=Bq.road;
-    W(R.x0-0.4, R.x0+0.4, END, R.z1); W(R.x1-0.4, R.x1+0.4, L.z1, R.z1); W(R.x1-0.4, R.x1+0.4, END, L.z0);
+    const P=EAST.pretz.site;              // (the east side open where the pretzel works' clearing comes down to the road, 14mc)
+    W(R.x0-0.4, R.x0+0.4, END, R.z1); W(R.x1-0.4, R.x1+0.4, L.z1, R.z1); W(R.x1-0.4, R.x1+0.4, P.z1, L.z0); W(R.x1-0.4, R.x1+0.4, END, P.z0);
     W(R.x1, L.x1, L.z1-0.4, L.z1+0.4); W(L.x1-0.4, L.x1+0.4, L.z0, L.z1); W(R.x1, L.x1, L.z0-0.4, L.z0+0.4);
     W(R.x0, R.x1, END-0.4, END+0.4).msg="HOLLOW ROAD RUNS ON NORTH THROUGH THE WOODS FROM HERE. THIS IS AS FAR AS THE MAP GOES";
     addZone(R.x0, R.x1, END, R.z1, Y-2, Y+12, "HOLLOW ROAD"); addZone(L.x0, L.x1, L.z0, L.z1, Y-2, Y+12, "EDINBORO BEER"); }
@@ -69,23 +75,25 @@ const BEER={routes:{}, served:false, aisle:null};
         const t=(k+q()*0.6)/Math.max(1, n), x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);
         tree(sp || (q()<0.3 ? "hemlock" : q()<0.45 ? "pine" : "hard"), x, z, 0.85+q()*0.4); } };
     const L=Bq.lot, R=Bq.road;
-    row(R.x0, END, R.x0, R.z1-1, -1, 0); row(R.x1, L.z1+1, R.x1, R.z1-1, 1, 0); row(R.x1, END, R.x1, L.z0-1, 1, 0);
+    const P=EAST.pretz.site;
+    row(R.x0, END, R.x0, R.z1-1, -1, 0); row(R.x1, L.z1+1, R.x1, R.z1-1, 1, 0); row(R.x1, P.z1+1, R.x1, L.z0-1, 1, 0); row(R.x1, END, R.x1, P.z0-1, 1, 0);
     row(L.x0+10, L.z1, L.x1, L.z1, 0, 1); row(L.x1, L.z0, L.x1, L.z1, 1, 0); row(L.x0+10, L.z0, L.x1, L.z0, 0, -1);
     // and across the road's end, deep: the road runs on into them, so they must be real well past where you can go
     for(const off of [0, 20, 40]) row(R.x0-30, END-off, R.x1+30, END-off, 0, -1); }
 
   /* ---- signs at the mouth: the stop sign and the road's name, and the place's own for traffic on US 6N ---- */
   const post=(x, z, top)=>{ const gy=Terrain.groundAt(x, z); B(0.06, top, 0.06, x, gy+top/2, z, "#a3a8aa"); addCol(x-0.06, x+0.06, z-0.06, z+0.06, gy-0.5, gy+top); return gy; };
-  { const x=RX-4.6, z=Z-HW-3.0, gy=post(x, z, 2.95);
+  { const x=RX-4.6, z=Z-HW-3.0, gy=post(x, z+0.05, 2.74); C(0.045, 0.04, x, gy+2.76, z+0.05, "#8d9294", 10);
     const t=signTex(240, 240, (c, W, H)=>{ c.fillStyle="#b3191e"; c.beginPath(); for(let k=0;k<8;k++){ const a=Math.PI/8+k*Math.PI/4; c.lineTo(W/2+Math.cos(a)*W*0.49, H/2+Math.sin(a)*H*0.49); } c.fill();
       c.strokeStyle="#f4f2ec"; c.lineWidth=8; c.beginPath(); for(let k=0;k<8;k++){ const a=Math.PI/8+k*Math.PI/4; c.lineTo(W/2+Math.cos(a)*W*0.43, H/2+Math.sin(a)*H*0.43); } c.closePath(); c.stroke();
       c.fillStyle="#f4f2ec"; fitHwy(c, "STOP", W*0.62, H*0.26, W/2, H/2); });
     const m=new T.Mesh(new T.CircleGeometry(0.38, 8), new T.MeshStandardMaterial({map:t, roughness:0.6, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}));
     m.geometry.rotateZ(Math.PI/8); m.position.set(x, gy+2.2, z-0.045); m.rotation.y=Math.PI; scene.add(m); B(0.62, 0.62, 0.02, x, gy+2.2, z-0.02, "#8d9294");   // (its face to the north, to the way out)
-    for(const ry of [0, Math.PI/2]){ B(0.9, 0.17, 0.02, x, gy+2.85, z, "#8d9294", ry);
+    for(const ry of [0, Math.PI/2]){ B(0.9, 0.17, 0.02, x, gy+(ry ? 3.06 : 2.86), z, "#8d9294", ry);
       for(const s of [-1, 1]) sign(0.88, 0.15, (c, W, H)=>{ c.fillStyle="#1f6a3a"; c.fillRect(0, 0, W, H); c.strokeStyle="#f4f2ec"; c.lineWidth=3; c.strokeRect(3, 3, W-6, H-6); c.fillStyle="#f4f2ec"; fitHwy(c, "HOLLOW RD", W*0.8, H*0.6, W/2, H/2); },
-        x+(ry ? s*0.012 : 0), gy+2.85, z+(ry ? 0 : s*0.012), ry+(s<0 ? Math.PI : 0), false, 264); } }
-  { const x=RX+6.0, z=Z-HW-2.6, gy=post(x-0.7, z, 2.9); post(x+0.7, z, 2.9); B(1.7, 0.9, 0.04, x, gy+2.4, z-0.03, "#2a2a2a");
+        x+(ry ? s*0.012 : 0), gy+(ry ? 3.06 : 2.86), z+(ry ? 0 : s*0.012), ry+(s<0 ? Math.PI : 0), false, 264); }
+    C(0.007, 0.32, x, gy+2.94, z, "#8d9294", 6); }
+  { const x=RX+6.0, z=Z-HW-2.6, gy=post(x-0.7, z-0.09, 2.9); post(x+0.7, z-0.09, 2.9);   /* (the posts behind the board) */ B(1.7, 0.9, 0.04, x, gy+2.4, z-0.03, "#2a2a2a");
     sign(1.66, 0.86, (c, W, H)=>{ c.fillStyle="#f4f2ec"; c.fillRect(0, 0, W, H); c.fillStyle=GREEN; c.fillRect(W*0.04, H*0.06, W*0.92, H*0.5);
         say(c, "EDINBORO BEER", W/2, H*0.31, W*0.8, H*0.3, GOLD); say(c, "DRIVE THRU · KEGS · ICE · NEXT RIGHT", W/2, H*0.76, W*0.8, H*0.16, "#1a1a1a", "700", "Arial"); },
       x, gy+2.4, z-0.008, 0, false, 400); }
@@ -174,9 +182,93 @@ const BEER={routes:{}, served:false, aisle:null};
       for(const zr of [AZ0-0.75, AZ0-2.05, AZ0-3.35]) if(zr-0.6>BZ0+WT) stack(x, zr, 1.2, 1.0, 1.2+((k*7+zr*3)&3)*0.22, (k+Math.round(-zr))%8);
       if(x<749.9 || (x>754.5 && x<758) || (x>768 && x<777)) for(const zr of [AZ1+0.75, AZ1+2.05]) stack(x, zr, 1.2, 1.0, 1.1+((k*5)&3)*0.25, (k*3+1)%8); } }
   // the counter by the way in, on the south side of the lane, the register on it; the coolers along the south wall
-  { RB(2.8, 1.02, 0.7, 762.0, FLS+0.51, AZ1+0.55, "#5a3a22", 0, 0.02); B(2.9, 0.05, 0.8, 762.0, FLS+1.045, AZ1+0.55, "#2a2a2a");
-    RB(0.4, 0.25, 0.35, 761.2, FLS+1.2, AZ1+0.6, "#2a2c2e", 0, 0.03); B(0.3, 0.2, 0.02, 761.2, FLS+1.45, AZ1+0.5, "#3af06a");
-    addCol(760.6, 763.4, AZ1+0.2, AZ1+0.9, FLS-0.5, FLS+1.08);
+  { /* The cashier's office: a panelled booth on the lane's south side, its own ceiling, a sliding window onto the lane
+       with a ledge each side of it (you pay through it from the car), a door on its west side round from the shop door.
+       Inside: the counter under the window and the register, the desk on the back wall, the safe, the files, a little
+       fridge with the coffee on it, the TV up in the corner, the clock, the calendar, the board of notes. */
+    const OX0=758.6, OX1=764.05, NZ0=-1280.22, NZ1=-1280.10, SZ=BZ1-WT, OT=0.12, OH=FLS+2.6, PANEL="#cfc6b0", TRIM="#6a4a2e";
+    const WIN={a:759.6, b:763.4, sill:FLS+0.95, head:FLS+2.0}, OD={a:-1279.2, b:-1278.28, head:FLS+2.1};
+    const wpc=(x0, x1, z0, z1, y0, y1)=>{ if(x1-x0<0.005 || z1-z0<0.005 || y1-y0<0.005) return; B(x1-x0, y1-y0, z1-z0, (x0+x1)/2, (y0+y1)/2, (z0+z1)/2, PANEL);
+      addCol(x0, x1, z0, z1, y0<=FLS+0.02 ? FLS-0.5 : y0, y1); };
+    // (the lane's wall runs 2 cm past the side walls each end, so no end of it lies in their faces; the side walls run 2 cm into the block)
+    wpc(OX0-0.02, WIN.a, NZ0, NZ1, FLS, OH); wpc(WIN.b, OX1+0.02, NZ0, NZ1, FLS, OH);
+    wpc(WIN.a, WIN.b, NZ0, NZ1, FLS, WIN.sill); wpc(WIN.a, WIN.b, NZ0, NZ1, WIN.head, OH);
+    wpc(OX0, OX0+OT, NZ1, OD.a, FLS, OH); wpc(OX0, OX0+OT, OD.b, SZ+0.02, FLS, OH); wpc(OX0, OX0+OT, OD.a, OD.b, OD.head, OH);
+    wpc(OX1-OT, OX1, NZ1, SZ+0.02, FLS, OH);
+    B(OX1-OX0+0.1, 0.08, SZ-NZ0+0.03, (OX0+OX1)/2, OH+0.04, (NZ0+SZ)/2-0.005, "#e8e4d8");                    // (its ceiling, lapped over the walls' tops)
+    B(OX1-OX0+0.14, 0.1, 0.04, (OX0+OX1)/2, OH-0.03, NZ0-0.03, TRIM);                                      // (a fascia along the lane)
+    // the window: an aluminium frame, two panes on their own tracks, the east one slid over the west so half of it is open
+    for(const [w, x, y] of [[WIN.b-WIN.a+0.1, (WIN.a+WIN.b)/2, WIN.head+0.025],[0.05, WIN.a-0.025, 0],[0.05, WIN.b+0.025, 0]])
+      for(const sd of [-1, 1]) B(w, y ? 0.05 : WIN.head-WIN.sill+0.1, 0.03, x, y || (WIN.sill+WIN.head)/2, (sd<0 ? NZ0-0.015 : NZ1+0.015), "#9aa0a4");
+    const pw=(WIN.b-WIN.a)/2+0.03, ph=WIN.head-WIN.sill-0.04;
+    for(const [x, z] of [[WIN.a+pw/2, (NZ0+NZ1)/2-0.025],[WIN.a+pw/2+0.06, (NZ0+NZ1)/2+0.025]]){
+      push("glass", planeGeo(pw-0.04, ph-0.04, 0), x, (WIN.sill+WIN.head)/2, z, 0, "#ffffff");
+      for(const [w, h, dx, dy] of [[pw, 0.035, 0, ph/2-0.0175],[pw, 0.035, 0, -ph/2+0.0175],[0.035, ph-0.07, -pw/2+0.0175, 0],[0.035, ph-0.07, pw/2-0.0175, 0]])
+        B(w, h, 0.03, x+dx, (WIN.sill+WIN.head)/2+dy, z, "#b8bcbe"); }
+    for(const z of [NZ0-0.05, NZ1+0.05]) B(WIN.b-WIN.a, 0.012, 0.06, (WIN.a+WIN.b)/2, WIN.sill+0.006, z, "#9aa0a4");          // (the tracks)
+    // the ledges: a narrow one outside to slide money across, the counter inside
+    RB(WIN.b-WIN.a+0.3, 0.05, 0.26, (WIN.a+WIN.b)/2, WIN.sill-0.01, NZ0-0.13, "#3a3a3a", 0, 0.012);
+    for(const x of [WIN.a+0.2, WIN.b-0.2]) B(0.04, 0.18, 0.2, x, WIN.sill-0.13, NZ0-0.1, "#7a7e80");
+    RB(WIN.b-WIN.a+0.2, 0.05, 0.62, (WIN.a+WIN.b)/2, WIN.sill-0.01, NZ1+0.31, "#3a3a3a", 0, 0.012);
+    B(WIN.b-WIN.a+0.1, WIN.sill-FLS-0.04, 0.55, (WIN.a+WIN.b)/2, FLS+(WIN.sill-FLS-0.04)/2, NZ1+0.3, "#6a4a2e");
+    for(let k=0;k<3;k++) B(1.18, 0.6, 0.012, WIN.a+0.7+k*1.25, FLS+0.5, NZ1+0.581, "#7a5a3a");                    // (the cupboard doors)
+    addCol(WIN.a-0.05, WIN.b+0.05, NZ1, NZ1+0.62, FLS-0.5, WIN.sill+0.02);
+    // on the counter: the register and its screen, the card reader, a receipt spike, the lottery dispenser, a jar of pens
+    RB(0.42, 0.14, 0.38, 761.0, WIN.sill+0.085, NZ1+0.32, "#2a2c2e", 0, 0.02); RB(0.36, 0.06, 0.3, 761.0, WIN.sill+0.18, NZ1+0.34, "#3a3c3e", 0, 0.01);
+    RB(0.3, 0.22, 0.04, 761.0, WIN.sill+0.33, NZ1+0.24, "#1a1a1a", 0, 0.008); push("lk_tvon", planeGeo(0.26, 0.17, 0), 761.0, WIN.sill+0.33, NZ1+0.218, Math.PI, "#ffffff");
+    RB(0.09, 0.15, 0.06, 760.5, WIN.sill+0.1, NZ1+0.2, "#1a1a1a", 0, 0.01);
+    C(0.05, 0.02, 761.9, WIN.sill+0.025, NZ1+0.4, "#2a2a2a", 10); C(0.003, 0.14, 761.9, WIN.sill+0.1, NZ1+0.4, "#c8ccd0", 4);
+    for(let k=0;k<4;k++){ RB(0.13, 0.24, 0.14, 762.4+k*0.15, WIN.sill+0.145, NZ1+0.45, ["#c8282a","#2a5aa8","#2e7a3a","#d8a020"][k], 0, 0.01); }
+    C(0.04, 0.1, 763.2, WIN.sill+0.075, NZ1+0.35, "#c8d8d8", 10); for(let k=0;k<4;k++) C(0.005, 0.14, 763.2+(k-1.5)*0.015, WIN.sill+0.13, NZ1+0.35, ["#1a3aa8","#1a1a1a","#c41a1a","#1a1a1a"][k], 4);
+    // the desk on the back wall, its monitor and keyboard, a lamp, papers and a mug; the office chair
+    const DZ=SZ-0.38; RB(1.8, 0.04, 0.72, 760.9, FLS+0.75, DZ, "#7a5a3a", 0, 0.012);
+    for(const x of [760.1, 761.7]) B(0.04, 0.73, 0.66, x, FLS+0.365, DZ, "#3a3a3a"); B(1.5, 0.4, 0.02, 760.9, FLS+0.5, DZ+0.3, "#3a3a3a");
+    addCol(759.98, 761.82, DZ-0.37, DZ+0.37, FLS-0.5, FLS+0.78);
+    RB(0.52, 0.34, 0.05, 760.9, FLS+1.08, DZ+0.18, "#1a1a1a", 0, 0.01); B(0.06, 0.14, 0.06, 760.9, FLS+0.84, DZ+0.2, "#2a2a2a");
+    push("lk_tvon", planeGeo(0.46, 0.28, 0), 760.9, FLS+1.08, DZ+0.153, Math.PI, "#ffffff");
+    RB(0.44, 0.025, 0.15, 760.9, FLS+0.785, DZ-0.12, "#2a2a2a", 0, 0.006);
+    for(let k=0;k<3;k++) B(0.21, 0.004, 0.29, 760.2+k*0.035, FLS+0.774+k*0.005, DZ-0.02+k*0.02, "#f2f0ea", 0.2*k-0.1);
+    C(0.04, 0.1, 761.5, FLS+0.82, DZ-0.15, "#c8282a", 12);
+    C(0.07, 0.02, 761.55, FLS+0.78, DZ+0.18, "#2a4a3a", 12);
+    tubeE(V3(761.55, FLS+0.79, DZ+0.18), V3(761.5, FLS+1.15, DZ+0.1), 0.008, "#2a4a3a"); ent(new T.ConeGeometry(0.08, 0.1, 12, 1, true), 761.42, FLS+1.13, DZ-0.0, "#2a4a3a");
+    { const x=760.9, z=DZ-0.62; C(0.26, 0.04, x, FLS+0.03, z, "#2a2a2a", 5); C(0.025, 0.4, x, FLS+0.25, z, "#8a8e90", 8);
+      RB(0.48, 0.08, 0.46, x, FLS+0.5, z, "#2a2c34", 0, 0.03); RB(0.46, 0.56, 0.07, x, FLS+0.84, z-0.22, "#2a2c34", 0, 0.03);
+      addCol(x-0.26, x+0.26, z-0.28, z+0.24, FLS-0.5, FLS+0.5); addSeat(x, z, FLS, Math.PI, "THE OFFICE CHAIR"); }
+    // the safe in the corner, the filing cabinet, the little fridge with the coffee on it
+    { const x=OX1-OT-0.4, z=SZ-0.42; RB(0.7, 0.92, 0.7, x, FLS+0.46, z, "#3a4a3e", 0, 0.03); C(0.07, 0.04, x+0.1, FLS+0.6, z-0.37, "#c8b070", 16, Math.PI/2, 0, 0);
+      B(0.04, 0.2, 0.03, x-0.2, FLS+0.6, z-0.36, "#c8ccd0"); B(0.5, 0.03, 0.004, x, FLS+0.82, z-0.352, "#c8b070"); addCol(x-0.36, x+0.36, z-0.36, z+0.36, FLS-0.5, FLS+0.93); }
+    { const x=OX0+OT+0.28, z=SZ-0.34; B(0.48, 1.32, 0.62, x, FLS+0.66, z, "#7a7e80");
+      for(let k=0;k<4;k++){ B(0.42, 0.28, 0.012, x, FLS+0.18+k*0.32, z-0.315, "#8a8e90"); B(0.12, 0.02, 0.03, x, FLS+0.27+k*0.32, z-0.33, "#c8ccd0"); }
+      addCol(x-0.25, x+0.25, z-0.32, z+0.32, FLS-0.5, FLS+1.33); }
+    { const x=OX1-OT-0.3, z=-1278.3; B(0.55, 0.85, 0.55, x, FLS+0.425, z, "#e8e8e4"); B(0.012, 0.4, 0.03, x-0.282, FLS+0.6, z+0.18, "#8a8e90");
+      RB(0.22, 0.34, 0.26, x, FLS+1.02, z, "#1a1a1a", 0, 0.02); C(0.065, 0.12, x-0.04, FLS+0.92, z, "#c8d8e0", 14); C(0.04, 0.1, x+0.05, FLS+0.9, z+0.18, "#f2f0ea", 12);
+      addCol(x-0.28, x+0.28, z-0.28, z+0.28, FLS-0.5, FLS+0.86); }
+    // the TV on its bracket up in the corner over the window, the game on
+    { const x=OX1-OT-0.35, z=NZ1+0.3; B(0.04, 0.3, 0.04, x+0.17, FLS+2.35, z+0.0, "#2a2a2a"); RB(0.6, 0.36, 0.06, x, FLS+2.06, z, "#1a1a1a", -0.5, 0.01);
+      push("lk_tvon", planeGeo(0.54, 0.3, 0), x-Math.sin(-0.5)*0.032, FLS+2.06, z+Math.cos(-0.5)*0.032, -0.5, "#ffffff"); }
+    // the tube under the ceiling, a lamp in the pool
+    push("tube", boxGeo(1.2, 0.02, 0.3, 0), 761.3, OH-0.015, -1278.2, 0, "#ffffff");
+    LAMPS.push({x:761.3, y:OH-0.25, z:-1278.2, color:0xf2f6ff, intensity:0.45, dist:5, decay:1.5, indoor:true});
+    // the door, round the west side
+    for(const z of [OD.a-0.03, OD.b+0.03]) B(0.18, OD.head-FLS+0.04, 0.06, OX0+OT/2, FLS+(OD.head-FLS+0.04)/2, z, TRIM);
+    B(0.18, 0.06, OD.b-OD.a+0.12, OX0+OT/2, OD.head+0.03, (OD.a+OD.b)/2, TRIM);
+    makeDoor(XF(OX0+OT/2, OD.b-0.02, Math.PI/2), 0, FLS+0.01, 0, "THE OFFICE", true, 0, "closet", 0x8a6a4a);
+    addZone(OX0, OX1, NZ0, SZ, FLS-0.5, OH, "EDINBORO BEER · THE OFFICE", true);
+    // on the walls: the sign over the window, the clock, the calendar, the board of notes
+    sign(2.0, 0.42, (c, W, H)=>{ c.fillStyle=GREEN; c.fillRect(0, 0, W, H); c.strokeStyle=GOLD; c.lineWidth=5; c.strokeRect(5, 5, W-10, H-10);
+        say(c, "PAY HERE · CASH OR CARD", W/2, H/2, W*0.8, H*0.5, GOLD); }, (WIN.a+WIN.b)/2, FLS+2.3, NZ0-0.022, Math.PI, false, 480);
+    { const cl=signTex(128, 128, (c, W, H)=>{ c.fillStyle="#f4f2ec"; c.beginPath(); c.arc(W/2, H/2, W*0.46, 0, 7); c.fill(); c.strokeStyle="#1a1a1a"; c.lineWidth=5; c.stroke();
+        c.lineWidth=3; for(let k=0;k<12;k++){ const a=k*Math.PI/6; c.beginPath(); c.moveTo(W/2+Math.cos(a)*W*0.36, H/2+Math.sin(a)*H*0.36); c.lineTo(W/2+Math.cos(a)*W*0.42, H/2+Math.sin(a)*H*0.42); c.stroke(); }
+        c.lineWidth=5; c.beginPath(); c.moveTo(W/2, H/2); c.lineTo(W/2+W*0.2, H/2-H*0.08); c.stroke(); c.lineWidth=3; c.beginPath(); c.moveTo(W/2, H/2); c.lineTo(W/2-W*0.05, H/2-H*0.33); c.stroke(); });
+      const m=new T.Mesh(new T.CircleGeometry(0.15, 24), new T.MeshStandardMaterial({map:cl, roughness:0.5})); m.position.set(OX0+OT+0.03, FLS+2.05, -1277.4); m.rotation.y=Math.PI/2; scene.add(m);
+      C(0.16, 0.03, OX0+OT+0.015, FLS+2.05, -1277.4, "#1a1a1a", 24, 0, 0, Math.PI/2); }
+    sign(0.42, 0.56, (c, W, H)=>{ c.fillStyle="#f4f2ec"; c.fillRect(0, 0, W, H); c.fillStyle="#2e7a3a"; c.fillRect(0, 0, W, H*0.42);
+        say(c, "OLD NO. 6", W/2, H*0.16, W*0.78, H*0.12, "#e8c870"); say(c, "STOUT", W/2, H*0.31, W*0.78, H*0.1, "#e8c870");
+        c.strokeStyle="#8a8a8a"; c.lineWidth=1; for(let i=0;i<=7;i++){ c.beginPath(); c.moveTo(W*(0.08+i*0.12), H*0.48); c.lineTo(W*(0.08+i*0.12), H*0.94); c.stroke(); }
+        for(let j=0;j<=5;j++){ c.beginPath(); c.moveTo(W*0.08, H*(0.48+j*0.092)); c.lineTo(W*0.92, H*(0.48+j*0.092)); c.stroke(); } }, 762.3, FLS+1.55, SZ-0.014, Math.PI, false, 168);
+    { const x=OX1-OT-0.012; B(0.02, 0.8, 1.1, x-0.008, FLS+1.6, -1277.0, "#6a4a2e"); B(0.012, 0.72, 1.02, x-0.022, FLS+1.6, -1277.0, "#b89a6a");
+      [["#f2f0ea", -0.3, 0.12],["#f2e88a", 0.05, 0.18],["#c8e8f2", 0.32, 0.06],["#f2d8d8", -0.12, -0.18],["#f2f0ea", 0.25, -0.16]].forEach(([col, dz, dy], k)=>
+        B(0.006, 0.2, 0.16, x-0.032, FLS+1.6+dy, -1277.0+dz, col)); }
     addUse(762.0, AZ1-0.6, FLS, "BUY A CASE", ()=>toast(["“THIRTY OF THE LAKESHORE? TWENTY NINETY-EIGHT, ON SALE.”","“I'LL PUT IT IN YOUR TRUNK FOR YOU.” YOU WALKED","“ID? ...YEAH, YOU'RE GOOD.”"][(Math.random()*3)|0], "#c8e8b0"), 1.2);
     for(let k=0;k<5;k++){ const x=764.8+k*1.05; B(1.0, 2.1, 0.75, x, FLS+1.05, BZ1-WT-0.4, "#d8d8d4");
       push("lk_tvon", planeGeo(0.82, 1.7, 0), x, FLS+1.15, BZ1-WT-0.778, Math.PI, "#ffffff"); }
@@ -222,9 +314,9 @@ const BEER={routes:{}, served:false, aisle:null};
         say(c, "EDINBORO BEER", W/2, H*0.36, W*0.8, H*0.3, GOLD); say(c, "DRIVE THRU · KEGS · ICE", W/2, H*0.72, W*0.76, H*0.16, "#f4f2ec", "700", "Arial"); },
       x+s*0.17, gy+4.6, z, s*Math.PI/2, true, 480); }
 
-  // the kid in the green shirt, behind the counter
+  // the kid in the green shirt, at the office's window
   if(typeof crowdGroup==="function"){ const G=crowdGroup("edinboro beer", 765, -1283, 90);
-    crowdAdd(G, {look:{h:1.02, skin:SKINS[1], hair:HAIRS[2], shirt:"#2e8a3a", pants:"#3b4a66", shoes:"#2a2a2a", cap:"#2e8a3a"}, x:762.0, z:AZ1+1.25, y:FLS, yaw:0, mode:"stand"}); }
+    crowdAdd(G, {look:{h:1.02, skin:SKINS[1], hair:HAIRS[2], shirt:"#2e8a3a", pants:"#3b4a66", shoes:"#2a2a2a", cap:"#2e8a3a"}, x:762.0, z:AZ1+1.15, y:FLS, yaw:Math.PI, mode:"stand"}); }      // (at the window, inside the office, facing out of it)
 
   const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.05});
   detailMesh(ME, mat, "edinboro-beer", true);

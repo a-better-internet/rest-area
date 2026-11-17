@@ -168,7 +168,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
   addZone(P.x0, P.x1, P.z0-3, P.z1, Y-1, Y+12, "FRENCH CREEK PINES");
   // the sign at the way in: routed wood on two log posts, the pines cut out on it
   { const sx=GX+7.5, sz=Z+HW+3.0;
-    for(const dx of [-1.6, 1.6]) C(0.11, 2.6, sx+dx, Y+1.3, sz, "#6a4a2e", 10);
+    for(const dx of [-1.6, 1.6]) C(0.11, 2.6, sx+dx, Y+1.3, sz+0.19, "#6a4a2e", 10);                      // (the posts behind the board, the face to the road)
     B(3.6, 1.30, 0.10, sx, Y+1.75, sz+0.02, "#5a3a22");
     sign(3.4, 1.18, (c,Wd,Hh)=>{ c.fillStyle="#6a4428"; c.fillRect(0,0,Wd,Hh); c.strokeStyle="#e8d8b0"; c.lineWidth=6; c.strokeRect(8,8,Wd-16,Hh-16);
       c.fillStyle="#2e5a32"; for(const px of [0.12, 0.88]){ c.beginPath(); c.moveTo(Wd*px, Hh*0.18); c.lineTo(Wd*px+30, Hh*0.66); c.lineTo(Wd*px-30, Hh*0.66); c.closePath(); c.fill(); }
@@ -184,13 +184,17 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     const ssx=GX+3.2, ssz=Z+HW+6.0; C(0.035, 2.4, ssx, Y+1.2, ssz, "#a3a8aa", 8);
     sign(0.6, 0.75, (c,Wd,Hh)=>{ c.fillStyle="#f2f0ea"; c.fillRect(0,0,Wd,Hh); c.strokeStyle="#1a1a1a"; c.lineWidth=6; c.strokeRect(8,8,Wd-16,Hh-16);
       say(c, "SPEED", Wd/2, Hh*0.24, Wd*0.76, Hh*0.16, "#1a1a1a", "800", "Arial"); say(c, "LIMIT", Wd/2, Hh*0.42, Wd*0.76, Hh*0.16, "#1a1a1a", "800", "Arial");
-      say(c, "5", Wd/2, Hh*0.70, Wd*0.6, Hh*0.34, "#1a1a1a", "900", "Arial"); }, ssx, Y+1.9, ssz-0.03, Math.PI, false, 240);
+      say(c, "5", Wd/2, Hh*0.70, Wd*0.6, Hh*0.34, "#1a1a1a", "900", "Arial"); }, ssx, Y+1.9, ssz-0.06, Math.PI, false, 240);
     sign(0.9, 0.5, (c,Wd,Hh)=>{ c.fillStyle="#f2c41c"; c.fillRect(0,0,Wd,Hh); c.strokeStyle="#1a1a1a"; c.lineWidth=5; c.strokeRect(6,6,Wd-12,Hh-12);
-      say(c, "KIDS & DOGS", Wd/2, Hh*0.36, Wd*0.78, Hh*0.26, "#1a1a1a", "800", "Arial"); say(c, "AT PLAY", Wd/2, Hh*0.68, Wd*0.78, Hh*0.24, "#1a1a1a", "800", "Arial"); }, ssx, Y+1.25, ssz-0.03, Math.PI, false, 300);
+      say(c, "KIDS & DOGS", Wd/2, Hh*0.36, Wd*0.78, Hh*0.26, "#1a1a1a", "800", "Arial"); say(c, "AT PLAY", Wd/2, Hh*0.68, Wd*0.78, Hh*0.24, "#1a1a1a", "800", "Arial"); }, ssx, Y+1.25, ssz-0.06, Math.PI, false, 300);
+    for(const [y, w, h] of [[Y+1.9, 0.6, 0.75],[Y+1.25, 0.9, 0.5]]) B(w+0.02, h+0.02, 0.02, ssx, y, ssz-0.045, "#8d9294");
     addCol(ssx-0.1, ssx+0.1, ssz-0.1, ssz+0.1, Y-0.5, Y+2.4);
-    const px=GX-3.2, pz=LZ-4.2; C(0.03, 2.6, px, Y+1.3, pz, "#a3a8aa", 8);
-    for(const [ry, txt, dy] of [[0, "PINE LN", 2.45],[Math.PI/2, "HEMLOCK CT", 2.25]]) sign(0.95, 0.18, (c,Wd,Hh)=>{ c.fillStyle="#2a6a3a"; c.fillRect(0,0,Wd,Hh);
-      say(c, txt, Wd/2, Hh/2, Wd*0.80, Hh*0.60, "#f2f0ea", "700", "Arial"); }, px, Y+dy, pz, ry, false, 380);
+    // (the street blades on top of their pole, crossed, a face to each side; the pole stops under them)
+    const px=GX-3.2, pz=LZ-4.2; C(0.03, 2.13, px, Y+1.065, pz, "#a3a8aa", 8); C(0.05, 0.05, px, Y+2.15, pz, "#8d9294", 10);
+    for(const [ry, txt, dy] of [[0, "PINE LN", 2.45],[Math.PI/2, "HEMLOCK CT", 2.26]]){ B(0.97, 0.2, 0.02, px, Y+dy, pz, "#8d9294", ry);
+      for(const sd of [1, -1]) sign(0.95, 0.18, (c,Wd,Hh)=>{ c.fillStyle="#2a6a3a"; c.fillRect(0,0,Wd,Hh);
+        say(c, txt, Wd/2, Hh/2, Wd*0.80, Hh*0.60, "#f2f0ea", "700", "Arial"); }, px+Math.sin(ry)*sd*0.013, Y+dy, pz+Math.cos(ry)*sd*0.013, sd>0 ? ry : ry+Math.PI, false, 380); }
+    C(0.007, 0.22, px, Y+2.35, pz, "#8d9294", 6);
     addCol(px-0.08, px+0.08, pz-0.08, pz+0.08, Y-0.5, Y+2.6); }
 
   /* ======================================================================
@@ -635,7 +639,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     B(0.5, 1.15, 0.5, ix0+1.9, HFY+0.575, iz1-2.0, "#6a4a2e"); B(0.56, 0.05, 0.56, ix0+1.9, HFY+1.17, iz1-2.0, "#5a3a22"); addCol(ix0+1.64, ix0+2.16, iz1-2.26, iz1-1.74, HFY-0.06, HFY+1.2);
     // the banner over the table
     sign(3.4, 0.5, (c,Wd,Hh)=>{ c.fillStyle="#f2ece0"; c.fillRect(0,0,Wd,Hh); c.strokeStyle="#2e4a32"; c.lineWidth=5; c.strokeRect(6,6,Wd-12,Hh-12);
-      say(c, "MONTHLY MEETING · SECOND TUESDAY · 7 PM", Wd/2, Hh*0.52, Wd*0.80, Hh*0.42, "#2e4a32", "800", "Arial"); }, ix0+0.02, HFY+2.25, (iz0+iz1)/2, Math.PI/2, false, 720);
+      say(c, "MONTHLY MEETING · SECOND TUESDAY · 7 PM", Wd/2, Hh*0.52, Wd*0.80, Hh*0.42, "#2e4a32", "800", "Arial"); }, ix0+0.02, HFY+2.5, (iz0+iz1)/2, Math.PI/2, false, 720);          // (high over the flags' finials)
     // the rows of folding chairs, an aisle down the middle
     // (each a real folding chair, facing the officers' table: a padded seat, a curved back on two uprights that run down
     // into the back legs, the front legs crossing up under the seat, spreaders low between them, rubber feet)
@@ -726,7 +730,7 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
     RB(BX1-BX0, 0.10, 0.12, (BX0+BX1)/2, BF+1.12, BZ+0.34, "#5a1e14", 0, 0.04);
     B(BX1-BX0, 0.03, 0.03, (BX0+BX1)/2, BF+0.18, BZ+0.34, "#c8a050");
     addCol(BX0, BX1, BZ-0.3, BZ+0.42, BF-0.5, BF+1.1);
-    for(let k=0;k<8;k++){ if(k===4) continue; const sx=BX0+0.6+k*1.25, sz=BZ+0.82;          // (the fifth is the poker machine's place: you stand to it) C(0.19, 0.07, sx, BF+0.76, sz, "#5a1e14", 18); C(0.025, 0.72, sx, BF+0.37, sz, "#c8ccd0", 8); C(0.17, 0.02, sx, BF+0.012, sz, "#c8ccd0", 16);
+    for(let k=0;k<8;k++){ if(k===4) continue; const sx=BX0+0.6+k*1.25, sz=BZ+0.82;          /* (the fifth is the poker machine's place: you stand to it) */ C(0.19, 0.07, sx, BF+0.76, sz, "#5a1e14", 18); C(0.025, 0.72, sx, BF+0.37, sz, "#c8ccd0", 8); C(0.17, 0.02, sx, BF+0.012, sz, "#c8ccd0", 16);
       addCol(sx-0.2, sx+0.2, sz-0.2, sz+0.2, BF-0.5, BF+0.8); addSeat(sx, sz, BF, 0, "A STOOL AT THE BAR", false, 0.34); WESTPARK.stools=(WESTPARK.stools||[]).concat([[sx, sz]]); }
     // the back bar
     B(BX1-BX0, 0.9, 0.5, (BX0+BX1)/2, BF+0.45, QZ0+0.25, "#3a2414"); B(BX1-BX0, 0.04, 0.54, (BX0+BX1)/2, BF+0.92, QZ0+0.27, "#2a1a0e");
