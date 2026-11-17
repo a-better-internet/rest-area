@@ -786,11 +786,24 @@ const WESTPARK={trailers:[], slots:[], routes:{}, hall:null};
       addCol(jx-0.46, jx+0.46, jz-0.31, QZ1, BF-0.5, BF+1.9);
       lampU({x:jx, y:BF+1.2, z:jz-0.6, color:0xff9a3a, intensity:0.4, dist:3.5, decay:1.6, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]});
       addUse(jx, jz-1.0, BF, "THE JUKEBOX", ()=>toast(["YOU PUT IN A QUARTER. SOMETHING WITH A STEEL GUITAR","D-4: 'THE REGULARS' FAVOURITE', SAYS A NOTE TAPED ON","THREE PLAYS FOR A DOLLAR. YOU PICK THE SAME ONE THREE TIMES"][(Math.random()*3)|0], "#ffb070"), 1.2); }
-    // the dartboard on the west wall by the honour roll, the line on the floor
-    { const dz=-1180.6; const g=new T.CylinderGeometry(0.23, 0.23, 0.04, 28); g.rotateZ(Math.PI/2); ent(g, QX0+0.04, BF+1.73, dz, "#1a1a1a");
-      const g2=new T.CylinderGeometry(0.16, 0.16, 0.042, 20); g2.rotateZ(Math.PI/2); ent(g2, QX0+0.043, BF+1.73, dz, "#e8d8b0");
-      const g3=new T.CylinderGeometry(0.03, 0.03, 0.044, 12); g3.rotateZ(Math.PI/2); ent(g3, QX0+0.046, BF+1.73, dz, "#b82a22");
-      B(0.03, 0.006, 0.6, QX0+2.37, BF+0.008, dz, "#c8a050"); }
+    // the dartboard on the west wall by the honour roll: a real one, 18d's game played on it (WESTPARK.dart), against Gus; the line
+    // on the floor at the regulation throw; the chalkboard the game keeps beside it
+    { const dz=-1180.6, DY=BF+1.73, DXF=QX0+0.045, RB_=0.225;
+      push("cork", boxGeo(0.03, 0.90, 0.90, 0.5), QX0+0.015, DY, dz, 0, "#ffffff");
+      const face=new T.Mesh(new T.CircleGeometry(RB_, 64), new T.MeshStandardMaterial({map:HANGOUT.dartTex, roughness:0.8}));
+      face.position.set(DXF, DY, dz); face.rotation.y=Math.PI/2; scene.add(face);
+      { const g=new T.CylinderGeometry(RB_+0.006, RB_+0.006, 0.04, 48); g.rotateZ(Math.PI/2); ent(g, QX0+0.022, DY, dz, "#141414"); }
+      const OCHE=DXF+2.37; B(0.04, 0.006, 0.6, OCHE+0.02, BF+0.008, dz, "#c8a050");
+      const cc=cvs(256, 320), ct=setSRGB(new T.CanvasTexture(cc));
+      { const m=new T.Mesh(new T.PlaneGeometry(0.50, 0.62), new T.MeshStandardMaterial({map:ct, roughness:0.85, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
+        m.position.set(QX0+0.016, BF+1.62, dz+0.95); m.rotation.y=Math.PI/2; scene.add(m); B(0.012, 0.66, 0.54, QX0+0.006, BF+1.62, dz+0.95, "#7a5a3a"); }
+      chalkDraw(cc, ["GUS","BEV"], ["301","221","160","99","40"], ["301","256","187","127"], "");
+      const idle=[], dg=dartGeometry();
+      for(const [ddz, dy, ry, rx] of [[0.05,0.07,0.04,0.03],[-0.06,0.01,-0.05,0.02],[0.02,-0.11,0.07,-0.02]]){
+        const m=new T.Mesh(dg, DART_MAT); m.position.set(DXF+0.002, DY+dy, dz+ddz); m.rotation.set(rx, Math.PI/2+ry, 0, "YXZ"); scene.add(m); idle.push(m); }
+      WESTPARK.dart={x:DXF, y:DY, z:dz, r:RB_, oche:OCHE, wall:QX0, corkHalf:0.45, fy:BF, idle:idle, chalk:{c:cc, tex:ct}, opp:"GUS", names:["GUS","BEV"]};
+      addUse(OCHE+0.3, dz, BF, "PLAY DARTS", ()=>{ if(typeof DARTS!=="undefined") DARTS.start(WESTPARK.dart); }, 1.0);
+      lampU({x:QX0+0.8, y:BCL-0.25, z:dz, color:0xfff0d8, intensity:0.5, dist:3.5, decay:1.6, vol:[QX0, QX1, QZ0, QZ1, BF-0.5, HFY+1.3]}); }
     // beer signs: neon-ish, generic
     for(const [txt, col, x] of [["COLD BEER", "#ff4a3a", -1130.1],["ON TAP", "#4ad8ff", -1122.6]])
       sign(0.9, 0.32, (c,Wd,Hh)=>{ c.fillStyle="#0a0a0c"; c.fillRect(0,0,Wd,Hh); c.shadowColor=col; c.shadowBlur=14; say(c, txt, Wd/2, Hh/2, Wd*0.80, Hh*0.55, col, "800", "'Arial Black', Arial"); c.shadowBlur=0; },

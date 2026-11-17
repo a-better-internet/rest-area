@@ -1004,3 +1004,8 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   (14s2) ends at a pole off the hut's south-west corner. The steel door
   to the shelter is latched; its route is `gate:true`.
 - The warp list has pages of thirty (arrows or Tab turn them over).
+- Darts (18d) is played on a board object: `DARTS.start(board)` with
+  `HANGOUT.dart` (the dug-out, against Dale) or `WESTPARK.dart` (the Pine
+  Knot, against Gus). A board carries its face's middle, radius, oche,
+  floor `fy`, idle darts, chalkboard, `opp` and the game left on it, and
+  hangs on a wall facing +x. 12b's `HANGOUT.dartTex` is the face both use.

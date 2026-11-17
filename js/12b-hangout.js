@@ -388,6 +388,8 @@ function chalkDraw(c, names, colA, colB, note){
   { const dg=dartGeometry();
     for(const [dz,dy,ry,rx] of [[0.03,0.05,0.05,0.04],[-0.08,-0.02,-0.06,0.02],[0.11,-0.12,0.08,-0.03]]){
       const m=new T.Mesh(dg, DART_MAT); m.position.set(DXF+0.002, DY+dy, DZ+dz); m.rotation.set(rx, Math.PI/2+ry, 0, "YXZ"); scene.add(m); HANGOUT.idleDarts.push(m); } }
+  Object.assign(HANGOUT.dart, {fy:FB, idle:HANGOUT.idleDarts, chalk:HANGOUT.chalk, opp:"DALE", names:["RICH","DALE"]});   // (what 18d's game reads from a board)
+  HANGOUT.dartTex=dt;
   addUse(OCHE+0.3, DZ, FB, "PLAY DARTS", ()=>{ if(typeof DARTS!=="undefined") DARTS.start(); }, 1.0);
 
   // steel shelving on the east wall: what lives on it
