@@ -1017,6 +1017,14 @@ If the scene runs hot on your machine, start there (see below).
       three darts a turn, finish exactly on zero, and go under and the turn
       is bust. A panel and the chalkboard keep the score. `N` starts a new
       game and `Esc` puts the darts down.
+    - **The velvet room.** In the poker room's south wall, under the house's
+      own front door, is a steel door with a keypad. `E` brings the keypad
+      up; type the right word (the last can in the fridge has it written on
+      in marker) and it opens on a room dug out under the yard: crimson
+      velvet on every wall, a deep carpet, a buttoned chesterfield and two
+      wing chairs, a bar cart of decanters, a record console playing the
+      jazz trio, gold frames, a little chandelier, and the name in pink
+      neon.
     - **The corridor and the arcade.** A door in the far wall opens on six
       steps down to a fallout-shelter corridor from 1962. It has block
       walls painted green and cream, a yellow stripe, conduit and a cable

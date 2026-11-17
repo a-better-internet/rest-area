@@ -17,6 +17,7 @@ let started=false, hudOn=true, leaving=false;
 const WALK=3.05, RUN=5.6, SPRINT=10.4;
 
 addEventListener("keydown",e=>{
+  if(typeof VELVET!=="undefined" && VELVET.typing) return;                           // (the velvet room's keypad has the keyboard, 12f)
   // the map open: every key is its own (18y-map)
   if(typeof MAP!=="undefined" && MAP.open){ e.preventDefault(); MAP.key(e); return; }
   // at a vending machine the keys are its keypad's (18b-vending)

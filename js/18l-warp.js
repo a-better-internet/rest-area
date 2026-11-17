@@ -61,7 +61,8 @@ const WARP=(function(){
     ["THE RADIO TOWER",       100.0, -1511.0,    0,           x=>g(x[1], x[2])],
     ["THE TUNING HOUSE",       88.4, -1516.6,  -Math.PI/2,   x=>surfaceY(x[1], x[2], TUNE.FL+0.1)],
     ["THE TUNING HOUSE'S CELLAR", 89.4, -1517.2, -Math.PI/2, x=>surfaceY(x[1], x[2], TUNE.BF+0.1), true],
-    ["THE SHELTER",            85.6, -1516.8,   Math.PI/2,   x=>surfaceY(x[1], x[2], TUNE.SF+0.1), true]];
+    ["THE SHELTER",            85.6, -1516.8,   Math.PI/2,   x=>surfaceY(x[1], x[2], TUNE.SF+0.1), true],
+    ["THE VELVET ROOM",        80.0, -174.4,    0,           x=>surfaceY(x[1], x[2], SUB_G-2.4), true]];
   const KEYS="1234567890ABCDFGHIJKLMNOPQRTUV";            // (E and S left out: E is your hand, S is a step back)
   // the hoop: in front of the first one there is, facing it
   const hoopAt=()=>{ const H=(typeof YARD_HOOPS!=="undefined" && YARD_HOOPS[0]) || null; if(!H) return null;

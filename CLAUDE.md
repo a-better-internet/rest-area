@@ -1009,3 +1009,12 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   Knot, against Gus). A board carries its face's middle, radius, oche,
   floor `fy`, idle darts, chalkboard, `opp` and the game left on it, and
   hangs on a wall facing +x. 12b's `HANGOUT.dartTex` is the face both use.
+- The velvet room (12f, `VELVET`) is behind the poker room's south wall
+  under the generator house, through the old frame of the house's front
+  door. Its door is latched with an `onUse`: locked, `E` opens the keypad
+  (`VELVET.ask`, a typed box; 17's keydown returns at once while
+  `VELVET.typing`), and only TERRY opens it; after that it is a latched
+  door driven by `d.manual` (never set a latched door's `target`, which
+  `updateDoors` works out). The doorway has its own VOID, or the yard's
+  ground over the wall's thickness lifts you onto it. Its record console
+  is `VELVET.radios` in 20's `nearRadio`; its route is in `VELVET.routes`.
