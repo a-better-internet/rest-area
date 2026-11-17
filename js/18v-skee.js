@@ -9,10 +9,13 @@
    two metres of maple, a hump at the end that throws the ball up, and a
    sloped board of rings behind it under a cage. Nine balls. The big ring
    is 10; inside it 20 and 30; above it 40 and 50, each a ring the size of
-   the ball and a bit; and a 100 in each top corner. A ball that lands on
-   the board and in no ring rolls down into the 10; one that falls short
-   comes back to you for nothing. A ball that comes down on the rim of a
-   40, 50 or 100 kicks out and rolls down to the 10. Two 40s or better in
+   the ball and a bit; and a 100 in each top corner. The ball bounces and
+   rolls on the board as a ball would: it drops into a cup it comes over
+   slowly, glances off a cup's lip it strikes (RIMMED), rolls down into
+   the 10's open top, and once in a ring of the bullseye rolls down it and
+   out through its slot. A ball that misses everything runs off the foot
+   of the board for nothing, and one that falls short comes back to you.
+   Two 40s or better in
    a row is a HOT HAND (ten more for each after the first), and the ninth
    ball scores double. The ring a ball drops into lights, the bulbs round
    the readout chase (and flash together on a big one), and when the
@@ -23,11 +26,10 @@
    mouse button) and the gauge runs up and back; let go to roll. N starts
    again, Esc or E steps away, ENTER plays it (17).
 
-   The ball is worked out, not played back: down the lane at the speed you
-   gave it, off the hump at SK.LIFT, through the air to the board's plane.
-   SKEE.land(x, a, s) gives where a roll comes down and what it scores, and
-   the aiming line drawn on the lane uses the same, so what you see is
-   what the ball does. Built here the way 18h's dozer is; the best nine
+   The ball is worked out step by step (SKEE.sim, 1/240 s) and the game
+   plays back that path, so the score is where you saw it go in.
+   SKEE.land(x, a, s) is the same roll as far as its first touch on the
+   board: the mark you see while you hold the gauge. Built here the way 18h's dozer is; the best nine
    balls are kept in the browser.
    ---------------------------------------------------------------------- */
 const SKEE={on:false, t:0, g:null, cab:null, hi:0, acc:0, keys:{}};
@@ -35,24 +37,76 @@ const SK={BALLS:9, LY:0.80, Z0:1.30, ZR:-0.50, ZL:-0.80, HUMP:0.10, HW:0.31, R:0
   // the rings, in the board's own terms: u across it, v up it from its foot
   RINGS:[{p:100, u:-0.225, v:1.10, r:0.062}, {p:100, u:0.225, v:1.10, r:0.062}, {p:50, u:0, v:1.02, r:0.066}, {p:40, u:0, v:0.82, r:0.072},
          {p:30, u:0, v:0.40, r:0.115}, {p:20, u:0, v:0.375, r:0.195}, {p:10, u:0, v:0.345, r:0.285}]};
-// where a roll from x across the lane, turned a (radians, + to the right), at speed s comes down: {u, v, p, ring, t (seconds in the air), short}
-SKEE.land=function(x, a, s){
-  const run=SK.Z0-SK.ZL, ux=x+Math.tan(a)*run;
-  let u=ux, vx=Math.sin(a)*s;
-  if(Math.abs(u)>SK.HW-SK.R){ u=Math.sign(u)*(SK.HW-SK.R)*2-u; vx=-vx; }           // (off the rail once)
-  const lu=u, sy=Math.sin(SK.LIFT)*s, sz=Math.cos(SK.LIFT)*s*Math.cos(a), tn=Math.tan(SK.TILT), y0=SK.LY+SK.HUMP+SK.R;
-  // y0 + sy t - g/2 t² = YB + R + tan(TILT)·(ZB - z),  z = ZL - sz t
-  const qa=-4.905, qb=sy-tn*sz, qc=y0-(SK.YB+SK.R)-tn*(SK.ZB-SK.ZL), disc=qb*qb-4*qa*qc;
-  const t=disc>0 ? (-qb-Math.sqrt(disc))/(2*qa) : 0, v=(SK.ZB-(SK.ZL-sz*t))/Math.cos(SK.TILT);
-  u=clamp(u+vx*t, -(SK.HW-SK.R), SK.HW-SK.R);
-  const out={u:u, v:v, t:t, p:0, ring:null, short:v<0.05, lu:lu};
-  if(out.short) return out;
-  if(v>SK.BL){ out.v=SK.BL-0.02; }                                                // (off the back: it drops down the board from the top)
-  for(const r of SK.RINGS){ const d=Math.hypot(out.u-r.u, out.v-r.v);
-    if(d<r.r-(r.p>=40 ? 0.012 : 0)){ out.ring=r; out.p=r.p; break; }
-    if(r.p>=40 && d<r.r+0.016){ out.rim=r; break; } }                              // (on the rim: it kicks out and rolls down)
-  if(!out.ring){ out.ring=SK.RINGS[6]; out.p=10; out.roll=true; }
+// THE ROLL, worked out step by step (1/240 s) and played back as it was worked out: up the lane, over the hump, through the air;
+// then on the board, which is tilted: it bounces, rolls under gravity, glances off the cups' lips and the walls, and ends one of
+// four ways. Into a cup (the 100s, the 50, the 40) if it comes over one slowly enough. Into the bullseye's rings: the 10's top is
+// open, so a ball rolling down the board drops into it, but the 20 and the 30 are walled and taken only from the air; a ball
+// trapped in a ring rolls down it and goes out through its slot (the 30 into its hole). Off the bottom of the board, for nothing.
+// Or short of the board, back to you. The score is wherever the ball actually goes in.
+SKEE.sim=function(x, a, s, landOnly){
+  const R=SK.R, G=9.81, sn=Math.sin(SK.TILT), cs=Math.cos(SK.TILT), H=1/240, N0=0.006+R, W=SK.HW-R;
+  const RG=SK.RINGS, CUPS=[0, 1, 2, 3], BULL={30:4, 20:5, 10:6};
+  const out={path:[], ev:[], p:0, ri:-1, short:false, land:null, rim:-1, gutter:false};
+  let n=0; const put=(X, Y, Z)=>{ if((n++)%4===0) out.path.push([X, Y, Z]); };
+  const ev=(k)=>out.ev.push([out.path.length, k]);
+  const ob=(u, v, h)=>[u, SK.YB+v*sn+h*cs, SK.ZB-v*cs+h*sn];
+  // the lane, and the hump
+  let px=x, vx=Math.sin(a)*s; const cz=s*Math.cos(a);
+  for(let z=SK.Z0; z>SK.ZL; z-=cz*H){ px+=vx*H; if(Math.abs(px)>W){ px=Math.sign(px)*W*2-px; vx=-vx; }
+    const f=clamp((SK.ZR-z)/(SK.ZR-SK.ZL), 0, 1); put(px, SK.LY+R+SK.HUMP*f*f, z); }
+  ev("hop");
+  // the air: off the hump at LIFT, until it meets the board (or falls short of it)
+  let X=px, Y=SK.LY+SK.HUMP+R, Z=SK.ZL, VY=Math.sin(SK.LIFT)*s, VZ=-Math.cos(SK.LIFT)*s*Math.cos(a), VX=vx;
+  for(let k=0;k<2400;k++){ VY-=G*H; X+=VX*H; Y+=VY*H; Z+=VZ*H; if(Math.abs(X)>W){ X=Math.sign(X)*W*2-X; VX=-VX; }
+    const hn=(Y-SK.YB)*cs+(Z-SK.ZB)*sn, hv=(Y-SK.YB)*sn-(Z-SK.ZB)*cs;
+    if(hv>SK.BL-R && VY*sn-VZ*cs>0){ const wv=VY*sn-VZ*cs, wn=VY*cs+VZ*sn, nv=-0.25*wv; VY=nv*sn+wn*cs; VZ=-nv*cs+wn*sn; ev("net"); }   // (the net at the back)
+    if(hn<=N0 && hv>=0){ out.land={u:X, v:hv, wu:VX, wv:VY*sn-VZ*cs, wn:VY*cs+VZ*sn}; break; }
+    if(hv<0 && Y<SK.YB+R){ out.short=true; out.land={u:X, v:hv}; break; }
+    put(X, Y, Z); }
+  if(landOnly || !out.land) return out;
+  if(out.short){ ev("tick"); for(let k=1;k<=54;k++){ const q=k/54; put(X, SK.LY+R+SK.HUMP*(1-q)*(1-q), SK.ZL+q*0.9); put(X, SK.LY+R+SK.HUMP*(1-q)*(1-q), SK.ZL+q*0.9); put(X, SK.LY+R, SK.ZL+q*0.9); put(X, SK.LY+R, SK.ZL+q*0.9); } return out; }
+  // the board
+  let u=out.land.u, v=out.land.v, h=0, wu=out.land.wu*0.85, wv=out.land.wv*0.85, wn=-out.land.wn*0.28, zone=0, end=null;
+  ev("thump");
+  const inner=(pu, pv)=>{ for(const p of [30, 20, 10]){ const r=RG[BULL[p]]; if(Math.hypot(pu-r.u, pv-r.v)<r.r-0.3*R) return p; } return 0; };
+  const bounce=(r, sign, e)=>{ const d=Math.hypot(u-r.u, v-r.v)||1e-6, nu=(u-r.u)/d*sign, nv=(v-r.v)/d*sign, dot=wu*nu+wv*nv;
+    if(dot<0){ wu-=(1+e)*dot*nu; wv-=(1+e)*dot*nv; return -dot; } return 0; };
+  for(let k=0;k<240*8 && !end;k++){
+    wn-=G*cs*H; wv-=G*sn*H*(h<=0 ? 5/7 : 1);
+    u+=wu*H; v+=wv*H; h+=wn*H;
+    if(h<=0){ h=0; if(wn<-0.35){ wn=-wn*0.3; ev("tap"); } else wn=0; const f=Math.max(0, 1-0.4*H); wu*=f; wv*=f; }
+    if(Math.abs(u)>W){ u=Math.sign(u)*W; wu=-wu*0.5; ev("wall"); }
+    if(v>SK.BL-R){ v=SK.BL-R; wv=-Math.abs(wv)*0.4; }
+    const low=h<0.03, sp=Math.hypot(wu, wv);
+    // the cups up the board: over one slowly and low, in; on its lip, glanced off
+    for(const i of CUPS){ const r=RG[i], d=Math.hypot(u-r.u, v-r.v);
+      if(!low) continue;
+      if(d<r.r-0.35*R){ if(sp<2.4){ end={kind:"cup", i:i}; break; } }
+      else if(d<r.r+0.5*R){ const hit=bounce(r, 1, 0.45); if(!hit) continue;
+        if(hit<0.35 && v>r.v){ end={kind:"cup", i:i}; break; }                       // (slow on its upper lip: it tips in)
+        const q=(r.r+0.5*R)/d; u=r.u+(u-r.u)*q; v=r.v+(v-r.v)*q; if(hit>0.3){ if(out.rim<0 || RG[i].p>RG[out.rim].p) out.rim=i; ev("rim"); } } }
+    if(end) break;
+    // the bullseye: the 10 open at its top to a ball rolling down; the 20 and 30 taken only from the air; nothing climbs out of a ring
+    const c=inner(u, v);
+    if(c!==zone){
+      if(c>zone){ const r=RG[BULL[c]]; if(h>0.005 || (zone===0 && c===10 && v>r.v)) zone=c;
+        else if(bounce(r, 1, 0.35)>0.3) ev("lip"); }
+      else { const r=RG[BULL[zone]]; if(bounce(r, -1, 0.35)>0.3) ev("lip"); const d=Math.hypot(u-r.u, v-r.v), q=(r.r-0.3*R-0.002)/d; if(q<1){ u=r.u+(u-r.u)*q; v=r.v+(v-r.v)*q; } } }
+    if(zone && h===0 && Math.hypot(wu, wv)<0.15) end={kind:"ring", p:zone};
+    if(v<R*0.5 && !zone){ end={kind:"gutter"}; }
+    put(...ob(u, v, N0+h)); }
+  if(!end) end=zone ? {kind:"ring", p:zone} : {kind:"gutter"};
+  // where it goes in, and how
+  if(end.kind==="cup"){ out.p=RG[end.i].p; out.ri=end.i; ev("drop"); const r=RG[end.i];
+    for(let k=1;k<=60;k++){ const q=k/60; put(...ob(u+(r.u-u)*Math.min(1, q*2), v+(r.v-v)*Math.min(1, q*2), N0-q*0.12)); } }
+  else if(end.kind==="ring"){ out.p=end.p; out.ri=BULL[end.p]; const t=SKEE.slot(end.p); ev("drop");
+    for(let k=1;k<=80;k++){ const q=k/80, e=Math.min(1, q*1.6); put(...ob(u+(t.u-u)*e, v+(t.v-v)*e, N0-Math.max(0, q-0.6)*0.3)); } }
+  else { out.gutter=true; ev("tick"); for(let k=1;k<=40;k++){ const q=k/40; put(...ob(u, v-q*0.12, N0-q*0.15)); } }
   return out; };
+// where the bullseye's rings go out: a slot at the foot of the 10 and of the 20; the 30's own hole
+SKEE.slot=(p)=>p===30 ? {u:0, v:SK.RINGS[4].v} : p===20 ? {u:0, v:0.225} : {u:0, v:0.11};
+// where a roll first comes down (the mark while you hold the gauge)
+SKEE.land=function(x, a, s){ const o=SKEE.sim(x, a, s, true); return o.land ? {u:o.land.u, v:o.land.v, short:o.short} : {u:0, v:0, short:true}; };
 (function skeeBuild(){
   const A=ARCADE.room; if(!A) return;
   const P={x:80.6, z:A.z1-2.02, y:A.y};                    // the lane's own origin; its far end stops just short of the front wall
@@ -114,10 +168,12 @@ SKEE.land=function(x, a, s){
       const band=(r, w, col)=>{ c.strokeStyle=col; c.lineWidth=w*S; c.beginPath(); c.arc(X(r.u), Y(r.v), (r.r+w/2)*S, 0, 7); c.stroke(); };
       for(const r of SK.RINGS.slice().reverse()){ if(r.p<=30){ c.fillStyle=r.p===10 ? "#e8402a" : r.p===20 ? "#f2c81e" : "#2a8a4a"; c.beginPath(); c.arc(X(r.u), Y(r.v), r.r*S, 0, 7); c.fill(); }
         else { band(r, 0.030, r.p>=100 ? "#f2c81e" : "#e8402a"); band(r, 0.010, "#fff6d8"); c.fillStyle="#050404"; c.beginPath(); c.arc(X(r.u), Y(r.v), r.r*S, 0, 7); c.fill(); } }
-      c.fillStyle="#050404"; c.beginPath(); c.arc(X(0), Y(0.40), 0.115*S*0.92, 0, 7); c.fill();
+      // the 30's hole in its own disc; the slots the 20 and the 10 empty through, at the foot of each
+      c.fillStyle="#050404"; c.beginPath(); c.arc(X(0), Y(SK.RINGS[4].v), 0.068*S, 0, 7); c.fill();
+      for(const [p, w, hh] of [[20, 0.10, 0.034],[10, 0.14, 0.042]]){ const t=SKEE.slot(p); c.beginPath(); c.ellipse(X(t.u), Y(t.v), w/2*S, hh/2*S, 0, 0, 7); c.fill(); }
       c.textAlign="center"; c.textBaseline="middle"; c.lineJoin="round";
       const num=(t, u, v, f)=>{ c.font="900 "+f+"px 'Arial Black', Arial"; c.lineWidth=7; c.strokeStyle="#0c1830"; c.strokeText(t, X(u), Y(v)); c.fillStyle="#fff6d8"; c.fillText(t, X(u), Y(v)); };
-      num("10", 0, 0.105, 42); num("20", 0, 0.215, 40); num("30", -0.17, 0.46, 30); num("40", -0.15, 0.82, 32); num("50", 0.15, 1.02, 32); num("100", -0.225, 0.975, 24); num("100", 0.225, 0.975, 24); });
+      num("10", -0.205, 0.22, 34); num("10", 0.205, 0.22, 34); num("20", -0.12, 0.30, 30); num("20", 0.12, 0.30, 30); num("30", 0, 0.488, 22); num("40", -0.15, 0.82, 32); num("50", 0.15, 1.02, 32); num("100", -0.225, 0.975, 24); num("100", 0.225, 0.975, 24); });
     tex.anisotropy=4;
     const m=new T.Mesh(new T.PlaneGeometry(HW*2, SK.BL), new T.MeshStandardMaterial({map:tex, roughness:0.8})); m.rotation.x=-(Math.PI/2-SK.TILT);
     m.position.copy(onBoard(0, SK.BL/2, 0.006)); m.receiveShadow=true; G.add(m);
@@ -167,7 +223,7 @@ SKEE.newGame=function(){ return {score:0, left:SK.BALLS, x:0, a:0, pow:0, charge
 SKEE.release=function(){
   const g=SKEE.g; if(!g || !g.charge || g.roll) return; g.charge=false;
   const s=SK.S0+(SK.S1-SK.S0)*g.pow, a=g.a+(Math.random()-0.5)*0.016, x=g.x+(Math.random()-0.5)*0.008;
-  g.roll={x:x, a:a, s:s, t:0, L:SKEE.land(x, a, s), ph:0}; g.left--; _skSnd("whoosh"); };
+  g.roll={x:x, a:a, s:s, t:0, S:SKEE.sim(x, a, s), ei:0}; g.left--; _skSnd("whoosh"); };
 SKEE.start=function(){
   const C=SKEE.cab; if(!C || SKEE.on) return;
   for(const o of [typeof DARTS!=="undefined" && DARTS, typeof HOCKEY!=="undefined" && HOCKEY, typeof HOOPS!=="undefined" && HOOPS, typeof RAIDERS!=="undefined" && RAIDERS,
@@ -216,30 +272,21 @@ function updateSkee(dt){
       g.x=clamp(g.x+((K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0))*0.22*dt, -(SK.HW-SK.R-0.01), SK.HW-SK.R-0.01);
       g.a=clamp(g.a+((K.KeyR?1:0)-(K.KeyQ?1:0))*0.10*dt, -0.10, 0.10);
       if(g.charge){ g.ph+=dt*0.85; g.pow=1-Math.abs(1-(g.ph%2)); } }
-    // the ball on its way: down the lane, over the hump, through the air, then into its ring (or back down the board to the 10, or back to you)
-    const r=g.roll; if(r){ const was=r.t; r.t+=dt; const run=SK.Z0-SK.ZL, tl=run/(r.s*Math.cos(r.a)), L=r.L;
-      if(was<tl && r.t>=tl) _skSnd("hop");
-      if(r.t>=tl+L.t && !r.hit){ r.hit=true; r.th=0; _skSnd(L.short ? "tick" : L.rim ? "rim" : "thump"); }
-      if(r.hit){ r.th+=dt; const end=L.short ? 0.9 : L.roll ? 0.75 : 0.42;
-        if(r.th>=end){ g.roll=null; let p=L.p, msg=L.short ? "SHORT" : L.rim ? "RIMMED · +"+p : "+"+p;
+    // the ball on its way: its worked-out path, a point every sixtieth of a second, its sounds where they fell; then what it scored
+    const r=g.roll; if(r){ r.t+=dt; const S=r.S, i=r.t*60;
+      while(r.ei<S.ev.length && S.ev[r.ei][0]<=i){ const k=S.ev[r.ei][1]; if(k!=="lip" && k!=="wall" || r.ei%2===0) _skSnd(k==="drop" ? "thump" : k==="lip" || k==="wall" || k==="net" ? "rim" : k); r.ei++; }
+      if(i>=S.path.length){ g.roll=null; let p=S.p, msg=S.short ? "SHORT" : S.gutter ? "IN THE GUTTER" : S.rim>=0 && SK.RINGS[S.rim].p>p ? "RIMMED · +"+p : "+"+p;
           if(p>=40){ g.streak++; if(g.streak>=2){ p+=10*(g.streak-1); msg="HOT HAND · +"+p; } } else g.streak=0;
           if(g.left===0 && p>0){ p*=2; msg="LAST BALL DOUBLE · +"+p; }
           g.score+=p; g.tally.push(p); g.last=msg; g.lastT=1.8;
-          if(!L.short){ g.lit=SK.RINGS.indexOf(L.ring); g.litT=1.0; if(p>=40) g.flashT=1.2; }
+          if(S.ri>=0){ g.lit=S.ri; g.litT=1.0; if(p>=40) g.flashT=1.2; }
           if(p>=40) _skSnd("jingle"); else if(p>0) _skSnd("coin");
-          if(g.left<=0){ g.over=true; g.overT=0; g.tix=Math.max(1, Math.round(g.score/10)); if(g.score>SKEE.hi){ SKEE.hi=g.score; try{ localStorage.setItem("restarea.arcade.alleyroll", String(g.score)); }catch(e){} } } } } } }
+          if(g.left<=0){ g.over=true; g.overT=0; g.tix=Math.max(1, Math.round(g.score/10)); if(g.score>SKEE.hi){ SKEE.hi=g.score; try{ localStorage.setItem("restarea.arcade.alleyroll", String(g.score)); }catch(e){} } } } } }
   // where everything is: the ball, the ones waiting, the line and the mark
   { const b=C.ball, r=g && g.roll;
-    if(r){ const run=SK.Z0-SK.ZL, cz=r.s*Math.cos(r.a), tl=run/cz, L=r.L;
-      if(r.t<tl){ const z=SK.Z0-cz*r.t, f=clamp((SK.ZR-z)/(SK.ZR-SK.ZL), 0, 1); let x=r.x+Math.tan(r.a)*(SK.Z0-z);
-        if(Math.abs(x)>SK.HW-SK.R) x=Math.sign(x)*(SK.HW-SK.R)*2-x;
-        b.position.set(x, LY+SK.R+SK.HUMP*f*f, z); }
-      else if(!r.hit){ const t=r.t-tl, sy=Math.sin(SK.LIFT)*r.s, sz=Math.cos(SK.LIFT)*r.s*Math.cos(r.a), k=clamp(t/Math.max(0.01, L.t), 0, 1);
-        b.position.set(L.lu+(L.u-L.lu)*k, LY+SK.HUMP+SK.R+sy*t-4.905*t*t, SK.ZL-sz*t); }
-      else if(L.short){ const k=r.th/0.9; b.position.set(L.u, LY+SK.R+SK.HUMP*(1-k)*(1-k), SK.ZL+k*0.9); }
-      else { const R0=L.ring, k=clamp(r.th/(L.roll ? 0.75 : 0.42), 0, 1), e=k*k, u=L.u+(R0.u-L.u)*e, v=L.v+(R0.v-L.v)*e, sink=k>0.8 ? (k-0.8)*5 : 0;
-        const p=C.onBoard(u, v, SK.R*(1-sink*1.6)); b.position.copy(p); }
-      b.visible=true; b.rotation.x-=dt*r.s/SK.R*0.5; }
+    if(r){ const P=r.S.path, i=Math.min(P.length-1, r.t*60), i0=Math.floor(i), i1=Math.min(P.length-1, i0+1), f=i-i0, A=P[i0], Bp=P[i1];
+      b.position.set(A[0]+(Bp[0]-A[0])*f, A[1]+(Bp[1]-A[1])*f, A[2]+(Bp[2]-A[2])*f);
+      const sp=Math.hypot(Bp[0]-A[0], Bp[1]-A[1], Bp[2]-A[2])*60; b.rotation.x-=dt*sp/SK.R; b.visible=true; }
     else if(g && !g.over && SKEE.on){ b.visible=true; b.position.set(g.x, LY+SK.R+0.10+(g.charge ? -0.06*g.pow : 0), SK.Z0+0.04); }
     else b.visible=false;
     const left=g ? g.left-(g.roll || g.over || !SKEE.on ? 0 : 1) : SK.BALLS; C.spare.forEach((m, k)=>{ m.visible=k<left; });

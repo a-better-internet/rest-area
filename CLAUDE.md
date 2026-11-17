@@ -983,8 +983,14 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - 18u's hits: a chuck you hit is `st` 4 (squashed and flashing on its own
   `fm` material for `bonk` seconds), with 18u's `FX` pools (stars, a ring,
   the points rising, dust on a miss); nothing is made per hit.
-- 18v's Alley Roll: a roll on the rim of a 40, 50 or 100 (`out.rim` from
-  `SKEE.land`) kicks out to the 10; back-to-back 40s and up are a HOT HAND,
+- 18v's Alley Roll is simulated (`SKEE.sim(x, a, s)`, 1/240 s): lane,
+  hump, flight, then bounces and rolling on the tilted board against the
+  cups' lips, the walls and the bullseye's rings (the 10 open at its top,
+  the 20 and 30 taken from the air, nothing climbs out of a ring). It
+  returns the path the game plays back, its sounds (`ev`) and the score:
+  a cup, a ring's slot (`SKEE.slot`), the gutter or short. A slow ball on
+  a cup's upper lip tips in. Check the spread over x, a and `S0`..`S1`
+  after changing anything in `SK` or the sim. Back-to-back 40s and up are a HOT HAND,
   the ninth ball scores double, and the tickets (`g.tix`, one for every
   ten) feed out of the slot as one plane whose texture repeats. Each ring
   has its own glow torus and the bulbs three materials: colours change,
