@@ -196,7 +196,7 @@ let GATE_SIGN=null;          // where the drive gate's sign stands (set with the
   push("roofmetal", rg, 0,0,0, 0, "#9ea3a3");
   for(const sg of [1]) bx("paintm", H.x1-H.x0+0.9, 0.12, 0.08, (H.x0+H.x1)/2, FY+H.h+0.26, H.z1+0.42, 0, 0, "#7d8282");
   // the door, the light over it, the signs on it
-  frameX(H.z1-T2/2, T2, DR.a, DR.b, DR.head, "#6e7474");
+  frameX(H.z1-T2/2, T2, DR.a, DR.b, DR.head, "#6e7474", FY-0.02);          // (standing on the house's floor: run down to the yard's level it showed in the poker room under it)
   makeDoor(XF(DR.a+0.0, H.z1-T2/2, 0), 0, FY+0.02, 0, "GENERATOR HOUSE", true, 0, "steel");
   bx("paintm", 0.30, 0.18, 0.18, (DR.a+DR.b)/2, DR.head+0.45, H.z1+0.09, 0, 0, "#2c2c2a");
   push("lamplens", boxGeo(0.22,0.02,0.10,0), (DR.a+DR.b)/2, DR.head+0.355, H.z1+0.12, 0, "#ffffff");

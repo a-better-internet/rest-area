@@ -912,7 +912,7 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - Leaf greens are deep and a little grey (`SPECIES.summer`, around
   `#40602e`). A per-plant `color` passed to `FOREST.plant` should sit in
   the same range; anything like `#7e9e4a` comes out lime in full sun.
-- The arcade (12c) is seventeen metres by eight and a half (`A.x1` 84.5; it was 79.5):
+- The arcade (12c) is twenty metres and a half by eight and a half (`A.x1` 88.1; it was 79.5, then 84.5):
   the east wall and everything on it (the changer, the can, 18h's dozer,
   the house rules) go by `A.x1`. `cab(i, x, z, ry, id)`: `i` is the place
   in `NAMES` (the marquee's cell) and `id` the cabinet's number in
@@ -1064,3 +1064,44 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   three InstancedMeshes, both run by `updatePretzelWorks` (from 14's
   `updateLife`) only within 110 m. The forklift is a crowd driver with a
   forklift `prop` and its own `COL_DYN` box, like the baler.
+
+## Round 37 notes
+
+- A finer ground patch let into a coarser ring with no apron of its own
+  is stitched to it: `grid(..., stitch)` (04) gives its border the coarse
+  lattice's heights, straight between the coarse corners as the coarse
+  triangles draw them, and `groundAt` takes the same through `_ringH`. The
+  tuning house's and the chapel's 2 m patches are. Without it a crest
+  opens slivers of sky along the seam.
+- `frameX` / `frameZ` (09) take the floor their jambs stand on as a last
+  argument; left out it is the visitor centre's `FL`, and a frame on a
+  floor up a storey runs its jambs down into any room under it.
+- The velvet room (12f) runs to z −168.4: the lounge to the partition at
+  z −171.4, the back room through the beads (`BA`..`BB`) behind it. From
+  the poker room its door is not to be seen: the leaf carries a face of
+  `TEX.block` with world uvs, so its courses run on from the wall's. `E`
+  at it while locked says A LOOSE BLOCK and brings up the keypad. Violet
+  on the chaise is 14q's crowd, added by `VELVET.people()`, which 14q
+  calls at its end (12f loads before it); her pose is 14q's `lounge` job
+  and she holds 14q's `coupe`.
+- Past the pretzel works a trail (`EAST.pretz.trail`, a clearing a path
+  wide in `siteDist`) runs east through `EAST.pretz.woods` to a clearing
+  on the shore (`EAST.pretz.lake`); real trees either side, walls round
+  both, and the bank a chain of colliders a step short of the water,
+  worked out from `lakeSD` (14mc, and 14md the same).
+- Hollow Road now ends at −1880. 14mc paves it to −1660; 14md the rest.
+  The office park (14md, `OFFICE`) is `EAST.office` (04): its site, out
+  to the shore so the lake shows behind it, and its `mouth`. Hollow
+  Road's east edge line breaks at each mouth in `[pretz, office]`, and
+  14mb opens its east wall and tree rows at each site. `RING_PRETZ` and
+  `EAST.pcan` reach x 1024, z −1920 for it. Each building is 14md's
+  `building(K)`: the ground floor's walls and glass by kind, the storeys
+  over it a dark solid under a skin of the kind's material and bands of
+  `tint`, a pair of store doors, and `fitout(F, W, D, st)` lays the inside
+  in the building's own frame (`u` across the front from its middle, `v`
+  in from the front wall): lobby, elevator wall with a way through,
+  cubicles in fours, a glass conference room. The fountain's water and
+  spray are textures `updateOfficePark` (14) scrolls within 150 m.
+- The arcade's thirteenth to fifteenth cabinets are 17 (18z1, Abduction
+  Acres), 18 (18z2, Cropduster Ace) and 19 (18z3, Deep Well), on the back
+  wall past Silo Scramble.

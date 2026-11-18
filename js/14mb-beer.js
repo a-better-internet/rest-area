@@ -55,7 +55,8 @@ const BEER={routes:{}, served:false, aisle:null};
   for(const o of [-0.12, 0.12]) stripe(RX+o, Z-HW-1.2, RX+o, END+0.6, 0.1, YELLOW_LINE, LY);
   stripe(RX-3.15, Z-HW-7.5, RX-3.15, END+0.6, 0.12, WHITE_LINE, LY);
   stripe(RX+3.15, Z-HW-7.5, RX+3.15, LZ1-1.5, 0.12, WHITE_LINE, LY); // (and on up past the beer distributor, broken only at the pretzel works' mouth, where its rounding starts and ends, 14mc)
-  { const PM=EAST.pretz.mouth; stripe(RX+3.15, LZ0+1.5, RX+3.15, PM.z1+4.2, 0.12, WHITE_LINE, LY); stripe(RX+3.15, PM.z0-4.2, RX+3.15, END+0.6, 0.12, WHITE_LINE, LY); }
+  { let zt=LZ0+1.5; for(const PM of [EAST.pretz.mouth, EAST.office.mouth]){ stripe(RX+3.15, zt, RX+3.15, PM.z1+4.2, 0.12, WHITE_LINE, LY); zt=PM.z0-4.2; }
+    stripe(RX+3.15, zt, RX+3.15, END+0.6, 0.12, WHITE_LINE, LY); }
   stripe(RX-3.05, Z-HW-3.2, RX-0.3, Z-HW-3.2, 0.45, WHITE_LINE, LY);
   // the lot's arrows, painted: in at the west door, out at the east
   for(const [x, ry] of [[742.5, -Math.PI/2],[788.5, -Math.PI/2]]){ stripe(x-1.2, (AZ0+AZ1)/2, x+0.6, (AZ0+AZ1)/2, 0.25, WHITE_LINE, LY);
@@ -63,8 +64,10 @@ const BEER={routes:{}, served:false, aisle:null};
 
   /* ---- the walls of the world here, as far as you can push through the trees ---- */
   { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300), L=Bq.lot, R=Bq.road;
-    const P=EAST.pretz.site;              // (the east side open where the pretzel works' clearing comes down to the road, 14mc)
-    W(R.x0-0.4, R.x0+0.4, END, R.z1); W(R.x1-0.4, R.x1+0.4, L.z1, R.z1); W(R.x1-0.4, R.x1+0.4, P.z1, L.z0); W(R.x1-0.4, R.x1+0.4, END, P.z0);
+    // (the east side open wherever a clearing comes down to the road: the pretzel works, 14mc, and the office park, 14md)
+    const GAPS=[EAST.pretz.site, EAST.office.site].sort((a, b)=>b.z1-a.z1);
+    W(R.x0-0.4, R.x0+0.4, END, R.z1); W(R.x1-0.4, R.x1+0.4, L.z1, R.z1);
+    { let zt=L.z0; for(const G of GAPS){ W(R.x1-0.4, R.x1+0.4, G.z1, zt); zt=G.z0; } W(R.x1-0.4, R.x1+0.4, END, zt); }
     W(R.x1, L.x1, L.z1-0.4, L.z1+0.4); W(L.x1-0.4, L.x1+0.4, L.z0, L.z1); W(R.x1, L.x1, L.z0-0.4, L.z0+0.4);
     W(R.x0, R.x1, END-0.4, END+0.4).msg="HOLLOW ROAD RUNS ON NORTH THROUGH THE WOODS FROM HERE. THIS IS AS FAR AS THE MAP GOES";
     addZone(R.x0, R.x1, END, R.z1, Y-2, Y+12, "HOLLOW ROAD"); addZone(L.x0, L.x1, L.z0, L.z1, Y-2, Y+12, "EDINBORO BEER"); }
@@ -75,8 +78,9 @@ const BEER={routes:{}, served:false, aisle:null};
         const t=(k+q()*0.6)/Math.max(1, n), x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);
         tree(sp || (q()<0.3 ? "hemlock" : q()<0.45 ? "pine" : "hard"), x, z, 0.85+q()*0.4); } };
     const L=Bq.lot, R=Bq.road;
-    const P=EAST.pretz.site;
-    row(R.x0, END, R.x0, R.z1-1, -1, 0); row(R.x1, L.z1+1, R.x1, R.z1-1, 1, 0); row(R.x1, P.z1+1, R.x1, L.z0-1, 1, 0); row(R.x1, END, R.x1, P.z0-1, 1, 0);
+    const GAPS=[EAST.pretz.site, EAST.office.site].sort((a, b)=>b.z1-a.z1);
+    row(R.x0, END, R.x0, R.z1-1, -1, 0); row(R.x1, L.z1+1, R.x1, R.z1-1, 1, 0);
+    { let zt=L.z0-1; for(const G of GAPS){ row(R.x1, G.z1+1, R.x1, zt, 1, 0); zt=G.z0-1; } row(R.x1, END, R.x1, zt, 1, 0); }
     row(L.x0+10, L.z1, L.x1, L.z1, 0, 1); row(L.x1, L.z0, L.x1, L.z1, 1, 0); row(L.x0+10, L.z0, L.x1, L.z0, 0, -1);
     // and across the road's end, deep: the road runs on into them, so they must be real well past where you can go
     for(const off of [0, 20, 40]) row(R.x0-30, END-off, R.x1+30, END-off, 0, -1); }
@@ -282,7 +286,7 @@ const BEER={routes:{}, served:false, aisle:null};
   }
   for(const x of [754, 765, 776]) LAMPS.push({x:x, y:CEIL-0.4, z:(AZ0+AZ1)/2, color:0xf2f6ff, intensity:0.6, dist:8, decay:1.5, indoor:true});
   { const cols=["#c8282a","#f2c230","#2a5aa8","#f4f2ec","#2e7a3a"];
-    for(let x=BX0+1.2; x<BX1-0.8; x+=1.6){ let k=0;
+    for(let x=BX0+3.0; x<BX1-0.8; x+=6.4){ let k=0;          // (a string every few metres, not a ceiling of them)
       for(let z=BZ0+WT+0.1; z<BZ1-WT-0.1; z+=0.36, k++){ const sag=0.25*Math.sin(Math.PI*(z-BZ0)/(BZ1-BZ0)), y=CEIL-0.25-sag;
         const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute([0, 0, -0.15, 0, 0, 0.15, 0, -0.32, 0], 3)); g.computeVertexNormals();
         ent(g, x, y, z+0.15, cols[(k+((x|0)%5))%5], 0, 0, 0, PN); } }
@@ -291,8 +295,8 @@ const BEER={routes:{}, served:false, aisle:null};
     banner(2.6, 0.9, 755.0, AZ0-0.4, CEIL-0.75, 0, (c, W, H)=>{ c.fillStyle="#1a1a1a"; c.fillRect(0, 0, W, H); c.fillStyle=GOLD; c.fillRect(0, H*0.8, W, H*0.2); say(c, "GO BLACK & GOLD", W/2, H*0.42, W*0.8, H*0.4, GOLD); });
     banner(2.4, 0.8, 772.0, AZ1+0.4, CEIL-0.7, 0, (c, W, H)=>{ c.fillStyle="#2e7a3a"; c.fillRect(0, 0, W, H); say(c, "FRENCH CREEK PALE", W/2, H*0.38, W*0.8, H*0.34, "#f4e8c8"); say(c, "BREWED UP THE CREEK", W/2, H*0.76, W*0.7, H*0.16, "#f4e8c8", "700", "Arial"); });
     banner(1.8, 0.4, 776.0, (AZ0+AZ1)/2, CEIL-0.55, Math.PI/2, (c, W, H)=>{ c.fillStyle="#d8ccb0"; c.fillRect(0, 0, W, H); c.strokeStyle="#5a3a22"; c.lineWidth=6; c.strokeRect(3, 3, W-6, H-6); say(c, "CIDER SECTION", W/2, H/2, W*0.8, H*0.6, "#5a3a22", "800", "Georgia, serif"); });
-    // two flags on short poles, out from the south stock over the lane
-    for(const x of [770.0, 774.0]){ C(0.012, 1.4, x, CEIL-0.9, AZ1+0.5, "#c8a050", 6, 0.6, 0, 0);
+    // a flag on a short pole, out from the south stock over the lane
+    for(const x of [772.0]){ C(0.012, 1.4, x, CEIL-0.9, AZ1+0.5, "#c8a050", 6, 0.6, 0, 0);
       banner(0.9, 0.5, x, AZ1+0.05, CEIL-1.25, Math.PI/2, (c, W, H)=>{ for(let k=0;k<13;k++){ c.fillStyle=k%2 ? "#f4f2ec" : "#b3191e"; c.fillRect(0, k*H/13, W, H/13+1); }
         c.fillStyle="#1f2a5a"; c.fillRect(0, 0, W*0.4, H*7/13); c.fillStyle="#f4f2ec"; for(let i=0;i<5;i++) for(let j=0;j<4;j++) c.fillRect(W*(0.03+i*0.075), H*(0.04+j*0.12), 2, 2); }); } }
 

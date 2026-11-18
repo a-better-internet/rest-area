@@ -92,7 +92,7 @@ function chalkDraw(c, names, colA, colB, note){
   wallBox("block", IX0, IX1, H.z0, IZ0, FB-0.1, FY-0.6, WALL, 0.6, FB);
   // (the south one cut for the door to the velvet room, 12f, under the house's own front door and its frame)
   wallBox("block", IX0, 79.5, IZ1, H.z1, FB-0.1, FY-0.6, WALL, 0.6, FB); wallBox("block", 80.46, IX1, IZ1, H.z1, FB-0.1, FY-0.6, WALL, 0.6, FB);
-  wallBox("block", 79.5, 80.46, IZ1, H.z1, FB+2.10, FY-0.6, WALL, 0.6, FB);
+  wallBox("block", 79.5, 80.46, IZ1, H.z1, FB+2.10, FY-0.39, WALL, 0.6, FB);       // (up a centimetre into the house's slab: no slot over the head)
   // the house's own walls stand on the slab: their colliders stop at its underside, not a metre below
   // it in the cellar, where they would catch your head going through the hole under the west one
   for(const c of COL) if(c.x0>=H.x0-0.01 && c.x1<=H.x1+0.01 && c.z0>=H.z0-0.01 && c.z1<=H.z1+0.01 && Math.abs(c.y0-(FY-1.1))<0.01) c.y0=FY-0.6;

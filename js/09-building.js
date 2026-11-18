@@ -118,12 +118,13 @@ function ceilAt(bk, x0,x1,z0,z1, y, color, uv){
 // a door frame: two posts and a head, proud of both faces of a wall t thick
 // The posts stop under the head, and the head is half a centimetre longer
 // and deeper than they span, so no face of one lies in a face of the other.
-function frameX(c, t, a, b, head, color){
-  for(const x of [a-0.035, b+0.035]) bx("paintm", 0.07, head-FL, t+0.12, x, FL+(head-FL)/2, c, 0, 0, color||BRONZE);
+// (fl: the floor the jambs stand on, the visitor centre's unless given: a jamb run down past its own floor shows in any room under it)
+function frameX(c, t, a, b, head, color, fl){ const F=fl===undefined ? FL : fl;
+  for(const x of [a-0.035, b+0.035]) bx("paintm", 0.07, head-F, t+0.12, x, F+(head-F)/2, c, 0, 0, color||BRONZE);
   bx("paintm", b-a+0.15, 0.07, t+0.13, (a+b)/2, head+0.035, c, 0, 0, color||BRONZE);
 }
-function frameZ(c, t, a, b, head, color){
-  for(const z of [a-0.035, b+0.035]) bx("paintm", t+0.12, head-FL, 0.07, c, FL+(head-FL)/2, z, 0, 0, color||BRONZE);
+function frameZ(c, t, a, b, head, color, fl){ const F=fl===undefined ? FL : fl;
+  for(const z of [a-0.035, b+0.035]) bx("paintm", t+0.12, head-F, 0.07, c, F+(head-F)/2, z, 0, 0, color||BRONZE);
   bx("paintm", t+0.13, 0.07, b-a+0.15, c, head+0.035, (a+b)/2, 0, 0, color||BRONZE);
 }
 // a small printed sign on a wall face: lit=false, a centimetre proud

@@ -58,9 +58,10 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
   const pretzelGeo=(s, rr, tub, rad)=>new T.TubeGeometry(pretzelCurve(s), tub, rr, rad, false);
 
   /* ---- the ground: Hollow Road on north from where it used to stop, the mouth, the lot, the walk, the truck court ---- */
-  { const road=SD_rect(RX-RW, RX+RW, END, -1496), mouth=SD_rect(RX+RW-0.6, 750, M.z0, M.z1), lot=SD_rect(748, 764, -1600, -1506),
+  // (the road from here north, past the office park's mouth, is 14md's: one surface with that mouth's rounding)
+  { const road=SD_rect(RX-RW, RX+RW, -1660, -1496), mouth=SD_rect(RX+RW-0.6, 750, M.z0, M.z1), lot=SD_rect(748, 764, -1600, -1506),
       walk=SD_rect(763, 768.2, -1592, -1568), court=SD_rect(763, 890, -1545, -1500);
-    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, walk, court], 4), RX-RW-1, 891, END, -1496, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
+    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, walk, court], 4), RX-RW-1, 891, -1660, -1496, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
     push("lotpave", sdPaveGeo(SD_rect(RX-RW, RX+RW, -1496, PEND), RX-RW-1, RX+RW+1, -1496, PEND, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
     addPaveRect(RX+RW-0.6, 750, M.z0, M.z1, Y); addPaveRect(748, 764, -1600, -1506, Y); addPaveRect(763, 768.2, -1592, -1568, Y); addPaveRect(763, 890, -1545, -1500, Y); }
   // the lot's stalls, two rows, kept six metres clear of the way in
@@ -421,6 +422,32 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
       onShow:(p, on)=>{ rig.y1=on ? FLS+2.2 : -9999; },
       tick:(p)=>placeRig(p)}); }
 
+  /* ---- the trail out the back to the lake: shredded bark through the woods, a sign at the fence, the clearing on the shore ---- */
+  { const TR=EAST.pretz.trail, LK=EAST.pretz.lake;
+    for(const p of TR) p.y=Terrain.groundAt(p.x, p.z);
+    layRibbon("mulchbed", TR, -0.65, 0.65, 0.045, 0.6, "#c4b4a2");
+    // (the sign faces back into the yard; its post behind it)
+    { const sx=889.6, sz=-1602.2, g=Terrain.groundAt(sx, sz); B(0.1, 1.5, 0.1, sx+0.12, g+0.75, sz, "#5a4430"); addCol(sx+0.06, sx+0.18, sz-0.06, sz+0.06, g-0.5, g+1.5);
+      B(0.04, 0.32, 0.7, sx+0.05, g+1.25, sz, "#6a5238");
+      sign(0.64, 0.28, (c, W, H)=>{ c.fillStyle="#7a5e40"; c.fillRect(0, 0, W, H); c.fillStyle="rgba(40,24,10,0.25)"; for(let k=0;k<6;k++) c.fillRect(0, k*H/6+4, W, 2);
+          say(c, "TO THE LAKE", W/2, H*0.4, W*0.78, H*0.3, "#f2e8d0", "800", "Georgia, serif"); say(c, "EMPLOYEES' LUNCH SPOT", W/2, H*0.74, W*0.7, H*0.14, "#f2e8d0", "700", "Arial"); },
+        sx+0.02, g+1.25, sz, -Math.PI/2, false, 300); }
+    // the clearing: a bench looking out over the water, a picnic table, two kayaks turned over on the bank
+    { const bx=950.5, bz=-1596.5, g=Terrain.groundAt(bx, bz);
+      for(const dz of [-0.75, 0.75]) B(0.4, 0.42, 0.08, bx, g+0.21, bz+dz, "#3a3a3a");
+      for(let k=0;k<3;k++) B(0.12, 0.04, 1.8, bx-0.14+k*0.14, g+0.44, bz, "#8a6a4a"); for(let k=0;k<2;k++) B(0.04, 0.11, 1.8, bx+0.21, g+0.62+k*0.14, bz, "#8a6a4a");
+      addCol(bx-0.22, bx+0.26, bz-0.9, bz+0.9, g-0.5, g+0.9); for(const dz of [-0.45, 0.45]) addSeat(bx-0.02, bz+dz, g, -Math.PI/2, "A BENCH BY THE LAKE"); }
+    { const px=940.0, pz=-1612.0, g=Terrain.groundAt(px, pz);
+      B(0.8, 0.05, 1.9, px, g+0.76, pz, "#9a7a52"); for(const s of [-1, 1]){ B(0.26, 0.04, 1.9, px+s*0.62, g+0.45, pz, "#9a7a52");
+        for(const dz of [-0.75, 0.75]) B(1.5, 0.06, 0.06, px, g+0.38, pz+dz, "#7a5a3a", 0); }
+      for(const dz of [-0.75, 0.75]) for(const s of [-1, 1]) tubeE(V3(px+s*0.72, g, pz+dz), V3(px+s*0.1, g+0.74, pz+dz), 0.03, "#7a5a3a");
+      addCol(px-0.76, px+0.76, pz-0.98, pz+0.98, g-0.5, g+0.8); for(const s of [-1, 1]) addSeat(px+s*0.62, pz, g, s<0 ? -Math.PI/2 : Math.PI/2, "THE PICNIC TABLE"); }
+    for(const [x, z, col] of [[953.0, -1618.5, "#c8401a"],[954.6, -1617.6, "#2a6ab8"]]){ const g=Terrain.groundAt(x, z);
+      ent(new T.SphereGeometry(1, 14, 8, 0, Math.PI*2, 0, Math.PI/2), x, g+0.04, z, col, Math.PI, 0.25, 0); ME[ME.length-1].matrix.multiply(new T.Matrix4().makeScale(0.32, 0.3, 1.6));
+      addColOB(x, z, 0.25, 0.35, 1.6, g-0.5, g+0.4); }
+    addZone(P.x1, LK.x0, EAST.pretz.woods.z0, EAST.pretz.woods.z1, Y-2, Y+20, "THE TRAIL TO THE LAKE");
+    addZone(LK.x0, LK.x1, LK.z0, LK.z1, Y-4, Y+20, "THE LAKE BEHIND THE PRETZEL WORKS"); }
+
   /* ---- the zones: the works' ground, then the rooms in it ---- */
   addZone(P.x0, P.x1, P.z0, P.z1, Y-2, Y+25, "EDINBORO PRETZEL CO.");
   addZone(LX0, BX0, LZ0, LZ1, FLS-0.5, LC, "EDINBORO PRETZEL CO. · THE LOBBY", true);
@@ -430,14 +457,33 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
 
   /* ---- the walls of the world round the works' clearing, and the woods close in on three sides ---- */
   { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300);
-    W(P.x0, P.x1, P.z0-0.4, P.z0+0.4); W(P.x1-0.4, P.x1+0.4, P.z0, P.z1); W(P.x0, P.x1, P.z1-0.4, P.z1+0.4); }
+    const WD=EAST.pretz.woods, LK=EAST.pretz.lake;
+    W(P.x0, P.x1, P.z0-0.4, P.z0+0.4); W(P.x0, P.x1, P.z1-0.4, P.z1+0.4);
+    W(P.x1-0.4, P.x1+0.4, P.z0, WD.z0); W(P.x1-0.4, P.x1+0.4, WD.z1, P.z1);            // (the back fence open onto the trail's woods)
+    // the woods the trail goes through, and the clearing on the shore it comes out in
+    W(P.x1, LK.x0, WD.z0-0.4, WD.z0+0.4); W(P.x1, LK.x0, WD.z1-0.4, WD.z1+0.4);
+    W(LK.x0-0.4, LK.x0+0.4, LK.z0, WD.z0); W(LK.x0-0.4, LK.x0+0.4, WD.z1, LK.z1);
+    W(LK.x0, LK.x1, LK.z0-0.4, LK.z0+0.4); W(LK.x0, LK.x1, LK.z1-0.4, LK.z1+0.4);
+    // the bank: a step short of the water all along the clearing (where the lake's edge is a metre and a half off)
+    const BANK="THE BANK DROPS STRAIGHT INTO THE LAKE HERE";
+    const shoreX=(z)=>{ let x=LK.x0; while(x<LK.x1+30 && Terrain.lakeSD(x, z)>1.5) x+=0.25; return x; };
+    for(let z=LK.z0; z<LK.z1-0.01; z+=2){ const a=shoreX(z), b=shoreX(Math.min(LK.z1, z+2)); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, z, Math.min(LK.z1, z+2)).msg=BANK; } }
   if(typeof FOREST!=="undefined"){ const q=_trng(1931);
     const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, gy=Terrain.groundAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
     const row=(x0, z0, x1, z1, nx, nz)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.round(L/6.4);
       for(let k=0;k<=n;k++) for(const [dep, sp] of [[1.8, "edge"],[6.5, null],[11.5, null],[16.5, null],[22.0, null]]){ if(q()<0.15) continue;
         const t=(k+q()*0.6)/Math.max(1, n), x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);
         tree(sp || (q()<0.3 ? "hemlock" : q()<0.45 ? "pine" : "hard"), x, z, 0.85+q()*0.4); } };
-    row(P.x0+6, P.z0, P.x1, P.z0, 0, -1); row(P.x1, P.z0, P.x1, P.z1, 1, 0); row(P.x0+6, P.z1, P.x1, P.z1, 0, 1); }
+    const WD=EAST.pretz.woods, LK=EAST.pretz.lake, TR=EAST.pretz.trail;
+    row(P.x0+6, P.z0, P.x1, P.z0, 0, -1); row(P.x1, P.z0, P.x1, WD.z0-1, 1, 0); row(P.x1, WD.z1+1, P.x1, P.z1, 1, 0); row(P.x0+6, P.z1, P.x1, P.z1, 0, 1);
+    // the trail's woods: a jittered lattice of real trees, clear of the path; more beyond its walls; the clearing's edges
+    const dry=(x, z)=>Terrain.lakeSD(x, z)>3.5;
+    for(let x=WD.x0+2.2; x<WD.x1-1; x+=4.4) for(let z=WD.z0+2; z<WD.z1-1; z+=4.4){ const jx=x+(q()-0.5)*2.4, jz=z+(q()-0.5)*2.4;
+      if(distToPath(TR, jx, jz).d<2.3) continue; tree(q()<0.3 ? "hemlock" : q()<0.4 ? "pine" : "hard", jx, jz, 0.8+q()*0.4);
+      if(q()<0.4){ const fx=jx+(q()-0.5)*2, fz=jz+(q()-0.5)*2; if(distToPath(TR, fx, fz).d>1.2) FOREST.plant(q()<0.5 ? "fern" : "shrub", fx, fz, {scale:0.8+q()*0.5, solid:false}); } }
+    row(P.x1+2, WD.z0, LK.x0, WD.z0, 0, -1); row(P.x1+2, WD.z1, LK.x0, WD.z1, 0, 1);
+    for(const [z, nz] of [[LK.z0, -1],[LK.z1, 1]]) for(let x=LK.x0; x<LK.x1+10; x+=6.2) for(const dep of [1.8, 6.5, 11.5, 16.5]){
+      const xx=x+(q()-0.5)*2.4, zz=z+nz*(dep+q()*2); if(dry(xx, zz) && q()>0.12) tree(dep<2 ? "edge" : q()<0.3 ? "hemlock" : "hard", xx, zz, 0.85+q()*0.4); } }
 
   /* ---- what is built: the works, its cartons, the belts that move, the pretzels going down them ---- */
   const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.08});
@@ -466,6 +512,8 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
       [832.5, -1576.0],[836.5, -1576.0],[838.6, -1576.0]]},
     "pretzel works: across the warehouse's staging, into the trailer at the dock":{y0:FLS+0.1, pts:[[838.6, -1560.5],[850.0, -1560.0],[858.0, -1559.0],[858.0, -1548.0],[858.0, -1544.0],[858.0, -1538.0]]},
     "pretzel works: down the warehouse's aisles":{y0:FLS+0.1, pts:[[838.6, -1576.0],[838.6, -1611.0],[856.15, -1611.0],[856.15, -1590.0],[856.15, -1562.0]]},
+    "pretzel works: out the back and down the trail to the lake":[[886.0, -1600.0],[892.0, -1600.0],[899.0, -1596.0],[906.0, -1599.0],[913.0, -1605.0],[919.0, -1604.0],
+      [925.0, -1600.0],[935.0, -1600.0],[948.0, -1600.0]],
     "pretzel works: round the outside, the court and the silos":[[766.0, -1540.0],[790.0, -1525.0],[884.0, -1525.0],[886.0, -1600.0],[886.0, -1622.0],[820.0, -1640.0],[784.0, -1640.0],[775.0, -1625.0],[760.0, -1600.0]]};
 })();
 /* the bulbs on the sign and the lamps in the lot come on after dark; the belts run and the pretzels go down them while you are near */

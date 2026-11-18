@@ -12,7 +12,17 @@
    velvet hung on every wall, a carpet you sink into, a chesterfield and
    two wing chairs, a bar cart of decanters, a record console playing the
    jazz trio, gold frames, a little chandelier, and the name over it all
-   in pink neon.
+   in pink neon. Behind a curtain of beads at the back is the back room:
+   a round bed in red satin under a mirror, a little stage with a brass
+   pole and a mirror ball over it, champagne on ice, a rack of the kind of
+   magazines kept behind the counter, prints of a lady in silhouette, an
+   AFTER HOURS heart in neon, and Violet on the chaise with a coupe of
+   champagne, who has seen everybody come through that curtain.
+
+   From the poker room there is no door to see: the opening is faced with
+   the same painted block as the wall round it (TEX.block, its courses run
+   on from the wall's), on the leaf, so it swings with it. One block by it
+   sits a little proud; E there brings up the keypad.
 
    The door is 01's makeDoor, latched (latchDoor), with its own `onUse`:
    while it is locked E brings up the keypad (VELVET.ask), a box you type
@@ -20,14 +30,16 @@
    shuts with E like any latched door. The keypad takes the keyboard while
    it is up (17's keydown chain asks VELVET.typing first).
 
-   PLAN (world): the room x 77.5..82.5, z -176.0..-171.4, its floor the
+   PLAN (world): the room x 77.5..82.5, z -176.0..-168.4 (the lounge to the
+   partition at z -171.4, the back room behind it), its floor the
    poker room's (FB) and its ceiling the same (CB), under the yard's ground
    (2.6): it is a VOID, BURIED and lit by under lamps only.
    ---------------------------------------------------------------------- */
 const VELVET={open:false, typing:false, door:null, radios:[], el:null};
 (function velvetRoom(){
   const FY=SUB_G+0.15, FB=FY-2.65, CB=FY-0.40, WT=0.25;
-  const X0=77.5, X1=82.5, Z0=-176.0, Z1=-171.4, DA=79.5, DB=80.46, DH=FB+2.10;
+  const X0=77.5, X1=82.5, Z0=-176.0, Z1=-168.4, ZP=-171.4, DA=79.5, DB=80.46, DH=FB+2.10;
+  const BA=81.35, BB=82.35;                                    // (the beaded opening through the partition to the back room)
   const ME=[];
   const ent=(geo,x,y,z,c,rx,ry,rz)=>ME.push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
     new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
@@ -43,11 +55,15 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
   wallBox("block", X0-WT+0.01, X0, Z0-0.02, Z1+WT, FB-0.1, CB+0.1, "#d6cdb6", 0.6, FB);
   wallBox("block", X1, X1+WT-0.01, Z0-0.02, Z1+WT, FB-0.1, CB+0.1, "#d6cdb6", 0.6, FB);
   wallBox("block", X0, X1, Z1, Z1+WT, FB-0.1, CB+0.1, "#d6cdb6", 0.6, FB);
+  // the partition between the lounge and the back room, open at its east end under a header
+  wallBox("block", X0, BA, ZP, ZP+WT, FB-0.1, CB+0.1, "#d6cdb6", 0.6, FB); wallBox("block", BB, X1, ZP, ZP+WT, FB-0.1, CB+0.1, "#d6cdb6", 0.6, FB);
+  wallBox("block", BA, BB, ZP, ZP+WT, DH, CB+0.1, "#d6cdb6", 0.6, FB);
   B(X1-X0+0.02, 0.2, Z1-Z0, (X0+X1)/2, FB-0.1, (Z0+Z1)/2, "#5a5048"); B(X1-X0+0.02, 0.12, Z1-Z0, (X0+X1)/2, CB+0.05, (Z0+Z1)/2, "#2a0a10");      // (its underside 1 cm under the house slab's, which it meets by the north wall)
   addFlat(X0, X1, Z0, Z1, FB); addFlat(DA, DB, Z0-0.27, Z0+0.02, FB);
   B(DB-DA-0.004, 0.02, WT, (DA+DB)/2, FB+0.002, Z0-WT/2, "#b8963a");                         // (the brass threshold across the wall)
   addVoid(X0, X1, Z0, Z1, FB-3, FB+1.5, FB); addVoid(DA, DB, Z0-0.27, Z0+0.02, FB-3, FB+1.5, FB);   // (only as high as feet go down here: the yard's ground is 20 cm over the ceiling)   // (and the doorway through the wall: not the yard's ground over it)
   addZone(X0, X1, Z0, Z1, FB-0.5, CB, "THE VELVET ROOM", true);
+  addZone(X0, X1, ZP+WT, Z1, FB-0.5, CB, "THE VELVET ROOM · THE BACK ROOM", true);
   addBuried(X0, X1, Z0, Z1, FB-0.5, CB+0.05, 0.3, 0x8a2a3a);
 
   /* ---- velvet on the walls: crimson, hung in pleats, 2 cm off the block; the north wall round the door. A carpet; a ceiling of it ---- */
@@ -61,6 +77,11 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
   plane(Z1-Z0-0.04, H, vel(Z1-Z0), X0+0.02, YM, (Z0+Z1)/2, Math.PI/2);                // the west
   plane(Z1-Z0-0.04, H, vel(Z1-Z0), X1-0.02, YM, (Z0+Z1)/2, -Math.PI/2);               // the east
   for(const [a, b] of [[X0+0.02, DA-0.06],[DB+0.06, X1-0.02]]) plane(b-a, H, vel(b-a), (a+b)/2, YM, Z0+0.02, 0);   // the north, either side of the door
+  // the partition: velvet on both faces either side of the beads, and over them
+  for(const [zf, ry] of [[ZP-0.02, Math.PI],[ZP+WT+0.02, 0]]){ for(const [a, b] of [[X0+0.02, BA-0.06],[BB+0.06, X1-0.02]]) if(b-a>0.05) plane(b-a, H, vel(b-a), (a+b)/2, YM, zf, ry);
+    plane(BB-BA+0.12, CB-DH-0.07, vel(1.1), (BA+BB)/2, (DH+0.05+CB)/2, zf, ry);
+    for(const x of [BA-0.035, BB+0.035]) B(0.06, DH-FB+0.04, 0.05, x, FB+(DH-FB+0.04)/2, zf+(ry ? -0.005 : 0.005), "#b8963a");
+    B(BB-BA+0.13, 0.06, 0.05, (BA+BB)/2, DH+0.05, zf+(ry ? -0.006 : 0.006), "#b8963a"); }
   plane(DB-DA+0.12, CB-DH-0.07, vel(1.1), (DA+DB)/2, (DH+0.05+CB)/2, Z0+0.02, 0);
   // the door's casing: brass, standing proud of the velvet
   for(const x of [DA-0.035, DB+0.035]) B(0.06, DH-FB+0.04, 0.05, x, FB+(DH-FB+0.04)/2, Z0+0.025, "#b8963a");
@@ -74,29 +95,37 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
   C(0.25, 0.04, (X0+X1)/2, CB-0.02, -173.7, "#c8a050", 24);
 
   /* ---- the door: steel, latched, a keypad by it on the poker room's side ---- */
-  makeDoor(XF(DA+0.02, Z0-0.125, 0), 0, FB+0.02, 0, "THE VELVET ROOM", true, 0, "steel", 0x5a5e60);
+  const leaf=makeDoor(XF(DA+0.02, Z0-0.125, 0), 0, FB+0.02, 0, "THE VELVET ROOM", true, 0, "steel", 0x5a5e60);
+  // (the false face: painted block like the wall's, its uvs taken from where it stands shut, so its courses run on from the
+  //  wall either side; 5 mm back from the wall's face, so no face of it lies in the wall's)
+  { const w=DB-DA-0.006, h=DH-FB-0.008, d=0.087, g=new T.BoxGeometry(w, h, d), P=g.attributes.position, N=g.attributes.normal, U=g.attributes.uv;
+    const lx=(DA+DB)/2-(DA+0.02), ly=FB+0.004+h/2-(FB+0.02), lz=-0.0765, wx0=DA+0.02, wy0=FB+0.02, wz0=Z0-0.125;
+    for(let i=0;i<P.count;i++){ const x=P.getX(i)+lx+wx0, y=P.getY(i)+ly+wy0, z=P.getZ(i)+lz+wz0;
+      if(Math.abs(N.getZ(i))>0.5) U.setXY(i, (N.getZ(i)>0 ? x : -x)*0.6, y*0.6); else if(Math.abs(N.getX(i))>0.5) U.setXY(i, -z*0.6, y*0.6); else U.setXY(i, x*0.6, z*0.6); }
+    const m=new T.Mesh(g, new T.MeshStandardMaterial({map:TEX.block, color:new T.Color("#d6cdb6"), roughness:0.8}));
+    m.position.set(lx, ly, lz); m.castShadow=true; m.receiveShadow=true; leaf.add(m); }
   const D=latchDoor({x0:DA, x1:DB, z0:Z0-WT, z1:Z0, y0:FB, y1:FB+2.1}); VELVET.door=D;
   D.onUse=(d)=>{ if(!VELVET.open){ VELVET.ask(); return; } d.manual=d.target>0.5 ? -1 : 1; if(typeof AUDIO!=="undefined") AUDIO.blip("latch", d.x||80, d.z||-176); };
-  D.promptFn=(d)=>VELVET.open ? "E  ·  "+(d.target>0.5 ? "CLOSE" : "OPEN")+" THE VELVET ROOM" : "E  ·  THE KEYPAD";
-  B(0.12, 0.18, 0.03, DB+0.22, FB+1.35, Z0-WT-0.015, "#2a2c2e");
-  { const t=signTex(120, 180, (c, W, Hh)=>{ c.fillStyle="#1a1c1e"; c.fillRect(0, 0, W, Hh); c.fillStyle="#3af06a"; c.fillRect(W*0.15, Hh*0.08, W*0.7, Hh*0.14);
-      for(let r=0;r<4;r++) for(let k=0;k<3;k++){ c.fillStyle="#c8ccd0"; c.fillRect(W*(0.14+k*0.26), Hh*(0.32+r*0.16), W*0.2, Hh*0.11); } });
-    plane(0.1, 0.16, new T.MeshBasicMaterial({map:t, toneMapped:false}), DB+0.22, FB+1.35, Z0-WT-0.032, Math.PI); }
+  D.promptFn=(d)=>VELVET.open ? "E  ·  "+(d.target>0.5 ? "CLOSE" : "OPEN")+" THE WALL" : "E  ·  A LOOSE BLOCK";
+  // the one block that sits a little proud of the wall, by the false face: the keypad is behind it
+  { const g=new T.BoxGeometry(0.39, 0.19, 0.03), U=g.attributes.uv, P=g.attributes.position, x0=DB+0.4, y0=FB+1.3, z0=Z0-WT-0.012;
+    for(let i=0;i<P.count;i++) U.setXY(i, -(P.getX(i)+x0)*0.6, (P.getY(i)+y0)*0.6);
+    const m=new T.Mesh(g, new T.MeshStandardMaterial({map:TEX.block, color:new T.Color("#cfc6ae"), roughness:0.85})); m.position.set(x0, y0, z0); m.receiveShadow=true; scene.add(m); }
 
   /* ---- the furniture ---- */
   // the chesterfield on the south wall, buttoned green velvet; two wing chairs facing it; a low table between
-  { const sx=80.0, sz=Z1-0.48, G="#1c3a2c";
+  { const sx=79.85, sz=ZP-0.48, G="#1c3a2c";
     RB(2.2, 0.42, 0.86, sx, FB+0.21, sz, G, 0, 0.06); RB(2.2, 0.36, 0.24, sx, FB+0.6, sz+0.34, G, 0, 0.08);
     for(const s of [-1, 1]) RB(0.24, 0.62, 0.86, sx+s*1.0, FB+0.31, sz, G, 0, 0.1);
     for(let k=0;k<3;k++) RB(0.62, 0.12, 0.62, sx-0.66+k*0.66, FB+0.48, sz-0.06, "#24483a", 0, 0.05);
     for(let i=0;i<9;i++) for(let j=0;j<2;j++) ent(new T.SphereGeometry(0.012, 6, 4), sx-0.9+i*0.225, FB+0.55+j*0.12, sz+0.215, "#c8a050");
     for(const x of [sx-1.0, sx+1.0]) for(const z of [sz-0.36, sz+0.36]) C(0.025, 0.06, x, FB+0.03, z, "#2a1a10", 8);
-    addCol(sx-1.12, sx+1.12, sz-0.43, Z1, FB-0.5, FB+0.62); for(let k=0;k<3;k++) addSeat(sx-0.66+k*0.66, sz-0.1, FB, 0, "THE CHESTERFIELD");
+    addCol(sx-1.12, sx+1.12, sz-0.43, ZP, FB-0.5, FB+0.62); for(let k=0;k<3;k++) addSeat(sx-0.66+k*0.66, sz-0.1, FB, 0, "THE CHESTERFIELD");
     RB(1.0, 0.06, 0.55, sx, FB+0.42, sz-1.25, "#3a1a10", 0, 0.02); for(const a of [-0.42, 0.42]) for(const b of [-0.2, 0.2]) C(0.022, 0.4, sx+a, FB+0.2, sz-1.25+b, "#c8a050", 8);
     addCol(sx-0.5, sx+0.5, sz-1.53, sz-0.97, FB-0.5, FB+0.46);
     ent(new T.CylinderGeometry(0.035, 0.05, 0.16, 12), sx-0.2, FB+0.53, sz-1.25, "#7a1a2a"); B(0.22, 0.03, 0.16, sx+0.22, FB+0.465, sz-1.2, "#e8e2d0");
     for(const [cx, ry] of [[78.4, 0.47],[81.6, -0.47]]){                    // (each turned in toward the chesterfield)
-      const cz=sz-1.9, f=XF(cx, cz, ry), W="#6a0e1e";
+      const cz=sz-2.5, f=XF(cx, cz, ry), W="#6a0e1e";             // (far enough up the room that the way round to the beads is clear)
       const q=(w, h, d, lx, ly, lz, c)=>RB(w, h, d, f.x(lx, lz), FB+ly, f.z(lx, lz), c, ry, 0.05);
       q(0.74, 0.44, 0.7, 0, 0.22, 0, W); q(0.74, 0.9, 0.16, 0, 0.62, -0.3, W); for(const s of [-1, 1]){ q(0.12, 0.3, 0.6, s*0.33, 0.55, -0.02, W); q(0.08, 0.55, 0.28, s*0.36, 0.86, -0.22, W); }
       q(0.6, 0.1, 0.56, 0, 0.48, 0.04, "#7a1424");
@@ -133,11 +162,11 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
         c.fillStyle="#0a140e"; c.beginPath(); c.moveTo(0, Hh*0.56); for(let x=0;x<=W;x+=W/10) c.lineTo(x, Hh*(0.5-0.05*Math.sin(x/W*7))); c.lineTo(W, Hh*0.56); c.fill(); } });
     plane(w, h, new T.MeshStandardMaterial({map:t, roughness:0.6}), f.x(0, 0.032), FB+1.45, f.z(0, 0.032), ry); }
   // the name over the chesterfield, in pink neon on a black board
-  { B(1.3, 0.42, 0.03, 80.0, FB+1.62, Z1-0.065, "#0a0a0c");
+  { B(1.3, 0.42, 0.03, 79.85, FB+1.62, ZP-0.065, "#0a0a0c");
     const t=signTex(620, 200, (c, W, Hh)=>{ c.fillStyle="#0a0a0c"; c.fillRect(0, 0, W, Hh); c.shadowColor="#ff4ab0"; c.shadowBlur=18;
       say(c, "Terry's", W/2, Hh*0.5, W*0.80, Hh*0.6, "#ffb0dc", "700", "'Brush Script MT', 'Segoe Script', cursive"); c.shadowBlur=0; });
-    plane(1.24, 0.38, new T.MeshBasicMaterial({map:t, toneMapped:false}), 80.0, FB+1.62, Z1-0.085, Math.PI);
-    lamp(80.0, FB+1.62, Z1-0.5, 0.25, 0xff5ab8, 2.5); }
+    plane(1.24, 0.38, new T.MeshBasicMaterial({map:t, toneMapped:false}), 79.85, FB+1.62, ZP-0.085, Math.PI);
+    lamp(79.85, FB+1.62, ZP-0.5, 0.25, 0xff5ab8, 2.5); }
   // the chandelier: a brass ring, candle bulbs, drops of crystal
   { const cx=(X0+X1)/2, cz=-173.7, cy=CB-0.42; C(0.008, 0.3, cx, CB-0.17, cz, "#c8a050", 6); ent(new T.TorusGeometry(0.22, 0.012, 6, 28), cx, cy, cz, "#c8a050", Math.PI/2);
     for(let k=0;k<8;k++){ const a=k/8*Math.PI*2, x=cx+Math.cos(a)*0.22, z=cz+Math.sin(a)*0.22; C(0.012, 0.06, x, cy+0.04, z, "#f2ecd8", 8);
@@ -149,9 +178,92 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
     const a=V3(DA-0.2, FB+0.86, Z0+0.5), b=V3(DB+0.2, FB+0.86, Z0+0.5); for(let k=0;k<10;k++){ const t0=k/10, t1=(k+1)/10, p=a.clone().lerp(b, t0), q=a.clone().lerp(b, t1);
       p.y-=0.16*4*t0*(1-t0); q.y-=0.16*4*t1*(1-t1); const d=new T.Vector3().subVectors(q, p), L=d.length();
       ME.push({geo:new T.CylinderGeometry(0.018, 0.018, L, 6, 1, true), matrix:new T.Matrix4().compose(p.clone().add(q).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0, 1, 0), d.normalize()), V3(1, 1, 1)), color:new T.Color("#8a0a1e")}); } }
+  /* ---- the back room: the bed, the stage and its pole, the chaise, the champagne, the magazines, the prints, the neon ---- */
+  const BZ0=ZP+WT, BZM=(BZ0+Z1)/2;
+  // the beads hung across the opening: strands of garnet and gold, nothing solid
+  for(let k=0;k<22;k++){ const x=BA+0.03+k*(BB-BA-0.06)/21, col=k%3 ? "#8a0a2a" : "#c8a050";
+    for(let j=0;j<16;j++) ent(new T.SphereGeometry(0.011, 6, 4), x, DH-0.06-j*0.125, ZP+WT/2, j%4===3 ? "#c8a050" : col);
+    C(0.002, DH-FB-0.12, x, (DH+FB+0.06)/2, ZP+WT/2, "#3a0a14", 3); }
+  // the bed: round, red satin, a tufted headboard against the south wall, heart pillows; the mirror over it
+  { const bx=78.75, bz=Z1-1.1, br=1.02;
+    C(br, 0.36, bx, FB+0.18, bz, "#3a0a14", 32); C(br-0.02, 0.18, bx, FB+0.45, bz, "#b8142a", 32); C(br+0.01, 0.06, bx, FB+0.37, bz, "#c8a050", 32);
+    ent(new T.CylinderGeometry(br+0.08, br+0.08, 0.9, 32, 1, false, -Math.PI/2-0.9, 1.8), bx, FB+0.65, bz, "#6a0a1e");
+    for(let k=0;k<7;k++){ const a=-0.75+k*0.25; ent(new T.SphereGeometry(0.018, 6, 4), bx+Math.sin(a)*(br+0.1), FB+0.8, bz+Math.cos(a)*(br+0.1), "#c8a050"); }
+    for(const [dx, col] of [[-0.32, "#e8a0b8"],[0.3, "#f2f0ea"]]){ const hx=bx+dx, hz=bz+0.6;
+      for(const s of [-1, 1]) ent(new T.SphereGeometry(0.11, 10, 8), hx+s*0.07, FB+0.62, hz, col); ent(new T.ConeGeometry(0.15, 0.2, 10), hx, FB+0.52, hz, col, 0, 0, Math.PI); }
+    addCol(bx-br, bx+br, bz-br, Math.min(Z1, bz+br), FB-0.5, FB+0.55); addSeat(bx+0.2, bz-0.5, FB, Math.PI, "THE ROUND BED", false, 0.5);
+    push("mirror", new T.CircleGeometry(0.9, 32), bx, CB-0.012, bz, 0, "#ffffff", Math.PI/2, 0); C(0.92, 0.02, bx, CB-0.012, bz, "#c8a050", 32); }
+  // the stage: a little round platform, a brass pole to the ceiling, a mirror ball over it, a pink light on it
+  { const sx=80.75, sz=Z1-1.25;
+    C(0.62, 0.15, sx, FB+0.075, sz, "#1a1a1e", 28); C(0.64, 0.03, sx, FB+0.15, sz, "#c8a050", 28);
+    C(0.025, CB-FB-0.15, sx, (CB+FB+0.15)/2, sz, "#d8b060", 12); C(0.06, 0.03, sx, CB-0.015, sz, "#c8a050", 12);
+    addCol(sx-0.6, sx+0.6, sz-0.6, sz+0.6, FB-0.5, FB+0.15); addFlat(sx-0.42, sx+0.42, sz-0.42, sz+0.42, FB+0.15);
+    ent(new T.IcosahedronGeometry(0.13, 1), sx+0.55, CB-0.3, sz-0.55, "#d8dce0"); C(0.004, 0.18, sx+0.55, CB-0.09, sz-0.55, "#8a8a8a", 4);
+    lamp(sx, CB-0.25, sz, 0.45, 0xff4aa8, 3.2); }
+  // the chaise against the east wall, red velvet, a gold side table by it: the champagne on ice, two coupes
+  { const cx=X1-0.42, cz=BZM+0.25;
+    RB(0.62, 0.4, 1.35, cx, FB+0.2, cz, "#8a0a1e", 0, 0.06); RB(0.2, 0.55, 1.35, cx+0.22, FB+0.55, cz, "#8a0a1e", 0, 0.08);
+    RB(0.6, 0.4, 0.22, cx, FB+0.6, cz+0.6, "#8a0a1e", 0, 0.08);
+    addCol(cx-0.32, X1, cz-0.68, cz+0.72, FB-0.5, FB+0.42);
+    const tx=X1-0.4, tz=BZ0+0.38; C(0.2, 0.025, tx, FB+0.58, tz, "#c8a050", 18); C(0.018, 0.56, tx, FB+0.29, tz, "#c8a050", 8); C(0.14, 0.02, tx, FB+0.01, tz, "#c8a050", 14);
+    ent(new T.CylinderGeometry(0.09, 0.07, 0.2, 16, 1, true), tx-0.05, FB+0.695, tz, "#c8ccd0"); C(0.07, 0.01, tx-0.05, FB+0.6, tz, "#c8ccd0", 14);
+    C(0.035, 0.24, tx-0.05, FB+0.76, tz, "#1a3a1a", 12); C(0.014, 0.06, tx-0.05, FB+0.91, tz, "#c8a050", 8);
+    for(const dz of [-0.07, 0.07]){ C(0.004, 0.09, tx+0.09, FB+0.64, tz+dz, "#e8eef0", 6); ent(new T.CylinderGeometry(0.05, 0.012, 0.03, 14, 1, true), tx+0.09, FB+0.7, tz+dz, "#e8eef0"); }
+    addCol(tx-0.21, tx+0.21, tz-0.21, tz+0.21, FB-0.5, FB+0.6);
+    VELVET.chaise={x:cx-0.04, z:cz-0.15, y:FB}; }
+  // the magazine rack against the partition, by the bed: the kind kept behind the counter, their covers made up here
+  { const rx=78.25, rz=BZ0+0.14, mags=["VELVET","SATIN SHEETS","AFTER DARK","BOUDOIR","PEARLS","MIDNIGHT"];
+    B(1.1, 0.95, 0.24, rx, FB+0.475, rz, "#3a1a10"); for(const y of [0.3, 0.62, 0.92]) B(1.12, 0.03, 0.26, rx, FB+y, rz, "#c8a050");
+    addCol(rx-0.56, rx+0.56, BZ0, rz+0.13, FB-0.5, FB+0.95);
+    mags.forEach((t, k)=>{ const x=rx-0.4+(k%3)*0.4, y=FB+(k<3 ? 0.46 : 0.78);
+      const cv=signTex(120, 160, (c, W, Hh)=>{ const bg=["#c8143a","#2a0a2a","#e86a9a","#0a0a0a","#7a0a4a","#1a1a3a"][k]; c.fillStyle=bg; c.fillRect(0, 0, W, Hh);
+          // (a lady in silhouette on every cover: a curve of hip and shoulder, a hat, nothing more)
+          c.fillStyle="rgba(0,0,0,0.55)"; c.beginPath(); c.ellipse(W*0.5, Hh*0.4, W*0.08, Hh*0.06, 0, 0, 7); c.fill();
+          c.beginPath(); c.moveTo(W*0.42, Hh*0.48); c.quadraticCurveTo(W*0.3, Hh*0.66, W*0.46, Hh*0.8); c.quadraticCurveTo(W*0.62, Hh*0.92, W*0.6, Hh*0.98); c.lineTo(W*0.72, Hh*0.98);
+          c.quadraticCurveTo(W*0.72, Hh*0.8, W*0.58, Hh*0.66); c.quadraticCurveTo(W*0.66, Hh*0.55, W*0.58, Hh*0.48); c.fill();
+          c.fillRect(W*0.36, Hh*0.33, W*0.28, Hh*0.025);
+          say(c, t, W/2, Hh*0.16, W*0.8, Hh*0.16, "#f4e8c8", "800", "Georgia, serif"); });
+      plane(0.24, 0.32, new T.MeshStandardMaterial({map:cv, roughness:0.4}), x, y, rz+0.128, (k%2 ? 0.06 : -0.05)); }); }
+  // prints of a lady in silhouette, gold framed, over the bed on the west wall
+  for(const [z, k] of [[Z1-1.55, 0],[Z1-0.65, 1]]){ const x=X0+0.03;
+    B(0.05, 0.62, 0.48, x, FB+1.55, z, "#c8a050");
+    const t=signTex(200, 260, (c, W, Hh)=>{ c.fillStyle=k ? "#e8b0c0" : "#f2d8a0"; c.fillRect(0, 0, W, Hh); c.fillStyle="#1a0a10";
+      if(!k){ c.beginPath(); c.ellipse(W*0.32, Hh*0.3, W*0.07, Hh*0.06, 0, 0, 7); c.fill();
+        c.beginPath(); c.moveTo(W*0.3, Hh*0.36); c.quadraticCurveTo(W*0.22, Hh*0.5, W*0.34, Hh*0.6); c.quadraticCurveTo(W*0.62, Hh*0.66, W*0.86, Hh*0.58); c.lineTo(W*0.88, Hh*0.62);
+        c.quadraticCurveTo(W*0.6, Hh*0.74, W*0.3, Hh*0.7); c.quadraticCurveTo(W*0.16, Hh*0.56, W*0.24, Hh*0.4); c.fill(); }
+      else { c.beginPath(); c.ellipse(W*0.5, Hh*0.2, W*0.07, Hh*0.055, 0, 0, 7); c.fill(); c.fillRect(W*0.34, Hh*0.14, W*0.32, Hh*0.02);
+        c.beginPath(); c.moveTo(W*0.44, Hh*0.26); c.quadraticCurveTo(W*0.34, Hh*0.42, W*0.46, Hh*0.55); c.quadraticCurveTo(W*0.36, Hh*0.75, W*0.42, Hh*0.96); c.lineTo(W*0.5, Hh*0.96);
+        c.quadraticCurveTo(W*0.5, Hh*0.75, W*0.6, Hh*0.58); c.quadraticCurveTo(W*0.62, Hh*0.42, W*0.56, Hh*0.26); c.fill(); } });
+    plane(0.42, 0.56, new T.MeshStandardMaterial({map:t, roughness:0.6}), x+0.032, FB+1.55, z, Math.PI/2); }
+  // the heart in neon over the stage on the south wall, AFTER HOURS in it
+  { B(1.0, 0.62, 0.03, 80.75, FB+1.62, Z1-0.065, "#0a0a0c");
+    const t=signTex(400, 248, (c, W, Hh)=>{ c.fillStyle="#0a0a0c"; c.fillRect(0, 0, W, Hh); c.shadowColor="#ff3a8a"; c.shadowBlur=16; c.strokeStyle="#ff8ac0"; c.lineWidth=7;
+      c.beginPath(); c.moveTo(W*0.5, Hh*0.9); c.bezierCurveTo(W*0.08, Hh*0.6, W*0.12, Hh*0.08, W*0.5, Hh*0.3); c.bezierCurveTo(W*0.88, Hh*0.08, W*0.92, Hh*0.6, W*0.5, Hh*0.9); c.stroke();
+      say(c, "AFTER HOURS", W/2, Hh*0.5, W*0.5, Hh*0.14, "#ffd0e8", "700", "'Brush Script MT', 'Segoe Script', cursive"); c.shadowBlur=0; });
+    plane(0.96, 0.58, new T.MeshBasicMaterial({map:t, toneMapped:false}), 80.75, FB+1.62, Z1-0.085, Math.PI); }
+  // a leopard rug at the foot of the bed, a lava lamp on the rack
+  { const t=signTex(256, 256, (c, W, Hh)=>{ c.fillStyle="#c89a4a"; c.fillRect(0, 0, W, Hh);
+      for(let i=0;i<90;i++){ const x=(i*97.3)%W, y=(i*53.7)%Hh, r=6+(i%5)*2; c.fillStyle="#3a2210"; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle="#8a5a22"; c.beginPath(); c.arc(x, y, r*0.5, 0, 7); c.fill(); } });
+    plane(1.4, 0.9, new T.MeshStandardMaterial({map:t, roughness:1.0}), 79.0, FB+0.014, BZ0+1.0, 0, -Math.PI/2);
+    ent(new T.CylinderGeometry(0.035, 0.06, 0.28, 12), 78.65, FB+1.1, BZ0+0.14, "#ff4a8a"); C(0.06, 0.06, 78.65, FB+0.96, BZ0+0.14, "#c8a050", 12);
+    lamp(78.7, FB+1.6, BZM, 0.35, 0xff6a90, 3.5); }
+
   const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.08});
   detailMesh(ME, mat, "velvet-room", true);
-  VELVET.routes={"the velvet room (its door unlocked)":{gate:true, y0:FB, pts:[[79.6, -178.3],[79.98, -177.2],[79.98, -176.1],[79.98, -175.0],[80.0, -174.4],[81.0, -175.0]]}};
+  VELVET.routes={"the velvet room (its door unlocked)":{gate:true, y0:FB, pts:[[79.6, -178.3],[79.98, -177.2],[79.98, -176.1],[79.98, -175.0],[80.0, -174.4],[81.0, -175.0]]},
+    "the velvet room, through the beads to the back room":{gate:true, y0:FB, pts:[[79.98, -175.2],[80.0, -174.4],[81.35, -173.4],[81.85, -172.6],[81.85, -171.6],
+      [81.85, -170.9],[81.6, -170.6],[80.4, -170.55]]}};
+  /* ---- Violet, on the chaise: one of 14q's crowd (added by 14q once it is built, VELVET.people) ---- */
+  VELVET.people=function(){ const C=VELVET.chaise; if(!C || typeof crowdGroup!=="function") return;
+    const G=crowdGroup("the velvet room", 80, -172, 26);
+    const p=crowdAdd(G, {look:{h:0.98, female:true, skin:SKINS[1], hair:HAIRS[5], shirt:"#a8102a", pants:"#a8102a", shoes:"#0a0a0a"}, x:C.x, z:C.z, y:C.y, yaw:-Math.PI/2,
+      mode:"sit", sitY:0.455, job:"lounge", held:"coupe", drink:true, sway:0.35});
+    VELVET.violet=p;
+    const LINES=["“FIRST TIME AT TERRY'S, SUGAR? THE CHAMPAGNE'S ON THE HOUSE. I'M NOT.”","“YOU FOUND THE LOOSE BLOCK ALL BY YOURSELF? I'M IMPRESSED.”",
+      "“SIT DOWN, HONEY, YOU'RE MAKING THE BEADS NERVOUS.”","“TERRY SAYS I'M THE BEST THING ON THE PROPERTY. TERRY'S RIGHT.”",
+      "“THE BED'S FOR CUSTOMERS. THE CHAISE IS MINE. YOU CAN LOOK AT EITHER.”","“WHAT HAPPENS UNDER THE YARD STAYS UNDER THE YARD, DARLING.”",
+      "“POUR YOURSELF A GLASS. I'LL TELL YOU ABOUT THE TIME THE MAYOR CAME DOWN HERE.”"];
+    let k=0; addUse(C.x-0.75, C.z, C.y, "TALK TO VIOLET", ()=>{ toast(LINES[k%LINES.length], "#ff9ad0"); k++; }, 1.3); };
 })();
 
 /* ---- the keypad: a box you type the word into ---- */

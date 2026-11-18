@@ -577,6 +577,7 @@ function updateLife(dt, now, dark, dn){
   if(typeof updateTuningHouse==="function") updateTuningHouse(dark);
   if(typeof updateBeer==="function") updateBeer(dt, dark);
   if(typeof updatePretzelWorks==="function") updatePretzelWorks(dt, dark);
+  if(typeof updateOfficePark==="function") updateOfficePark(dt, dark);
   if(typeof updateCoffee==="function") updateCoffee(dt, dark);
   if(typeof updatePretzel==="function") updatePretzel(dt, dark);
   if(typeof updateEdinSub==="function") updateEdinSub(dt, now);

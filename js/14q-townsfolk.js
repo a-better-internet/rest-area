@@ -31,7 +31,7 @@
 const CROWD={groups:[], t:0};
 function crowdGroup(name, cx, cz, reach){ const g={name:name, cx:cx, cz:cz, r:reach||170, people:[], shown:true, day:true}; CROWD.groups.push(g); return g; }
 // a glass, a can, a cup, a rod, a tray: something held, on a forearm's bone, the way 14b holds a cigarette
-const _HELD={}, _HELD_UP={pint:1, can:1, cup:1, rocks:1};                       // (_HELD_UP: drinks, kept standing in the hand)
+const _HELD={}, _HELD_UP={pint:1, can:1, cup:1, rocks:1, coupe:1};                       // (_HELD_UP: drinks, kept standing in the hand)
 function _heldMat(c){ return _HELD[c]||(_HELD[c]=new T.MeshStandardMaterial({color:c, roughness:0.4, metalness:0.1})); }
 function crowdHold(P, kind, right){
   const h=P.h, g=new T.Group(), bone=P.B[right===false ? P.j.elL : P.j.elR];
@@ -40,6 +40,8 @@ function crowdHold(P, kind, right){
   else if(kind==="can") add(new T.CylinderGeometry(0.033, 0.033, 0.12, 10), "#3a6aa8", 0, 0.03, 0.02);
   else if(kind==="cup") add(new T.CylinderGeometry(0.04, 0.032, 0.10, 10), "#f2efe6", 0, 0.03, 0.02);
   else if(kind==="rocks"){ add(new T.CylinderGeometry(0.038, 0.034, 0.085, 14), "#e8eef0", 0, 0.02, 0.02); add(new T.CylinderGeometry(0.0378, 0.0362, 0.04, 14), "#b8742a", 0, 0.008, 0.02); }   // (a short glass of scotch: the whisky a band 1.5 mm proud of the glass, low in it)
+  else if(kind==="coupe"){ add(new T.CylinderGeometry(0.03, 0.03, 0.004, 12), "#e8eef0", 0, -0.02, 0.02); add(new T.CylinderGeometry(0.0035, 0.0035, 0.08, 6), "#e8eef0", 0, 0.02, 0.02);
+    add(new T.CylinderGeometry(0.052, 0.014, 0.032, 16, 1, true), "#e8eef0", 0, 0.076, 0.02); add(new T.CylinderGeometry(0.048, 0.03, 0.018, 16), "#e8d48a", 0, 0.07, 0.02); }   // (a coupe of champagne)
   else if(kind==="tray"){
     // level on the flat of the hand: a frame turned back by the arm's own pose (the "tray" job's shoulder and elbow,
     // below), so up in it is up in the world whatever the forearm is doing
@@ -166,6 +168,9 @@ function _crowdPose(p, now, moving){
     B[J.head].rotation.x=-0.12*up; p.sip=up; }
   const k=p.job;
   // (laid back in a recliner, the footrest out: the back leant into the chair's, the legs out along the rest, the eyes still ahead)
+  // (on a chaise, at her ease: leant back a little, the left leg crossed over the right, the free arm along the chaise's back)
+  if(k==="lounge"){ B[J.spine].rotation.x=-0.16; B[J.hpL].rotation.set(-1.75, 0, -0.22); B[J.knL].rotation.x=1.25;
+    B[J.shL].rotation.set(0.05, 0, -0.75); B[J.elL].rotation.x=-0.25; B[J.head].rotation.z=0.08; }
   if(k==="recline"){ B[J.spine].rotation.x=-0.30; B[J.head].rotation.x+=0.24; B[J.hpL].rotation.x=B[J.hpR].rotation.x=-1.40; B[J.knL].rotation.x=B[J.knR].rotation.x=0.30; }
   if(k==="wash"){ const a=t*2.6; B[J.shR].rotation.set(-1.15+Math.sin(a)*0.25, 0, 0.25+Math.cos(a)*0.25); B[J.elR].rotation.x=-0.5; B[J.spine].rotation.x=0.28; B[J.head].rotation.x=0.2; }
   else if(k==="water"){ B[J.shR].rotation.set(-0.85, 0.2, 0); B[J.elR].rotation.x=-0.25+Math.sin(t*0.7)*0.08; B[J.head].rotation.x=0.35; B[J.spine].rotation.y=Math.sin(t*0.4)*0.25; }
@@ -446,3 +451,5 @@ function crowdRound(pts, R, closed){
           const x=p.x+c*0.32+s*2.25, z=p.z-s*0.32+c*2.25;
           PUFFS.emit(x, Y+2.62, z, (Math.random()-0.5)*0.1, 0.55+Math.random()*0.2, (Math.random()-0.5)*0.1, 0.10, 0.8, 2.0, moving ? 0.22 : 0.12, 0.32, 0); } } }); }
 })();
+// (people built before the crowd was: the velvet room's, 12f)
+if(typeof VELVET!=="undefined" && VELVET.people) VELVET.people();

@@ -116,11 +116,16 @@ const EAST=(function(){
     noPole:[[716, 748]],                                              // where the wires along the road keep out (14m, 14n; 14y): the road north's mouth
     // Hollow Road, north off US 6N into the woods between the farms and the fireworks outlet, and Edinboro Beer's drive-thru
     // on it (14mb): the road's clearing, the distributor's lot's, the road's centre line and where it runs off the map
-    beer:{rx:732, end:-1700, road:{x0:721, x1:743, z0:-1700, z1:z-13}, lot:{x0:733, x1:812, z0:-1316, z1:-1250}},
+    beer:{rx:732, end:-1880, road:{x0:721, x1:743, z0:-1880, z1:z-13}, lot:{x0:733, x1:812, z0:-1316, z1:-1250}},
     // and a third of a kilometre on up it, east of the road, the Edinboro Pretzel Company's works (14mc): its clearing, graded
     // level, and the 8 m canopy over the woods round it (on the 32 m lattice)
-    pretz:{site:{x0:743, x1:892, z0:-1652, z1:-1496}, mouth:{z0:-1552, z1:-1536}},
-    pcan:{x0:640, x1:960, z0:-1760, z1:-1504} };
+    pretz:{site:{x0:743, x1:892, z0:-1652, z1:-1496}, mouth:{z0:-1552, z1:-1536},
+           // the trail from the works' back fence east through the woods to a clearing on the shore, and that clearing
+           trail:smoothPath([{x:892,z:-1600},{x:899,z:-1596},{x:906,z:-1599},{x:913,z:-1605},{x:919,z:-1604},{x:925,z:-1600}], 1.5),
+           woods:{x0:892, x1:924, z0:-1622, z1:-1580}, lake:{x0:922, x1:972, z0:-1628, z1:-1576}},
+    // and up the road past the works, the office park (14md): its clearing, graded, out to the shore so the lake opens behind it
+    office:{site:{x0:743, x1:990, z0:-1862, z1:-1690}, mouth:{z0:-1782, z1:-1766}},
+    pcan:{x0:640, x1:1024, z0:-1920, z1:-1504} };
 })();
 /* ---- west along US 6N -----------------------------------------------------
    Past the west fields the road goes on into the woods and comes to French Creek Pines, a campground and trailer
@@ -307,7 +312,8 @@ const Terrain=(function(){
     const pd=boxDist(EDIN.plain,x,z);
     if(pd<60) h=toward(h, EDIN.y, pd, 0, 60);
     // east along US 6N: the country lies lower and flatter toward the lake, and every clearing is level with the road
-    { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z), boxDist(EAST.beer.road,x,z), boxDist(EAST.beer.lot,x,z), boxDist(EAST.pretz.site,x,z));
+    { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z), boxDist(EAST.beer.road,x,z), boxDist(EAST.beer.lot,x,z), boxDist(EAST.pretz.site,x,z),
+        boxDist(EAST.pretz.lake,x,z), boxDist(EAST.office.site,x,z));
       if(ed<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, ed));
       if(ed<50) h=toward(h, EDIN.y, ed, 0, 46);
       // the lake: its bed shelving off the shore to six metres; the banks brought down to the water, and never under it.
@@ -447,7 +453,9 @@ const Terrain=(function(){
     if(x>DRIVE_B.x0 && x<DRIVE_B.x1 && z>DRIVE_B.z0 && z<DRIVE_B.z1) d=Math.min(d, distToPath(DRIVE,x,z).d-4.6);
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
-    d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3, boxSD(EAST.beer.road,x,z), boxSD(EAST.beer.lot,x,z), boxSD(EAST.pretz.site,x,z));
+    d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3, boxSD(EAST.beer.road,x,z), boxSD(EAST.beer.lot,x,z), boxSD(EAST.pretz.site,x,z),
+      boxSD(EAST.pretz.lake,x,z), boxSD(EAST.office.site,x,z));
+    { const W=EAST.pretz.woods; if(x>W.x0-12 && x<W.x1+12 && z>W.z0-12 && z<W.z1+12) d=Math.min(d, distToPath(EAST.pretz.trail,x,z).d-1.6); }   // (the trail: a clearing a path wide)
     d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z), boxSD(WEST.ranch,x,z));
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
@@ -502,7 +510,7 @@ const RING_HWYN={x0:-272, x1:-48, z0:-1752, z1:-336}, RING_HWYS={x0:-272, x1:-48
 // and one at 4 m east along US 6N: the outlet, the street, the park and the lake's near shore (EAST)
 const RING_EAST={x0:640, x1:1472, z0:-1344, z1:-1056};
 // and one at 4 m north of it up Hollow Road, round the pretzel works (EAST.pretz, 14mc)
-const RING_PRETZ={x0:640, x1:960, z0:-1760, z1:-1344};
+const RING_PRETZ={x0:640, x1:1024, z0:-1920, z1:-1344};      // (and the office park up the road, out to the shore)
 // and one at 4 m west along US 6N past the west fields: the road through the woods and French Creek Pines (WEST), holed
 // under the community hall, whose basement lounge is under it (the hall's floor and its skirting cover the hole's edges)
 const RING_WEST={x0:-1616, x1:-512, z0:-1344, z1:-1040};
@@ -592,13 +600,17 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
     const mown=Math.max(1-smoothstep(0, 8, Terrain.boxDist(SITE.pad,x,z)), farm, kirk, town);
     return [w, w*mown*(hd<22 ? smoothstep(12, 22, hd) : 1)];
   }
-  function grid(R,cell,holes,name,skirt){
+  // (stitch: the cell of the coarser ground this patch is let into. Its border then takes that ground's heights, straight
+  //  between the coarse corners as the coarse triangles draw them, so on a crest or in a hollow no sliver opens between the
+  //  two and no apron is wanted)
+  function grid(R,cell,holes,name,skirt,stitch){
     const x0=R.x0, x1=R.x1, z0=R.z0, z1=R.z1;
     const nx=Math.round((x1-x0)/cell), nz=Math.round((z1-z0)/cell);
-    TERRAIN_RINGS.push({x0:x0, x1:x1, z0:z0, z1:z1, cell:cell, holes:holes||[], name:name});
+    const RR={x0:x0, x1:x1, z0:z0, z1:z1, cell:cell, holes:holes||[], name:name, stitch:stitch||0};
+    TERRAIN_RINGS.push(RR);
     const N=(nx+1)*(nz+1);
     const H=new Float32Array(N);
-    for(let j=0;j<=nz;j++) for(let i=0;i<=nx;i++) H[j*(nx+1)+i]=Terrain.heightAt(x0+i*cell, z0+j*cell);
+    for(let j=0;j<=nz;j++) for(let i=0;i<=nx;i++) H[j*(nx+1)+i]=_ringH(RR, x0+i*cell, z0+j*cell, Terrain.heightAt);      // (the field's own: the corners' memory comes later)
     const P=[], C=[], U=[], G2=[], IDX=[], c=new T.Color();
     for(let j=0;j<=nz;j++) for(let i=0;i<=nx;i++){
       const k=j*(nx+1)+i, x=x0+i*cell, z=z0+j*cell, y=H[k];
@@ -725,8 +737,8 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   grid(RING_PRETZ, 4, [], "ground-pretz", 6);
   grid(RING_WEST, 4, WEST_HOLES, "ground-west", 6);
   grid(LOON_RING, 0.5, LOON_HOLES, "ground-loon", 0);       // (no apron: it meets the 4 m ground on the street's flat)
-  grid(KIRK_RING, 2, KIRK_HOLES, "ground-kirk", 0);              // (no apron: it meets the 8 m ground on the flat, and one would hang through the hall)
-  grid(TUNE_RING, 2, TUNE_HOLES, "ground-tune", 0);              // (no apron: the 8 m ground's own skirt round the hole it is let into covers the seam, and one would lie in its plane)
+  grid(KIRK_RING, 2, KIRK_HOLES, "ground-kirk", 0, 8);              // (no apron: its border is stitched to the 8 m ground, and one would hang through the hall)
+  grid(TUNE_RING, 2, TUNE_HOLES, "ground-tune", 0, 8);              // (no apron: its border is stitched to the 8 m ground's edges, so no sliver opens on the crest)
   TERRAIN_RINGS.sort((a,b)=>a.cell-b.cell);        // finest ring wins
 })();
 
@@ -736,6 +748,14 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
 /* The rings' corners, remembered: the field is fixed once the ground is built, and every foot, wheel and walker asks
    after the same few corners frame after frame. Cleared when it grows past a quarter of a million. */
 const _GH=new Map();
+// the height a ring draws at one of its corners: the field's, or, on a stitched patch's border, the coarse edge's
+function _ringH(R, x, z, f){
+  const h=f || _gh, s=R.stitch; if(!s) return h(x, z);
+  const e=1e-4, onX=Math.abs(x-R.x0)<e || Math.abs(x-R.x1)<e, onZ=Math.abs(z-R.z0)<e || Math.abs(z-R.z1)<e;
+  if(onX && !onZ){ const a=R.z0+Math.floor((z-R.z0)/s+1e-6)*s, t=(z-a)/s; return t<1e-6 ? h(x, a) : h(x, a)+(h(x, a+s)-h(x, a))*t; }
+  if(onZ && !onX){ const a=R.x0+Math.floor((x-R.x0)/s+1e-6)*s, t=(x-a)/s; return t<1e-6 ? h(a, z) : h(a, z)+(h(a+s, z)-h(a, z))*t; }
+  return h(x, z);
+}
 function _gh(x, z){
   const k=Math.round(x*16+100000)*400009+Math.round(z*16+100000);       // (to a sixteenth of a metre: no two rings' corners are closer)
   let h=_GH.get(k);
@@ -758,9 +778,9 @@ function groundAt(x,z){
     }
     if(holed) continue;
     const u=Math.min(1,Math.max(0,(x-cx0)/c)), v=Math.min(1,Math.max(0,(z-cz0)/c));
-    const hb=_gh(cx0+c, cz0), hd=_gh(cx0, cz0+c);
-    if(u+v<=1){ const ha=_gh(cx0, cz0); return ha + (hb-ha)*u + (hd-ha)*v; }
-    const he=_gh(cx0+c, cz0+c);
+    const hb=_ringH(R, cx0+c, cz0), hd=_ringH(R, cx0, cz0+c);
+    if(u+v<=1){ const ha=_ringH(R, cx0, cz0); return ha + (hb-ha)*u + (hd-ha)*v; }
+    const he=_ringH(R, cx0+c, cz0+c);
     return he + (hd-he)*(1-u) + (hb-he)*(1-v);
   }
   return Terrain.heightAt(x,z);

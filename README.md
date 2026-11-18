@@ -561,7 +561,20 @@ If the scene runs hot on your machine, start there (see below).
     baked brown. Through the wall at the end is the warehouse: racking to
     the roof, cartons on every pallet, a forklift going round its loop
     (it stops for you), five dock doors, and a trailer backed in at one,
-    half loaded, that you can walk into. Three flour silos stand out back.
+    half loaded, that you can walk into. Three flour silos stand out back,
+    and a bark trail goes out the back fence through the woods to a
+    clearing on the lake shore: a bench, a picnic table, two kayaks.
+  - Past the works the road comes to **Hollow Road Corporate Park**, all
+    1984: a car lot, three buildings round a plaza with a fountain in it,
+    and a lawn down to the lake behind. French Creek Financial is brown
+    brick and smoked glass with a glass pyramid on the roof; Midland
+    Mutual is five storeys of dark glass on a black granite band; Lakeshore
+    Data Systems is white precast and ribbon windows behind a mirrored
+    glass bay. Every one has a stone lobby (black and white marble,
+    travertine, pink granite), a brass-trimmed desk with somebody at it,
+    leather sofas, ficus, the felt-letter directory and brass elevator
+    doors, and behind them the office: cubicles in fours with beige
+    terminals, a glass conference room, the copier and the water cooler.
   - **The tuning house** at the tower's foot, red brick with a flat roof,
     is open: the feed line comes in through its wall to the tuning unit (a
     copper coil and vacuum capacitors in a wire cage), the meters and the
@@ -1047,7 +1060,14 @@ If the scene runs hot on your machine, start there (see below).
       velvet on every wall, a deep carpet, a buttoned chesterfield and two
       wing chairs, a bar cart of decanters, a record console playing the
       jazz trio, gold frames, a little chandelier, and the name in pink
-      neon.
+      neon. From the poker room you would never know: the door is faced
+      with the same painted block as the wall round it, and only one
+      block that sits a little proud gives it away. Through a curtain of
+      beads at the back is the back room: a round bed in red satin under
+      a mirror, a little stage with a brass pole and a mirror ball, an
+      AFTER HOURS heart in neon, champagne on ice, a rack of the
+      magazines kept behind the counter, and Violet on the chaise with a
+      coupe of champagne, who has a word for anybody who comes through.
     - **The corridor and the arcade.** A door in the far wall opens on six
       steps down to a fallout-shelter corridor from 1962. It has block
       walls painted green and cream, a yellow stripe, conduit and a cable
@@ -1066,8 +1086,9 @@ If the scene runs hot on your machine, start there (see below).
       and back walls, SUDS PATROL in the back corner, ROUTE 6 RALLY by the
       hoops, GROUNDHOG GULCH and
       TURNPIKE TURTLE either side of the way in, and HORNWORM HAVOC and
-      EXIT 166 RUMBLE, SLIPPERY ROCK and SILO SCRAMBLE along the back
-      wall of the east end, past the hoops),
+      EXIT 166 RUMBLE, SLIPPERY ROCK, SILO SCRAMBLE, ABDUCTION ACRES,
+      CROPDUSTER ACE and DEEP WELL along the back wall of the east end,
+      past the hoops),
       with a token changer on the east wall, clear of the trash can.
       Against the front wall of the east end are two machines you stand
       at: WHACK-A-CHUCK and the ALLEY ROLL lane.
@@ -1273,6 +1294,26 @@ If the scene runs hot on your machine, start there (see below).
         you can neither jump nor climb while you carry it. What is left
         of the bonus clock is yours at the pie. Three Junes. The best
         five scores are kept.
+      - **Abduction Acres** is flown back and forth over farm country at
+        night that wraps round, with a scanner showing all of it. Saucers
+        come down and beam the cows up; shoot one carrying a cow and she
+        floats down (catch her for five hundred). A cow taken to the top
+        of the sky comes back a Moo-tant and hunts you. `Space` fires, `B`
+        is the barn-burner (three a game). Each cow standing pays at the
+        end of a wave.
+      - **Cropduster Ace** scrolls Erie County down the screen under Peg,
+        a yellow biplane: the farms, then the lake. The Sky Hogs' red
+        planes come in fives (down all five for a POW: a twin gun, then
+        wingmen), their bombers take some hitting, and each stage ends
+        with their airship. `Space` fires, `Z` loops out of harm's way,
+        three loops a life.
+      - **Deep Well** is played round the rim of a well seen end on in
+        glowing lines, a new shape each level. Jumpers climb up and hop
+        along the rim at you, Sparks wriggle up and go off at the top,
+        Bindweed grows vines up a lane. Left and right step round the rim,
+        `Space` fires down your lane, `B` is the zapper (once a level), and
+        between levels you dive down the well: a vine left in your lane
+        catches you.
       - **Whack-a-Chuck** is not a screen but a machine: a red box with
         a patch of lawn for a top, six burrows and a woodchuck under
         each. The mouse carries the mallet and a click brings it down, or

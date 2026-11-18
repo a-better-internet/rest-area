@@ -67,7 +67,13 @@ const WARP=(function(){
     ["HOLLOW ROAD",           733.5, -1220.0,   0,           x=>g(x[1], x[2])],
     ["THE PRETZEL WORKS",     757.0, -1580.0,  -Math.PI/2,   x=>g(x[1], x[2])],
     ["THE PRETZEL WORKS' FLOOR", 782.5, -1576.0, -Math.PI/2, x=>surfaceY(x[1], x[2], PRETZ.FLS+0.1)],
-    ["THE PRETZEL WORKS' WAREHOUSE", 838.6, -1560.5, -Math.PI/2, x=>surfaceY(x[1], x[2], PRETZ.FLS+0.1)]];
+    ["THE PRETZEL WORKS' WAREHOUSE", 838.6, -1560.5, -Math.PI/2, x=>surfaceY(x[1], x[2], PRETZ.FLS+0.1)],
+    ["THE LAKE BEHIND THE PRETZEL WORKS", 945.0, -1600.0, -Math.PI/2, x=>g(x[1], x[2])],
+    ["HOLLOW ROAD CORPORATE PARK", 760.0, -1774.0, -Math.PI/2, x=>g(x[1], x[2])],
+    ["THE OFFICE PARK'S FOUNTAIN", 880.0, -1775.0, -Math.PI/2, x=>g(x[1], x[2])],
+    ["FRENCH CREEK FINANCIAL", 826.0, -1776.0, -Math.PI/2, x=>surfaceY(x[1], x[2], OFFICE.FL+0.1)],
+    ["MIDLAND MUTUAL", 886.0, -1820.0, 0, x=>surfaceY(x[1], x[2], OFFICE.FL+0.1)],
+    ["LAKESHORE DATA SYSTEMS", 886.0, -1729.0, Math.PI, x=>surfaceY(x[1], x[2], OFFICE.FL+0.1)]];
   const KEYS="1234567890ABCDFGHIJKLMNOPQRTUV";            // (E and S left out: E is your hand, S is a step back)
   // the hoop: in front of the first one there is, facing it
   const hoopAt=()=>{ const H=(typeof YARD_HOOPS!=="undefined" && YARD_HOOPS[0]) || null; if(!H) return null;
