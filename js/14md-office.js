@@ -171,7 +171,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       if(who) K.sitters.push({x:o.x, z:o.z, y:y, yaw:o.ry, look:who}); return o; };
     // a chrome sled chair with a cushion, for visitors, facing d
     K.guest=(u, v, y, d, col, label)=>{ const o=K.obj(u, v, d, y);
-      for(const s of [-1, 1]){ o.b(0.028, 0.025, 0.5, s*0.22, 0.012, 0, "#b8bcc0"); o.b(0.02, 0.46, 0.02, s*0.22, 0.24, 0.23, "#b8bcc0"); o.b(0.02, 0.8, 0.02, s*0.22, 0.4, -0.24, "#b8bcc0"); }   // (runners thicker than the uprights: no side of one in the other's)
+      for(const s of [-1, 1]){ o.b(0.028, 0.025, 0.46, s*0.2, 0.012, 0, "#b8bcc0"); o.b(0.02, 0.46, 0.02, s*0.2, 0.24, 0.19, "#b8bcc0"); o.b(0.02, 0.8, 0.02, s*0.2, 0.4, -0.24, "#b8bcc0"); }   // (the frame inside the seat's and the back's edges: no face of it in theirs)
       o.rb(0.48, 0.08, 0.48, 0, 0.46, 0, col, 0.03); o.rb(0.46, 0.38, 0.07, 0, 0.74, -0.24, col, 0.03);
       addSeat(o.x, o.z, y, o.ry+Math.PI, label || "A CHAIR", false, 0.66); return o; };
     // a desk you sit at facing d: the top, the pedestal, the modesty panel; a beige terminal on it facing you, its keyboard; the chair
@@ -218,7 +218,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         const [ax, az]=o.at(-0.23, -0.31), [bx2, bz2]=o.at(0.23, 0.31); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+1.33); } };
     K.shelf=(u, v, y, d, len, col)=>{ const o=K.obj(u, v, d, y), q=_trng(((u*13+v*7)|0)+3);
       o.b(len, 2.1, 0.36, 0, 1.05, 0, col); for(let k=0;k<5;k++){ o.b(len-0.04, 0.025, 0.34, 0, 0.12+k*0.44, 0.012, col); if(k===4) continue;
-        for(let x=-len/2+0.06; x<len/2-0.05;){ const bw=0.03+q()*0.04, bh=0.24+q()*0.1; o.b(bw, bh, 0.24, x+bw/2, 0.135+k*0.44+bh/2, 0.03, ["#6a2a1a","#2a3a5a","#3a5a2a","#7a5a2a","#4a2a3a","#2a2a2a"][(q()*6)|0]); x+=bw+0.005; } }
+        for(let x=-len/2+0.06; x<len/2-0.05;){ const bw=0.03+q()*0.04, bh=0.24+q()*0.1; const lift=0.004+q()*0.006, bd=0.2+q()*0.04; o.b(bw, bh, bd, x+bw/2, 0.1325+lift+k*0.44+bh/2, 0.03+(0.24-bd)/2, ["#6a2a1a","#2a3a5a","#3a5a2a","#7a5a2a","#4a2a3a","#2a2a2a"][(q()*6)|0]); x+=bw+0.005; } }
       const [ax, az]=o.at(-len/2, -0.18), [bx2, bz2]=o.at(len/2, 0.18); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+2.1); };
     K.cooler=(u, v, y)=>{ const [x, z]=P(u, v); B(0.34, 0.95, 0.34, x, y+0.475, z, "#b8ae98"); C(0.15, 0.42, x, y+1.16, z, "#7ab0d0", 14); addCol(x-0.2, x+0.2, z-0.2, z+0.2, y-0.05, y+1.4); };
     K.copier=(u, v, y, d)=>{ const o=K.obj(u, v, d, y); o.rb(1.0, 1.0, 0.65, 0, 0.5, 0, "#bcb4a2", 0.04); o.rb(1.0, 0.1, 0.65, 0, 1.05, 0, "#a49c8a", 0.02); o.b(0.3, 0.12, 0.012, 0.25, 0.9, 0.33, "#2a6a3a");
@@ -237,7 +237,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     // the shaft: its sides and back the whole height; its front a wall on every floor, the opening in it framed in brass
     // (its sides start behind the front wall: no face of one in the other's)
     K.box(0.12, top-levels[0]+0.05, VB-VF-0.2, UC-0.89, (top+levels[0])/2, (VF+0.2+VB)/2, "#8a8478"); K.box(0.12, top-levels[0]+0.05, VB-VF-0.2, UC+0.89, (top+levels[0])/2, (VF+0.2+VB)/2, "#8a8478");
-    K.box(1.9, top-levels[0]+0.05, 0.12, UC, (top+levels[0])/2, VB-0.06, "#8a8478");
+    K.box(1.66, top-levels[0]+0.05, 0.12, UC, (top+levels[0])/2, VB-0.06, "#8a8478");          // (between the sides, not across their ends)
     K.col(UC-0.95, UC-0.83, VF, VB, levels[0]-0.5, top); K.col(UC+0.83, UC+0.95, VF, VB, levels[0]-0.5, top); K.col(UC-0.95, UC+0.95, VB-0.12, VB, levels[0]-0.5, top);
     E.doorCols=[]; E.land=[];
     const bm=new T.MeshStandardMaterial({color:new T.Color("#b0904c"), metalness:0.7, roughness:0.32});
