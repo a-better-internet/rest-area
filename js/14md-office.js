@@ -249,6 +249,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       K.box(0.08, DH, 0.06, UC-0.54, y+DH/2, VF-0.025, BRASS); K.box(0.08, DH, 0.06, UC+0.54, y+DH/2, VF-0.025, BRASS); K.box(1.18, 0.08, 0.06, UC, y+DH+0.04, VF-0.026, BRASS);
       K.box(0.1, 0.22, 0.03, UC+0.78, y+1.1, VF-0.015, BRASS); K.box(0.26, 0.14, 0.03, UC, y+DH+0.28, VF-0.015, "#1a1a1e");
       { const [nx, nz]=F.P(UC, VF-0.032); sign(0.22, 0.12, (c, W, H)=>{ c.fillStyle="#1a1a1e"; c.fillRect(0, 0, W, H); say(c, f===0 ? "L" : String(f+1), W/2, H/2, W*0.6, H*0.62, "#ff8a3a", "700", "Arial"); }, nx, y+DH+0.28, nz, F.ry, true, 88); }
+      // the sill: a floor across the doorway's depth, from the landing's slab to the car's, or you drop through the gap between them
+      K.flat(UC-0.5, UC+0.5, VF-0.02, CAR_V0+0.03, y); K.box(0.99, 0.028, CAR_V0-VF-0.015, UC, y-0.006, (VF+0.01+CAR_V0-0.005)/2, BRASS);
       const cb={}; const R=K.rect(UC-0.5, UC+0.5, VF, VF+0.2); Object.assign(cb, {x0:R[0], x1:R[1], z0:R[2], z1:R[3], y0:y-0.3, y1:y+DH}); COL_DYN.push(cb); E.doorCols.push(cb);
       // the landing doors: two leaves in the opening, sliding apart into the wall either side
       const g=new T.Group(); const [gx, gz]=F.P(UC, VF+0.1); g.position.set(gx, y+DH/2, gz); g.rotation.y=F.ry; scene.add(g);
