@@ -565,7 +565,7 @@ If the scene runs hot on your machine, start there (see below).
     and a bark trail goes out the back fence through the woods to a
     clearing on the lake shore: a bench, a picnic table, two kayaks.
   - Past the works the road comes to **Hollow Road Corporate Park**, all
-    1984: a car lot, three buildings round a plaza with a fountain in it
+    1984: a car lot (about fifty cars in it on a working day), three buildings round a plaza with a fountain in it
     (its jets arcing in from the rim, the water running off two bowls),
     and a lawn down to the lake behind. Every floor of every building is
     there, and every building's elevator works: call it, step in, `E` for
@@ -573,17 +573,26 @@ If the scene runs hot on your machine, start there (see below).
     - **Midland Mutual**, five storeys of bronze glass over bronze
       spandrels, its name in red along the roof: the claims counter and
       file room; a bullpen of desks in rows with the managers' glass
-      offices; the cubicle farm and break room; the executive floor's
+      offices; policy services (private offices down one wall, a typing
+      pool of desks in facing pairs, a training room with its screen and
+      projector, the mail room's pigeonholes, the break room); the executive floor's
       walnut corner offices and boardroom; the computer room on its raised
       floor, and the cafeteria.
     - **French Creek Financial**, brown brick with cast stone bands and a
       glass pyramid on the roof: the bank (the teller line behind glass,
-      the rope queue, the vault door); the loan officers' glass offices;
-      the law firm upstairs in walnut, with its library.
+      the rope queue, the vault door) with Erie Valley Travel behind glass
+      in the lobby's corner; upstairs, the loan officers' glass offices on
+      one side of a wall and Allegheny Title & Abstract on the other (its
+      deed books, map cabinets, microfiche reader and closing room); the
+      law firm on top in walnut, with its library.
     - **Lakeshore Data Systems**, sandstone with teal bands, glass block up
       its corners and its initials in neon: the showroom of personal
-      computers and the network board; the software pit upstairs, the
-      break room with its arcade machine and foosball, the server room.
+      computers and the network board; the software floor upstairs in
+      pinwheel pods, a big screen and beanbags, the break room with its
+      arcade machine and foosball, the server room, and Tri-County Temps
+      with its typing test.
+    - On every floor a board over the way out of the elevator says which
+      floor it is and who is on it.
   - Hollow Road itself has its pole line and wires, a light over each
     place's entrance, its signs (speed limit, deer, trucks entering, the
     office park ahead), reflector posts, a guardrail where it crosses

@@ -1145,3 +1145,20 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   the guardrail at Hollow Run, the bus shelter, the verges, and the small
   things at the beer distributor and the pretzel works; `updateHollowRoad`
   (14) lights the heads and puffs steam off the oven stacks.
+
+## Round 39 notes
+
+- An elevator's doorway (14md) has a sill: a flat across the wall's depth
+  from the landing's slab onto the car's floor. Without it there is a gap
+  between them, and stepping out drops you to the floor below.
+  `tools/elevators.js` rides every car to every floor and walks out.
+- 14md's `kit`: `desk` puts its own clutter on (`DQ`, its own random
+  stream so nobody moves seats), unless `clutter:false`; `shelf` is an open
+  case (back, sides, top), never a solid box with the books inside it;
+  `clock` is a disc on the wall facing its way. `pods` lays LDS's pinwheel
+  pods, `poster` paints a travel poster. Each building's `floorNames` hang
+  a two-sided board over the way out of the elevator on every upper floor.
+- The office lot's cars are seeded (`parked` in 14md), fuller near the way
+  in and the buildings. Each car is a `COL_DYN` box and six draws close
+  to; keep a lot near fifty, not a hundred.
+
