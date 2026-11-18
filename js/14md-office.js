@@ -73,7 +73,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   // the plaza laid in squares of buff concrete and terra cotta pavers, a joint round each (paint over the paving, 08's ladder), clear of the basin
   for(let x=852.2; x<935.9; x+=3.0) for(let z=-1811.8; z<-1738.1; z+=3.0){ const cx=x+1.45, cz=z+1.45; if(Math.hypot(cx-893, cz+1775)<5.0) continue;
     const ring=Math.abs(Math.hypot(cx-893, cz+1775)-9)<1.6;
-    stripe(cx, z, cx, Math.min(z+2.9, -1738.05), Math.min(2.9, 935.95-x), ring ? "#9a6a4a" : (((x-852.2)/3+(z+1811.8)/3)|0)%2 ? "#aa9e86" : "#a2967e", LY); }
+    stripe(cx, z, cx, Math.min(z+2.9, -1738.05), Math.min(2.9, 935.95-x), ring ? "#6a4630" : (((x-852.2)/3+(z+1811.8)/3)|0)%2 ? "#7a7062" : "#72685a", LY); }
   // the lot's stalls: rows back to back down its length, kept six metres clear of the way in
   for(const [xa, xb] of [[750.3, 755.8],[762.0, 767.5],[767.5, 773.0],[779.5, 785.0],[785.0, 790.5],[797.0, 802.5]])
     for(const [z0, z1] of [[-1846.0, -1789.0],[-1759.0, -1704.0]]) for(let z=z0; z<=z1+0.01; z+=2.7) stripe(xa, z, xb, z, 0.1, WHITE_LINE, LY);
@@ -150,7 +150,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         rb:(w, h, dd, lx, ly, lz, c, rad)=>RB(w, h, dd, f.x(lx, lz), y+ly, f.z(lx, lz), c, ry, rad),
         c:(rr, h, lx, ly, lz, c, seg)=>C(rr, h, f.x(lx, lz), y+ly, f.z(lx, lz), c, seg)}; };
     // a straight wall in the frame, on the floor at y, h high, its collider with it; gaps along it left open
-    K.wall=(u0, v0, u1, v1, y, h, c, gaps, t)=>{ t=t||0.12; const along=Math.abs(u1-u0)>Math.abs(v1-v0), a0=along ? Math.min(u0, u1) : Math.min(v0, v1), a1=along ? Math.max(u0, u1) : Math.max(v0, v1);
+    K.wall=(u0, v0, u1, v1, y, h, c, gaps, t)=>{ t=t||0.12; const along=Math.abs(u1-u0)>Math.abs(v1-v0), a0=(along ? Math.min(u0, u1) : Math.min(v0, v1))+0.055, a1=(along ? Math.max(u0, u1) : Math.max(v0, v1))-0.055;   // (its ends inside what it meets, or short of a glass line)
       let p=a0; for(const g of (gaps||[]).concat([[a1, a1]]).sort((m, n)=>m[0]-n[0])){ if(g[0]-p>0.02){
           if(along){ K.box(g[0]-p, h, t, (p+g[0])/2, y+h/2, v0, c); K.col(p, g[0], v0-t/2, v0+t/2, y-0.05, y+h); }
           else { K.box(t, h, g[0]-p, u0, y+h/2, (p+g[0])/2, c); K.col(u0-t/2, u0+t/2, p, g[0], y-0.05, y+h); } }
@@ -158,9 +158,9 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     K.glassWall=(u0, v0, u1, v1, y, h, gaps)=>{ const along=Math.abs(u1-u0)>Math.abs(v1-v0), a0=along ? Math.min(u0, u1) : Math.min(v0, v1), a1=along ? Math.max(u0, u1) : Math.max(v0, v1);
       let p=a0; for(const g of (gaps||[]).concat([[a1, a1]]).sort((m, n)=>m[0]-n[0])){ if(g[0]-p>0.05){ const m=(p+g[0])/2;
           const [x, z]=along ? P(m, v0) : P(u0, m); push("glass", planeGeo(g[0]-p-0.04, h-0.06, 0), x, y+h/2, z, F.ry+(along ? 0 : Math.PI/2), "#ffffff");
-          if(along){ K.box(g[0]-p, 0.06, 0.08, m, y+0.03, v0, "#3a3a3e"); K.box(g[0]-p, 0.06, 0.08, m, y+h-0.03, v0, "#3a3a3e"); K.col(p, g[0], v0-0.04, v0+0.04, y-0.05, y+h); }
-          else { K.box(0.08, 0.06, g[0]-p, u0, y+0.03, m, "#3a3a3e"); K.box(0.08, 0.06, g[0]-p, u0, y+h-0.03, m, "#3a3a3e"); K.col(u0-0.04, u0+0.04, p, g[0], y-0.05, y+h); }
-          for(const e of [p, g[0]]) along ? K.box(0.06, h, 0.1, e, y+h/2, v0, "#3a3a3e") : K.box(0.1, h, 0.06, u0, y+h/2, e, "#3a3a3e"); }
+          if(along){ K.box(g[0]-p, 0.06, 0.08, m, y+0.035, v0, "#3a3a3e"); K.box(g[0]-p, 0.06, 0.08, m, y+h-0.035, v0, "#3a3a3e"); K.col(p, g[0], v0-0.04, v0+0.04, y-0.05, y+h); }
+          else { K.box(0.08, 0.06, g[0]-p, u0, y+0.035, m, "#3a3a3e"); K.box(0.08, 0.06, g[0]-p, u0, y+h-0.035, m, "#3a3a3e"); K.col(u0-0.04, u0+0.04, p, g[0], y-0.05, y+h); }
+          for(const e of [p, g[0]]) along ? K.box(0.06, h-0.004, 0.1, e, y+h/2, v0, "#3a3a3e") : K.box(0.1, h-0.004, 0.06, u0, y+h/2, e, "#3a3a3e"); }   // (rails and posts never flush: rails 5 mm in, posts 2 mm short)
         p=Math.max(p, g[1]); } };
     // an office chair on its star, facing d; the seat goes with it, and (if asked) the one who sits in it
     K.chair=(u, v, y, d, col, label, who)=>{ const o=K.obj(u, v, d, y);
@@ -171,7 +171,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       if(who) K.sitters.push({x:o.x, z:o.z, y:y, yaw:o.ry, look:who}); return o; };
     // a chrome sled chair with a cushion, for visitors, facing d
     K.guest=(u, v, y, d, col, label)=>{ const o=K.obj(u, v, d, y);
-      for(const s of [-1, 1]){ o.b(0.025, 0.025, 0.5, s*0.22, 0.012, 0, "#b8bcc0"); o.b(0.025, 0.46, 0.025, s*0.22, 0.24, 0.23, "#b8bcc0"); o.b(0.025, 0.8, 0.025, s*0.22, 0.4, -0.24, "#b8bcc0"); }
+      for(const s of [-1, 1]){ o.b(0.028, 0.025, 0.5, s*0.22, 0.012, 0, "#b8bcc0"); o.b(0.02, 0.46, 0.02, s*0.22, 0.24, 0.23, "#b8bcc0"); o.b(0.02, 0.8, 0.02, s*0.22, 0.4, -0.24, "#b8bcc0"); }   // (runners thicker than the uprights: no side of one in the other's)
       o.rb(0.48, 0.08, 0.48, 0, 0.46, 0, col, 0.03); o.rb(0.46, 0.38, 0.07, 0, 0.74, -0.24, col, 0.03);
       addSeat(o.x, o.z, y, o.ry+Math.PI, label || "A CHAIR", false, 0.66); return o; };
     // a desk you sit at facing d: the top, the pedestal, the modesty panel; a beige terminal on it facing you, its keyboard; the chair
@@ -217,8 +217,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         o.b(0.46, 1.32, 0.62, 0, 0.66, 0, col || "#7a7468"); for(let j=0;j<4;j++){ o.b(0.4, 0.28, 0.012, 0, 0.18+j*0.32, 0.316, "#8a8478"); o.b(0.12, 0.02, 0.03, 0, 0.27+j*0.32, 0.33, "#b8b4a8"); }
         const [ax, az]=o.at(-0.23, -0.31), [bx2, bz2]=o.at(0.23, 0.31); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+1.33); } };
     K.shelf=(u, v, y, d, len, col)=>{ const o=K.obj(u, v, d, y), q=_trng(((u*13+v*7)|0)+3);
-      o.b(len, 2.1, 0.36, 0, 1.05, 0, col); for(let k=0;k<5;k++){ o.b(len-0.04, 0.025, 0.34, 0, 0.12+k*0.44, 0.012, col);
-        for(let x=-len/2+0.06; x<len/2-0.05;){ const bw=0.03+q()*0.04, bh=0.24+q()*0.12; o.b(bw, bh, 0.24, x+bw/2, 0.135+k*0.44+bh/2, 0.03, ["#6a2a1a","#2a3a5a","#3a5a2a","#7a5a2a","#4a2a3a","#2a2a2a"][(q()*6)|0]); x+=bw+0.005; } }
+      o.b(len, 2.1, 0.36, 0, 1.05, 0, col); for(let k=0;k<5;k++){ o.b(len-0.04, 0.025, 0.34, 0, 0.12+k*0.44, 0.012, col); if(k===4) continue;
+        for(let x=-len/2+0.06; x<len/2-0.05;){ const bw=0.03+q()*0.04, bh=0.24+q()*0.1; o.b(bw, bh, 0.24, x+bw/2, 0.135+k*0.44+bh/2, 0.03, ["#6a2a1a","#2a3a5a","#3a5a2a","#7a5a2a","#4a2a3a","#2a2a2a"][(q()*6)|0]); x+=bw+0.005; } }
       const [ax, az]=o.at(-len/2, -0.18), [bx2, bz2]=o.at(len/2, 0.18); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+2.1); };
     K.cooler=(u, v, y)=>{ const [x, z]=P(u, v); B(0.34, 0.95, 0.34, x, y+0.475, z, "#b8ae98"); C(0.15, 0.42, x, y+1.16, z, "#7ab0d0", 14); addCol(x-0.2, x+0.2, z-0.2, z+0.2, y-0.05, y+1.4); };
     K.copier=(u, v, y, d)=>{ const o=K.obj(u, v, d, y); o.rb(1.0, 1.0, 0.65, 0, 0.5, 0, "#bcb4a2", 0.04); o.rb(1.0, 0.1, 0.65, 0, 1.05, 0, "#a49c8a", 0.02); o.b(0.3, 0.12, 0.012, 0.25, 0.9, 0.33, "#2a6a3a");
@@ -235,7 +235,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     const F=K.F, N=levels.length, E={name:name, levels:levels, f:0, y:levels[0], target:0, state:"idle", door:1, dwell:0, F:F};
     const DH=2.2;
     // the shaft: its sides and back the whole height; its front a wall on every floor, the opening in it framed in brass
-    K.box(0.12, top-levels[0]+0.05, VB-VF, UC-0.89, (top+levels[0])/2, (VF+VB)/2, "#8a8478"); K.box(0.12, top-levels[0]+0.05, VB-VF, UC+0.89, (top+levels[0])/2, (VF+VB)/2, "#8a8478");
+    // (its sides start behind the front wall: no face of one in the other's)
+    K.box(0.12, top-levels[0]+0.05, VB-VF-0.2, UC-0.89, (top+levels[0])/2, (VF+0.2+VB)/2, "#8a8478"); K.box(0.12, top-levels[0]+0.05, VB-VF-0.2, UC+0.89, (top+levels[0])/2, (VF+0.2+VB)/2, "#8a8478");
     K.box(1.9, top-levels[0]+0.05, 0.12, UC, (top+levels[0])/2, VB-0.06, "#8a8478");
     K.col(UC-0.95, UC-0.83, VF, VB, levels[0]-0.5, top); K.col(UC+0.83, UC+0.95, VF, VB, levels[0]-0.5, top); K.col(UC-0.95, UC+0.95, VB-0.12, VB, levels[0]-0.5, top);
     E.doorCols=[]; E.land=[];
@@ -245,7 +246,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       if(f>0){ K.box(0.45, yn-y, 0.2, UC-0.725, (y+yn)/2, VF+0.1, "#8a8478"); K.box(0.45, yn-y, 0.2, UC+0.725, (y+yn)/2, VF+0.1, "#8a8478"); K.box(1.0, yn-y-DH, 0.2, UC, y+DH+(yn-y-DH)/2, VF+0.1, "#8a8478");
         K.col(UC-0.95, UC-0.5, VF, VF+0.2, y-0.05, yn); K.col(UC+0.5, UC+0.95, VF, VF+0.2, y-0.05, yn); }
       // the brass frame round the opening, the call buttons, the floor's number over it
-      K.box(0.08, DH+0.04, 0.06, UC-0.54, y+(DH+0.04)/2, VF-0.025, BRASS); K.box(0.08, DH+0.04, 0.06, UC+0.54, y+(DH+0.04)/2, VF-0.025, BRASS); K.box(1.16, 0.08, 0.06, UC, y+DH+0.04, VF-0.026, BRASS);
+      K.box(0.08, DH, 0.06, UC-0.54, y+DH/2, VF-0.025, BRASS); K.box(0.08, DH, 0.06, UC+0.54, y+DH/2, VF-0.025, BRASS); K.box(1.18, 0.08, 0.06, UC, y+DH+0.04, VF-0.026, BRASS);
       K.box(0.1, 0.22, 0.03, UC+0.78, y+1.1, VF-0.015, BRASS); K.box(0.26, 0.14, 0.03, UC, y+DH+0.28, VF-0.015, "#1a1a1e");
       { const [nx, nz]=F.P(UC, VF-0.032); sign(0.22, 0.12, (c, W, H)=>{ c.fillStyle="#1a1a1e"; c.fillRect(0, 0, W, H); say(c, f===0 ? "L" : String(f+1), W/2, H/2, W*0.6, H*0.62, "#ff8a3a", "700", "Arial"); }, nx, y+DH+0.28, nz, F.ry, true, 88); }
       const cb={}; const R=K.rect(UC-0.5, UC+0.5, VF, VF+0.2); Object.assign(cb, {x0:R[0], x1:R[1], z0:R[2], z1:R[3], y0:y-0.3, y1:y+DH}); COL_DYN.push(cb); E.doorCols.push(cb);
@@ -363,9 +364,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         for(const [sx, sz] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ const a=V3(cx+sx*pr, top+0.02, cz+sz*pr), b=V3(cx, top+ph+0.02, cz), d=b.clone().sub(a), L=d.length();
           ME.push({geo:boxGeo(0.12, L, 0.12), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color("#2a2420")}); }
         B(2*pr+0.2, 0.2, 2*pr+0.2, cx, top+0.1, cz, "#2a2420");
-        // a brick arch round the door, its keystone in cast stone
-        for(const s of [-1, 1]) wallBox("brick", x0-0.5, x0, dc+s*1.9-0.35, dc+s*1.9+0.35, FL-0.05, FL+3.2, Kd.col, 0.6, FL);
-        { const n=11; for(let k=0;k<n;k++){ const a=k/(n-1)*Math.PI, rr=1.9; B(0.5, 0.3, 0.42, x0-0.25, FL+3.2+Math.sin(a)*rr*0.55, dc+Math.cos(a)*rr, k===5 ? Kd.band : Kd.col, 0); } } }
+        // brick piers either side of the door, a cast stone cap on each
+        for(const s of [-1, 1]){ wallBox("brick", x0-0.5, x0+0.02, dc+s*1.9-0.35, dc+s*1.9+0.35, FL-0.05, FL+2.9, Kd.col, 0.6, FL); B(0.62, 0.12, 0.82, x0-0.24, FL+2.96, dc+s*1.9, Kd.band); } }
       // the name over the door
       { const fy=side==="w" ? -Math.PI/2 : side==="n" ? Math.PI : side==="e" ? Math.PI/2 : 0;
         const fx=side==="w" ? x0-0.03 : side==="e" ? x1+0.03 : dc, fz=side==="n" ? z0-0.03 : side==="s" ? z1+0.03 : dc;
@@ -411,7 +411,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       K.chair(du, dv+1.0, y, "front", Kd.chairCol, "THE CHAIR BEHIND THE DESK", Kd.receptionist); }
     K.sofa(W*0.24, 2.4, y, "back", 2.4, Kd.sofa, "A SOFA IN THE LOBBY"); K.sofa(W*0.24, 5.8, y, "front", 2.4, Kd.sofa, "A SOFA IN THE LOBBY");
     K.rbox(1.2, 0.04, 0.7, W*0.24, y+0.42, 4.1, "#1a1a1e", 0.01); for(const s of [-1, 1]) K.box(0.04, 0.4, 0.6, W*0.24+s*0.55, y+0.2, 4.1, "#b8bcc0"); K.col(W*0.24-0.62, W*0.24+0.62, 3.75, 4.45, y-0.5, y+0.44);
-    for(const [pu, pv] of [[-W/2+0.9, 0.9],[W/2-0.9, 0.9],[-2.6, LV-0.9],[2.4, LV-0.9]]) K.plant(pu, pv, y, true, Kd.planter);
+    for(const [pu, pv] of [[-W/2+0.9, 0.9],[W/2-0.9, 0.9],[-2.6, LV-0.9],[UC+2.6, LV-0.9]]) K.plant(pu, pv, y, true, Kd.planter);   // (the right one past the elevator, clear of the way to it)
     // the wall across the lobby's back: the way through it in the middle, the working car at UC (its own front) and the other one out of order
     { const t=0.2, h=FL+3.2-y+0.02;
       for(const [a, b] of [[-W/2, -1.4],[1.4, UC-0.95],[UC+0.95, W/2]]){ K.box(b-a, h, t, (a+b)/2, y+h/2, LV+t/2, Kd.wall); K.col(a, b, LV, LV+t, y-0.5, y+h); }

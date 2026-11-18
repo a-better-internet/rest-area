@@ -1105,3 +1105,43 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - The arcade's thirteenth to fifteenth cabinets are 17 (18z1, Abduction
   Acres), 18 (18z2, Cropduster Ace) and 19 (18z3, Deep Well), on the back
   wall past Silo Scramble.
+
+## Round 38 notes
+
+- **Never plain white.** Nothing in the world is painted plain white: no
+  wall, slab, trim, building or vehicle body. Large surfaces stay tinted
+  and no brighter than about `#d8`-ish in any channel (buff, cream-tan,
+  sandstone, warm grey); a light surface takes a warm or cool cast, never
+  `#e8e8e4`-and-up neutrals. Sign faces and lettering are the exception
+  only where the real thing is white, and even there prefer `#d8d0c0`.
+  The plaza's paint and the pavers obey it too.
+- Seats face the way they are used: a chair at a table or desk faces it,
+  a bench faces what it was put there to look at (the fountain, the
+  water), its back on the far side. Check with `tools/seats.js`, which
+  lists seats with their back in front of them and seats with their table
+  behind them.
+- The office park's buildings (14md) are hollow, floor by floor: each
+  storey a slab (open over the shaft), its carpet (`carpet()`), ceiling,
+  tubes, two lamps and a zone `NAME · nTH FLOOR`; the skins are per storey
+  (Two: a bronze spandrel over each slab's edge and bronze glass to the
+  next; One and Three: wall, a band of `tint`, wall). Each has an elevator
+  (`elevator(K, name, levels, top)`): a shaft at the frame's u 3.25..5.15,
+  v 10..11.9, a car that is a moving SURF (its `y` changes, never its rect)
+  with its doors, landing doors on every floor whose `COL_DYN` collider
+  opens only while the car stands there open, a call use outside and a
+  ride use inside on every floor; `OFFICE.elevKey` (17's keydown) takes a
+  number while you stand in an idle car. `updateElevators` runs from
+  `updateOfficePark`. Furniture comes from the frame's kit (`kit(F)`):
+  `chair`, `guest`, `station` (a chair and the desk 0.78 in front of it),
+  `sofa`, `table` (its chairs facing in), `plant`, `art`, `files`, `shelf`,
+  `wall` and `glassWall` (whose ends never lie in a pane), each placed by
+  (u, v) facing one of `front`, `back`, `+u`, `-u`.
+- The fountain's water is the lake's ripple normals drifting (`OFFICE.flow`)
+  and a pool of drops (`OFFICE.drops`, Points) thrown from the jet and the
+  rim's nozzles and off the bowls' lips, run within 130 m.
+- Hollow Road's dressing is 14me (`HOLLOW`): the pole line down its west
+  side and a drop to each place, a cobra head at each mouth, its signs
+  (each post behind its board from the side it is read), reflector posts,
+  the guardrail at Hollow Run, the bus shelter, the verges, and the small
+  things at the beer distributor and the pretzel works; `updateHollowRoad`
+  (14) lights the heads and puffs steam off the oven stacks.

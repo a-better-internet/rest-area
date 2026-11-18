@@ -565,16 +565,29 @@ If the scene runs hot on your machine, start there (see below).
     and a bark trail goes out the back fence through the woods to a
     clearing on the lake shore: a bench, a picnic table, two kayaks.
   - Past the works the road comes to **Hollow Road Corporate Park**, all
-    1984: a car lot, three buildings round a plaza with a fountain in it,
-    and a lawn down to the lake behind. French Creek Financial is brown
-    brick and smoked glass with a glass pyramid on the roof; Midland
-    Mutual is five storeys of dark glass on a black granite band; Lakeshore
-    Data Systems is white precast and ribbon windows behind a mirrored
-    glass bay. Every one has a stone lobby (black and white marble,
-    travertine, pink granite), a brass-trimmed desk with somebody at it,
-    leather sofas, ficus, the felt-letter directory and brass elevator
-    doors, and behind them the office: cubicles in fours with beige
-    terminals, a glass conference room, the copier and the water cooler.
+    1984: a car lot, three buildings round a plaza with a fountain in it
+    (its jets arcing in from the rim, the water running off two bowls),
+    and a lawn down to the lake behind. Every floor of every building is
+    there, and every building's elevator works: call it, step in, `E` for
+    the next floor up or a number for any floor.
+    - **Midland Mutual**, five storeys of bronze glass over bronze
+      spandrels, its name in red along the roof: the claims counter and
+      file room; a bullpen of desks in rows with the managers' glass
+      offices; the cubicle farm and break room; the executive floor's
+      walnut corner offices and boardroom; the computer room on its raised
+      floor, and the cafeteria.
+    - **French Creek Financial**, brown brick with cast stone bands and a
+      glass pyramid on the roof: the bank (the teller line behind glass,
+      the rope queue, the vault door); the loan officers' glass offices;
+      the law firm upstairs in walnut, with its library.
+    - **Lakeshore Data Systems**, sandstone with teal bands, glass block up
+      its corners and its initials in neon: the showroom of personal
+      computers and the network board; the software pit upstairs, the
+      break room with its arcade machine and foosball, the server room.
+  - Hollow Road itself has its pole line and wires, a light over each
+    place's entrance, its signs (speed limit, deer, trucks entering, the
+    office park ahead), reflector posts, a guardrail where it crosses
+    Hollow Run, a bus shelter, and the verges gone to wildflowers.
   - **The tuning house** at the tower's foot, red brick with a flat roof,
     is open: the feed line comes in through its wall to the tuning unit (a
     copper coil and vacuum capacitors in a wire cage), the meters and the
