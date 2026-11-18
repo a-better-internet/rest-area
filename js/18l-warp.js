@@ -73,7 +73,11 @@ const WARP=(function(){
     ["THE OFFICE PARK'S FOUNTAIN", 880.0, -1775.0, -Math.PI/2, x=>g(x[1], x[2])],
     ["FRENCH CREEK FINANCIAL", 826.0, -1776.0, -Math.PI/2, x=>surfaceY(x[1], x[2], OFFICE.FL+0.1)],
     ["MIDLAND MUTUAL", 886.0, -1820.0, 0, x=>surfaceY(x[1], x[2], OFFICE.FL+0.1)],
-    ["LAKESHORE DATA SYSTEMS", 886.0, -1729.0, Math.PI, x=>surfaceY(x[1], x[2], OFFICE.FL+0.1)]];
+    ["LAKESHORE DATA SYSTEMS", 886.0, -1729.0, Math.PI, x=>surfaceY(x[1], x[2], OFFICE.FL+0.1)],
+    ["FRENCH CREEK FINANCIAL, THE LAW FIRM", 829.3, -1773.3, -Math.PI/2, x=>surfaceY(x[1], x[2], OFFICE.bldg[0].levels[2]+0.1)],
+    ["MIDLAND MUTUAL, THE EXECUTIVE FLOOR", 887.7, -1822.25, 0, x=>surfaceY(x[1], x[2], OFFICE.bldg[1].levels[3]+0.1)],
+    ["MIDLAND MUTUAL, THE COMPUTER ROOM", 887.7, -1822.25, 0, x=>surfaceY(x[1], x[2], OFFICE.bldg[1].levels[4]+0.1)],
+    ["LAKESHORE DATA SYSTEMS, THE SOFTWARE PIT", 884.3, -1727.7, Math.PI, x=>surfaceY(x[1], x[2], OFFICE.bldg[2].levels[1]+0.1)]];
   const KEYS="1234567890ABCDFGHIJKLMNOPQRTUV";            // (E and S left out: E is your hand, S is a step back)
   // the hoop: in front of the first one there is, facing it
   const hoopAt=()=>{ const H=(typeof YARD_HOOPS!=="undefined" && YARD_HOOPS[0]) || null; if(!H) return null;

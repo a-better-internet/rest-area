@@ -42,7 +42,7 @@ const BEER={routes:{}, served:false, aisle:null};
   const say=(c, s, cx, cy, w, h, col, weight, family)=>{ c.fillStyle=col; fitText(c, s, w, h, cx, cy, weight||"800", family||"'Arial Black', Arial"); };
   const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*240), Math.round((cw||w*240)*h/w), draw), px,py,pz,ry,lit);
   const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, gy=Terrain.groundAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
-  const GREEN="#1f6a34", GOLD="#f2c230", WHITEW="#e4e2da";
+  const GREEN="#1f6a34", GOLD="#f2c230", WHITEW="#c9bb9c";          // (painted block, a warm buff: never plain white)
 
   /* ---- the paving: the road, its mouth's rounded corners onto US 6N's shoulder, and the lot, as one surface; the building left out ---- */
   // (paved here to where the road ran off the map before the pretzel works; 14mc paves it on from there)

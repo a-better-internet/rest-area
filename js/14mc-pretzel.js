@@ -48,7 +48,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
       matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color(c)}); };
   const say=(c, s, cx, cy, w, h, col, weight, family)=>{ c.fillStyle=col; fitText(c, s, w, h, cx, cy, weight||"800", family||"'Arial Black', Arial"); };
   const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*240), Math.round((cw||w*240)*h/w), draw), px,py,pz,ry,lit);
-  const BROWN="#7a4220", GOLDEN="#d89a3a", CREAM="#f4ead6", RED="#b8281e", WALLC="#d6d0c2", STEEL="#b8bcc0", DKSTEEL="#5a6066";
+  const BROWN="#7a4220", GOLDEN="#d89a3a", CREAM="#f4ead6", RED="#b8281e", WALLC="#c2b292", STEEL="#b8bcc0", DKSTEEL="#5a6066";
 
   /* ---- the pretzel: one rope, the belly at the bottom, the arms up and over and crossed, the ends laid on the belly ---- */
   const PZ=[[-0.56,-0.6,0.08],[-0.32,-0.26,0.06],[0,0.08,0.085],[0.24,0.34,0.03],[0.46,0.56,0],[0.72,0.64,0],[0.93,0.46,0],[0.97,0.1,0],[0.82,-0.3,0],
@@ -321,7 +321,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
 
   /* ---- the trailers at the docks: one shut, one backed in with its doors open, half loaded, its floor at the dock's ---- */
   const TZ0=-1544.7, TZ1=-1528.7, TWo=1.3, TB=FLS-0.25, TT=FLS+2.7;
-  const trailerSide=(x, sd)=>sign(10.5, 1.5, (c, W, H)=>{ c.fillStyle="#f4f2ec"; c.fillRect(0, 0, W, H); c.fillStyle=BROWN; c.fillRect(0, H*0.82, W, H*0.18);
+  const trailerSide=(x, sd)=>sign(10.5, 1.5, (c, W, H)=>{ c.fillStyle="#d6cbb2"; c.fillRect(0, 0, W, H); c.fillStyle=BROWN; c.fillRect(0, H*0.82, W, H*0.18);
       say(c, "EDINBORO PRETZEL CO.", W*0.56, H*0.4, W*0.66, H*0.42, BROWN, "900", "Georgia, serif");
       c.strokeStyle=GOLDEN; c.lineWidth=10; c.beginPath(); c.arc(W*0.12, H*0.36, H*0.2, 0, 7); c.stroke(); c.beginPath(); c.arc(W*0.12, H*0.58, H*0.14, 0, 7); c.stroke(); },
     x+sd*(TWo+0.012), FLS+1.45, (TZ0+TZ1)/2, sd*Math.PI/2, false, 1260);
@@ -329,13 +329,13 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
     B(1.0, 0.25, TZ1-TZ0-0.4, x, TB-0.12, (TZ0+TZ1)/2, "#3a3a3a");
     for(const s of [-1, 1]){ B(0.12, TB-0.25-LY, 0.12, x+s*0.85, (TB-0.25+LY)/2, TZ1-3.5, "#3a3a3a"); B(0.3, 0.05, 0.3, x+s*0.85, LY+0.025, TZ1-3.5, "#3a3a3a"); }
     for(const s of [-1, 1]) B(0.12, 0.12, 2.0, x+s*1.2, TB-0.4, TZ0+3.15, "#3a3a3a"); };
-  { const x=874; B(2*TWo, TT-TB, TZ1-TZ0, x, (TT+TB)/2, (TZ0+TZ1)/2, "#f4f2ec"); running(x);
+  { const x=874; B(2*TWo, TT-TB, TZ1-TZ0, x, (TT+TB)/2, (TZ0+TZ1)/2, "#d6cbb2"); running(x);
     for(const s of [-1, 1]) trailerSide(x, s); for(const s of [-1, 1]) B(0.04, 2.7, 0.04, x+s*0.02, (TT+TB)/2, TZ0-0.02, "#a8acb0");
     addCol(x-TWo, x+TWo, TZ0, TZ1, LY-0.5, TT); }
   { const x=OPEN, iw=TWo-0.06;
     B(2*TWo, 0.25, TZ1-TZ0, x, TB+0.125-0.0, (TZ0+TZ1)/2, "#8a8e90");
-    for(const s of [-1, 1]) B(0.06, TT-0.06-FLS, TZ1-TZ0, x+s*(TWo-0.03), (TT-0.06+FLS)/2, (TZ0+TZ1)/2, "#f4f2ec");      // (up to the roof's underside: no face of one in the other's)
-    B(2*TWo, 0.06, TZ1-TZ0, x, TT-0.03, (TZ0+TZ1)/2, "#f4f2ec"); B(2*TWo-0.12, TT-FLS-0.06, 0.06, x, (TT+FLS-0.06)/2, TZ1-0.03, "#f4f2ec");
+    for(const s of [-1, 1]) B(0.06, TT-0.06-FLS, TZ1-TZ0, x+s*(TWo-0.03), (TT-0.06+FLS)/2, (TZ0+TZ1)/2, "#d6cbb2");      // (up to the roof's underside: no face of one in the other's)
+    B(2*TWo, 0.06, TZ1-TZ0, x, TT-0.03, (TZ0+TZ1)/2, "#d6cbb2"); B(2*TWo-0.12, TT-FLS-0.06, 0.06, x, (TT+FLS-0.06)/2, TZ1-0.03, "#c8bca2");
     { const g=new T.PlaneGeometry(2*iw, TZ1-TZ0-0.06); push("wood", g, x, FLS+0.002, (TZ0+TZ1)/2, 0, "#8a6a4a", -Math.PI/2, 0); }
     running(x); for(const s of [-1, 1]) trailerSide(x, s);
     // its doors swung back flat against its sides

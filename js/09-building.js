@@ -48,7 +48,7 @@ bucketOf("beam",     ()=>new T.MeshStandardMaterial({map:TEX.wood,    roughness:
 bucketOf("cork",     ()=>new T.MeshStandardMaterial({map:TEX.cork,    roughness:0.95}));
 bucketOf("mat",      ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.rubber, roughness:1.0},
                           {polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4})));
-const BRICK="#d4cfc8", BRICK_IN="#bdb4aa", FASCIA="#3b2e26", BRONZE="#3e332b", CREAM="#e6e0cf",
+const BRICK="#d4cfc8", BRICK_IN="#bdb4aa", FASCIA="#3b2e26", BRONZE="#3e332b", CREAM="#d4cab2",
       TILE="#ffffff", BLOCKC="#c9cac6", PART="#c7b998", PORC="#ebe9e3";
 
 /* ---- wall builders ------------------------------------------------------

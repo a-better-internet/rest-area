@@ -44,7 +44,7 @@ const RADIO_ST={beacons:[], glow:null, glowIn:null, lamp:null, t:0, radios:[], d
   const g=(x,z)=>Terrain.groundAt(x,z);
 
   /* ---- the building ---- */
-  const X0=2, XR=20, R=6, ZC=-1480, FZ=ZC+R, HT=5.0, WALL="#ece6d6";
+  const X0=2, XR=20, R=6, ZC=-1480, FZ=ZC+R, HT=5.0, WALL="#d2c3a2";               // (cream stucco gone a little golden: never plain white)
   // its plan (x across, -z up the shape), grown by o: a rectangle with a half round on its east end
   const plan=(o)=>{ const s=new T.Shape(); s.moveTo(X0-o, -(ZC+R+o)+ZC); s.lineTo(XR, -(ZC+R+o)+ZC); s.absarc(XR, 0, R+o, -Math.PI/2, Math.PI/2, false); s.lineTo(X0-o, R+o); s.closePath(); return s; };
   const slab=(o, y0, y1, c)=>{ const gg=new T.ExtrudeGeometry(plan(o), {depth:y1-y0, bevelEnabled:false, curveSegments:28}); gg.rotateX(-Math.PI/2); ent(gg, 0, y0, ZC, c); };
@@ -416,7 +416,7 @@ const RADIO_ST={beacons:[], glow:null, glowIn:null, lamp:null, t:0, radios:[], d
      of hundred metres and would come and go. So each face also has a plain sheet in the bands' colours that is not there close to
      and fills in with distance (TOWER_FAR), and the guys, a centimetre and a half of steel, fade as real ones do into the sky. ---- */
   const H=124, FW=1.8, RI=FW/Math.sqrt(3), x=T0.x, z=T0.z, y0=TY+2.7, PAN=1.5, BASE=3.0;
-  const ORANGE="#d9501e", WHITE="#f0ece4";
+  const ORANGE="#d9501e", WHITE="#d8d0c0";
   const band=y=>Math.min(6, Math.floor(y/(H/7)))%2 ? WHITE : ORANGE;
   const TL=[], GL=[], FL2=[], GB=RADIO.guys;                           // (the guys' bearings from north, clockwise: 04)
   // leg k points out toward guy k

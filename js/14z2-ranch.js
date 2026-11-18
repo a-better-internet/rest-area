@@ -139,7 +139,7 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
   const CX0=-1432, CX1=-1420, CZ0=-1162, CZ1=-1152;                      // the middle: living, dining, kitchen, mudroom (the porch in front of it)
   const GX0=-1420, GX1=-1412.4, GZ0=-1164.8, GZ1=-1152;                  // the garage
   const BX0=-1439.4, BX1=-1435.4, BZ0=-1165.4;                           // the stone bump-out on the wing's front
-  const SID="#6e5c52", STN="#ffffff", TRIM="#4a3a32", WALLC="#ece4d6";
+  const SID="#6e5c52", STN="#ffffff", TRIM="#4a3a32", WALLC="#d8ccb2";
   const SWX0=-1423.92, SWX1=-1422.78, SWZ0=-1156.6, SWZ1=-1152.3;        // the basement stair's well, in the mudroom
   RANCH.box={x0:WX0, x1:GX1, z0:BZ0, z1:WZ1, FY:FY, BF:BF, GY:GY};
 

@@ -49,7 +49,7 @@ const TUNE={};
 
   const T0=RADIO.tower, TY=Terrain.groundAt(T0.x, T0.z), FL=TY+0.2, CEIL=TY+3.2, BCL=FL-0.25, BF=FL-3.0, SF=BF-3.0, SCL=SF+2.6;
   const X0=85.8, X1=94.2, Z0=-1520.2, Z1=-1513.8, TW=0.25, IX0=X0+TW, IX1=X1-TW, IZ0=Z0+TW, IZ1=Z1-TW;
-  const BRICK="#d8c8bc", BLOCK="#9e9a90", PAINT="#ece6d6", STEEL="#6a6e70", COPPER="#b8703a";
+  const BRICK="#d8c8bc", BLOCK="#9e9a90", PAINT="#d6c9ae", STEEL="#6a6e70", COPPER="#b8703a";
   Object.assign(TUNE, {FL:FL, BF:BF, SF:SF, TY:TY});
 
   /* ---- the shell: brick walls from the cellar's ceiling up past the roof to a parapet, block below them down to the cellar's floor.

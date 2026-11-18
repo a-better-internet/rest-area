@@ -63,7 +63,7 @@ function chalkDraw(c, names, colA, colB, note){
   const WZ0=P.z0-0.15, WZ1=P.z0;                                   // the stair's wall on the room side
   const WX0=82.05, WX1=82.20;                                      // and its end wall, where the door is
   const AD={x0:71.56, x1:72.44};                                   // the door on to the corridor (12c)
-  const WALL="#d6cdb6", HOUSE="#dcd8cc";
+  const WALL="#d6cdb6", HOUSE="#c8bea8";
   let _s=9137; const R=()=>{ _s=(_s*1664525+1013904223)&0x7fffffff; return _s/0x7fffffff; };
   const E=[];                                                      // everything plain, vertex-coloured, one mesh
   const ent=(geo, x,y,z, c, rx,ry,rz)=>E.push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),

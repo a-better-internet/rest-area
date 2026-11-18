@@ -11,21 +11,28 @@
    three buildings round a plaza with a fountain in it, and the lake
    beyond them across a lawn that runs down to the water.
 
-   One Hollow Road, by the lot, is French Creek Financial: brown brick,
-   bands of smoked glass, a glass pyramid on the roof. Two Hollow Road, at
-   the north side of the plaza, is Midland Mutual: five storeys of dark
-   reflective glass on a black granite band, a steel canopy over the
-   doors. Three Hollow Road, at the south side, is Lakeshore Data Systems:
-   two long storeys of white precast and dark ribbon windows, a mirrored
-   glass bay at the door.
+   One Hollow Road, by the lot, is French Creek Financial: brown brick
+   with cast stone bands, smoked brown glass, a glass pyramid on the
+   roof. Two Hollow Road, north of the plaza, is Midland Mutual: five
+   storeys of bronze reflective glass over bronze spandrels on a black
+   granite base, its name in red letters along the parapet. Three Hollow
+   Road, south of the plaza, is Lakeshore Data Systems: two long storeys
+   of sandstone precast with teal bands, glass block up the corners, its
+   initials in neon, a tinted bay at the door.
 
-   You can go in every one. Each has a lobby of polished stone (black and
-   white marble at Midland, travertine at French Creek, pink granite at
-   Lakeshore) with a brass-trimmed desk and somebody at it, leather
-   sofas, ficus in planters, a felt-letter directory and a bank of brass
-   elevator doors; and through the gap in the elevator wall the office:
-   fabric cubicles in fours with beige terminals on the desks, a glass
-   conference room with its long table, the copier, the water cooler.
+   Every floor of every building is there, and every building has an
+   elevator that works: call it, step in, E for the next floor up or a
+   number for any floor. (The other car in each lobby is out of order.)
+   Each building and each floor is its own: Midland's claims counter and
+   file room, its bullpen of desks in rows, its cubicle farm and break
+   room, its executive floor with the boardroom, its computer room and
+   cafeteria; French Creek's bank with the teller line and the vault
+   door, its loan officers' glass offices, the law firm upstairs in
+   walnut with its library; Lakeshore's showroom of personal computers
+   and its network board, the software pit upstairs with the arcade
+   machine in the break room and the server room behind glass. Mauve and
+   teal, brass and smoked glass, carpet with confetti in it, art with
+   squiggles in it, beige terminals everywhere.
 
    Everything here is made up here: the companies, the names, the art.
 
@@ -35,8 +42,11 @@
    -1755, its door west; Two x 860..912, z -1850..-1815, its door south;
    Three x 860..912, z -1735..-1702, its door north; the plaza between,
    the fountain at x 893, z -1775; the lawn to the water east of it.
+   Inside, each building is laid out in its own frame (`frame`): u across
+   the front from its middle, v in from the front wall. The elevator's
+   shaft is at u 3.25..5.15, v 10..11.9 in every one.
    ---------------------------------------------------------------------- */
-const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
+const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:[], drops:null};
 (function officePark(){
   if(typeof EAST==="undefined" || !EAST.office) return;
   const E=EDIN, Y=E.y, O=EAST.office.site, M=EAST.office.mouth, Bq=EAST.beer, RX=Bq.rx, RW=3.4, END=Bq.end, LY=Y+PAVE_T+0.015;
@@ -51,7 +61,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
   const S=(r0,x,y,z,c)=>ent(new T.SphereGeometry(r0,10,8),x,y,z,c);
   const say=(c, s, cx, cy, w, h, col, weight, family)=>{ c.fillStyle=col; fitText(c, s, w, h, cx, cy, weight||"800", family||"'Arial Black', Arial"); };
   const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*240), Math.round((cw||w*240)*h/w), draw), px,py,pz,ry,lit);
-  const BRASS="#c8a050", GRAN="#2a2a2e";
+  const BRASS="#b8944a", GRAN="#2a2a2e", BEIGE="#c8bca0", MAUVE="#8a5a6a", TEAL="#2a7a7a";
 
   /* ---- the ground: Hollow Road from the pretzel works on north to its end, the mouth, the lot, the walks, the plaza ---- */
   { const road=SD_rect(RX-RW, RX+RW, END, -1660), mouth=SD_rect(RX+RW-0.6, 752, M.z0, M.z1), lot=SD_rect(750, 806, -1848, -1702),
@@ -60,39 +70,55 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
     push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza, lawnwalk], 3), RX-RW-1, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
     for(const b of [[RX+RW-0.6, 752, M.z0, M.z1],[750, 806, -1848, -1702],[804, 822.05, -1800, -1750],[820, 856, -1804, -1798.5],[820, 856, -1751.5, -1746],[852, 936, -1812, -1738],[934, 968, -1777.5, -1772.5]])
       addPaveRect(b[0], b[1], b[2], b[3], Y); }
-  // the plaza laid in pale concrete squares, a dark joint round each (paint over the paving, 08's ladder), clear of the fountain's basin
-  for(let x=852.2; x<935.9; x+=3.0) for(let z=-1811.8; z<-1738.1; z+=3.0){ const cx=x+1.45, cz=z+1.45; if(Math.hypot(cx-893, cz+1775)<4.9) continue;
-    stripe(cx, z, cx, Math.min(z+2.9, -1738.05), Math.min(2.9, 935.95-x), (((x-852.2)/3+(z+1811.8)/3)|0)%2 ? "#b4b0a6" : "#aaa69c", LY); }
-  // the lot's stalls: rows back to back down its length, kept six metres clear of the way in; islands with a lamp at the ends
+  // the plaza laid in squares of buff concrete and terra cotta pavers, a joint round each (paint over the paving, 08's ladder), clear of the basin
+  for(let x=852.2; x<935.9; x+=3.0) for(let z=-1811.8; z<-1738.1; z+=3.0){ const cx=x+1.45, cz=z+1.45; if(Math.hypot(cx-893, cz+1775)<5.0) continue;
+    const ring=Math.abs(Math.hypot(cx-893, cz+1775)-9)<1.6;
+    stripe(cx, z, cx, Math.min(z+2.9, -1738.05), Math.min(2.9, 935.95-x), ring ? "#9a6a4a" : (((x-852.2)/3+(z+1811.8)/3)|0)%2 ? "#aa9e86" : "#a2967e", LY); }
+  // the lot's stalls: rows back to back down its length, kept six metres clear of the way in
   for(const [xa, xb] of [[750.3, 755.8],[762.0, 767.5],[767.5, 773.0],[779.5, 785.0],[785.0, 790.5],[797.0, 802.5]])
     for(const [z0, z1] of [[-1846.0, -1789.0],[-1759.0, -1704.0]]) for(let z=z0; z<=z1+0.01; z+=2.7) stripe(xa, z, xb, z, 0.1, WHITE_LINE, LY);
   if(typeof parked==="function"){ parked(0, "#8a8e92", 764.75, -1801.45, Math.PI/2, Y); parked(2, "#2a3a5a", 770.25, -1817.65, -Math.PI/2, Y);
-    parked(1, "#c8b89a", 782.25, -1831.15, Math.PI/2, Y); parked(3, "#6a1a1a", 787.75, -1752.25, -Math.PI/2, Y); parked(0, "#e8e2d0", 753.05, -1744.15, -Math.PI/2, Y);
-    parked(2, "#3a4a3a", 799.75, -1717.15, Math.PI/2, Y); }
+    parked(1, "#a89a7a", 782.25, -1831.15, Math.PI/2, Y); parked(3, "#6a1a1a", 787.75, -1752.25, -Math.PI/2, Y); parked(0, "#7a5a3a", 753.05, -1744.15, -Math.PI/2, Y);
+    parked(2, "#3a4a3a", 799.75, -1717.15, Math.PI/2, Y); parked(1, "#4a2a4a", 776.25+(-1.25), -1717.15+2.7*3, Math.PI/2, Y); }
 
-  /* ---- the stone, the carpet, the ceiling: canvas textures made here ---- */
-  const marble=(base, vein, tile, check)=>{ const t=signTex(512, 512, (c, W, H)=>{
+  /* ---- textures made here: stone, carpet with confetti in it, the ceiling's tiles, art with squiggles in it, glass block ---- */
+  const marble=(base, vein, check)=>{ const t=signTex(512, 512, (c, W, H)=>{
       for(let i=0;i<2;i++) for(let j=0;j<2;j++){ c.fillStyle=check && (i+j)%2 ? check : base; c.fillRect(i*W/2, j*H/2, W/2, H/2); }
       for(let k=0;k<26;k++){ c.strokeStyle=vein; c.globalAlpha=0.18+((k*37)%10)/40; c.lineWidth=0.6+(k%3)*0.7; c.beginPath();
         let x=(k*97)%W, y=(k*53)%H; c.moveTo(x, y); for(let s=0;s<6;s++){ x+=((k*s*13)%60)-22; y+=40+(s*k)%30; c.lineTo(x, y); } c.stroke(); }
-      c.globalAlpha=1; if(tile){ c.strokeStyle="rgba(0,0,0,0.25)"; c.lineWidth=2; c.strokeRect(1, 1, W/2-2, H/2-2); c.strokeRect(W/2+1, 1, W/2-2, H/2-2); c.strokeRect(1, H/2+1, W/2-2, H/2-2); c.strokeRect(W/2+1, H/2+1, W/2-2, H/2-2); } });
+      c.globalAlpha=1; c.strokeStyle="rgba(0,0,0,0.25)"; c.lineWidth=2; for(let i=0;i<2;i++) for(let j=0;j<2;j++) c.strokeRect(i*W/2+1, j*H/2+1, W/2-2, H/2-2); });
     t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=4; return t; };
   const granite=(base, specks)=>{ const t=signTex(256, 256, (c, W, H)=>{ c.fillStyle=base; c.fillRect(0, 0, W, H);
       for(let i=0;i<2600;i++){ c.fillStyle=specks[i%specks.length]; c.fillRect((i*131.7)%W, (i*71.3+i*0.37)%H, 1+(i%3), 1+(i%2)); }
       c.strokeStyle="rgba(0,0,0,0.25)"; c.lineWidth=2; c.strokeRect(1, 1, W-2, H-2); });
     t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=4; return t; };
-  const STONE={A:marble("#e8e6e0", "#4a4a50", true, "#1a1a1e"), B:marble("#d8c8a8", "#a88a5a", true), C:granite("#c89a8a", ["#7a4a4a","#e8d0c8","#3a2a2a","#a87a6a"])};
-  const CEILT=signTex(128, 128, (c, W, H)=>{ c.fillStyle="#e8e6de"; c.fillRect(0, 0, W, H); c.fillStyle="rgba(0,0,0,0.08)"; for(let i=0;i<220;i++) c.fillRect((i*37)%W, (i*91)%H, 2, 2);
-    c.fillStyle="#b8b6ae"; c.fillRect(0, 0, W, 3); c.fillRect(0, 0, 3, H); });
+  // (carpet: a ground and a scatter of the period's shapes, squiggles, triangles, dashes and dots)
+  const carpet=(base, cols, seed)=>{ const q=_trng(seed), t=signTex(256, 256, (c, W, H)=>{ c.fillStyle=base; c.fillRect(0, 0, W, H);
+      for(let i=0;i<5000;i++){ c.fillStyle="rgba(0,0,0,"+(q()*0.08).toFixed(3)+")"; c.fillRect(q()*W, q()*H, 1, 1); }
+      for(let i=0;i<46;i++){ const x=q()*W, y=q()*H, col=cols[(q()*cols.length)|0], k=(q()*4)|0; c.fillStyle=col; c.strokeStyle=col; c.lineWidth=2;
+        if(k===0){ c.beginPath(); c.moveTo(x, y); for(let s=1;s<5;s++) c.lineTo(x+s*5, y+(s%2 ? 5 : -5)); c.stroke(); }
+        else if(k===1){ c.beginPath(); c.moveTo(x, y); c.lineTo(x+8, y+2); c.lineTo(x+3, y+9); c.fill(); }
+        else if(k===2) c.fillRect(x, y, 9, 2); else { c.beginPath(); c.arc(x, y, 2.5, 0, 7); c.fill(); } } });
+    t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=4; return t; };
+  const STONE={A:marble("#cfc6b4", "#4a4a50", "#1a1a1e"), B:marble("#c8b494", "#8a6a3a"), C:granite("#b88a7a", ["#6a3a3a","#d8b8a8","#3a2a2a","#a07060"])};
+  const CEILT=signTex(128, 128, (c, W, H)=>{ c.fillStyle="#cfc6b4"; c.fillRect(0, 0, W, H); c.fillStyle="rgba(0,0,0,0.09)"; for(let i=0;i<220;i++) c.fillRect((i*37)%W, (i*91)%H, 2, 2);
+    c.fillStyle="#a8a090"; c.fillRect(0, 0, W, 3); c.fillRect(0, 0, 3, H); });
   CEILT.wrapS=CEILT.wrapT=T.RepeatWrapping;
-  const floorPlane=(x0, x1, z0, z1, y, tex, rep)=>{ const t=tex.clone(); t.needsUpdate=true; t.repeat.set((x1-x0)/rep, (z1-z0)/rep);
-    const m=new T.Mesh(new T.PlaneGeometry(x1-x0, z1-z0), new T.MeshStandardMaterial({map:t, roughness:0.22, metalness:0.05}));
-    m.rotation.x=-Math.PI/2; m.position.set((x0+x1)/2, y, (z0+z1)/2); m.receiveShadow=true; m.updateMatrix(); m.matrixAutoUpdate=false; scene.add(m); return m; };
-  const ceilPlane=(x0, x1, z0, z1, y)=>{ const t=CEILT.clone(); t.needsUpdate=true; t.repeat.set((x1-x0)/0.61, (z1-z0)/0.61);
-    const m=new T.Mesh(new T.PlaneGeometry(x1-x0, z1-z0), new T.MeshStandardMaterial({map:t, roughness:0.95}));
-    m.rotation.x=Math.PI/2; m.position.set((x0+x1)/2, y, (z0+z1)/2); m.updateMatrix(); m.matrixAutoUpdate=false; scene.add(m); };
+  const ART=(k)=>(c, W, H)=>{ const pal=[["#e8c0c8","#2a8a8a","#f2c41c","#1a1a2a","#c84a8a"],["#c8d8d0","#8a4a8a","#e8743a","#1a3a5a","#f2d8a0"],["#d8c8e0","#3a6aa8","#ff6a8a","#2a2a2a","#7ac8a8"]][((k%3)+3)%3];
+    c.fillStyle=pal[0]; c.fillRect(0, 0, W, H); c.lineWidth=W*0.03;
+    c.fillStyle=pal[1]; c.beginPath(); c.arc(W*0.32, H*0.36, W*0.18, 0, 7); c.fill();
+    c.fillStyle=pal[2]; c.beginPath(); c.moveTo(W*0.55, H*0.8); c.lineTo(W*0.88, H*0.3); c.lineTo(W*0.92, H*0.82); c.fill();
+    c.strokeStyle=pal[3]; c.beginPath(); c.moveTo(W*0.1, H*0.7); for(let s=1;s<8;s++) c.lineTo(W*(0.1+s*0.06), H*(s%2 ? 0.6 : 0.75)); c.stroke();
+    c.fillStyle=pal[4]; for(let i=0;i<14;i++) c.fillRect(W*(0.05+((i*37)%90)/100), H*(0.05+((i*53)%40)/100), W*0.03, W*0.03);
+    c.strokeStyle=pal[3]; c.lineWidth=W*0.012; for(let i=0;i<5;i++){ c.beginPath(); c.moveTo(W*(0.6+i*0.06), H*0.1); c.lineTo(W*(0.6+i*0.06), H*0.24); c.stroke(); } };
+  const GBLOCK=signTex(128, 128, (c, W, H)=>{ c.fillStyle="#8aa8ac"; c.fillRect(0, 0, W, H); c.fillStyle="#b4ccd0"; for(let i=0;i<4;i++) for(let j=0;j<4;j++){ c.fillRect(i*32+4, j*32+4, 24, 24); }
+    c.fillStyle="rgba(255,255,255,0.18)"; for(let i=0;i<4;i++) for(let j=0;j<4;j++) c.fillRect(i*32+8, j*32+6, 6, 18); });
+  GBLOCK.wrapS=GBLOCK.wrapT=T.RepeatWrapping;
+  const texPlane=(w, h, tex, rep, x, y, z, rx, ry, rough)=>{ const t=tex.clone(); t.needsUpdate=true; t.repeat.set(w/rep, h/rep);
+    const m=new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshStandardMaterial({map:t, roughness:rough===undefined ? 0.9 : rough}));
+    m.rotation.set(rx||0, ry||0, 0, "YXZ"); m.position.set(x, y, z); m.receiveShadow=true; m.updateMatrix(); m.matrixAutoUpdate=false; scene.add(m); return m; };
 
-  /* ---- a wall with its openings, and glass in them ---- */
+  /* ---- walls with their openings, and glass in them ---- */
   const runW=(bk, col, ax, c0, c1, a, b, y0, y1, ops)=>{ let u=a;
     const piece=(p, q, h0, h1)=>{ if(q-p<0.005 || h1-h0<0.005) return; if(ax==="x") wallBox(bk, p, q, c0, c1, h0, h1, col, 0.6, FL); else wallBox(bk, c0, c1, p, q, h0, h1, col, 0.6, FL); };
     for(const o of ops.slice().sort((m, n)=>m.a-n.a)){ piece(u, o.a, y0, y1); piece(o.a, o.b, y0, o.sill); piece(o.a, o.b, o.head, y1); u=o.b; }
@@ -101,262 +127,523 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
     if(ax==="x"){ push("glass", planeGeo(w-0.02, h-0.02, 0), mid, y, cm, 0, "#ffffff"); for(let k=1;k<Math.round(w/1.6);k++) B(0.06, h, 0.1, o.a+k*w/Math.round(w/1.6), y, cm, frame); }
     else { push("glass", planeGeo(w-0.02, h-0.02, 0), cm, y, mid, Math.PI/2, "#ffffff"); for(let k=1;k<Math.round(w/1.6);k++) B(0.1, h, 0.06, cm, y, o.a+k*w/Math.round(w/1.6), frame); } };
 
-  /* ---- a building's interior, laid out in its own frame: u across the front from its middle, v in from the front wall ---- */
-  // (side: the face the door is in; o: the middle of that wall's inner face)
+  /* ---- a building's own frame: u across the front from its middle, v in from the front wall's inner face ---- */
   const frame=(side, ox, oz)=>{
     if(side==="s") return {P:(u, v)=>[ox+u, oz-v], swap:false, ry:0};
     if(side==="n") return {P:(u, v)=>[ox-u, oz+v], swap:false, ry:Math.PI};
     if(side==="w") return {P:(u, v)=>[ox+v, oz+u], swap:true, ry:-Math.PI/2};
     return {P:(u, v)=>[ox-v, oz-u], swap:true, ry:Math.PI/2}; };
-  function fitout(F, W, D, st){
-    const LB=(uw, h, vd, u, y, v, c)=>{ const [x, z]=F.P(u, v); B(F.swap ? vd : uw, h, F.swap ? uw : vd, x, y, z, c); };
-    const LRB=(uw, h, vd, u, y, v, c, rad)=>{ const [x, z]=F.P(u, v); RB(F.swap ? vd : uw, h, F.swap ? uw : vd, x, y, z, c, 0, rad); };
-    const LCOL=(u0, u1, v0, v1, y0, y1)=>{ const a=F.P(u0, v0), b=F.P(u1, v1); addCol(Math.min(a[0], b[0]), Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[1], b[1]), y0, y1); };
-    const LP=(u, v)=>F.P(u, v), CH=FL+3.2, LV=Math.min(10, D*0.38);
-    // the lobby: the desk and the one at it, two sofas and a table, ficus in the corners, the directory, the elevators
-    { const du=W*0.2, dv=LV*0.55;
-      LRB(3.8, 1.05, 0.8, du, FL+0.525, dv, st.desk, 0.03); LRB(3.96, 0.05, 0.96, du, FL+1.08, dv-0.05, st.top, 0.015);
-      LB(3.84, 0.06, 0.02, du, FL+0.9, dv-0.415, BRASS); LCOL(du-1.95, du+1.95, dv-0.5, dv+0.45, FL-0.5, FL+1.1);
-      { const [x, z]=LP(du+0.6, dv+0.15), fy=F.ry+Math.PI; RB(0.36, 0.3, 0.32, x, FL+1.26, z, "#d8d0bc", fy, 0.03); push("lk_tvon", planeGeo(0.26, 0.18, 0), x+Math.sin(fy)*0.165, FL+1.28, z+Math.cos(fy)*0.165, fy, "#ffffff"); }
-      st.desk_at=LP(du, dv+1.0);
-      for(const [sv, face] of [[2.4, 1],[5.6, -1]]){ const su=-W*0.24, [x, z]=LP(su, sv), ry=F.ry+(face>0 ? Math.PI : 0);
-        const fx=XF(x, z, ry), q=(w, h, d, lx, ly, lz, c)=>RB(w, h, d, fx.x(lx, lz), FL+ly, fx.z(lx, lz), c, ry, 0.05);
-        q(2.2, 0.42, 0.85, 0, 0.21, 0, st.sofa); q(1.8, 0.5, 0.2, 0, 0.62, -0.34, st.sofa); for(const s of [-1, 1]) q(0.2, 0.62, 0.85, s*1.0, 0.31, 0, st.sofa);
-        for(const s of [-1, 1]) C(0.02, 0.12, fx.x(s*0.95, 0.3), FL+0.06, fx.z(s*0.95, 0.3), "#c8ccd0", 8);
-        const a=LP(su-1.15, sv-0.45), b=LP(su+1.15, sv+0.45); addCol(Math.min(a[0], b[0]), Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[1], b[1]), FL-0.5, FL+0.6);
-        for(const du2 of [-0.6, 0.6]){ const p=LP(su+du2, sv+face*0.05); addSeat(p[0], p[1], FL, ry+Math.PI, "A SOFA IN THE LOBBY"); } }
-      { const [x, z]=LP(-W*0.24, 4.0); RB(1.2, 0.04, 0.7, x, FL+0.42, z, "#1a1a1e", F.ry, 0.01); for(const s of [-1, 1]) B(F.swap ? 0.6 : 0.04, 0.4, F.swap ? 0.04 : 0.6, x+(F.swap ? 0 : s*0.55), FL+0.2, z+(F.swap ? s*0.55 : 0), "#c8ccd0");
-        addCol(x-0.62, x+0.62, z-0.62, z+0.62, FL-0.5, FL+0.44); }
-      for(const [pu, pv] of [[-W/2+0.9, 0.9],[W/2-0.9, 0.9],[-3.0, LV-0.9],[3.0, LV-0.9]]){ const [x, z]=LP(pu, pv);
-        RB(0.7, 0.62, 0.7, x, FL+0.31, z, st.planter, 0, 0.04); C(0.04, 1.1, x, FL+1.1, z, "#5a4430", 8);
-        for(let k=0;k<7;k++){ const a=k*0.9, rr=0.2+(k%3)*0.08; S(0.26, x+Math.cos(a)*rr, FL+1.45+(k%3)*0.22, z+Math.sin(a)*rr, k%2 ? "#3a5a2a" : "#2e4a22"); }
-        addCol(x-0.36, x+0.36, z-0.36, z+0.36, FL-0.5, FL+0.65); }
-    }
-    // the elevator wall across the lobby's back, a gap through it in the middle to the office; two elevators, their call buttons, the directory
-    { const v=LV, t=0.2, h=CH-FL+0.02;
-      for(const [a, b] of [[-W/2, -1.4],[1.4, W/2]]){ LB(b-a, h, t, (a+b)/2, FL+h/2, v+t/2, st.wall); LCOL(a, b, v, v+t, FL-0.5, FL+h); }
-      for(const u of [-1.45, 1.45]) LB(0.08, 2.5, t+0.06, u, FL+1.25, v+t/2, BRASS); LB(2.98, 0.08, t+0.06, 0, FL+2.54, v+t/2, BRASS);
-      for(const u of [-4.2, 4.2]){ LB(1.3, 2.3, 0.04, u, FL+1.15, v-0.02, "#b8964a"); LB(0.012, 2.25, 0.05, u, FL+1.15, v-0.02, "#8a6a2a");
-        LB(1.5, 0.12, 0.05, u, FL+2.36, v-0.025, BRASS); LB(1.5, 0.16, 0.03, u, FL+2.52, v-0.015, "#1a1a1e");
-        LB(0.1, 0.22, 0.03, u+0.95, FL+1.15, v-0.015, BRASS); }
-      st.lift=LP(4.2, v-0.6);
-      // the directory: black felt, white letters, a brass frame
-      { const [x, z]=LP(-8.0, v-0.03); LB(1.5, 1.1, 0.04, -8.0, FL+1.6, v-0.02, BRASS);
-        sign(1.4, 1.0, (c, Wd, Hh)=>{ c.fillStyle="#141416"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="rgba(255,255,255,0.05)"; for(let y=0;y<Hh;y+=6) c.fillRect(0, y, Wd, 2);
-            say(c, st.name, Wd/2, Hh*0.12, Wd*0.8, Hh*0.09, "#f2f0ea", "700", "Arial");
-            st.tenants.forEach((n, k)=>{ say(c, n[0], Wd*0.45, Hh*(0.27+k*0.1), Wd*0.62, Hh*0.06, "#f2f0ea", "600", "'Courier New', monospace"); say(c, n[1], Wd*0.86, Hh*(0.27+k*0.1), Wd*0.16, Hh*0.06, "#f2f0ea", "600", "'Courier New', monospace"); }); },
-          x+Math.sin(F.ry)*0.025, FL+1.6, z+Math.cos(F.ry)*0.025, F.ry, false, 420); } }
-    // the office: cubicles in fours, a glass conference room in the far corner, the copier and the water cooler by the way in
-    { const v0=LV+0.2, cu0=W/2-8.5, cv0=D-6.6;
-      // the conference room: glass on its two open sides (a door left in one), the long table and its chairs, a whiteboard
-      { const gh=CH-FL-0.02;
-        for(const [a, b] of [[cu0, cu0+1.6],[cu0+2.6, W/2]]){ const [x, z]=LP((a+b)/2, cv0); push("glass", planeGeo(b-a-0.04, gh-0.04, 0), x, FL+gh/2, z, F.ry, "#ffffff");
-          LB(b-a, 0.06, 0.08, (a+b)/2, FL+0.03, cv0, "#8a8e90"); LB(b-a, 0.06, 0.08, (a+b)/2, CH-0.03, cv0, "#8a8e90"); LCOL(a, b, cv0-0.04, cv0+0.04, FL-0.5, CH); }
-        for(const u of [cu0+1.6, cu0+2.6]) LB(0.06, gh, 0.1, u, FL+gh/2, cv0, "#8a8e90");
-        { const [x, z]=LP(cu0, (cv0+D)/2); push("glass", planeGeo(D-cv0-0.04, gh-0.04, 0), x, FL+gh/2, z, F.ry+Math.PI/2, "#ffffff"); LB(0.08, 0.06, D-cv0, cu0, FL+0.03, (cv0+D)/2, "#8a8e90"); LCOL(cu0-0.04, cu0+0.04, cv0, D, FL-0.5, CH); }
-        const tu=(cu0+W/2)/2, tv=(cv0+D)/2;
-        LRB(1.4, 0.05, 4.0, tu, FL+0.74, tv, st.desk, 0.02); LB(0.5, 0.72, 2.6, tu, FL+0.36, tv, "#3a3a3a"); LCOL(tu-0.72, tu+0.72, tv-2.02, tv+2.02, FL-0.5, FL+0.78);
-        for(let k=0;k<4;k++) for(const s of [-1, 1]){ const [x, z]=LP(tu+s*1.05, tv-1.5+k*1.0); RB(0.5, 0.5, 0.5, x, FL+0.25, z, st.chair, 0, 0.06); RB(0.5, 0.55, 0.1, x+(F.swap ? 0 : s*0.25), FL+0.75, z+(F.swap ? s*0.25 : 0), st.chair, 0, 0.04); }
-        { const [x, z]=LP(tu, D-0.03); LB(2.4, 1.2, 0.04, tu, FL+1.5, D-0.03, "#f4f4f0"); LB(2.5, 0.06, 0.08, tu, FL+0.88, D-0.05, "#8a8e90"); } }
-      // the cubicles: four to a cluster, fabric panels shoulder high, a desk and a terminal in each
-      for(let cu=-W/2+3.2; cu<W/2-3; cu+=7.0) for(let cv=v0+3.4; cv<D-3; cv+=7.0){
-        if(Math.abs(cu)<4.4) continue; if(cu+3>cu0-0.6 && cv+3>cv0-0.6) continue;
-        const ph=1.45;
-        LB(5.6, ph, 0.06, cu, FL+ph/2, cv-2.8, st.fabric); LB(5.6, ph, 0.06, cu, FL+ph/2, cv+2.8, st.fabric);
-        LB(0.06, ph, 5.6, cu-2.8, FL+ph/2, cv, st.fabric); LB(0.06, ph, 5.6, cu, FL+ph/2, cv, st.fabric); LB(5.6, ph, 0.06, cu, FL+ph/2, cv, st.fabric);
-        LB(0.06, ph, 2.0, cu+2.8, FL+ph/2, cv-1.8, st.fabric); LB(0.06, ph, 2.0, cu+2.8, FL+ph/2, cv+1.8, st.fabric);
-        for(const [a, b] of [[-2.83, 2.83]]) for(const vv of [cv-2.8, cv, cv+2.8]) LB(5.66, 0.04, 0.08, cu, FL+ph+0.02, vv, "#8a8e90");
-        LCOL(cu-2.84, cu+0.04, cv-2.84, cv+2.84, FL-0.5, FL+ph); LCOL(cu+0.04, cu+2.84, cv-2.84, cv-0.8, FL-0.5, FL+ph); LCOL(cu+0.04, cu+2.84, cv+0.8, cv+2.84, FL-0.5, FL+ph);
-        for(const [qu, qv] of [[-1.4, -1.4],[1.4, -1.4],[-1.4, 1.4],[1.4, 1.4]]){ const du=cu+qu, dv=cv+qv;
-          LRB(2.4, 0.04, 0.75, du, FL+0.74, dv+(qv<0 ? -0.95 : 0.95), st.desk, 0.01);
-          const [mx, mz]=LP(du, dv+(qv<0 ? -1.0 : 1.0)), fy=F.ry+(qv<0 ? Math.PI : 0);
-          RB(0.4, 0.34, 0.38, mx, FL+0.95, mz, "#d8d0bc", fy, 0.04); push("lk_tvon", planeGeo(0.28, 0.2, 0), mx+Math.sin(fy)*0.193, FL+0.97, mz+Math.cos(fy)*0.193, fy, "#ffffff");
-          const [kx, kz]=LP(du, dv+(qv<0 ? -0.62 : 0.62)); RB(0.42, 0.03, 0.15, kx, FL+0.775, kz, "#c8c0ac", fy, 0.008);
-          const [cx, cz]=LP(du+0.2, dv+(qv<0 ? -0.1 : 0.1)); C(0.25, 0.04, cx, FL+0.03, cz, "#2a2a2a", 5); C(0.025, 0.36, cx, FL+0.22, cz, "#8a8e90", 8); RB(0.46, 0.08, 0.44, cx, FL+0.46, cz, st.chair, fy, 0.03);
-          if(r()<0.4 && st.sitters.length<4) st.sitters.push({x:cx, z:cz, yaw:fy+Math.PI}); } }
-      // the copier, the water cooler, a coat rack by the way in from the lobby
-      { const [x, z]=LP(-4.0, v0+0.6); RB(1.0, 1.0, 0.65, x, FL+0.5, z, "#d8d4c8", F.ry, 0.04); RB(1.0, 0.1, 0.65, x, FL+1.05, z, "#b8b4a8", F.ry, 0.02); addCol(x-0.55, x+0.55, z-0.55, z+0.55, FL-0.5, FL+1.1); }
-      { const [x, z]=LP(1.2, v0+0.4); B(0.34, 0.95, 0.34, x, FL+0.475, z, "#e8e4d8"); C(0.15, 0.42, x, FL+1.16, z, "#9ac8e8", 14); addCol(x-0.2, x+0.2, z-0.2, z+0.2, FL-0.5, FL+1.4); }
-      // a poster on the elevator wall's back: the kind every office had
-      { const [x, z]=LP(-6.0, v0+0.015);
-        sign(0.8, 1.05, (c, Wd, Hh)=>{ c.fillStyle="#0a0a0c"; c.fillRect(0, 0, Wd, Hh); c.fillStyle=st.poster[1]; c.fillRect(Wd*0.08, Hh*0.08, Wd*0.84, Hh*0.6);
-            c.fillStyle="#f4f2ec"; c.beginPath(); c.moveTo(Wd*0.2, Hh*0.62); c.lineTo(Wd*0.5, Hh*0.2); c.lineTo(Wd*0.8, Hh*0.62); c.fill();
-            say(c, st.poster[0], Wd/2, Hh*0.78, Wd*0.8, Hh*0.09, "#f4f2ec", "700", "Georgia, serif"); say(c, st.poster[2], Wd/2, Hh*0.89, Wd*0.8, Hh*0.04, "#c8c4b8", "400", "Georgia, serif"); },
-          x, FL+1.6, z, F.ry+Math.PI, false, 240); } }
-    // the drop ceiling, its lights, two lamps in the pool
-    { const a=LP(-W/2, 0), b=LP(W/2, D); ceilPlane(Math.min(a[0], b[0]), Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[1], b[1]), CH);
-      for(let u=-W/2+2; u<W/2-1; u+=3.6) for(let v=1.8; v<D-1; v+=3.6){ const [x, z]=LP(u, v); push("tube", boxGeo(F.swap ? 1.2 : 0.6, 0.02, F.swap ? 0.6 : 1.2, 0), x, CH-0.012, z, 0, "#ffffff"); }
-      for(const [u, v] of [[0, LV*0.5],[0, (LV+D)/2]]){ const [x, z]=LP(u, v); LAMPS.push({x:x, y:CH-0.3, z:z, color:0xfff4e6, intensity:0.7, dist:16, decay:1.5, indoor:true}); } }
-  }
+  /* The kit, in a frame: boxes, colliders and floors by (u, v); and the furniture, each facing one of the frame's four ways
+     ("front" toward the front wall, "back" away from it, "+u", "-u"): what you sit in faces that way, its seat with it. */
+  function kit(F){
+    const P=F.P, ryOf=(d)=>F.ry+(d==="front" ? 0 : d==="back" ? Math.PI : d==="+u" ? Math.PI/2 : -Math.PI/2);
+    const K={F:F, P:P, ryOf:ryOf, sitters:[]};
+    K.box=(uw, h, vd, u, y, v, c)=>{ const [x, z]=P(u, v); B(F.swap ? vd : uw, h, F.swap ? uw : vd, x, y, z, c); };
+    K.rbox=(uw, h, vd, u, y, v, c, rad)=>{ const [x, z]=P(u, v); RB(F.swap ? vd : uw, h, F.swap ? uw : vd, x, y, z, c, 0, rad); };
+    K.rect=(u0, u1, v0, v1)=>{ const a=P(u0, v0), b=P(u1, v1); return [Math.min(a[0], b[0]), Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[1], b[1])]; };
+    K.col=(u0, u1, v0, v1, y0, y1)=>{ const R=K.rect(u0, u1, v0, v1); addCol(R[0], R[1], R[2], R[3], y0, y1); };
+    K.flat=(u0, u1, v0, v1, y)=>{ const R=K.rect(u0, u1, v0, v1); addFlat(R[0], R[1], R[2], R[3], y); };
+    // an object at (u, v) facing d: its own boxes by its own x (across) and z (toward its front)
+    K.obj=(u, v, d, y)=>{ const [x, z]=P(u, v), ry=ryOf(d), f=XF(x, z, ry);
+      return {x:x, z:z, ry:ry, at:(lx, lz)=>[f.x(lx, lz), f.z(lx, lz)],
+        b:(w, h, dd, lx, ly, lz, c)=>B(w, h, dd, f.x(lx, lz), y+ly, f.z(lx, lz), c, ry),
+        rb:(w, h, dd, lx, ly, lz, c, rad)=>RB(w, h, dd, f.x(lx, lz), y+ly, f.z(lx, lz), c, ry, rad),
+        c:(rr, h, lx, ly, lz, c, seg)=>C(rr, h, f.x(lx, lz), y+ly, f.z(lx, lz), c, seg)}; };
+    // a straight wall in the frame, on the floor at y, h high, its collider with it; gaps along it left open
+    K.wall=(u0, v0, u1, v1, y, h, c, gaps, t)=>{ t=t||0.12; const along=Math.abs(u1-u0)>Math.abs(v1-v0), a0=along ? Math.min(u0, u1) : Math.min(v0, v1), a1=along ? Math.max(u0, u1) : Math.max(v0, v1);
+      let p=a0; for(const g of (gaps||[]).concat([[a1, a1]]).sort((m, n)=>m[0]-n[0])){ if(g[0]-p>0.02){
+          if(along){ K.box(g[0]-p, h, t, (p+g[0])/2, y+h/2, v0, c); K.col(p, g[0], v0-t/2, v0+t/2, y-0.05, y+h); }
+          else { K.box(t, h, g[0]-p, u0, y+h/2, (p+g[0])/2, c); K.col(u0-t/2, u0+t/2, p, g[0], y-0.05, y+h); } }
+        p=Math.max(p, g[1]); } };
+    K.glassWall=(u0, v0, u1, v1, y, h, gaps)=>{ const along=Math.abs(u1-u0)>Math.abs(v1-v0), a0=along ? Math.min(u0, u1) : Math.min(v0, v1), a1=along ? Math.max(u0, u1) : Math.max(v0, v1);
+      let p=a0; for(const g of (gaps||[]).concat([[a1, a1]]).sort((m, n)=>m[0]-n[0])){ if(g[0]-p>0.05){ const m=(p+g[0])/2;
+          const [x, z]=along ? P(m, v0) : P(u0, m); push("glass", planeGeo(g[0]-p-0.04, h-0.06, 0), x, y+h/2, z, F.ry+(along ? 0 : Math.PI/2), "#ffffff");
+          if(along){ K.box(g[0]-p, 0.06, 0.08, m, y+0.03, v0, "#3a3a3e"); K.box(g[0]-p, 0.06, 0.08, m, y+h-0.03, v0, "#3a3a3e"); K.col(p, g[0], v0-0.04, v0+0.04, y-0.05, y+h); }
+          else { K.box(0.08, 0.06, g[0]-p, u0, y+0.03, m, "#3a3a3e"); K.box(0.08, 0.06, g[0]-p, u0, y+h-0.03, m, "#3a3a3e"); K.col(u0-0.04, u0+0.04, p, g[0], y-0.05, y+h); }
+          for(const e of [p, g[0]]) along ? K.box(0.06, h, 0.1, e, y+h/2, v0, "#3a3a3e") : K.box(0.1, h, 0.06, u0, y+h/2, e, "#3a3a3e"); }
+        p=Math.max(p, g[1]); } };
+    // an office chair on its star, facing d; the seat goes with it, and (if asked) the one who sits in it
+    K.chair=(u, v, y, d, col, label, who)=>{ const o=K.obj(u, v, d, y);
+      o.c(0.27, 0.035, 0, 0.03, 0, "#2a2a2a", 5); o.c(0.025, 0.38, 0, 0.22, 0, "#6a6e72", 8);
+      o.rb(0.48, 0.08, 0.46, 0, 0.46, 0, col, 0.03); o.rb(0.44, 0.5, 0.07, 0, 0.82, -0.22, col, 0.03);
+      for(const s of [-1, 1]) o.b(0.04, 0.2, 0.3, s*0.23, 0.6, -0.02, "#2a2a2a");
+      addSeat(o.x, o.z, y, o.ry+Math.PI, label || "A CHAIR", false, 0.66);
+      if(who) K.sitters.push({x:o.x, z:o.z, y:y, yaw:o.ry, look:who}); return o; };
+    // a chrome sled chair with a cushion, for visitors, facing d
+    K.guest=(u, v, y, d, col, label)=>{ const o=K.obj(u, v, d, y);
+      for(const s of [-1, 1]){ o.b(0.025, 0.025, 0.5, s*0.22, 0.012, 0, "#b8bcc0"); o.b(0.025, 0.46, 0.025, s*0.22, 0.24, 0.23, "#b8bcc0"); o.b(0.025, 0.8, 0.025, s*0.22, 0.4, -0.24, "#b8bcc0"); }
+      o.rb(0.48, 0.08, 0.48, 0, 0.46, 0, col, 0.03); o.rb(0.46, 0.38, 0.07, 0, 0.74, -0.24, col, 0.03);
+      addSeat(o.x, o.z, y, o.ry+Math.PI, label || "A CHAIR", false, 0.66); return o; };
+    // a desk you sit at facing d: the top, the pedestal, the modesty panel; a beige terminal on it facing you, its keyboard; the chair
+    K.desk=(u, v, y, d, w, col, opt)=>{ opt=opt||{}; const o=K.obj(u, v, d, y), dd=opt.deep||0.78;
+      o.rb(w, 0.04, dd, 0, 0.74, 0, col, 0.012); o.b(0.42, 0.7, dd-0.04, w/2-0.23, 0.36, 0, opt.ped||col); o.b(w-0.06, 0.45, 0.025, 0, 0.45, dd/2-0.03, opt.ped||col);
+      if(w>1.0) o.b(0.04, 0.7, dd-0.06, -w/2+0.03, 0.36, 0, opt.ped||col);
+      for(let k=0;k<3;k++) o.b(0.36, 0.16, 0.012, w/2-0.23, 0.2+k*0.2, -dd/2-0.002, "#7a7468");
+      const [ax, az]=o.at(-w/2, -dd/2), [bx2, bz2]=o.at(w/2, dd/2); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+0.76);
+      if(opt.term!==false){ const [mx, mz]=o.at(opt.tx||0, 0.12); RB(0.42, 0.36, 0.4, mx, y+0.94, mz, "#c4b89c", o.ry, 0.04); RB(0.36, 0.06, 0.32, mx, y+0.77, mz, "#b4a88c", o.ry, 0.02);
+        push("lk_tvon", planeGeo(0.3, 0.22, 0), mx-Math.sin(o.ry)*0.203, y+0.96, mz-Math.cos(o.ry)*0.203, o.ry+Math.PI, "#ffffff");
+        const [kx, kz]=o.at(opt.tx||0, -0.18); RB(0.44, 0.03, 0.16, kx, y+0.775, kz, "#b4a88c", o.ry, 0.008); }
+      if(opt.phone!==false){ const [px, pz]=o.at(-w/2+0.25, 0.05); RB(0.2, 0.08, 0.2, px, y+0.8, pz, opt.phoneCol||"#8a2a2a", o.ry, 0.02); }
+      return o; };
+    // (desk(): the chair is where you sit, the desk 0.75 in front of it, so a desk is placed by its chair)
+    K.station=(u, v, y, d, w, col, opt)=>{ const o=K.obj(u, v, d, y), [cx, cz]=o.at(0, 0), [dx2, dz2]=o.at(0, 0.78);
+      const du=uvOf(F, dx2, dz2); K.desk(du[0], du[1], y, d, w, col, Object.assign({chair:false}, opt||{}));
+      if(!(opt && opt.chair===false)) K.chair(u, v, y, d, (opt && opt.chairCol) || "#3a3a40", opt && opt.label, opt && opt.who); };
+    K.sofa=(u, v, y, d, len, col, label)=>{ const o=K.obj(u, v, d, y);
+      o.rb(len, 0.42, 0.85, 0, 0.21, 0, col, 0.06); o.rb(len-0.4, 0.5, 0.2, 0, 0.62, -0.32, col, 0.08); for(const s of [-1, 1]) o.rb(0.2, 0.62, 0.85, s*(len/2-0.1), 0.31, 0, col, 0.08);
+      for(const s of [-1, 1]) o.c(0.02, 0.1, s*(len/2-0.15), 0.05, 0.3, "#b8bcc0", 8);
+      const [ax, az]=o.at(-len/2, -0.43), [bx2, bz2]=o.at(len/2, 0.43); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+0.6);
+      for(let k=0;k<Math.max(1, Math.round((len-0.4)/0.7));k++){ const lx=-(len-0.4)/2+(k+0.5)*(len-0.4)/Math.max(1, Math.round((len-0.4)/0.7)), [sx, sz]=o.at(lx, 0.05); addSeat(sx, sz, y, o.ry+Math.PI, label || "A SOFA"); }
+      return o; };
+    // a table (uw by vd) with chairs round it, all facing in to it
+    K.table=(u, v, y, uw, vd, col, n, chairCol, round)=>{
+      if(round){ const [x, z]=P(u, v); C(Math.min(uw, vd)/2, 0.04, x, y+0.74, z, col, 24); C(0.05, 0.72, x, y+0.36, z, "#3a3a3a", 10); C(0.3, 0.03, x, y+0.015, z, "#3a3a3a", 16); }
+      else { K.rbox(uw, 0.05, vd, u, y+0.74, v, col, 0.015); for(const [a, b] of [[-1,-1],[1,-1],[-1,1],[1,1]]) K.box(0.06, 0.72, 0.06, u+a*(uw/2-0.15), y+0.36, v+b*(vd/2-0.15), "#3a3a3a"); }
+      K.col(u-uw/2, u+uw/2, v-vd/2, v+vd/2, y-0.05, y+0.76);
+      const cc=chairCol || "#5a4a5a";
+      if(round){ for(let k=0;k<n;k++){ const a=k/n*Math.PI*2, cu=u+Math.cos(a)*(uw/2+0.45), cv=v+Math.sin(a)*(vd/2+0.45);
+          const d=Math.abs(Math.cos(a))>Math.abs(Math.sin(a)) ? (Math.cos(a)>0 ? "-u" : "+u") : (Math.sin(a)>0 ? "front" : "back"); K.guest(cu, cv, y, d, cc, "A CHAIR AT THE TABLE"); } }
+      else { const per=Math.max(1, Math.floor(uw/0.75));
+        for(let k=0;k<per && k<n;k++){ const cu=u-uw/2+(k+0.5)*uw/per; K.guest(cu, v-vd/2-0.45, y, "back", cc, "A CHAIR AT THE TABLE"); K.guest(cu, v+vd/2+0.45, y, "front", cc, "A CHAIR AT THE TABLE"); }
+        if(n>per*2 && vd>1.2) for(const s of [-1, 1]) K.guest(u+s*(uw/2+0.45), v, y, s<0 ? "+u" : "-u", cc, "A CHAIR AT THE TABLE"); } };
+    K.plant=(u, v, y, big, pot)=>{ const [x, z]=P(u, v), s=big ? 1.3 : 0.9;
+      RB(0.55*s, 0.55*s, 0.55*s, x, y+0.275*s, z, pot || "#8a6a4a", 0, 0.04); C(0.035, 0.9*s, x, y+0.55*s+0.45*s, z, "#5a4430", 8);
+      for(let k=0;k<8;k++){ const a=k*0.8, rr=(0.15+(k%3)*0.08)*s; S(0.2*s, x+Math.cos(a)*rr, y+(1.1+(k%3)*0.2)*s, z+Math.sin(a)*rr, k%2 ? "#3a5a2a" : "#2e4a22"); }
+      addCol(x-0.3*s, x+0.3*s, z-0.3*s, z+0.3*s, y-0.05, y+0.6*s); };
+    // a framed picture on a wall, facing d, its face 1.5 cm off its frame's
+    K.art=(u, v, y, d, w, h, k)=>{ const o=K.obj(u, v, d, y); o.b(w+0.08, h+0.08, 0.03, 0, 0, 0, "#2a2a2e");
+      const [ax, az]=o.at(0, 0.03); sign(w, h, ART(k), ax, y, az, o.ry, false, 240); };
+    K.files=(u, v, y, d, n, col)=>{ for(let k=0;k<n;k++){ const o=K.obj(u+(d==="front" || d==="back" ? (k-(n-1)/2)*0.48 : 0), v+(d==="+u" || d==="-u" ? (k-(n-1)/2)*0.48 : 0), d, y);
+        o.b(0.46, 1.32, 0.62, 0, 0.66, 0, col || "#7a7468"); for(let j=0;j<4;j++){ o.b(0.4, 0.28, 0.012, 0, 0.18+j*0.32, 0.316, "#8a8478"); o.b(0.12, 0.02, 0.03, 0, 0.27+j*0.32, 0.33, "#b8b4a8"); }
+        const [ax, az]=o.at(-0.23, -0.31), [bx2, bz2]=o.at(0.23, 0.31); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+1.33); } };
+    K.shelf=(u, v, y, d, len, col)=>{ const o=K.obj(u, v, d, y), q=_trng(((u*13+v*7)|0)+3);
+      o.b(len, 2.1, 0.36, 0, 1.05, 0, col); for(let k=0;k<5;k++){ o.b(len-0.04, 0.025, 0.34, 0, 0.12+k*0.44, 0.012, col);
+        for(let x=-len/2+0.06; x<len/2-0.05;){ const bw=0.03+q()*0.04, bh=0.24+q()*0.12; o.b(bw, bh, 0.24, x+bw/2, 0.135+k*0.44+bh/2, 0.03, ["#6a2a1a","#2a3a5a","#3a5a2a","#7a5a2a","#4a2a3a","#2a2a2a"][(q()*6)|0]); x+=bw+0.005; } }
+      const [ax, az]=o.at(-len/2, -0.18), [bx2, bz2]=o.at(len/2, 0.18); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+2.1); };
+    K.cooler=(u, v, y)=>{ const [x, z]=P(u, v); B(0.34, 0.95, 0.34, x, y+0.475, z, "#b8ae98"); C(0.15, 0.42, x, y+1.16, z, "#7ab0d0", 14); addCol(x-0.2, x+0.2, z-0.2, z+0.2, y-0.05, y+1.4); };
+    K.copier=(u, v, y, d)=>{ const o=K.obj(u, v, d, y); o.rb(1.0, 1.0, 0.65, 0, 0.5, 0, "#bcb4a2", 0.04); o.rb(1.0, 0.1, 0.65, 0, 1.05, 0, "#a49c8a", 0.02); o.b(0.3, 0.12, 0.012, 0.25, 0.9, 0.33, "#2a6a3a");
+      const [ax, az]=o.at(-0.5, -0.33), [bx2, bz2]=o.at(0.5, 0.33); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+1.1); };
+    K.clock=(u, v, y, d)=>{ const o=K.obj(u, v, d, y); o.c(0.2, 0.04, 0, 0, 0.02, "#2a2a2a", 24); };
+    return K; }
+  const uvOf=(F, x, z)=>{ // (the inverse of F.P, for the four frames)
+    const P0=F.P(0, 0), Pu=F.P(1, 0), Pv=F.P(0, 1), ux=Pu[0]-P0[0], uz=Pu[1]-P0[1], vx=Pv[0]-P0[0], vz=Pv[1]-P0[1], dx=x-P0[0], dz=z-P0[1];
+    return [dx*ux+dz*uz, dx*vx+dz*vz]; };
 
-  /* ---- the three buildings ---- */
-  function building(K){
-    const {x0, x1, z0, z1, side, WT}=K, H=K.FH0+K.FHU*(K.floors-1), top=FL+H, ox=side==="s" || side==="n" ? (x0+x1)/2 : (side==="w" ? x0+WT : x1-WT), oz=side==="w" || side==="e" ? (z0+z1)/2 : (side==="s" ? z1-WT : z0+WT);
-    const F=frame(side, ox, oz), W=(side==="s" || side==="n" ? x1-x0 : z1-z0)-2*WT, D=(side==="s" || side==="n" ? z1-z0 : x1-x0)-2*WT;
-    // the slab, its edge, the floor of stone, the walkable floor
-    B(x1-x0+0.1, FL-(LY-0.2), z1-z0+0.1, (x0+x1)/2, (FL+LY-0.2)/2-0.006, (z0+z1)/2, "#8a8680");
-    floorPlane(x0+WT, x1-WT, z0+WT, z1-WT, FL, STONE[K.id], K.id==="C" ? 0.6 : 1.2);
+  /* ---- the elevator: a shaft up every floor, a car that rides it, doors that slide, a button on every floor ---- */
+  const UC=4.2, VF=10.0, VB=11.9, CAR_V0=10.2, CAR_V1=11.78;
+  function elevator(K, name, levels, top){
+    const F=K.F, N=levels.length, E={name:name, levels:levels, f:0, y:levels[0], target:0, state:"idle", door:1, dwell:0, F:F};
+    const DH=2.2;
+    // the shaft: its sides and back the whole height; its front a wall on every floor, the opening in it framed in brass
+    K.box(0.12, top-levels[0]+0.05, VB-VF, UC-0.89, (top+levels[0])/2, (VF+VB)/2, "#8a8478"); K.box(0.12, top-levels[0]+0.05, VB-VF, UC+0.89, (top+levels[0])/2, (VF+VB)/2, "#8a8478");
+    K.box(1.9, top-levels[0]+0.05, 0.12, UC, (top+levels[0])/2, VB-0.06, "#8a8478");
+    K.col(UC-0.95, UC-0.83, VF, VB, levels[0]-0.5, top); K.col(UC+0.83, UC+0.95, VF, VB, levels[0]-0.5, top); K.col(UC-0.95, UC+0.95, VB-0.12, VB, levels[0]-0.5, top);
+    E.doorCols=[]; E.land=[];
+    const bm=new T.MeshStandardMaterial({color:new T.Color("#b0904c"), metalness:0.7, roughness:0.32});
+    const leafG=new T.BoxGeometry(0.52, DH-0.02, 0.04);
+    for(let f=0;f<N;f++){ const y=levels[f], yn=f<N-1 ? levels[f+1]-0.3 : top;
+      if(f>0){ K.box(0.45, yn-y, 0.2, UC-0.725, (y+yn)/2, VF+0.1, "#8a8478"); K.box(0.45, yn-y, 0.2, UC+0.725, (y+yn)/2, VF+0.1, "#8a8478"); K.box(1.0, yn-y-DH, 0.2, UC, y+DH+(yn-y-DH)/2, VF+0.1, "#8a8478");
+        K.col(UC-0.95, UC-0.5, VF, VF+0.2, y-0.05, yn); K.col(UC+0.5, UC+0.95, VF, VF+0.2, y-0.05, yn); }
+      // the brass frame round the opening, the call buttons, the floor's number over it
+      K.box(0.08, DH+0.04, 0.06, UC-0.54, y+(DH+0.04)/2, VF-0.025, BRASS); K.box(0.08, DH+0.04, 0.06, UC+0.54, y+(DH+0.04)/2, VF-0.025, BRASS); K.box(1.16, 0.08, 0.06, UC, y+DH+0.04, VF-0.026, BRASS);
+      K.box(0.1, 0.22, 0.03, UC+0.78, y+1.1, VF-0.015, BRASS); K.box(0.26, 0.14, 0.03, UC, y+DH+0.28, VF-0.015, "#1a1a1e");
+      { const [nx, nz]=F.P(UC, VF-0.032); sign(0.22, 0.12, (c, W, H)=>{ c.fillStyle="#1a1a1e"; c.fillRect(0, 0, W, H); say(c, f===0 ? "L" : String(f+1), W/2, H/2, W*0.6, H*0.62, "#ff8a3a", "700", "Arial"); }, nx, y+DH+0.28, nz, F.ry, true, 88); }
+      const cb={}; const R=K.rect(UC-0.5, UC+0.5, VF, VF+0.2); Object.assign(cb, {x0:R[0], x1:R[1], z0:R[2], z1:R[3], y0:y-0.3, y1:y+DH}); COL_DYN.push(cb); E.doorCols.push(cb);
+      // the landing doors: two leaves in the opening, sliding apart into the wall either side
+      const g=new T.Group(); const [gx, gz]=F.P(UC, VF+0.1); g.position.set(gx, y+DH/2, gz); g.rotation.y=F.ry; scene.add(g);
+      const L=[new T.Mesh(leafG, bm), new T.Mesh(leafG, bm)]; L[0].position.x=-0.25; L[1].position.x=0.25; for(const m of L){ m.castShadow=true; g.add(m); }
+      E.land.push(L);
+      const [ux, uz]=F.P(UC+0.95+0.3, VF-0.45); addUse(ux, uz, y, "E  ·  CALL THE ELEVATOR", ()=>{ call(E, f); }, 1.3);
+      const [ix, iz]=F.P(UC, 11.3); addUse(ix, iz, y, "E  ·  THE NEXT FLOOR UP   ·   1–"+N+"  ·  ANY FLOOR", ()=>{ call(E, (E.f+1)%N); }, 0.9, ()=>E.state==="idle" && E.f===f);
+      addZone(...K.rect(UC-0.83, UC+0.83, CAR_V0, CAR_V1).slice(0, 4), y-0.4, y+2.6, name+" · THE ELEVATOR", true); }
+    // the car: a floor, walnut sides, a mirror at the back, a brass rail, a lit ceiling, its panel of buttons, its own doors
+    const car=new T.Group(); const [cx, cz]=F.P(UC, (CAR_V0+CAR_V1)/2); car.position.set(cx, levels[0], cz); car.rotation.y=F.ry; scene.add(car);
+    const cm=(c, extra)=>new T.MeshStandardMaterial(Object.assign({color:new T.Color(c), roughness:0.55}, extra||{}));
+    const add=(geo, mat, x, y, z)=>{ const m=new T.Mesh(geo, mat); m.position.set(x, y, z); m.receiveShadow=true; car.add(m); return m; };
+    const D=CAR_V1-CAR_V0;                                         // (along the car's own z: +z out of its door)
+    add(new T.BoxGeometry(1.64, 0.06, D-0.02), cm("#3a3236"), 0, -0.03, 0);
+    for(const s of [-1, 1]) add(new T.BoxGeometry(0.03, 2.4, D-0.04), cm("#5a3a22"), s*0.8, 1.2, 0);
+    add(new T.BoxGeometry(1.58, 2.4, 0.03), cm("#8a9298", {metalness:0.6, roughness:0.12}), 0, 1.2, -D/2+0.03);
+    add(new T.BoxGeometry(1.64, 0.05, D-0.02), cm("#2a2a2e"), 0, 2.45, 0);
+    add(new T.BoxGeometry(1.2, 0.02, D-0.4), new T.MeshBasicMaterial({color:new T.Color("#e8dcc0"), toneMapped:false}), 0, 2.42, 0);
+    for(const s of [-1, 1]) add(new T.CylinderGeometry(0.02, 0.02, D-0.2, 8).rotateX(Math.PI/2), cm("#b0904c", {metalness:0.7, roughness:0.3}), s*0.74, 0.92, -0.05);
+    add(new T.BoxGeometry(0.02, 0.6, 0.22), cm("#b0904c", {metalness:0.7, roughness:0.3}), 0.775, 1.25, D/2-0.25);
+    { const t=signTex(64, 176, (c, W, H)=>{ c.fillStyle="#b0904c"; c.fillRect(0, 0, W, H); for(let k=0;k<N;k++){ const y=H-20-k*(H-36)/Math.max(1, N-1)*(N>1 ? 1 : 0);
+          c.fillStyle="#2a2a2a"; c.beginPath(); c.arc(W/2, y, 12, 0, 7); c.fill(); c.fillStyle="#f2c06a"; c.font="bold 14px Arial"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(k===0 ? "L" : String(k+1), W/2, y+1); } });
+      const m=add(new T.PlaneGeometry(0.2, 0.55), new T.MeshBasicMaterial({map:t, toneMapped:false}), 0.763, 1.25, D/2-0.25); m.rotation.y=-Math.PI/2; }
+    const cl=[new T.Mesh(leafG, bm), new T.Mesh(leafG, bm)]; for(const m of cl){ m.position.set(0, DH/2, D/2+0.03); car.add(m); }
+    E.car=car; E.carL=cl;
+    // the car's floor, a surface that rides up and down with it
+    { const R=K.rect(UC-0.83, UC+0.83, CAR_V0, CAR_V1); addFlat(R[0], R[1], R[2], R[3], levels[0]); E.surf=SURF[SURF.length-1]; E.rect=R; }
+    E.doorCols[0].y1=-9999;                                         // (it starts at the lobby, its doors open)
+    OFFICE.elevs.push(E); return E; }
+  function call(E, f){ if(f===E.f && (E.state==="idle" || E.state==="opening")){ E.state="opening"; return; } E.target=f; if(E.state==="idle" || E.state==="opening") E.state="closing"; }
+
+  /* ---- the buildings ---- */
+  function building(Kd){
+    const {x0, x1, z0, z1, side, WT}=Kd, nF=Kd.floors, levels=[]; for(let f=0;f<nF;f++) levels.push(FL+(f ? Kd.FH0+(f-1)*Kd.FHU : 0));
+    const H=Kd.FH0+Kd.FHU*(nF-1), top=FL+H;
+    const ox=side==="s" || side==="n" ? (x0+x1)/2 : (side==="w" ? x0+WT : x1-WT), oz=side==="w" || side==="e" ? (z0+z1)/2 : (side==="s" ? z1-WT : z0+WT);
+    const F=frame(side, ox, oz), W=(side==="s" || side==="n" ? x1-x0 : z1-z0)-2*WT, D=(side==="s" || side==="n" ? z1-z0 : x1-x0)-2*WT, K=kit(F);
+    Kd.levels=levels; Kd.top=top; Kd.F=F; Kd.K=K; Kd.W=W; Kd.D=D;
+    const cx=(x0+x1)/2, cz=(z0+z1)/2, dc=Kd.dc, G=FL+Kd.FH0;
+    // the slab and its edge, the ground floor's stone, the walkable floor
+    B(x1-x0+0.1, FL-(LY-0.2), z1-z0+0.1, cx, (FL+LY-0.2)/2-0.006, cz, "#8a8680");
+    texPlane(x1-x0-2*WT, z1-z0-2*WT, STONE[Kd.id], Kd.id==="C" ? 0.6 : 1.2, cx, FL, cz, -Math.PI/2, 0, 0.22);
     addFlat(x0, x1, z0, z1, FL);
-    const dc=K.dc;                                    // (the door's middle along the front)
-    const DOP={a:dc-1.0, b:dc+1.0, sill:FL-0.3, head:FL+2.4};
-    // the ground floor's walls and windows, by kind; the storeys over it a solid with its skin
-    const G=FL+K.FH0;
-    const opsAlong=(a, b, pitch, ww, sill, head, skip)=>{ const L=[]; for(let c=a+pitch/2; c<b-pitch/2+0.01; c+=pitch) if(!skip || Math.abs(c-skip)>ww/2+1.4) L.push({a:c-ww/2, b:c+ww/2, sill:sill, head:head}); return L; };
+    // the floors above: a slab each (open over the shaft), carpet on it, its ceiling, its lamps, its zone; every floor its own carpet
+    const shaft=K.rect(UC-0.95, UC+0.95, VF, VB);
+    const around=[[-W/2, W/2, 0, VF],[-W/2, W/2, VB, D],[-W/2, UC-0.95, VF, VB],[UC+0.95, W/2, VF, VB]];
+    for(let f=0;f<nF;f++){ const y=levels[f], ch=f ? y+2.95 : FL+3.2;
+      if(f){ for(const [u0, u1, v0, v1] of around){ K.box(u1-u0, 0.3, v1-v0, (u0+u1)/2, y-0.15, (v0+v1)/2, "#7a7468"); K.flat(u0, u1, v0, v1, y);
+          const R=K.rect(u0, u1, v0, v1); texPlane(R[1]-R[0], R[3]-R[2], Kd.carpets[f-1], 1.6, (R[0]+R[1])/2, y+0.006, (R[2]+R[3])/2, -Math.PI/2, 0, 1.0); } }
+      for(const [u0, u1, v0, v1] of around){ const R=K.rect(u0, u1, v0, v1); texPlane(R[1]-R[0], R[3]-R[2], CEILT, 0.61, (R[0]+R[1])/2, ch, (R[2]+R[3])/2, Math.PI/2, 0, 0.95); }
+      for(let u=-W/2+2; u<W/2-1; u+=3.6) for(let v=1.8; v<D-1; v+=3.6){ if(u>UC-1.4 && u<UC+1.4 && v>VF-0.6 && v<VB+0.6) continue; const [x, z]=F.P(u, v); push("tube", boxGeo(F.swap ? 1.2 : 0.6, 0.02, F.swap ? 0.6 : 1.2, 0), x, ch-0.012, z, 0, "#ffffff"); }
+      for(const [u, v] of [[-W/4, D*0.5],[W/4, D*0.5]]){ const [x, z]=F.P(u, v); LAMPS.push({x:x, y:ch-0.3, z:z, color:0xfff2e0, intensity:0.75, dist:20, decay:1.5, indoor:true}); }
+      addZone(x0, x1, z0, z1, y-0.4, ch, Kd.name+" · "+(f ? (["","2ND","3RD","4TH","5TH"][f])+" FLOOR" : "THE LOBBY"), true); }
+    // ---- the outside, by kind ----
     const sides=[["x", z0, z0+WT, x0, x1, "n"],["x", z1-WT, z1, x0, x1, "s"],["z", x0, x0+WT, z0+WT, z1-WT, "w"],["z", x1-WT, x1, z0+WT, z1-WT, "e"]];
-    for(const [ax, c0, c1, a, b, sd] of sides){
-      const front=sd===side, ops=K.glassBox ? [] : opsAlong(a, b, K.pitch, K.win, FL+0.75, FL+3.0, front ? dc : null);
-      if(front) ops.push(DOP);
-      if(K.glassBox){
-        // (Two: the ground floor all glass between dark mullions, a granite band over it; its colliders the glass line's)
-        const cm=(c0+c1)/2, n=Math.round((b-a)/2.6);
-        for(let k=0;k<n;k++){ const pa=a+k*(b-a)/n, pb=a+(k+1)*(b-a)/n; if(front && pb>dc-1.05 && pa<dc+1.05){
-            if(pa<dc-1.05) push("glass", planeGeo(dc-1.05-pa-0.02, 3.0, 0), ax==="x" ? (pa+dc-1.05)/2 : cm, FL+1.55, ax==="x" ? cm : (pa+dc-1.05)/2, ax==="x" ? 0 : Math.PI/2, "#ffffff");
-            if(pb>dc+1.05) push("glass", planeGeo(pb-dc-1.05-0.02, 3.0, 0), ax==="x" ? (pb+dc+1.05)/2 : cm, FL+1.55, ax==="x" ? cm : (pb+dc+1.05)/2, ax==="x" ? 0 : Math.PI/2, "#ffffff");
-            continue; }
-          push("glass", planeGeo(pb-pa-0.02, 3.0, 0), ax==="x" ? (pa+pb)/2 : cm, FL+1.55, ax==="x" ? cm : (pa+pb)/2, ax==="x" ? 0 : Math.PI/2, "#ffffff"); }
+    const DOP={a:dc-1.0, b:dc+1.0, sill:FL-0.3, head:FL+2.4};
+    if(Kd.id==="A"){
+      // (Two: the ground floor all glass between dark mullions, a granite band over it; the storeys bronze glass over bronze spandrels)
+      for(const [ax, c0, c1, a, b, sd] of sides){ const front=sd===side, cm=(c0+c1)/2, n=Math.round((b-a)/2.6);
+        for(let k=0;k<n;k++){ const pa=a+k*(b-a)/n, pb=a+(k+1)*(b-a)/n;
+          const seg=(p, q)=>{ if(q-p<0.1) return; push("glass", planeGeo(q-p-0.02, 3.0, 0), ax==="x" ? (p+q)/2 : cm, FL+1.55, ax==="x" ? cm : (p+q)/2, ax==="x" ? 0 : Math.PI/2, "#ffffff"); };
+          if(front && pb>dc-1.05 && pa<dc+1.05){ seg(pa, dc-1.05); seg(dc+1.05, pb); } else seg(pa, pb); }
         for(let k=0;k<=n;k++){ const p=a+k*(b-a)/n; if(ax==="x") B(0.12, 3.1, WT+0.04, p, FL+1.55, cm, "#1a1e22"); else B(WT+0.04, 3.1, 0.12, cm, FL+1.55, p, "#1a1e22"); }
-        if(ax==="x"){ B(b-a+0.02, 0.1, WT+0.06, (a+b)/2, FL+0.05, cm, "#1a1e22"); } else B(WT+0.06, 0.1, b-a+0.02, cm, FL+0.05, (a+b)/2, "#1a1e22");
-        wallBox("block", ax==="x" ? a : c0, ax==="x" ? b : c1, ax==="x" ? c0 : a, ax==="x" ? c1 : b, FL+3.1, G, GRAN, 0.6, FL);
-        // (the glass line is solid but where the doors are)
+        if(ax==="x") B(b-a+0.02, 0.1, WT+0.06, (a+b)/2, FL+0.05, cm, "#1a1e22"); else B(WT+0.06, 0.1, b-a+0.02, cm, FL+0.05, (a+b)/2, "#1a1e22");
+        wallBox("block", ax==="x" ? a : c0, ax==="x" ? b : c1, ax==="x" ? c0 : a, ax==="x" ? c1 : b, FL+3.1, G-0.3, GRAN, 0.6, FL);      // (up to the first spandrel)
         if(front){ if(ax==="x"){ addCol(a, dc-1.0, c0, c1, FL-0.5, G); addCol(dc+1.0, b, c0, c1, FL-0.5, G); } else { addCol(c0, c1, a, dc-1.0, FL-0.5, G); addCol(c0, c1, dc+1.0, b, FL-0.5, G); } }
-        else if(ax==="x") addCol(a, b, c0, c1, FL-0.5, G); else addCol(c0, c1, a, b, FL-0.5, G); }
-      else {
-        runW(K.bk, K.col, ax, c0, c1, a, b, FL-0.05, G, ops);
-        for(const o of ops){ if(o===DOP) continue; glaze(ax, (c0+c1)/2, o, K.frame); } } }
-    // the doors: a pair of store doors in the opening
-    { const L=side==="s" || side==="n" ? [[dc-0.98, 0],[dc+0.98, Math.PI]] : [[dc-0.98, -Math.PI/2],[dc+0.98, Math.PI/2]];
-      const cm=side==="s" ? z1-WT/2 : side==="n" ? z0+WT/2 : side==="w" ? x0+WT/2 : x1-WT/2;
-      for(const [h, ry] of L){ if(side==="s" || side==="n") makeDoor(XF(h, cm, ry), 0, FL+0.01, 0, K.name, side==="n", 0, "store");
-        else makeDoor(XF(cm, h, ry), 0, FL+0.01, 0, K.name, side==="e", 0, "store"); } }
-    // the storeys over: a solid, its skin (the kind's), the bands of tinted glass, the parapet's coping
-    const hx=(x1-x0)/2, hz=(z1-z0)/2, cx=(x0+x1)/2, cz=(z0+z1)/2;
-    if(K.id==="A"){
-      B(x1-x0-0.04, H-K.FH0, z1-z0-0.04, cx, G+(H-K.FH0)/2, cz, "#141a20");
-      for(let f=1; f<K.floors; f++){ const y0=FL+K.FH0+(f-1)*K.FHU;
-        for(const [ax, c, a, b, ry] of [["x", z0-0.012, x0, x1, 0],["x", z1+0.012, x0, x1, Math.PI],["z", x0-0.012, z0, z1, -Math.PI/2],["z", x1+0.012, z0, z1, Math.PI/2]]){
-          const n=Math.round((b-a)/2.6);
-          for(let k=0;k<n;k++){ const m=a+(k+0.5)*(b-a)/n; push("tint", boxGeo((b-a)/n-0.14, K.FHU-0.9, 0.03), ax==="x" ? m : c, y0+0.45+(K.FHU-0.9)/2, ax==="x" ? c : m, ax==="x" ? 0 : Math.PI/2, "#8aa0b0"); }
-          for(let k=(ax==="x" ? 0 : 1);k<=(ax==="x" ? n : n-1);k++){ const m=a+k*(b-a)/n; if(ax==="x") B(0.1, K.FHU, 0.06, m, y0+K.FHU/2, c, "#20262c"); else B(0.06, K.FHU, 0.1, c, y0+K.FHU/2, m, "#20262c"); }   // (the corners the x faces' own)
-          if(ax==="x") B(b-a+0.06, 0.45, 0.05, (a+b)/2, y0+0.225, c, "#20262c"); else B(0.05, 0.45, b-a+0.06, c, y0+0.225, (a+b)/2, "#20262c"); } }
-      B(x1-x0+0.16, 0.5, z1-z0+0.16, cx, top+0.25, cz, "#20262c");
-      // the canopy over the doors: a steel frame with glass on it, on two round columns
-      { const [dx, dz]=[dc, z1]; B(6.0, 0.12, 3.2, dx, FL+3.3, dz+1.6, "#2a2e32"); push("glass", boxGeo(5.6, 0.03, 2.9), dx, FL+3.385, dz+1.6, 0, "#ffffff");
-        for(const s of [-1, 1]){ C(0.1, 3.3, dx+s*2.7, FL+1.65, dz+3.0, "#2a2e32", 12); addCol(dx+s*2.7-0.11, dx+s*2.7+0.11, dz+2.89, dz+3.11, FL-0.5, FL+3.3); }
-        addRoof(dx-3, dx+3, dz, dz+3.2, FL+3.36); }
-      sign(14, 1.1, (c, Wd, Hh)=>{ c.fillStyle=GRAN; c.fillRect(0, 0, Wd, Hh); say(c, "MIDLAND MUTUAL", Wd/2, Hh/2, Wd*0.8, Hh*0.56, "#d8b868", "700", "Optima, Palatino, 'Palatino Linotype', serif"); },
-        dc, FL+3.65, z1+0.012, 0, false, 1680); }
+        else if(ax==="x") addCol(a, b, c0, c1, FL-0.5, G); else addCol(c0, c1, a, b, FL-0.5, G);
+        for(let f=1; f<nF; f++){ const y=levels[f], yn=f<nF-1 ? levels[f+1] : top;
+          // the spandrel over the slab's edge, then the glass to the next one; bronze mullions; the line solid
+          if(ax==="x") B(b-a, 1.2, WT, (a+b)/2, y+0.3, cm, "#4a3826"); else B(WT, 1.2, b-a, cm, y+0.3, (a+b)/2, "#4a3826");
+          const gh=yn-0.3-(y+0.9);
+          for(let k=0;k<n;k++){ const m=a+(k+0.5)*(b-a)/n; push("tint", boxGeo((b-a)/n-0.12, gh-0.02, 0.03), ax==="x" ? m : cm, y+0.9+gh/2, ax==="x" ? cm : m, ax==="x" ? 0 : Math.PI/2, "#a07a4a"); }
+          for(let k=(ax==="x" ? 0 : 1);k<=(ax==="x" ? n : n-1);k++){ const m=a+k*(b-a)/n; if(ax==="x") B(0.1, gh, WT+0.04, m, y+0.9+gh/2, cm, "#3a2c1e"); else B(WT+0.04, gh, 0.1, cm, y+0.9+gh/2, m, "#3a2c1e"); }
+          if(ax==="x") addCol(a, b, c0, c1, y-0.05, yn); else addCol(c0, c1, a, b, y-0.05, yn); }
+        // the parapet: granite, the coping
+        if(ax==="x") B(b-a, 1.1, WT, (a+b)/2, top-0.3+0.55, cm, GRAN); else B(WT, 1.1, b-a, cm, top-0.3+0.55, (a+b)/2, GRAN); }
+      B(x1-x0+0.12, 0.08, z1-z0+0.12, cx, top+0.84, cz, "#4a3826");
+      B(x1-x0-2*WT+0.02, 0.3, z1-z0-2*WT+0.02, cx, top-0.15, cz, "#6a645a");
+      // the canopy over the doors: a bronze frame and glass on two round columns; the name on the granite band; red letters along the top
+      { const dz=z1; B(6.0, 0.14, 3.2, dc, FL+3.3, dz+1.6, "#4a3826"); push("glass", boxGeo(5.6, 0.03, 2.9), dc, FL+3.39, dz+1.6, 0, "#ffffff");
+        for(const s of [-1, 1]){ C(0.12, 3.3, dc+s*2.7, FL+1.65, dz+3.0, "#4a3826", 14); addCol(dc+s*2.7-0.13, dc+s*2.7+0.13, dz+2.87, dz+3.13, FL-0.5, FL+3.3); }
+        addRoof(dc-3, dc+3, dz, dz+3.2, FL+3.38); }
+      sign(14, 1.1, (c, Wd, Hh)=>{ c.fillStyle=GRAN; c.fillRect(0, 0, Wd, Hh); say(c, "MIDLAND MUTUAL", Wd/2, Hh/2, Wd*0.8, Hh*0.56, "#c8a868", "700", "Optima, Palatino, 'Palatino Linotype', serif"); },
+        dc, FL+3.65, z1+0.012, 0, false, 1680);
+      sign(24, 1.0, (c, Wd, Hh)=>{ c.fillStyle=GRAN; c.fillRect(0, 0, Wd, Hh); c.shadowColor="#ff3a2a"; c.shadowBlur=14; say(c, "MIDLAND MUTUAL", Wd/2, Hh/2, Wd*0.84, Hh*0.6, "#ff5a3a", "800", "Helvetica, Arial, sans-serif"); c.shadowBlur=0; },
+        cx, top+0.25, z1+0.012, 0, true, 2400); }
     else {
-      // (One and Three: the storeys' walls the kind's material over a dark solid, a band of glass at each storey's window height)
-      B(x1-x0-2*WT+0.04, H-K.FH0-0.3, z1-z0-2*WT+0.04, cx, G+(H-K.FH0-0.3)/2, cz, "#1a1c20");          // (up to the roof's slab, which caps it)
-      for(const [ax, c0, c1, a, b] of sides){
-        const bands=[]; for(let f=1; f<K.floors; f++){ const y0=FL+K.FH0+(f-1)*K.FHU; bands.push({y0:y0, s:y0+K.bandS, h:y0+K.bandH}); }
-        let y=G; for(const bd of bands){ if(ax==="x") wallBox(K.bk, a, b, c0, c1, y, bd.s, K.col, 0.6, FL); else wallBox(K.bk, c0, c1, a, b, y, bd.s, K.col, 0.6, FL);
-          const cm=(c0+c1)/2, ry=ax==="x" ? 0 : Math.PI/2;
-          push("tint", boxGeo(b-a-0.32, bd.h-bd.s-0.02, 0.04), ax==="x" ? (a+b)/2 : cm, (bd.s+bd.h)/2, ax==="x" ? cm : (a+b)/2, ry, "#7a8a8a");
-          for(let m=a+3.0; m<b-1.0; m+=3.0) if(ax==="x") B(0.08, bd.h-bd.s, WT-0.06, m, (bd.s+bd.h)/2, cm, K.frame); else B(WT-0.06, bd.h-bd.s, 0.08, cm, (bd.s+bd.h)/2, m, K.frame);
-          // (the ends of the band: the wall's, so its jambs are the wall's)
-          if(ax==="x"){ wallBox(K.bk, a, a+0.15, c0, c1, bd.s, bd.h, K.col, 0.6, FL); wallBox(K.bk, b-0.15, b, c0, c1, bd.s, bd.h, K.col, 0.6, FL); }
-          else { wallBox(K.bk, c0, c1, a, a+0.15, bd.s, bd.h, K.col, 0.6, FL); wallBox(K.bk, c0, c1, b-0.15, b, bd.s, bd.h, K.col, 0.6, FL); }
-          y=bd.h; }
-        if(ax==="x") wallBox(K.bk, a, b, c0, c1, y, top+0.9, K.col, 0.6, FL); else wallBox(K.bk, c0, c1, a, b, y, top+0.9, K.col, 0.6, FL); }
-      for(const zc of [z0+WT/2, z1-WT/2]) B(x1-x0+0.08, 0.08, WT+0.1, cx, top+0.94, zc, K.cap);
-      for(const xc of [x0+WT/2, x1-WT/2]) B(WT+0.08, 0.08, z1-z0-2*WT-0.1, xc, top+0.94, cz, K.cap);
-      B(x1-x0-2*WT+0.04, 0.3, z1-z0-2*WT+0.04, cx, top-0.15, cz, "#9a968c");
-      if(K.id==="B"){
-        // the pyramid: a skylight of smoked glass on a steel frame, over the middle of the roof
-        const ph=3.2, pr=5.0, pc=V3(cx, top, cz);
+      // (One and Three: the ground floor's wall with its windows, then for each storey a solid band, a band of glass, the wall over it)
+      const G0=G;
+      for(const [ax, c0, c1, a, b, sd] of sides){
+        const front=sd===side, ops=[]; for(let c=a+Kd.pitch/2; c<b-Kd.pitch/2+0.01; c+=Kd.pitch) if(!front || Math.abs(c-dc)>Kd.win/2+1.4) ops.push({a:c-Kd.win/2, b:c+Kd.win/2, sill:FL+0.75, head:FL+3.0});
+        if(front) ops.push(DOP);
+        runW(Kd.bk, Kd.col, ax, c0, c1, a, b, FL-0.05, G0, ops); for(const o of ops) if(o!==DOP) glaze(ax, (c0+c1)/2, o, Kd.frame);
+        let y=G0; const cm=(c0+c1)/2;
+        for(let f=1; f<nF; f++){ const fy=levels[f], s=fy+Kd.bandS, h=fy+Kd.bandH;
+          if(ax==="x") wallBox(Kd.bk, a, b, c0, c1, y, s, Kd.col, 0.6, FL); else wallBox(Kd.bk, c0, c1, a, b, y, s, Kd.col, 0.6, FL);
+          push("tint", boxGeo(b-a-0.32, h-s-0.02, 0.04), ax==="x" ? (a+b)/2 : cm, (s+h)/2, ax==="x" ? cm : (a+b)/2, ax==="x" ? 0 : Math.PI/2, Kd.glass);
+          for(let m=a+3.0; m<b-1.0; m+=3.0) if(ax==="x") B(0.08, h-s, WT-0.06, m, (s+h)/2, cm, Kd.frame); else B(WT-0.06, h-s, 0.08, cm, (s+h)/2, m, Kd.frame);
+          if(ax==="x"){ wallBox(Kd.bk, a, a+0.15, c0, c1, s, h, Kd.col, 0.6, FL); wallBox(Kd.bk, b-0.15, b, c0, c1, s, h, Kd.col, 0.6, FL); addCol(a, b, c0, c1, s-0.1, h); }
+          else { wallBox(Kd.bk, c0, c1, a, a+0.15, s, h, Kd.col, 0.6, FL); wallBox(Kd.bk, c0, c1, b-0.15, b, s, h, Kd.col, 0.6, FL); addCol(c0, c1, a, b, s-0.1, h); }
+          // a band on the face at each floor: cast stone at One, teal at Three
+          if(ax==="x") B(b-a+0.04, 0.24, 0.025, (a+b)/2, h+0.2, sd==="n" ? c0-0.0125 : c1+0.0125, Kd.band); else B(0.03, 0.24, b-a, sd==="w" ? c0-0.015 : c1+0.015, h+0.2, (a+b)/2, Kd.band);
+          y=h; }
+        if(ax==="x") wallBox(Kd.bk, a, b, c0, c1, y, top+0.9, Kd.col, 0.6, FL); else wallBox(Kd.bk, c0, c1, a, b, y, top+0.9, Kd.col, 0.6, FL); }
+      for(const zc of [z0+WT/2, z1-WT/2]) B(x1-x0+0.08, 0.08, WT+0.1, cx, top+0.94, zc, Kd.cap);
+      for(const xc of [x0+WT/2, x1-WT/2]) B(WT+0.08, 0.08, z1-z0-2*WT-0.1, xc, top+0.94, cz, Kd.cap);
+      B(x1-x0-2*WT+0.04, 0.3, z1-z0-2*WT+0.04, cx, top-0.15, cz, "#6a645a");
+      if(Kd.id==="B"){
+        // the pyramid: a skylight of smoked glass on a dark frame over the middle of the roof
+        const ph=3.2, pr=5.0;
         const pg=new T.ConeGeometry(pr*Math.SQRT2, ph, 4, 1, true); pg.rotateY(Math.PI/4);
-        const pm=new T.Mesh(pg, new T.MeshStandardMaterial({color:0x5a6a6a, metalness:0.6, roughness:0.15, transparent:true, opacity:0.75})); pm.position.set(cx, top+ph/2+0.02, cz); pm.updateMatrix(); pm.matrixAutoUpdate=false; scene.add(pm);
+        const pm=new T.Mesh(pg, new T.MeshStandardMaterial({color:0x5a4a3a, metalness:0.6, roughness:0.15, transparent:true, opacity:0.78})); pm.position.set(cx, top+ph/2+0.02, cz); pm.updateMatrix(); pm.matrixAutoUpdate=false; scene.add(pm);
         for(const [sx, sz] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ const a=V3(cx+sx*pr, top+0.02, cz+sz*pr), b=V3(cx, top+ph+0.02, cz), d=b.clone().sub(a), L=d.length();
-          ME.push({geo:boxGeo(0.12, L, 0.12), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color("#2a2e32")}); }
-        B(2*pr+0.2, 0.2, 2*pr+0.2, cx, top+0.1, cz, "#2a2e32"); }
+          ME.push({geo:boxGeo(0.12, L, 0.12), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color("#2a2420")}); }
+        B(2*pr+0.2, 0.2, 2*pr+0.2, cx, top+0.1, cz, "#2a2420");
+        // a brick arch round the door, its keystone in cast stone
+        for(const s of [-1, 1]) wallBox("brick", x0-0.5, x0, dc+s*1.9-0.35, dc+s*1.9+0.35, FL-0.05, FL+3.2, Kd.col, 0.6, FL);
+        { const n=11; for(let k=0;k<n;k++){ const a=k/(n-1)*Math.PI, rr=1.9; B(0.5, 0.3, 0.42, x0-0.25, FL+3.2+Math.sin(a)*rr*0.55, dc+Math.cos(a)*rr, k===5 ? Kd.band : Kd.col, 0); } } }
       // the name over the door
       { const fy=side==="w" ? -Math.PI/2 : side==="n" ? Math.PI : side==="e" ? Math.PI/2 : 0;
         const fx=side==="w" ? x0-0.03 : side==="e" ? x1+0.03 : dc, fz=side==="n" ? z0-0.03 : side==="s" ? z1+0.03 : dc;
-        sign(10, 0.9, (c, Wd, Hh)=>{ c.fillStyle=K.col; c.fillRect(0, 0, Wd, Hh); say(c, K.name, Wd/2, Hh/2, Wd*0.8, Hh*0.55, K.letters, "700", K.font); },
-          fx, K.signY, fz, fy, false, 1200);
-        if(side==="w") B(0.02, 1.0, 10.1, x0-0.01, K.signY, dc, K.col); else if(side==="n") B(10.1, 1.0, 0.02, dc, K.signY, z0-0.01, K.col); }
-      // Three's mirrored bay at the door: a glass box out from the front, the doors in its face
-      if(K.bay){ const by=FL, bd=2.6;
-        // (its glass dark and mirrored, a box a few centimetres thick, so it reads from inside the bay as well as out)
-        for(const s of [-1, 1]){ push("tint", boxGeo(0.04, 3.4, bd-0.02), dc+s*3.0, by+1.7, z0-bd/2, 0, "#4a5a60"); addCol(dc+s*3.0-0.06, dc+s*3.0+0.06, z0-bd, z0, FL-0.5, FL+3.5); }
-        for(const s of [-1, 1]) push("tint", boxGeo(1.9, 3.4, 0.04), dc+s*2.05, by+1.7, z0-bd, 0, "#4a5a60");
-        push("tint", boxGeo(2.2, 1.0, 0.04), dc, by+2.9, z0-bd, 0, "#4a5a60");
-        for(const x of [dc-3.0, dc-1.1, dc+1.1, dc+3.0]) B(0.08, 3.42, 0.08, x, by+1.71, z0-bd, "#2a2e32");
+        sign(10, 0.9, (c, Wd, Hh)=>{ c.fillStyle=Kd.signBg; c.fillRect(0, 0, Wd, Hh); say(c, Kd.name, Wd/2, Hh/2, Wd*0.8, Hh*0.55, Kd.letters, "700", Kd.font); },
+          fx, Kd.signY, fz, fy, false, 1200);
+        if(side==="w") B(0.02, 1.0, 10.1, x0-0.01, Kd.signY, dc, Kd.signBg); else if(side==="n") B(10.1, 1.0, 0.02, dc, Kd.signY, z0-0.01, Kd.signBg); }
+      if(Kd.id==="C"){
+        // glass block up the four corners; its initials in neon on the front; the tinted bay at the door
+        for(const [px, pz, a] of [[x0, z0, "x"],[x1, z0, "x"],[x0, z1, "x"],[x1, z1, "x"]]){ const sx=px===x0 ? 1 : -1, sz=pz===z0 ? 1 : -1;
+          const gb0=G+0.1, gb1=top-0.2;       // (from the storey up: the ground floor's windows stay clear)
+          texPlane(1.6, gb1-gb0, GBLOCK, 0.4, px+sx*0.8, (gb0+gb1)/2, pz-sz*0.012, 0, sz<0 ? 0 : Math.PI, 0.3);
+          texPlane(1.6, gb1-gb0, GBLOCK, 0.4, px-sx*0.012, (gb0+gb1)/2, pz+sz*0.8, 0, sx<0 ? Math.PI/2 : -Math.PI/2, 0.3); }
+        sign(6, 1.6, (c, Wd, Hh)=>{ c.fillStyle="#1a1a22"; c.fillRect(0, 0, Wd, Hh); c.shadowColor="#ff4ab0"; c.shadowBlur=20;
+            say(c, "LDS", Wd*0.3, Hh/2, Wd*0.4, Hh*0.62, "#ff8ad0", "800", "'Eurostile', 'Arial Black', Arial"); c.shadowColor="#3ae8e8";
+            say(c, "LAKESHORE DATA", Wd*0.72, Hh*0.4, Wd*0.42, Hh*0.18, "#8af0f0", "700", "Arial"); say(c, "SYSTEMS", Wd*0.72, Hh*0.64, Wd*0.42, Hh*0.18, "#8af0f0", "700", "Arial"); c.shadowBlur=0; },
+          dc+16, top-1.4, z0-0.03, Math.PI, true, 720);
+        B(6.1, 1.7, 0.02, dc+16, top-1.4, z0-0.01, "#1a1a22");
+        const by=FL, bd=2.6;
+        for(const s of [-1, 1]){ push("tint", boxGeo(0.04, 3.4, bd-0.02), dc+s*3.0, by+1.7, z0-bd/2, 0, "#3a6a6a"); addCol(dc+s*3.0-0.06, dc+s*3.0+0.06, z0-bd, z0, FL-0.5, FL+3.5); }
+        for(const s of [-1, 1]) push("tint", boxGeo(1.9, 3.4, 0.04), dc+s*2.05, by+1.7, z0-bd, 0, "#3a6a6a");
+        push("tint", boxGeo(2.2, 1.0, 0.04), dc, by+2.9, z0-bd, 0, "#3a6a6a");
+        for(const x of [dc-3.0, dc-1.1, dc+1.1, dc+3.0]) B(0.08, 3.42, 0.08, x, by+1.71, z0-bd, TEAL);
         addCol(dc-3.0, dc-1.1, z0-bd-0.06, z0-bd+0.06, FL-0.5, FL+3.5); addCol(dc+1.1, dc+3.0, z0-bd-0.06, z0-bd+0.06, FL-0.5, FL+3.5);
-        B(6.2, 0.2, bd+0.1, dc, FL+3.5, z0-bd/2, "#e8e4d8"); B(6.2, 0.05, bd, dc, FL-0.02, z0-bd/2, "#b8b4aa"); addFlat(dc-3.0, dc+3.0, z0-bd, z0, FL);
-        addZone(dc-3.0, dc+3.0, z0-bd, z0, FL-0.5, FL+3.4, K.name+" · THE BAY", true); } }
-    const st={name:K.name, tenants:K.tenants, desk:K.desk, top:K.top, sofa:K.sofa, planter:K.planter, wall:K.wall, fabric:K.fabric, chair:K.chair, poster:K.poster, sitters:[]};
-    fitout(F, W, D, st);
-    K.st=st; K.F=F;
-    return K; }
+        B(6.2, 0.2, bd+0.1, dc, FL+3.5, z0-bd/2, TEAL); B(6.2, 0.05, bd, dc, FL-0.02, z0-bd/2, "#9a8a7a"); addFlat(dc-3.0, dc+3.0, z0-bd, z0, FL);
+        addZone(dc-3.0, dc+3.0, z0-bd, z0, FL-0.5, FL+3.4, Kd.name+" · THE BAY", true); } }
+    // the doors: a pair of store doors in the opening
+    { const L=side==="s" || side==="n" ? [[dc-0.98, 0],[dc+0.98, Math.PI]] : [[dc-0.98, -Math.PI/2],[dc+0.98, Math.PI/2]];
+      const cm=side==="s" ? z1-WT/2 : side==="n" ? z0+WT/2 : side==="w" ? x0+WT/2 : x1-WT/2;
+      for(const [h, ry] of L){ if(side==="s" || side==="n") makeDoor(XF(h, cm, ry), 0, FL+0.01, 0, Kd.name, side==="n", 0, "store");
+        else makeDoor(XF(cm, h, ry), 0, FL+0.01, 0, Kd.name, side==="e", 0, "store"); } }
+    // the lobby, which every building has: the desk and the one at it, sofas, a table, ficus, the directory, the elevators
+    lobby(Kd, K, W, D);
+    Kd.E=elevator(K, Kd.name, levels, top-0.3);
+    for(let f=0; f<nF; f++) Kd.plans[f](K, levels[f], W, D, Kd);
+    return Kd; }
+
+  function lobby(Kd, K, W, D){
+    const y=FL, LV=VF;
+    { const du=-W*0.2, dv=LV*0.55;
+      K.rbox(3.8, 1.05, 0.8, du, y+0.525, dv, Kd.desk, 0.03); K.rbox(3.96, 0.05, 0.96, du, y+1.08, dv-0.05, Kd.top, 0.015);
+      K.box(3.84, 0.06, 0.02, du, y+0.9, dv-0.415, BRASS); K.col(du-1.95, du+1.95, dv-0.5, dv+0.45, y-0.5, y+1.1);
+      { const o=K.obj(du+0.6, dv+0.15, "back", y); o.rb(0.36, 0.3, 0.32, 0, 1.26, 0, "#c4b89c", 0.03); const [sx, sz]=o.at(0, 0.165); push("lk_tvon", planeGeo(0.26, 0.18, 0), sx, y+1.28, sz, o.ry, "#ffffff"); }
+      K.chair(du, dv+1.0, y, "front", Kd.chairCol, "THE CHAIR BEHIND THE DESK", Kd.receptionist); }
+    K.sofa(W*0.24, 2.4, y, "back", 2.4, Kd.sofa, "A SOFA IN THE LOBBY"); K.sofa(W*0.24, 5.8, y, "front", 2.4, Kd.sofa, "A SOFA IN THE LOBBY");
+    K.rbox(1.2, 0.04, 0.7, W*0.24, y+0.42, 4.1, "#1a1a1e", 0.01); for(const s of [-1, 1]) K.box(0.04, 0.4, 0.6, W*0.24+s*0.55, y+0.2, 4.1, "#b8bcc0"); K.col(W*0.24-0.62, W*0.24+0.62, 3.75, 4.45, y-0.5, y+0.44);
+    for(const [pu, pv] of [[-W/2+0.9, 0.9],[W/2-0.9, 0.9],[-2.6, LV-0.9],[2.4, LV-0.9]]) K.plant(pu, pv, y, true, Kd.planter);
+    // the wall across the lobby's back: the way through it in the middle, the working car at UC (its own front) and the other one out of order
+    { const t=0.2, h=FL+3.2-y+0.02;
+      for(const [a, b] of [[-W/2, -1.4],[1.4, UC-0.95],[UC+0.95, W/2]]){ K.box(b-a, h, t, (a+b)/2, y+h/2, LV+t/2, Kd.wall); K.col(a, b, LV, LV+t, y-0.5, y+h); }
+      K.box(0.45, h, t, UC-0.725, y+h/2, LV+t/2, Kd.wall); K.box(0.45, h, t, UC+0.725, y+h/2, LV+t/2, Kd.wall); K.box(1.0, h-2.2, t, UC, y+2.2+(h-2.2)/2, LV+t/2, Kd.wall);
+      K.col(UC-0.95, UC-0.5, LV, LV+t, y-0.5, y+h); K.col(UC+0.5, UC+0.95, LV, LV+t, y-0.5, y+h);
+      for(const u of [-1.45, 1.45]) K.box(0.08, 2.5, t+0.06, u, y+1.25, LV+t/2, BRASS); K.box(2.98, 0.08, t+0.06, 0, y+2.54, LV+t/2, BRASS);
+      { const u=-4.2; K.box(1.3, 2.3, 0.04, u, y+1.15, LV-0.02, "#a8884a"); K.box(0.012, 2.25, 0.05, u, y+1.15, LV-0.02, "#7a5a2a"); K.box(1.5, 0.12, 0.05, u, y+2.36, LV-0.025, BRASS);
+        const [sx, sz]=K.P(u, LV-0.05); sign(0.5, 0.36, (c, Wd, Hh)=>{ c.fillStyle="#d8c88a"; c.fillRect(0, 0, Wd, Hh); say(c, "OUT OF", Wd/2, Hh*0.35, Wd*0.8, Hh*0.26, "#2a2a2a", "700", "'Marker Felt', 'Comic Sans MS', cursive"); say(c, "ORDER", Wd/2, Hh*0.68, Wd*0.8, Hh*0.26, "#2a2a2a", "700", "'Marker Felt', 'Comic Sans MS', cursive"); }, sx, y+1.4, sz, K.F.ry, false, 120); }
+      // the directory: black felt, the letters, a brass frame
+      { const [x, z]=K.P(-8.0, LV-0.03); K.box(1.5, 1.1, 0.04, -8.0, y+1.6, LV-0.02, BRASS);
+        sign(1.4, 1.0, (c, Wd, Hh)=>{ c.fillStyle="#141416"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="rgba(255,255,255,0.05)"; for(let yy=0;yy<Hh;yy+=6) c.fillRect(0, yy, Wd, 2);
+            say(c, Kd.name, Wd/2, Hh*0.12, Wd*0.8, Hh*0.09, "#d8d0c0", "700", "Arial");
+            Kd.tenants.forEach((n, k)=>{ say(c, n[0], Wd*0.45, Hh*(0.27+k*0.1), Wd*0.62, Hh*0.06, "#d8d0c0", "600", "'Courier New', monospace"); say(c, n[1], Wd*0.86, Hh*(0.27+k*0.1), Wd*0.16, Hh*0.06, "#d8d0c0", "600", "'Courier New', monospace"); }); },
+          x+Math.sin(K.F.ry)*0.025, y+1.6, z+Math.cos(K.F.ry)*0.025, K.F.ry, false, 420); } }
+    K.art(-W/2+0.05, 4.0, y+1.7, "+u", 1.6, 1.1, Kd.artK); K.art(W/2-0.05, 4.0, y+1.7, "-u", 1.6, 1.1, Kd.artK+1);
+  }
+
+  /* ---- the floors, building by building: each its own ---- */
+  const look=(o)=>Object.assign({h:1.0, skin:SKINS[(r()*5)|0], hair:HAIRS[(r()*6)|0], shirt:"#c8c0a8", pants:"#2a2e3a", shoes:"#1a1a1a", long:true}, o);
+  const cubes=(K, y, u0, u1, v0, v1, fabric, desk, skip)=>{ // clusters of four, fabric shoulder high, each with its desk, terminal and chair
+    for(let cu=u0+2.84; cu<u1-2.8; cu+=7.0) for(let cv=v0+2.84; cv<v1-2.8; cv+=7.0){ if(skip && skip(cu, cv)) continue; const ph=1.45;
+      for(const vv of [cv-2.8, cv, cv+2.8]) K.box(5.6, ph, 0.06, cu, y+ph/2, vv, fabric);
+      K.box(0.06, ph, 5.6, cu-2.8, y+ph/2, cv, fabric); K.box(0.06, ph, 5.6, cu, y+ph/2, cv, fabric);
+      K.box(0.06, ph, 2.0, cu+2.8, y+ph/2, cv-1.8, fabric); K.box(0.06, ph, 2.0, cu+2.8, y+ph/2, cv+1.8, fabric);
+      for(const vv of [cv-2.8, cv, cv+2.8]) K.box(5.66, 0.04, 0.08, cu, y+ph+0.02, vv, "#8a8478");
+      K.col(cu-2.84, cu+0.04, cv-2.84, cv+2.84, y-0.05, y+ph); K.col(cu+0.04, cu+2.84, cv-2.84, cv-0.8, y-0.05, y+ph); K.col(cu+0.04, cu+2.84, cv+0.8, cv+2.84, y-0.05, y+ph);
+      for(const [qu, qv] of [[-1.4, -1.4],[1.4, -1.4],[-1.4, 1.4],[1.4, 1.4]]){ const d=qv<0 ? "front" : "back";
+        K.station(cu+qu, cv+qv+(qv<0 ? 0.55 : -0.55), y, d, 2.2, desk, {who:r()<0.3 ? look({}) : null, label:"A CHAIR IN A CUBICLE"}); } } };
+  const breakRoom=(K, y, u0, u1, v0, v1, wallCol, gaps)=>{ // a counter with a coffee maker and a sink, a fridge, a vending machine, round tables
+    K.rbox(Math.min(4, u1-u0-1), 0.92, 0.62, (u0+u1)/2, y+0.46, v1-0.34, "#8a6a4a", 0.02); K.col((u0+u1)/2-2, (u0+u1)/2+2, v1-0.66, v1, y-0.05, y+0.95);
+    { const [x, z]=K.P((u0+u1)/2-1, v1-0.4); RB(0.25, 0.38, 0.28, x, y+1.12, z, "#1a1a1a", 0, 0.03); C(0.06, 0.12, x, y+1.0, z, "#8ab0c8", 12); }
+    { const o=K.obj(u0+0.45, v1-1.4, "+u", y); o.rb(0.8, 1.75, 0.72, 0, 0.875, 0, "#a89a7a", 0.03); o.b(0.03, 0.6, 0.03, 0.3, 1.3, 0.37, "#8a8478"); K.col(u0+0.04, u0+0.86, v1-1.8, v1-1.0, y-0.05, y+1.75); }
+    { const o=K.obj(u0+0.5, v1-2.6, "+u", y); o.rb(0.95, 1.85, 0.8, 0, 0.925, 0, "#7a1a1a", 0.03); const [sx, sz]=o.at(0, 0.41); push("lk_tvon", planeGeo(0.6, 1.1, 0), sx, y+1.15, sz, o.ry, "#ffffff"); K.col(u0+0.06, u0+0.94, v1-3.1, v1-2.1, y-0.05, y+1.85); }
+    for(let k=0;k<2;k++) K.table((u0+u1)/2+(k ? 1.6 : -1.6), (v0+v1)/2-0.4, y, 0.9, 0.9, "#c8b89a", 4, "#2a7a7a", true); };
+
+  // MIDLAND MUTUAL (A, door south): the claims floor; the bullpen; the cubicle farm and break room; the executive floor; the computer room and cafeteria
+  const PLANS_A=[
+    (K, y, W, D)=>{ // the lobby's back: the claims counter, its clerks, the waiting rows; the file room behind
+      const cv=15.0; K.rbox(16, 1.05, 0.7, -12, y+0.525, cv, "#4a3a3a", 0.03); K.rbox(16.2, 0.05, 0.86, -12, y+1.08, cv, "#cfc6b4", 0.015); K.col(-20, -4, cv-0.36, cv+0.36, y-0.05, y+1.1);
+      { const [x, z]=K.P(-12, cv-0.37); sign(4, 0.5, (c, Wd, Hh)=>{ c.fillStyle="#1a2a4a"; c.fillRect(0, 0, Wd, Hh); say(c, "CLAIMS · PLEASE TAKE A NUMBER", Wd/2, Hh/2, Wd*0.84, Hh*0.5, "#d8c890", "700", "Arial"); }, x, y+2.4, z, K.F.ry, false, 600); }
+      for(let k=0;k<4;k++) K.station(-18+k*4, cv+2.0, y, "front", 1.4, "#6a5a4a", {who:look({shirt:["#c8b8d8","#d8c8a8","#a8c8c8","#d8b8b8"][k]}), label:"A CLAIMS CLERK'S CHAIR"});
+      for(const v of [12.0, 13.3]) for(let k=0;k<6;k++) K.guest(-18+k*1.0+(k>2 ? 0.6 : 0), v, y, "back", "#5a6a8a", "A WAITING CHAIR");
+      // the file room: rows of cabinets, a high window of glass between
+      K.glassWall(6.5, 14.5, W/2, 14.5, y, 2.6, [[8.0, 9.2]]); K.glassWall(6.5, 14.5, 6.5, D, y, 2.6);
+      for(let v=17.5; v<D-1.5; v+=3.0) K.files(15.5, v, y, "front", 14, "#7a7468");
+      K.copier(2.0, 13.4, y, "front"); K.cooler(-1.9, 12.6, y); K.plant(-3, D-1, y, true); K.art(-W/2+0.05, 22, y+1.6, "+u", 1.6, 1.1, 2); },
+    (K, y, W, D)=>{ // the bullpen: desks in rows facing the front, the managers' glass offices along the back
+      for(let v=13.6; v<=25.6; v+=3.0) for(const side of [-1, 1]) for(let k=0;k<5;k++){ const u=side*(3.8+k*3.4); if(side>0 && k<1 && v<16) continue;
+        K.station(u, v, y, "front", 1.5, "#6a5a4a", {who:r()<0.3 ? look({}) : null, label:"A DESK IN THE BULLPEN"}); }
+      for(let u=-W/2; u<W/2-5.9; u+=6.4){ K.glassWall(u, 29.0, u+6.4, 29.0, y, 2.7, [[u+2.6, u+3.6]]); if(u>-W/2) K.wall(u, 29.0, u, D, y, 2.7, "#b8ac94");
+        K.station(u+3.2, 31.5, y, "front", 1.8, "#4a3a2a", {label:"A MANAGER'S CHAIR"}); K.guest(u+2.6, 29.9, y, "back", "#5a6a8a"); K.guest(u+3.8, 29.9, y, "back", "#5a6a8a");
+        K.plant(u+5.8, D-0.6, y, false); K.art(u+3.2, D-0.06, y+1.7, "front", 1.2, 0.8, (u|0)); }
+      K.copier(-3.0, 11.0, y, "front"); K.cooler(1.2, 10.6, y); },
+    (K, y, W, D)=>{ // the cubicle farm, teal, and the break room in the front corner
+      cubes(K, y, -W/2+0.4, W/2-0.4, 12.4, D-0.4, "#2a6a6a", "#8a7a64", (cu, cv)=>Math.abs(cu-UC)<4.2 && cv<16);
+      K.wall(-W/2, 8.2, -W/2+11, 8.2, y, 2.7, "#b8a888", [[-W/2+8.6, -W/2+9.8]]); K.wall(-W/2+11, 0, -W/2+11, 8.2, y, 2.7, "#b8a888");
+      breakRoom(K, y, -W/2+0.2, -W/2+10.9, 0.2, 8.1, "#b8a888"); K.art(-W/2+0.05, 4, y+1.6, "+u", 1.2, 0.9, 1);
+      K.copier(-2.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y); for(const u of [-12, 12]) K.plant(u, 1.0, y, true); },
+    (K, y, W, D)=>{ // the executive floor: four corner offices in walnut, the boardroom, the secretaries' desks by the elevator
+      const WAL="#4a2e1c";
+      for(const [su, sv] of [[-1, 0],[1, 0],[-1, 1],[1, 1]]){ const u0=su<0 ? -W/2 : W/2-9, u1=su<0 ? -W/2+9 : W/2, v0=sv ? D-8.5 : 0, v1=sv ? D : 8.5;
+        const iu=su<0 ? u1 : u0, iv=sv ? v0 : v1; K.wall(u0, iv, u1, iv, y, 2.75, WAL, [[(u0+u1)/2-0.5, (u0+u1)/2+0.5]], 0.14); K.wall(iu, v0, iu, v1, y, 2.75, WAL, null, 0.14);
+        const du=(u0+u1)/2, dv=sv ? D-3.6 : 3.6, d=sv ? "front" : "back";
+        K.station(du, dv+(sv ? 1.0 : -1.0), y, d, 2.2, "#3a2014", {deep:1.0, term:false, phoneCol:"#1a1a1a", chairCol:"#2a1a14", label:"A CORNER OFFICE'S CHAIR", who:su<0 && sv ? look({shirt:"#f2ecd8", pants:"#1a1a2a"}) : null});
+        for(const s of [-1, 1]) K.guest(du+s*0.6, dv+(sv ? -1.1 : 1.1), y, sv ? "back" : "front", "#5a1a1a", "A CHAIR IN THE CORNER OFFICE");
+        K.sofa(u0+(su<0 ? 1.0 : 8.0), (v0+v1)/2, y, su<0 ? "+u" : "-u", 2.2, "#5a1a1a"); K.plant(su<0 ? u1-0.6 : u0+0.6, sv ? D-0.6 : 0.6, y, true);
+        K.art(du, sv ? D-0.06 : 0.06+0.3, y+1.7, sv ? "front" : "back", 1.6, 1.0, su+2); }
+      // the boardroom: walnut on three sides, glass on the fourth, the long table, twelve chairs, the painting at its head
+      K.wall(-7, 20, -7, D, y, 2.75, WAL, null, 0.14); K.wall(7, 20, 7, D, y, 2.75, WAL, null, 0.14); K.glassWall(-7, 20, 7, 20, y, 2.75, [[-0.6, 0.6]]);
+      K.table(0, 27.5, y, 6.0, 1.6, "#3a2014", 16, "#2a1a14"); K.art(0, D-0.06, y+1.7, "front", 2.2, 1.4, 0);
+      K.station(-4.0, 8.0, y, "front", 1.6, "#5a3a24", {who:look({female:true, shirt:"#d8b8c8"}), label:"THE SECRETARY'S CHAIR"}); K.plant(UC+3, 8.5, y, true); K.cooler(UC-1.5, VF-0.4, y); },
+    (K, y, W, D)=>{ // the computer room behind glass on its raised floor; the cafeteria in front
+      K.glassWall(-W/2, 13.2, W/2, 13.2, y, 2.75, [[-1.0, 0.2]]);
+      const RF=signTex(128, 128, (c, Wd, Hh)=>{ c.fillStyle="#a8a294"; c.fillRect(0, 0, Wd, Hh); c.strokeStyle="#7a7468"; c.lineWidth=3; c.strokeRect(1, 1, Wd-2, Hh-2); }); RF.wrapS=RF.wrapT=T.RepeatWrapping;
+      { const R=K.rect(-W/2, W/2, 13.3, D); texPlane(R[1]-R[0], R[3]-R[2], RF, 0.6, (R[0]+R[1])/2, y+0.008, (R[2]+R[3])/2, -Math.PI/2, 0, 0.6); }
+      for(let v=16.5; v<D-2; v+=3.6) for(let u=-W/2+3; u<W/2-3; u+=2.0){ if(Math.abs(u-UC)<2.4 && v<17) continue; const big=((u*7+v)|0)%3===0, o=K.obj(u, v, "front", y);
+        o.rb(1.6, 1.8, 0.85, 0, 0.9, 0, big ? "#2a4a7a" : "#b4a88c", 0.02); o.b(1.5, 0.2, 0.02, 0, 1.6, 0.43, big ? "#1a2a4a" : "#8a7e64");
+        if(!big) for(const s of [-1, 1]){ o.c(0.17, 0.03, s*0.38, 1.25, 0.44, "#3a3a3a", 18); o.c(0.05, 0.035, s*0.38, 1.25, 0.445, "#b8b0a0", 12); }
+        else for(let k=0;k<5;k++) o.b(0.04, 0.04, 0.02, -0.5+k*0.25, 1.35, 0.44, ["#ff4a3a","#3aff6a","#ffd83a"][k%3]);
+        K.col(u-0.82, u+0.82, v-0.45, v+0.45, y-0.05, y+1.8); }
+      K.station(-6, 14.6, y, "back", 2.4, "#8a7e64", {who:look({shirt:"#f2ecd8"}), label:"THE OPERATOR'S CHAIR"});
+      { const o=K.obj(6, 15.2, "back", y); o.rb(1.6, 1.0, 0.8, 0, 0.5, 0, "#b4a88c", 0.03); o.b(1.4, 0.02, 0.5, 0, 1.01, -0.1, "#d8cca0"); K.col(5.2, 6.8, 14.8, 15.6, y-0.05, y+1.0); }
+      // the cafeteria: the serving line along the front, tables of four
+      K.rbox(12, 0.95, 0.75, -W/2+7.5, y+0.475, 1.2, "#8a7a64", 0.02); K.box(12, 0.04, 0.3, -W/2+7.5, y+0.98, 1.65, "#b8bcc0"); K.col(-W/2+1.5, -W/2+13.5, 0.8, 1.6, y-0.05, y+1.0);
+      for(let u=-W/2+16; u<W/2-3; u+=4.4) for(const v of [4.2, 8.6]){ if(Math.abs(u-UC)<3.2 && v>7) continue; K.table(u, v, y, 1.2, 1.2, "#c8b89a", 2, "#c84a3a"); } },
+  ];
+  // FRENCH CREEK FINANCIAL (B, door west): the bank; the loan officers; the law firm
+  const PLANS_B=[
+    (K, y, W, D)=>{ // the teller line, its five windows behind glass, the queue's ropes, the vault door, two loan desks
+      const tv=16.0; K.rbox(W-8, 1.1, 0.75, 0, y+0.55, tv, "#5a3a24", 0.03); K.rbox(W-7.8, 0.05, 0.9, 0, y+1.12, tv, "#c8b494", 0.015);
+      K.col(-W/2+4, W/2-4, tv-0.38, tv+0.38, y-0.05, y+1.15);
+      for(let k=0;k<6;k++){ const u=-W/2+4+k*(W-8)/5; K.box(0.04, 1.0, 0.75, u, y+1.65, tv, BRASS); }
+      for(let k=0;k<5;k++){ const u=-W/2+4+(k+0.5)*(W-8)/5, [gx, gz]=K.P(u, tv-0.1); push("glass", planeGeo((W-8)/5-0.1, 0.95, 0), gx, y+1.66, gz, K.F.ry, "#ffffff");
+        K.chair(u, tv+1.1, y, "front", "#3a3a40", "A TELLER'S STOOL", k%2 ? null : look({female:k===2, shirt:"#c8d8c8"})); }
+      { const [x, z]=K.P(0, tv-0.4); sign(3.2, 0.42, (c, Wd, Hh)=>{ c.fillStyle="#2a1a10"; c.fillRect(0, 0, Wd, Hh); say(c, "TELLERS", Wd/2, Hh/2, Wd*0.6, Hh*0.55, "#c8a868", "700", "Optima, Palatino, serif"); }, x, y+2.55, z, K.F.ry, false, 480); }
+      for(let k=0;k<6;k++){ const u=-6+k*2.4, v=13.2; K.c && 0; const [x, z]=K.P(u, v); C(0.05, 0.95, x, y+0.475, z, BRASS, 10); C(0.16, 0.03, x, y+0.015, z, BRASS, 14); S(0.055, x, y+0.97, z, BRASS); }
+      { const [a0, a1]=[K.P(-6, 13.2), K.P(6, 13.2)]; for(let k=0;k<5;k++){ const p=V3(a0[0]+(a1[0]-a0[0])*k/5, y+0.88, a0[1]+(a1[1]-a0[1])*k/5), q=V3(a0[0]+(a1[0]-a0[0])*(k+1)/5, y+0.88, a0[1]+(a1[1]-a0[1])*(k+1)/5), m=p.clone().add(q).multiplyScalar(0.5); m.y-=0.12;
+          const d=q.clone().sub(p); ME.push({geo:new T.CylinderGeometry(0.02, 0.02, d.length(), 6), matrix:new T.Matrix4().compose(m, new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color("#7a1a2a")}); } }
+      // the vault door on the back wall: round, steel, its wheel
+      { const o=K.obj(-8, D-0.2, "front", y), disc=(rr, h, lz, c)=>{ const [x, z]=o.at(0, lz); ent(new T.CylinderGeometry(rr, rr, h, 32), x, y+1.45, z, c, Math.PI/2, o.ry, 0); };
+        disc(1.35, 0.3, 0, "#7a7e82"); disc(1.15, 0.32, 0.01, "#9a9ea2"); disc(0.14, 0.12, 0.22, "#c8a050");
+        for(let k=0;k<6;k++){ const a=k/6*Math.PI*2; o.b(0.05, 0.6, 0.05, Math.cos(a)*0.3, 1.45+Math.sin(a)*0.3, 0.22, "#3a3a3a"); } }
+      { const [vx, vz]=K.P(-8, D-0.12); sign(1.6, 0.3, (c, Wd, Hh)=>{ c.fillStyle="#2a1a10"; c.fillRect(0, 0, Wd, Hh); say(c, "VAULT", Wd/2, Hh/2, Wd*0.6, Hh*0.6, "#c8a868", "700", "Optima, serif"); }, vx-Math.sin(K.F.ry)*0.02, y+3.05, vz-Math.cos(K.F.ry)*0.02, K.F.ry, false, 240); }
+      for(const u of [8, 14]){ K.station(u, 24.5, y, "front", 1.8, "#5a3a24", {term:false, chairCol:"#3a2a1a", label:"A LOAN OFFICER'S CHAIR", who:u===8 ? look({shirt:"#e8dcc8"}) : null});
+        for(const s of [-1, 1]) K.guest(u+s*0.55, 22.7, y, "back", "#7a3a2a", "A CHAIR AT THE LOAN DESK"); }
+      K.plant(W/2-1, D-1, y, true); K.plant(-W/2+1, D-1, y, true); K.clock(0, D-0.02, y+2.6, "front"); },
+    (K, y, W, D)=>{ // the loan officers' offices in glass along the back and sides, the secretaries in the middle
+      for(let u=-W/2; u<W/2-4.9; u+=5.0){ K.glassWall(u, D-6, u+5.0, D-6, y, 2.6, [[u+2.0, u+3.0]]); if(u>-W/2) K.wall(u, D-6, u, D, y, 2.6, "#a89070");
+        K.station(u+2.5, D-2.4, y, "front", 1.6, "#5a3a24", {term:false, chairCol:"#3a2a1a", label:"A LOAN OFFICER'S CHAIR", who:r()<0.4 ? look({}) : null});
+        for(const s of [-1, 1]) K.guest(u+2.5+s*0.55, D-4.2, y, "back", "#9a5a2a"); K.art(u+2.5, D-0.06, y+1.7, "front", 1.0, 0.7, (u|0)+3); }
+      for(let k=0;k<4;k++) for(const v of [16, 19.5]) K.station(-12+k*4.4+(k>1 ? 4 : 0), v, y, "front", 1.5, "#8a6a4a", {who:r()<0.4 ? look({female:true}) : null, label:"A SECRETARY'S CHAIR"});
+      K.sofa(-10, 3.0, y, "back", 2.4, "#9a5a2a"); K.sofa(-10, 6.4, y, "front", 2.4, "#9a5a2a"); K.plant(-6.5, 4.7, y, true);
+      K.copier(-2.5, 11.0, y, "front"); K.cooler(1.2, 10.6, y); },
+    (K, y, W, D)=>{ // Kovach, Reese & Partners: walnut, the reception desk, the library, the conference room, the partners' offices on the front
+      const WAL="#4a2e1c";
+      K.rbox(3.4, 1.05, 0.8, -1, y+0.525, 7.0, "#3a2014", 0.03); K.col(-2.7, 0.7, 6.6, 7.4, y-0.05, y+1.1); K.chair(-1, 6.0, y, "back", "#2a1a14", "THE RECEPTIONIST'S CHAIR", look({female:true, shirt:"#3a2a4a"}));
+      { const [x, z]=K.P(-10, 13.0-0.09); sign(4.2, 0.6, (c, Wd, Hh)=>{ c.fillStyle="#3a2014"; c.fillRect(0, 0, Wd, Hh); say(c, "KOVACH, REESE & PARTNERS", Wd/2, Hh/2, Wd*0.84, Hh*0.42, "#c8a868", "700", "Georgia, serif"); }, x, y+2.0, z, K.F.ry, false, 600); }
+      // the library: shelves in rows, a long reading table
+      K.wall(-W/2, 13.0, -2, 13.0, y, 2.6, WAL, [[-4.6, -3.4]], 0.14); K.wall(-2, 13.0, -2, D, y, 2.6, WAL, null, 0.14);
+      for(let v=15.5; v<D-1.5; v+=2.6) K.shelf(-W/2+6.5, v, y, "front", 8.0, "#4a2e1c");
+      K.table(-6.0, 22, y, 1.0, 4.0, "#3a2014", 8, "#5a1a1a");
+      // the conference room
+      K.wall(2, 15, W/2, 15, y, 2.6, WAL, [[3.0, 4.0]], 0.14); K.wall(2, 15, 2, D, y, 2.6, WAL, null, 0.14);
+      K.table((2+W/2)/2, 22.5, y, 8.0, 1.8, "#3a2014", 20, "#2a1a14"); K.art((2+W/2)/2, D-0.06, y+1.7, "front", 2.0, 1.2, 1);
+      // the partners' offices along the front windows
+      for(const [u0, u1] of [[-W/2, -W/2+8],[W/2-8, W/2]]){ K.wall(u0, 6.0, u1, 6.0, y, 2.6, WAL, [[(u0+u1)/2-0.5, (u0+u1)/2+0.5]], 0.14);
+        K.wall(u0<0 ? u1 : u0, 0, u0<0 ? u1 : u0, 6.0, y, 2.6, WAL, null, 0.14);
+        K.station((u0+u1)/2, 2.0, y, "back", 2.0, "#3a2014", {term:false, chairCol:"#2a1a14", label:"A PARTNER'S CHAIR"}); for(const s of [-1, 1]) K.guest((u0+u1)/2+s*0.6, 4.0, y, "front", "#5a1a1a"); } },
+  ];
+  // LAKESHORE DATA SYSTEMS (C, door north): the showroom and the network board; the software pit, its break room and the server room
+  const PLANS_C=[
+    (K, y, W, D)=>{ // the showroom: personal computers on angled desks in rows; the network board on the back wall, its console facing it
+      for(let v=13.5; v<=19.5; v+=3.0) for(let k=0;k<7;k++){ const u=-W/2+4+k*3.6; if(Math.abs(u-UC)<2.6) continue; K.station(u, v, y, "front", 1.4, "#c8b8a8", {chairCol:"#3a6a6a", label:"A CHAIR IN THE SHOWROOM", who:r()<0.25 ? look({shirt:"#b8d8d8"}) : null}); }
+      { const [x, z]=K.P(0, D-0.06); const t=signTex(1200, 360, (c, Wd, Hh)=>{ c.fillStyle="#0a0e18"; c.fillRect(0, 0, Wd, Hh); c.strokeStyle="#2a5a8a"; c.lineWidth=2;
+          c.beginPath(); for(let i=0;i<14;i++){ c.moveTo(Wd*(0.08+((i*37)%84)/100), Hh*(0.2+((i*53)%60)/100)); c.lineTo(Wd*(0.08+((i*71)%84)/100), Hh*(0.2+((i*29)%60)/100)); } c.stroke();
+          for(let i=0;i<14;i++){ c.fillStyle=i%4 ? "#3af06a" : "#ff6a3a"; c.beginPath(); c.arc(Wd*(0.08+((i*37)%84)/100), Hh*(0.2+((i*53)%60)/100), 6, 0, 7); c.fill(); }
+          say(c, "LDS NETWORK · 14 NODES · ALL SYSTEMS NORMAL", Wd/2, Hh*0.09, Wd*0.8, Hh*0.08, "#8af0f0", "700", "'Courier New', monospace"); });
+        const m=new T.Mesh(new T.PlaneGeometry(10, 3), new T.MeshBasicMaterial({map:t, toneMapped:false})); m.position.set(x, y+1.9, z); m.rotation.y=K.F.ry; scene.add(m);
+        K.box(10.2, 3.2, 0.04, 0, y+1.9, D-0.03, "#1a1a22"); }
+      for(let k=0;k<3;k++) K.station(-3+k*3, D-4, y, "back", 2.6, "#c8b8a8", {chairCol:"#5a3a5a", label:"A CHAIR AT THE NETWORK CONSOLE", who:k===1 ? look({shirt:"#e8d8b8"}) : null});
+      K.sofa(W/2-5, 23, y, "-u", 2.6, "#8a5a6a"); K.sofa(W/2-9, 23, y, "+u", 2.6, "#2a7a7a"); K.plant(W/2-7, 26, y, true); K.art(W/2-0.05, 20, y+1.7, "-u", 1.6, 1.1, 2); },
+    (K, y, W, D)=>{ // the software pit (mauve cubicles), the break room with its games, the server room behind glass
+      cubes(K, y, -W/2+0.4, W/2-14, 12.4, D-0.4, "#7a4a5a", "#c8b8a8");
+      K.glassWall(W/2-13.5, 12.4, W/2, 12.4, y, 2.7, [[W/2-12.5, W/2-11.5]]); K.glassWall(W/2-13.5, 12.4, W/2-13.5, D, y, 2.7);
+      for(let v=15; v<D-1.5; v+=2.6) for(let u=W/2-11; u<W/2-1; u+=1.0){ const o=K.obj(u, v, "front", y); o.rb(0.62, 2.0, 0.9, 0, 1.0, 0, "#2a2a30", 0.02);
+        for(let k=0;k<8;k++) o.b(0.03, 0.03, 0.02, -0.2+((k*37)%40)/100, 0.3+k*0.2, 0.46, ["#3aff6a","#ffd83a","#3a8aff"][k%3]); K.col(u-0.32, u+0.32, v-0.46, v+0.46, y-0.05, y+2.0); }
+      K.wall(-W/2, 8.2, -W/2+12, 8.2, y, 2.7, "#8a6a7a", [[-W/2+9.6, -W/2+10.8]]); K.wall(-W/2+12, 0, -W/2+12, 8.2, y, 2.7, "#8a6a7a");
+      breakRoom(K, y, -W/2+0.2, -W/2+11.9, 0.2, 8.1, "#8a6a7a");
+      { const o=K.obj(-W/2+11.4, 2.0, "-u", y); o.rb(0.7, 1.75, 0.75, 0, 0.875, 0, "#1a1a2a", 0.03); const [sx, sz]=o.at(0, 0.3); push("lk_tvon", planeGeo(0.48, 0.38, 0), sx, y+1.3, sz, o.ry, "#ffffff"); K.col(-W/2+10.9, -W/2+11.9, 1.6, 2.4, y-0.05, y+1.75); }
+      { const [x, z]=K.P(-W/2+6, 5.6); B(1.4, 0.8, 0.8, x, y+0.4, z, "#2a6a3a"); for(let k=0;k<4;k++) C(0.012, 1.2, x, y+0.75, z-0.3+k*0.2, "#b8bcc0", 6, 0, 0, Math.PI/2); addCol(x-0.72, x+0.72, z-0.42, z+0.42, y-0.05, y+0.85); }
+      K.sofa(-W/2+3.5, 5.6, y, "+u", 2.0, "#2a7a7a"); K.art(-W/2+0.05, 3, y+1.6, "+u", 1.2, 0.9, 0);
+      K.copier(-2.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y); },
+  ];
 
   const ONE=building({id:"B", name:"FRENCH CREEK FINANCIAL", x0:822, x1:852, z0:-1795, z1:-1755, side:"w", dc:-1775, WT:0.3, signY:FL+3.6, floors:3, FH0:4.2, FHU:3.6,
-    bk:"brick", col:"#8a5a42", frame:"#2a2420", cap:"#5a4a3e", pitch:3.6, win:2.4, bandS:0.9, bandH:2.6, letters:"#e8d8b8", font:"Optima, Palatino, serif",
-    desk:"#5a3a22", top:"#d8c8a8", sofa:"#5a2a1a", planter:"#b8a888", wall:"#c8b89a", fabric:"#b8a888", chair:"#5a4a3e",
-    poster:["PERSEVERANCE", "#3a5a7a", "THE SUMMIT IS EARNED ONE STEP AT A TIME"],
-    tenants:[["FRENCH CREEK FINANCIAL", "100"],["ALLEGHENY TITLE & ABSTRACT", "210"],["KOVACH, REESE & PARTNERS", "220"],["DR. L. ANTONELLI, D.D.S.", "300"],["ERIE VALLEY TRAVEL", "310"]]});
-  const TWO=building({id:"A", name:"MIDLAND MUTUAL", x0:860, x1:912, z0:-1850, z1:-1815, side:"s", dc:886, WT:0.25, floors:5, FH0:4.4, FHU:3.7, glassBox:true,
-    desk:"#1a1a1e", top:"#e8e6e0", sofa:"#1a1a1a", planter:"#e8e6e0", wall:"#d8d6d0", fabric:"#6a7a8a", chair:"#2a2a2e",
-    poster:["TEAMWORK", "#7a2a2a", "TOGETHER EVERYONE ACHIEVES MORE"],
-    tenants:[["MIDLAND MUTUAL INSURANCE", "1-4"],["MIDLAND MUTUAL · CLAIMS", "2"],["MIDLAND MUTUAL · UNDERWRITING", "3"],["NORTHCOAST PAYROLL INC.", "5"],["THE EXECUTIVE SUITE", "5"]]});
-  const THREE=building({id:"C", name:"LAKESHORE DATA SYSTEMS", x0:860, x1:912, z0:-1735, z1:-1702, side:"n", dc:886, WT:0.3, signY:FL+4.55, floors:2, FH0:4.2, FHU:3.8, bay:true,
-    bk:"concrete", col:"#d8d4c8", frame:"#3a3e42", cap:"#b8b4aa", pitch:3.0, win:2.4, bandS:0.8, bandH:2.9, letters:"#3a6a7a", font:"'Avenir Next', 'Trebuchet MS', sans-serif",
-    desk:"#e8e2d4", top:"#c89a8a", sofa:"#5a7a7a", planter:"#c89a8a", wall:"#d8c8c8", fabric:"#8a6a7a", chair:"#3a6a6a",
-    poster:["EXCELLENCE", "#2a6a6a", "THE DIFFERENCE IS IN THE DETAILS"],
-    tenants:[["LAKESHORE DATA SYSTEMS", "100"],["LDS · CUSTOMER SUPPORT", "110"],["LDS · MAINFRAME SERVICES", "200"],["TRI-COUNTY TEMPS", "210"],["CONFERENCE CENTER", "220"]]});
+    bk:"brick", col:"#7a4a36", frame:"#2a2420", cap:"#5a4a3e", band:"#b4a488", glass:"#6a5040", pitch:3.6, win:2.4, bandS:0.9, bandH:2.6, letters:"#d8c8a8", font:"Optima, Palatino, serif", signBg:"#5a3426",
+    desk:"#5a3a22", top:"#c8b494", sofa:"#5a2a1a", planter:"#b4a488", wall:"#b8a07a", chairCol:"#3a2a1a", artK:1, receptionist:look({female:true, shirt:"#8a3a5a", pants:"#2a2a3a"}),
+    carpets:[carpet("#6a4a32", ["#c8a868","#3a2a1a","#a86a3a"], 11), carpet("#3a2a2a", ["#6a1a1a","#c8a868"], 12)],
+    tenants:[["FRENCH CREEK FINANCIAL", "L"],["FCF · LOANS & MORTGAGES", "2"],["KOVACH, REESE & PARTNERS", "3"],["ALLEGHENY TITLE & ABSTRACT", "2"],["ERIE VALLEY TRAVEL", "L"]], plans:PLANS_B});
+  const TWO=building({id:"A", name:"MIDLAND MUTUAL", x0:860, x1:912, z0:-1850, z1:-1815, side:"s", dc:886, WT:0.25, floors:5, FH0:4.4, FHU:3.7,
+    desk:"#1a1a1e", top:"#cfc6b4", sofa:"#1a1a1a", planter:"#2a2a2e", wall:"#a89e8a", chairCol:"#2a2a2e", artK:0, receptionist:look({skin:SKINS[3], hair:HAIRS[5], shirt:"#d8d0c0", pants:"#1a1a2a"}),
+    carpets:[carpet("#5a6474", ["#2a7a7a","#c84a6a","#e8c070","#1a1a2a"], 21), carpet("#4a6a6a", ["#c87a9a","#e8d8a8","#1a3a4a"], 22), carpet("#5a1a24", ["#c8a868","#2a0a10"], 23), carpet("#6a6460", ["#3a8aa8","#d8a040"], 24)],
+    tenants:[["MIDLAND MUTUAL INSURANCE", "L-5"],["MIDLAND MUTUAL · CLAIMS", "L"],["MIDLAND MUTUAL · UNDERWRITING", "2"],["THE EXECUTIVE SUITE", "4"],["DATA PROCESSING · CAFETERIA", "5"]], plans:PLANS_A});
+  const THREE=building({id:"C", name:"LAKESHORE DATA SYSTEMS", x0:860, x1:912, z0:-1735, z1:-1702, side:"n", dc:886, WT:0.3, signY:FL+4.55, floors:2, FH0:4.2, FHU:3.8,
+    bk:"concrete", col:"#b49a78", frame:"#2a4a4a", cap:"#8a7458", band:TEAL, glass:"#3a6a6a", pitch:3.0, win:2.4, bandS:0.8, bandH:2.9, letters:"#2a5a5a", font:"'Avenir Next', 'Trebuchet MS', sans-serif", signBg:"#b49a78",
+    desk:"#c8b8a8", top:"#b88a7a", sofa:"#8a5a6a", planter:"#b88a7a", wall:"#a88a8a", chairCol:"#3a6a6a", artK:2, receptionist:look({female:true, skin:SKINS[2], hair:HAIRS[0], shirt:"#3a6a7a", pants:"#2a2a2a"}),
+    carpets:[carpet("#6a5a6a", ["#2ac8c8","#ff8ab8","#f2d84a","#2a2a3a"], 31)],
+    tenants:[["LAKESHORE DATA SYSTEMS", "L"],["LDS · SHOWROOM", "L"],["LDS · NETWORK OPERATIONS", "L"],["LDS · SOFTWARE", "2"],["TRI-COUNTY TEMPS", "2"]], plans:PLANS_C});
 
-  /* ---- the plaza: the fountain, planters with trees in them, benches, lamps on posts ---- */
+  /* ---- the plaza: the fountain, planters with trees, benches facing it, lamps on posts ---- */
   const FX=893, FZ=-1775, FR=4.5;
-  { // the basin's wall: a ring of granite blocks (each faced inside and out), its coping; the bowl's floor; the water
+  { // the basin's wall: a ring of granite blocks (each faced inside and out), its coping; the bowl's floor; the water, rippled
     const n=40; for(let k=0;k<n;k++){ const a=(k+0.5)/n*Math.PI*2, x=FX+Math.cos(a)*(FR-0.18), z=FZ+Math.sin(a)*(FR-0.18), w=2*Math.PI*FR/n+0.02;
-      B(0.36, 0.5, w, x, LY+0.25, z, "#5a5a5e", -a); B(0.5, k%2 ? 0.06 : 0.064, w+0.04, x, LY+0.53, z, "#8a8a8e", -a); }        // (alternate blocks 4 mm prouder: their tops never share a plane)
+      B(0.36, 0.5, w, x, LY+0.25, z, "#5a544e", -a); B(0.5, k%2 ? 0.06 : 0.064, w+0.04, x, LY+0.53, z, "#8a8076", -a); }
     for(let k=0;k<16;k++){ const a=(k+0.5)/16*Math.PI*2; addColOB(FX+Math.cos(a)*(FR-0.18), FZ+Math.sin(a)*(FR-0.18), -a+Math.PI/2, 0.95, 0.25, LY-0.5, LY+0.56); }
     for(let k=0;k<10;k++){ const a=(k+0.5)/10*Math.PI*2; addSeat(FX+Math.cos(a)*(FR+0.05), FZ+Math.sin(a)*(FR+0.05), LY+0.1, Math.atan2(-Math.cos(a), -Math.sin(a)), "THE FOUNTAIN'S EDGE", false, 0.4); }
-    ent(new T.CircleGeometry(FR-0.3, 40), FX, LY+0.06, FZ, "#2a4a5a", -Math.PI/2, 0, 0);
-    const wt=signTex(128, 128, (c, W, H)=>{ c.fillStyle="#4a7a8a"; c.fillRect(0, 0, W, H); for(let i=0;i<60;i++){ c.strokeStyle="rgba(220,240,250,"+(0.1+(i%5)*0.04)+")"; c.lineWidth=1+(i%3); c.beginPath(); c.arc((i*37)%W, (i*61)%H, 6+(i%7)*3, 0, Math.PI*(0.6+(i%3)*0.2)); c.stroke(); } });
-    wt.wrapS=wt.wrapT=T.RepeatWrapping; wt.repeat.set(3, 3);
-    const wm=new T.Mesh(new T.CircleGeometry(FR-0.3, 40), new T.MeshStandardMaterial({map:wt, color:0xa8c8d0, transparent:true, opacity:0.78, roughness:0.08, metalness:0.2}));
-    wm.rotation.x=-Math.PI/2; wm.position.set(FX, LY+0.4, FZ); scene.add(wm); OFFICE.water=wt;
-    // the middle: a pedestal, two bowls, the jet; the water coming down off each bowl's lip, and the ring of arcs from the rim
-    C(0.45, 1.5, FX, LY+0.75, FZ, "#8a8a8e", 16); ent(new T.CylinderGeometry(1.5, 0.35, 0.35, 28), FX, LY+1.55, FZ, "#8a8a8e");
-    C(0.25, 0.9, FX, LY+2.1, FZ, "#8a8a8e", 14); ent(new T.CylinderGeometry(0.8, 0.2, 0.22, 24), FX, LY+2.62, FZ, "#8a8a8e");
+    // (the basin's floor: dark pebbled, seen through the water)
+    { const t=signTex(256, 256, (c, W, H)=>{ c.fillStyle="#3a4a48"; c.fillRect(0, 0, W, H); for(let i=0;i<900;i++){ c.fillStyle=["#2a3634","#4a5a56","#5a6862","#323e3c"][i%4]; c.beginPath(); c.arc((i*61.7)%W, (i*37.3+i*0.7)%H, 2+(i%4), 0, 7); c.fill(); } });
+      t.wrapS=t.wrapT=T.RepeatWrapping; t.repeat.set(4, 4); const m=new T.Mesh(new T.CircleGeometry(FR-0.3, 40), new T.MeshStandardMaterial({map:t, roughness:0.9})); m.rotation.x=-Math.PI/2; m.position.set(FX, LY+0.06, FZ); m.updateMatrix(); m.matrixAutoUpdate=false; scene.add(m); }
+    const lakeN=(typeof LAKESIDE!=="undefined" && LAKESIDE.water) ? LAKESIDE.water.material.normalMap : null;
+    let nrm=null; if(lakeN){ nrm=lakeN.clone(); nrm.needsUpdate=true; nrm.wrapS=nrm.wrapT=T.RepeatWrapping; nrm.repeat.set(2.4, 2.4); }
+    const wm=envOut(new T.MeshStandardMaterial({color:0x3a7a8a, roughness:0.03, metalness:0.15, transparent:true, opacity:0.62, depthWrite:false, normalMap:nrm, normalScale:new T.Vector2(0.45, 0.45)}), 1.2);
+    if(nrm) wm.onBeforeCompile=(sh)=>{ sh.uniforms.uFlow={value:OFFICE.flow};
+      sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform vec4 uFlow;")
+        .replace("#include <normal_fragment_maps>", `{ vec3 nA=texture2D(normalMap, vUv+uFlow.xy).xyz*2.0-1.0, nB=texture2D(normalMap, vUv*0.53+uFlow.zw).xyz*2.0-1.0;
+  vec3 mapN=normalize(vec3(nA.xy+nB.xy, nA.z*nB.z)); mapN.xy*=normalScale;
+  normal=perturbNormal2Arb(-vViewPosition, normal, mapN, faceDirection); }`); };
+    const w=new T.Mesh(new T.CircleGeometry(FR-0.3, 48), wm); w.rotation.x=-Math.PI/2; w.position.set(FX, LY+0.42, FZ); w.renderOrder=3; scene.add(w); OFFICE.water=w;
+    // the middle: a fluted pedestal, two bowls, a finial
+    C(0.42, 1.5, FX, LY+0.75, FZ, "#7a746a", 16); ent(new T.CylinderGeometry(1.5, 0.35, 0.32, 28), FX, LY+1.55, FZ, "#7a746a"); C(1.52, 0.06, FX, LY+1.72, FZ, "#8a8076", 28);
+    C(0.24, 0.9, FX, LY+2.1, FZ, "#7a746a", 14); ent(new T.CylinderGeometry(0.8, 0.2, 0.22, 24), FX, LY+2.62, FZ, "#7a746a"); C(0.82, 0.05, FX, LY+2.74, FZ, "#8a8076", 24);
+    ent(new T.SphereGeometry(0.12, 12, 10), FX, LY+2.86, FZ, "#7a746a");
+    // (the water standing in each bowl)
+    for(const [rr, yy] of [[1.44, 1.69],[0.76, 2.71]]){ const m=new T.Mesh(new T.CircleGeometry(rr, 28), wm); m.rotation.x=-Math.PI/2; m.position.set(FX, LY+yy, FZ); m.renderOrder=3; scene.add(m); }
     addCol(FX-0.5, FX+0.5, FZ-0.5, FZ+0.5, LY-0.5, LY+2.7);
-    const st=signTex(32, 128, (c, W, H)=>{ c.fillStyle="rgba(255,255,255,0)"; c.clearRect(0, 0, W, H); for(let y=0;y<H;y+=8){ c.fillStyle="rgba(235,245,250,"+(0.35+((y/8)%3)*0.15)+")"; c.fillRect(0, y, W, 5); } });
-    st.wrapS=st.wrapT=T.RepeatWrapping;
-    const sm=new T.MeshStandardMaterial({map:st, transparent:true, opacity:0.8, depthWrite:false, side:T.DoubleSide, roughness:0.1});
-    const SPR=[];
-    const add=(geo, x, y, z)=>{ const m=new T.Mesh(geo, sm); m.position.set(x, y, z); scene.add(m); SPR.push(m); };
-    add(new T.CylinderGeometry(1.5, 1.62, 1.15, 28, 1, true), FX, LY+0.95, FZ);
-    add(new T.CylinderGeometry(0.8, 0.86, 0.95, 24, 1, true), FX, LY+2.05, FZ);
-    add(new T.CylinderGeometry(0.04, 0.07, 1.6, 8, 1, true), FX, LY+3.5, FZ);
-    for(let k=0;k<10;k++){ const a=k/10*Math.PI*2, p0=V3(FX+Math.cos(a)*(FR-0.4), LY+0.5, FZ+Math.sin(a)*(FR-0.4)), p2=V3(FX+Math.cos(a)*1.9, LY+0.4, FZ+Math.sin(a)*1.9),
-        p1=V3(FX+Math.cos(a)*3.2, LY+2.1, FZ+Math.sin(a)*3.2);
-      add(new T.TubeGeometry(new T.QuadraticBezierCurve3(p0, p1, p2), 16, 0.025, 5, false), 0, 0, 0); }
-    OFFICE.spray=st; }
-  // planters with a tree in each, benches between, lamps on posts round the edge
-  for(const [x, z] of [[866, -1803],[920, -1803],[866, -1747],[920, -1747]]){ B(3.0, 0.55, 3.0, x, LY+0.275, z, "#b8b4aa"); B(2.6, 0.03, 2.6, x, LY+0.545, z, "#4a3a2a");      // (the soil a centimetre over the rim)
+    // the water in the air: drops thrown from the jet and the rim's nozzles, falling off each bowl's lip; a splash where they land
+    const NP=2600, pos=new Float32Array(NP*3), vel=new Float32Array(NP*3), life=new Float32Array(NP), kind=new Uint8Array(NP);
+    const dropT=signTex(32, 32, (c, W, H)=>{ const g=c.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2); g.addColorStop(0, "rgba(220,236,240,0.9)"); g.addColorStop(0.5, "rgba(190,214,222,0.45)"); g.addColorStop(1, "rgba(190,214,222,0)"); c.fillStyle=g; c.fillRect(0, 0, W, H); });
+    const pg=new T.BufferGeometry(); pg.setAttribute("position", new T.BufferAttribute(pos, 3)); pg.boundingSphere=new T.Sphere(V3(FX, LY+2, FZ), 7);
+    const pm=new T.PointsMaterial({map:dropT, size:0.07, sizeAttenuation:true, transparent:true, depthWrite:false, color:0xc8d8dc, opacity:0.85});
+    const pts=new T.Points(pg, pm); pts.frustumCulled=true; scene.add(pts);
+    OFFICE.drops={pts:pts, pos:pos, vel:vel, life:life, kind:kind, NP:NP, at:0, cx:FX, cz:FZ, y:LY};
+    for(let i=0;i<NP;i++){ life[i]=0; pos[i*3+1]=-999; } }
+  // planters with a tree in each, benches round the fountain facing it, lamps on posts round the edge
+  for(const [x, z] of [[866, -1803],[920, -1803],[866, -1747],[920, -1747]]){ B(3.0, 0.55, 3.0, x, LY+0.275, z, "#9a8a74"); B(2.6, 0.03, 2.6, x, LY+0.545, z, "#4a3a2a");
     addCol(x-1.5, x+1.5, z-1.5, z+1.5, LY-0.5, LY+0.56); if(typeof FOREST!=="undefined") FOREST.plant("lawn", x, z, {scale:0.75});
-    for(const [dx, dz, ry] of [[0, 1.55, Math.PI],[0, -1.55, 0]]) addSeat(x+dx, z+dz*1.0, LY+0.1, ry, "A PLANTER'S EDGE", false, 0.4); }
-  for(const [x, z, ry] of [[880, -1790, 0],[906, -1790, 0],[880, -1760, Math.PI],[906, -1760, Math.PI]]){
+    for(const [dz, ry] of [[1.55, Math.PI],[-1.55, 0]]) addSeat(x, z+dz, LY+0.1, ry, "A PLANTER'S EDGE", false, 0.4); }
+  // (a bench's back is on the far side from the fountain, so whoever sits on it looks at the water)
+  for(const [x, z] of [[880, -1790],[906, -1790],[880, -1760],[906, -1760]]){ const toF=Math.sign(FZ-z), ry=toF>0 ? Math.PI : 0;
     for(const s of [-1, 1]) B(0.08, 0.42, 0.42, x+s*0.85, LY+0.21, z, "#2a2a2e");
-    B(1.9, 0.06, 0.46, x, LY+0.45, z, "#8a6a4a"); B(1.9, 0.4, 0.06, x, LY+0.7, z+(ry ? -0.22 : 0.22), "#8a6a4a");
-    addCol(x-0.95, x+0.95, z-0.26, z+0.26, LY-0.5, LY+0.9); for(const dx of [-0.5, 0.5]) addSeat(x+dx, z, LY+0.1, ry, "A BENCH ON THE PLAZA"); }
+    B(1.9, 0.06, 0.46, x, LY+0.45, z, "#8a6a4a"); B(1.9, 0.4, 0.06, x, LY+0.7, z-toF*0.22, "#8a6a4a");
+    addCol(x-0.95, x+0.95, z-0.26, z+0.26, LY-0.5, LY+0.9); for(const dx of [-0.5, 0.5]) addSeat(x+dx, z, LY+0.1, ry, "A BENCH BY THE FOUNTAIN"); }
   for(const [x, z] of [[856, -1808],[930, -1808],[856, -1742],[930, -1742],[893, -1810],[893, -1740]]){
-    C(0.07, 3.6, x, LY+1.8, z, "#2a2a2e", 10); S(0.24, x, LY+3.75, z, "#f4f0e8"); addCol(x-0.09, x+0.09, z-0.09, z+0.09, LY-0.5, LY+3.6);
+    C(0.07, 3.6, x, LY+1.8, z, "#2a2a2e", 10); S(0.24, x, LY+3.75, z, "#c8bca0"); addCol(x-0.09, x+0.09, z-0.09, z+0.09, LY-0.5, LY+3.6);
     push("rn_glow", new T.SphereGeometry(0.2, 10, 8), x, LY+3.75, z, 0, "#ffffff");
     const L={x:x, y:LY+3.5, z:z, color:0xffe2b0, intensity:0, dist:14, decay:1.5}; LAMPS.push(L); OFFICE.lamps.push(L); }
-  // three flags on poles at the plaza's lake end
-  for(const [k, z] of [[0, -1791],[1, -1787],[2, -1783]]){ const x=933.5;            // (beside the walk down to the water, not across it) C(0.06, 10, x, LY+5, z, "#c8ccd0", 10); S(0.09, x, LY+10.05, z, BRASS); addCol(x-0.08, x+0.08, z-0.08, z+0.08, LY-0.5, LY+10);
-    sign(1.6, 1.0, (c, Wd, Hh)=>{ if(k===0){ for(let i=0;i<13;i++){ c.fillStyle=i%2 ? "#f4f2ec" : "#b3191e"; c.fillRect(0, i*Hh/13, Wd, Hh/13+1); } c.fillStyle="#1f2a5a"; c.fillRect(0, 0, Wd*0.4, Hh*7/13); }
+  // three flags at the plaza's lake end, on proper poles: stout, dark, a base and a gold ball, so they never seem to hang in the air
+  for(const [k, z] of [[0, -1791],[1, -1787],[2, -1783]]){ const x=933.5;
+    C(0.11, 10, x, LY+5, z, "#4a4e52", 12); C(0.3, 0.3, x, LY+0.15, z, "#6a645a", 16); S(0.14, x, LY+10.1, z, "#c8a050"); addCol(x-0.32, x+0.32, z-0.32, z+0.32, LY-0.5, LY+10);
+    for(const yy of [9.75, 8.85]) C(0.02, 0.14, x, LY+yy, z+0.15, "#8a8e92", 6, Math.PI/2, 0, 0);
+    sign(1.6, 1.0, (c, Wd, Hh)=>{ if(k===0){ for(let i=0;i<13;i++){ c.fillStyle=i%2 ? "#d8d0c0" : "#b3191e"; c.fillRect(0, i*Hh/13, Wd, Hh/13+1); } c.fillStyle="#1f2a5a"; c.fillRect(0, 0, Wd*0.4, Hh*7/13); }
         else if(k===1){ c.fillStyle="#1f3f7a"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#d8b048"; c.beginPath(); c.ellipse(Wd/2, Hh/2, Wd*0.12, Hh*0.22, 0, 0, 7); c.fill(); }
-        else { c.fillStyle="#f4f2ec"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#3a6a7a"; c.fillRect(0, Hh*0.4, Wd, Hh*0.2); say(c, "HRCP", Wd/2, Hh*0.5, Wd*0.5, Hh*0.16, "#f4f2ec", "800", "Arial"); } },
-      x, LY+9.3, z+0.82, Math.PI/2, false, 320); }
+        else { c.fillStyle="#2a7a7a"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#c8b48a"; c.fillRect(0, Hh*0.4, Wd, Hh*0.2); say(c, "HRCP", Wd/2, Hh*0.5, Wd*0.5, Hh*0.16, "#2a2a2a", "800", "Arial"); } },
+      x+0.003, LY+9.3, z+0.94, Math.PI/2, false, 320);
+    sign(1.6, 1.0, (c, Wd, Hh)=>{ if(k===0){ for(let i=0;i<13;i++){ c.fillStyle=i%2 ? "#d8d0c0" : "#b3191e"; c.fillRect(0, i*Hh/13, Wd, Hh/13+1); } c.fillStyle="#1f2a5a"; c.fillRect(Wd*0.6, 0, Wd*0.4, Hh*7/13); }
+        else if(k===1){ c.fillStyle="#1f3f7a"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#d8b048"; c.beginPath(); c.ellipse(Wd/2, Hh/2, Wd*0.12, Hh*0.22, 0, 0, 7); c.fill(); }
+        else { c.fillStyle="#2a7a7a"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#c8b48a"; c.fillRect(0, Hh*0.4, Wd, Hh*0.2); say(c, "HRCP", Wd/2, Hh*0.5, Wd*0.5, Hh*0.16, "#2a2a2a", "800", "Arial"); } },
+      x-0.003, LY+9.3, z+0.94, -Math.PI/2, false, 320); }
   // the lawn down to the water: a walk out to a rail at the bank, benches looking out
-  { const g=Terrain.groundAt(966, -1775);
-    for(const dz of [-3, 3]) for(const y of [0.5, 1.0]) B(0.06, 0.06, 1.0, 967.6, LY+y, -1775+dz, "#2a2a2e");
+  { for(const dz of [-3, 3]) for(const y of [0.5, 1.0]) B(0.06, 0.06, 1.0, 967.6, LY+y, -1775+dz, "#2a2a2e");
     B(0.06, 0.06, 8.0, 967.6, LY+1.0, -1775, "#2a2a2e"); B(0.06, 0.06, 8.0, 967.6, LY+0.5, -1775, "#2a2a2e");
-    for(let z=-1779; z<=-1771; z+=2) B(0.075, 1.02, 0.075, 967.6, LY+0.51, z, "#2a2a2e");           // (a little stouter than the rails, so no face of one lies in the other's)
+    for(let z=-1779; z<=-1771; z+=2) B(0.075, 1.02, 0.075, 967.6, LY+0.51, z, "#2a2a2e");
     addCol(967.4, 967.8, -1779.1, -1770.9, LY-0.5, LY+1.05);
     for(const z of [-1790, -1760]){ const gz=Terrain.groundAt(960, z); for(const s of [-1, 1]) B(0.42, 0.42, 0.08, 960, gz+0.21, z+s*0.85, "#2a2a2e");
       B(0.46, 0.06, 1.9, 960, gz+0.45, z, "#8a6a4a"); B(0.06, 0.4, 1.9, 959.78, gz+0.7, z, "#8a6a4a");
@@ -366,33 +653,29 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
     for(const s of [-1, 1]){ B(1.0, 0.08, 0.1, x+s*0.5, gy+7.9, z, "#5a5e60"); RB(0.6, 0.14, 0.4, x+s*1.0, gy+7.85, z, "#3a3e42", 0, 0.03);
       push("rn_glow", planeGeo(0.5, 0.3, 0), x+s*1.0, gy+7.775, z, 0, "#ffffff", Math.PI/2, 0);
       const L={x:x+s*1.0, y:gy+7.5, z:z, color:0xffd8a0, intensity:0, dist:20, decay:1.4}; LAMPS.push(L); OFFICE.lamps.push(L); } }
-  // the park's name by the road on a low wall of brick (no post to stand in front of it), the tenants under it
+  // the park's name by the road on a low wall of brick, the tenants under it
   { const sx=746.0, sz=-1758.0, gy=Terrain.groundAt(sx, sz);
-    wallBox("brick", sx-0.3, sx+0.3, sz-3.6, sz+3.6, gy-0.3, gy+1.9, "#8a5a42", 0.6, gy); B(0.74, 0.08, 7.4, sx, gy+1.94, sz, "#b8b4aa");
+    wallBox("brick", sx-0.3, sx+0.3, sz-3.6, sz+3.6, gy-0.3, gy+1.9, "#7a4a36", 0.6, gy); B(0.74, 0.08, 7.4, sx, gy+1.94, sz, "#9a8a74");
     for(const sd of [-1, 1]) sign(6.6, 1.6, (c, Wd, Hh)=>{ c.fillStyle="#2a2a2e"; c.fillRect(0, 0, Wd, Hh); c.strokeStyle="#c8a050"; c.lineWidth=6; c.strokeRect(8, 8, Wd-16, Hh-16);
         say(c, "HOLLOW ROAD CORPORATE PARK", Wd/2, Hh*0.3, Wd*0.8, Hh*0.2, "#e8d8a8", "700", "Optima, Palatino, serif");
-        say(c, "FRENCH CREEK FINANCIAL · MIDLAND MUTUAL · LAKESHORE DATA SYSTEMS", Wd/2, Hh*0.62, Wd*0.8, Hh*0.1, "#f4f2ec", "600", "Arial");
-        say(c, "ONE · TWO · THREE HOLLOW ROAD", Wd/2, Hh*0.8, Wd*0.6, Hh*0.08, "#c8c4b8", "600", "Arial"); },
-      sx+sd*0.32, gy+1.05, sz, sd*Math.PI/2, false, 1320); }
+        say(c, "FRENCH CREEK FINANCIAL · MIDLAND MUTUAL · LAKESHORE DATA SYSTEMS", Wd/2, Hh*0.62, Wd*0.8, Hh*0.1, "#d8d0c0", "600", "Arial");
+        say(c, "ONE · TWO · THREE HOLLOW ROAD", Wd/2, Hh*0.8, Wd*0.6, Hh*0.08, "#b8b0a0", "600", "Arial"); },
+      sx+sd*0.32, gy+1.05, sz, sd*Math.PI/2, false, 1320);
+    // a bed of junipers and red mulch along its foot
+    for(let k=0;k<6;k++) for(const s of [-1, 1]) if(typeof FOREST!=="undefined") FOREST.plant("shrub", sx+s*1.1, sz-3+k*1.2, {scale:0.7, solid:false}); }
 
-  /* ---- the people: one at each desk by day, a few at their terminals, lunch on the plaza, somebody walking the lake ---- */
+  /* ---- the people: one at each desk by day, the ones at their desks upstairs, lunch on the plaza ---- */
   if(typeof crowdGroup==="function"){
-    const G=crowdGroup("hollow road corporate park", 860, -1775, 150);
-    const lk=(o)=>Object.assign({h:1.0, skin:SKINS[1], hair:HAIRS[1], shirt:"#e8e4d8", pants:"#2a2e3a", shoes:"#1a1a1a"}, o);
-    for(const [K, look] of [[ONE, lk({female:true, skin:SKINS[0], hair:HAIRS[3], shirt:"#8a3a5a", pants:"#2a2a3a"})],[TWO, lk({skin:SKINS[3], hair:HAIRS[5], shirt:"#f2f0ea", pants:"#1a1a2a", long:true})],
-                           [THREE, lk({female:true, skin:SKINS[2], hair:HAIRS[0], shirt:"#3a6a7a", pants:"#2a2a2a"})]]){
-      const [x, z]=K.st.desk_at; crowdAdd(G, {look:look, x:x, z:z, y:FL, yaw:K.F.ry, mode:"stand", sway:0.4, dayOnly:true});
-      K.st.sitters.forEach((s, k)=>crowdAdd(G, {look:lk({female:k%2===0, skin:SKINS[(k+1)%5], hair:HAIRS[(k*2)%6], shirt:["#d8d0e8","#e8e0c8","#c8d8e8","#f2e8e8"][k%4], long:true}),
-        x:s.x, z:s.z, y:FL, yaw:s.yaw, mode:"sit", sitY:0.515, dayOnly:true, sway:0.2})); }
-    crowdAdd(G, {look:lk({shirt:"#c8d8e8", long:true, pants:"#3a3a3a"}), x:880.4, z:-1790.0, y:LY+0.1, yaw:Math.PI, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3});
-    crowdAdd(G, {look:lk({female:true, shirt:"#e8a0b0", hair:HAIRS[2]}), x:906.4, z:-1760.0, y:LY+0.1, yaw:0, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3, held:"cup", drink:true});
-    crowdAdd(G, {look:lk({shirt:"#3a4a6a", long:true}), mode:"walk", path:[[812, -1801, LY],[935, -1801, LY, 3],[962, -1785, undefined],[962, -1765, undefined, 6],[935, -1749, LY],[812, -1749, LY, 4]],
-      loop:true, dayOnly:true}); }
+    for(const Kd of [ONE, TWO, THREE]){ const [gx, gz]=Kd.F.P(0, Kd.D/2), G=crowdGroup(Kd.name.toLowerCase(), gx, gz, 70);
+      for(const s of Kd.K.sitters) crowdAdd(G, {look:s.look, x:s.x, z:s.z, y:s.y, yaw:s.yaw, mode:"sit", sitY:0.515, dayOnly:true, sway:0.2}); }
+    const G=crowdGroup("hollow road corporate park", 880, -1775, 150);
+    crowdAdd(G, {look:look({shirt:"#a8b8c8", pants:"#3a3a3a"}), x:880.4, z:-1790.0, y:LY+0.1, yaw:Math.PI, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3});
+    crowdAdd(G, {look:look({female:true, shirt:"#c88a9a", hair:HAIRS[2], long:false}), x:906.4, z:-1760.0, y:LY+0.1, yaw:0, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3, held:"cup", drink:true});
+    crowdAdd(G, {look:look({shirt:"#3a4a6a"}), mode:"walk", path:[[812, -1801, LY],[935, -1801, LY, 3],[962, -1785, undefined],[962, -1765, undefined, 6],[935, -1749, LY],[812, -1749, LY, 4]], loop:true, dayOnly:true}); }
 
-  /* ---- the zones; the walls of the world round the park; the woods on its north and south, none toward the lake ---- */
+  /* ---- the zones; the walls of the world round the park; trees, lots of them, everywhere but toward the lake ---- */
   addZone(O.x0, O.x1, O.z0, O.z1, Y-4, Y+30, "HOLLOW ROAD CORPORATE PARK");
   addZone(852, 936, -1812, -1738, Y-1, Y+20, "HOLLOW ROAD CORPORATE PARK · THE PLAZA");
-  for(const K of [ONE, TWO, THREE]) addZone(K.x0, K.x1, K.z0, K.z1, FL-0.5, FL+3.2, K.name+" · THE LOBBY", true);
   { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300);
     const shoreX=(z)=>{ let x=930; while(x<O.x1+40 && Terrain.lakeSD(x, z)>1.5) x+=0.25; return x; };
     const xs=shoreX(O.z0), xn=shoreX(O.z1);
@@ -403,8 +686,17 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
     const tree=(sp, x, z, s)=>{ if(Terrain.lakeSD(x, z)<3.5) return; FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, gy=Terrain.groundAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
     for(const [z, nz] of [[O.z0, -1],[O.z1, 1]]) for(let x=O.x0+4; x<O.x1+12; x+=6.2) for(const [dep, sp] of [[1.8, "edge"],[6.5, null],[11.5, null],[16.5, null]]){ if(q()<0.15) continue;
       tree(sp || (q()<0.3 ? "hemlock" : q()<0.45 ? "pine" : "hard"), x+(q()-0.5)*2.4, z+nz*(dep+q()*2.2), 0.85+q()*0.4); }
-    // a few on the lawn, standing alone (edge trees, never the woods' bare-trunked kind)
-    for(const [x, z] of [[945, -1820],[952, -1730],[940, -1845],[948, -1712]]) tree("lawn", x, z, 0.9); }
+    // trees in the open: along the lot's edges and the road, round the buildings, on the lawn (edge and lawn trees, never the woods' kind)
+    const open=[[747.5, -1845],[747.5, -1830],[747.5, -1815],[747.5, -1800],[747.5, -1745],[747.5, -1730],[747.5, -1715],[747.5, -1700],
+      [808.5, -1845],[808.5, -1830],[808.5, -1815],[808.5, -1735],[808.5, -1720],[808.5, -1705],
+      [776.25, -1795],[776.25, -1755],[758.9, -1700.5],[793.9, -1700.5],[758.9, -1849.5],[793.9, -1849.5],
+      [818, -1812],[838, -1812],[856, -1857],[876, -1857],[896, -1857],[916, -1857],[925, -1832],[925, -1820],
+      [818, -1738],[838, -1738],[856, -1695],[876, -1695],[896, -1695],[916, -1695],[925, -1720],[925, -1708],
+      [945, -1820],[952, -1730],[940, -1845],[948, -1712],[950, -1800],[944, -1752],[956, -1840],[958, -1700]];
+    for(const [x, z] of open) tree(q()<0.6 ? "lawn" : "edge", x+(q()-0.5)*0.8, z+(q()-0.5)*0.8, 0.85+q()*0.3);
+    // and shrubs along the buildings' feet
+    for(const Kd of [ONE, TWO, THREE]){ for(let x=Kd.x0+1.5; x<Kd.x1-1; x+=2.2) for(const z of [Kd.z0-1.2, Kd.z1+1.2]){ if(Math.abs(x-Kd.dc)<4 && (Kd.side==="s" || Kd.side==="n")) continue; if(Terrain.lakeSD(x, z)<3) continue;
+        if(z>-1812 && z<-1738 && x>852 && x<936) continue; FOREST.plant("shrub", x, z, {scale:0.65+q()*0.3, solid:false}); } } }
 
   const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.08});
   detailMesh(ME, mat, "office-park", true);
@@ -412,17 +704,63 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
   OFFICE.routes={
     "office park: up Hollow Road from the pretzel works to the end":[[733.5, -1660],[733.5, -1720],[733.5, -1800],[733.5, -1870]],
     "office park: in at the mouth, across the lot to One Hollow Road's door":[[734.0, -1774.0],[745.0, -1774.0],[758.0, -1776.0],[776.25, -1786.0],[795.0, -1786.0],[805.0, -1776.0],[815.0, -1775.0],[819.5, -1775.0]],
-    "office park: into French Creek Financial, its lobby and through to the office":{y0:FL+0.1, pts:[[819.5, -1775.0],[821.0, -1775.0],[823.0, -1775.0],[826.0, -1778.0],[831.0, -1775.0],[835.0, -1775.0],[840.0, -1775.0]]},
     "office park: round One to the plaza and the fountain":[[812.0, -1801.0],[840.0, -1801.0],[856.0, -1801.0],[870.0, -1796.0],[886.0, -1796.0],[886.0, -1787.0]],
-    "office park: from the plaza into Midland Mutual":[[886.0, -1810.0],[886.0, -1813.0],[886.0, -1815.5],[886.0, -1818.0],[886.0, -1823.0],[886.0, -1826.0]],
-    "office park: from the plaza into Lakeshore Data Systems":[[886.0, -1745.0],[886.0, -1740.0],[886.0, -1736.0],[886.0, -1733.0],[886.0, -1730.0],[886.0, -1725.0]],
+    "office park: from the plaza into Midland Mutual":[[886.0, -1810.0],[886.0, -1813.0],[886.0, -1815.5],[886.0, -1818.0],[886.0, -1823.0]],
+    "office park: from the plaza into Lakeshore Data Systems":[[886.0, -1745.0],[886.0, -1740.0],[886.0, -1736.0],[886.0, -1733.0],[886.0, -1730.0]],
     "office park: across the lawn to the rail at the water":[[930.0, -1775.0],[945.0, -1775.0],[960.0, -1775.0],[966.5, -1775.0]]};
+  // and in each building, from the door to the elevator, and round every floor from the elevator
+  for(const Kd of [ONE, TWO, THREE]){ const P=Kd.F.P, nm=Kd.name.toLowerCase();
+    OFFICE.routes["office park: "+nm+", the door to the elevator"]={y0:FL+0.1, pts:[P(0, -0.6), P(0, 3.0), P(0, 8.5), P(UC, 9.0), P(UC, 9.6)]};
+    for(let f=1; f<Kd.levels.length; f++) OFFICE.routes["office park: "+nm+", floor "+(f+1)+" from the elevator"]={y0:Kd.levels[f]+0.1, pts:[P(UC, 9.4), P(UC, 8.0), P(UC, 7.0), P(1.7, 7.0)]};
+    OFFICE.routes["office park: "+nm+", into the elevator"]={y0:FL+0.1, pts:[P(UC, 9.2), P(UC, 9.8), P(UC, 10.6), P(UC, 11.1)]}; }
+  OFFICE.bldg=[ONE, TWO, THREE];
 })();
-/* the lamps come on after dark; the fountain runs while you are near it */
+
+/* ---- the elevators: each a little machine run here; a number while you are in an idle car is a floor (17's keydown) ---- */
+OFFICE.elevKey=function(e){
+  if(typeof player==="undefined") return false;
+  const m=/^(Digit|Numpad)([1-9])$/.exec(e.code); if(!m) return false;
+  for(const E of OFFICE.elevs){ const R=E.rect, p=player.pos;
+    if(p.x>R[0] && p.x<R[1] && p.z>R[2] && p.z<R[3] && Math.abs(player.feetY-E.y)<0.5){ const f=(+m[2])-1; if(f<E.levels.length){ if(f!==E.f || E.state!=="idle"){ E.target=f; if(E.state==="idle" || E.state==="opening") E.state="closing"; } } return true; } }
+  return false; };
+function updateElevators(dt){
+  for(const E of OFFICE.elevs){
+    const lv=E.levels;
+    if(E.state==="opening"){ E.door=Math.min(1, E.door+dt*0.9); if(E.door>=1) E.state="idle"; }
+    else if(E.state==="closing"){ E.door=Math.max(0, E.door-dt*0.9); if(E.door<=0) E.state="moving"; }
+    else if(E.state==="moving"){ const goal=lv[E.target], d=goal-E.y, sp=Math.min(2.0, 0.35+Math.abs(d)*1.2);
+      if(Math.abs(d)<0.004){ E.y=goal; E.f=E.target; E.state="opening"; if(typeof AUDIO!=="undefined"){ const [x, z]=E.F.P(UC_ELEV, 9.5); AUDIO.blip("bell", x, z); } }
+      else E.y+=Math.sign(d)*Math.min(Math.abs(d), sp*dt); }
+    E.car.position.y=E.y; E.surf.y=E.y;
+    const open=E.state==="moving" ? 0 : E.door;
+    E.carL[0].position.x=-0.25-open*0.5; E.carL[1].position.x=0.25+open*0.5;
+    for(let f=0; f<lv.length; f++){ const o=(f===E.f && E.state!=="moving") ? open : 0, L=E.land[f]; L[0].position.x=-0.25-o*0.5; L[1].position.x=0.25+o*0.5;
+      E.doorCols[f].y1=o>0.7 ? -9999 : lv[f]+2.2; } } }
+const UC_ELEV=4.2;
+/* the lamps come on after dark; the fountain runs and its water drifts while you are near it */
 function updateOfficePark(dt, dark){
   for(const L of OFFICE.lamps) L.intensity=1.1*smoothstep(0.3, 0.6, dark);
-  const c=camera.position; if(Math.hypot(c.x-893, c.z+1775)>150) return;
-  OFFICE.t+=dt;
-  if(OFFICE.spray) OFFICE.spray.offset.y=-(OFFICE.t*1.6)%1;
-  if(OFFICE.water){ OFFICE.water.offset.x=(OFFICE.t*0.03)%1; OFFICE.water.offset.y=(OFFICE.t*0.021)%1; }
+  updateElevators(dt);
+  const c=camera.position; if(Math.hypot(c.x-893, c.z+1775)>130) return;
+  OFFICE.t+=dt; const t=OFFICE.t;
+  OFFICE.flow.set((t*0.031)%1, (t*0.022)%1, (-t*0.017)%1, (t*0.026)%1);
+  const Dr=OFFICE.drops; if(!Dr || dt<=0) return;
+  const {pos, vel, life, kind, NP}=Dr, y0=Dr.y, cx=Dr.cx, cz=Dr.cz;
+  // (each frame a few drops leave each source: the jet, the ten rim nozzles, each bowl's lip; a drop that lands makes a little splash)
+  const emit=(n, f)=>{ for(let k=0;k<n;k++){ const i=Dr.at; Dr.at=(Dr.at+1)%NP; f(i); } };
+  const h=Math.min(dt, 0.05);
+  const per=h*60;
+  emit(Math.round(8*per), (i)=>{ pos[i*3]=cx+(Math.random()-0.5)*0.04; pos[i*3+1]=y0+2.95; pos[i*3+2]=cz+(Math.random()-0.5)*0.04;
+    vel[i*3]=(Math.random()-0.5)*0.35; vel[i*3+1]=6.2+Math.random()*0.6; vel[i*3+2]=(Math.random()-0.5)*0.35; life[i]=2.5; kind[i]=0; });
+  emit(Math.round(20*per), (i)=>{ const a=((Math.random()*10)|0)/10*Math.PI*2+0.314, rr=4.05;
+    pos[i*3]=cx+Math.cos(a)*rr; pos[i*3+1]=y0+0.55; pos[i*3+2]=cz+Math.sin(a)*rr; const s=0.95+Math.random()*0.1;
+    vel[i*3]=-Math.cos(a)*2.05*s; vel[i*3+1]=4.3*s; vel[i*3+2]=-Math.sin(a)*2.05*s; life[i]=2.5; kind[i]=0; });
+  emit(Math.round(8*per), (i)=>{ const a=Math.random()*Math.PI*2, upper=Math.random()<0.4, rr=upper ? 0.82 : 1.53, yy=upper ? 2.75 : 1.73;
+    pos[i*3]=cx+Math.cos(a)*rr; pos[i*3+1]=y0+yy; pos[i*3+2]=cz+Math.sin(a)*rr; vel[i*3]=Math.cos(a)*0.35; vel[i*3+1]=-0.1; vel[i*3+2]=Math.sin(a)*0.35; life[i]=2; kind[i]=0; });
+  for(let i=0;i<NP;i++){ if(life[i]<=0) continue; life[i]-=h; vel[i*3+1]-=9.8*h; pos[i*3]+=vel[i*3]*h; pos[i*3+1]+=vel[i*3+1]*h; pos[i*3+2]+=vel[i*3+2]*h;
+    const x=pos[i*3], z=pos[i*3+2], dd=Math.hypot(x-cx, z-cz), floor=dd<0.82 ? y0+2.73 : dd<1.5 ? y0+1.71 : y0+0.42;
+    if(pos[i*3+1]<floor && vel[i*3+1]<0){ if(kind[i]===0 && Math.random()<0.35){ kind[i]=1; vel[i*3]*=0.2; vel[i*3+2]*=0.2; vel[i*3+1]=0.6+Math.random()*0.8; pos[i*3+1]=floor+0.01; life[i]=0.25; }
+      else { life[i]=0; pos[i*3+1]=-999; } }
+    if(life[i]<=0) pos[i*3+1]=-999; }
+  Dr.pts.geometry.attributes.position.needsUpdate=true;
 }
