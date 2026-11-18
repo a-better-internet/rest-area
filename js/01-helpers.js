@@ -570,7 +570,7 @@ function detailMesh(ents, mat, name, cast){
   for(const e of ents){ _c.setFromMatrixPosition(e.matrix); const k=Math.floor(_c.x/64)+":"+Math.floor(_c.z/64);
     let L=tiles.get(k); if(!L){ L=[]; tiles.set(k, L); } L.push(e); }
   for(const [k, L] of tiles){ const m=new T.Mesh(mergeEntries(L), mat);
-    m.castShadow=cast!==false; m.receiveShadow=true; m.name=(name||"detail")+":"+k; m.matrixAutoUpdate=false; scene.add(m); DETAIL.push(m); out.push(m); }
+    m.castShadow=cast!==false; m.receiveShadow=true; m.name=(name||"detail")+":"+k; m.matrixAutoUpdate=false; if(window.ZDBG) m.userData.zdbg=true; scene.add(m); DETAIL.push(m); out.push(m); }   // (its pieces are in ZDBG already: the checker skips the merged mesh)
   return out;
 }
 

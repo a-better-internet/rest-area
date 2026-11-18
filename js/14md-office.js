@@ -121,7 +121,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
       st.desk_at=LP(du, dv+1.0);
       for(const [sv, face] of [[2.4, 1],[5.6, -1]]){ const su=-W*0.24, [x, z]=LP(su, sv), ry=F.ry+(face>0 ? Math.PI : 0);
         const fx=XF(x, z, ry), q=(w, h, d, lx, ly, lz, c)=>RB(w, h, d, fx.x(lx, lz), FL+ly, fx.z(lx, lz), c, ry, 0.05);
-        q(2.2, 0.42, 0.85, 0, 0.21, 0, st.sofa); q(2.2, 0.5, 0.2, 0, 0.62, -0.34, st.sofa); for(const s of [-1, 1]) q(0.2, 0.62, 0.85, s*1.0, 0.31, 0, st.sofa);
+        q(2.2, 0.42, 0.85, 0, 0.21, 0, st.sofa); q(1.8, 0.5, 0.2, 0, 0.62, -0.34, st.sofa); for(const s of [-1, 1]) q(0.2, 0.62, 0.85, s*1.0, 0.31, 0, st.sofa);
         for(const s of [-1, 1]) C(0.02, 0.12, fx.x(s*0.95, 0.3), FL+0.06, fx.z(s*0.95, 0.3), "#c8ccd0", 8);
         const a=LP(su-1.15, sv-0.45), b=LP(su+1.15, sv+0.45); addCol(Math.min(a[0], b[0]), Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[1], b[1]), FL-0.5, FL+0.6);
         for(const du2 of [-0.6, 0.6]){ const p=LP(su+du2, sv+face*0.05); addSeat(p[0], p[1], FL, ry+Math.PI, "A SOFA IN THE LOBBY"); } }
@@ -236,7 +236,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
         for(const [ax, c, a, b, ry] of [["x", z0-0.012, x0, x1, 0],["x", z1+0.012, x0, x1, Math.PI],["z", x0-0.012, z0, z1, -Math.PI/2],["z", x1+0.012, z0, z1, Math.PI/2]]){
           const n=Math.round((b-a)/2.6);
           for(let k=0;k<n;k++){ const m=a+(k+0.5)*(b-a)/n; push("tint", boxGeo((b-a)/n-0.14, K.FHU-0.9, 0.03), ax==="x" ? m : c, y0+0.45+(K.FHU-0.9)/2, ax==="x" ? c : m, ax==="x" ? 0 : Math.PI/2, "#8aa0b0"); }
-          for(let k=0;k<=n;k++){ const m=a+k*(b-a)/n; if(ax==="x") B(0.1, K.FHU, 0.06, m, y0+K.FHU/2, c, "#20262c"); else B(0.06, K.FHU, 0.1, c, y0+K.FHU/2, m, "#20262c"); }
+          for(let k=(ax==="x" ? 0 : 1);k<=(ax==="x" ? n : n-1);k++){ const m=a+k*(b-a)/n; if(ax==="x") B(0.1, K.FHU, 0.06, m, y0+K.FHU/2, c, "#20262c"); else B(0.06, K.FHU, 0.1, c, y0+K.FHU/2, m, "#20262c"); }   // (the corners the x faces' own)
           if(ax==="x") B(b-a+0.06, 0.45, 0.05, (a+b)/2, y0+0.225, c, "#20262c"); else B(0.05, 0.45, b-a+0.06, c, y0+0.225, (a+b)/2, "#20262c"); } }
       B(x1-x0+0.16, 0.5, z1-z0+0.16, cx, top+0.25, cz, "#20262c");
       // the canopy over the doors: a steel frame with glass on it, on two round columns
@@ -252,7 +252,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
         const bands=[]; for(let f=1; f<K.floors; f++){ const y0=FL+K.FH0+(f-1)*K.FHU; bands.push({y0:y0, s:y0+K.bandS, h:y0+K.bandH}); }
         let y=G; for(const bd of bands){ if(ax==="x") wallBox(K.bk, a, b, c0, c1, y, bd.s, K.col, 0.6, FL); else wallBox(K.bk, c0, c1, a, b, y, bd.s, K.col, 0.6, FL);
           const cm=(c0+c1)/2, ry=ax==="x" ? 0 : Math.PI/2;
-          push("tint", boxGeo(b-a-0.3, bd.h-bd.s, 0.04), ax==="x" ? (a+b)/2 : cm, (bd.s+bd.h)/2, ax==="x" ? cm : (a+b)/2, ry, "#7a8a8a");
+          push("tint", boxGeo(b-a-0.32, bd.h-bd.s-0.02, 0.04), ax==="x" ? (a+b)/2 : cm, (bd.s+bd.h)/2, ax==="x" ? cm : (a+b)/2, ry, "#7a8a8a");
           for(let m=a+3.0; m<b-1.0; m+=3.0) if(ax==="x") B(0.08, bd.h-bd.s, WT-0.06, m, (bd.s+bd.h)/2, cm, K.frame); else B(WT-0.06, bd.h-bd.s, 0.08, cm, (bd.s+bd.h)/2, m, K.frame);
           // (the ends of the band: the wall's, so its jambs are the wall's)
           if(ax==="x"){ wallBox(K.bk, a, a+0.15, c0, c1, bd.s, bd.h, K.col, 0.6, FL); wallBox(K.bk, b-0.15, b, c0, c1, bd.s, bd.h, K.col, 0.6, FL); }
@@ -310,7 +310,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
   const FX=893, FZ=-1775, FR=4.5;
   { // the basin's wall: a ring of granite blocks (each faced inside and out), its coping; the bowl's floor; the water
     const n=40; for(let k=0;k<n;k++){ const a=(k+0.5)/n*Math.PI*2, x=FX+Math.cos(a)*(FR-0.18), z=FZ+Math.sin(a)*(FR-0.18), w=2*Math.PI*FR/n+0.02;
-      B(0.36, 0.5, w, x, LY+0.25, z, "#5a5a5e", -a); B(0.5, 0.06, w+0.04, x, LY+0.53, z, "#8a8a8e", -a); }
+      B(0.36, 0.5, w, x, LY+0.25, z, "#5a5a5e", -a); B(0.5, k%2 ? 0.06 : 0.064, w+0.04, x, LY+0.53, z, "#8a8a8e", -a); }        // (alternate blocks 4 mm prouder: their tops never share a plane)
     for(let k=0;k<16;k++){ const a=(k+0.5)/16*Math.PI*2; addColOB(FX+Math.cos(a)*(FR-0.18), FZ+Math.sin(a)*(FR-0.18), -a+Math.PI/2, 0.95, 0.25, LY-0.5, LY+0.56); }
     for(let k=0;k<10;k++){ const a=(k+0.5)/10*Math.PI*2; addSeat(FX+Math.cos(a)*(FR+0.05), FZ+Math.sin(a)*(FR+0.05), LY+0.1, Math.atan2(-Math.cos(a), -Math.sin(a)), "THE FOUNTAIN'S EDGE", false, 0.4); }
     ent(new T.CircleGeometry(FR-0.3, 40), FX, LY+0.06, FZ, "#2a4a5a", -Math.PI/2, 0, 0);
@@ -335,7 +335,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
       add(new T.TubeGeometry(new T.QuadraticBezierCurve3(p0, p1, p2), 16, 0.025, 5, false), 0, 0, 0); }
     OFFICE.spray=st; }
   // planters with a tree in each, benches between, lamps on posts round the edge
-  for(const [x, z] of [[866, -1803],[920, -1803],[866, -1747],[920, -1747]]){ B(3.0, 0.55, 3.0, x, LY+0.275, z, "#b8b4aa"); B(2.6, 0.04, 2.6, x, LY+0.53, z, "#4a3a2a");
+  for(const [x, z] of [[866, -1803],[920, -1803],[866, -1747],[920, -1747]]){ B(3.0, 0.55, 3.0, x, LY+0.275, z, "#b8b4aa"); B(2.6, 0.03, 2.6, x, LY+0.545, z, "#4a3a2a");      // (the soil a centimetre over the rim)
     addCol(x-1.5, x+1.5, z-1.5, z+1.5, LY-0.5, LY+0.56); if(typeof FOREST!=="undefined") FOREST.plant("lawn", x, z, {scale:0.75});
     for(const [dx, dz, ry] of [[0, 1.55, Math.PI],[0, -1.55, 0]]) addSeat(x+dx, z+dz*1.0, LY+0.1, ry, "A PLANTER'S EDGE", false, 0.4); }
   for(const [x, z, ry] of [[880, -1790, 0],[906, -1790, 0],[880, -1760, Math.PI],[906, -1760, Math.PI]]){
@@ -356,7 +356,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
   { const g=Terrain.groundAt(966, -1775);
     for(const dz of [-3, 3]) for(const y of [0.5, 1.0]) B(0.06, 0.06, 1.0, 967.6, LY+y, -1775+dz, "#2a2a2e");
     B(0.06, 0.06, 8.0, 967.6, LY+1.0, -1775, "#2a2a2e"); B(0.06, 0.06, 8.0, 967.6, LY+0.5, -1775, "#2a2a2e");
-    for(let z=-1779; z<=-1771; z+=2) B(0.06, 1.02, 0.06, 967.6, LY+0.51, z, "#2a2a2e");
+    for(let z=-1779; z<=-1771; z+=2) B(0.075, 1.02, 0.075, 967.6, LY+0.51, z, "#2a2a2e");           // (a little stouter than the rails, so no face of one lies in the other's)
     addCol(967.4, 967.8, -1779.1, -1770.9, LY-0.5, LY+1.05);
     for(const z of [-1790, -1760]){ const gz=Terrain.groundAt(960, z); for(const s of [-1, 1]) B(0.42, 0.42, 0.08, 960, gz+0.21, z+s*0.85, "#2a2a2e");
       B(0.46, 0.06, 1.9, 960, gz+0.45, z, "#8a6a4a"); B(0.06, 0.4, 1.9, 959.78, gz+0.7, z, "#8a6a4a");

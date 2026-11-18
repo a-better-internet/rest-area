@@ -80,12 +80,12 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
   // the partition: velvet on both faces either side of the beads, and over them
   for(const [zf, ry] of [[ZP-0.02, Math.PI],[ZP+WT+0.02, 0]]){ for(const [a, b] of [[X0+0.02, BA-0.06],[BB+0.06, X1-0.02]]) if(b-a>0.05) plane(b-a, H, vel(b-a), (a+b)/2, YM, zf, ry);
     plane(BB-BA+0.12, CB-DH-0.07, vel(1.1), (BA+BB)/2, (DH+0.05+CB)/2, zf, ry);
-    for(const x of [BA-0.035, BB+0.035]) B(0.06, DH-FB+0.04, 0.05, x, FB+(DH-FB+0.04)/2, zf+(ry ? -0.005 : 0.005), "#b8963a");
-    B(BB-BA+0.13, 0.06, 0.05, (BA+BB)/2, DH+0.05, zf+(ry ? -0.006 : 0.006), "#b8963a"); }
+    for(const x of [BA-0.035, BB+0.035]) B(0.06, DH-FB+0.02, 0.05, x, FB+(DH-FB+0.02)/2, zf+(ry ? -0.005 : 0.005), "#b8963a");
+    B(BB-BA+0.14, 0.06, 0.05, (BA+BB)/2, DH+0.05, zf+(ry ? -0.006 : 0.006), "#b8963a"); }
   plane(DB-DA+0.12, CB-DH-0.07, vel(1.1), (DA+DB)/2, (DH+0.05+CB)/2, Z0+0.02, 0);
   // the door's casing: brass, standing proud of the velvet
-  for(const x of [DA-0.035, DB+0.035]) B(0.06, DH-FB+0.04, 0.05, x, FB+(DH-FB+0.04)/2, Z0+0.025, "#b8963a");
-  B(DB-DA+0.13, 0.06, 0.05, (DA+DB)/2, DH+0.05, Z0+0.026, "#b8963a");
+  for(const x of [DA-0.035, DB+0.035]) B(0.06, DH-FB+0.02, 0.05, x, FB+(DH-FB+0.02)/2, Z0+0.025, "#b8963a");      // (up to the head's underside)
+  B(DB-DA+0.14, 0.06, 0.05, (DA+DB)/2, DH+0.05, Z0+0.026, "#b8963a");                                              // (5 mm past the jambs each end)
   // the carpet: deep red with a gold diamond, wall to wall; the ceiling dark wine, a rose round the chandelier
   { const t=signTex(512, 512, (c, W, Hh)=>{ c.fillStyle="#4a0c14"; c.fillRect(0, 0, W, Hh); c.strokeStyle="rgba(200,160,70,0.35)"; c.lineWidth=3;
       for(let k=-8;k<16;k++){ c.beginPath(); c.moveTo(k*64, 0); c.lineTo(k*64+Hh, Hh); c.stroke(); c.beginPath(); c.moveTo(k*64, Hh); c.lineTo(k*64+Hh, 0); c.stroke(); }

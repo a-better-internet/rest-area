@@ -28,6 +28,7 @@ const boxes=Array.isArray(arg) ? arg : [arg];
     REST.scene.traverse(o=>{
       if(!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.visible) return;
       if(o.name && o.name.startsWith("bucket:")) return;
+      if(o.userData && o.userData.zdbg) return;                     // (a detail mesh whose pieces ZDBG holds one by one)
       for(let q=o.parent; q; q=q.parent) if(!q.visible) return;
       o.updateMatrixWorld(true);
       srcs.push({name:"mesh:"+(o.name||o.material.type)+(o.parent&&o.parent.name?"<"+o.parent.name:""), geo:o.geometry, m:o.matrixWorld});
