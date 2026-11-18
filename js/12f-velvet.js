@@ -194,7 +194,7 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
     addCol(bx-br, bx+br, bz-br, Math.min(Z1, bz+br), FB-0.5, FB+0.55); addSeat(bx+0.2, bz-0.5, FB, Math.PI, "THE ROUND BED", false, 0.5);
     push("mirror", new T.CircleGeometry(0.9, 32), bx, CB-0.012, bz, 0, "#ffffff", Math.PI/2, 0); C(0.92, 0.02, bx, CB-0.012, bz, "#c8a050", 32); }
   // the stage: a little round platform, a brass pole to the ceiling, a mirror ball over it, a pink light on it
-  { const sx=80.75, sz=Z1-1.25;
+  { const sx=80.75, sz=Z1-1.05;
     C(0.62, 0.15, sx, FB+0.075, sz, "#1a1a1e", 28); C(0.64, 0.03, sx, FB+0.15, sz, "#c8a050", 28);
     C(0.025, CB-FB-0.15, sx, (CB+FB+0.15)/2, sz, "#d8b060", 12); C(0.06, 0.03, sx, CB-0.015, sz, "#c8a050", 12);
     addCol(sx-0.6, sx+0.6, sz-0.6, sz+0.6, FB-0.5, FB+0.15); addFlat(sx-0.42, sx+0.42, sz-0.42, sz+0.42, FB+0.15);
@@ -205,7 +205,7 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
     RB(0.62, 0.4, 1.35, cx, FB+0.2, cz, "#8a0a1e", 0, 0.06); RB(0.2, 0.55, 1.35, cx+0.22, FB+0.55, cz, "#8a0a1e", 0, 0.08);
     RB(0.6, 0.4, 0.22, cx, FB+0.6, cz+0.6, "#8a0a1e", 0, 0.08);
     addCol(cx-0.32, X1, cz-0.68, cz+0.72, FB-0.5, FB+0.42);
-    const tx=X1-0.4, tz=BZ0+0.38; C(0.2, 0.025, tx, FB+0.58, tz, "#c8a050", 18); C(0.018, 0.56, tx, FB+0.29, tz, "#c8a050", 8); C(0.14, 0.02, tx, FB+0.01, tz, "#c8a050", 14);
+    const tx=80.0, tz=Z1-0.3;                                        // (in the corner between the bed and the stage, clear of the way in) C(0.2, 0.025, tx, FB+0.58, tz, "#c8a050", 18); C(0.018, 0.56, tx, FB+0.29, tz, "#c8a050", 8); C(0.14, 0.02, tx, FB+0.01, tz, "#c8a050", 14);
     ent(new T.CylinderGeometry(0.09, 0.07, 0.2, 16, 1, true), tx-0.05, FB+0.695, tz, "#c8ccd0"); C(0.07, 0.01, tx-0.05, FB+0.6, tz, "#c8ccd0", 14);
     C(0.035, 0.24, tx-0.05, FB+0.76, tz, "#1a3a1a", 12); C(0.014, 0.06, tx-0.05, FB+0.91, tz, "#c8a050", 8);
     for(const dz of [-0.07, 0.07]){ C(0.004, 0.09, tx+0.09, FB+0.64, tz+dz, "#e8eef0", 6); ent(new T.CylinderGeometry(0.05, 0.012, 0.03, 14, 1, true), tx+0.09, FB+0.7, tz+dz, "#e8eef0"); }
@@ -250,9 +250,9 @@ const VELVET={open:false, typing:false, door:null, radios:[], el:null};
 
   const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.7, metalness:0.08});
   detailMesh(ME, mat, "velvet-room", true);
-  VELVET.routes={"the velvet room (its door unlocked)":{gate:true, y0:FB, pts:[[79.6, -178.3],[79.98, -177.2],[79.98, -176.1],[79.98, -175.0],[80.0, -174.4],[81.0, -175.0]]},
-    "the velvet room, through the beads to the back room":{gate:true, y0:FB, pts:[[79.98, -175.2],[80.0, -174.4],[81.35, -173.4],[81.85, -172.6],[81.85, -171.6],
-      [81.85, -170.9],[81.6, -170.6],[80.4, -170.55]]}};
+  VELVET.routes={"the velvet room (its door unlocked)":{gate:true, y0:FB, pts:[[79.6, -178.3],[79.98, -177.2],[79.98, -176.1],[79.98, -175.0],[80.0, -174.4],[80.3, -174.6]]},
+    "the velvet room, through the beads to the back room":{gate:true, y0:FB, pts:[[79.98, -175.2],[80.0, -174.6],[80.78, -174.0],[80.78, -173.2],[81.0, -172.85],[81.85, -172.75],[81.85, -171.6],
+      [81.85, -170.9],[81.3, -170.65],[80.4, -170.6]]}};
   /* ---- Violet, on the chaise: one of 14q's crowd (added by 14q once it is built, VELVET.people) ---- */
   VELVET.people=function(){ const C=VELVET.chaise; if(!C || typeof crowdGroup!=="function") return;
     const G=crowdGroup("the velvet room", 80, -172, 26);

@@ -347,7 +347,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
     push("rn_glow", new T.SphereGeometry(0.2, 10, 8), x, LY+3.75, z, 0, "#ffffff");
     const L={x:x, y:LY+3.5, z:z, color:0xffe2b0, intensity:0, dist:14, decay:1.5}; LAMPS.push(L); OFFICE.lamps.push(L); }
   // three flags on poles at the plaza's lake end
-  for(const [k, z] of [[0, -1782],[1, -1775],[2, -1768]]){ const x=933.5; C(0.06, 10, x, LY+5, z, "#c8ccd0", 10); S(0.09, x, LY+10.05, z, BRASS); addCol(x-0.08, x+0.08, z-0.08, z+0.08, LY-0.5, LY+10);
+  for(const [k, z] of [[0, -1791],[1, -1787],[2, -1783]]){ const x=933.5;            // (beside the walk down to the water, not across it) C(0.06, 10, x, LY+5, z, "#c8ccd0", 10); S(0.09, x, LY+10.05, z, BRASS); addCol(x-0.08, x+0.08, z-0.08, z+0.08, LY-0.5, LY+10);
     sign(1.6, 1.0, (c, Wd, Hh)=>{ if(k===0){ for(let i=0;i<13;i++){ c.fillStyle=i%2 ? "#f4f2ec" : "#b3191e"; c.fillRect(0, i*Hh/13, Wd, Hh/13+1); } c.fillStyle="#1f2a5a"; c.fillRect(0, 0, Wd*0.4, Hh*7/13); }
         else if(k===1){ c.fillStyle="#1f3f7a"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#d8b048"; c.beginPath(); c.ellipse(Wd/2, Hh/2, Wd*0.12, Hh*0.22, 0, 0, 7); c.fill(); }
         else { c.fillStyle="#f4f2ec"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#3a6a7a"; c.fillRect(0, Hh*0.4, Wd, Hh*0.2); say(c, "HRCP", Wd/2, Hh*0.5, Wd*0.5, Hh*0.16, "#f4f2ec", "800", "Arial"); } },
@@ -413,7 +413,7 @@ const OFFICE={routes:{}, lamps:[], water:null, spray:null, t:0};
     "office park: up Hollow Road from the pretzel works to the end":[[733.5, -1660],[733.5, -1720],[733.5, -1800],[733.5, -1870]],
     "office park: in at the mouth, across the lot to One Hollow Road's door":[[734.0, -1774.0],[745.0, -1774.0],[758.0, -1776.0],[776.25, -1786.0],[795.0, -1786.0],[805.0, -1776.0],[815.0, -1775.0],[819.5, -1775.0]],
     "office park: into French Creek Financial, its lobby and through to the office":{y0:FL+0.1, pts:[[819.5, -1775.0],[821.0, -1775.0],[823.0, -1775.0],[826.0, -1778.0],[831.0, -1775.0],[835.0, -1775.0],[840.0, -1775.0]]},
-    "office park: round One to the plaza and the fountain":[[812.0, -1801.0],[840.0, -1801.0],[856.0, -1801.0],[870.0, -1795.0],[886.0, -1787.0]],
+    "office park: round One to the plaza and the fountain":[[812.0, -1801.0],[840.0, -1801.0],[856.0, -1801.0],[870.0, -1796.0],[886.0, -1796.0],[886.0, -1787.0]],
     "office park: from the plaza into Midland Mutual":[[886.0, -1810.0],[886.0, -1813.0],[886.0, -1815.5],[886.0, -1818.0],[886.0, -1823.0],[886.0, -1826.0]],
     "office park: from the plaza into Lakeshore Data Systems":[[886.0, -1745.0],[886.0, -1740.0],[886.0, -1736.0],[886.0, -1733.0],[886.0, -1730.0],[886.0, -1725.0]],
     "office park: across the lawn to the rail at the water":[[930.0, -1775.0],[945.0, -1775.0],[960.0, -1775.0],[966.5, -1775.0]]};
