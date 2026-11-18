@@ -140,11 +140,11 @@ const _AA=(function(){
     for(const e of G.tip){ x.fillStyle="#7aff7a"; x.fillRect(sx(e.x), 26+(e.y-TOP)/(GY-TOP)*18, 2, 2); }
     for(const e of G.mut){ x.fillStyle="#ff5a5a"; x.fillRect(sx(e.x), 26+(e.y-TOP)/(GY-TOP)*18, 2, 2); }
     x.fillStyle="#ffffff"; x.fillRect(sx(p.x), 26+(p.y-TOP)/(GY-TOP)*18, 2, 2);
-    x.textBaseline="middle"; _cbFont(x, 11); x.textAlign="left"; x.fillStyle="#8affa0"; x.fillText(String(G.score).padStart(6, "0"), 6, 12);
+    x.textBaseline="middle"; _cbFont(x, 11); x.textAlign="left"; x.fillStyle="#8affa0"; x.fillText(String(G.score).padStart(6, "0"), 12, 14);
     x.fillStyle="#c8d8f0"; for(let k=0;k<Math.max(0, G.lives);k++) x.fillRect(6+k*10, 30, 7, 4);
     x.fillStyle="#ff8a3a"; for(let k=0;k<G.bombs;k++) x.fillRect(6+k*8, 40, 5, 5);
-    x.textAlign="right"; x.fillStyle="#e8c858"; x.fillText("WAVE "+G.wave, W-6, 12);
-    x.fillStyle="#f2f0ea"; x.fillText("COWS "+G.cows.filter(c=>c.st!=="gone").length, W-6, 36); }
+    x.textAlign="right"; x.fillStyle="#e8c858"; x.fillText("WAVE "+G.wave, W-12, 14);
+    x.fillStyle="#f2f0ea"; x.fillText("COWS "+G.cows.filter(c=>c.st!=="gone").length, W-12, 36); }
   let D=null;
   function demo(){ if(!D){ D=newGame(); D.p.inv=0; } return D; }
   return {

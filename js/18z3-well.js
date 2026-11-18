@@ -119,9 +119,9 @@ const _DW=(function(){
     x.restore();
     if(G.flash>0){ x.fillStyle="rgba(255,255,255,"+(G.flash*2).toFixed(2)+")"; x.fillRect(0, 0, W, H); }
     x.fillStyle="#000"; x.fillRect(0, 0, W, TOP); x.textBaseline="middle"; _cbFont(x, 11);
-    x.textAlign="left"; x.fillStyle="#ffff8a"; x.fillText(String(G.score).padStart(6, "0"), 6, 12);
-    x.textAlign="center"; x.fillStyle=S.col; x.fillText("LEVEL "+G.level+(G.zap ? "  · ZAP" : ""), W/2, 12);
-    x.textAlign="right"; x.fillStyle="#ffff8a"; x.fillText("◆".repeat(Math.max(0, G.lives)), W-6, 12); }
+    x.textAlign="left"; x.fillStyle="#ffff8a"; x.fillText(String(G.score).padStart(6, "0"), 12, 14);
+    x.textAlign="center"; x.fillStyle=S.col; x.fillText("LEVEL "+G.level+(G.zap ? "  · ZAP" : ""), W/2, 14);
+    x.textAlign="right"; x.fillStyle="#ffff8a"; x.fillText("◆".repeat(Math.max(0, G.lives)), W-12, 14); }
   let D=null;
   function demo(){ if(!D){ D=newGame(); } return D; }
   return {

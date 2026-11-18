@@ -125,9 +125,9 @@ const _DU=(function(){
       else { x.fillStyle="rgba(0,0,0,0.25)"; x.beginPath(); x.ellipse(p.x+8, p.y+12, 9, 3, 0, 0, 7); x.fill(); plane(x, p.x, p.y, 1, "#f2c41c", "#e8a01a", t, false);
         if(p.gun>=3) for(const s of [-1, 1]) plane(x, p.x+s*20, p.y+6, 0.55, "#f2c41c", "#e8a01a", t, false); } }
     x.fillStyle="#000"; x.fillRect(0, 0, W, TOP); x.textBaseline="middle"; _cbFont(x, 11);
-    x.textAlign="left"; x.fillStyle="#f2c41c"; x.fillText(String(G.score).padStart(6, "0"), 6, 12);
-    x.textAlign="center"; x.fillStyle="#c8d8f0"; x.fillText("LOOPS "+"R".repeat(Math.max(0, p.loops)), W/2, 12);
-    x.textAlign="right"; x.fillStyle="#f2f0ea"; x.fillText("STAGE "+G.stage+"  "+"▲".repeat(Math.max(0, G.lives)), W-6, 12); }
+    x.textAlign="left"; x.fillStyle="#f2c41c"; x.fillText(String(G.score).padStart(6, "0"), 12, 14);
+    x.textAlign="center"; x.fillStyle="#c8d8f0"; x.fillText("LOOPS "+"R".repeat(Math.max(0, p.loops)), W/2, 14);
+    x.textAlign="right"; x.fillStyle="#f2f0ea"; x.fillText("STAGE "+G.stage+"  "+"▲".repeat(Math.max(0, G.lives)), W-12, 14); }
   let D=null;
   function demo(){ if(!D){ D=newGame(); } return D; }
   return {
