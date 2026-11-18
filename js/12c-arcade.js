@@ -277,7 +277,7 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
     const scrQ=new T.Quaternion().setFromEuler(new T.Euler(-0.20, ry, 0, "YXZ"));
     // a screen of its own, which its game draws (18f, 18g): its attract mode, or the game you are playing
     { const c=cvs(336,280), tex=setSRGB(new T.CanvasTexture(c)); tex.minFilter=T.LinearFilter;
-      const m=new T.Mesh(new T.PlaneGeometry(0.48, 0.40), new T.MeshBasicMaterial({map:tex, toneMapped:false}));
+      const m=new T.Mesh(new T.PlaneGeometry(0.48, 0.40), crtMaterial(tex, 336, 280));
       m.position.set(ps[0], A.y+1.30, ps[1]); m.quaternion.copy(scrQ); scene.add(m);
       const pf=L(0, 1.02);
       ARCADE.cabs[id]={name:NAMES[i], c:c, x:c.getContext("2d"), tex:tex, mesh:m, stick:st, stand:{x:pf[0], z:pf[1]}, ry:ry,

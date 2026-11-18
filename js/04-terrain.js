@@ -125,7 +125,9 @@ const EAST=(function(){
            woods:{x0:892, x1:924, z0:-1622, z1:-1580}, lake:{x0:922, x1:972, z0:-1628, z1:-1576}},
     // and up the road past the works, the office park (14md): its clearing, graded, out to the shore so the lake opens behind it
     office:{site:{x0:743, x1:990, z0:-1862, z1:-1690}, mouth:{z0:-1782, z1:-1766}},
-    pcan:{x0:640, x1:1024, z0:-1920, z1:-1504} };
+    // and past it on the shore, the Lakeside Dive (14mf): its clearing, graded, joined to the park's north edge
+    dive:{site:{x0:905, x1:990, z0:-1922, z1:-1862}},
+    pcan:{x0:640, x1:1024, z0:-1952, z1:-1504} };
 })();
 /* ---- west along US 6N -----------------------------------------------------
    Past the west fields the road goes on into the woods and comes to French Creek Pines, a campground and trailer
@@ -313,7 +315,7 @@ const Terrain=(function(){
     if(pd<60) h=toward(h, EDIN.y, pd, 0, 60);
     // east along US 6N: the country lies lower and flatter toward the lake, and every clearing is level with the road
     { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z), boxDist(EAST.beer.road,x,z), boxDist(EAST.beer.lot,x,z), boxDist(EAST.pretz.site,x,z),
-        boxDist(EAST.pretz.lake,x,z), boxDist(EAST.office.site,x,z));
+        boxDist(EAST.pretz.lake,x,z), boxDist(EAST.office.site,x,z), boxDist(EAST.dive.site,x,z));
       if(ed<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, ed));
       if(ed<50) h=toward(h, EDIN.y, ed, 0, 46);
       // the lake: its bed shelving off the shore to six metres; the banks brought down to the water, and never under it.
@@ -454,7 +456,7 @@ const Terrain=(function(){
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
     d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3, boxSD(EAST.beer.road,x,z), boxSD(EAST.beer.lot,x,z), boxSD(EAST.pretz.site,x,z),
-      boxSD(EAST.pretz.lake,x,z), boxSD(EAST.office.site,x,z));
+      boxSD(EAST.pretz.lake,x,z), boxSD(EAST.office.site,x,z), boxSD(EAST.dive.site,x,z));
     { const W=EAST.pretz.woods; if(x>W.x0-12 && x<W.x1+12 && z>W.z0-12 && z<W.z1+12) d=Math.min(d, distToPath(EAST.pretz.trail,x,z).d-1.6); }   // (the trail: a clearing a path wide)
     d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z), boxSD(WEST.ranch,x,z));
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])
@@ -510,7 +512,7 @@ const RING_HWYN={x0:-272, x1:-48, z0:-1752, z1:-336}, RING_HWYS={x0:-272, x1:-48
 // and one at 4 m east along US 6N: the outlet, the street, the park and the lake's near shore (EAST)
 const RING_EAST={x0:640, x1:1472, z0:-1344, z1:-1056};
 // and one at 4 m north of it up Hollow Road, round the pretzel works (EAST.pretz, 14mc)
-const RING_PRETZ={x0:640, x1:1024, z0:-1920, z1:-1344};      // (and the office park up the road, out to the shore)
+const RING_PRETZ={x0:640, x1:1024, z0:-1936, z1:-1344};      // (and the office park up the road, out to the shore)
 // and one at 4 m west along US 6N past the west fields: the road through the woods and French Creek Pines (WEST), holed
 // under the community hall, whose basement lounge is under it (the hall's floor and its skirting cover the hole's edges)
 const RING_WEST={x0:-1616, x1:-512, z0:-1344, z1:-1040};

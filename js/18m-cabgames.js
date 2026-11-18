@@ -163,18 +163,23 @@ const _BK=(function(){
   }
   // the pictures
   function brick(x, px, py, k, flash, hp){
-    const c=KB[k]; x.fillStyle=flash>0 ? "#ffffff" : c[0]; x.fillRect(px+0.5, py+0.5, BW-1, BH-1);
-    if(flash>0) return;
+    const c=KB[k]; x.fillStyle="rgba(0,0,0,0.45)"; x.fillRect(px+2, py+2, BW-1, BH-1);                              // (its shadow on the field)
+    if(flash>0){ x.fillStyle="#ffffff"; x.fillRect(px+0.5, py+0.5, BW-1, BH-1); return; }
+    { const g=x.createLinearGradient(0, py, 0, py+BH); g.addColorStop(0, c[1]); g.addColorStop(0.35, c[0]); g.addColorStop(1, c[2]); x.fillStyle=g; x.fillRect(px+0.5, py+0.5, BW-1, BH-1); }
+    x.fillStyle="rgba(255,255,255,0.28)"; x.fillRect(px+1.5, py+1.2, BW-6, 1.2);
     x.fillStyle=c[1]; x.fillRect(px+0.5, py+0.5, BW-1, 1.5); x.fillStyle=c[2]; x.fillRect(px+0.5, py+BH-2, BW-1, 1.5);
     if(k==="x"){ x.fillStyle=c[2]; x.fillRect(px+3, py+3.5, 2, 2); x.fillRect(px+BW-5, py+3.5, 2, 2); }
     else if(k==="s"){ x.fillStyle="rgba(255,255,255,0.35)"; x.fillRect(px+3, py+2, 4, BH-4); if(hp>1){ x.fillStyle=c[2]; x.fillRect(px+BW-6, py+3, 3, 3); } }
     else { x.fillStyle="rgba(0,0,0,0.18)"; x.fillRect(px+BW/2, py+2, 1, BH-4); } }
   function bat(x, px, w, power, t){
-    x.fillStyle="#2a2a30"; x.fillRect(px, BAT_Y, w, BAT_H);
-    for(let k=0;k<w;k+=8){ x.fillStyle=((k/8)|0)%2 ? "#f2f2f2" : "#e8662a"; x.fillRect(px+k+1, BAT_Y+1, Math.min(6, w-k-2), BAT_H-2); }
+    { const g=x.createLinearGradient(0, BAT_Y, 0, BAT_Y+BAT_H); g.addColorStop(0, "#f2f4f8"); g.addColorStop(0.45, "#8a8e98"); g.addColorStop(1, "#3a3e46"); x.fillStyle=g;
+      x.beginPath(); x.moveTo(px+3, BAT_Y); x.lineTo(px+w-3, BAT_Y); x.arc(px+w-3, BAT_Y+BAT_H/2, BAT_H/2, -Math.PI/2, Math.PI/2); x.lineTo(px+3, BAT_Y+BAT_H); x.arc(px+3, BAT_Y+BAT_H/2, BAT_H/2, Math.PI/2, Math.PI*1.5); x.fill(); }
+    for(let k=6;k<w-6;k+=8){ x.fillStyle=((k/8)|0)%2 ? "rgba(255,255,255,0.0)" : "#e8662a"; x.fillRect(px+k, BAT_Y+1.5, 4, BAT_H-3); }
     if(power==="Z"){ x.fillStyle=((t*6)|0)%2 ? "#ff3a2a" : "#ffb0a0"; x.fillRect(px-1, BAT_Y-3, 3, 3); x.fillRect(px+w-2, BAT_Y-3, 3, 3); }
     if(power==="G"){ x.fillStyle="#7ae8f0"; x.fillRect(px+2, BAT_Y-1, w-4, 1); } }
-  const ball=(x, bx, by)=>{ x.fillStyle="#e8f6ff"; x.beginPath(); x.arc(bx, by, BR, 0, Math.PI*2); x.fill(); x.fillStyle="#7ac8ff"; x.fillRect(bx-0.5, by, 1.5, 1.5); };
+  const ball=(x, bx, by, vx, vy)=>{ if(vx!==undefined){ const sp=Math.hypot(vx, vy)||1; for(let k=4;k>=1;k--){ x.fillStyle="rgba(122,200,255,"+(0.12*(5-k)/4).toFixed(3)+")"; x.beginPath(); x.arc(bx-vx/sp*k*3.2, by-vy/sp*k*3.2, BR*(1-k*0.12), 0, Math.PI*2); x.fill(); } }
+    const g=x.createRadialGradient(bx, by, 0, bx, by, BR*3); g.addColorStop(0, "rgba(170,220,255,0.55)"); g.addColorStop(1, "rgba(170,220,255,0)"); x.fillStyle=g; x.fillRect(bx-BR*3, by-BR*3, BR*6, BR*6);
+    const h=x.createRadialGradient(bx-1, by-1, 0, bx, by, BR); h.addColorStop(0, "#ffffff"); h.addColorStop(1, "#8ac8ff"); x.fillStyle=h; x.beginPath(); x.arc(bx, by, BR, 0, Math.PI*2); x.fill(); };
   function bird(x, d, t){ const f=Math.sin(t*14+d.t*3)>0;
     x.fillStyle="#8a8e98"; x.beginPath(); x.ellipse(d.x, d.y, 4, 3, 0, 0, Math.PI*2); x.fill();
     x.fillStyle="#5e626c"; x.fillRect(d.x-7, d.y+(f?-3:0), 5, 2); x.fillRect(d.x+2, d.y+(f?-3:0), 5, 2);
@@ -182,7 +187,8 @@ const _BK=(function(){
   function backdrop(x){
     x.fillStyle="#140a08"; x.fillRect(0, 0, W, H);
     x.fillStyle="#1e0f0c"; for(let r=0;r<H/8;r++) for(let c=-1;c<W/16;c++) x.fillRect(c*16+(r%2)*8+1, r*8+1, 14, 6);
-    x.fillStyle="#08080c"; x.fillRect(FX0, FY0, FX1-FX0, H-FY0);
+    { const g=x.createLinearGradient(0, FY0, 0, H); g.addColorStop(0, "#0c1020"); g.addColorStop(1, "#04050a"); x.fillStyle=g; x.fillRect(FX0, FY0, FX1-FX0, H-FY0);
+      const s=x.createRadialGradient((FX0+FX1)/2, FY0+40, 10, (FX0+FX1)/2, FY0+40, 160); s.addColorStop(0, "rgba(90,120,200,0.14)"); s.addColorStop(1, "rgba(90,120,200,0)"); x.fillStyle=s; x.fillRect(FX0, FY0, FX1-FX0, H-FY0); }
     x.fillStyle="#6a6e78"; x.fillRect(FX0-4, FY0-4, 4, H-FY0+4); x.fillRect(FX1, FY0-4, 4, H-FY0+4); x.fillRect(FX0-4, FY0-4, FX1-FX0+8, 4);
     x.fillStyle="#9aa0aa"; x.fillRect(FX0-4, FY0-4, FX1-FX0+8, 1); }
   return {
@@ -212,7 +218,7 @@ const _BK=(function(){
       for(const d of G.birds) bird(x, d, t);
       for(const p of G.puffs){ x.fillStyle="rgba(220,220,230,"+(1-p.t*2).toFixed(2)+")"; for(let k=0;k<5;k++) x.fillRect(p.x+Math.cos(k*1.3)*p.t*20, p.y+Math.sin(k*1.3)*p.t*20, 2, 2); }
       bat(x, G.px, batW(G), G.power, t);
-      if(!(G.phase==="lost" && ((t*8)|0)%2)) for(const b of G.balls) ball(x, b.x, b.y);
+      if(!(G.phase==="lost" && ((t*8)|0)%2)) for(const b of G.balls) ball(x, b.x, b.y, b.st ? undefined : b.vx, b.st ? undefined : b.vy);
       // the side: the score, the best, the round, the bats left, what you have
       const SX=(FX1+4+W)/2; x.textAlign="center"; x.textBaseline="middle";
       _cbFont(x, 11); x.fillStyle="#d8402a"; x.fillText("SCORE", SX, 32); x.fillText("HIGH", SX, 78); x.fillText("ROUND", SX, 124); x.fillText("BATS", SX, 170);

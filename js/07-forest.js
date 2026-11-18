@@ -834,7 +834,7 @@ const FOREST=(function(){
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
     // and round the pretzel works' clearing, which 14mc lines with real trees the same way
     // (and the trail's woods behind it, the clearing on the shore, and the office park up the road, 14md)
-    if(fine && typeof EAST!=="undefined" && EAST.pretz) for(const P of [EAST.pretz.site, EAST.pretz.woods, EAST.pretz.lake, EAST.office.site]){
+    if(fine && typeof EAST!=="undefined" && EAST.pretz) for(const P of [EAST.pretz.site, EAST.pretz.woods, EAST.pretz.lake, EAST.office.site, EAST.dive.site]){
       const ex=Math.max(0, x-(P.x1+30), (P.x0-30)-x), ez=Math.max(0, z-(P.z1+30), (P.z0-30)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
     // and round the radio station and its tower, which 14s2 rings with real trees the same way

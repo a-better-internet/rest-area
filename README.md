@@ -593,6 +593,20 @@ If the scene runs hot on your machine, start there (see below).
       with its typing test.
     - On every floor a board over the way out of the elevator says which
       floor it is and who is on it.
+    - The elevators carry you smoothly floor to floor: press a number in the
+      car (or E for the next floor up), or call one from a landing. The cab
+      is walnut, brass and terrazzo with a mirror, rails, a lit ceiling and a
+      panel whose buttons light; a lantern over every landing shows where
+      the car is and which way it's going, and a chime rings when it comes.
+    - Every terminal shows something of its own: claims screens, word
+      processors, spreadsheets, ledgers, charts, the network map, a game.
+  - **The Lakeside Dive**, past the office park on the shore, down the
+    service drive from the office lot: a one-room bar in stained siding with
+    six stools, beer on tap, a pool table, a jukebox playing country, darts,
+    neon in the windows; a deck off the lake side with chairs looking out;
+    picnic tables on the grass under strings of lights; and Lake Effect Eats,
+    a step-van food truck with its awning up, the cook at the window, the
+    menu on its side (perch, pierogies, burgers).
   - Hollow Road itself has its pole line and wires, a light over each
     place's entrance, its signs (speed limit, deer, trucks entering, the
     office park ahead), reflector posts, a guardrail where it crosses
@@ -1100,7 +1114,8 @@ If the scene runs hot on your machine, start there (see below).
       Twenty-five metres on, under the hill, a pair of sliding glass doors
       parts as you come up to them, each leaf running into a pocket in the
       wall, onto an arcade with a cosmic carpet, black walls with pink
-      and blue neon, and a GAME ROOM sign. The room is seventeen metres by
+      and blue neon, and a GAME ROOM sign. Every cabinet's screen is a picture
+      tube: curved glass, glowing phosphors, scanlines and dimmed corners. The room is seventeen metres by
       eight and a half: its east wall has gone out into the hill twice,
       three metres and then five, as machines came. Twelve upright cabinets stand
       round the walls, each running its own attract screen (ASTRO

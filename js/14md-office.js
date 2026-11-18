@@ -65,9 +65,10 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
 
   /* ---- the ground: Hollow Road from the pretzel works on north to its end, the mouth, the lot, the walks, the plaza ---- */
   { const road=SD_rect(RX-RW, RX+RW, END, -1660), mouth=SD_rect(RX+RW-0.6, 752, M.z0, M.z1), lot=SD_rect(750, 806, -1848, -1702),
+      svc=[SD_rect(796, 806, -1860.6, -1846), SD_rect(796, 924, -1860.6, -1856.4), SD_rect(914, 924, -1875.5, -1856.4)],   // (the service drive along the north side to the Lakeside Dive, 14mf)
       front=SD_rect(804, 822.05, -1800, -1750), nwalk=SD_rect(820, 856, -1804, -1798.5), swalk=SD_rect(820, 856, -1751.5, -1746),
       plaza=SD_rect(852, 936, -1812, -1738), lawnwalk=SD_rect(934, 968, -1777.5, -1772.5);
-    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza, lawnwalk], 3), RX-RW-1, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
+    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza, lawnwalk].concat(svc), 3), RX-RW-1, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
     for(const b of [[RX+RW-0.6, 752, M.z0, M.z1],[750, 806, -1848, -1702],[804, 822.05, -1800, -1750],[820, 856, -1804, -1798.5],[820, 856, -1751.5, -1746],[852, 936, -1812, -1738],[934, 968, -1777.5, -1772.5]])
       addPaveRect(b[0], b[1], b[2], b[3], Y); }
   // the plaza laid in squares of buff concrete and terra cotta pavers, a joint round each (paint over the paving, 08's ladder), clear of the basin
@@ -128,14 +129,90 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   const GBLOCK=signTex(128, 128, (c, W, H)=>{ c.fillStyle="#8aa8ac"; c.fillRect(0, 0, W, H); c.fillStyle="#b4ccd0"; for(let i=0;i<4;i++) for(let j=0;j<4;j++){ c.fillRect(i*32+4, j*32+4, 24, 24); }
     c.fillStyle="rgba(255,255,255,0.18)"; for(let i=0;i<4;i++) for(let j=0;j<4;j++) c.fillRect(i*32+8, j*32+6, 6, 18); });
   GBLOCK.wrapS=GBLOCK.wrapT=T.RepeatWrapping;
-  const texPlane=(w, h, tex, rep, x, y, z, rx, ry, rough)=>{ const t=tex.clone(); t.needsUpdate=true; t.repeat.set(w/rep, h/rep);
-    const m=new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshStandardMaterial({map:t, roughness:rough===undefined ? 0.9 : rough}));
+  // (po: a floor covering's step up the polygon-offset ladder over what it lies on, as well as its few millimetres)
+  const texPlane=(w, h, tex, rep, x, y, z, rx, ry, rough, po)=>{ const t=tex.clone(); t.needsUpdate=true; t.repeat.set(w/rep, h/rep);
+    const m=new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshStandardMaterial(Object.assign({map:t, roughness:rough===undefined ? 0.9 : rough}, po ? {polygonOffset:true, polygonOffsetFactor:po, polygonOffsetUnits:po*2} : {})));
     m.rotation.set(rx||0, ry||0, 0, "YXZ"); m.position.set(x, y, z); m.receiveShadow=true; m.updateMatrix(); m.matrixAutoUpdate=false; scene.add(m); return m; };
+
+  /* ---- the screens: one atlas of sixteen 1980s screens (4 x 4 cells of 256 x 192), each terminal given its own by turns:
+     green and amber text, a word processor, spreadsheets, menus, a policy inquiry, a ledger, charts, a network map, a game, a logo.
+     Raw fillText is fine here (a screen's own picture, not a sign), kept inside each cell. */
+  const SCR=[], SQ=_trng(1985);
+  const SCREENS=(()=>{ const CW=256, CH=192, c=cvs(CW*4, CH*4), x=c.getContext("2d");
+    const cell=(k, f)=>{ const c2=cvs(CW, CH), g=c2.getContext("2d"); f(g, CW, CH); x.drawImage(c2, (k%4)*CW, ((k/4)|0)*CH); };      // (each screen on its own canvas, then into its cell)
+    // (a line of a screen's text: shrunk until it ends 8 px short of the screen's right edge, whatever monospace the machine has)
+    const txt=(g, s, tx, ty, col, sz, b)=>{ g.fillStyle=col; let z=sz||11; tx=Math.max(tx, 9); ty=Math.min(Math.max(ty, 7), g.canvas.height-8-z); const room=g.canvas.width-9-tx; g.textAlign="left"; g.textBaseline="top";
+      for(;;){ g.font=(b ? "bold " : "")+z+"px 'Courier New', monospace"; if(z<=6 || g.measureText(s).width<=room) break; z-=0.5; } g.fillText(s, tx, ty); };
+    const scan=(g, W, H, a)=>{ g.fillStyle="rgba(0,0,0,"+(a||0.18)+")"; for(let y=0;y<H;y+=3) g.fillRect(0, y, W, 1); };
+    const lines=(g, col, rows, x0, y0, step, q)=>{ const room=Math.floor((g.canvas.width-x0-12)/6.4); for(let i=0;i<rows;i++){ let s=""; const n=Math.min(room, 6+((q()*26)|0)); for(let j=0;j<n;j++) s+=q()<0.17 ? " " : String.fromCharCode(65+((q()*26)|0)); txt(g, s, x0, y0+i*step, col, 10); } };
+    // 0 green text: a mainframe session
+    cell(0, (g, W, H)=>{ const q=_trng(1); g.fillStyle="#04140a"; g.fillRect(0, 0, W, H); txt(g, "MMI CLAIMS SYSTEM  REL 4.2", 8, 6, "#5aff8a", 11, true); txt(g, "CLAIM NO  884-20731   STATUS  OPEN", 8, 24, "#5aff8a"); lines(g, "#3ad06a", 11, 8, 42, 12, q); txt(g, "PF3=END  PF7=BACK  PF8=FWD  ENTER", 8, H-18, "#5aff8a"); scan(g, W, H); });
+    // 1 amber text: a word processor
+    cell(1, (g, W, H)=>{ const q=_trng(2); g.fillStyle="#140a02"; g.fillRect(0, 0, W, H); txt(g, "B:MEMO.DOC  PAGE 1  LINE 14  COL 22", 6, 4, "#ffb040"); g.fillStyle="#ffb040"; g.fillRect(0, 18, W, 1);
+      txt(g, "TO:   ALL UNDERWRITING STAFF", 10, 26, "#ffb040"); txt(g, "RE:   NEW RATE TABLES, 1 JULY", 10, 40, "#ffb040"); lines(g, "#d88a2a", 9, 10, 60, 12, q); g.fillRect(70, 160, 7, 10); scan(g, W, H); });
+    // 2 a blue word processor with a ruler
+    cell(2, (g, W, H)=>{ const q=_trng(3); g.fillStyle="#1a2a8a"; g.fillRect(0, 0, W, H); g.fillStyle="#c8c8d8"; g.fillRect(0, 0, W, 14); txt(g, " File  Edit  Search  Format  Print", 4, 2, "#1a2a8a", 10);
+      txt(g, "L----!----!----!----!----!----!--R", 6, 18, "#8aa8ff", 10); lines(g, "#e8e8f0", 11, 8, 34, 12, q); scan(g, W, H, 0.1); });
+    // 3 a spreadsheet: a grid, column letters, figures
+    cell(3, (g, W, H)=>{ const q=_trng(4); g.fillStyle="#0a0a0a"; g.fillRect(0, 0, W, H); g.fillStyle="#2a6a8a"; g.fillRect(0, 0, W, 12); txt(g, "A1: Q2 PREMIUMS", 4, 1, "#e8e8e8", 10);
+      g.fillStyle="#3a3a8a"; g.fillRect(0, 14, W, 11); g.fillRect(0, 14, 22, H); for(let i=0;i<6;i++) txt(g, "ABCDEF"[i], 36+i*35, 15, "#e8e8e8", 10); for(let r=0;r<13;r++) txt(g, String(r+1), 4, 28+r*12, "#e8e8e8", 10);
+      for(let r=0;r<13;r++) for(let i=0;i<6;i++) txt(g, i===0 ? ["ERIE","CRAWFRD","WARREN","VENANGO","MERCER","TOTAL"][r%6] : String(((q()*9000)|0)+1000), 26+i*35, 28+r*12, i===0 ? "#e8d88a" : "#5ae0e0", 9);
+      g.fillStyle="rgba(255,255,255,0.25)"; g.fillRect(62, 52, 36, 11); scan(g, W, H, 0.1); });
+    // 4 a menu: the policy system's main menu in boxes
+    cell(4, (g, W, H)=>{ g.fillStyle="#0a1a3a"; g.fillRect(0, 0, W, H); g.strokeStyle="#5ac8ff"; g.lineWidth=2; g.strokeRect(10, 10, W-20, H-20); txt(g, "MIDLAND MUTUAL", 70, 18, "#ffe08a", 12, true); txt(g, "POLICY SERVICES MAIN MENU", 50, 36, "#5ac8ff", 10);
+      ["1  NEW BUSINESS","2  ENDORSEMENTS","3  RENEWALS","4  CANCELLATIONS","5  INQUIRY","6  REPORTS","X  SIGN OFF"].forEach((s, i)=>txt(g, s, 60, 58+i*15, i===4 ? "#0a1a3a" : "#e8e8f0", 10));
+      g.fillStyle="#e8e8f0"; g.fillRect(56, 116, 130, 13); txt(g, "5  INQUIRY", 60, 118, "#0a1a3a", 10); txt(g, "SELECTION ==> 5", 60, H-30, "#ffe08a", 10); scan(g, W, H); });
+    // 5 a policy inquiry form
+    cell(5, (g, W, H)=>{ const q=_trng(6); g.fillStyle="#04140a"; g.fillRect(0, 0, W, H); txt(g, "POLICY INQUIRY        PI01", 8, 6, "#5aff8a", 11, true);
+      ["POLICY NO","INSURED","ADDRESS","EFF DATE","PREMIUM","AGENT","CLASS"].forEach((s, i)=>{ txt(g, s+" :", 8, 28+i*18, "#3ad06a", 10); g.fillStyle="#0a3a1a"; g.fillRect(96, 26+i*18, 140, 13); lines(g, "#c8ffd8", 1, 100, 28+i*18, 12, _trng(i+60)); }); scan(g, W, H); });
+    // 6 a ledger in amber, columns of figures
+    cell(6, (g, W, H)=>{ const q=_trng(7); g.fillStyle="#140a02"; g.fillRect(0, 0, W, H); txt(g, "GENERAL LEDGER   PERIOD 06", 8, 4, "#ffb040", 11, true); txt(g, "ACCT   DESCRIPTION      DEBIT    CREDIT", 6, 22, "#ffb040", 9);
+      for(let r=0;r<12;r++){ txt(g, String(1000+((q()*8999)|0)), 6, 36+r*12, "#d88a2a", 9); lines(g, "#d88a2a", 1, 44, 36+r*12, 12, q); txt(g, (q()*9999).toFixed(2).padStart(8), 140, 36+r*12, "#ffb040", 9); txt(g, (q()*9999).toFixed(2).padStart(8), 196, 36+r*12, "#ffb040", 9); } scan(g, W, H); });
+    // 7 a bar chart
+    cell(7, (g, W, H)=>{ g.fillStyle="#0a0a14"; g.fillRect(0, 0, W, H); txt(g, "LOANS CLOSED BY MONTH, 1986", 30, 6, "#e8e8e8", 11, true); g.strokeStyle="#8a8a9a"; g.beginPath(); g.moveTo(30, 30); g.lineTo(30, H-24); g.lineTo(W-14, H-24); g.stroke();
+      const q=_trng(8); for(let i=0;i<10;i++){ const h=30+q()*110; g.fillStyle=["#ff5a5a","#ffd83a","#3ac8ff","#5aff8a"][i%4]; g.fillRect(38+i*21, H-24-h, 14, h); } scan(g, W, H, 0.1); });
+    // 8 a line chart over a grid
+    cell(8, (g, W, H)=>{ g.fillStyle="#0a140a"; g.fillRect(0, 0, W, H); g.strokeStyle="#1a4a2a"; for(let i=0;i<10;i++){ g.beginPath(); g.moveTo(20+i*24, 20); g.lineTo(20+i*24, H-20); g.stroke(); g.beginPath(); g.moveTo(20, 20+i*16); g.lineTo(W-12, 20+i*16); g.stroke(); }
+      const q=_trng(9); g.strokeStyle="#5aff8a"; g.lineWidth=2; g.beginPath(); let y=120; for(let i=0;i<22;i++){ y=Math.max(30, Math.min(H-30, y-14+q()*24)); i ? g.lineTo(20+i*10.4, y) : g.moveTo(20, y); } g.stroke(); g.lineWidth=1;
+      txt(g, "LDS NET LOAD  % CPU", 24, 4, "#5aff8a", 10); scan(g, W, H); });
+    // 9 a command prompt and a directory
+    cell(9, (g, W, H)=>{ const q=_trng(10); g.fillStyle="#000"; g.fillRect(0, 0, W, H); txt(g, "A>DIR B:", 6, 4, "#c8c8c8", 10);
+      for(let i=0;i<10;i++){ let n=""; for(let j=0;j<6;j++) n+=String.fromCharCode(65+((q()*26)|0)); txt(g, n.padEnd(9)+["COM","EXE","DOC","WKS","DAT","BAS"][(q()*6)|0]+"   "+String(((q()*60000)|0)).padStart(6), 6, 18+i*13, "#c8c8c8", 10); }
+      txt(g, "      10 File(s)   18432 bytes free", 6, 152, "#c8c8c8", 10); txt(g, "A>_", 6, 168, "#c8c8c8", 10); scan(g, W, H, 0.12); });
+    // 10 the network map: nodes and links
+    cell(10, (g, W, H)=>{ g.fillStyle="#06081a"; g.fillRect(0, 0, W, H); const q=_trng(11), P=[]; for(let i=0;i<9;i++) P.push([24+q()*(W-48), 30+q()*(H-56)]);
+      g.strokeStyle="#2a5a8a"; for(let i=0;i<P.length;i++){ const j=(i*3+1)%P.length; g.beginPath(); g.moveTo(P[i][0], P[i][1]); g.lineTo(P[j][0], P[j][1]); g.stroke(); }
+      P.forEach((p, i)=>{ g.fillStyle=i===4 ? "#ff6a3a" : "#3af06a"; g.beginPath(); g.arc(p[0], p[1], 5, 0, 7); g.fill(); }); txt(g, "LDS-NET  9 NODES  1 ALARM", 8, 4, "#8af0f0", 10); scan(g, W, H); });
+    // 11 a game: blocks falling into a well
+    cell(11, (g, W, H)=>{ g.fillStyle="#000"; g.fillRect(0, 0, W, H); g.strokeStyle="#8a8a8a"; g.strokeRect(80, 10, 96, 172); const q=_trng(12);
+      for(let r=0;r<8;r++) for(let i=0;i<8;i++) if(q()<0.75){ g.fillStyle=["#ff4a4a","#4aff6a","#4a8aff","#ffd84a","#ff8aff"][(q()*5)|0]; g.fillRect(82+i*12, 170-r*12, 11, 11); }
+      g.fillStyle="#4affff"; for(let i=0;i<3;i++) g.fillRect(118+i*12, 40, 11, 11); g.fillRect(130, 52, 11, 11); txt(g, "SCORE", 190, 20, "#e8e8e8", 10); txt(g, "004120", 190, 34, "#ffd84a", 10); scan(g, W, H); });
+    // 12 the company's logo, a screen at rest
+    cell(12, (g, W, H)=>{ g.fillStyle="#0a2a2a"; g.fillRect(0, 0, W, H); g.fillStyle="#2ac8c8"; g.font="bold 56px 'Avenir Next', Arial"; g.textAlign="center"; g.textBaseline="middle"; g.fillText("LDS", W/2, H/2-14);
+      g.fillStyle="#ff8ab8"; g.fillRect(40, H/2+16, W-80, 3); txt(g, "PRESS ANY KEY", 80, H/2+30, "#e8e8e8", 10); scan(g, W, H); });
+    // 13 a calendar of appointments
+    cell(13, (g, W, H)=>{ g.fillStyle="#e0dccc"; g.fillRect(0, 0, W, H); g.fillStyle="#2a4a6a"; g.fillRect(0, 0, W, 16); txt(g, " JUNE 1986", 4, 3, "#e8e8e8", 10, true); g.strokeStyle="#8a8478";
+      for(let i=0;i<=7;i++){ g.beginPath(); g.moveTo(4+i*35, 20); g.lineTo(4+i*35, H-6); g.stroke(); } for(let r=0;r<=5;r++){ g.beginPath(); g.moveTo(4, 20+r*33); g.lineTo(W-7, 20+r*33); g.stroke(); }
+      const q=_trng(14); for(let d=0;d<30;d++){ const cx=4+((d+3)%7)*35, cy=20+(((d+3)/7)|0)*33; txt(g, String(d+1), cx+2, cy+2, "#2a2a2a", 9); if(q()<0.3){ g.fillStyle=["#c84a4a","#4a8ac8","#4aa86a"][(q()*3)|0]; g.fillRect(cx+3, cy+16, 29, 6); } } });
+    // 14 a database list with a highlighted row
+    cell(14, (g, W, H)=>{ const q=_trng(15); g.fillStyle="#1a1a2a"; g.fillRect(0, 0, W, H); txt(g, "TITLE SEARCH  ·  ERIE COUNTY  BK  PG", 6, 4, "#ffe08a", 9, true);
+      for(let r=0;r<13;r++){ if(r===5){ g.fillStyle="#3a5a8a"; g.fillRect(0, 22+r*12, W, 12); } lines(g, "#c8c8e8", 1, 6, 23+r*12, 12, q); txt(g, String(1100+((q()*900)|0))+"  "+String(((q()*600)|0)).padStart(3), 180, 23+r*12, "#8ac8ff", 9); } scan(g, W, H, 0.1); });
+    // 15 a test card: colour bars for the projection set and the bank's monitors
+    cell(15, (g, W, H)=>{ ["#c8c8c8","#c8c82a","#2ac8c8","#2ac82a","#c82ac8","#c82a2a","#2a2ac8"].forEach((col, i)=>{ g.fillStyle=col; g.fillRect(i*W/7, 0, W/7+1, H*0.7); }); g.fillStyle="#141414"; g.fillRect(0, H*0.7, W, H*0.3);
+      txt(g, "WICU 12  ·  PLEASE STAND BY", 34, H*0.78, "#e8e8e8", 11, true); });
+    const t=new T.CanvasTexture(c); t.anisotropy=4; return t; })();
+  const SCREEN_MAT=new T.MeshBasicMaterial({map:SCREENS, color:new T.Color("#b8b8b8"), toneMapped:false});
+  // a screen of w by h facing ry at (x, y, z): which picture is up to `k`, or the next by turns from its kind's list
+  const _scrGeo=new Map();
+  const screen=(w, h, x, y, z, ry, k)=>{ if(k===undefined || Array.isArray(k)){ const L=k || [0,1,2,3,4,5,6,9,13,14]; k=L[(SQ()*L.length)|0]; }
+    const key=w.toFixed(3)+"|"+h.toFixed(3)+"|"+k; let g=_scrGeo.get(key);
+    if(!g){ g=planeGeo(w, h, 0).clone(); const u0=(k%4)/4, v1=1-((k/4)|0)/4, uv=g.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i, u0+uv.getX(i)*0.25, v1-0.25+uv.getY(i)*0.25); _scrGeo.set(key, g); }
+    SCR.push({geo:g, matrix:new T.Matrix4().compose(V3(x, y, z), new T.Quaternion().setFromEuler(new T.Euler(0, ry, 0)), V3(1,1,1)), color:new T.Color("#ffffff")}); };
 
   /* ---- walls with their openings, and glass in them ---- */
   const runW=(bk, col, ax, c0, c1, a, b, y0, y1, ops)=>{ let u=a;
     const piece=(p, q, h0, h1)=>{ if(q-p<0.005 || h1-h0<0.005) return; if(ax==="x") wallBox(bk, p, q, c0, c1, h0, h1, col, 0.6, FL); else wallBox(bk, c0, c1, p, q, h0, h1, col, 0.6, FL); };
-    for(const o of ops.slice().sort((m, n)=>m.a-n.a)){ piece(u, o.a, y0, y1); piece(o.a, o.b, y0, o.sill); piece(o.a, o.b, o.head, y1); u=o.b; }
+    for(const o of ops.slice().sort((m, n)=>m.a-n.a)){ piece(u, o.a, y0, y1); piece(o.a, o.b, y0, o.sill); piece(o.a, o.b, o.head, y1-0.002); u=o.b; }
     piece(u, b, y0, y1); };
   const glaze=(ax, cm, o, frame)=>{ const w=o.b-o.a, h=o.head-o.sill, mid=(o.a+o.b)/2, y=(o.sill+o.head)/2;
     if(ax==="x"){ push("glass", planeGeo(w-0.02, h-0.02, 0), mid, y, cm, 0, "#ffffff"); for(let k=1;k<Math.round(w/1.6);k++) B(0.06, h, 0.1, o.a+k*w/Math.round(w/1.6), y, cm, frame); }
@@ -164,16 +241,17 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         rb:(w, h, dd, lx, ly, lz, c, rad)=>RB(w, h, dd, f.x(lx, lz), y+ly, f.z(lx, lz), c, ry, rad),
         c:(rr, h, lx, ly, lz, c, seg)=>C(rr, h, f.x(lx, lz), y+ly, f.z(lx, lz), c, seg)}; };
     // a straight wall in the frame, on the floor at y, h high, its collider with it; gaps along it left open
-    K.wall=(u0, v0, u1, v1, y, h, c, gaps, t)=>{ t=t||0.12; const along=Math.abs(u1-u0)>Math.abs(v1-v0), a0=(along ? Math.min(u0, u1) : Math.min(v0, v1))+0.055, a1=(along ? Math.max(u0, u1) : Math.max(v0, v1))-0.055;   // (its ends inside what it meets, or short of a glass line)
+    K.wall=(u0, v0, u1, v1, y, h, c, gaps, t)=>{ t=t||0.12; const along=Math.abs(u1-u0)>Math.abs(v1-v0); if(!along) h+=0.002; const a0=(along ? Math.min(u0, u1) : Math.min(v0, v1))+0.055; const a1=(along ? Math.max(u0, u1) : Math.max(v0, v1))-0.055;   // (its ends inside what it meets, or short of a glass line)
       let p=a0; for(const g of (gaps||[]).concat([[a1, a1]]).sort((m, n)=>m[0]-n[0])){ if(g[0]-p>0.02){
           if(along){ K.box(g[0]-p, h, t, (p+g[0])/2, y+h/2, v0, c); K.col(p, g[0], v0-t/2, v0+t/2, y-0.05, y+h); }
           else { K.box(t, h, g[0]-p, u0, y+h/2, (p+g[0])/2, c); K.col(u0-t/2, u0+t/2, p, g[0], y-0.05, y+h); } }
         p=Math.max(p, g[1]); } };
-    K.glassWall=(u0, v0, u1, v1, y, h, gaps)=>{ const along=Math.abs(u1-u0)>Math.abs(v1-v0), a0=along ? Math.min(u0, u1) : Math.min(v0, v1), a1=along ? Math.max(u0, u1) : Math.max(v0, v1);
+    K.glassWall=(u0, v0, u1, v1, y, h, gaps)=>{ const along=Math.abs(u1-u0)>Math.abs(v1-v0);
+      const a0=Math.max(along ? Math.min(u0, u1) : Math.min(v0, v1), along ? -K.W/2+0.05 : 0.05), a1=Math.min(along ? Math.max(u0, u1) : Math.max(v0, v1), along ? K.W/2-0.05 : K.D-0.05);
       let p=a0; for(const g of (gaps||[]).concat([[a1, a1]]).sort((m, n)=>m[0]-n[0])){ if(g[0]-p>0.05){ const m=(p+g[0])/2;
           const [x, z]=along ? P(m, v0) : P(u0, m); push("glass", planeGeo(g[0]-p-0.04, h-0.06, 0), x, y+h/2, z, F.ry+(along ? 0 : Math.PI/2), "#ffffff");
           if(along){ K.box(g[0]-p, 0.06, 0.08, m, y+0.035, v0, "#3a3a3e"); K.box(g[0]-p, 0.06, 0.08, m, y+h-0.035, v0, "#3a3a3e"); K.col(p, g[0], v0-0.04, v0+0.04, y-0.05, y+h); }
-          else { K.box(0.08, 0.06, g[0]-p, u0, y+0.035, m, "#3a3a3e"); K.box(0.08, 0.06, g[0]-p, u0, y+h-0.035, m, "#3a3a3e"); K.col(u0-0.04, u0+0.04, p, g[0], y-0.05, y+h); }
+          else { K.box(0.08, 0.06, g[0]-p-0.09, u0, y+0.033, m, "#3a3a3e"); K.box(0.08, 0.06, g[0]-p-0.09, u0, y+h-0.037, m, "#3a3a3e"); K.col(u0-0.04, u0+0.04, p, g[0], y-0.05, y+h); }
           for(const e of [p, g[0]]) along ? K.box(0.06, h-0.004, 0.1, e, y+h/2, v0, "#3a3a3e") : K.box(0.1, h-0.004, 0.06, u0, y+h/2, e, "#3a3a3e"); }   // (rails and posts never flush: rails 5 mm in, posts 2 mm short)
         p=Math.max(p, g[1]); } };
     // an office chair on its star, facing d; the seat goes with it, and (if asked) the one who sits in it
@@ -195,7 +273,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       for(let k=0;k<3;k++) o.b(0.36, 0.16, 0.012, w/2-0.23, 0.2+k*0.2, -dd/2-0.002, "#7a7468");
       const [ax, az]=o.at(-w/2, -dd/2), [bx2, bz2]=o.at(w/2, dd/2); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+0.76);
       if(opt.term!==false){ const [mx, mz]=o.at(opt.tx||0, 0.12); RB(0.42, 0.36, 0.4, mx, y+0.94, mz, "#c4b89c", o.ry, 0.04); RB(0.36, 0.06, 0.32, mx, y+0.77, mz, "#b4a88c", o.ry, 0.02);
-        push("lk_tvon", planeGeo(0.3, 0.22, 0), mx-Math.sin(o.ry)*0.203, y+0.96, mz-Math.cos(o.ry)*0.203, o.ry+Math.PI, "#ffffff");
+        screen(0.3, 0.22, mx-Math.sin(o.ry)*0.203, y+0.96, mz-Math.cos(o.ry)*0.203, o.ry+Math.PI, opt.scr || K.scr);
         const [kx, kz]=o.at(opt.tx||0, -0.18); RB(0.44, 0.03, 0.16, kx, y+0.775, kz, "#b4a88c", o.ry, 0.008); }
       if(opt.phone!==false){ const [px, pz]=o.at(-w/2+0.25, 0.05); RB(0.2, 0.08, 0.2, px, y+0.8, pz, opt.phoneCol||"#8a2a2a", o.ry, 0.02); }
       // what is on it: a pile of paper, a mug, an in-tray by the phone; on a desk with no terminal a blotter, a banker's lamp, a nameplate; a basket under it
@@ -242,8 +320,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     K.shelf=(u, v, y, d, len, col)=>{ const o=K.obj(u, v, d, y), q=_trng(Math.abs((u*13+v*7)|0)+3);   // (a positive seed: a negative one gives _trng negative draws, and books of negative width)
       // (an open case: its back, its sides, a top a hair wider than them; the boards sink into the sides and the back, the books stand on them)
       o.b(len-0.04, 2.08, 0.02, 0, 1.04, -0.166, col); for(const s of [-1, 1]) o.b(0.025, 2.09, 0.36, s*(len/2-0.0125), 1.045, 0, col); o.b(len+0.004, 0.025, 0.364, 0, 2.0875, 0, col);
-      for(let k=0;k<5;k++){ o.b(len-0.04, 0.025, 0.34, 0, 0.12+k*0.44, 0.012, col); if(k===4) continue;
-        for(let x=-len/2+0.06; x<len/2-0.05;){ const bw=0.03+q()*0.04, bh=0.24+q()*0.1; const lift=0.004+q()*0.006, bd=0.2+q()*0.04; o.b(bw, bh, bd, x+bw/2, 0.1325+lift+k*0.44+bh/2, 0.03+(0.24-bd)/2, ["#6a2a1a","#2a3a5a","#3a5a2a","#7a5a2a","#4a2a3a","#2a2a2a"][(q()*6)|0]); x+=bw+0.005; } }
+      for(let k=0;k<5;k++){ o.b(len-0.046, 0.025, 0.34, 0, 0.12+k*0.44, 0.012, col); if(k===4) continue;
+        for(let x=-len/2+0.06; ;){ const bw=0.03+q()*0.04, bh=0.24+q()*0.1; if(x+bw>len/2-0.04) break; const lift=0.004+q()*0.006, bd=0.2+q()*0.04; o.b(bw, bh, bd, x+bw/2, 0.1325+lift+k*0.44+bh/2, 0.03+(0.24-bd)/2, ["#6a2a1a","#2a3a5a","#3a5a2a","#7a5a2a","#4a2a3a","#2a2a2a"][(q()*6)|0]); x+=bw+0.005; } }
       const [ax, az]=o.at(-len/2, -0.18), [bx2, bz2]=o.at(len/2, 0.18); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+2.1); };
     K.cooler=(u, v, y)=>{ const [x, z]=P(u, v); B(0.34, 0.95, 0.34, x, y+0.475, z, "#b8ae98"); C(0.15, 0.42, x, y+1.16, z, "#7ab0d0", 14); addCol(x-0.2, x+0.2, z-0.2, z+0.2, y-0.05, y+1.4); };
     K.copier=(u, v, y, d)=>{ const o=K.obj(u, v, d, y); o.rb(1.0, 1.0, 0.65, 0, 0.5, 0, "#bcb4a2", 0.04); o.rb(1.0, 0.1, 0.65, 0, 1.05, 0, "#a49c8a", 0.02); o.b(0.3, 0.12, 0.012, 0.25, 0.9, 0.33, "#2a6a3a");
@@ -251,31 +329,74 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     K.clock=(u, v, y, d)=>{ const o=K.obj(u, v, d, y), [x, z]=o.at(0, 0.02), [fx, fz]=o.at(0, 0.043);      // (a wall clock: its rim, its face, its hands at ten past two)
       ent(new T.CylinderGeometry(0.2, 0.2, 0.04, 24), x, y, z, "#2a2a2a", Math.PI/2, o.ry, 0); ent(new T.CylinderGeometry(0.175, 0.175, 0.008, 24), fx, y, fz, "#d4ccb8", Math.PI/2, o.ry, 0);
       o.b(0.012, 0.11, 0.005, 0.0, 0.045, 0.05, "#1a1a1a"); o.b(0.09, 0.014, 0.005, 0.045, 0.0, 0.055, "#1a1a1a"); };
+    // more furniture: a collider for an object's own footprint; a credenza; a printer on its stand; a coat tree; a whiteboard on legs;
+    // a wastebasket; a magazine table. All face d, as the rest of the kit does.
+    K.colO=(o, w, dd, h, y)=>{ const [ax, az]=o.at(-w/2, -dd/2), [bx2, bz2]=o.at(w/2, dd/2); addCol(Math.min(ax, bx2), Math.max(ax, bx2), Math.min(az, bz2), Math.max(az, bz2), y-0.05, y+h); };
+    K.credenza=(u, v, y, d, len, col)=>{ const o=K.obj(u, v, d, y); o.rb(len, 0.72, 0.5, 0, 0.36, 0, col, 0.02);
+      const n=Math.max(2, Math.round(len/0.55)); for(let k=1;k<n;k++) o.b(0.012, 0.6, 0.012, -len/2+k*len/n, 0.36, 0.252, "#2a1a10");
+      for(let k=0;k<n;k++) o.b(0.1, 0.018, 0.02, -len/2+(k+0.5)*len/n, 0.6, 0.258, BRASS);
+      if(DQ()<0.7){ o.c(0.07, 0.02, len/2-0.25, 0.73, 0, BRASS, 12); o.c(0.012, 0.3, len/2-0.25, 0.89, 0, BRASS, 6); o.c(0.13, 0.16, len/2-0.25, 1.1, 0, "#d8c8a0", 14); }    // (a lamp at one end)
+      if(DQ()<0.6) for(let k=0;k<3;k++) o.b(0.24, 0.035, 0.3, -len/2+0.3, 0.737+k*0.037, 0.02*k, ["#2a3a5a","#6a2a1a","#3a5a2a"][k]);                                  // (and binders, or a stack of books)
+      K.colO(o, len, 0.5, 0.75, y); return o; };
+    K.printer=(u, v, y, d)=>{ const o=K.obj(u, v, d, y); o.b(0.7, 0.03, 0.55, 0, 0.62, 0, "#3a3a3e"); o.b(0.66, 0.03, 0.5, 0, 0.14, 0, "#3a3a3e");
+      for(const [a, b] of [[-1,-1],[1,-1],[-1,1],[1,1]]) o.b(0.03, 0.62, 0.03, a*0.32, 0.31, b*0.25, "#2a2a2e");
+      o.rb(0.6, 0.18, 0.42, 0, 0.725, 0, "#c4b89c", 0.03); o.b(0.5, 0.04, 0.1, 0, 0.83, -0.12, "#8a8270"); o.b(0.44, 0.003, 0.3, 0, 0.836+0.0, 0.08, "#d4ccb8");
+      o.b(0.4, 0.14, 0.3, 0, 0.226, 0, "#d4ccb8"); for(let k=0;k<5;k++) o.b(0.405, 0.006, 0.302, 0, 0.17+k*0.025, 0, "#a8c8a8");                                 // (green-bar paper in the bottom shelf)
+      K.colO(o, 0.7, 0.55, 0.85, y); return o; };
+    K.coatTree=(u, v, y, coats)=>{ const [x, z]=P(u, v); C(0.2, 0.03, x, y+0.015, z, "#2a2a2a", 16); C(0.022, 1.78, x, y+0.9, z, "#4a3020", 8); S(0.04, x, y+1.8, z, "#4a3020");
+      for(let k=0;k<4;k++){ const a=k*Math.PI/2+0.4; B(0.16, 0.025, 0.025, x+Math.cos(a)*0.1, y+1.66+k*0.03, z+Math.sin(a)*0.1, "#4a3020", -a); }   // (each a little higher than the last, so none shares a face)
+      for(let k=0;k<(coats||0);k++){ const a=k*Math.PI+0.4; RB(0.3, 0.9, 0.14, x+Math.cos(a)*0.17, y+1.22, z+Math.sin(a)*0.17, ["#3a3a4a","#6a4a2a","#2a2a2e"][k%3], -a+Math.PI/2, 0.05); }
+      addCol(x-0.22, x+0.22, z-0.22, z+0.22, y-0.05, y+1.8); };
+    K.whiteboard=(u, v, y, d, w)=>{ const o=K.obj(u, v, d, y); o.b(w, 1.0, 0.025, 0, 1.4, 0, "#d4d0c4"); o.b(w+0.06, 0.04, 0.04, 0, 1.92, 0, "#8a8478"); o.b(w+0.06, 0.04, 0.04, 0, 0.88, 0, "#8a8478");
+      o.b(w*0.7, 0.02, 0.08, 0, 0.9, 0.045, "#8a8478"); for(const s of [-1, 1]){ o.b(0.04, 1.94, 0.04, s*(w/2+0.05), 0.97, 0, "#5a5e62"); o.b(0.056, 0.03, 0.5, s*(w/2+0.05), 0.04, 0, "#5a5e62"); }
+      for(let k=0;k<5;k++) o.b(w*(0.2+DQ()*0.5), 0.012, 0.003, -w*0.25+DQ()*w*0.2, 1.15+k*0.14, 0.014, ["#2a4a8a","#8a2a2a","#2a2a2a"][k%3]);                        // (somebody's last meeting, in marker)
+      K.colO(o, w+0.14, 0.5, 1.95, y); return o; };
+    K.bin=(u, v, y)=>{ const [x, z]=P(u, v); C(0.14, 0.34, x, y+0.17, z, "#5a5a5e", 12); };
+    K.magTable=(u, v, y, col)=>{ const [x, z]=P(u, v); C(0.35, 0.03, x, y+0.5, z, col||"#3a2014", 20); C(0.04, 0.48, x, y+0.25, z, BRASS, 8); C(0.22, 0.02, x, y+0.01, z, BRASS, 16);
+      for(let k=0;k<3;k++) B(0.21, 0.008, 0.28, x+(k-1)*0.08, y+0.524+k*0.009, z+(k%2)*0.04, ["#c84a3a","#2a6a8a","#d8b84a"][k], k*0.5); addCol(x-0.36, x+0.36, z-0.36, z+0.36, y-0.05, y+0.52); };
     return K; }
   const uvOf=(F, x, z)=>{ // (the inverse of F.P, for the four frames)
     const P0=F.P(0, 0), Pu=F.P(1, 0), Pv=F.P(0, 1), ux=Pu[0]-P0[0], uz=Pu[1]-P0[1], vx=Pv[0]-P0[0], vz=Pv[1]-P0[1], dx=x-P0[0], dz=z-P0[1];
     return [dx*ux+dz*uz, dx*vx+dz*vz]; };
 
-  /* ---- the elevator: a shaft up every floor, a car that rides it, doors that slide, a button on every floor ---- */
+  /* ---- the elevator: a shaft up every floor, a car that rides it, doors that slide, buttons that light, a lantern on every floor ----
+     The car is a moving SURF and a moving collider across its own door, so nobody walks out of it between floors; it moves on the
+     physics step (OFFICE.step, from the top of 17's fixedUpdate) and carries whoever stands in it exactly, so a slow frame can never
+     leave you behind in the shaft. Calls are a set: the car serves them in the way it is going, turns, and comes to rest with its doors
+     open. Its doors come back open for anyone in the doorway. */
   const UC=4.2, VF=10.0, VB=11.9, CAR_V0=10.2, CAR_V1=11.78;
+  const TERRAZZO=signTex(256, 256, (c, W, H)=>{ c.fillStyle="#8a8278"; c.fillRect(0, 0, W, H); const q=_trng(77);
+    for(let i=0;i<2600;i++){ c.fillStyle=["#a49c90","#6a625a","#b4aa98","#5a524a","#9a7a5a"][(q()*5)|0]; const s=1+q()*3; c.fillRect(q()*W, q()*H, s, s); }
+    c.fillStyle="#b0904c"; c.fillRect(0, H/2-1, W, 2); c.fillRect(W/2-1, 0, 2, H); });
+  TERRAZZO.wrapS=TERRAZZO.wrapT=T.RepeatWrapping;
   function elevator(K, name, levels, top){
-    const F=K.F, N=levels.length, E={name:name, levels:levels, f:0, y:levels[0], target:0, state:"idle", door:1, dwell:0, F:F};
+    const F=K.F, N=levels.length, E={name:name, levels:levels, f:0, y:levels[0], v:0, dir:0, target:-1, state:"idle", door:1, dwell:0, hurry:false, F:F, calls:new Set(), shown:"", btnKey:""};
     const DH=2.2;
     // the shaft: its sides and back the whole height; its front a wall on every floor, the opening in it framed in brass
     // (its sides start behind the front wall: no face of one in the other's)
     K.box(0.12, top-levels[0]+0.05, VB-VF-0.2, UC-0.89, (top+levels[0])/2, (VF+0.2+VB)/2, "#8a8478"); K.box(0.12, top-levels[0]+0.05, VB-VF-0.2, UC+0.89, (top+levels[0])/2, (VF+0.2+VB)/2, "#8a8478");
     K.box(1.66, top-levels[0]+0.05, 0.12, UC, (top+levels[0])/2, VB-0.06, "#8a8478");          // (between the sides, not across their ends)
     K.col(UC-0.95, UC-0.83, VF, VB, levels[0]-0.5, top); K.col(UC+0.83, UC+0.95, VF, VB, levels[0]-0.5, top); K.col(UC-0.95, UC+0.95, VB-0.12, VB, levels[0]-0.5, top);
-    E.doorCols=[]; E.land=[];
+    E.doorCols=[]; E.land=[]; E.hall=[];
     const bm=new T.MeshStandardMaterial({color:new T.Color("#b0904c"), metalness:0.7, roughness:0.32});
     const leafG=new T.BoxGeometry(0.52, DH-0.02, 0.04);
+    // the lantern over every landing and inside the car: one picture per elevator, the floor it is at and the way it is going
+    const indC=cvs(128, 64); E.indCtx=indC.getContext("2d"); E.indTex=new T.CanvasTexture(indC);
+    const indMat=new T.MeshBasicMaterial({map:E.indTex, toneMapped:false}), indGeo=new T.PlaneGeometry(0.24, 0.12);
     for(let f=0;f<N;f++){ const y=levels[f], yn=f<N-1 ? levels[f+1]-0.3 : top;
       if(f>0){ K.box(0.45, yn-y, 0.2, UC-0.725, (y+yn)/2, VF+0.1, "#8a8478"); K.box(0.45, yn-y, 0.2, UC+0.725, (y+yn)/2, VF+0.1, "#8a8478"); K.box(1.0, yn-y-DH, 0.2, UC, y+DH+(yn-y-DH)/2, VF+0.1, "#8a8478");
         K.col(UC-0.95, UC-0.5, VF, VF+0.2, y-0.05, yn); K.col(UC+0.5, UC+0.95, VF, VF+0.2, y-0.05, yn); }
-      // the brass frame round the opening, the call buttons, the floor's number over it
-      K.box(0.08, DH, 0.06, UC-0.54, y+DH/2, VF-0.025, BRASS); K.box(0.08, DH, 0.06, UC+0.54, y+DH/2, VF-0.025, BRASS); K.box(1.18, 0.08, 0.06, UC, y+DH+0.04, VF-0.026, BRASS);
-      K.box(0.1, 0.22, 0.03, UC+0.78, y+1.1, VF-0.015, BRASS); K.box(0.26, 0.14, 0.03, UC, y+DH+0.28, VF-0.015, "#1a1a1e");
-      { const [nx, nz]=F.P(UC, VF-0.032); sign(0.22, 0.12, (c, W, H)=>{ c.fillStyle="#1a1a1e"; c.fillRect(0, 0, W, H); say(c, f===0 ? "L" : String(f+1), W/2, H/2, W*0.6, H*0.62, "#ff8a3a", "700", "Arial"); }, nx, y+DH+0.28, nz, F.ry, true, 88); }
+      // the brass frame round the opening, the lantern's box over it, the call plate and its button, the floor's number on the jamb
+      K.box(0.08, DH, 0.06, UC-0.545, y+DH/2, VF-0.025, BRASS); K.box(0.08, DH, 0.06, UC+0.545, y+DH/2, VF-0.025, BRASS); K.box(1.18, 0.08, 0.06, UC, y+DH+0.04, VF-0.026, BRASS);
+      K.box(0.3, 0.16, 0.03, UC, y+DH+0.28, VF-0.015, "#1a1a1e");
+      { const [x, z]=F.P(UC, VF-0.037); const m=new T.Mesh(indGeo, indMat); m.position.set(x, y+DH+0.28, z); m.rotation.y=F.ry; scene.add(m); }
+      K.box(0.12, 0.26, 0.03, UC+0.8, y+1.1, VF-0.015, BRASS);
+      { const [x, z]=F.P(UC+0.8, VF-0.036); const mt=new T.MeshBasicMaterial({color:new T.Color("#5a4a30"), toneMapped:false});
+        const b=new T.Mesh(new T.CylinderGeometry(0.022, 0.022, 0.012, 14).rotateX(Math.PI/2), mt); b.position.set(x, y+1.14, z); b.rotation.y=F.ry; scene.add(b);
+        const d=new T.Mesh(new T.CylinderGeometry(0.022, 0.022, 0.012, 14).rotateX(Math.PI/2), mt.clone()); d.position.set(x, y+1.06, z); d.rotation.y=F.ry; scene.add(d);
+        E.hall.push([b.material, d.material]); }
+      { const [nx, nz]=F.P(UC-0.8, VF-0.032); K.box(0.16, 0.16, 0.02, UC-0.8, y+1.6, VF-0.01, BRASS);
+        sign(0.12, 0.12, (c, W, H)=>{ c.fillStyle="#1a1a1e"; c.fillRect(0, 0, W, H); say(c, f===0 ? "L" : String(f+1), W/2, H/2, W*0.6, H*0.62, "#d8c088", "700", "Optima, Palatino, serif"); }, nx, y+1.6, nz, F.ry, false, 64); }
       // the sill: a floor across the doorway's depth, from the landing's slab to the car's, or you drop through the gap between them
       K.flat(UC-0.5, UC+0.5, VF-0.02, CAR_V0+0.03, y); K.box(0.99, 0.028, CAR_V0-VF-0.015, UC, y-0.006, (VF+0.01+CAR_V0-0.005)/2, BRASS);
       const cb={}; const R=K.rect(UC-0.5, UC+0.5, VF, VF+0.2); Object.assign(cb, {x0:R[0], x1:R[1], z0:R[2], z1:R[3], y0:y-0.3, y1:y+DH}); COL_DYN.push(cb); E.doorCols.push(cb);
@@ -283,31 +404,60 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       const g=new T.Group(); const [gx, gz]=F.P(UC, VF+0.1); g.position.set(gx, y+DH/2, gz); g.rotation.y=F.ry; scene.add(g);
       const L=[new T.Mesh(leafG, bm), new T.Mesh(leafG, bm)]; L[0].position.x=-0.25; L[1].position.x=0.25; for(const m of L){ m.castShadow=true; g.add(m); }
       E.land.push(L);
-      const [ux, uz]=F.P(UC+0.95+0.3, VF-0.45); addUse(ux, uz, y, "E  ·  CALL THE ELEVATOR", ()=>{ call(E, f); }, 1.3);
-      const [ix, iz]=F.P(UC, 11.3); addUse(ix, iz, y, "E  ·  THE NEXT FLOOR UP   ·   1–"+N+"  ·  ANY FLOOR", ()=>{ call(E, (E.f+1)%N); }, 0.9, ()=>E.state==="idle" && E.f===f);
+      const [ux, uz]=F.P(UC+0.95+0.3, VF-0.45); addUse(ux, uz, y, "E  ·  CALL THE ELEVATOR", ()=>{ press(E, f, true); }, 1.3);
+      const [ix, iz]=F.P(UC, 11.2); addUse(ix, iz, y, "E  ·  THE NEXT FLOOR UP   ·   1–"+N+"  ·  ANY FLOOR", ()=>{ press(E, (E.f+1)%N); }, 0.9, ()=>E.state!=="moving" && E.f===f);
       addZone(...K.rect(UC-0.83, UC+0.83, CAR_V0, CAR_V1).slice(0, 4), y-0.4, y+2.6, name+" · THE ELEVATOR", true); }
-    // the car: a floor, walnut sides, a mirror at the back, a brass rail, a lit ceiling, its panel of buttons, its own doors
+    // the car, in its own frame (+z out of its door, x across): terrazzo, walnut panelled in brass, a mirror over a walnut dado,
+    // brass rails on three sides, a lit ceiling in a brass frame, the returns either side of the door with the panel and the phone,
+    // the lantern over the door, the inspection certificate; merged by material, so the whole car is a handful of draws
     const car=new T.Group(); const [cx, cz]=F.P(UC, (CAR_V0+CAR_V1)/2); car.position.set(cx, levels[0], cz); car.rotation.y=F.ry; scene.add(car);
-    const cm=(c, extra)=>new T.MeshStandardMaterial(Object.assign({color:new T.Color(c), roughness:0.55}, extra||{}));
-    const add=(geo, mat, x, y, z)=>{ const m=new T.Mesh(geo, mat); m.position.set(x, y, z); m.receiveShadow=true; car.add(m); return m; };
-    const D=CAR_V1-CAR_V0;                                         // (along the car's own z: +z out of its door)
-    add(new T.BoxGeometry(1.64, 0.06, D-0.02), cm("#3a3236"), 0, -0.03, 0);
-    for(const s of [-1, 1]) add(new T.BoxGeometry(0.03, 2.4, D-0.04), cm("#5a3a22"), s*0.8, 1.2, 0);
-    add(new T.BoxGeometry(1.58, 2.4, 0.03), cm("#8a9298", {metalness:0.6, roughness:0.12}), 0, 1.2, -D/2+0.03);
-    add(new T.BoxGeometry(1.64, 0.05, D-0.02), cm("#2a2a2e"), 0, 2.45, 0);
-    add(new T.BoxGeometry(1.2, 0.02, D-0.4), new T.MeshBasicMaterial({color:new T.Color("#e8dcc0"), toneMapped:false}), 0, 2.42, 0);
-    for(const s of [-1, 1]) add(new T.CylinderGeometry(0.02, 0.02, D-0.2, 8).rotateX(Math.PI/2), cm("#b0904c", {metalness:0.7, roughness:0.3}), s*0.74, 0.92, -0.05);
-    add(new T.BoxGeometry(0.02, 0.6, 0.22), cm("#b0904c", {metalness:0.7, roughness:0.3}), 0.775, 1.25, D/2-0.25);
-    { const t=signTex(64, 176, (c, W, H)=>{ c.fillStyle="#b0904c"; c.fillRect(0, 0, W, H); for(let k=0;k<N;k++){ const y=H-20-k*(H-36)/Math.max(1, N-1)*(N>1 ? 1 : 0);
-          c.fillStyle="#2a2a2a"; c.beginPath(); c.arc(W/2, y, 12, 0, 7); c.fill(); c.fillStyle="#f2c06a"; c.font="bold 14px Arial"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(k===0 ? "L" : String(k+1), W/2, y+1); } });
-      const m=add(new T.PlaneGeometry(0.2, 0.55), new T.MeshBasicMaterial({map:t, toneMapped:false}), 0.763, 1.25, D/2-0.25); m.rotation.y=-Math.PI/2; }
+    const D=CAR_V1-CAR_V0, LISTS={wood:[], brass:[], dark:[]};
+    const put=(list, geo, x, y, z, c, ry)=>LISTS[list].push({geo:geo, matrix:new T.Matrix4().compose(V3(x, y, z), new T.Quaternion().setFromEuler(new T.Euler(0, ry||0, 0)), V3(1,1,1)), color:new T.Color(c||"#ffffff")});
+    const bx=(list, w, h, d, x, y, z, c)=>put(list, new T.BoxGeometry(w, h, d), x, y, z, c);
+    for(const s of [-1, 1]){ bx("wood", 0.03, 2.4, D-0.04, s*0.8, 1.2, 0, "#6a4228");
+      for(const zz of [-0.4, 0.4]) bx("brass", 0.01, 2.3, 0.02, s*0.781, 1.2, zz);
+      bx("brass", 0.016, 0.02, D-0.12, s*0.78, 0.95, 0); }
+    bx("wood", 1.56, 0.9, 0.02, 0, 0.47, -D/2+0.055, "#5a3820"); bx("brass", 1.56, 0.02, 0.03, 0, 0.93, -D/2+0.06);
+    bx("dark", 1.64, 0.05, D-0.02, 0, 2.45, 0, "#2a2a2e");
+    for(const s of [-1, 1]){ bx("brass", 1.16, 0.03, 0.03, 0, 2.405, s*(D/2-0.24)); bx("brass", 0.03, 0.03, D-0.45, s*0.565, 2.407, 0); }
+    { const rail=(len, x, z, along)=>{ const g=new T.CylinderGeometry(0.018, 0.018, len, 10); along==="z" ? g.rotateX(Math.PI/2) : g.rotateZ(Math.PI/2); put("brass", g, x, 0.92, z); };
+      rail(1.36, 0, -D/2+0.13, "x"); for(const s of [-1, 1]){ rail(D-0.5, s*0.71, -0.06, "z"); for(const zz of [-0.5, 0.35]) put("brass", new T.CylinderGeometry(0.008, 0.008, 0.07, 6).rotateZ(Math.PI/2), s*0.75, 0.92, zz); }
+      for(const xx of [-0.5, 0.5]) put("brass", new T.CylinderGeometry(0.008, 0.008, 0.07, 6).rotateX(Math.PI/2), xx, 0.92, -D/2+0.095); }
+    for(const s of [-1, 1]) bx("wood", 0.225, 2.4, 0.04, s*0.6725, 1.2, D/2-0.03, "#6a4228");
+    bx("wood", 1.12, 0.2, 0.04, 0, 2.3, D/2-0.03, "#6a4228");
+    bx("brass", 0.18, 0.62, 0.012, 0.6725, 1.2, D/2-0.054); bx("dark", 0.16, 0.2, 0.04, -0.6725, 1.1, D/2-0.068, "#7a1a1a");
+    bx("brass", 0.26, 0.34, 0.012, -0.778, 1.6, 0, "#7a5a2a");
+    const cm=(c, extra)=>new T.MeshStandardMaterial(Object.assign({color:new T.Color(c), roughness:0.55, vertexColors:true}, extra||{}));
+    const addM=(geo, mat, x, y, z, ry)=>{ const m=new T.Mesh(geo, mat); m.position.set(x||0, y||0, z||0); if(ry) m.rotation.y=ry; m.receiveShadow=true; car.add(m); return m; };
+    addM(mergeEntries(LISTS.wood), cm("#ffffff", {roughness:0.45}));
+    addM(mergeEntries(LISTS.brass), cm("#b0904c", {metalness:0.7, roughness:0.3}));
+    addM(mergeEntries(LISTS.dark), cm("#ffffff"));
+    { const t=TERRAZZO.clone(); t.needsUpdate=true; t.repeat.set(1.6, 1.5); addM(new T.BoxGeometry(1.64, 0.06, D-0.02), new T.MeshStandardMaterial({map:t, roughness:0.35}), 0, -0.03, 0); }
+    addM(new T.BoxGeometry(1.58, 2.4, 0.03), new T.MeshStandardMaterial({color:new T.Color("#8a9298"), metalness:0.6, roughness:0.12}), 0, 1.2, -D/2+0.03);
+    addM(new T.BoxGeometry(1.1, 0.02, D-0.5), new T.MeshBasicMaterial({color:new T.Color("#d8ccb0"), toneMapped:false}), 0, 2.415, 0);
+    addM(indGeo, indMat, 0, 2.3, D/2-0.056, Math.PI);
+    // the panel: a button for every floor, door open and door shut, the alarm; a lit ring round every floor called
+    const pc=cvs(96, 352); E.panCtx=pc.getContext("2d"); E.panTex=new T.CanvasTexture(pc);
+    addM(new T.PlaneGeometry(0.16, 0.58), new T.MeshBasicMaterial({map:E.panTex, toneMapped:false}), 0.6725, 1.2, D/2-0.0625, Math.PI);
+    addM(new T.PlaneGeometry(0.15, 0.06), new T.MeshBasicMaterial({map:signTex(150, 60, (c, W, H)=>{ c.fillStyle="#7a1a1a"; c.fillRect(0, 0, W, H); say(c, "EMERGENCY PHONE", W/2, H/2, W*0.84, H*0.5, "#d8d0c0", "700", "Arial"); })}), -0.6725, 1.17, D/2-0.094, Math.PI);
+    addM(new T.PlaneGeometry(0.22, 0.3), new T.MeshStandardMaterial({map:signTex(220, 300, (c, W, H)=>{ c.fillStyle="#d4ccb4"; c.fillRect(0, 0, W, H); c.strokeStyle="#7a5a2a"; c.lineWidth=4; c.strokeRect(10, 10, W-20, H-20);
+        say(c, "COMMONWEALTH OF PENNSYLVANIA", W/2, H*0.14, W*0.72, H*0.05, "#2a2a2a", "700", "Georgia, serif"); say(c, "CERTIFICATE OF OPERATION", W/2, H*0.24, W*0.72, H*0.06, "#2a2a2a", "800", "Georgia, serif");
+        say(c, "PASSENGER ELEVATOR", W/2, H*0.38, W*0.7, H*0.05, "#2a2a2a", "600", "Georgia, serif"); say(c, "CAPACITY 2500 LBS · 16 PERSONS", W/2, H*0.5, W*0.72, H*0.045, "#2a2a2a", "600", "Georgia, serif");
+        say(c, "DEPT. OF LABOR & INDUSTRY", W/2, H*0.66, W*0.72, H*0.045, "#2a2a2a", "600", "Georgia, serif"); say(c, "INSPECTED 4 · 86", W/2, H*0.8, W*0.6, H*0.05, "#7a1a1a", "700", "Georgia, serif"); }), roughness:0.8}), -0.765, 1.6, 0, Math.PI/2);
     const cl=[new T.Mesh(leafG, bm), new T.Mesh(leafG, bm)]; for(const m of cl){ m.position.set(0, DH/2, D/2+0.03); car.add(m); }
     E.car=car; E.carL=cl;
-    // the car's floor, a surface that rides up and down with it
-    { const R=K.rect(UC-0.83, UC+0.83, CAR_V0, CAR_V1); addFlat(R[0], R[1], R[2], R[3], levels[0]); E.surf=SURF[SURF.length-1]; E.rect=R; }
+    // the car's floor, a surface that rides up and down with it; across its door a collider that rides with it, solid while the doors are shut
+    { const R=K.rect(UC-0.83, UC+0.83, CAR_V0, CAR_V1); addFlat(R[0], R[1], R[2], R[3], levels[0]); E.surf=SURF[SURF.length-1]; E.rect=R;
+      const Q=K.rect(UC-0.83, UC+0.83, CAR_V0-0.06, CAR_V0); E.carCol={x0:Q[0], x1:Q[1], z0:Q[2], z1:Q[3], y0:levels[0]-0.2, y1:-9999}; COL_DYN.push(E.carCol);
+      E.gap=K.rect(UC-0.6, UC+0.6, VF-0.4, CAR_V0+0.4);                   // (anyone standing in here holds the doors)
+      E.shaft=K.rect(UC-0.83, UC+0.83, VF+0.2, CAR_V1); E.out=F.P(UC, VF-0.7); }
     E.doorCols[0].y1=-9999;                                         // (it starts at the lobby, its doors open)
-    OFFICE.elevs.push(E); return E; }
-  function call(E, f){ if(f===E.f && (E.state==="idle" || E.state==="opening")){ E.state="opening"; return; } E.target=f; if(E.state==="idle" || E.state==="opening") E.state="closing"; }
+    elevDraw(E); OFFICE.elevs.push(E); return E; }
+  // a call: from a landing (hall), from the panel, or a number key in the car; a call at the floor it stands at opens its doors
+  function press(E, f, hall){ if(f<0 || f>=E.levels.length) return;
+    if(f===E.f && E.state!=="moving"){ if(E.state==="closing" || E.state==="shut") E.state="opening"; E.dwell=0; return; }
+    E.calls.add(f); if(!hall) E.hurry=true; }
+  OFFICE.press=press;
 
   /* ---- the buildings ---- */
   function building(Kd){
@@ -315,18 +465,19 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     const H=Kd.FH0+Kd.FHU*(nF-1), top=FL+H;
     const ox=side==="s" || side==="n" ? (x0+x1)/2 : (side==="w" ? x0+WT : x1-WT), oz=side==="w" || side==="e" ? (z0+z1)/2 : (side==="s" ? z1-WT : z0+WT);
     const F=frame(side, ox, oz), W=(side==="s" || side==="n" ? x1-x0 : z1-z0)-2*WT, D=(side==="s" || side==="n" ? z1-z0 : x1-x0)-2*WT, K=kit(F);
-    Kd.levels=levels; Kd.top=top; Kd.F=F; Kd.K=K; Kd.W=W; Kd.D=D;
+    Kd.levels=levels; Kd.top=top; Kd.F=F; Kd.K=K; Kd.W=W; Kd.D=D; K.W=W; K.D=D;
+    K.scr={A:[0,0,1,3,4,5,5,6,9,13], B:[2,3,6,6,7,13,14,9,1], C:[2,3,8,8,9,10,11,12,1]}[Kd.id];       // (what is up on its terminals: insurance, banking, software)
     const cx=(x0+x1)/2, cz=(z0+z1)/2, dc=Kd.dc, G=FL+Kd.FH0;
     // the slab and its edge, the ground floor's stone, the walkable floor
     B(x1-x0+0.1, FL-(LY-0.2), z1-z0+0.1, cx, (FL+LY-0.2)/2-0.006, cz, "#8a8680");
-    texPlane(x1-x0-2*WT, z1-z0-2*WT, STONE[Kd.id], Kd.id==="C" ? 0.6 : 1.2, cx, FL, cz, -Math.PI/2, 0, 0.22);
+    texPlane(x1-x0-2*WT, z1-z0-2*WT, STONE[Kd.id], Kd.id==="C" ? 0.6 : 1.2, cx, FL+0.004, cz, -Math.PI/2, 0, 0.22, -1);
     addFlat(x0, x1, z0, z1, FL);
     // the floors above: a slab each (open over the shaft), carpet on it, its ceiling, its lamps, its zone; every floor its own carpet
     const shaft=K.rect(UC-0.95, UC+0.95, VF, VB);
     const around=[[-W/2, W/2, 0, VF],[-W/2, W/2, VB, D],[-W/2, UC-0.95, VF, VB],[UC+0.95, W/2, VF, VB]];
     for(let f=0;f<nF;f++){ const y=levels[f], ch=f ? y+2.95 : FL+3.2;
       if(f){ for(const [u0, u1, v0, v1] of around){ K.box(u1-u0, 0.3, v1-v0, (u0+u1)/2, y-0.15, (v0+v1)/2, "#7a7468"); K.flat(u0, u1, v0, v1, y);
-          const R=K.rect(u0, u1, v0, v1); texPlane(R[1]-R[0], R[3]-R[2], Kd.carpets[f-1], 1.6, (R[0]+R[1])/2, y+0.006, (R[2]+R[3])/2, -Math.PI/2, 0, 1.0); } }
+          const R=K.rect(u0, u1, v0, v1); texPlane(R[1]-R[0], R[3]-R[2], Kd.carpets[f-1], 1.6, (R[0]+R[1])/2, y+0.012, (R[2]+R[3])/2, -Math.PI/2, 0, 1.0, -1); } }
       for(const [u0, u1, v0, v1] of around){ const R=K.rect(u0, u1, v0, v1); texPlane(R[1]-R[0], R[3]-R[2], CEILT, 0.61, (R[0]+R[1])/2, ch, (R[2]+R[3])/2, Math.PI/2, 0, 0.95); }
       for(let u=-W/2+2; u<W/2-1; u+=3.6) for(let v=1.8; v<D-1; v+=3.6){ if(u>UC-1.4 && u<UC+1.4 && v>VF-0.6 && v<VB+0.6) continue; const [x, z]=F.P(u, v); push("tube", boxGeo(F.swap ? 1.2 : 0.6, 0.02, F.swap ? 0.6 : 1.2, 0), x, ch-0.012, z, 0, "#ffffff"); }
       for(const [u, v] of [[-W/4, D*0.5],[W/4, D*0.5]]){ const [x, z]=F.P(u, v); LAMPS.push({x:x, y:ch-0.3, z:z, color:0xfff2e0, intensity:0.75, dist:20, decay:1.5, indoor:true}); }
@@ -340,7 +491,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         for(let k=0;k<n;k++){ const pa=a+k*(b-a)/n, pb=a+(k+1)*(b-a)/n;
           const seg=(p, q)=>{ if(q-p<0.1) return; push("glass", planeGeo(q-p-0.02, 3.0, 0), ax==="x" ? (p+q)/2 : cm, FL+1.55, ax==="x" ? cm : (p+q)/2, ax==="x" ? 0 : Math.PI/2, "#ffffff"); };
           if(front && pb>dc-1.05 && pa<dc+1.05){ seg(pa, dc-1.05); seg(dc+1.05, pb); } else seg(pa, pb); }
-        for(let k=0;k<=n;k++){ const p=a+k*(b-a)/n; if(ax==="x") B(0.12, 3.1, WT+0.04, p, FL+1.55, cm, "#1a1e22"); else B(WT+0.04, 3.1, 0.12, cm, FL+1.55, p, "#1a1e22"); }
+        for(let k=0;k<=n;k++){ const p=a+k*(b-a)/n; if(ax==="x") B(0.12, 3.1, WT+0.04, p, FL+1.55, cm, "#1a1e22"); else B(WT+0.04, 3.116, 0.12, cm, FL+1.558, p, "#1a1e22"); }
         if(ax==="x") B(b-a+0.02, 0.1, WT+0.06, (a+b)/2, FL+0.05, cm, "#1a1e22"); else B(WT+0.06, 0.1, b-a+0.02, cm, FL+0.05, (a+b)/2, "#1a1e22");
         wallBox("block", ax==="x" ? a : c0, ax==="x" ? b : c1, ax==="x" ? c0 : a, ax==="x" ? c1 : b, FL+3.1, G-0.3, GRAN, 0.6, FL);      // (up to the first spandrel)
         if(front){ if(ax==="x"){ addCol(a, dc-1.0, c0, c1, FL-0.5, G); addCol(dc+1.0, b, c0, c1, FL-0.5, G); } else { addCol(c0, c1, a, dc-1.0, FL-0.5, G); addCol(c0, c1, dc+1.0, b, FL-0.5, G); } }
@@ -376,8 +527,9 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
           if(ax==="x") wallBox(Kd.bk, a, b, c0, c1, y, s, Kd.col, 0.6, FL); else wallBox(Kd.bk, c0, c1, a, b, y, s, Kd.col, 0.6, FL);
           push("tint", boxGeo(b-a-0.32, h-s-0.02, 0.04), ax==="x" ? (a+b)/2 : cm, (s+h)/2, ax==="x" ? cm : (a+b)/2, ax==="x" ? 0 : Math.PI/2, Kd.glass);
           for(let m=a+3.0; m<b-1.0; m+=3.0) if(ax==="x") B(0.08, h-s, WT-0.06, m, (s+h)/2, cm, Kd.frame); else B(WT-0.06, h-s, 0.08, cm, (s+h)/2, m, Kd.frame);
-          if(ax==="x"){ wallBox(Kd.bk, a, a+0.15, c0, c1, s, h, Kd.col, 0.6, FL); wallBox(Kd.bk, b-0.15, b, c0, c1, s, h, Kd.col, 0.6, FL); addCol(a, b, c0, c1, s-0.1, h); }
-          else { wallBox(Kd.bk, c0, c1, a, a+0.15, s, h, Kd.col, 0.6, FL); wallBox(Kd.bk, c0, c1, b-0.15, b, s, h, Kd.col, 0.6, FL); addCol(c0, c1, a, b, s-0.1, h); }
+          if(ax==="x"){ wallBox(Kd.bk, a+0.008, a+0.15, c0, c1, s, h, Kd.col, 0.6, FL); wallBox(Kd.bk, b-0.15, b-0.008, c0, c1, s, h, Kd.col, 0.6, FL); addCol(a, b, c0, c1, s-0.1, h); }
+          else { wallBox(Kd.bk, c0, c1, a, a+0.15, s, h+0.008, Kd.col, 0.6, FL); wallBox(Kd.bk, c0, c1, b-0.15, b, s, h+0.008, Kd.col, 0.6, FL); addCol(c0, c1, a, b, s-0.1, h); }
+          // (the face's corner posts stop 8 mm short of the corner and the side's stand 8 mm taller: the side's post owns the corner)
           // a band on the face at each floor: cast stone at One, teal at Three
           if(ax==="x") B(b-a+0.04, 0.24, 0.025, (a+b)/2, h+0.2, sd==="n" ? c0-0.0125 : c1+0.0125, Kd.band); else B(0.03, 0.24, b-a, sd==="w" ? c0-0.015 : c1+0.015, h+0.2, (a+b)/2, Kd.band);
           y=h; }
@@ -410,8 +562,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         sign(6, 1.6, (c, Wd, Hh)=>{ c.fillStyle="#1a1a22"; c.fillRect(0, 0, Wd, Hh); c.shadowColor="#ff4ab0"; c.shadowBlur=20;
             say(c, "LDS", Wd*0.3, Hh/2, Wd*0.4, Hh*0.62, "#ff8ad0", "800", "'Eurostile', 'Arial Black', Arial"); c.shadowColor="#3ae8e8";
             say(c, "LAKESHORE DATA", Wd*0.72, Hh*0.4, Wd*0.42, Hh*0.18, "#8af0f0", "700", "Arial"); say(c, "SYSTEMS", Wd*0.72, Hh*0.64, Wd*0.42, Hh*0.18, "#8af0f0", "700", "Arial"); c.shadowBlur=0; },
-          dc+16, top-1.4, z0-0.03, Math.PI, true, 720);
-        B(6.1, 1.7, 0.02, dc+16, top-1.4, z0-0.01, "#1a1a22");
+          dc+16, top-1.4, z0-0.042, Math.PI, true, 720);
+        B(6.1, 1.7, 0.02, dc+16, top-1.4, z0-0.012, "#1a1a22");
         const by=FL, bd=2.6;
         for(const s of [-1, 1]){ push("tint", boxGeo(0.04, 3.4, bd-0.02), dc+s*3.0, by+1.7, z0-bd/2, 0, "#3a6a6a"); addCol(dc+s*3.0-0.06, dc+s*3.0+0.06, z0-bd, z0, FL-0.5, FL+3.5); }
         for(const s of [-1, 1]) push("tint", boxGeo(1.9, 3.4, 0.04), dc+s*2.05, by+1.7, z0-bd, 0, "#3a6a6a");
@@ -442,7 +594,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     { const du=-W*0.2, dv=LV*0.55;
       K.rbox(3.8, 1.05, 0.8, du, y+0.525, dv, Kd.desk, 0.03); K.rbox(3.96, 0.05, 0.96, du, y+1.08, dv-0.05, Kd.top, 0.015);
       K.box(3.84, 0.06, 0.02, du, y+0.9, dv-0.415, BRASS); K.col(du-1.95, du+1.95, dv-0.5, dv+0.45, y-0.5, y+1.1);
-      { const o=K.obj(du+0.6, dv+0.15, "back", y); o.rb(0.36, 0.3, 0.32, 0, 1.26, 0, "#c4b89c", 0.03); const [sx, sz]=o.at(0, 0.165); push("lk_tvon", planeGeo(0.26, 0.18, 0), sx, y+1.28, sz, o.ry, "#ffffff"); }
+      { const o=K.obj(du+0.6, dv+0.15, "back", y); o.rb(0.36, 0.3, 0.32, 0, 1.26, 0, "#c4b89c", 0.03); const [sx, sz]=o.at(0, 0.165); screen(0.26, 0.18, sx, y+1.28, sz, o.ry, Kd.id==="C" ? 12 : Kd.id==="A" ? 4 : 13); }
       K.chair(du, dv+1.0, y, "front", Kd.chairCol, "THE CHAIR BEHIND THE DESK", Kd.receptionist); }
     K.sofa(W*0.24, 2.4, y, "back", 2.4, Kd.sofa, "A SOFA IN THE LOBBY"); K.sofa(W*0.24, 5.8, y, "front", 2.4, Kd.sofa, "A SOFA IN THE LOBBY");
     K.rbox(1.2, 0.04, 0.7, W*0.24, y+0.42, 4.1, "#1a1a1e", 0.01); for(const s of [-1, 1]) K.box(0.04, 0.4, 0.6, W*0.24+s*0.55, y+0.2, 4.1, "#b8bcc0"); K.col(W*0.24-0.62, W*0.24+0.62, 3.75, 4.45, y-0.5, y+0.44);
@@ -462,6 +614,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
             Kd.tenants.forEach((n, k)=>{ say(c, n[0], Wd*0.45, Hh*(0.27+k*0.1), Wd*0.62, Hh*0.06, "#d8d0c0", "600", "'Courier New', monospace"); say(c, n[1], Wd*0.86, Hh*(0.27+k*0.1), Wd*0.16, Hh*0.06, "#d8d0c0", "600", "'Courier New', monospace"); }); },
           x+Math.sin(K.F.ry)*0.025, y+1.6, z+Math.cos(K.F.ry)*0.025, K.F.ry, false, 420); } }
     K.art(-W/2+0.05, 4.0, y+1.7, "+u", 1.6, 1.1, Kd.artK); K.art(W/2-0.05, 4.0, y+1.7, "-u", 1.6, 1.1, Kd.artK+1);
+    K.coatTree(2.4, 1.0, y, 1); K.magTable(W*0.24+2.0, 4.1, y, Kd.desk);
   }
 
   /* ---- the floors, building by building: each its own ---- */
@@ -512,7 +665,12 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       for(let u=-W/2; u<W/2-5.9; u+=6.4){ K.glassWall(u, 29.0, u+6.4, 29.0, y, 2.7, [[u+2.6, u+3.6]]); if(u>-W/2) K.wall(u, 29.0, u, D, y, 2.7, "#b8ac94");
         K.station(u+3.2, 31.5, y, "front", 1.8, "#4a3a2a", {label:"A MANAGER'S CHAIR"}); K.guest(u+2.6, 29.9, y, "back", "#5a6a8a"); K.guest(u+3.8, 29.9, y, "back", "#5a6a8a");
         K.plant(u+5.8, D-0.6, y, false); K.art(u+3.2, D-0.06, y+1.7, "front", 1.2, 0.8, (u|0)); }
-      K.copier(-3.0, 11.0, y, "front"); K.cooler(1.2, 10.6, y); },
+      K.copier(-3.0, 11.0, y, "front"); K.cooler(1.2, 10.6, y);
+      // printers on their stands down the sides, a row of files against each, a credenza behind every manager, coats by the elevator
+      for(const [pu, d] of [[-21.5, "+u"],[21.5, "-u"]]) for(const pv of [15.5, 23.0]) K.printer(pu, pv, y, d);
+      K.files(-W/2+0.4, 19.3, y, "+u", 4, "#6a6458"); K.files(W/2-0.4, 19.3, y, "-u", 4, "#6a6458");
+      for(let u=-W/2; u<W/2-5.9; u+=6.4) K.credenza(u+3.2, D-0.32, y, "front", 1.8, "#4a3a2a");
+      K.coatTree(-2.4, 8.2, y, 2); },
     (K, y, W, D)=>{ // policy services: private offices down the west wall, the typing pool in facing pairs, the training room, the mail room, the break room
       const PW="#a89e8a", oe=-W/2+5.0, t0=W/2-12;
       // the offices: five along the side wall, each with its door, a desk facing it, two chairs for visitors, a cabinet, a picture
@@ -561,11 +719,15 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       // the boardroom: walnut on three sides, glass on the fourth, the long table, twelve chairs, the painting at its head
       K.wall(-7, 20, -7, D, y, 2.75, WAL, null, 0.14); K.wall(7, 20, 7, D, y, 2.75, WAL, null, 0.14); K.glassWall(-7, 20, 7, 20, y, 2.75, [[-0.6, 0.6]]);
       K.table(0, 27.5, y, 6.0, 1.6, "#3a2014", 16, "#2a1a14"); K.art(0, D-0.06, y+1.7, "front", 2.2, 1.4, 0);
-      K.station(-4.0, 8.0, y, "front", 1.6, "#5a3a24", {who:look({female:true, shirt:"#d8b8c8"}), label:"THE SECRETARY'S CHAIR"}); K.plant(UC+3, 8.5, y, true); K.cooler(UC-1.5, VF-0.4, y); },
+      K.station(-4.0, 8.0, y, "front", 1.6, "#5a3a24", {who:look({female:true, shirt:"#d8b8c8"}), label:"THE SECRETARY'S CHAIR"}); K.plant(UC+3, 8.5, y, true); K.cooler(UC-1.5, VF-0.4, y);
+      // in every corner office a credenza behind the desk and a case of books against the inner wall
+      for(const [su, sv] of [[-1, 0],[1, 0],[-1, 1],[1, 1]]){ const u0=su<0 ? -W/2 : W/2-9, u1=su<0 ? -W/2+9 : W/2, v0=sv ? D-8.5 : 0, v1=sv ? D : 8.5;
+        K.credenza((u0+u1)/2, sv ? D-0.32 : 0.32, y, sv ? "front" : "back", 2.0, "#3a2014"); K.shelf(su<0 ? u1-0.25 : u0+0.25, (v0+v1)/2, y, su<0 ? "-u" : "+u", 2.4, "#4a2e1c"); }
+      K.coatTree(-6.6, 9.0, y, 1); },
     (K, y, W, D)=>{ // the computer room behind glass on its raised floor; the cafeteria in front
       K.glassWall(-W/2, 13.2, W/2, 13.2, y, 2.75, [[-1.0, 0.2]]);
       const RF=signTex(128, 128, (c, Wd, Hh)=>{ c.fillStyle="#a8a294"; c.fillRect(0, 0, Wd, Hh); c.strokeStyle="#7a7468"; c.lineWidth=3; c.strokeRect(1, 1, Wd-2, Hh-2); }); RF.wrapS=RF.wrapT=T.RepeatWrapping;
-      { const R=K.rect(-W/2, W/2, 13.3, D); texPlane(R[1]-R[0], R[3]-R[2], RF, 0.6, (R[0]+R[1])/2, y+0.008, (R[2]+R[3])/2, -Math.PI/2, 0, 0.6); }
+      { const R=K.rect(-W/2, W/2, 13.3, D); texPlane(R[1]-R[0], R[3]-R[2], RF, 0.6, (R[0]+R[1])/2, y+0.035, (R[2]+R[3])/2, -Math.PI/2, 0, 0.6, -2); }
       for(let v=16.5; v<D-2; v+=3.6) for(let u=-W/2+3; u<W/2-3; u+=2.0){ if(Math.abs(u-UC)<2.4 && v<17) continue; const big=((u*7+v)|0)%3===0, o=K.obj(u, v, "front", y);
         o.rb(1.6, 1.8, 0.85, 0, 0.9, 0, big ? "#2a4a7a" : "#b4a88c", 0.02); o.b(1.5, 0.2, 0.02, 0, 1.6, 0.43, big ? "#1a2a4a" : "#8a7e64");
         if(!big) for(const s of [-1, 1]){ o.c(0.17, 0.03, s*0.38, 1.25, 0.44, "#3a3a3a", 18); o.c(0.05, 0.035, s*0.38, 1.25, 0.445, "#b8b0a0", 12); }
@@ -575,7 +737,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       { const o=K.obj(6, 15.2, "back", y); o.rb(1.6, 1.0, 0.8, 0, 0.5, 0, "#b4a88c", 0.03); o.b(1.4, 0.02, 0.5, 0, 1.01, -0.1, "#d8cca0"); K.col(5.2, 6.8, 14.8, 15.6, y-0.05, y+1.0); }
       // the cafeteria: the serving line along the front, tables of four
       K.rbox(12, 0.95, 0.75, -W/2+7.5, y+0.475, 1.2, "#8a7a64", 0.02); K.box(12, 0.04, 0.3, -W/2+7.5, y+0.98, 1.65, "#b8bcc0"); K.col(-W/2+1.5, -W/2+13.5, 0.8, 1.6, y-0.05, y+1.0);
-      for(let u=-W/2+16; u<W/2-3; u+=4.4) for(const v of [4.2, 8.6]){ if(Math.abs(u-UC)<3.2 && v>7) continue; K.table(u, v, y, 1.2, 1.2, "#c8b89a", 2, "#c84a3a"); } },
+      for(let u=-W/2+16; u<W/2-3; u+=4.4) for(const v of [4.2, 8.6]){ if(Math.abs(u-UC)<3.2 && v>7) continue; K.table(u, v, y, 1.2, 1.2, "#c8b89a", 2, "#c84a3a"); }
+      K.printer(-9.5, 14.5, y, "back"); K.printer(-11.0, 14.5, y, "back"); },
   ];
   // FRENCH CREEK FINANCIAL (B, door west): the bank; the loan officers; the law firm
   const PLANS_B=[
@@ -603,8 +766,9 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
           const d=q.clone().sub(p); ME.push({geo:new T.CylinderGeometry(0.02, 0.02, d.length(), 6), matrix:new T.Matrix4().compose(m, new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color("#7a1a2a")}); } }
       // the vault door on the back wall: round, steel, its wheel
       { const o=K.obj(-8, D-0.2, "front", y), disc=(rr, h, lz, c)=>{ const [x, z]=o.at(0, lz); ent(new T.CylinderGeometry(rr, rr, h, 32), x, y+1.45, z, c, Math.PI/2, o.ry, 0); };
-        disc(1.35, 0.3, 0, "#7a7e82"); disc(1.15, 0.32, 0.01, "#9a9ea2"); disc(0.14, 0.12, 0.22, "#c8a050");
-        for(let k=0;k<6;k++){ const a=k/6*Math.PI*2; o.b(0.05, 0.6, 0.05, Math.cos(a)*0.3, 1.45+Math.sin(a)*0.3, 0.22, "#3a3a3a"); } }
+        disc(1.35, 0.3, 0, "#7a7e82"); disc(1.15, 0.32, 0.012, "#9a9ea2"); disc(0.14, 0.12, 0.22, "#c8a050");
+        for(let k=0;k<6;k++){ const a=k/6*Math.PI*2, [sx, sz]=o.at(Math.cos(a)*0.22, 0.22); ent(boxGeo(0.04, 0.24, 0.04), sx, y+1.45+Math.sin(a)*0.22, sz, "#3a3a3a", 0, o.ry, a-Math.PI/2); }
+        { const [hx, hz]=o.at(0, 0.24); ent(new T.TorusGeometry(0.34, 0.025, 8, 32), hx, y+1.45, hz, "#3a3a3a", 0, o.ry, 0); } }
       { const [vx, vz]=K.P(-8, D-0.12); sign(1.6, 0.3, (c, Wd, Hh)=>{ c.fillStyle="#2a1a10"; c.fillRect(0, 0, Wd, Hh); say(c, "VAULT", Wd/2, Hh/2, Wd*0.6, Hh*0.6, "#c8a868", "700", "Optima, serif"); }, vx-Math.sin(K.F.ry)*0.02, y+3.05, vz-Math.cos(K.F.ry)*0.02, K.F.ry, false, 240); }
       for(const u of [8, 14]){ K.station(u, 24.5, y, "front", 1.8, "#5a3a24", {term:false, chairCol:"#3a2a1a", label:"A LOAN OFFICER'S CHAIR", who:u===8 ? look({shirt:"#e8dcc8"}) : null});
         for(const s of [-1, 1]) K.guest(u+s*0.55, 22.7, y, "back", "#7a3a2a", "A CHAIR AT THE LOAN DESK"); }
@@ -622,6 +786,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       K.sofa(12, 2.4, y, "back", 2.4, "#9a5a2a", "A SOFA IN THE WAITING CORNER"); K.sofa(12, 5.8, y, "front", 2.4, "#9a5a2a", "A SOFA IN THE WAITING CORNER");
       K.rbox(1.2, 0.04, 0.7, 12, y+0.42, 4.1, "#3a2014", 0.01); K.col(11.38, 12.62, 3.74, 4.46, y-0.05, y+0.44); K.plant(W/2-1, 0.9, y, true); K.plant(16.5, 4.1, y, false);
       K.copier(8.0, 11.0, y, "front"); K.cooler(1.2, 10.6, y);
+      for(let u=DW; u<W/2-4.9; u+=5.3) K.credenza(u+2.65, D-0.32, y, "front", 1.6, "#4a2e1c");
+      K.printer(-3.2, 11.0, y, "-u"); K.coatTree(-3.0, 3.0, y, 1); K.coatTree(2.6, 6.4, y, 2);
       // the title company: the counter by its door, the record room's shelves of deed books, map cabinets down the wall, a microfiche reader, the abstractors
       K.rbox(0.8, 1.05, 2.6, -5.0, y+0.525, 5.0, T2, 0.03); K.rbox(0.96, 0.05, 2.76, -5.0, y+1.08, 5.0, "#c8b494", 0.015); K.col(-5.42, -4.58, 3.68, 6.32, y-0.05, y+1.1);
       K.chair(-6.1, 5.0, y, "+u", "#2a3a4a", "THE TITLE COUNTER'S CHAIR", look({female:true, shirt:"#a8b8c8"}));
@@ -630,7 +796,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         for(let j=0;j<6;j++) o.b(0.16, 0.02, 0.02, 0, 0.13+j*0.14, 0.495, "#b8b4a8"); if(k%3===1) o.b(1.0, 0.01, 0.8, 0.05, 0.906, -0.02, "#d4ccb8");
         K.col(-W/2+0.07, -W/2+1.03, 11.2+k*1.3-0.63, 11.2+k*1.3+0.63, y-0.05, y+0.92); }
       { K.station(-4.6, 14.0, y, "-u", 1.4, T2, {term:false, clutter:false, phone:false, label:"THE MICROFICHE READER'S CHAIR"}); const o=K.obj(-5.38, 14.0, "-u", y); o.rb(0.46, 0.5, 0.5, 0, 1.01, 0.1, "#3a3a3e", 0.04);
-        const [sx, sz]=o.at(0, -0.152); push("lk_tvon", planeGeo(0.34, 0.26, 0), sx, y+1.06, sz, o.ry+Math.PI, "#ffffff"); }
+        const [sx, sz]=o.at(0, -0.152); screen(0.34, 0.26, sx, y+1.06, sz, o.ry+Math.PI, 14); }
       for(const u of [-16, -11, -6]) K.station(u, D-2.0, y, "front", 1.8, T2, {term:false, label:"AN ABSTRACTOR'S CHAIR", who:r()<0.5 ? look({}) : null});
       // the closing room in the front corner: the round table, its chairs, the plat on the wall
       K.wall(-11.5, 0, -11.5, 8.0, y, 2.94, PW, [[6.0, 7.0]]); K.wall(-W/2, 8.0, -11.5, 8.0, y, 2.94, PW);
@@ -655,7 +821,9 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       // the partners' offices along the front windows
       for(const [u0, u1] of [[-W/2, -W/2+8],[W/2-8, W/2]]){ K.wall(u0, 6.0, u1, 6.0, y, 2.6, WAL, [[(u0+u1)/2-0.5, (u0+u1)/2+0.5]], 0.14);
         K.wall(u0<0 ? u1 : u0, 0, u0<0 ? u1 : u0, 6.0, y, 2.6, WAL, null, 0.14);
-        K.station((u0+u1)/2, 2.0, y, "back", 2.0, "#3a2014", {term:false, chairCol:"#2a1a14", label:"A PARTNER'S CHAIR"}); for(const s of [-1, 1]) K.guest((u0+u1)/2+s*0.6, 4.0, y, "front", "#5a1a1a"); } },
+        K.station((u0+u1)/2, 2.0, y, "back", 2.0, "#3a2014", {term:false, chairCol:"#2a1a14", label:"A PARTNER'S CHAIR"}); for(const s of [-1, 1]) K.guest((u0+u1)/2+s*0.6, 4.0, y, "front", "#5a1a1a");
+        K.credenza((u0+u1)/2, 0.32, y, "back", 1.8, "#3a2014"); }
+      K.coatTree(1.6, 5.2, y, 2); },
   ];
   // LAKESHORE DATA SYSTEMS (C, door north): the showroom and the network board; the software pit, its break room and the server room
   const PLANS_C=[
@@ -668,12 +836,13 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         const m=new T.Mesh(new T.PlaneGeometry(10, 3), new T.MeshBasicMaterial({map:t, toneMapped:false})); m.position.set(x, y+1.9, z); m.rotation.y=K.F.ry; scene.add(m);
         K.box(10.2, 3.2, 0.04, 0, y+1.9, D-0.03, "#1a1a22"); }
       for(let k=0;k<3;k++) K.station(-3+k*3, D-4, y, "back", 2.6, "#c8b8a8", {chairCol:"#5a3a5a", label:"A CHAIR AT THE NETWORK CONSOLE", who:k===1 ? look({shirt:"#e8d8b8"}) : null});
-      K.sofa(W/2-5, 23, y, "-u", 2.6, "#8a5a6a"); K.sofa(W/2-9, 23, y, "+u", 2.6, "#2a7a7a"); K.plant(W/2-7, 26, y, true); K.art(W/2-0.05, 20, y+1.7, "-u", 1.6, 1.1, 2); },
+      K.sofa(W/2-5, 23, y, "-u", 2.6, "#8a5a6a"); K.sofa(W/2-9, 23, y, "+u", 2.6, "#2a7a7a"); K.plant(W/2-7, 26, y, true); K.art(W/2-0.05, 20, y+1.7, "-u", 1.6, 1.1, 2);
+      K.magTable(W/2-7, 23, y, "#2a2a2e"); K.printer(-W/2+3.0, 23.5, y, "+u"); K.coatTree(-2.6, 8.4, y, 1); },
     (K, y, W, D)=>{ // the software pit (mauve cubicles), the break room with its games, the server room behind glass
       pods(K, y, -W/2+3.0, W/2-15.5, 15.0, D-2.5, ["#7a4a5a","#2a6a6a","#8a6a3a"], "#c8b8a8");
       // the big screen at the windows: a projection set in its cabinet, a sofa and two beanbags facing it
       { const o=K.obj(-4.0, 1.0, "back", y); o.rb(1.5, 1.45, 0.75, 0, 0.725, 0, "#2a2a2e", 0.04); o.rb(1.3, 0.12, 0.2, 0, 0.12, 0.33, "#3a3a3e", 0.02);
-        const [sx, sz]=o.at(0, 0.38); push("lk_tvon", planeGeo(1.15, 0.86, 0), sx, y+0.95, sz, o.ry, "#ffffff"); K.col(-4.78, -3.22, 0.6, 1.4, y-0.05, y+1.45); }
+        const [sx, sz]=o.at(0, 0.38); screen(1.15, 0.86, sx, y+0.95, sz, o.ry, 11); K.col(-4.78, -3.22, 0.6, 1.4, y-0.05, y+1.45); }
       K.sofa(-4.0, 4.6, y, "front", 2.4, "#2a7a7a", "A SOFA BY THE BIG SCREEN");
       for(const [bu, bc] of [[-6.4, "#c84a6a"],[-1.6, "#f2c41c"]]){ const [x, z]=K.P(bu, 3.4); S(0.42, x, y+0.3, z, bc); addSeat(x, z, y, K.ryOf("front")+Math.PI, "A BEANBAG", false, 0.95); addCol(x-0.35, x+0.35, z-0.35, z+0.35, y-0.05, y+0.5); }
       // Tri-County Temps in the front corner past the elevator: its counter, the typing test, the waiting chairs, the board of jobs
@@ -692,10 +861,11 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         for(let k=0;k<8;k++) o.b(0.03, 0.03, 0.02, -0.2+((k*37)%40)/100, 0.3+k*0.2, 0.46, ["#3aff6a","#ffd83a","#3a8aff"][k%3]); K.col(u-0.32, u+0.32, v-0.46, v+0.46, y-0.05, y+2.0); }
       K.wall(-W/2, 8.2, -W/2+12, 8.2, y, 2.7, "#8a6a7a", [[-W/2+9.6, -W/2+10.8]]); K.wall(-W/2+12, 0, -W/2+12, 8.2, y, 2.7, "#8a6a7a");
       breakRoom(K, y, -W/2+0.2, -W/2+11.9, 0.2, 8.1, "#8a6a7a");
-      { const o=K.obj(-W/2+11.4, 2.0, "-u", y); o.rb(0.7, 1.75, 0.75, 0, 0.875, 0, "#1a1a2a", 0.03); const [sx, sz]=o.at(0, 0.3); push("lk_tvon", planeGeo(0.48, 0.38, 0), sx, y+1.3, sz, o.ry, "#ffffff"); K.col(-W/2+10.9, -W/2+11.9, 1.6, 2.4, y-0.05, y+1.75); }
+      { const o=K.obj(-W/2+11.4, 2.0, "-u", y); o.rb(0.7, 1.75, 0.75, 0, 0.875, 0, "#1a1a2a", 0.03); const [sx, sz]=o.at(0, 0.3); screen(0.48, 0.38, sx, y+1.3, sz, o.ry, 11); K.col(-W/2+10.9, -W/2+11.9, 1.6, 2.4, y-0.05, y+1.75); }
       { const [x, z]=K.P(-W/2+6, 5.6); B(1.4, 0.8, 0.8, x, y+0.4, z, "#2a6a3a"); for(let k=0;k<4;k++) C(0.012, 1.2, x, y+0.75, z-0.3+k*0.2, "#b8bcc0", 6, 0, 0, Math.PI/2); addCol(x-0.72, x+0.72, z-0.42, z+0.42, y-0.05, y+0.85); }
       K.sofa(-W/2+3.5, 5.6, y, "+u", 2.0, "#2a7a7a"); K.art(-W/2+0.05, 3, y+1.6, "+u", 1.2, 0.9, 0);
-      K.copier(-2.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y); },
+      K.copier(-2.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y);
+      K.printer(8.0, 13.2, y, "back"); K.whiteboard(-14.0, 13.0, y, "back", 1.8); K.coatTree(-2.5, 8.5, y, 2); },
   ];
 
   const ONE=building({id:"B", name:"FRENCH CREEK FINANCIAL", x0:822, x1:852, z0:-1795, z1:-1755, side:"w", dc:-1775, WT:0.3, signY:FL+3.6, floors:3, FH0:4.2, FHU:3.6,
@@ -720,7 +890,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   const FX=893, FZ=-1775, FR=4.5;
   { // the basin's wall: a ring of granite blocks (each faced inside and out), its coping; the bowl's floor; the water, rippled
     const n=40; for(let k=0;k<n;k++){ const a=(k+0.5)/n*Math.PI*2, x=FX+Math.cos(a)*(FR-0.18), z=FZ+Math.sin(a)*(FR-0.18), w=2*Math.PI*FR/n+0.02;
-      B(0.36, 0.5, w, x, LY+0.25, z, "#5a544e", -a); B(0.5, k%2 ? 0.06 : 0.064, w+0.04, x, LY+0.53, z, "#8a8076", -a); }
+      B(0.36, k%2 ? 0.5 : 0.496, w, x, LY+(k%2 ? 0.25 : 0.248), z, "#5a544e", -a); B(0.5, k%2 ? 0.06 : 0.064, w+0.04, x, LY+0.53, z, "#8a8076", -a); }
     for(let k=0;k<16;k++){ const a=(k+0.5)/16*Math.PI*2; addColOB(FX+Math.cos(a)*(FR-0.18), FZ+Math.sin(a)*(FR-0.18), -a+Math.PI/2, 0.95, 0.25, LY-0.5, LY+0.56); }
     for(let k=0;k<10;k++){ const a=(k+0.5)/10*Math.PI*2; addSeat(FX+Math.cos(a)*(FR+0.05), FZ+Math.sin(a)*(FR+0.05), LY+0.1, Math.atan2(-Math.cos(a), -Math.sin(a)), "THE FOUNTAIN'S EDGE", false, 0.4); }
     // (the basin's floor: dark pebbled, seen through the water)
@@ -776,8 +946,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         else { c.fillStyle="#2a7a7a"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#c8b48a"; c.fillRect(0, Hh*0.4, Wd, Hh*0.2); say(c, "HRCP", Wd/2, Hh*0.5, Wd*0.5, Hh*0.16, "#2a2a2a", "800", "Arial"); } },
       x-0.003, LY+9.3, z+0.94, -Math.PI/2, false, 320); }
   // the lawn down to the water: a walk out to a rail at the bank, benches looking out
-  { for(const dz of [-3, 3]) for(const y of [0.5, 1.0]) B(0.06, 0.06, 1.0, 967.6, LY+y, -1775+dz, "#2a2a2e");
-    B(0.06, 0.06, 8.0, 967.6, LY+1.0, -1775, "#2a2a2e"); B(0.06, 0.06, 8.0, 967.6, LY+0.5, -1775, "#2a2a2e");
+  {  B(0.06, 0.06, 8.0, 967.6, LY+1.0, -1775, "#2a2a2e"); B(0.06, 0.06, 8.0, 967.6, LY+0.5, -1775, "#2a2a2e");
     for(let z=-1779; z<=-1771; z+=2) B(0.075, 1.02, 0.075, 967.6, LY+0.51, z, "#2a2a2e");
     addCol(967.4, 967.8, -1779.1, -1770.9, LY-0.5, LY+1.05);
     for(const z of [-1790, -1760]){ const gz=Terrain.groundAt(960, z); for(const s of [-1, 1]) B(0.42, 0.42, 0.08, 960, gz+0.21, z+s*0.85, "#2a2a2e");
@@ -814,18 +983,18 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300);
     const shoreX=(z)=>{ let x=930; while(x<O.x1+40 && Terrain.lakeSD(x, z)>1.5) x+=0.25; return x; };
     const xs=shoreX(O.z0), xn=shoreX(O.z1);
-    W(O.x0, xs+0.4, O.z0-0.4, O.z0+0.4); W(O.x0, xn+0.4, O.z1-0.4, O.z1+0.4);
+    W(O.x0, EAST.dive.site.x0+0.4, O.z0-0.4, O.z0+0.4); W(O.x0, xn+0.4, O.z1-0.4, O.z1+0.4);              // (the north side open past x 905 onto the Lakeside Dive's clearing, 14mf)
     const BANK="THE BANK DROPS STRAIGHT INTO THE LAKE HERE";
     for(let z=O.z0; z<O.z1-0.01; z+=2){ const a=shoreX(z), b=shoreX(Math.min(O.z1, z+2)); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, z, Math.min(O.z1, z+2)).msg=BANK; } }
   if(typeof FOREST!=="undefined"){ const q=_trng(1984);
     const tree=(sp, x, z, s)=>{ if(Terrain.lakeSD(x, z)<3.5) return; FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, gy=Terrain.groundAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
-    for(const [z, nz] of [[O.z0, -1],[O.z1, 1]]) for(let x=O.x0+4; x<O.x1+12; x+=6.2) for(const [dep, sp] of [[1.8, "edge"],[6.5, null],[11.5, null],[16.5, null]]){ if(q()<0.15) continue;
+    for(const [z, nz] of [[O.z0, -1],[O.z1, 1]]) for(let x=O.x0+4; x<O.x1+12; x+=6.2) for(const [dep, sp] of [[1.8, "edge"],[6.5, null],[11.5, null],[16.5, null]]){ if(q()<0.15) continue; if(nz<0 && x>EAST.dive.site.x0-4) continue;
       tree(sp || (q()<0.3 ? "hemlock" : q()<0.45 ? "pine" : "hard"), x+(q()-0.5)*2.4, z+nz*(dep+q()*2.2), 0.85+q()*0.4); }
     // trees in the open: along the lot's edges and the road, round the buildings, on the lawn (edge and lawn trees, never the woods' kind)
     const open=[[747.5, -1845],[747.5, -1830],[747.5, -1815],[747.5, -1800],[747.5, -1745],[747.5, -1730],[747.5, -1715],[747.5, -1700],
       [808.5, -1845],[808.5, -1830],[808.5, -1815],[808.5, -1735],[808.5, -1720],[808.5, -1705],
       [776.25, -1795],[776.25, -1755],[758.9, -1700.5],[793.9, -1700.5],[758.9, -1849.5],[793.9, -1849.5],
-      [818, -1812],[838, -1812],[856, -1857],[876, -1857],[896, -1857],[916, -1857],[925, -1832],[925, -1820],
+      [818, -1812],[838, -1812],[925, -1832],[925, -1820],
       [818, -1738],[838, -1738],[856, -1695],[876, -1695],[896, -1695],[916, -1695],[925, -1720],[925, -1708],
       [945, -1820],[952, -1730],[940, -1845],[948, -1712],[950, -1800],[944, -1752],[956, -1840],[958, -1700]];
     for(const [x, z] of open) tree(q()<0.6 ? "lawn" : "edge", x+(q()-0.5)*0.8, z+(q()-0.5)*0.8, 0.85+q()*0.3);
@@ -835,6 +1004,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
 
   const mat=new T.MeshStandardMaterial({vertexColors:true, roughness:0.62, metalness:0.08});
   detailMesh(ME, mat, "office-park", true);
+  detailMesh(SCR, SCREEN_MAT, "office-screens", false);
 
   OFFICE.routes={
     "office park: up Hollow Road from the pretzel works to the end":[[733.5, -1660],[733.5, -1720],[733.5, -1800],[733.5, -1870]],
@@ -857,27 +1027,74 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   OFFICE.bldg=[ONE, TWO, THREE];
 })();
 
-/* ---- the elevators: each a little machine run here; a number while you are in an idle car is a floor (17's keydown) ---- */
+/* ---- the elevators, run here. OFFICE.step goes on the physics step (the top of 17's fixedUpdate); updateElevators draws them each frame ---- */
+const UC_ELEV=4.2, EL_A=0.9, EL_VMAX=2.0;
+function _elevIn(E, p){ const R=E.rect; return p.pos.x>R[0]-0.02 && p.pos.x<R[1]+0.02 && p.pos.z>R[2]-0.02 && p.pos.z<R[3]+0.02; }
+function _inRect(R, p){ return p.pos.x>R[0] && p.pos.x<R[1] && p.pos.z>R[2] && p.pos.z<R[3]; }
+// the next floor to stop at: the nearest call the way it is going, else the nearest the other way
+function _elevNext(E){ if(!E.calls.size) return -1; const lv=E.levels; let best=-1, bd=1e9;
+  for(const dir of (E.dir ? [E.dir, -E.dir] : [1, -1])){ for(const c of E.calls){ const d=(lv[c]-E.y)*dir; if(d>0.001 && d<bd){ bd=d; best=c; } } if(best>=0) return best; }
+  for(const c of E.calls) return c; return -1; }
 OFFICE.elevKey=function(e){
   if(typeof player==="undefined") return false;
   const m=/^(Digit|Numpad)([1-9])$/.exec(e.code); if(!m) return false;
-  for(const E of OFFICE.elevs){ const R=E.rect, p=player.pos;
-    if(p.x>R[0] && p.x<R[1] && p.z>R[2] && p.z<R[3] && Math.abs(player.feetY-E.y)<0.5){ const f=(+m[2])-1; if(f<E.levels.length){ if(f!==E.f || E.state!=="idle"){ E.target=f; if(E.state==="idle" || E.state==="opening") E.state="closing"; } } return true; } }
+  for(const E of OFFICE.elevs){ if(_elevIn(E, player) && Math.abs(player.feetY-E.y)<0.75){ const f=(+m[2])-1; if(f<E.levels.length) OFFICE.press(E, f); return true; } }
   return false; };
+OFFICE.step=function(dt){
+  const p=(typeof player!=="undefined") ? player : null, still=p && !(typeof driving!=="undefined" && driving) && !p.ladder;
+  for(const E of OFFICE.elevs){
+    const lv=E.levels, y0=E.y, rider=still && _elevIn(E, p) && Math.abs(p.feetY-E.y)<0.75;
+    const inGap=still && _inRect(E.gap, p) && Math.abs(p.feetY-lv[E.f])<0.75;
+    if(E.state==="idle"){ E.dwell+=dt; if(E.calls.has(E.f)) E.calls.delete(E.f);
+      if(E.calls.size && (E.hurry || E.dwell>4.0) && !inGap) E.state="closing"; }
+    else if(E.state==="opening"){ E.door=Math.min(1, E.door+dt*0.85); if(E.door>=1){ E.state="idle"; E.dwell=0; E.hurry=false; } }
+    else if(E.state==="closing"){ if(inGap) E.state="opening";                  // (the safety edge: it will not shut on you)
+      else { E.door=Math.max(0, E.door-dt*0.7); if(E.door<=0){ const t=_elevNext(E); if(t<0) E.state="shut"; else { E.target=t; E.state="moving"; E.v=0; E.dir=Math.sign(lv[t]-E.y); } } } }
+    else if(E.state==="shut"){ if(E.calls.size){ const t=_elevNext(E); E.target=t; E.state="moving"; E.v=0; E.dir=Math.sign(lv[t]-E.y); } }
+    else if(E.state==="moving"){
+      // a call on the way that it can still stop for takes the place of the one it was going to
+      for(const c of E.calls){ const d=(lv[c]-E.y)*E.dir, dT=(lv[E.target]-E.y)*E.dir; if(d>E.v*E.v/(2*EL_A)+0.05 && d<dT) E.target=c; }
+      const d=lv[E.target]-E.y, s=Math.abs(d);
+      E.v=Math.min(EL_VMAX, E.v+EL_A*dt, Math.sqrt(2*EL_A*s)+0.03);
+      if(s<=E.v*dt+0.002){ E.y=lv[E.target]; E.v=0; E.f=E.target; E.calls.delete(E.f); E.state="opening"; E.dwell=0;
+        if(typeof AUDIO!=="undefined" && AUDIO.blip){ const [x, z]=E.F.P(UC_ELEV, 9.5); AUDIO.blip("ding", x, z); } }
+      else E.y+=Math.sign(d)*E.v*dt;
+      let k=0, kd=1e9; for(let i=0;i<lv.length;i++){ const dd=Math.abs(lv[i]-E.y); if(dd<kd){ kd=dd; k=i; } } E.at=k; }
+    if(E.state!=="moving") E.at=E.f;
+    // whoever stands in the car goes with it, exactly
+    if(rider) p.feetY+=E.y-y0;
+    E.surf.y=E.y;
+    // the car's own door is solid while it is not open; a landing's doors are open only while the car stands there open
+    const open=E.state!=="moving" && E.state!=="shut" && E.door>0.7;
+    E.carCol.y0=E.y-0.2; E.carCol.y1=open ? -9999 : E.y+2.3;
+    for(let f=0; f<lv.length; f++) E.doorCols[f].y1=(open && f===E.f) ? -9999 : lv[f]+2.2;
+    // and the net under it all: anyone in the shaft without the car under them is put back out on the nearest landing
+    if(still && _inRect(E.shaft, p) && !rider && (p.feetY<E.y-0.3 || p.feetY>E.y+0.75)){ let k=0, kd=1e9; for(let i=0;i<lv.length;i++){ const dd=Math.abs(lv[i]-p.feetY); if(dd<kd){ kd=dd; k=i; } }
+      p.pos.x=E.out[0]; p.pos.z=E.out[1]; p.feetY=lv[k]; } } };
+// the lantern (the floor it is at, the way it is going) and the panel (a lit ring round every floor called), drawn only when they change
+function elevDraw(E){
+  const N=E.levels.length, at=E.at===undefined ? E.f : E.at, arrow=E.state==="moving" ? E.dir : 0, key=at+"|"+arrow;
+  if(key!==E.shown){ E.shown=key; const c=E.indCtx, W=128, H=64; c.fillStyle="#0e0c0c"; c.fillRect(0, 0, W, H);
+    c.fillStyle="#ff9a3a"; c.font="bold 40px 'Courier New', monospace"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(at===0 ? "L" : String(at+1), W*0.62, H/2+2);
+    for(const s of [1, -1]){ c.fillStyle=arrow===s ? "#ff9a3a" : "#2a1a12"; c.beginPath(); const cx=W*0.22, cy=H/2-s*12; c.moveTo(cx-10, cy+s*6); c.lineTo(cx+10, cy+s*6); c.lineTo(cx, cy-s*8); c.fill(); }
+    E.indTex.needsUpdate=true; }
+  const bk=[...E.calls].sort().join(",");
+  if(bk!==E.btnKey){ E.btnKey=bk; const c=E.panCtx, W=96, H=352; c.fillStyle="#b0904c"; c.fillRect(0, 0, W, H); c.fillStyle="#8a6a2a"; c.fillRect(6, 6, W-12, H-12); c.fillStyle="#b89a58"; c.fillRect(9, 9, W-18, H-18);
+    c.textAlign="center"; c.textBaseline="middle";
+    const btn=(x, y, lab, lit)=>{ c.fillStyle=lit ? "#ffb84a" : "#5a4a30"; c.beginPath(); c.arc(x, y, 17, 0, 7); c.fill(); c.fillStyle="#2a2420"; c.beginPath(); c.arc(x, y, 13, 0, 7); c.fill();
+      c.fillStyle=lit ? "#ffd890" : "#d8c088"; c.font="bold 14px Arial"; c.fillText(lab, x, y+1); };
+    for(let k=0;k<N;k++){ const col=N>3 ? k%2 : 0, row=N>3 ? (k/2)|0 : k, x=N>3 ? (col ? W*0.7 : W*0.3) : W/2, y=H-118-row*44; btn(x, y, k===0 ? "L" : String(k+1), E.calls.has(k)); }
+    btn(W*0.3, H-66, "<>", false); btn(W*0.7, H-66, "><", false);
+    c.fillStyle="#7a1a1a"; c.beginPath(); c.arc(W/2, H-28, 13, 0, 7); c.fill(); c.fillStyle="#d8c088"; c.font="bold 9px Arial"; c.fillText("ALARM", W/2, H-28);
+    E.panTex.needsUpdate=true;
+    for(let f=0; f<N; f++){ const called=E.calls.has(f), [u, d]=E.hall[f]; u.color.set(called && f<N-1 ? "#ffb84a" : "#5a4a30"); d.color.set(called && f>0 ? "#ffb84a" : "#5a4a30"); } } }
 function updateElevators(dt){
   for(const E of OFFICE.elevs){
-    const lv=E.levels;
-    if(E.state==="opening"){ E.door=Math.min(1, E.door+dt*0.9); if(E.door>=1) E.state="idle"; }
-    else if(E.state==="closing"){ E.door=Math.max(0, E.door-dt*0.9); if(E.door<=0) E.state="moving"; }
-    else if(E.state==="moving"){ const goal=lv[E.target], d=goal-E.y, sp=Math.min(2.0, 0.35+Math.abs(d)*1.2);
-      if(Math.abs(d)<0.004){ E.y=goal; E.f=E.target; E.state="opening"; if(typeof AUDIO!=="undefined"){ const [x, z]=E.F.P(UC_ELEV, 9.5); AUDIO.blip("bell", x, z); } }
-      else E.y+=Math.sign(d)*Math.min(Math.abs(d), sp*dt); }
-    E.car.position.y=E.y; E.surf.y=E.y;
-    const open=E.state==="moving" ? 0 : E.door;
+    E.car.position.y=E.y;
+    const o=E.state==="moving" || E.state==="shut" ? 0 : E.door, open=o*o*(3-2*o);          // (eased: the leaves start and stop gently)
     E.carL[0].position.x=-0.25-open*0.5; E.carL[1].position.x=0.25+open*0.5;
-    for(let f=0; f<lv.length; f++){ const o=(f===E.f && E.state!=="moving") ? open : 0, L=E.land[f]; L[0].position.x=-0.25-o*0.5; L[1].position.x=0.25+o*0.5;
-      E.doorCols[f].y1=o>0.7 ? -9999 : lv[f]+2.2; } } }
-const UC_ELEV=4.2;
+    for(let f=0; f<E.levels.length; f++){ const q=(f===E.f) ? open : 0, L=E.land[f]; L[0].position.x=-0.25-q*0.5; L[1].position.x=0.25+q*0.5; }
+    elevDraw(E); } }
 /* the lamps come on after dark; the fountain runs and its water drifts while you are near it */
 function updateOfficePark(dt, dark){
   for(const L of OFFICE.lamps) L.intensity=1.1*smoothstep(0.3, 0.6, dark);

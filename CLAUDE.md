@@ -1162,3 +1162,44 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   in and the buildings. Each car is a `COL_DYN` box and six draws close
   to; keep a lot near fifty, not a hundred.
 
+## Round 40 notes
+
+- The office park's elevators move on the physics step: `OFFICE.step(dt)` runs
+  first thing in 17's `fixedUpdate`, and carries whoever stands in the car by
+  exactly the car's move, so you never trail it. Across the car's door is a
+  `COL_DYN` collider that rides with it (`E.carCol`), solid whenever its doors
+  are not open, so nobody walks out between floors; a landing's doors are
+  open only while the car stands there open. Calls are a set (`E.calls`,
+  `OFFICE.press(E, f, hall)`), served the way it is going; it eases up to
+  speed and down to the floor (`EL_A`, `EL_VMAX`); anyone in the doorway
+  (`E.gap`) holds the doors. A net puts anyone in the shaft without the car
+  under them back out on the nearest landing. `updateElevators` only draws:
+  the car, the leaves, the lantern (one canvas per elevator, over every
+  landing and inside the car) and the panel's lit buttons, redrawn only when
+  they change. `tools/elevators.js` rides every car to every floor, walks
+  at its doors the whole way, and checks the doors hold for the doorway.
+- Thin bucket boxes are grown by 1 to 3.5 mm at bake, plus up to 1.8 mm by
+  entry, so two of them meant to sit a little apart must sit at least 8 mm
+  apart, or the bake can close the gap and put their faces back in one
+  plane. A run of liner pieces round an opening stands the pieces over and
+  under it a centimetre proud of the ones beside it (14mf's `run`).
+- The office screens are one atlas (14md's `SCREENS`, sixteen 1980s
+  screens, each painted on its own canvas and copied into its cell) drawn
+  through `screen(w, h, x, y, z, ry, k)` into one detail mesh; each
+  building's kit has `K.scr`, the screens its terminals show.
+- Floor coverings laid as planes (14md's carpets, stone, the raised floor)
+  take `texPlane`'s `po`, a step up the polygon-offset ladder, as well as a
+  centimetre or more over what they lie on.
+- The Lakeside Dive is 14mf (`DIVE`), on `EAST.dive.site` (04: graded,
+  `siteDist`, and 07's `canopyY`); `RING_PRETZ` reaches z -1936 and
+  `EAST.pcan` -1952 for it. The service drive to it is part of the office
+  park's paving (14md's `svc`), and the park's north wall stops at the dive's
+  site. Its jukebox is `DIVE.radios` in 20's `nearRadio` (station 0), its
+  routes `DIVE.routes` in `tools/walk.js`, `updateDive` (from 14's
+  `updateLife`) its lamps. The food truck is built piece by piece in its own
+  frame (`q(lx, lz)`), chrome on its own material (`CH`).
+- A cabinet's screen in the arcade is 01's `crtMaterial(tex, w, h)`: a curved
+  face, bloom, scanlines and a slot mask that fade by `fwidth`, the corners
+  dimmed. It marks its canvas `_crt`, and 18g's `_cbTube` then leaves that
+  canvas alone (the slots and the poker machine keep their own).
+

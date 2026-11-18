@@ -40,6 +40,7 @@ function _cbSnd(i, k){ const R=ARCADE.cabs && ARCADE.cabs[i]; if(typeof AUDIO!==
 const _cbFont=(x, px)=>{ x.font="bold "+px+"px 'Courier New', monospace"; };
 // the tube: scan lines, and the corners darker
 function _cbTube(x){
+  if(x.canvas && x.canvas._crt) return;                     // (a cabinet's screen is a tube of its own now: 01's crtMaterial)
   const W=_CB.W, H=_CB.H;
   x.fillStyle="rgba(0,0,0,0.22)"; for(let y=0;y<H;y+=3) x.fillRect(0,y,W,1);
   const vg=x.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.85); vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,0.55)");
@@ -275,6 +276,8 @@ const _MM=(function(){
 /* ======================================================================
    BLOCK DROP
    ====================================================================== */
+function _bdShade(hex, k){ const n=parseInt(hex.slice(1), 16), f=v=>Math.max(0, Math.min(255, Math.round(v+(k<0 ? v*k : (255-v)*k))));
+  return "rgb("+f(n>>16)+","+f((n>>8)&255)+","+f(n&255)+")"; }
 const _BD=(function(){
   const NX=10, NY=20, NU=5, BS=12, W=_CB.W, H=_CB.H, CX=108, CY=24;
   const SPEED={start:0.6, decrement:0.005, min:0.1};                 // seconds a row: at first, less each row cleared, never under
@@ -315,11 +318,20 @@ const _BD=(function(){
     _cbSnd(i, removeLines(G) ? "line" : "lock");
     G.cur=G.next; G.next=randomPiece(G); G.actions=[];
     if(occupied(G, G.cur.type, G.cur.x, G.cur.y, G.cur.dir)){ G.over=true; _cbSnd(i, "boom"); } }
-  function block(x, px, py, col, s){ s=s||BS;
-    x.fillStyle=col; x.fillRect(px, py, s, s);
-    x.fillStyle="rgba(255,255,255,0.35)"; x.fillRect(px, py, s, 2); x.fillRect(px, py, 2, s);
-    x.fillStyle="rgba(0,0,0,0.35)"; x.fillRect(px, py+s-2, s, 2); x.fillRect(px+s-2, py, 2, s);
-    x.strokeStyle="#000"; x.lineWidth=1; x.strokeRect(px+0.5, py+0.5, s-1, s-1); }
+  // a block: its face shaded top to bottom, a bevel lit from the top left, a gloss across its upper half, a dark seam round it
+  function block(x, px, py, col, s, ghost){ s=s||BS;
+    if(ghost){ x.strokeStyle=col; x.globalAlpha=0.45; x.lineWidth=1; x.strokeRect(px+1.5, py+1.5, s-3, s-3); x.globalAlpha=1; return; }
+    const g=x.createLinearGradient(px, py, px, py+s); g.addColorStop(0, col); g.addColorStop(1, _bdShade(col, -0.35)); x.fillStyle=g; x.fillRect(px, py, s, s);
+    x.fillStyle="rgba(255,255,255,0.45)"; x.fillRect(px+1, py+1, s-2, 1.5); x.fillRect(px+1, py+1, 1.5, s-2);
+    x.fillStyle="rgba(0,0,0,0.4)"; x.fillRect(px+1, py+s-2.5, s-2, 1.5); x.fillRect(px+s-2.5, py+1, 1.5, s-2);
+    x.fillStyle="rgba(255,255,255,0.16)"; x.fillRect(px+2.5, py+2.5, s-5, (s-5)*0.45);
+    x.strokeStyle="rgba(0,0,0,0.75)"; x.lineWidth=1; x.strokeRect(px+0.5, py+0.5, s-1, s-1); }
+  // the night behind the well: a dusk sky, stars, a low line of hills and a town's lit windows
+  function backdrop(x, t){
+    const g=x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0a0620"); g.addColorStop(0.6, "#1a1240"); g.addColorStop(1, "#3a1a3a"); x.fillStyle=g; x.fillRect(0, 0, W, H);
+    for(let k=0;k<60;k++){ const sx=(k*73)%W, sy=(k*41)%(H*0.6), tw=0.5+0.5*Math.sin(t*2+k); x.fillStyle="rgba(255,255,255,"+(0.25+0.5*tw).toFixed(2)+")"; x.fillRect(sx, sy, 1, 1); }
+    x.fillStyle="#120a22"; x.beginPath(); x.moveTo(0, H); for(let k=0;k<=12;k++) x.lineTo(k*W/12, H-40-18*Math.sin(k*1.7)-10*Math.sin(k*0.6)); x.lineTo(W, H); x.fill();
+    for(let k=0;k<24;k++){ x.fillStyle=k%3 ? "#f2c46a" : "#8ac8ff"; x.fillRect((k*53)%W, H-14-((k*7)%18), 2, 2); } }
   return {
     name:"BLOCK DROP", col:"#7aff7a",
     help:"BLOCK DROP · A/D OR ARROWS MOVE · W/UP TURNS · S/DOWN DROPS · ESC TO STEP AWAY",
@@ -343,13 +355,19 @@ const _BD=(function(){
         G.dt+=1/60; if(G.dt>G.step){ G.dt-=G.step; drop(G, i); }
         if(G.over){ G.acc=0; break; } } },
     draw(x, G, t){
-      x.fillStyle="#05040a"; x.fillRect(0,0,W,H);
-      // the well
-      x.fillStyle="#0c0a18"; x.fillRect(CX, CY, NX*BS, NY*BS);
-      x.fillStyle="rgba(255,255,255,0.04)"; for(let k=1;k<NX;k++) x.fillRect(CX+k*BS, CY, 1, NY*BS);
+      backdrop(x, t);
+      // the well: dark glass over the night, its grid, a sheen down its left side
+      x.fillStyle="rgba(6,4,16,0.86)"; x.fillRect(CX, CY, NX*BS, NY*BS);
+      x.fillStyle="rgba(255,255,255,0.045)"; for(let k=1;k<NX;k++) x.fillRect(CX+k*BS, CY, 1, NY*BS); for(let k=1;k<NY;k++) x.fillRect(CX, CY+k*BS, NX*BS, 1);
+      { const g=x.createLinearGradient(CX, 0, CX+NX*BS, 0); g.addColorStop(0, "rgba(140,170,255,0.10)"); g.addColorStop(0.3, "rgba(140,170,255,0)"); x.fillStyle=g; x.fillRect(CX, CY, NX*BS, NY*BS); }
       for(let y=0;y<NY;y++) for(let xx=0;xx<NX;xx++){ const b=get(G, xx, y); if(b) block(x, CX+xx*BS, CY+y*BS, b.color); }
-      if(!G.over) eachblock(G.cur.type, G.cur.x, G.cur.y, G.cur.dir, (bx, by)=>block(x, CX+bx*BS, CY+by*BS, G.cur.type.color));
+      if(!G.over){ let gy=G.cur.y; while(!occupied(G, G.cur.type, G.cur.x, gy+1, G.cur.dir)) gy++;          // (the ghost: where it lands if dropped now)
+        if(gy>G.cur.y) eachblock(G.cur.type, G.cur.x, gy, G.cur.dir, (bx, by)=>block(x, CX+bx*BS, CY+by*BS, G.cur.type.color, BS, true));
+        eachblock(G.cur.type, G.cur.x, G.cur.y, G.cur.dir, (bx, by)=>block(x, CX+bx*BS, CY+by*BS, G.cur.type.color)); }
       x.strokeStyle=G.flash>0 ? "#ffffff" : "#8a8aa0"; x.lineWidth=2; x.strokeRect(CX-1, CY-1, NX*BS+2, NY*BS+2);
+      x.strokeStyle="rgba(58,232,255,0.35)"; x.lineWidth=1; x.strokeRect(CX-3.5, CY-3.5, NX*BS+7, NY*BS+7);
+      // the side panels, each framed
+      for(const [px0, py0, pw, ph] of [[8, 26, CX-18, 116]]){ x.fillStyle="rgba(10,8,28,0.75)"; x.fillRect(px0, py0, pw, ph); x.strokeStyle="rgba(122,255,122,0.5)"; x.strokeRect(px0+0.5, py0+0.5, pw-1, ph-1); }
       // the side: the score and the rows on the left, the next piece on the right
       x.textAlign="center"; x.textBaseline="middle"; _cbFont(x, 13);
       x.fillStyle="#9a9aaa"; x.fillText("SCORE", CX/2, 44); x.fillText("ROWS", CX/2, 104); x.fillText("NEXT", CX+NX*BS+(W-CX-NX*BS)/2, 34);
@@ -361,7 +379,7 @@ const _BD=(function(){
       _cbTube(x); },
     // the attract mode: the name in blocks, a few pieces coming down onto a stack
     attract(x, t, i){
-      x.fillStyle="#05040a"; x.fillRect(0,0,W,H);
+      backdrop(x, t);
       x.textAlign="center"; x.textBaseline="middle"; _cbFont(x, 28);
       x.fillStyle="#3ae8ff"; x.fillText("BLOCK", W/2, 30); x.fillStyle="#ff3a3a"; x.fillText("DROP", W/2, 60);
       const s=10, ox=W/2-NX*s/2, oy=84, rowsN=12;

@@ -180,6 +180,7 @@ const ROUTES={
   Object.assign(ROUTES, await p.evaluate(()=>typeof BEER!=="undefined" && BEER.routes ? BEER.routes : {}));
   Object.assign(ROUTES, await p.evaluate(()=>typeof PRETZ!=="undefined" && PRETZ.routes ? PRETZ.routes : {}));
   Object.assign(ROUTES, await p.evaluate(()=>typeof OFFICE!=="undefined" && OFFICE.routes ? OFFICE.routes : {}));
+  Object.assign(ROUTES, await p.evaluate(()=>typeof DIVE!=="undefined" && DIVE.routes ? DIVE.routes : {}));
   // ONLY=regex runs just the routes, seats and stair tests whose names match it (for working on one place)
   const out=await p.evaluate(([ROUTES, only])=>{
     const res={}, ONLY=only ? new RegExp(only, "i") : null, want=n=>!ONLY || ONLY.test(n);

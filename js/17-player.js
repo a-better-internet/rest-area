@@ -352,6 +352,7 @@ function nearEdge(x,z){
          ((z<Z.z0 || z>Z.z1) && Math.min(Math.abs(Math.abs(x-HWY.nb)-19.5),Math.abs(Math.abs(x-HWY.sb)-19.5))<1.4);
 }
 function fixedUpdate(dt){
+  if(typeof OFFICE!=="undefined" && OFFICE.step) OFFICE.step(dt);                  // (the office park's elevators, on this step: they carry you, 14md)
   if(typeof ZOMBIE!=="undefined" && ZOMBIE.dead){ player.moving=0; return; }        // (down, in zombie mode, 21)
   // the boat (14p) goes on whether you have it or not, adrift; with you at the helm it is all you do
   if(typeof BOAT!=="undefined" && BOAT.g){ updateBoat(dt); if(BOAT.on){ player.sit+=(0-player.sit)*Math.min(1,dt*6); player.bob+=(0-player.bob)*Math.min(1,dt*6); return; } }

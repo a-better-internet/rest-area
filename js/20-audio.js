@@ -405,6 +405,7 @@ const AUDIO=(function(){
     if(typeof RADIO_ST!=="undefined") for(const q of RADIO_ST.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
     if(typeof WESTPARK!=="undefined" && WESTPARK.radios) for(const q of WESTPARK.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
     if(typeof VELVET!=="undefined") for(const q of VELVET.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
+    if(typeof DIVE!=="undefined") for(const q of DIVE.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
     return R; }
   function garageSound(dt, cam, rx, rz, zn){
     const t=ctx.currentTime, R=nearRadio(cam);
@@ -745,6 +746,9 @@ const AUDIO=(function(){
       const s=ctx.createBufferSource(); s.buffer=noise(2.6,"white"); const f=ctx.createBiquadFilter(); f.type="bandpass"; f.frequency.value=2200; f.Q.value=0.5;
       const g=ctx.createGain(); env(g,t,0.05,0.05*vol,1.9,0.5); s.connect(f); f.connect(g); g.connect(master); s.start(t);
       tone("sine", 620, 600, 1.4, 0.006*vol, t+0.6, 0, master);
+    }else if(kind==="ding"){                      // an elevator's hall chime (14md): two soft notes, the second lower
+      tone("sine", 1318.5, 1318.5, 1.1, 0.10*vol, t, 0, master); tone("sine", 2637, 2637, 0.4, 0.015*vol, t, 0, master);
+      tone("sine", 1046.5, 1046.5, 1.5, 0.10*vol, t+0.42, 0, master); tone("sine", 2093, 2093, 0.5, 0.015*vol, t+0.42, 0, master);
     }else if(kind==="bell"){                      // the chapel's bell (14l): a strike, its partials dying slowly, and again
       for(const at of [t, t+2.2]) [[1,0.10],[2.0,0.05],[2.4,0.04],[3.0,0.025],[4.2,0.012]].forEach(([m,a])=>tone("sine", 196*m, 196*m*0.998, 4.5/Math.sqrt(m), a*Math.max(vol,0.25), at, 0, master));
     }else if(kind==="wheel"){                     // 12e's wheel: the dogs' ratchet clicking back, a dry grind under it

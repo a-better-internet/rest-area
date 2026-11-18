@@ -191,8 +191,18 @@ const _HW=(function(){
     if(BG) return BG;
     const c=cvs(W, H), x=c.getContext("2d"); let s=977; const r=()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; };
     x.fillStyle=SOIL; x.fillRect(0, 0, W, H);
-    for(let j=0;j<NR;j++){ x.fillStyle=j%2 ? SOIL2 : SOIL; x.fillRect(0, Y0+j*CS, W, CS); x.fillStyle="rgba(0,0,0,0.16)"; x.fillRect(0, Y0+j*CS+CS-1, W, 1); }
-    for(let k=0;k<700;k++){ x.fillStyle=r()<0.5 ? "rgba(96,72,48,0.5)" : "rgba(20,12,8,0.4)"; x.fillRect((r()*W)|0, Y0+((r()*NR*CS)|0), 1+((r()*2)|0), 1); }
+    // each row a mound: lit along its crown, dark in the furrow under it
+    for(let j=0;j<NR;j++){ const y=Y0+j*CS, g=x.createLinearGradient(0, y, 0, y+CS); g.addColorStop(0, j%2 ? SOIL2 : SOIL); g.addColorStop(0.35, "rgba(150,112,72,1)"); g.addColorStop(1, "rgba(30,20,12,1)");
+      x.fillStyle=g; x.fillRect(0, y, W, CS); x.fillStyle="rgba(0,0,0,0.22)"; x.fillRect(0, y+CS-1, W, 1); }
+    // crumbs of soil, flecks of straw mulch, a few pebbles with their shadows
+    for(let k=0;k<1400;k++){ x.fillStyle=r()<0.5 ? "rgba(120,90,58,0.55)" : "rgba(20,12,8,0.45)"; x.fillRect((r()*W)|0, Y0+((r()*NR*CS)|0), 1+((r()*2)|0), 1); }
+    for(let k=0;k<160;k++){ const sx=r()*W, sy=Y0+r()*NR*CS, a=r()*Math.PI; x.strokeStyle="rgba(214,186,110,"+(0.35+r()*0.35).toFixed(2)+")"; x.lineWidth=0.8; x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx+Math.cos(a)*4, sy+Math.sin(a)*4); x.stroke(); }
+    for(let k=0;k<40;k++){ const sx=r()*W, sy=Y0+r()*NR*CS, rr=1+r()*1.6; x.fillStyle="rgba(0,0,0,0.35)"; x.beginPath(); x.ellipse(sx+0.8, sy+0.8, rr, rr*0.7, 0, 0, 7); x.fill();
+      x.fillStyle=["#a49c90","#8a8478","#b8b0a0"][(r()*3)|0]; x.beginPath(); x.ellipse(sx, sy, rr, rr*0.7, 0, 0, 7); x.fill(); }
+    // the bed's timbers along its top, their grain and a nail head or two
+    { const g=x.createLinearGradient(0, Y0-8, 0, Y0); g.addColorStop(0, "#9a7448"); g.addColorStop(1, "#5a3e22"); x.fillStyle=g; x.fillRect(0, Y0-8, W, 8);
+      x.strokeStyle="rgba(40,24,10,0.5)"; for(let k=0;k<6;k++){ x.beginPath(); x.moveTo(0, Y0-7+k*1.2); x.lineTo(W, Y0-7+k*1.2+Math.sin(k)*0.6); x.stroke(); }
+      x.fillStyle="#3a3a3e"; for(let k=1;k<6;k++) x.fillRect(k*W/6, Y0-5, 2, 2); }
     // the gnome's end: mulched, a board along the top of it
     x.fillStyle="rgba(150,112,62,0.20)"; x.fillRect(0, Y0+(NR-ZONE)*CS, W, ZONE*CS);
     x.fillStyle="#6a5236"; x.fillRect(0, Y0+(NR-ZONE)*CS-1, W, 2);
@@ -201,16 +211,25 @@ const _HW=(function(){
   function plant(x, c, r, q, t){
     const px=cx(c), py=cy(r);
     if(q.hp===1){ x.fillStyle=LEAF; x.fillRect(px-1, py-1, 2, 5); x.fillRect(px-4, py-2, 3, 2); x.fillRect(px+1, py-3, 3, 2); return; }
+    x.fillStyle="rgba(0,0,0,0.3)"; x.beginPath(); x.ellipse(px+1, py+3, q.hp===3 ? 5.5 : 4, 2, 0, 0, 7); x.fill();       // (its shadow on the soil)
     x.fillStyle=STAKE; x.fillRect(px-1, py-5, 1, 10);
-    x.fillStyle=LEAF2; x.beginPath(); x.arc(px, py, q.hp===3 ? 5.2 : 3.8, 0, 7); x.fill();
-    x.fillStyle=LEAF; for(const [dx, dy, rr] of (q.hp===3 ? [[-2,-2,2.6],[2.5,-1,2.4],[-1,2.5,2.4],[2,2.5,2.0]] : [[-1.5,-1,2.0],[1.5,1,1.9]])){ x.beginPath(); x.arc(px+dx, py+dy, rr, 0, 7); x.fill(); }
-    if(q.ripe>0){ const k=q.ripe, R=Math.round(96+159*k), Gc=Math.round(170-110*k), B=Math.round(56-20*k);
-      x.fillStyle="rgb("+R+","+Gc+","+B+")"; x.beginPath(); x.arc(px+0.5, py+0.5, 2.2+1.2*k+(k>=1 ? Math.sin(t*5+c)*0.3 : 0), 0, 7); x.fill();
-      if(k>=1){ x.fillStyle="#ffd0c0"; x.fillRect(px-1, py-1, 1, 1); } }
+    // the leaves: pointed, each a darker side and a lighter, a vein down the middle
+    const leaf=(ax, ay, a, L, wd)=>{ const ca=Math.cos(a), sa=Math.sin(a), tx=ax+ca*L, ty=ay+sa*L, nx=-sa*wd, ny=ca*wd;
+      x.fillStyle=LEAF2; x.beginPath(); x.moveTo(ax, ay); x.quadraticCurveTo(ax+ca*L*0.5+nx, ay+sa*L*0.5+ny, tx, ty); x.lineTo(ax, ay); x.fill();
+      x.fillStyle=LEAF; x.beginPath(); x.moveTo(ax, ay); x.quadraticCurveTo(ax+ca*L*0.5-nx, ay+sa*L*0.5-ny, tx, ty); x.lineTo(ax, ay); x.fill();
+      x.strokeStyle="rgba(20,50,10,0.6)"; x.lineWidth=0.5; x.beginPath(); x.moveTo(ax, ay); x.lineTo(tx, ty); x.stroke(); };
+    const n=q.hp===3 ? 7 : 4, L=q.hp===3 ? 6.2 : 4.6; for(let k=0;k<n;k++) leaf(px, py, k*Math.PI*2/n+c*0.7, L, L*0.42);
+    if(q.ripe>0){ const k=q.ripe, R=Math.round(96+159*k), Gc=Math.round(170-110*k), B=Math.round(56-20*k), rr=2.2+1.2*k+(k>=1 ? Math.sin(t*5+c)*0.3 : 0);
+      const g=x.createRadialGradient(px-0.4, py-0.4, 0.2, px+0.5, py+0.5, rr); g.addColorStop(0, "rgb("+Math.min(255, R+50)+","+Math.min(255, Gc+40)+","+(B+30)+")"); g.addColorStop(1, "rgb("+(R*0.7|0)+","+(Gc*0.7|0)+","+(B*0.7|0)+")");
+      x.fillStyle=g; x.beginPath(); x.arc(px+0.5, py+0.5, rr, 0, 7); x.fill();
+      x.fillStyle="#2a6a1a"; for(let a=0;a<5;a++) x.fillRect(px+0.5+Math.cos(a*1.26)*1.2-0.5, py-rr+1+Math.sin(a*1.26)*0.6, 1, 1);      // (its calyx)
+      if(k>=1){ x.fillStyle="rgba(255,230,220,0.9)"; x.fillRect(px-1, py-1, 1.2, 1.2); } }
   }
   function seg(x, sx, sy, s, t, k){
+    x.fillStyle="rgba(0,0,0,0.35)"; x.beginPath(); x.ellipse(sx+1, sy+4, 5.2, 2, 0, 0, 7); x.fill();
     x.fillStyle="#1e4a1c"; x.beginPath(); x.arc(sx, sy+1, 5.4, 0, 7); x.fill();
-    x.fillStyle=s.lone ? "#b8d83a" : "#6cc83a"; x.beginPath(); x.arc(sx, sy, 5.0, 0, 7); x.fill();
+    { const g=x.createRadialGradient(sx-1.6, sy-1.8, 0.5, sx, sy, 5.2); g.addColorStop(0, s.lone ? "#e8f87a" : "#a8f06a"); g.addColorStop(1, s.lone ? "#7a9a1a" : "#3a8a22"); x.fillStyle=g; x.beginPath(); x.arc(sx, sy, 5.0, 0, 7); x.fill(); }
+    x.strokeStyle="rgba(20,60,14,0.5)"; x.lineWidth=0.6; for(const o of [-2.4, 0, 2.4]){ x.beginPath(); x.moveTo(sx+o, sy-4.4); x.lineTo(sx+o, sy+4.4); x.stroke(); }   // (the rings of its body)
     x.strokeStyle="#f2f4e0"; x.lineWidth=1.4; x.beginPath(); x.moveTo(sx-3, sy+3); x.lineTo(sx+2, sy-3.5); x.stroke();   // its white slash
     x.fillStyle="#12240f"; x.fillRect(sx+2, sy+1, 1, 1);
     if(s.head){ x.fillStyle="#12240f"; x.fillRect(sx+s.dx*2-2, sy-2, 2, 2); x.fillRect(sx+s.dx*2+1, sy-2, 2, 2); x.fillStyle="#e8f4d0"; x.fillRect(sx+s.dx*2-2, sy-2, 1, 1); x.fillRect(sx+s.dx*2+1, sy-2, 1, 1); }

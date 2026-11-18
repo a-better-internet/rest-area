@@ -16,6 +16,33 @@ function mat(color, opts){
   return new T.MeshStandardMaterial(Object.assign({color:color, roughness:0.92, metalness:0.0}, opts||{}));
 }
 function cvs(w,h){ const c=document.createElement("canvas"); c.width=w; c.height=h; return c; }
+/* A cabinet's screen as a picture tube (12c): the game's canvas drawn through a curved face with a black bezel round it, its
+   bright parts blooming into their neighbours (eight taps out a pixel and a half and three), scanlines and a slot mask that
+   fade out as they get finer than the pixels showing them (fwidth, so a far screen does not crawl), the corners dimmed, a soft
+   glint of the room on the glass. The canvas is sampled as it is painted and written as it is (like the plain material it
+   replaces, which decoded and re-encoded the same sRGB). */
+function crtMaterial(tex, w, h){
+  if(tex.image) tex.image._crt=true;                          // (18g's _cbTube leaves a canvas the tube shades alone)
+  return new T.ShaderMaterial({ uniforms:{map:{value:tex}, res:{value:new T.Vector2(w, h)}}, extensions:{derivatives:true}, toneMapped:false,
+    vertexShader:"varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+    fragmentShader:[
+      "uniform sampler2D map; uniform vec2 res; varying vec2 vUv;",
+      "void main(){",
+      "  vec2 c=vUv*2.0-1.0; c*=1.0+vec2(0.045,0.06)*(c.yx*c.yx); vec2 uv=c*0.5+0.5;",
+      "  float inside=step(0.0,uv.x)*step(uv.x,1.0)*step(0.0,uv.y)*step(uv.y,1.0);",
+      "  vec2 px=1.0/res; vec3 col=texture2D(map,uv).rgb;",
+      "  vec3 b=vec3(0.0);",
+      "  b+=texture2D(map,uv+vec2( 1.5, 0.0)*px).rgb; b+=texture2D(map,uv+vec2(-1.5, 0.0)*px).rgb; b+=texture2D(map,uv+vec2(0.0, 1.5)*px).rgb; b+=texture2D(map,uv+vec2(0.0,-1.5)*px).rgb;",
+      "  b+=texture2D(map,uv+vec2( 2.2, 2.2)*px).rgb; b+=texture2D(map,uv+vec2(-2.2, 2.2)*px).rgb; b+=texture2D(map,uv+vec2(2.2,-2.2)*px).rgb; b+=texture2D(map,uv+vec2(-2.2,-2.2)*px).rgb;",
+      "  b/=8.0; col+=max(b-0.18,0.0)*0.55;",
+      "  float ly=uv.y*res.y, fy=clamp(1.2-fwidth(ly)*1.6,0.0,1.0), scan=1.0-fy*0.28*(0.5-0.5*cos(ly*6.2831853));",
+      "  float lx=uv.x*res.x*3.0, fx=clamp(1.2-fwidth(lx)*1.6,0.0,1.0), m=mod(floor(lx),3.0);",
+      "  vec3 mask=mix(vec3(1.0), vec3(m==0.0?1.12:0.9, m==1.0?1.12:0.9, m==2.0?1.12:0.9), fx*0.6);",
+      "  col*=scan*mask*1.12;",
+      "  vec2 v=uv*(1.0-uv.yx); float vig=pow(clamp(v.x*v.y*16.0,0.0,1.0),0.22); col*=vig;",
+      "  col+=vec3(0.035,0.04,0.05)*smoothstep(0.55,0.0,length(vUv-vec2(0.28,0.82)));",
+      "  gl_FragColor=vec4(col*inside,1.0);",
+      "}"].join("\n") }); }
 function setSRGB(t){ try{ t.colorSpace=T.SRGBColorSpace; }catch(e){ t.encoding=T.sRGBEncoding; } return t; }
 function rep(t,x,y){ t.wrapS=t.wrapT=T.RepeatWrapping; t.repeat.set(x,y); return t; }
 
