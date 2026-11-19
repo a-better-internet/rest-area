@@ -1300,3 +1300,40 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - Never put a `// (comment)` partway along a line with more code after it:
   everything after `//` is gone. It has cost three fixes now.
 
+## Round 43 notes
+
+- **Grain and rounded edges on every hand-built thing.** 01's `surfaceGrain(mat)`
+  (put on every `detailMesh` material that draws no texture) adds a grain in
+  world space (a fine speckle, a mottle, a broad unevenness, each a few per
+  cent, each fading out once a pixel covers several of its cells) and a
+  lighter rim along every box's edges, the way a rounded edge catches the
+  light. The rim needs no vertices: `mergeEntries(entries, true)` writes
+  each box face's size in cm and its place across it into the uv channel
+  (`width + u*0.999`, `height + v*0.999`; -1 for anything not a plain box),
+  which the shader reads. It is off with SURFACE DETAIL (`FX_U`). A
+  `detailMesh` material that does take a `map` keeps its uvs and gets
+  neither. The hash wraps its cell (`mod 289`) first: a kilometre out, a
+  float has too little left over and it drew rings.
+- The office park's heart (`EAST.office.level`, 04: the lot, the buildings
+  and the plaza) is held level with the road; the bank's slope to the lake
+  starts only past it. The plaza's east end and the old lawn walk used to
+  float up to two metres over the falling lawn. The lawn walk (14md) is now
+  a strip laid on the ground, and never a paved rect: `addPaveRect` sets
+  the height you stand at to its own `y` over the whole rect.
+- The office park's dock (14md, `OFFICE.dockZ`, `dockShore`, `dockLamps`):
+  an overlook on the bank where the walk ends, a boardwalk down to the pier,
+  the pier and its T in `LAKESIDE.docks`, the bank's wall open across it.
+  Its rails' corner posts are shared (`POSTS`), the handrail wider than the
+  posts and under their caps.
+- The bookstore's cats are 14mh's `CATS` (`updateCats`, from `updateBooks`):
+  each a few parts so it can move. Three wander the floor (`_catFree`: the
+  shop's floor clear of colliders at a cat's height; `_catPath`: a search
+  over a 20 cm grid of it, so they go round the cases), three keep a perch.
+  `E` by one pets it (`CATS.pet`, a purr from 20's `AUDIO.ctx` /
+  `outLP` / `noise`). The feather wand (`CATS.toggle`, from its jar on the
+  counter) puts the feather where you look on the floor; the floor cats
+  stalk it from their own side of it, crouch and pounce, the perchers watch.
+  The wand goes back if you leave the shop. Anything built at the origin and
+  moved about every frame sets `userData.noCull`, or 18c's `cullLoose`
+  hides it for good.
+

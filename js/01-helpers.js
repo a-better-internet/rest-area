@@ -385,7 +385,12 @@ function prismGeo(pts, depth, uv){
 }
 
 /* --- geometry merging: position + normal + uv + vertex colour ---------- */
-function mergeEntries(entries){
+/* mergeEntries(entries, bevelUV): with bevelUV (detailMesh's pieces, whose materials draw no texture), the uv channel
+   carries each box face's own size and place on it instead: x = the face's width in cm + how far across it (0..0.999),
+   y the same for its height; anything that is not a plain box gets -1, -1. surfaceGrain's shader reads it to light a
+   thin rim along every edge of every box, as a rounded edge catches the light, at no cost in vertices. */
+const _bvS=new T.Vector3();
+function mergeEntries(entries, bevelUV){
   let vtot=0, itot=0;
   for(const e of entries){
     const p=e.geo.attributes.position;
@@ -401,13 +406,17 @@ function mergeEntries(entries){
     const g=e.geo, pos=g.attributes.position, nor=g.attributes.normal, uv=g.attributes.uv;
     const col=e.color||white, vc=g.attributes.color;
     nm.getNormalMatrix(e.matrix);
+    let bx=null; if(bevelUV && g.type==="BoxGeometry" && pos.count===24 && uv){ const p=g.parameters; _bvS.setFromMatrixScale(e.matrix); bx=[p.width*_bvS.x, p.height*_bvS.y, p.depth*_bvS.z]; }
     for(let i=0;i<pos.count;i++){
       v.set(pos.getX(i),pos.getY(i),pos.getZ(i)).applyMatrix4(e.matrix);
       P[(vo+i)*3]=v.x; P[(vo+i)*3+1]=v.y; P[(vo+i)*3+2]=v.z;
       if(nor){ n.set(nor.getX(i),nor.getY(i),nor.getZ(i)).applyMatrix3(nm).normalize(); }
       else n.set(0,1,0);
       N[(vo+i)*3]=n.x; N[(vo+i)*3+1]=n.y; N[(vo+i)*3+2]=n.z;
-      if(uv){ U[(vo+i)*2]=uv.getX(i); U[(vo+i)*2+1]=uv.getY(i); }
+      if(bevelUV){ if(bx){ const f=(i/4)|0, fw=f<2 ? bx[2] : bx[0], fh=f<2 ? bx[1] : f<4 ? bx[2] : bx[1];
+          U[(vo+i)*2]=Math.max(1, Math.round(fw*100))+clamp(uv.getX(i), 0, 1)*0.999; U[(vo+i)*2+1]=Math.max(1, Math.round(fh*100))+clamp(uv.getY(i), 0, 1)*0.999; }
+        else { U[(vo+i)*2]=-1; U[(vo+i)*2+1]=-1; } }
+      else if(uv){ U[(vo+i)*2]=uv.getX(i); U[(vo+i)*2+1]=uv.getY(i); }
       if(vc){ C[(vo+i)*3]=vc.getX(i)*col.r; C[(vo+i)*3+1]=vc.getY(i)*col.g; C[(vo+i)*3+2]=vc.getZ(i)*col.b; }
       else  { C[(vo+i)*3]=col.r; C[(vo+i)*3+1]=col.g; C[(vo+i)*3+2]=col.b; }
     }
@@ -590,13 +599,42 @@ function sdPaveGeo(sd, x0, x1, z0, z1, cell, uvm){
    is not drawn (18c's cullBaked). Merged whole, a place's detail was one mesh as wide as the place, drawn from a
    mile off. Returns the meshes. */
 const DETAIL=[];
+/* --- the grain on hand-built things ----------------------------------------
+   A place's own pieces (detailMesh, below) are painted in flat colours. surfaceGrain gives their material a grain in
+   world space, the same on every face whichever way it is turned: a fine speckle, a middle mottle and a broad
+   unevenness, and a lighter rim along every box's edges (mergeEntries' bevelUV), each a few per cent of the colour, so painted wood, metal and plastic read as made of something rather
+   than as flat colour. Each scale fades out once a pixel covers more than a few of its cells (fwidth), so nothing finer
+   than a pixel is drawn and nothing crawls; and with SURFACE DETAIL off (FX_U, 03) it is not worked out at all. One
+   shader text for every material it is put on, so they share their programs. */
+const _GRAIN_VS=["varying vec3 vGW; varying vec2 vBv;", "vGW=(modelMatrix*vec4(transformed, 1.0)).xyz; vBv=uv;"];
+const _GRAIN_FS=`varying vec3 vGW; varying vec2 vBv; uniform float uFx;
+float gH(vec3 p){ p=mod(p, 289.0); p=fract(p*0.3183099+0.1); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }      // (the cell wrapped first: a kilometre out, a float has too little left for the hash)
+float gN(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
+  return mix(mix(mix(gH(i), gH(i+vec3(1.0,0.0,0.0)), f.x), mix(gH(i+vec3(0.0,1.0,0.0)), gH(i+vec3(1.0,1.0,0.0)), f.x), f.y),
+             mix(mix(gH(i+vec3(0.0,0.0,1.0)), gH(i+vec3(1.0,0.0,1.0)), f.x), mix(gH(i+vec3(0.0,1.0,1.0)), gH(i+vec3(1.0,1.0,1.0)), f.x), f.y), f.z); }`;
+function _grainOBC(sh){
+  sh.uniforms.uFx=(typeof FX_U!=="undefined") ? FX_U : {value:1};
+  sh.vertexShader=sh.vertexShader.replace("#include <common>", "#include <common>\n"+_GRAIN_VS[0]).replace("#include <project_vertex>", "#include <project_vertex>\n"+_GRAIN_VS[1]);
+  sh.fragmentShader=sh.fragmentShader.replace("#include <common>", "#include <common>\n"+_GRAIN_FS).replace("#include <color_fragment>", `#include <color_fragment>
+  if(uFx>0.5){ vec3 dw=fwidth(vGW); float w=max(dw.x, max(dw.y, dw.z));
+    float g=(gN(vGW*26.0)-0.5)*0.11*(1.0-smoothstep(0.012, 0.035, w))+(gN(vGW*5.0)-0.5)*0.09*(1.0-smoothstep(0.07, 0.2, w))+(gN(vGW*0.8)-0.5)*0.07;
+    // a box's edges catch the light as a rounded edge does: a rim a centimetre or so wide, lighter, fading out once it is under a pixel
+    if(vBv.x>=1.0 && vBv.y>=1.0){ float Wm=floor(vBv.x)*0.01, Hm=floor(vBv.y)*0.01, u=fract(vBv.x)/0.999, v=fract(vBv.y)/0.999;
+      float d=min(min(u, 1.0-u)*Wm, min(v, 1.0-v)*Hm), r=min(0.013, 0.22*min(Wm, Hm));
+      float rim=(1.0-smoothstep(r*0.15, r, d))*(1.0-smoothstep(r*0.5, r*1.6, w));
+      g+=0.15*rim; }
+    diffuseColor.rgb*=1.0+g; }`); }
+function surfaceGrain(mat){ if(!mat || mat.map || mat.userData.grain || !mat.isMeshStandardMaterial) return mat;
+  mat.userData.grain=true; mat.onBeforeCompile=_grainOBC; mat.customProgramCacheKey=()=>"grain";
+  mat.extensions=Object.assign(mat.extensions||{}, {derivatives:true}); return mat; }
 function detailMesh(ents, mat, name, cast){
   const tiles=new Map(), _c=new T.Vector3(), out=[];
   if(typeof location!=="undefined" && /zdebug/.test(location.search))                 // (the checks see a place's own pieces too)
     (window.ZDBG=window.ZDBG||[]).push(...ents.map(e=>({bucket:"detail:"+(name||"detail"), geo:e.geo, matrix:e.matrix})));
   for(const e of ents){ _c.setFromMatrixPosition(e.matrix); const k=Math.floor(_c.x/64)+":"+Math.floor(_c.z/64);
     let L=tiles.get(k); if(!L){ L=[]; tiles.set(k, L); } L.push(e); }
-  for(const [k, L] of tiles){ const m=new T.Mesh(mergeEntries(L), mat);
+  surfaceGrain(mat);
+  for(const [k, L] of tiles){ const m=new T.Mesh(mergeEntries(L, !mat.map), mat);
     m.castShadow=cast!==false; m.receiveShadow=true; m.name=(name||"detail")+":"+k; m.matrixAutoUpdate=false; if(window.ZDBG) m.userData.zdbg=true; scene.add(m); DETAIL.push(m); out.push(m); }   // (its pieces are in ZDBG already: the checker skips the merged mesh)
   return out;
 }

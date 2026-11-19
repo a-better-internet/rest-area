@@ -46,7 +46,7 @@
    the front from its middle, v in from the front wall. The elevator's
    shaft is at u 3.25..5.15, v 10..11.9 in every one.
    ---------------------------------------------------------------------- */
-const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:[], drops:null};
+const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:[], drops:null, dockZ:[-1776.2, -1773.8], dockLamps:[]};
 (function officePark(){
   if(typeof EAST==="undefined" || !EAST.office) return;
   const E=EDIN, Y=E.y, O=EAST.office.site, M=EAST.office.mouth, Bq=EAST.beer, RX=Bq.rx, RW=3.4, END=Bq.end, LY=Y+PAVE_T+0.015;
@@ -67,11 +67,11 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   { const road=SD_rect(RX-RW, RX+RW, END, -1660), mouth=SD_rect(RX+RW-0.6, 752, M.z0, M.z1), lot=SD_rect(750, 806, -1848, -1702),
       svc=[SD_rect(796, 806, -1860.6, -1846), SD_rect(796, 924, -1860.6, -1856.4), SD_rect(914, 924, -1875.5, -1856.4)],   // (the service drive along the north side to the Lakeside Dive, 14mf)
       front=SD_rect(804, 822.05, -1800, -1750), nwalk=SD_rect(820, 856, -1804, -1798.5), swalk=SD_rect(820, 856, -1751.5, -1746),
-      plaza=SD_rect(852, 936, -1812, -1738), lawnwalk=SD_rect(934, 968, -1777.5, -1772.5),
+      plaza=SD_rect(852, 936, -1812, -1738),
       BM=EAST.books.mouth, books=[SD_rect(714, RX-RW+0.6, BM.z0, BM.z1), SD_rect(700, 716, -1844, -1810), SD_rect(699.3, 701, -1828.4, -1825.6)];   // (the bookshop's drive, lot and the strip to its steps, west of the road: 14mh)
-    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza, lawnwalk].concat(svc, books), 3), 698, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
+    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza].concat(svc, books), 3), 698, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
     for(const b of [[714, RX-RW, BM.z0, BM.z1],[700, 716, -1844, -1810],[699.3, 701, -1828.4, -1825.6]]) addPaveRect(b[0], b[1], b[2], b[3], Y);
-    for(const b of [[RX+RW-0.6, 752, M.z0, M.z1],[750, 806, -1848, -1702],[804, 822.05, -1800, -1750],[820, 856, -1804, -1798.5],[820, 856, -1751.5, -1746],[852, 936, -1812, -1738],[934, 968, -1777.5, -1772.5]])
+    for(const b of [[RX+RW-0.6, 752, M.z0, M.z1],[750, 806, -1848, -1702],[804, 822.05, -1800, -1750],[820, 856, -1804, -1798.5],[820, 856, -1751.5, -1746],[852, 936, -1812, -1738]])
       addPaveRect(b[0], b[1], b[2], b[3], Y); }
   // the plaza laid in squares of buff concrete and terra cotta pavers, a joint round each (paint over the paving, 08's ladder), clear of the basin
   for(let x=852.2; x<935.9; x+=3.0) for(let z=-1811.8; z<-1738.1; z+=3.0){ const cx=x+1.45, cz=z+1.45; if(Math.hypot(cx-893, cz+1775)<5.0) continue;
@@ -1069,13 +1069,84 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     { const x=898.5, z=-1810.4; for(let k=0;k<4;k++){ const g=new T.TorusGeometry(0.34, 0.025, 6, 16, Math.PI); ent(g, x+k*0.8, LY+0.02, z, "#8a8e92", 0, 0, 0); } addCol(x-0.4, x+2.8, z-0.06, z+0.06, LY-0.5, LY+0.38); }
     { const x=878.5, z=-1810.6; B(0.5, 1.0, 0.45, x, LY+0.5, z, "#1a4a8a"); B(0.42, 0.28, 0.02, x, LY+0.8, z+0.235, "#c8d0d8"); addCol(x-0.25, x+0.25, z-0.23, z+0.23, LY-0.5, LY+1.0); }
     { const x=893, z=-1781.2; B(0.9, 0.03, 0.6, x, LY+0.016, z, "#7a5a2a"); } }
-  // the lawn down to the water: a walk out to a rail at the bank, benches looking out
-  {  B(0.06, 0.06, 8.0, 967.6, LY+1.0, -1775, "#2a2a2e"); B(0.06, 0.06, 8.0, 967.6, LY+0.5, -1775, "#2a2a2e");
-    for(let z=-1779; z<=-1771; z+=2) B(0.075, 1.02, 0.075, 967.6, LY+0.51, z, "#2a2a2e");
-    addCol(967.4, 967.8, -1779.1, -1770.9, LY-0.5, LY+1.05);
+  // the lawn down to the water: a walk that follows the ground from the plaza to the dock's overlook, benches looking out
+  { const X0=936.06, X1=966.9, Z0=-1777.5, Z1=-1772.5, n=Math.round(X1-X0), P=[], I=[], U=[];
+    for(let k=0;k<=n;k++){ const x=X0+(X1-X0)*k/n; for(const z of [Z0, (Z0+Z1)/2, Z1]){ P.push(x, Terrain.groundAt(x, z)+0.03, z); U.push(x*0.33, z*0.33); } }
+    for(let k=0;k<n;k++) for(let j=0;j<2;j++){ const a=k*3+j; I.push(a, a+1, a+3, a+1, a+4, a+3); }
+    const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(P, 3)); g.setAttribute("uv", new T.Float32BufferAttribute(U, 2)); g.setIndex(I); g.computeVertexNormals();
+    push("lotpave", g, 0, 0, 0, 0, "#9a9a96"); }
+  {
     for(const z of [-1790, -1760]){ const gz=Terrain.groundAt(960, z); for(const s of [-1, 1]) B(0.42, 0.42, 0.08, 960, gz+0.21, z+s*0.85, "#2a2a2e");
       B(0.46, 0.06, 1.9, 960, gz+0.45, z, "#8a6a4a"); B(0.06, 0.4, 1.9, 959.78, gz+0.7, z, "#8a6a4a");
       addCol(959.74, 960.26, z-0.95, z+0.95, gz-0.5, gz+0.9); for(const dz of [-0.5, 0.5]) addSeat(960.02, z+dz, gz, -Math.PI/2, "A BENCH LOOKING OUT OVER THE LAKE"); } }
+  /* ---- the dock at the foot of the lawn: an overlook where the walk ends, a stair down the bank, the pier out over the
+     water with a T at its end; the pier and the T are LAKESIDE.docks, so a boat taken anywhere on the lake ties up here ---- */
+  if(typeof LAKESIDE!=="undefined" && LAKESIDE.DY){ const WY=LAKESIDE.WY, DY=LAKESIDE.DY, PT=Terrain.groundAt(966.6, -1775)+0.07, WOOD="#7a6a52", WOOD2="#6a5a44", RAIL="#5a4a38";
+    const tubeE=(a, b, rr, c)=>{ const d=b.clone().sub(a), L=d.length(); ME.push({geo:new T.CylinderGeometry(rr, rr, L, 6), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color(c)}); };
+    { let x=930; while(Terrain.lakeSD(x, (OFFICE.dockZ[0]+OFFICE.dockZ[1])/2)>1.5) x+=0.25; OFFICE.dockShore=x; }
+    const DZ0=OFFICE.dockZ[0], DZ1=OFFICE.dockZ[1], ZC=(DZ0+DZ1)/2, OX0=966.6, OX1=970.4, OZ0=-1778.2, OZ1=-1771.8, SX1=974.0, PX1=1001.0, TE=[PX1, PX1+2.4, ZC-9.0, ZC+9.0];
+    // the overlook: boards on joists, a fascia, posts down to the ground
+    for(let k=0;;k++){ const z=OZ0+0.08+k*0.15; if(z>OZ1-0.06) break; B(OX1-OX0, 0.04, 0.13, (OX0+OX1)/2, PT-0.02, z, k%4 ? WOOD : "#6e5e48"); }
+    for(const z of [OZ0-0.03, OZ1+0.03]) B(OX1-OX0+0.06, 0.24, 0.06, (OX0+OX1)/2, PT-0.16, z, WOOD2);
+    B(0.06, 0.24, OZ1-OZ0, OX1+0.03, PT-0.16, (OZ0+OZ1)/2, WOOD2);
+    for(const x of [OX0+0.2, OX1-0.1]) for(const z of [OZ0+0.1, OZ1-0.1]){ const g=Terrain.groundAt(x, z); B(0.14, PT-0.28-g+0.3, 0.14, x, (PT-0.28+g-0.3)/2, z, WOOD2); }      // (the posts under the joists, into the ground)
+    addFlat(OX0, OX1, OZ0, OZ1, PT);
+    // its rail: round three sides, open to the walk behind and to the stair in front
+    const POSTS=new Set(), post=(x, z, y, h)=>{ const k=Math.round(x*20)+":"+Math.round(z*20); if(POSTS.has(k)) return; POSTS.add(k);      // (one post at a corner two runs share)
+      B(0.1, h, 0.1, x, y+h/2, z, RAIL); B(0.13, 0.03, 0.13, x, y+h+0.015, z, RAIL); };
+    const railRun=(ax, a0, a1, c, y0, y1)=>{ const L=a1-a0, n=Math.max(1, Math.round(L/1.6));
+      for(let k=0;k<=n;k++){ const a=a0+L*k/n, y=y0+(y1-y0)*k/n; ax==="x" ? post(a, c, y, 1.0) : post(c, a, y, 1.0); }
+      const am=(a0+a1)/2, ym=(y0+y1)/2, th=Math.atan2(y1-y0, L), Lr=Math.hypot(L, y1-y0)+0.02;
+      for(const [dy, hh, ww] of [[0.985, 0.06, 0.12],[0.5, 0.05, 0.04]])      // (the handrail wider than the posts, its top under their caps')
+        ax==="x" ? ent(boxGeo(Lr, hh, ww), am, ym+dy, c, RAIL, 0, 0, th) : ent(boxGeo(ww, hh, Lr), c, ym+dy, am, RAIL, -th, 0, 0);
+      for(let a=a0+0.13; a<a1-0.06; a+=0.13){ const y=y0+(y1-y0)*(a-a0)/L; ax==="x" ? B(0.025, 0.42, 0.025, a, y+0.73, c, WOOD) : B(0.025, 0.42, 0.025, c, y+0.73, a, WOOD); }
+      ax==="x" ? addCol(a0, a1, c-0.07, c+0.07, Math.min(y0, y1)-1.2, Math.max(y0, y1)+1.05) : addCol(c-0.07, c+0.07, a0, a1, Math.min(y0, y1)-1.2, Math.max(y0, y1)+1.05); };
+    railRun("x", OX0+0.05, OX1, OZ0+0.05, PT, PT); railRun("x", OX0+0.05, OX1, OZ1-0.05, PT, PT);
+    railRun("z", OZ0+0.05, DZ0+0.18, OX1-0.05, PT, PT); railRun("z", DZ1-0.18, OZ1-0.05, OX1-0.05, PT, PT);
+    // the stair down the bank: treads on two stringers, a handrail either side
+    { const n=Math.round((SX1-OX1)/0.15), run=(SX1-OX1)/n;      // (a boardwalk sloping gently down from the overlook to the pier, its boards across it)
+      for(let k=0;k<n;k++){ const x=OX1+run*(k+0.5), y=PT+(DY-PT)*(k+0.5)/n; B(0.13, 0.04, DZ1-DZ0-0.24, x, y-0.02, ZC, k%4 ? WOOD : "#6e5e48"); }
+      const th=Math.atan2(PT-DY, SX1-OX1), L=Math.hypot(SX1-OX1, PT-DY);
+      for(const z of [DZ0+0.06, DZ1-0.06]) ent(boxGeo(L+0.2, 0.26, 0.06), (OX1+SX1)/2, (PT+DY)/2-0.2, z, WOOD2, 0, 0, -th);
+      addRamp(OX1, SX1, DZ0+0.1, DZ1-0.1, "x", OX1, SX1, PT, DY);
+      railRun("x", OX1, SX1, DZ0+0.05, PT, DY); railRun("x", OX1, SX1, DZ1-0.05, PT, DY); }
+    // the pier: boards across it on stringers, pilings, cleats; the T across its end
+    const deck=(x0, x1, z0, z1)=>{ LAKESIDE.docks.push({x0:x0, x1:x1, z0:z0, z1:z1, y:DY}); addFlat(x0, x1, z0, z1, DY);
+      const along=(x1-x0)>(z1-z0), n=Math.floor((along ? x1-x0 : z1-z0)/0.16);
+      for(let k=0;k<n;k++){ const t=(k+0.5)/n; along ? B(0.145, 0.05, z1-z0, x0+(x1-x0)*t, DY-0.025, (z0+z1)/2, k%5 ? WOOD : "#6e5e48") : B(x1-x0, 0.05, 0.145, (x0+x1)/2, DY-0.025, z0+(z1-z0)*t, k%5 ? WOOD : "#6e5e48"); }
+      for(const sd of [0, 1]) along ? B(x1-x0, 0.2, 0.08, (x0+x1)/2, DY-0.15, sd ? z1+0.04 : z0-0.04, WOOD2) : B(0.08, 0.2, z1-z0, sd ? x1+0.04 : x0-0.04, DY-0.15, (z0+z1)/2, WOOD2); };
+    deck(SX1, PX1, DZ0, DZ1); deck(TE[0], TE[1], TE[2], TE[3]);
+    const piling=(x, z)=>{ const bed=Math.min(Terrain.groundAt(x, z), WY-0.5); C(0.12, DY+0.6-bed, x, (DY+0.6+bed)/2, z, "#5a4a36", 12); C(0.13, 0.04, x, DY+0.62, z, "#4a3a2a", 12); addCol(x-0.13, x+0.13, z-0.13, z+0.13, DY-1.2, DY+0.62); };
+    for(let x=SX1+2.0; x<PX1-0.5; x+=4.0) for(const z of [DZ0-0.16, DZ1+0.16]) piling(x, z);
+    for(const z of [TE[2], TE[2]+4.5, TE[3]-4.5, TE[3]]) for(const x of [TE[0]-0.16, TE[1]+0.16]) if(Math.abs(z-ZC)>2) piling(x, z);
+    for(let z=TE[2]+1.4; z<TE[3]-1; z+=3.2) if(Math.abs(z-ZC)>1.6){ B(0.3, 0.04, 0.06, TE[1]-0.12, DY+0.06, z, "#8a8d90", Math.PI/2); for(const sd of [-1, 1]) B(0.05, 0.05, 0.05, TE[1]-0.12, DY+0.025, z+sd*0.08, "#8a8d90"); }
+    for(let x=SX1+6; x<PX1-1; x+=6) for(const z of [DZ0+0.12, DZ1-0.12]){ B(0.3, 0.04, 0.06, x, DY+0.06, z, "#8a8d90"); for(const sd of [-1, 1]) B(0.05, 0.05, 0.05, x+sd*0.08, DY+0.025, z, "#8a8d90"); }
+    // its edges you cannot step off: low rails down the pier over the land, the rest a wall of collider at the edge (you step aboard a boat with E)
+    railRun("x", SX1, OFFICE.dockShore, DZ0+0.05, DY, DY); railRun("x", SX1, OFFICE.dockShore, DZ1-0.05, DY, DY);
+    { const E=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, DY-1.2, DY+0.9);
+      E(OFFICE.dockShore, PX1, DZ0-0.07, DZ0+0.07); E(OFFICE.dockShore, PX1, DZ1-0.07, DZ1+0.07);
+      E(TE[0]-0.07, TE[0]+0.07, TE[2], DZ0); E(TE[0]-0.07, TE[0]+0.07, DZ1, TE[3]); E(TE[1]-0.07, TE[1]+0.07, TE[2], TE[3]);
+      E(TE[0], TE[1], TE[2]-0.07, TE[2]+0.07); E(TE[0], TE[1], TE[3]-0.07, TE[3]+0.07); }
+    // on the T: two benches looking out east, a life ring on its post, a ladder down into the water, lamps on posts; a lamp at the overlook
+    for(const z of [ZC-5.0, ZC+5.0]){ const x=TE[1]-0.55; B(0.42, 0.05, 1.6, x, DY+0.45, z, "#8a6a4a"); B(0.06, 0.4, 1.6, x-0.2, DY+0.7, z, "#8a6a4a");
+      for(const dz of [-0.7, 0.7]) B(0.4, 0.43, 0.06, x, DY+0.215, z+dz, "#2a2a2e");
+      addCol(x-0.24, x+0.24, z-0.82, z+0.82, DY-0.5, DY+0.9); for(const dz of [-0.4, 0.4]) addSeat(x, z+dz, DY, -Math.PI/2, "A BENCH AT THE END OF THE DOCK"); }
+    { const x=TE[0]+0.2, z=ZC-2.4; B(0.08, 1.3, 0.08, x, DY+0.65, z, RAIL); ent(new T.TorusGeometry(0.3, 0.07, 8, 20), x+0.06, DY+1.0, z, "#e8762a", 0, Math.PI/2, 0);
+      addCol(x-0.06, x+0.06, z-0.06, z+0.06, DY-0.5, DY+1.3); }
+    { const z=TE[3]-0.9, x=TE[1]+0.12; for(const s of [-0.22, 0.22]) tubeE(V3(x, WY-1.0, z+s), V3(x, DY+0.8, z+s), 0.02, "#a8acae");
+      for(let k=0;k<5;k++) tubeE(V3(x, WY-0.7+k*0.3, z-0.22), V3(x, WY-0.7+k*0.3, z+0.22), 0.015, "#a8acae"); }
+    for(const [x, z] of [[(SX1+PX1)/2, DZ0+0.18],[TE[0]+0.2, ZC+2.4],[OX1-0.25, OZ1-0.25]]){ const y0=x<OX1+0.1 ? PT : DY;
+      C(0.05, 2.4, x, y0+1.2, z, "#2a2a2e", 8); RB(0.2, 0.26, 0.2, x, y0+2.5, z, "#2a2a2e", 0, 0.04); push("rn_glow", new T.SphereGeometry(0.085, 10, 8), x, y0+2.33, z, 0, "#ffffff");
+      addCol(x-0.07, x+0.07, z-0.07, z+0.07, y0-0.5, y0+2.6);
+      const L={x:x, y:y0+2.2, z:z, color:0xffd8a0, intensity:0, dist:11, decay:1.6, mothy:true}; LAMPS.push(L); OFFICE.dockLamps.push(L); }
+    // a plaque on the overlook's rail
+    sign(0.9, 0.36, (c, Wd, Hh)=>{ c.fillStyle="#2a3a2a"; c.fillRect(0, 0, Wd, Hh); c.strokeStyle="#b8944a"; c.lineWidth=3; c.strokeRect(5, 5, Wd-10, Hh-10);
+        say(c, "CORPORATE PARK DOCK", Wd/2, Hh*0.4, Wd*0.8, Hh*0.3, "#d8ccae", "700", "Georgia, serif"); say(c, "BOATERS TIE UP 2 HRS · NO SWIMMING", Wd/2, Hh*0.72, Wd*0.8, Hh*0.16, "#c8b898", "600", "Arial"); },
+      OX0+1.9, PT+0.82, OZ1-0.105, Math.PI, false, 300);
+    B(0.94, 0.4, 0.02, OX0+1.9, PT+0.82, OZ1-0.08, "#2a2a22");
+    addZone(OX0, TE[1], TE[2], TE[3], WY-1, PT+6, "HOLLOW ROAD CORPORATE PARK · THE DOCK");
+    OFFICE.dockRoute=[[940.0, -1775.0],[950.0, -1775.0],[965.0, -1775.0],[968.5, -1775.0],[970.6, ZC],[973.6, ZC],[980.0, ZC],[995.0, ZC],[TE[0]+1.2, ZC],[TE[0]+1.2, TE[2]+1.2],[TE[0]+1.2, TE[3]-1.6]];
+  }
   // lamps in the lot
   for(const [x, z] of [[759, -1775],[776.25, -1825],[776.25, -1725],[793.75, -1775]]){ const gy=LY; C(0.08, 8.0, x, gy+4.0, z, "#5a5e60", 10); addCol(x-0.1, x+0.1, z-0.1, z+0.1, gy-0.5, gy+8);
     for(const s of [-1, 1]){ B(1.0, 0.08, 0.1, x+s*0.5, gy+7.9, z, "#5a5e60"); RB(0.6, 0.14, 0.4, x+s*1.0, gy+7.85, z, "#3a3e42", 0, 0.03);
@@ -1111,7 +1182,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     const xs=shoreX(O.z0), xn=shoreX(O.z1);
     W(O.x0, EAST.dive.site.x0+0.4, O.z0-0.4, O.z0+0.4); W(O.x0, xn+0.4, O.z1-0.4, O.z1+0.4);              // (the north side open past x 905 onto the Lakeside Dive's clearing, 14mf)
     const BANK="THE BANK DROPS STRAIGHT INTO THE LAKE HERE";
-    for(let z=O.z0; z<O.z1-0.01; z+=2){ const a=shoreX(z), b=shoreX(Math.min(O.z1, z+2)); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, z, Math.min(O.z1, z+2)).msg=BANK; } }
+    for(let z=O.z0; z<O.z1-0.01; z+=2){ const z2=Math.min(O.z1, z+2); if(z2>OFFICE.dockZ[0]+0.05 && z<OFFICE.dockZ[1]-0.05) continue; const a=shoreX(z), b=shoreX(z2); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, z, z2).msg=BANK; }   // (open where the dock goes out)
+    { const a=shoreX(OFFICE.dockZ[0]-1), b=shoreX(OFFICE.dockZ[1]+1); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, OFFICE.dockZ[0]-1.0, OFFICE.dockZ[0]).msg=BANK; W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, OFFICE.dockZ[1], OFFICE.dockZ[1]+1.0).msg=BANK; } }
   if(typeof FOREST!=="undefined"){ const q=_trng(1984);
     const tree=(sp, x, z, s)=>{ if(Terrain.lakeSD(x, z)<3.5) return; FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, gy=Terrain.groundAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
     for(const [z, nz] of [[O.z0, -1],[O.z1, 1]]) for(let x=O.x0+4; x<O.x1+12; x+=6.2) for(const [dep, sp] of [[1.8, "edge"],[6.5, null],[11.5, null],[16.5, null]]){ if(q()<0.15) continue; if(nz<0 && x>EAST.dive.site.x0-4) continue;
@@ -1133,12 +1205,13 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   detailMesh(SCR, SCREEN_MAT, "office-screens", false);
 
   OFFICE.routes={
+    "office park: down the lawn, the stair and out the dock to the T":OFFICE.dockRoute,
     "office park: up Hollow Road from the pretzel works to the end":[[733.5, -1660],[733.5, -1720],[733.5, -1800],[733.5, -1870]],
     "office park: in at the mouth, across the lot to One Hollow Road's door":[[734.0, -1774.0],[745.0, -1774.0],[758.0, -1776.0],[776.25, -1786.0],[795.0, -1786.0],[805.0, -1776.0],[815.0, -1775.0],[819.5, -1775.0]],
     "office park: round One to the plaza and the fountain":[[812.0, -1801.0],[840.0, -1801.0],[856.0, -1801.0],[870.0, -1796.0],[886.0, -1796.0],[886.0, -1787.0]],
     "office park: from the plaza into Midland Mutual":[[886.0, -1810.0],[886.0, -1813.0],[886.0, -1815.5],[886.0, -1818.0],[886.0, -1823.0]],
     "office park: from the plaza into Lakeshore Data Systems":[[886.0, -1745.0],[886.0, -1740.0],[886.0, -1736.0],[886.0, -1733.0],[886.0, -1730.0]],
-    "office park: across the lawn to the rail at the water":[[930.0, -1775.0],[945.0, -1775.0],[960.0, -1775.0],[966.5, -1775.0]]};
+    "office park: across the lawn to the dock":[[930.0, -1775.0],[945.0, -1775.0],[960.0, -1775.0],[967.5, -1775.0]]};
   // and in each building, from the door to the elevator, and round every floor from the elevator
   for(const Kd of [ONE, TWO, THREE]){ const P=Kd.F.P, nm=Kd.name.toLowerCase();
     OFFICE.routes["office park: "+nm+", the door to the elevator"]={y0:FL+0.1, pts:[P(0, -0.6), P(0, 3.0), P(0, 8.5), P(UC, 9.0), P(UC, 9.6)]};
@@ -1227,6 +1300,7 @@ function updateElevators(dt){
     elevDraw(E); } }
 /* the lamps come on after dark; the fountain runs and its water drifts while you are near it */
 function updateOfficePark(dt, dark){
+  for(const L of OFFICE.dockLamps) L.intensity=0.8*smoothstep(0.3, 0.6, dark);
   for(const L of OFFICE.lamps) L.intensity=1.1*smoothstep(0.3, 0.6, dark);
   updateElevators(dt);
   const c=camera.position; if(Math.hypot(c.x-893, c.z+1775)>130) return;

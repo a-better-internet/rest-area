@@ -44,7 +44,7 @@ const COFFEE={};
   const CX0=1433.5, CX1=1441.5, CZ0=-1186.5, CZ1=-1179.5, WT=0.2, FF=Y+0.24, EAVE=FF+2.7, RIDGE=FF+4.4, CEIL=FF+2.6, XM=(CX0+CX1)/2;
   const IX0=CX0+WT, IX1=CX1-WT, IZ0=CZ0+WT, IZ1=CZ1-WT;               // (the room's inner faces)
   Object.assign(COFFEE, {x0:CX0, x1:CX1, z0:CZ0, z1:CZ1, FF:FF});
-  const SEA="#9fd2bf", CORAL="#e8705e", TRIM="#f6f3ec", CREAM="#f2e6cc";
+  const SEA="#9fd2bf", CORAL="#e8705e", TRIM="#d8d2c4", CREAM="#d8ccb0";      // (never plain white: a warm off-white trim)
   const ME=[];
   const ent=(geo,x,y,z,c,rx,ry,rz)=>ME.push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
     new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});

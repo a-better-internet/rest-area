@@ -605,6 +605,9 @@ If the scene runs hot on your machine, start there (see below).
       glow at night.
     - Every terminal shows something of its own: claims screens, word
       processors, spreadsheets, ledgers, charts, the network map, a game.
+    - At the foot of the lawn a dock goes out into the lake: an overlook
+      on the bank, a boardwalk down to the pier, a T at its end with
+      benches, lamps, a life ring and a ladder. Boats tie up there too.
     - Midland's executive floor has a private dining room off its lounge;
       the law firm upstairs in French Creek Financial has its library; and
       Lakeshore Data runs a customer training room and a service bench.
@@ -626,7 +629,11 @@ If the scene runs hot on your machine, start there (see below).
     cart, the hanging sign, a chalkboard by the steps). Inside, books to
     the ceiling on every wall and two cases down the middle, the owner at
     the counter with his old till, a wood stove with two armchairs drawn
-    up to it and the cat asleep in one, quiet jazz on the radio.
+    up to it, quiet jazz on the radio. Six cats live there: Pepper, Mabel
+    and Biscuit wander the floor, Moby sleeps in the green chair, Juniper
+    keeps the front window and Doris the counter. Pet any of them (E) and
+    it sits up and purrs; take the feather wand from its jar on the counter
+    and the cats stalk the feather wherever you look, crouch and pounce.
   - **The Lakeside Dive**, past the office park on the shore, down the
     service drive from the office lot: a one-room bar in stained siding with
     six stools, beer on tap, a pool table, a jukebox playing country, darts,

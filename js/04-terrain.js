@@ -124,7 +124,8 @@ const EAST=(function(){
            trail:smoothPath([{x:892,z:-1600},{x:899,z:-1596},{x:906,z:-1599},{x:913,z:-1605},{x:919,z:-1604},{x:925,z:-1600}], 1.5),
            woods:{x0:892, x1:924, z0:-1622, z1:-1580}, lake:{x0:922, x1:972, z0:-1628, z1:-1576}},
     // and up the road past the works, the office park (14md): its clearing, graded, out to the shore so the lake opens behind it
-    office:{site:{x0:743, x1:990, z0:-1862, z1:-1690}, mouth:{z0:-1782, z1:-1766}},
+    office:{site:{x0:743, x1:990, z0:-1862, z1:-1690}, mouth:{z0:-1782, z1:-1766},
+            level:{x0:743, x1:938, z0:-1862, z1:-1690}},                   // (the lot, the buildings and the plaza: held level, clear of the bank's slope down to the lake)
     // and past it on the shore, the Lakeside Dive (14mf): its clearing, graded, joined to the park's north edge
     dive:{site:{x0:905, x1:990, z0:-1922, z1:-1862}},
     // and down the coast, between the pretzel works and the beer distributor, Hollow Run Marina (14mg): the marina on the shore, and its drive in
@@ -329,7 +330,9 @@ const Terrain=(function(){
       if(ls<0) h=Math.min(h, EAST.wy-0.45-Math.min(-ls*0.10, 5.5));
       else if(ls<260){ const lo=EAST.wy+0.32, run=lerp(50, 70, smoothstep(0, 40, boxDist(EAST.town,x,z)));
         if(h>lo && ls<90) h=lo+(h-lo)*smoothstep(0, run, ls);
-        h=Math.max(h, lo+Math.min(ls, 40)*0.02); } }                   // (so nowhere off the lake is under its water)
+        h=Math.max(h, lo+Math.min(ls, 40)*0.02); }                     // (so nowhere off the lake is under its water)
+      // the office park's paved heart stays level with the road; the lawn falls away to the water only beyond it
+      { const od=boxDist(EAST.office.level,x,z); if(od<14) h=toward(h, EDIN.y, od, 0, 14); } }
     // west along US 6N: the same, the road's clearing and the park's level with the road
     { const wd=Math.min(boxDist(WEST.corr,x,z), boxDist(WEST.park,x,z), boxDist(WEST.ranch,x,z));
       if(wd<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, wd));

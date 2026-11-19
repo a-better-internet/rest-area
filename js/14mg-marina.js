@@ -77,6 +77,11 @@ const MARINA={routes:{}, lamps:[], radios:[]};
     for(const o of OPW){ for(const zz of [o[0]-0.05, o[1]+0.05]) B(0.03, o[3]-o[2]+0.06, 0.1, BX0-0.015, (o[2]+o[3])/2, zz, "#d4ccb8"); B(0.04, 0.08, o[1]-o[0]+0.24, BX0-0.02, o[3]+0.04, (o[0]+o[1])/2, "#d4ccb8");
       if(o[2]>FL) push("glass", planeGeo(o[1]-o[0]-0.02, o[3]-o[2]-0.02, 0), BX0+0.06, (o[2]+o[3])/2, (o[0]+o[1])/2, Math.PI/2, "#ffffff"); }
     for(const o of OPE) push("glass", planeGeo(o[1]-o[0]-0.02, o[3]-o[2]-0.02, 0), BX1-0.06, (o[2]+o[3])/2, (o[0]+o[1])/2, Math.PI/2, "#ffffff");
+    // and the casing round every opening inside, with a stool under each window (the openings were bare holes in the siding)
+    for(const [ops, xi, sd] of [[OPW, BX0+WT, 1],[OPE, BX1-WT, -1]]) for(const o of ops){
+      for(const zz of [o[0]-0.045, o[1]+0.045]) B(0.03, o[3]-o[2]+(o[2]>FL ? 0.06 : 0.03), 0.09, xi+sd*0.015, (o[2]+o[3]+(o[2]>FL ? 0 : 0.03))/2+(o[2]>FL ? 0 : -0.0), zz, "#a89a7c");
+      B(0.034, 0.09, o[1]-o[0]+0.21, xi+sd*0.017, o[3]+0.045, (o[0]+o[1])/2, "#a89a7c");
+      if(o[2]>FL) B(0.12, 0.035, o[1]-o[0]+0.24, xi+sd*0.06, o[2]-0.0175, (o[0]+o[1])/2, "#a89a7c"); }
     makeDoor(XF(BX0+WT/2, -1437.62, Math.PI/2), 0, FL+0.01, 0, "HOLLOW RUN MARINA", true, 0, "vision", 0x2a4a6a); addFlat(BX0-0.02, BX0+WT+0.02, -1438.6, -1437.6, FL);
     // the step up from the lot, a landing at the door
     push("concrete", boxGeo(1.13, FL-LY+0.3-0.012, 2.0), BX0-0.635, (FL-0.012+LY-0.3)/2, -1438.1, 0, "#8a867e"); addFlat(BX0-1.2, BX0, -1439.1, -1437.1, FL);      // (its top a hair under the slab's, and short of it)
