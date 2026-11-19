@@ -95,6 +95,23 @@ No lettering touches or runs past the edge of its board or its border.
   lettering that comes within 3% of its canvas's edge, and the line that
   drew it.
 
+### 4. People face the way their seat faces
+
+Anyone put down sitting (14q's crowd, mode `sit`) faces the way the seat
+they sit on faces: a person turned by `yaw` faces (sin yaw, cos yaw), a seat
+(`addSeat`) faces (−sin yaw, −cos yaw), so a person on a seat of yaw `s`
+takes yaw `s + π`. Never sit anyone backwards on a bench or sideways on a
+stool. **Check with `tools/sitters.js`**, which fails on anyone turned more
+than 60° from the nearest seat under them, and lists sitters with no seat
+at all (a bench with no `addSeat`) to look at by eye.
+
+### 5. A pair of doors swings the same way
+
+A double door is two `makeDoor`s, the second hung turned half round
+(`ry + π`), which also turns which way it opens. So the second leaf takes
+the opposite `opensIn` to the first, and both swing into the building
+(14md's store doors, 14m's fireworks store).
+
 ## Building notes
 
 - `runX` / `runZ` / `lineX` / `lineZ` (09) take one row of openings. A wall
@@ -1202,4 +1219,32 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   face, bloom, scanlines and a slot mask that fade by `fwidth`, the corners
   dimmed. It marks its canvas `_crt`, and 18g's `_cbTube` then leaves that
   canvas alone (the slots and the poker machine keep their own).
+
+## Round 41 notes
+
+- Every office building has two running elevators (14md): `elevator(K,
+  name, levels, top, uc)` builds one at `uc` across the frame, `UC` (4.2)
+  and `-UC`, each with its own shaft, landing doors, lantern, buttons, zone
+  and routes; the floors are open over both shafts, and the lobby's back
+  wall has a door either side of the way through. Keep the frame's u from
+  -6 to 6, v 7 to 12 clear on every floor: it is the way out of both.
+- 14md's kit has `aquarium`, `lateral`, `flag`, `pedestal` (a computer on a
+  plinth, its screen from the atlas), `trophies`, `barCart`, `globe`,
+  `grandfather` and `deposit` as well. The plaza (14md) has café tables
+  under umbrellas, the sculpture, flower boxes along the fronts, bollards,
+  bins, a bike rack and the plaque.
+- Hollow Run Marina is 14mg (`MARINA`), on `EAST.marina` (04: `site`, the
+  drive in off Hollow Road `drive`, its `mouth`; graded, `siteDist`, 07's
+  `canopyY`). Its drive and lot are paved with Hollow Road's stretch south
+  of the pretzel works (14mc); 14mb opens the road's east wall and tree rows
+  at the drive and breaks the edge line at its mouth; 14me lights the
+  mouth. Its pier and T are `LAKESIDE.docks`, so any boat ties up at them
+  and a boat taken from them ties up at Lake Street's. Its pontoons are
+  14n's `LAKESIDE.pontoon` (public now, with `LAKESIDE.WY` / `DY`), each
+  moored by 14p's `BOAT.moor(S)`, which ties it to the dock it lies along
+  and gives it TAKE THIS BOAT. A boat added after 14p calls `BOAT.moor`.
+- The pretzel works' south strip (14mc) holds the break room, the QA lab,
+  the film racks and the maintenance cage. Before putting a person on a
+  floor, check they stand clear of every collider at head height: a man
+  half inside an oven hood looks stuck against it.
 

@@ -580,6 +580,7 @@ function updateLife(dt, now, dark, dn){
   if(typeof updateOfficePark==="function") updateOfficePark(dt, dark);
   if(typeof updateHollowRoad==="function") updateHollowRoad(dt, dark);
   if(typeof updateDive==="function") updateDive(dt, dark);
+  if(typeof updateMarina==="function") updateMarina(dt, dark);
   if(typeof updateCoffee==="function") updateCoffee(dt, dark);
   if(typeof updatePretzel==="function") updatePretzel(dt, dark);
   if(typeof updateEdinSub==="function") updateEdinSub(dt, now);

@@ -55,7 +55,7 @@ const BEER={routes:{}, served:false, aisle:null};
   for(const o of [-0.12, 0.12]) stripe(RX+o, Z-HW-1.2, RX+o, END+0.6, 0.1, YELLOW_LINE, LY);
   stripe(RX-3.15, Z-HW-7.5, RX-3.15, END+0.6, 0.12, WHITE_LINE, LY);
   stripe(RX+3.15, Z-HW-7.5, RX+3.15, LZ1-1.5, 0.12, WHITE_LINE, LY); // (and on up past the beer distributor, broken only at the pretzel works' mouth, where its rounding starts and ends, 14mc)
-  { let zt=LZ0+1.5; for(const PM of [EAST.pretz.mouth, EAST.office.mouth]){ stripe(RX+3.15, zt, RX+3.15, PM.z1+4.2, 0.12, WHITE_LINE, LY); zt=PM.z0-4.2; }
+  { let zt=LZ0+1.5; for(const PM of [EAST.marina.mouth, EAST.pretz.mouth, EAST.office.mouth]){ stripe(RX+3.15, zt, RX+3.15, PM.z1+4.2, 0.12, WHITE_LINE, LY); zt=PM.z0-4.2; }
     stripe(RX+3.15, zt, RX+3.15, END+0.6, 0.12, WHITE_LINE, LY); }
   stripe(RX-3.05, Z-HW-3.2, RX-0.3, Z-HW-3.2, 0.45, WHITE_LINE, LY);
   // the lot's arrows, painted: in at the west door, out at the east
@@ -65,7 +65,7 @@ const BEER={routes:{}, served:false, aisle:null};
   /* ---- the walls of the world here, as far as you can push through the trees ---- */
   { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300), L=Bq.lot, R=Bq.road;
     // (the east side open wherever a clearing comes down to the road: the pretzel works, 14mc, and the office park, 14md)
-    const GAPS=[EAST.pretz.site, EAST.office.site].sort((a, b)=>b.z1-a.z1);
+    const GAPS=[EAST.marina.drive, EAST.pretz.site, EAST.office.site].sort((a, b)=>b.z1-a.z1);
     W(R.x0-0.4, R.x0+0.4, END, R.z1); W(R.x1-0.4, R.x1+0.4, L.z1, R.z1);
     { let zt=L.z0; for(const G of GAPS){ W(R.x1-0.4, R.x1+0.4, G.z1, zt); zt=G.z0; } W(R.x1-0.4, R.x1+0.4, END, zt); }
     W(R.x1, L.x1, L.z1-0.4, L.z1+0.4); W(L.x1-0.4, L.x1+0.4, L.z0, L.z1); W(R.x1, L.x1, L.z0-0.4, L.z0+0.4);
@@ -78,7 +78,7 @@ const BEER={routes:{}, served:false, aisle:null};
         const t=(k+q()*0.6)/Math.max(1, n), x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);
         tree(sp || (q()<0.3 ? "hemlock" : q()<0.45 ? "pine" : "hard"), x, z, 0.85+q()*0.4); } };
     const L=Bq.lot, R=Bq.road;
-    const GAPS=[EAST.pretz.site, EAST.office.site].sort((a, b)=>b.z1-a.z1);
+    const GAPS=[EAST.marina.drive, EAST.pretz.site, EAST.office.site].sort((a, b)=>b.z1-a.z1);
     row(R.x0, END, R.x0, R.z1-1, -1, 0); row(R.x1, L.z1+1, R.x1, R.z1-1, 1, 0);
     { let zt=L.z0-1; for(const G of GAPS){ row(R.x1, G.z1+1, R.x1, zt, 1, 0); zt=G.z0-1; } row(R.x1, END, R.x1, zt, 1, 0); }
     row(L.x0+10, L.z1, L.x1, L.z1, 0, 1); row(L.x1, L.z0, L.x1, L.z1, 1, 0); row(L.x0+10, L.z0, L.x1, L.z0, 0, -1);

@@ -250,7 +250,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       const a0=Math.max(along ? Math.min(u0, u1) : Math.min(v0, v1), along ? -K.W/2+0.05 : 0.05), a1=Math.min(along ? Math.max(u0, u1) : Math.max(v0, v1), along ? K.W/2-0.05 : K.D-0.05);
       let p=a0; for(const g of (gaps||[]).concat([[a1, a1]]).sort((m, n)=>m[0]-n[0])){ if(g[0]-p>0.05){ const m=(p+g[0])/2;
           const [x, z]=along ? P(m, v0) : P(u0, m); push("glass", planeGeo(g[0]-p-0.04, h-0.06, 0), x, y+h/2, z, F.ry+(along ? 0 : Math.PI/2), "#ffffff");
-          if(along){ K.box(g[0]-p, 0.06, 0.08, m, y+0.035, v0, "#3a3a3e"); K.box(g[0]-p, 0.06, 0.08, m, y+h-0.035, v0, "#3a3a3e"); K.col(p, g[0], v0-0.04, v0+0.04, y-0.05, y+h); }
+          if(along){ K.box(g[0]-p-0.09, 0.06, 0.08, m, y+0.035, v0, "#3a3a3e"); K.box(g[0]-p-0.09, 0.06, 0.08, m, y+h-0.035, v0, "#3a3a3e"); K.col(p, g[0], v0-0.04, v0+0.04, y-0.05, y+h); }
           else { K.box(0.08, 0.06, g[0]-p-0.09, u0, y+0.033, m, "#3a3a3e"); K.box(0.08, 0.06, g[0]-p-0.09, u0, y+h-0.037, m, "#3a3a3e"); K.col(u0-0.04, u0+0.04, p, g[0], y-0.05, y+h); }
           for(const e of [p, g[0]]) along ? K.box(0.06, h-0.004, 0.1, e, y+h/2, v0, "#3a3a3e") : K.box(0.1, h-0.004, 0.06, u0, y+h/2, e, "#3a3a3e"); }   // (rails and posts never flush: rails 5 mm in, posts 2 mm short)
         p=Math.max(p, g[1]); } };
@@ -354,6 +354,36 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     K.bin=(u, v, y)=>{ const [x, z]=P(u, v); C(0.14, 0.34, x, y+0.17, z, "#5a5a5e", 12); };
     K.magTable=(u, v, y, col)=>{ const [x, z]=P(u, v); C(0.35, 0.03, x, y+0.5, z, col||"#3a2014", 20); C(0.04, 0.48, x, y+0.25, z, BRASS, 8); C(0.22, 0.02, x, y+0.01, z, BRASS, 16);
       for(let k=0;k<3;k++) B(0.21, 0.008, 0.28, x+(k-1)*0.08, y+0.524+k*0.009, z+(k%2)*0.04, ["#c84a3a","#2a6a8a","#d8b84a"][k], k*0.5); addCol(x-0.36, x+0.36, z-0.36, z+0.36, y-0.05, y+0.52); };
+    // and more: an aquarium on its cabinet, lateral files, a flag on its stand, a computer on a pedestal, a trophy case, a bar cart, a globe,
+    // a grandfather clock, a wall of safe deposit boxes
+    K.aquarium=(u, v, y, d, len)=>{ const o=K.obj(u, v, d, y); o.rb(len, 0.75, 0.6, 0, 0.375, 0, "#2a1a14", 0.02);
+      o.b(len-0.08, 0.62, 0.48, 0, 1.08, 0, "#1e5a7a"); o.b(len-0.1, 0.06, 0.46, 0, 0.8, 0, "#a89878");
+      for(let k=0;k<7;k++) o.b(0.08, 0.04, 0.02, -len/2+0.3+k*(len-0.6)/6, 1.0+((k*37)%30)/100, ((k*53)%30-15)/100, ["#f2a030","#e8e8d8","#3ac8ff","#f2d03a"][k%4]);
+      for(let k=0;k<4;k++) o.b(0.03, 0.3+((k*7)%3)*0.08, 0.03, -len/2+0.4+k*0.6, 0.97, 0.1, "#2a7a3a");
+      const [gx, gz]=o.at(0, 0.247); push("glass", planeGeo(len-0.04, 0.66, 0), gx, y+1.08, gz, o.ry, "#ffffff");
+      o.b(len+0.02, 0.1, 0.62, 0, 1.45, 0, "#2a1a14"); K.colO(o, len, 0.6, 1.5, y); };
+    K.lateral=(u, v, y, d, n, col)=>{ for(let k=0;k<n;k++){ const o=K.obj(u+(d==="front" || d==="back" ? (k-(n-1)/2)*0.92 : 0), v+(d==="+u" || d==="-u" ? (k-(n-1)/2)*0.92 : 0), d, y);
+        o.b(0.9, 1.0, 0.5, 0, 0.5, 0, col || "#7a7468"); for(let j=0;j<3;j++){ o.b(0.84, 0.3, 0.012, 0, 0.18+j*0.32, 0.256, "#8a8478"); o.b(0.2, 0.02, 0.03, 0, 0.28+j*0.32, 0.27, "#b8b4a8"); }
+        if(DQ()<0.6) o.b(0.3, 0.08, 0.24, 0.2, 1.045, 0, ["#2a4a6a","#6a2a1a","#3a5a2a"][(DQ()*3)|0]); K.colO(o, 0.9, 0.5, 1.0, y); } };
+    K.flag=(u, v, y, colA, colB)=>{ const [x, z]=P(u, v); C(0.18, 0.06, x, y+0.03, z, BRASS, 14); C(0.018, 2.4, x, y+1.2, z, "#3a2a1a", 8); S(0.04, x, y+2.44, z, BRASS);
+      for(let k=0;k<5;k++) B(0.04, 0.16, 0.5, x+0.03, y+2.15-k*0.16, z+0.26+((k%2) ? 0.02 : 0), k%2 ? colB : colA); addCol(x-0.2, x+0.2, z-0.2, z+0.2, y-0.05, y+2.4); };
+    K.pedestal=(u, v, y, d, k)=>{ const o=K.obj(u, v, d, y); o.rb(0.8, 0.9, 0.7, 0, 0.45, 0, "#d4ccb8", 0.03); o.b(0.82, 0.04, 0.72, 0, 0.92, 0, "#2a7a7a");
+      o.rb(0.42, 0.34, 0.38, 0, 1.13, -0.05, "#c4b89c", 0.03); o.rb(0.46, 0.05, 0.18, 0, 0.965, 0.22, "#b4a88c", 0.01);
+      const [sx, sz]=o.at(0, 0.142); screen(0.32, 0.22, sx, y+1.15, sz, o.ry, k); K.colO(o, 0.8, 0.7, 1.3, y); };
+    K.trophies=(u, v, y, d, len)=>{ const o=K.obj(u, v, d, y); o.b(len, 1.9, 0.42, 0, 0.95, 0, "#3a2014"); for(const ly of [0.55, 1.0, 1.45]) o.b(len-0.08, 0.02, 0.34, 0, ly, 0.02, "#d4ccb8");
+      for(let k=0;k<9;k++){ const lx=-len/2+0.25+(k%3)*(len-0.5)/2, ly=0.57+((k/3)|0)*0.45; o.c(0.05, 0.03, lx, ly+0.025, 0.02, "#2a2a2a", 10); o.c(0.035, 0.16, lx, ly+0.12, 0.02, BRASS, 10); o.c(0.07, 0.03, lx, ly+0.215, 0.02, BRASS, 12); }
+      const [gx, gz]=o.at(0, 0.215); push("glass", planeGeo(len-0.06, 1.4, 0), gx, y+1.05, gz, o.ry, "#ffffff"); K.colO(o, len, 0.42, 1.9, y); };
+    K.barCart=(u, v, y, d)=>{ const o=K.obj(u, v, d, y); for(const ly of [0.3, 0.78]) o.b(0.8, 0.02, 0.45, 0, ly, 0, "#2a1a14"); for(const [a, b] of [[-1,-1],[1,-1],[-1,1],[1,1]]) o.b(0.025, 0.8, 0.025, a*0.38, 0.4, b*0.2, BRASS);
+      for(let k=0;k<5;k++){ const h=0.24+(k%2)*0.06; o.c(0.035, h, -0.28+k*0.14, 0.79+h/2+0.003, 0.02, ["#6a3a1a","#3a5a2a","#c8a85a","#8a2a1a","#d8c8a0"][k], 8); }
+      for(let k=0;k<4;k++) o.c(0.03, 0.08, -0.25+k*0.16, 0.351, -0.1, "#c8d8e0", 8); K.colO(o, 0.82, 0.47, 0.95, y); };
+    K.globe=(u, v, y)=>{ const [x, z]=P(u, v); C(0.2, 0.04, x, y+0.02, z, "#3a2014", 14); C(0.03, 0.6, x, y+0.32, z, "#3a2014", 8); S(0.28, x, y+0.92, z, "#5a7a6a");
+      ent(new T.TorusGeometry(0.31, 0.012, 6, 28), x, y+0.92, z, BRASS, 0, 0.4, 0); addCol(x-0.3, x+0.3, z-0.3, z+0.3, y-0.05, y+1.2); };
+    K.grandfather=(u, v, y, d)=>{ const o=K.obj(u, v, d, y); o.b(0.5, 2.1, 0.32, 0, 1.05, 0, "#4a2414"); o.b(0.56, 0.12, 0.36, 0, 2.16, 0, "#3a1a0e");
+      const [fx, fz]=o.at(0, 0.168); ent(new T.CylinderGeometry(0.16, 0.16, 0.01, 24), fx, y+1.8, fz, "#d4ccb8", Math.PI/2, o.ry, 0); o.b(0.012, 0.11, 0.004, 0, 1.84, 0.176, "#1a1a1a");
+      o.b(0.06, 0.5, 0.004, 0, 1.1, 0.165, BRASS); o.c(0.07, 0.01, 0, 0.85, 0.17, BRASS, 16); K.colO(o, 0.56, 0.36, 2.2, y); };
+    K.deposit=(u, v, y, d, len)=>{ const o=K.obj(u, v, d, y); o.b(len, 2.2, 0.3, 0, 1.1, 0, "#8a7a5a");
+      for(let i=0;i<Math.floor(len/0.3);i++) for(let j=0;j<7;j++){ const lx=-len/2+0.16+i*0.3, ly=0.2+j*0.29; o.b(0.27, 0.26, 0.012, lx, ly+0.13, 0.156, j%3 ? "#b8944a" : "#a88440"); o.b(0.04, 0.03, 0.02, lx+0.08, ly+0.13, 0.166, "#3a2a1a"); }
+      K.colO(o, len, 0.3, 2.2, y); };
     return K; }
   const uvOf=(F, x, z)=>{ // (the inverse of F.P, for the four frames)
     const P0=F.P(0, 0), Pu=F.P(1, 0), Pv=F.P(0, 1), ux=Pu[0]-P0[0], uz=Pu[1]-P0[1], vx=Pv[0]-P0[0], vz=Pv[1]-P0[1], dx=x-P0[0], dz=z-P0[1];
@@ -369,8 +399,10 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     for(let i=0;i<2600;i++){ c.fillStyle=["#a49c90","#6a625a","#b4aa98","#5a524a","#9a7a5a"][(q()*5)|0]; const s=1+q()*3; c.fillRect(q()*W, q()*H, s, s); }
     c.fillStyle="#b0904c"; c.fillRect(0, H/2-1, W, 2); c.fillRect(W/2-1, 0, 2, H); });
   TERRAZZO.wrapS=TERRAZZO.wrapT=T.RepeatWrapping;
-  function elevator(K, name, levels, top){
-    const F=K.F, N=levels.length, E={name:name, levels:levels, f:0, y:levels[0], v:0, dir:0, target:-1, state:"idle", door:1, dwell:0, hurry:false, F:F, calls:new Set(), shown:"", btnKey:""};
+  // (uc: where across the frame its shaft stands; every building has two, at UC and -UC, both running)
+  function elevator(K, name, levels, top, uc){
+    const UC=uc===undefined ? 4.2 : uc;
+    const F=K.F, N=levels.length, E={uc:UC, name:name, levels:levels, f:0, y:levels[0], v:0, dir:0, target:-1, state:"idle", door:1, dwell:0, hurry:false, F:F, calls:new Set(), shown:"", btnKey:""};
     const DH=2.2;
     // the shaft: its sides and back the whole height; its front a wall on every floor, the opening in it framed in brass
     // (its sides start behind the front wall: no face of one in the other's)
@@ -473,13 +505,12 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     texPlane(x1-x0-2*WT, z1-z0-2*WT, STONE[Kd.id], Kd.id==="C" ? 0.6 : 1.2, cx, FL+0.004, cz, -Math.PI/2, 0, 0.22, -1);
     addFlat(x0, x1, z0, z1, FL);
     // the floors above: a slab each (open over the shaft), carpet on it, its ceiling, its lamps, its zone; every floor its own carpet
-    const shaft=K.rect(UC-0.95, UC+0.95, VF, VB);
-    const around=[[-W/2, W/2, 0, VF],[-W/2, W/2, VB, D],[-W/2, UC-0.95, VF, VB],[UC+0.95, W/2, VF, VB]];
+    const around=[[-W/2, W/2, 0, VF],[-W/2, W/2, VB, D],[-W/2, -UC-0.95, VF, VB],[-UC+0.95, UC-0.95, VF, VB],[UC+0.95, W/2, VF, VB]];      // (open over both shafts)
     for(let f=0;f<nF;f++){ const y=levels[f], ch=f ? y+2.95 : FL+3.2;
       if(f){ for(const [u0, u1, v0, v1] of around){ K.box(u1-u0, 0.3, v1-v0, (u0+u1)/2, y-0.15, (v0+v1)/2, "#7a7468"); K.flat(u0, u1, v0, v1, y);
           const R=K.rect(u0, u1, v0, v1); texPlane(R[1]-R[0], R[3]-R[2], Kd.carpets[f-1], 1.6, (R[0]+R[1])/2, y+0.012, (R[2]+R[3])/2, -Math.PI/2, 0, 1.0, -1); } }
       for(const [u0, u1, v0, v1] of around){ const R=K.rect(u0, u1, v0, v1); texPlane(R[1]-R[0], R[3]-R[2], CEILT, 0.61, (R[0]+R[1])/2, ch, (R[2]+R[3])/2, Math.PI/2, 0, 0.95); }
-      for(let u=-W/2+2; u<W/2-1; u+=3.6) for(let v=1.8; v<D-1; v+=3.6){ if(u>UC-1.4 && u<UC+1.4 && v>VF-0.6 && v<VB+0.6) continue; const [x, z]=F.P(u, v); push("tube", boxGeo(F.swap ? 1.2 : 0.6, 0.02, F.swap ? 0.6 : 1.2, 0), x, ch-0.012, z, 0, "#ffffff"); }
+      for(let u=-W/2+2; u<W/2-1; u+=3.6) for(let v=1.8; v<D-1; v+=3.6){ if(Math.abs(Math.abs(u)-UC)<1.4 && v>VF-0.6 && v<VB+0.6) continue; const [x, z]=F.P(u, v); push("tube", boxGeo(F.swap ? 1.2 : 0.6, 0.02, F.swap ? 0.6 : 1.2, 0), x, ch-0.012, z, 0, "#ffffff"); }
       for(const [u, v] of [[-W/4, D*0.5],[W/4, D*0.5]]){ const [x, z]=F.P(u, v); LAMPS.push({x:x, y:ch-0.3, z:z, color:0xfff2e0, intensity:0.75, dist:20, decay:1.5, indoor:true}); }
       addZone(x0, x1, z0, z1, y-0.4, ch, Kd.name+" · "+(f ? (["","2ND","3RD","4TH","5TH"][f])+" FLOOR" : "THE LOBBY"), true); }
     // ---- the outside, by kind ----
@@ -575,11 +606,12 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     // the doors: a pair of store doors in the opening
     { const L=side==="s" || side==="n" ? [[dc-0.98, 0],[dc+0.98, Math.PI]] : [[dc-0.98, -Math.PI/2],[dc+0.98, Math.PI/2]];
       const cm=side==="s" ? z1-WT/2 : side==="n" ? z0+WT/2 : side==="w" ? x0+WT/2 : x1-WT/2;
-      for(const [h, ry] of L){ if(side==="s" || side==="n") makeDoor(XF(h, cm, ry), 0, FL+0.01, 0, Kd.name, side==="n", 0, "store");
-        else makeDoor(XF(cm, h, ry), 0, FL+0.01, 0, Kd.name, side==="e", 0, "store"); } }
+      // (the second leaf is hung turned half round, so the way it opens is turned too: both swing into the lobby)
+      L.forEach(([h, ry], k)=>{ if(side==="s" || side==="n") makeDoor(XF(h, cm, ry), 0, FL+0.01, 0, Kd.name, (side==="n")!==(k===1), 0, "store");
+        else makeDoor(XF(cm, h, ry), 0, FL+0.01, 0, Kd.name, (side==="e")!==(k===1), 0, "store"); }); }
     // the lobby, which every building has: the desk and the one at it, sofas, a table, ficus, the directory, the elevators
     lobby(Kd, K, W, D);
-    Kd.E=elevator(K, Kd.name, levels, top-0.3);
+    Kd.E=elevator(K, Kd.name, levels, top-0.3, UC); Kd.E2=elevator(K, Kd.name, levels, top-0.3, -UC);
     for(let f=0; f<nF; f++) Kd.plans[f](K, levels[f], W, D, Kd);
     // on every floor above the lobby, a board hung from the ceiling over the way out of the elevator: the floor and who is on it, read both ways
     for(let f=1; f<nF; f++){ const nm=(Kd.floorNames||[])[f]; if(!nm) continue; const y=levels[f], hy=y+2.45, hv=VF-2.4;
@@ -598,15 +630,13 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       K.chair(du, dv+1.0, y, "front", Kd.chairCol, "THE CHAIR BEHIND THE DESK", Kd.receptionist); }
     K.sofa(W*0.24, 2.4, y, "back", 2.4, Kd.sofa, "A SOFA IN THE LOBBY"); K.sofa(W*0.24, 5.8, y, "front", 2.4, Kd.sofa, "A SOFA IN THE LOBBY");
     K.rbox(1.2, 0.04, 0.7, W*0.24, y+0.42, 4.1, "#1a1a1e", 0.01); for(const s of [-1, 1]) K.box(0.04, 0.4, 0.6, W*0.24+s*0.55, y+0.2, 4.1, "#b8bcc0"); K.col(W*0.24-0.62, W*0.24+0.62, 3.75, 4.45, y-0.5, y+0.44);
-    for(const [pu, pv] of [[-W/2+0.9, 0.9],[W/2-0.9, 0.9],[-2.6, LV-0.9],[UC+2.6, LV-0.9]]) K.plant(pu, pv, y, true, Kd.planter);   // (the right one past the elevator, clear of the way to it)
-    // the wall across the lobby's back: the way through it in the middle, the working car at UC (its own front) and the other one out of order
+    for(const [pu, pv] of [[-W/2+0.9, 0.9],[W/2-0.9, 0.9],[-UC-2.6, LV-0.9],[UC+2.6, LV-0.9]]) K.plant(pu, pv, y, true, Kd.planter);   // (the right one past the elevator, clear of the way to it)
+    // the wall across the lobby's back: the way through it in the middle, a running car either side of it, each with its own front
     { const t=0.2, h=FL+3.2-y+0.02;
-      for(const [a, b] of [[-W/2, -1.4],[1.4, UC-0.95],[UC+0.95, W/2]]){ K.box(b-a, h, t, (a+b)/2, y+h/2, LV+t/2, Kd.wall); K.col(a, b, LV, LV+t, y-0.5, y+h); }
-      K.box(0.45, h, t, UC-0.725, y+h/2, LV+t/2, Kd.wall); K.box(0.45, h, t, UC+0.725, y+h/2, LV+t/2, Kd.wall); K.box(1.0, h-2.2, t, UC, y+2.2+(h-2.2)/2, LV+t/2, Kd.wall);
-      K.col(UC-0.95, UC-0.5, LV, LV+t, y-0.5, y+h); K.col(UC+0.5, UC+0.95, LV, LV+t, y-0.5, y+h);
+      for(const [a, b] of [[-W/2, -UC-0.95],[-UC+0.95, -1.4],[1.4, UC-0.95],[UC+0.95, W/2]]){ K.box(b-a, h, t, (a+b)/2, y+h/2, LV+t/2, Kd.wall); K.col(a, b, LV, LV+t, y-0.5, y+h); }
+      for(const uc of [UC, -UC]){ K.box(0.45, h, t, uc-0.725, y+h/2, LV+t/2, Kd.wall); K.box(0.45, h, t, uc+0.725, y+h/2, LV+t/2, Kd.wall); K.box(1.0, h-2.2, t, uc, y+2.2+(h-2.2)/2, LV+t/2, Kd.wall);
+        K.col(uc-0.95, uc-0.5, LV, LV+t, y-0.5, y+h); K.col(uc+0.5, uc+0.95, LV, LV+t, y-0.5, y+h); }
       for(const u of [-1.45, 1.45]) K.box(0.08, 2.5, t+0.06, u, y+1.25, LV+t/2, BRASS); K.box(2.98, 0.08, t+0.06, 0, y+2.54, LV+t/2, BRASS);
-      { const u=-4.2; K.box(1.3, 2.3, 0.04, u, y+1.15, LV-0.02, "#a8884a"); K.box(0.012, 2.25, 0.05, u, y+1.15, LV-0.02, "#7a5a2a"); K.box(1.5, 0.12, 0.05, u, y+2.36, LV-0.025, BRASS);
-        const [sx, sz]=K.P(u, LV-0.05); sign(0.5, 0.36, (c, Wd, Hh)=>{ c.fillStyle="#d8c88a"; c.fillRect(0, 0, Wd, Hh); say(c, "OUT OF", Wd/2, Hh*0.35, Wd*0.8, Hh*0.26, "#2a2a2a", "700", "'Marker Felt', 'Comic Sans MS', cursive"); say(c, "ORDER", Wd/2, Hh*0.68, Wd*0.8, Hh*0.26, "#2a2a2a", "700", "'Marker Felt', 'Comic Sans MS', cursive"); }, sx, y+1.4, sz, K.F.ry, false, 120); }
       // the directory: black felt, the letters, a brass frame
       { const [x, z]=K.P(-8.0, LV-0.03); K.box(1.5, 1.1, 0.04, -8.0, y+1.6, LV-0.02, BRASS);
         sign(1.4, 1.0, (c, Wd, Hh)=>{ c.fillStyle="#141416"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="rgba(255,255,255,0.05)"; for(let yy=0;yy<Hh;yy+=6) c.fillRect(0, yy, Wd, 2);
@@ -615,6 +645,9 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
           x+Math.sin(K.F.ry)*0.025, y+1.6, z+Math.cos(K.F.ry)*0.025, K.F.ry, false, 420); } }
     K.art(-W/2+0.05, 4.0, y+1.7, "+u", 1.6, 1.1, Kd.artK); K.art(W/2-0.05, 4.0, y+1.7, "-u", 1.6, 1.1, Kd.artK+1);
     K.coatTree(2.4, 1.0, y, 1); K.magTable(W*0.24+2.0, 4.1, y, Kd.desk);
+    if(Kd.id!=="B"){ const u=-W*0.4; K.sofa(u, 2.4, y, "back", 2.4, Kd.sofa, "A SOFA IN THE LOBBY"); K.sofa(u, 5.8, y, "front", 2.4, Kd.sofa, "A SOFA IN THE LOBBY");
+      K.rbox(1.2, 0.04, 0.7, u, y+0.42, 4.1, "#1a1a1e", 0.01); for(const s of [-1, 1]) K.box(0.04, 0.4, 0.6, u+s*0.55, y+0.2, 4.1, "#b8bcc0"); K.col(u-0.62, u+0.62, 3.75, 4.45, y-0.5, y+0.44);
+      K.magTable(u-2.0, 4.1, y, Kd.desk); }
   }
 
   /* ---- the floors, building by building: each its own ---- */
@@ -658,19 +691,30 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       // the file room: rows of cabinets, a high window of glass between
       K.glassWall(6.5, 14.5, W/2, 14.5, y, 2.6, [[8.0, 9.2]]); K.glassWall(6.5, 14.5, 6.5, D, y, 2.6);
       for(let v=17.5; v<D-1.5; v+=3.0) K.files(15.5, v, y, "front", 14, "#7a7468");
-      K.copier(2.0, 13.4, y, "front"); K.cooler(-1.9, 12.6, y); K.plant(-3, D-1, y, true); K.art(-W/2+0.05, 22, y+1.6, "+u", 1.6, 1.1, 2); },
+      K.copier(2.0, 13.4, y, "front"); K.cooler(-1.9, 12.6, y); K.plant(-3, D-1, y, true); K.art(-W/2+0.05, 22, y+1.6, "+u", 1.6, 1.1, 2);
+      // the adjusters behind the counter, three rows of six, and their supervisor in glass in the back corner
+      for(const v of [19.0, 23.5, 27.8]) for(let k=0;k<6;k++) K.station(-22+k*4.2, v, y, "front", 1.5, "#6a5a4a", {who:r()<0.3 ? look({}) : null, label:"A CLAIMS ADJUSTER'S CHAIR"});
+      K.glassWall(-W/2, 30.0, -17.0, 30.0, y, 2.6, [[-19.5, -18.5]]); K.glassWall(-17.0, 30.0, -17.0, D, y, 2.6);
+      K.station(-21.4, 32.6, y, "front", 1.8, "#4a3a2a", {term:false, chairCol:"#2a2a40", label:"THE CLAIMS SUPERVISOR'S CHAIR", who:look({shirt:"#e8dcc8", pants:"#2a2a3a"})});
+      for(const s of [-1, 1]) K.guest(-21.4+s*0.55, 30.8, y, "back", "#5a6a8a", "A CHAIR IN THE SUPERVISOR'S OFFICE"); K.lateral(-24.9, 32.0, y, "+u", 2); },
     (K, y, W, D)=>{ // the bullpen: desks in rows facing the front, the managers' glass offices along the back
       for(let v=13.6; v<=25.6; v+=3.0) for(const side of [-1, 1]) for(let k=0;k<5;k++){ const u=side*(3.8+k*3.4); if(side>0 && k<1 && v<16) continue;
         K.station(u, v, y, "front", 1.5, "#6a5a4a", {who:r()<0.3 ? look({}) : null, label:"A DESK IN THE BULLPEN"}); }
       for(let u=-W/2; u<W/2-5.9; u+=6.4){ K.glassWall(u, 29.0, u+6.4, 29.0, y, 2.7, [[u+2.6, u+3.6]]); if(u>-W/2) K.wall(u, 29.0, u, D, y, 2.7, "#b8ac94");
         K.station(u+3.2, 31.5, y, "front", 1.8, "#4a3a2a", {label:"A MANAGER'S CHAIR"}); K.guest(u+2.6, 29.9, y, "back", "#5a6a8a"); K.guest(u+3.8, 29.9, y, "back", "#5a6a8a");
         K.plant(u+5.8, D-0.6, y, false); K.art(u+3.2, D-0.06, y+1.7, "front", 1.2, 0.8, (u|0)); }
-      K.copier(-3.0, 11.0, y, "front"); K.cooler(1.2, 10.6, y);
+      K.copier(-1.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y);
       // printers on their stands down the sides, a row of files against each, a credenza behind every manager, coats by the elevator
       for(const [pu, d] of [[-21.5, "+u"],[21.5, "-u"]]) for(const pv of [15.5, 23.0]) K.printer(pu, pv, y, d);
       K.files(-W/2+0.4, 19.3, y, "+u", 4, "#6a6458"); K.files(W/2-0.4, 19.3, y, "-u", 4, "#6a6458");
       for(let u=-W/2; u<W/2-5.9; u+=6.4) K.credenza(u+3.2, D-0.32, y, "front", 1.8, "#4a3a2a");
-      K.coatTree(-2.4, 8.2, y, 2); },
+      K.coatTree(-2.4, 8.2, y, 2);
+      // the front band: a glass conference room on the left, lateral files along the windows, a kitchenette on the right
+      K.glassWall(-W/2, 8.0, -14.0, 8.0, y, 2.7, [[-16.5, -15.5]]); K.glassWall(-14.0, 0, -14.0, 8.0, y, 2.7);
+      K.table(-20.0, 4.0, y, 4.0, 1.4, "#3a2a1a", 10, "#5a6a8a"); K.whiteboard(-15.2, 4.0, y, "-u", 1.6);
+      K.lateral(-7.0, 2.6, y, "back", 5, "#6a6458"); K.lateral(9.0, 2.6, y, "back", 4, "#6a6458"); K.plant(-3.2, 1.2, y, true); K.plant(12.4, 1.2, y, false);
+      K.wall(W/2-11, 8.2, W/2, 8.2, y, 2.7, "#a89e8a", [[W/2-3.2, W/2-2.0]]); K.wall(W/2-11, 0, W/2-11, 8.2, y, 2.7, "#a89e8a");
+      breakRoom(K, y, W/2-10.9, W/2-0.2, 0.2, 8.1, "#a89e8a"); },
     (K, y, W, D)=>{ // policy services: private offices down the west wall, the typing pool in facing pairs, the training room, the mail room, the break room
       const PW="#a89e8a", oe=-W/2+5.0, t0=W/2-12;
       // the offices: five along the side wall, each with its door, a desk facing it, two chairs for visitors, a cabinet, a picture
@@ -706,7 +750,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       K.rbox(1.1, 0.04, 0.7, 12.0, y+0.42, 4.0, "#1a1a1e", 0.01); for(const s of [-1, 1]) K.box(0.04, 0.4, 0.6, 12.0+s*0.5, y+0.2, 4.0, "#b8bcc0"); K.col(11.44, 12.56, 3.64, 4.36, y-0.05, y+0.44);
       K.wall(-W/2, 8.2, -W/2+11, 8.2, y, 2.7, "#b8a888", [[-W/2+8.6, -W/2+9.8]]); K.wall(-W/2+11, 0, -W/2+11, 8.2, y, 2.7, "#b8a888");
       breakRoom(K, y, -W/2+0.2, -W/2+10.9, 0.2, 8.1, "#b8a888"); K.art(-W/2+0.05, 4, y+1.6, "+u", 1.2, 0.9, 1);
-      K.copier(-2.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y); for(const u of [W/2-1, 8.5]) K.plant(u, 0.9, y, true); },
+      K.copier(-1.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y); for(const u of [W/2-1, 8.5]) K.plant(u, 0.9, y, true); },
     (K, y, W, D)=>{ // the executive floor: four corner offices in walnut, the boardroom, the secretaries' desks by the elevator
       const WAL="#4a2e1c";
       for(const [su, sv] of [[-1, 0],[1, 0],[-1, 1],[1, 1]]){ const u0=su<0 ? -W/2 : W/2-9, u1=su<0 ? -W/2+9 : W/2, v0=sv ? D-8.5 : 0, v1=sv ? D : 8.5;
@@ -719,11 +763,16 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       // the boardroom: walnut on three sides, glass on the fourth, the long table, twelve chairs, the painting at its head
       K.wall(-7, 20, -7, D, y, 2.75, WAL, null, 0.14); K.wall(7, 20, 7, D, y, 2.75, WAL, null, 0.14); K.glassWall(-7, 20, 7, 20, y, 2.75, [[-0.6, 0.6]]);
       K.table(0, 27.5, y, 6.0, 1.6, "#3a2014", 16, "#2a1a14"); K.art(0, D-0.06, y+1.7, "front", 2.2, 1.4, 0);
-      K.station(-4.0, 8.0, y, "front", 1.6, "#5a3a24", {who:look({female:true, shirt:"#d8b8c8"}), label:"THE SECRETARY'S CHAIR"}); K.plant(UC+3, 8.5, y, true); K.cooler(UC-1.5, VF-0.4, y);
+      K.station(-8.5, 8.0, y, "front", 1.6, "#5a3a24", {who:look({female:true, shirt:"#d8b8c8"}), label:"THE SECRETARY'S CHAIR"}); K.plant(UC+3, 8.5, y, true); K.cooler(UC-1.5, VF-0.4, y);
       // in every corner office a credenza behind the desk and a case of books against the inner wall
       for(const [su, sv] of [[-1, 0],[1, 0],[-1, 1],[1, 1]]){ const u0=su<0 ? -W/2 : W/2-9, u1=su<0 ? -W/2+9 : W/2, v0=sv ? D-8.5 : 0, v1=sv ? D : 8.5;
         K.credenza((u0+u1)/2, sv ? D-0.32 : 0.32, y, sv ? "front" : "back", 2.0, "#3a2014"); K.shelf(su<0 ? u1-0.25 : u0+0.25, (v0+v1)/2, y, su<0 ? "-u" : "+u", 2.4, "#4a2e1c"); }
-      K.coatTree(-6.6, 9.0, y, 1); },
+      K.coatTree(-6.6, 9.0, y, 1);
+      // the middle: the aquarium facing the elevators, a lounge of oxblood sofas round a low table, the globe, the bar cart, the trophy case
+      K.aquarium(0, 14.5, y, "front", 3.0);
+      K.sofa(-7.5, 12.6, y, "back", 2.4, "#5a1a1a", "A SOFA IN THE EXECUTIVE LOUNGE"); K.sofa(-7.5, 17.4, y, "front", 2.4, "#5a1a1a", "A SOFA IN THE EXECUTIVE LOUNGE");
+      K.rbox(1.4, 0.04, 0.8, -7.5, y+0.42, 15.0, "#1a1a1e", 0.01); for(const s of [-1, 1]) K.box(0.04, 0.4, 0.7, -7.5+s*0.62, y+0.2, 15.0, BRASS); K.col(-8.22, -6.78, 14.58, 15.42, y-0.05, y+0.44);
+      K.globe(6.6, 13.4, y); K.barCart(7.6, 16.6, y, "-u"); K.trophies(12.5, 19.0, y, "front", 2.0); K.plant(-12.0, 12.0, y, true); K.plant(12.0, 12.0, y, true); },
     (K, y, W, D)=>{ // the computer room behind glass on its raised floor; the cafeteria in front
       K.glassWall(-W/2, 13.2, W/2, 13.2, y, 2.75, [[-1.0, 0.2]]);
       const RF=signTex(128, 128, (c, Wd, Hh)=>{ c.fillStyle="#a8a294"; c.fillRect(0, 0, Wd, Hh); c.strokeStyle="#7a7468"; c.lineWidth=3; c.strokeRect(1, 1, Wd-2, Hh-2); }); RF.wrapS=RF.wrapT=T.RepeatWrapping;
@@ -737,7 +786,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       { const o=K.obj(6, 15.2, "back", y); o.rb(1.6, 1.0, 0.8, 0, 0.5, 0, "#b4a88c", 0.03); o.b(1.4, 0.02, 0.5, 0, 1.01, -0.1, "#d8cca0"); K.col(5.2, 6.8, 14.8, 15.6, y-0.05, y+1.0); }
       // the cafeteria: the serving line along the front, tables of four
       K.rbox(12, 0.95, 0.75, -W/2+7.5, y+0.475, 1.2, "#8a7a64", 0.02); K.box(12, 0.04, 0.3, -W/2+7.5, y+0.98, 1.65, "#b8bcc0"); K.col(-W/2+1.5, -W/2+13.5, 0.8, 1.6, y-0.05, y+1.0);
-      for(let u=-W/2+16; u<W/2-3; u+=4.4) for(const v of [4.2, 8.6]){ if(Math.abs(u-UC)<3.2 && v>7) continue; K.table(u, v, y, 1.2, 1.2, "#c8b89a", 2, "#c84a3a"); }
+      for(let u=-W/2+16; u<W/2-3; u+=4.4) for(const v of [4.2, 8.6]){ if(Math.abs(Math.abs(u)-UC)<3.2 && v>7) continue; K.table(u, v, y, 1.2, 1.2, "#c8b89a", 2, "#c84a3a"); }
       K.printer(-9.5, 14.5, y, "back"); K.printer(-11.0, 14.5, y, "back"); },
   ];
   // FRENCH CREEK FINANCIAL (B, door west): the bank; the loan officers; the law firm
@@ -772,7 +821,12 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       { const [vx, vz]=K.P(-8, D-0.12); sign(1.6, 0.3, (c, Wd, Hh)=>{ c.fillStyle="#2a1a10"; c.fillRect(0, 0, Wd, Hh); say(c, "VAULT", Wd/2, Hh/2, Wd*0.6, Hh*0.6, "#c8a868", "700", "Optima, serif"); }, vx-Math.sin(K.F.ry)*0.02, y+3.05, vz-Math.cos(K.F.ry)*0.02, K.F.ry, false, 240); }
       for(const u of [8, 14]){ K.station(u, 24.5, y, "front", 1.8, "#5a3a24", {term:false, chairCol:"#3a2a1a", label:"A LOAN OFFICER'S CHAIR", who:u===8 ? look({shirt:"#e8dcc8"}) : null});
         for(const s of [-1, 1]) K.guest(u+s*0.55, 22.7, y, "back", "#7a3a2a", "A CHAIR AT THE LOAN DESK"); }
-      K.plant(W/2-1, D-1, y, true); K.plant(-W/2+1, D-1, y, true); K.clock(0, D-0.02, y+2.6, "front"); },
+      K.plant(W/2-1, D-1, y, true); K.plant(-W/2+1, D-1, y, true); K.clock(0, D-0.02, y+2.6, "front");
+      for(const v of [19.5, 23.0]) for(const u of [-17.0, -13.5, -10.0, -6.5]) K.station(u, v, y, "front", 1.5, "#5a3a24", {who:r()<0.35 ? look({female:r()<0.6}) : null, label:"A BOOKKEEPER'S CHAIR"});
+      K.deposit(3.0, D-0.16, y, "front", 4.8); K.station(3.0, 22.4, y, "front", 1.6, "#5a3a24", {term:false, clutter:false, label:"A CHAIR AT THE COIN COUNTER"});
+      { const [x, z]=K.P(3.0, 21.62); RB(0.4, 0.3, 0.36, x, y+0.91, z, "#8a8e92", K.F.ry, 0.03); }
+      { const u=10.5, v=12.0; K.rbox(1.6, 1.05, 0.8, u, y+0.525, v, "#5a3a24", 0.03); K.rbox(1.7, 0.05, 0.9, u, y+1.08, v, "#c8b494", 0.015); K.col(u-0.8, u+0.8, v-0.4, v+0.4, y-0.05, y+1.1);
+        for(let k=0;k<4;k++) K.box(0.2, 0.01, 0.1, u-0.6+k*0.4, y+1.11, v-0.25, "#d4ccb8"); for(const s of [-1, 1]) K.box(0.012, 0.012, 0.18, u+s*0.5, y+1.12, v+0.1, "#2a2a2a"); } },
     (K, y, W, D)=>{ // two suites across a wall: FCF's loans on the elevator's side; Allegheny Title & Abstract across it, its records, its map files, its closing room
       const DW=-1.5, PW="#a89070", T2="#7a6a54";
       K.wall(DW, 0, DW, D, y, 2.94, PW, [[7.8, 9.0]]);
@@ -787,7 +841,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       K.rbox(1.2, 0.04, 0.7, 12, y+0.42, 4.1, "#3a2014", 0.01); K.col(11.38, 12.62, 3.74, 4.46, y-0.05, y+0.44); K.plant(W/2-1, 0.9, y, true); K.plant(16.5, 4.1, y, false);
       K.copier(8.0, 11.0, y, "front"); K.cooler(1.2, 10.6, y);
       for(let u=DW; u<W/2-4.9; u+=5.3) K.credenza(u+2.65, D-0.32, y, "front", 1.6, "#4a2e1c");
-      K.printer(-3.2, 11.0, y, "-u"); K.coatTree(-3.0, 3.0, y, 1); K.coatTree(2.6, 6.4, y, 2);
+      K.printer(-2.4, 12.6, y, "-u"); K.coatTree(-3.0, 3.0, y, 1); K.coatTree(2.6, 6.4, y, 2);
       // the title company: the counter by its door, the record room's shelves of deed books, map cabinets down the wall, a microfiche reader, the abstractors
       K.rbox(0.8, 1.05, 2.6, -5.0, y+0.525, 5.0, T2, 0.03); K.rbox(0.96, 0.05, 2.76, -5.0, y+1.08, 5.0, "#c8b494", 0.015); K.col(-5.42, -4.58, 3.68, 6.32, y-0.05, y+1.1);
       K.chair(-6.1, 5.0, y, "+u", "#2a3a4a", "THE TITLE COUNTER'S CHAIR", look({female:true, shirt:"#a8b8c8"}));
@@ -823,12 +877,15 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         K.wall(u0<0 ? u1 : u0, 0, u0<0 ? u1 : u0, 6.0, y, 2.6, WAL, null, 0.14);
         K.station((u0+u1)/2, 2.0, y, "back", 2.0, "#3a2014", {term:false, chairCol:"#2a1a14", label:"A PARTNER'S CHAIR"}); for(const s of [-1, 1]) K.guest((u0+u1)/2+s*0.6, 4.0, y, "front", "#5a1a1a");
         K.credenza((u0+u1)/2, 0.32, y, "back", 1.8, "#3a2014"); }
-      K.coatTree(1.6, 5.2, y, 2); },
+      K.coatTree(1.6, 5.2, y, 2);
+      K.flag(-2.4, 5.4, y, "#c8281a", "#d8d0c0"); K.flag(0.4, 5.4, y, "#1a3a7a", "#c8a868"); K.grandfather(-6.0, 6.3, y, "back");
+      K.sofa(6.5, 8.6, y, "-u", 2.2, "#4a1a14", "A CHESTERFIELD IN THE WAITING ROOM"); K.globe(9.6, 6.6, y);
+      for(const u of [7.5, 10.5]) K.station(u, 11.6, y, "front", 1.5, "#3a2014", {who:r()<0.6 ? look({female:true, shirt:"#c8b8d8"}) : null, label:"A LEGAL SECRETARY'S CHAIR"}); },
   ];
   // LAKESHORE DATA SYSTEMS (C, door north): the showroom and the network board; the software pit, its break room and the server room
   const PLANS_C=[
     (K, y, W, D)=>{ // the showroom: personal computers on angled desks in rows; the network board on the back wall, its console facing it
-      for(let v=13.5; v<=19.5; v+=3.0) for(let k=0;k<7;k++){ const u=-W/2+4+k*3.6; if(Math.abs(u-UC)<2.6) continue; K.station(u, v, y, "front", 1.4, "#c8b8a8", {chairCol:"#3a6a6a", label:"A CHAIR IN THE SHOWROOM", who:r()<0.25 ? look({shirt:"#b8d8d8"}) : null}); }
+      for(let v=13.5; v<=19.5; v+=3.0) for(let k=0;k<7;k++){ const u=-W/2+4+k*3.6; if(Math.abs(Math.abs(u)-UC)<2.6) continue; K.station(u, v, y, "front", 1.4, "#c8b8a8", {chairCol:"#3a6a6a", label:"A CHAIR IN THE SHOWROOM", who:r()<0.25 ? look({shirt:"#b8d8d8"}) : null}); }
       { const [x, z]=K.P(0, D-0.06); const t=signTex(1200, 360, (c, Wd, Hh)=>{ c.fillStyle="#0a0e18"; c.fillRect(0, 0, Wd, Hh); c.strokeStyle="#2a5a8a"; c.lineWidth=2;
           c.beginPath(); for(let i=0;i<14;i++){ c.moveTo(Wd*(0.08+((i*37)%84)/100), Hh*(0.2+((i*53)%60)/100)); c.lineTo(Wd*(0.08+((i*71)%84)/100), Hh*(0.2+((i*29)%60)/100)); } c.stroke();
           for(let i=0;i<14;i++){ c.fillStyle=i%4 ? "#3af06a" : "#ff6a3a"; c.beginPath(); c.arc(Wd*(0.08+((i*37)%84)/100), Hh*(0.2+((i*53)%60)/100), 6, 0, 7); c.fill(); }
@@ -837,7 +894,11 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         K.box(10.2, 3.2, 0.04, 0, y+1.9, D-0.03, "#1a1a22"); }
       for(let k=0;k<3;k++) K.station(-3+k*3, D-4, y, "back", 2.6, "#c8b8a8", {chairCol:"#5a3a5a", label:"A CHAIR AT THE NETWORK CONSOLE", who:k===1 ? look({shirt:"#e8d8b8"}) : null});
       K.sofa(W/2-5, 23, y, "-u", 2.6, "#8a5a6a"); K.sofa(W/2-9, 23, y, "+u", 2.6, "#2a7a7a"); K.plant(W/2-7, 26, y, true); K.art(W/2-0.05, 20, y+1.7, "-u", 1.6, 1.1, 2);
-      K.magTable(W/2-7, 23, y, "#2a2a2e"); K.printer(-W/2+3.0, 23.5, y, "+u"); K.coatTree(-2.6, 8.4, y, 1); },
+      K.magTable(W/2-7, 23, y, "#2a2a2e"); K.printer(-W/2+3.0, 23.5, y, "+u"); K.coatTree(-8.6, 8.4, y, 1);
+      [[5, 14.5, 12],[9, 14.5, 8],[13, 14.5, 2],[5, 18.5, 11],[9, 18.5, 3],[13, 18.5, 10]].forEach(([u, v, k])=>K.pedestal(u, v, y, "front", k));
+      { const u=20.5, v=14.0; K.rbox(2.4, 1.05, 0.7, u, y+0.525, v, "#2a7a7a", 0.03); K.rbox(2.5, 0.05, 0.8, u, y+1.08, v, "#b88a7a", 0.015); K.col(u-1.2, u+1.2, v-0.35, v+0.35, y-0.05, y+1.1);
+        K.chair(u, v+0.9, y, "front", "#3a6a6a", "THE CHAIR BEHIND THE SALES COUNTER", look({shirt:"#e8b8c8"}));
+        { const [x, z]=K.P(u+0.6, v-0.05); RB(0.36, 0.3, 0.32, x, y+1.26, z, "#c4b89c", K.F.ry, 0.03); const [sx, sz]=K.P(u+0.6, v-0.212); screen(0.26, 0.18, sx, y+1.27, sz, K.F.ry, 12); } } },
     (K, y, W, D)=>{ // the software pit (mauve cubicles), the break room with its games, the server room behind glass
       pods(K, y, -W/2+3.0, W/2-15.5, 15.0, D-2.5, ["#7a4a5a","#2a6a6a","#8a6a3a"], "#c8b8a8");
       // the big screen at the windows: a projection set in its cabinet, a sofa and two beanbags facing it
@@ -864,7 +925,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       { const o=K.obj(-W/2+11.4, 2.0, "-u", y); o.rb(0.7, 1.75, 0.75, 0, 0.875, 0, "#1a1a2a", 0.03); const [sx, sz]=o.at(0, 0.3); screen(0.48, 0.38, sx, y+1.3, sz, o.ry, 11); K.col(-W/2+10.9, -W/2+11.9, 1.6, 2.4, y-0.05, y+1.75); }
       { const [x, z]=K.P(-W/2+6, 5.6); B(1.4, 0.8, 0.8, x, y+0.4, z, "#2a6a3a"); for(let k=0;k<4;k++) C(0.012, 1.2, x, y+0.75, z-0.3+k*0.2, "#b8bcc0", 6, 0, 0, Math.PI/2); addCol(x-0.72, x+0.72, z-0.42, z+0.42, y-0.05, y+0.85); }
       K.sofa(-W/2+3.5, 5.6, y, "+u", 2.0, "#2a7a7a"); K.art(-W/2+0.05, 3, y+1.6, "+u", 1.2, 0.9, 0);
-      K.copier(-2.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y);
+      K.copier(-1.8, 11.0, y, "front"); K.cooler(1.2, 10.6, y);
       K.printer(8.0, 13.2, y, "back"); K.whiteboard(-14.0, 13.0, y, "back", 1.8); K.coatTree(-2.5, 8.5, y, 2); },
   ];
 
@@ -945,6 +1006,36 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         else if(k===1){ c.fillStyle="#1f3f7a"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#d8b048"; c.beginPath(); c.ellipse(Wd/2, Hh/2, Wd*0.12, Hh*0.22, 0, 0, 7); c.fill(); }
         else { c.fillStyle="#2a7a7a"; c.fillRect(0, 0, Wd, Hh); c.fillStyle="#c8b48a"; c.fillRect(0, Hh*0.4, Wd, Hh*0.2); say(c, "HRCP", Wd/2, Hh*0.5, Wd*0.5, Hh*0.16, "#2a2a2a", "800", "Arial"); } },
       x-0.003, LY+9.3, z+0.94, -Math.PI/2, false, 320); }
+  /* ---- more on the plaza: café tables under umbrellas west of the fountain, a steel sculpture east of it on its plinth, boxes of flowers
+     along the buildings' fronts, bollards round the edge that glow at night, bins, a bike rack, a newspaper box, the dedication plaque ---- */
+  { // the café tables: four round tables, four chairs each facing in, an umbrella over each
+    const UMB=["#2a7a7a","#7a2a3a","#2a7a7a","#c8a050"];
+    [[864, -1780],[872, -1772],[864, -1766],[872, -1782]].forEach(([x, z], k)=>{
+      C(0.42, 0.04, x, LY+0.74, z, "#3a3a3e", 20); C(0.04, 0.72, x, LY+0.36, z, "#2a2a2e", 8); C(0.26, 0.03, x, LY+0.015, z, "#2a2a2e", 14); addCol(x-0.42, x+0.42, z-0.42, z+0.42, LY-0.5, LY+0.76);
+      C(0.025, 2.3, x, LY+1.15, z, "#d4ccb8", 8); ent(new T.ConeGeometry(1.4, 0.45, 8, 1, true), x, LY+2.32, z, UMB[k], 0, 0.2, 0); ent(new T.ConeGeometry(1.36, 0.43, 8, 1, true).scale(1, 1, 1), x, LY+2.3, z, "#3a3a3a", Math.PI, 0.2, 0);
+      S(0.05, x, LY+2.58, z, "#c8a050");
+      for(let j=0;j<4;j++){ const a=j*Math.PI/2+0.4, cx=x+Math.sin(a)*0.82, cz=z+Math.cos(a)*0.82, yaw=a;                 // (a chair's yaw faces it toward the table: (−sin, −cos) points in)
+        B(0.42, 0.04, 0.42, cx, LY+0.45, cz, "#3a3a3e", yaw); for(const [p, q] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const lx=p*0.18, lz=q*0.18; B(0.025, 0.44, 0.025, cx+lx*Math.cos(yaw)+lz*Math.sin(yaw), LY+0.22, cz-lx*Math.sin(yaw)+lz*Math.cos(yaw), "#2a2a2e", yaw); }
+        B(0.42, 0.4, 0.03, cx+Math.sin(a)*0.2, LY+0.68, cz+Math.cos(a)*0.2, "#3a3a3e", yaw); addSeat(cx, cz, LY+0.05, yaw, "A CHAIR AT A TABLE ON THE PLAZA"); }
+      addRoof(x-1.2, x+1.2, z-1.2, z+1.2, LY+2.1); });
+    // the sculpture: three arcs of red steel leaning together on a granite plinth, a bronze plate on the plinth's front
+    { const x=918, z=-1775; B(2.4, 0.6, 2.4, x, LY+0.3, z, "#4a4a4e"); B(2.5, 0.06, 2.5, x, LY+0.63, z, "#6a6a6e"); addCol(x-1.95, x+1.95, z-1.95, z+1.95, LY-0.5, LY+2.5);
+      for(let k=0;k<3;k++){ const g=new T.TorusGeometry(1.4+k*0.25, 0.09, 8, 28, Math.PI*0.95); ent(g, x+(k-1)*0.2, LY+0.66, z+(k-1)*0.15, "#a8281e", 0.15*(k-1), k*0.9, 0); }
+      sign(0.6, 0.3, (c, W, H)=>{ c.fillStyle="#8a6a2a"; c.fillRect(0, 0, W, H); say(c, "CONVERGENCE · 1984", W/2, H*0.38, W*0.8, H*0.28, "#2a1a0a", "700", "Georgia, serif");
+          say(c, "FOR THE PEOPLE WHO WORK HERE", W/2, H*0.72, W*0.8, H*0.16, "#2a1a0a", "600", "Georgia, serif"); }, x-1.215, LY+0.32, z, -Math.PI/2, false, 240); }
+    // flower boxes along the buildings' fronts, either side of each door, kept off the way in
+    for(const [x0, x1, z] of [[858, 879, -1808.6],[893, 914, -1808.6],[858, 879, -1741.4],[893, 914, -1741.4]]){ const cx=(x0+x1)/2;
+      B(x1-x0, 0.5, 1.0, cx, LY+0.25, z, "#8a7a64"); B(x1-x0-0.2, 0.03, 0.8, cx, LY+0.49, z, "#3a2a1e"); addCol(x0, x1, z-0.5, z+0.5, LY-0.5, LY+0.52);
+      for(let k=0;k<Math.round((x1-x0)/0.5);k++){ const fx=x0+0.3+k*0.5, fz=z+((k*37)%5-2)*0.12; S(0.14, fx, LY+0.62, fz, ["#c8282a","#e8c03a","#c84a8a","#d8d0c0","#e8762a"][k%5]); S(0.12, fx+0.15, LY+0.58, fz+0.18, "#3a5a2a"); }
+      for(const dz of [-0.55, 0.55]) addSeat(cx, z+dz, LY+0.1, dz<0 ? 0 : Math.PI, "THE EDGE OF A FLOWER BOX", false, 0.42); }
+    // bollards round the edge, their tops lit after dark
+    for(const [x, z] of [[855, -1806],[855, -1794],[855, -1784],[855, -1766],[855, -1756],[855, -1744],[931, -1806],[931, -1796],[931, -1754],[931, -1744]]){
+      C(0.12, 0.74, x, LY+0.37, z, "#2a2a2e", 12); push("rn_glow", new T.CylinderGeometry(0.1, 0.1, 0.12, 12), x, LY+0.8, z, 0, "#ffffff"); C(0.13, 0.04, x, LY+0.88, z, "#2a2a2e", 12); addCol(x-0.13, x+0.13, z-0.13, z+0.13, LY-0.5, LY+0.9); }
+    // bins, a bike rack by Midland's door, a newspaper box, the plaque set in the paving by the fountain
+    for(const [x, z] of [[882, -1810.5],[890, -1739.5],[860, -1775],[928, -1770]]){ C(0.28, 0.9, x, LY+0.45, z, "#4a3a2a", 14); C(0.3, 0.05, x, LY+0.92, z, "#2a2a2e", 14); addCol(x-0.3, x+0.3, z-0.3, z+0.3, LY-0.5, LY+0.95); }
+    { const x=898.5, z=-1810.4; for(let k=0;k<4;k++){ const g=new T.TorusGeometry(0.34, 0.025, 6, 16, Math.PI); ent(g, x+k*0.8, LY+0.02, z, "#8a8e92", 0, 0, 0); } addCol(x-0.4, x+2.8, z-0.06, z+0.06, LY-0.5, LY+0.38); }
+    { const x=878.5, z=-1810.6; B(0.5, 1.0, 0.45, x, LY+0.5, z, "#1a4a8a"); B(0.42, 0.28, 0.02, x, LY+0.8, z+0.235, "#c8d0d8"); addCol(x-0.25, x+0.25, z-0.23, z+0.23, LY-0.5, LY+1.0); }
+    { const x=893, z=-1781.2; B(0.9, 0.03, 0.6, x, LY+0.016, z, "#7a5a2a"); } }
   // the lawn down to the water: a walk out to a rail at the bank, benches looking out
   {  B(0.06, 0.06, 8.0, 967.6, LY+1.0, -1775, "#2a2a2e"); B(0.06, 0.06, 8.0, 967.6, LY+0.5, -1775, "#2a2a2e");
     for(let z=-1779; z<=-1771; z+=2) B(0.075, 1.02, 0.075, 967.6, LY+0.51, z, "#2a2a2e");
@@ -973,8 +1064,10 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
     for(const Kd of [ONE, TWO, THREE]){ const [gx, gz]=Kd.F.P(0, Kd.D/2), G=crowdGroup(Kd.name.toLowerCase(), gx, gz, 70);
       for(const s of Kd.K.sitters) crowdAdd(G, {look:s.look, x:s.x, z:s.z, y:s.y, yaw:s.yaw, mode:"sit", sitY:0.515, dayOnly:true, sway:0.2}); }
     const G=crowdGroup("hollow road corporate park", 880, -1775, 150);
-    crowdAdd(G, {look:look({shirt:"#a8b8c8", pants:"#3a3a3a"}), x:880.4, z:-1790.0, y:LY+0.1, yaw:Math.PI, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3});
-    crowdAdd(G, {look:look({female:true, shirt:"#c88a9a", hair:HAIRS[2], long:false}), x:906.4, z:-1760.0, y:LY+0.1, yaw:0, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3, held:"cup", drink:true});
+    crowdAdd(G, {look:look({shirt:"#a8b8c8", pants:"#3a3a3a"}), x:880.4, z:-1790.0, y:LY+0.1, yaw:0, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3});
+    crowdAdd(G, {look:look({female:true, shirt:"#c88a9a", hair:HAIRS[2], long:false}), x:906.4, z:-1760.0, y:LY+0.1, yaw:Math.PI, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3, held:"cup", drink:true});
+    // (lunch at a café table: each facing the table from the chair it sits in, yaw = the chair's angle round the table, turned half round)
+    for(const a of [0.4, 0.4+Math.PI]) crowdAdd(G, {look:look({female:a>1, shirt:a>1 ? "#c8a8b8" : "#8a9aa8"}), x:864+Math.sin(a)*0.82, z:-1780+Math.cos(a)*0.82, y:LY+0.05, yaw:a+Math.PI, mode:"sit", sitY:0.515, dayOnly:true, sway:0.3, held:a>1 ? "cup" : undefined, drink:a>1});
     crowdAdd(G, {look:look({shirt:"#3a4a6a"}), mode:"walk", path:[[812, -1801, LY],[935, -1801, LY, 3],[962, -1785, undefined],[962, -1765, undefined, 6],[935, -1749, LY],[812, -1749, LY, 4]], loop:true, dayOnly:true}); }
 
   /* ---- the zones; the walls of the world round the park; trees, lots of them, everywhere but toward the lake ---- */
@@ -1017,7 +1110,11 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   for(const Kd of [ONE, TWO, THREE]){ const P=Kd.F.P, nm=Kd.name.toLowerCase();
     OFFICE.routes["office park: "+nm+", the door to the elevator"]={y0:FL+0.1, pts:[P(0, -0.6), P(0, 3.0), P(0, 8.5), P(UC, 9.0), P(UC, 9.6)]};
     for(let f=1; f<Kd.levels.length; f++) OFFICE.routes["office park: "+nm+", floor "+(f+1)+" from the elevator"]={y0:Kd.levels[f]+0.1, pts:[P(UC, 9.4), P(UC, 8.0), P(UC, 7.0), P(1.7, 7.0)]};
-    OFFICE.routes["office park: "+nm+", into the elevator"]={y0:FL+0.1, pts:[P(UC, 9.2), P(UC, 9.8), P(UC, 10.6), P(UC, 11.1)]}; }
+    OFFICE.routes["office park: "+nm+", into the elevator"]={y0:FL+0.1, pts:[P(UC, 9.2), P(UC, 9.8), P(UC, 10.6), P(UC, 11.1)]};
+    // and the second car, at -UC
+    OFFICE.routes["office park: "+nm+", the door to the west elevator"]={y0:FL+0.1, pts:[P(0, -0.6), P(0, 3.0), P(0, 8.5), P(-UC, 9.0), P(-UC, 9.6)]};
+    for(let f=1; f<Kd.levels.length; f++) OFFICE.routes["office park: "+nm+", floor "+(f+1)+" from the west elevator"]={y0:Kd.levels[f]+0.1, pts:[P(-UC, 9.4), P(-UC, 8.0), P(-UC, 7.0)]};
+    OFFICE.routes["office park: "+nm+", into the west elevator"]={y0:FL+0.1, pts:[P(-UC, 9.2), P(-UC, 9.8), P(-UC, 10.6), P(-UC, 11.1)]}; }
   // and into the rooms off each floor: the travel agency, the title company's closing room, the training room, the temp agency
   { const R=(Kd, f, nm, uv)=>{ OFFICE.routes["office park: "+Kd.name.toLowerCase()+", "+nm]={y0:Kd.levels[f]+0.1, pts:uv.map(([u, v])=>Kd.F.P(u, v))}; };
     R(ONE, 0, "into Erie Valley Travel", [[0, 3.0],[-6, 7.0],[-10, 7.0],[-12, 7.0],[-14.5, 5.0]]);
@@ -1057,7 +1154,7 @@ OFFICE.step=function(dt){
       const d=lv[E.target]-E.y, s=Math.abs(d);
       E.v=Math.min(EL_VMAX, E.v+EL_A*dt, Math.sqrt(2*EL_A*s)+0.03);
       if(s<=E.v*dt+0.002){ E.y=lv[E.target]; E.v=0; E.f=E.target; E.calls.delete(E.f); E.state="opening"; E.dwell=0;
-        if(typeof AUDIO!=="undefined" && AUDIO.blip){ const [x, z]=E.F.P(UC_ELEV, 9.5); AUDIO.blip("ding", x, z); } }
+        if(typeof AUDIO!=="undefined" && AUDIO.blip){ const [x, z]=E.F.P(E.uc, 9.5); AUDIO.blip("ding", x, z); } }
       else E.y+=Math.sign(d)*E.v*dt;
       let k=0, kd=1e9; for(let i=0;i<lv.length;i++){ const dd=Math.abs(lv[i]-E.y); if(dd<kd){ kd=dd; k=i; } } E.at=k; }
     if(E.state!=="moving") E.at=E.f;

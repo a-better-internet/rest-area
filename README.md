@@ -598,8 +598,21 @@ If the scene runs hot on your machine, start there (see below).
       is walnut, brass and terrazzo with a mirror, rails, a lit ceiling and a
       panel whose buttons light; a lantern over every landing shows where
       the car is and which way it's going, and a chime rings when it comes.
+    - Every building has two working elevators, one either side of the way
+      through the lobby.
+    - The plaza has café tables under umbrellas, a red steel sculpture on
+      a granite plinth, flower boxes along the fronts and bollards that
+      glow at night.
     - Every terminal shows something of its own: claims screens, word
       processors, spreadsheets, ledgers, charts, the network map, a game.
+  - **Hollow Run Marina**, down the coast between the pretzel works and
+    the beer distributor, its own drive off Hollow Road through the woods:
+    a lot with trucks and boat trailers, the boathouse (rentals, live bait,
+    ice, life jackets, rods, the chart of the lake), a gravel path down the
+    bank, and a pier out into the lake with a T at its end, lamps, cleats,
+    a gas pump, a man fishing off the end, and five rental pontoons tied
+    along it. Take any of them (E alongside) and you can tie up at Lake
+    Street's docks across the lake, and bring a boat from there back here.
   - **The Lakeside Dive**, past the office park on the shore, down the
     service drive from the office lot: a one-room bar in stained siding with
     six stools, beer on tap, a pool table, a jukebox playing country, darts,

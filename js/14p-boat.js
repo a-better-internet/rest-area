@@ -126,14 +126,16 @@ function _tieRopes(st, x, z, yaw, b, wy){
     let t=clamp((px-b.ax)*b.ux+(pz-b.az)*b.uz+along*0.9, 0.2, b.el-0.2);
     G.add(_ropeMesh(V3(px, wy+0.66, pz), V3(b.ax+b.ux*t, b.y+0.08, b.az+b.uz*t), 0.16)); }
   scene.add(G); st.ropes=G; }
-(function moorAll(){
-  const B=BOAT; if(!B.g) return;
-  _tieRopes(B, B.x, B.z, B.yaw, _dockBerth(B.x, B.z, B.yaw, 4), B.wy);
-  for(const S of LAKESIDE.boats){ if(!S.pont) continue;
+/* tie one boat up at whatever dock it lies along, and give it its TAKE THIS BOAT (above, and any boat added later: 14mg's) */
+BOAT.moor=function(S){ {
     _tieRopes(S, S.x, S.z, S.ry, _dockBerth(S.x, S.z, S.ry, 4), S.y0);
     // take this one: E alongside it, anywhere down its length
     const u=addUse(S.x, S.z, S.y0+0.55, "TAKE THIS BOAT", ()=>BOAT.takeOver(S), 2.9, ()=>{ if(BOAT.on || BOAT.tie) return false;
-      const c=Math.cos(S.ry), s=Math.sin(S.ry), lz=clamp((player.pos.x-S.x)*s+(player.pos.z-S.z)*c, -S.L/2+0.6, S.L/2-0.6); u.x=S.x+lz*s; u.z=S.z+lz*c; return true; }); } })();
+      const c=Math.cos(S.ry), s=Math.sin(S.ry), lz=clamp((player.pos.x-S.x)*s+(player.pos.z-S.z)*c, -S.L/2+0.6, S.L/2-0.6); u.x=S.x+lz*s; u.z=S.z+lz*c; return true; }); } };
+(function moorAll(){
+  const B=BOAT; if(!B.g) return;
+  _tieRopes(B, B.x, B.z, B.yaw, _dockBerth(B.x, B.z, B.yaw, 4), B.wy);
+  for(const S of LAKESIDE.boats){ if(!S.pont) continue; BOAT.moor(S); } })();
 BOAT.takeOver=function(S){
   const B=BOAT; if(B.on || !B.hull || !S.m) return;
   const Hb=B.hull, Hs=S.m;

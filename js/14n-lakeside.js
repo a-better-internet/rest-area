@@ -593,6 +593,7 @@ const YARD_HOOPS=[];
     oe(0.40, 0.55, 0.45, 0, 0.95, -L/2-0.15, "#1a1a1a"); oe(0.14, 0.75, 0.18, 0, 0.30, -L/2-0.22, "#2a2a2a"); oe(0.30, 0.10, 0.12, 0, -0.08, -L/2-0.20, "#2a2a2a");
     const O=new T.Mesh(mergeEntries(OM), new T.MeshStandardMaterial({vertexColors:true, roughness:0.4, metalness:0.3})); O.castShadow=true; m.add(O);
     LAKESIDE.boats.push({m:m, y0:WY, ph:r()*6.28, ry:ry, x:x, z:z, L:L, out:O, pont:true, col:addColOB(x, z, ry, 1.3, L/2+0.5, WY-1, WY+2.7, COL_DYN)}); };
+  LAKESIDE.pontoon=pontoon; LAKESIDE.WY=WY; LAKESIDE.DY=DY;               // (for docks and boats built later: 14mg's marina)
   // dock A: straight out, a T at the end; dock B: out, then a finger to the east; a ladder, a life ring, a bench
   const docks=[{x0:1288.8, x1:1290.8, z0:SH-20.0, z1:SH+2.2, T:[1284.0, 1295.6, SH-22.4, SH-20.0],
                 edges:[[1288.68, 1288.82, SH-20.0, SH+0.4],[1290.78, 1290.92, SH-20.0, SH+0.4],[1283.88, 1295.72, SH-22.52, SH-22.38],

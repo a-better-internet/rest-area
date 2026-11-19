@@ -40,7 +40,7 @@ const HOLLOW={lamps:[], steam:[]};
   const gy=(x, z)=>Terrain.groundAt(x, z);
   const P=EAST.pretz.site, O=EAST.office.site, L=Bq.lot;
   const onPlace=(x, z, m)=>[P, O, L, Bq.lot].some(b=>x>b.x0-(m||0) && x<b.x1+(m||0) && z>b.z0-(m||0) && z<b.z1+(m||0));
-  const mouths=[[L.z0, L.z1],[EAST.pretz.mouth.z0-6, EAST.pretz.mouth.z1+6],[EAST.office.mouth.z0-6, EAST.office.mouth.z1+6]];
+  const mouths=[[L.z0, L.z1],[EAST.marina.mouth.z0-6, EAST.marina.mouth.z1+6],[EAST.pretz.mouth.z0-6, EAST.pretz.mouth.z1+6],[EAST.office.mouth.z0-6, EAST.office.mouth.z1+6]];
   const inMouth=(z)=>mouths.some(([a, b])=>z>a-2 && z<b+2);
 
   /* ---- the pole line down the west side, its wires; a drop to each place; a light over each mouth ---- */
