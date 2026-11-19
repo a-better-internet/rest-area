@@ -578,7 +578,7 @@ const YARD_HOOPS=[];
     for(const sd of [-1,1]) bb(2.38, 0.05, 0.012, 0, 0.62+(sd>0?0.38:0), 0, "#2a4a8a");
     // the seats: a bench along each side and across the stern, vinyl; the helm console forward on the right
     for(const sd of [-1,1]){ rb(0.6, 0.42, 2.6, sd*0.86, 0.72, -1.4, seat); rb(0.16, 0.5, 2.6, sd*1.12, 1.0, -1.4, seat); }
-    bb(0.7, 0.9, 0.6, 0.72, 0.96, 1.4, "#e8e8e4"); bb(0.5, 0.3, 0.04, 0.72, 1.48, 1.62, "#1a2a3a", -0.5); be(new T.TorusGeometry(0.17, 0.02, 6, 16), 0.72, 1.45, 1.22, "#1a1a1a", -0.9);
+    bb(0.7, 0.9, 0.6, 0.72, 0.96, 1.4, "#d4d0c4"); bb(0.5, 0.3, 0.04, 0.72, 1.48, 1.62, "#1a2a3a", -0.5); be(new T.TorusGeometry(0.17, 0.02, 6, 16), 0.72, 1.45, 1.22, "#1a1a1a", -0.9);
     rb(0.6, 0.45, 0.6, 0.72, 0.74, 0.6, seat);
     // the bimini: four poles and the canvas over the middle
     for(const sd of [-1,1]) for(const dz of [-1.6, 0.4]) be(new T.CylinderGeometry(0.015, 0.015, 1.3, 6), sd*1.18, 1.95, dz, "#c8ccd0");
@@ -593,6 +593,66 @@ const YARD_HOOPS=[];
     oe(0.40, 0.55, 0.45, 0, 0.95, -L/2-0.15, "#1a1a1a"); oe(0.14, 0.75, 0.18, 0, 0.30, -L/2-0.22, "#2a2a2a"); oe(0.30, 0.10, 0.12, 0, -0.08, -L/2-0.20, "#2a2a2a");
     const O=new T.Mesh(mergeEntries(OM), new T.MeshStandardMaterial({vertexColors:true, roughness:0.4, metalness:0.3})); O.castShadow=true; m.add(O);
     LAKESIDE.boats.push({m:m, y0:WY, ph:r()*6.28, ry:ry, x:x, z:z, L:L, out:O, pont:true, col:addColOB(x, z, ry, 1.3, L/2+0.5, WY-1, WY+2.7, COL_DYN)}); };
+  /* the fishing boats: a 14-foot aluminium V-hull, lofted from its stations (the keel rising to the stem, the chine and the
+     sheer drawn in round the bow), painted topsides over a bare bottom, three thwarts, a wooden floor, a rub rail, and a
+     25 horse tiller outboard on the transom. Its frame is the pontoon's: +z the bow, 0 the waterline. The rig (14p) takes
+     one the way it takes a pontoon: SKIFF.hull and SKIFF.motor are its parts, LAKESIDE.skiff puts one in the water */
+  const SKIFF={L:4.4, ST:0.32};
+  SKIFF.station=(t)=>{ const tp=t<0.55 ? 1 : Math.cos((t-0.55)/0.45*Math.PI/2), up=(a, b, k)=>Math.pow(Math.max(0, t-a)/(1-a), k)*b;
+    return {z:-SKIFF.L/2+SKIFF.L*t, gw:0.035+0.815*Math.pow(tp, 0.8), cw:0.025+0.625*Math.pow(tp, 1.25), gy:0.40+0.20*t*t, cy:-0.08+up(0.45, 0.40, 1.6), ky:-0.17+up(0.40, 0.46, 1.5)}; };
+  SKIFF.hull=(paint, seat)=>{ const E=[], NS=16, e=(geo, c, m)=>E.push({geo:geo, matrix:m||new T.Matrix4(), color:new T.Color(c)});
+    const S=[]; for(let i=0;i<=NS;i++) S.push(SKIFF.station(i/NS));
+    // a panel between two lines along the hull (each a function of the station), its faces turned toward `out`
+    const panel=(a, b, out, inset)=>{ const P=[], I=[];
+      for(const st of S){ const A=a(st), Bq=b(st); P.push(A[0]+(inset ? -Math.sign(A[0])*inset : 0), A[1]+(inset ? inset*0.6 : 0), st.z, Bq[0]+(inset ? -Math.sign(Bq[0])*inset : 0), Bq[1]+(inset ? inset*0.6 : 0), st.z); }
+      for(let i=0;i<NS;i++){ const k=i*2; I.push(k, k+1, k+2, k+1, k+3, k+2); }
+      const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(P, 3)); g.setIndex(I); g.computeVertexNormals();
+      const n=g.attributes.normal, m=Math.floor(NS/2)*2; if(n.getX(m)*out[0]+n.getY(m)*out[1]<0){ for(let i=0;i<I.length;i+=3){ const t=I[i]; I[i]=I[i+1]; I[i+1]=t; } g.setIndex(I); g.computeVertexNormals(); }
+      return g; };
+    for(const s of [-1, 1]){
+      const gun=(st)=>[s*st.gw, st.gy], chi=(st)=>[s*st.cw, st.cy], keel=(st)=>[0, st.ky];
+      e(panel(chi, gun, [s, 0.15]), paint); e(panel(keel, chi, [s*0.4, -1]), "#9aa0a2");                  // (outside: the painted topsides, the bare bottom)
+      e(panel(chi, gun, [-s, -0.1], 0.022), "#8e9496"); e(panel(keel, chi, [-s*0.3, 1], 0.022), "#8e9496"); }   // (inside, a skin's thickness in)
+    // the rub rail along the sheer, round the stem from quarter to quarter
+    { const pts=[]; for(let i=0;i<=NS;i++){ const st=S[i]; pts.push(V3(st.gw+0.01, st.gy+0.005, st.z)); } for(let i=NS;i>=0;i--){ const st=S[i]; pts.push(V3(-st.gw-0.01, st.gy+0.005, st.z)); }
+      e(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 90, 0.022, 6, false), "#6e7276"); }
+    // the transom, a plate the motor clamps to; the floor; the thwarts (stern, middle, bow), each wall to wall at its station
+    { const st=S[0], sh=new T.Shape(); sh.moveTo(-st.gw, st.gy); sh.lineTo(-st.cw, st.cy); sh.lineTo(0, st.ky); sh.lineTo(st.cw, st.cy); sh.lineTo(st.gw, st.gy); sh.lineTo(-st.gw, st.gy);
+      e(new T.ExtrudeGeometry(sh, {depth:0.045, bevelEnabled:false}).translate(0, 0, st.z), "#8e9496");
+      e(boxGeo(0.62, 0.08, 0.05), "#5a4a36", new T.Matrix4().makeTranslation(0, st.gy-0.07, st.z+0.07)); }               // (the hardwood pad under the clamps)
+    for(let k=0;k<7;k++) e(boxGeo(0.13, 0.025, 2.9), k%2 ? "#7a6448" : "#86704f", new T.Matrix4().makeTranslation(-0.42+k*0.14, -0.065, -0.45));
+    const thw=(z, d, c)=>{ const st=SKIFF.station((z+SKIFF.L/2)/SKIFF.L), w=2*(st.cw+(st.gw-st.cw)*((SKIFF.ST-st.cy)/(st.gy-st.cy)))-0.06;
+      e(boxGeo(w, 0.04, d), c, new T.Matrix4().makeTranslation(0, SKIFF.ST-0.02, z)); return w; };
+    const ws=thw(-SKIFF.L/2+0.42, 0.62, seat); e(boxGeo(ws-0.04, SKIFF.ST+0.02, 0.03), "#8e9496", new T.Matrix4().makeTranslation(0, SKIFF.ST/2-0.03, -SKIFF.L/2+0.74));   // (the stern seat's locker front)
+    thw(0.05, 0.30, seat); thw(SKIFF.L/2-1.15, 0.26, seat);
+    // the bow deck, a small casting platform under the gunwale; rod holders on the gunwales; an anchor and its line; a tackle box, a cooler
+    { const st=SKIFF.station(0.86); e(boxGeo(st.gw*2-0.08, 0.03, 0.55), "#8e9496", new T.Matrix4().makeTranslation(0, st.gy-0.06, st.z+0.18)); }
+    for(const s of [-1, 1]){ const st=SKIFF.station(0.30); e(new T.CylinderGeometry(0.022, 0.018, 0.18, 8), "#2a2a2c", new T.Matrix4().compose(V3(s*(st.gw-0.06), st.gy-0.02, st.z), new T.Quaternion().setFromEuler(new T.Euler(-0.5, 0, 0)), V3(1,1,1))); }
+    e(new T.CylinderGeometry(0.07, 0.07, 0.24, 10), "#3a3e40", new T.Matrix4().makeTranslation(0.22, -0.03, 1.1)); e(new T.TorusGeometry(0.12, 0.016, 6, 14), "#c8b898", new T.Matrix4().compose(V3(0.22, -0.04, 1.1), new T.Quaternion().setFromEuler(new T.Euler(Math.PI/2, 0, 0)), V3(1,1,1)));
+    e(rboxGeo(0.36, 0.16, 0.20, 0.03, 2), "#2a5a3a", new T.Matrix4().makeTranslation(-0.30, 0.03, -0.75)); e(rboxGeo(0.46, 0.30, 0.30, 0.04, 2), "#c8b48a", new T.Matrix4().makeTranslation(0.25, 0.10, 0.6));
+    const m=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.45, metalness:0.45})); m.castShadow=true; m.receiveShadow=true; return m; };
+  // its outboard: on the transom's top, its cowling out behind; `run` gives the prop as its own group to spin, and the tiller
+  SKIFF.motor=(run)=>{ const E=[], e=(geo, x, y, z, c, rx)=>E.push({geo:geo, matrix:new T.Matrix4().compose(V3(x, y, z), new T.Quaternion().setFromEuler(new T.Euler(rx||0, 0, 0)), V3(1,1,1)), color:new T.Color(c)});
+    e(boxGeo(0.20, 0.16, 0.10), 0, -0.04, -0.03, "#2a2a2c");                                    // the clamp bracket over the transom
+    e(rboxGeo(0.30, 0.32, 0.44, 0.08, 2), 0, 0.25, -0.24, "#33383c"); e(rboxGeo(0.31, 0.05, 0.45, 0.02, 2), 0, 0.10, -0.24, "#b8a878");
+    e(boxGeo(0.12, 0.66, 0.15), 0, -0.30, -0.22, "#2a2e32"); e(boxGeo(0.30, 0.02, 0.26), 0, -0.56, -0.24, "#2a2e32");
+    e(rboxGeo(0.10, 0.20, 0.32, 0.04, 2), 0, -0.68, -0.25, "#2a2e32"); e(boxGeo(0.025, 0.16, 0.12), 0, -0.84, -0.28, "#2a2e32");
+    e(boxGeo(0.045, 0.045, 0.58), 0, 0.14, 0.22, "#1e1e20", -0.12); e(rboxGeo(0.06, 0.06, 0.16, 0.025, 2), 0, 0.17, 0.53, "#1a1a1a", -0.12);   // (the tiller, the twist grip)
+    if(!run) e(new T.CylinderGeometry(0.05, 0.04, 0.12, 10).rotateX(Math.PI/2), 0, -0.68, -0.46, "#3a3e42");
+    const O=new T.Group(), m=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.35, metalness:0.35})); m.castShadow=true; O.add(m);
+    // the decal on the cowling's sides
+    const dec=signTex(192, 48, (c, W, H)=>{ c.fillStyle="#33383c"; c.fillRect(0, 0, W, H); c.fillStyle="#d8d0c0"; fitText(c, "25 HP", W*0.84, H*0.62, W/2, H/2, "800", "Arial"); });
+    for(const sd of [-1, 1]){ const d=new T.Mesh(new T.PlaneGeometry(0.26, 0.08), new T.MeshStandardMaterial({map:dec, roughness:0.4, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-4}));
+      d.position.set(sd*0.163, 0.29, -0.24); d.rotation.y=sd*Math.PI/2; O.add(d); }
+    if(run){ const pr=new T.Group(), PE=[]; for(let k=0;k<3;k++) PE.push({geo:boxGeo(0.20, 0.07, 0.01), matrix:new T.Matrix4().compose(V3(0,0,0), new T.Quaternion().setFromEuler(new T.Euler(0.35, 0, k*Math.PI*2/3)), V3(1,1,1)), color:new T.Color("#8a8e92")});
+      pr.add(new T.Mesh(mergeEntries(PE), new T.MeshStandardMaterial({vertexColors:true, roughness:0.3, metalness:0.7}))); pr.position.set(0, -0.68, -0.44); O.add(pr); O.userData.prop=pr; }
+    O.position.set(0, SKIFF.station(0).gy, -SKIFF.L/2-0.01); return O; };
+  // one in the water, with its own still outboard, a collider that moves with it, and the paint and seats given
+  SKIFF.put=(x, z, ry, paint, seat)=>{ const m=SKIFF.hull(paint, seat||"#6a5a44"); m.position.set(x, WY, z); m.rotation.y=ry; scene.add(m);
+    const O=SKIFF.motor(false); m.add(O);
+    const S={m:m, y0:WY, ph:r()*6.28, ry:ry, x:x, z:z, L:SKIFF.L, out:O, pont:true, kind:"skiff", col:addColOB(x, z, ry, 0.92, SKIFF.L/2+0.3, WY-1, WY+1.4, COL_DYN)};
+    LAKESIDE.boats.push(S); return S; };
+  LAKESIDE.SKIFF=SKIFF; LAKESIDE.skiff=SKIFF.put;
   LAKESIDE.pontoon=pontoon; LAKESIDE.WY=WY; LAKESIDE.DY=DY;               // (for docks and boats built later: 14mg's marina)
   // dock A: straight out, a T at the end; dock B: out, then a finger to the east; a ladder, a life ring, a bench
   const docks=[{x0:1288.8, x1:1290.8, z0:SH-20.0, z1:SH+2.2, T:[1284.0, 1295.6, SH-22.4, SH-20.0],
@@ -619,6 +679,8 @@ const YARD_HOOPS=[];
   // the boats: two at dock A's T, one along dock B
   pontoon(1286.0, SH-27.0, 0.0, "#e8e2d2", true); pontoon(1293.6, SH-26.4, 0.04, "#d8e2ec");
   pontoon(1333.0, SH-9.0, Math.PI, "#e8e2d2");
+  // and three of the fishing skiffs: one along the inside of dock B's finger, one down each side of dock A, bows out
+  SKIFF.put(1344.4, SH-13.65, Math.PI/2, "#7a2e24", "#5a4a36"); SKIFF.put(1292.1, SH-11.5, Math.PI, "#3e5a3e"); SKIFF.put(1287.5, SH-11.5, Math.PI, "#2e4a6a");
   // (their lines to the docks are 14p's, which ties up whichever boat is moored where)
   // the shore along the park: big stones at the water's edge, both sides of each dock
   for(let x=PK.x0+1.0; x<PK.x1-1.0; x+=0.85){ if(docks.some(d=>x>d.x0-0.6 && x<d.x1+0.6)) continue;
@@ -730,13 +792,9 @@ normal=normalize(normal+(viewMatrix*vec4(-wk.x, 0.0, -wk.y, 0.0)).xyz);`); };
     se(new FaceGeo().poly([V3(0, 1.0, 0.7), V3(0, 7.6, 0.6), V3(0, 1.0, 3.4)]).poly([V3(0, 1.0, 3.4), V3(0, 7.6, 0.6), V3(0, 1.0, 0.7)]).geo(), 0.03, 0, 0, "#e8e4d8");
     const m=new T.Mesh(mergeEntries(SM), new T.MeshStandardMaterial({vertexColors:true, roughness:0.6, side:T.DoubleSide})); sb.add(m);
     sb.position.set(1520, WY, -1610); sb.rotation.y=0.9; scene.add(sb); LAKESIDE.boats.push({m:sb, y0:WY, ph:1.3, ry:0.9, drift:true});
-    const jb=new T.Group(), JM=[]; const je=(geo,lx,ly,lz,c,rx,ry,rz)=>JM.push({geo:geo, matrix:new T.Matrix4().compose(V3(lx,ly,lz), new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
-    je(boxGeo(1.4, 0.4, 4.0), 0, 0.15, 0, "#5a6a4a"); je(boxGeo(1.3, 0.05, 3.9), 0, 0.33, 0, "#4a5a3a"); je(boxGeo(1.3, 0.06, 0.3), 0, 0.42, 0.6, "#6a5a44");
-    je(boxGeo(0.42, 0.5, 0.32), 0, 0.72, 0.6, "#c45a1a"); je(new T.SphereGeometry(0.12, 10, 8), 0, 1.06, 0.6, "#d8a888"); je(new T.CylinderGeometry(0.16, 0.18, 0.08, 12), 0, 1.16, 0.6, "#2a4a2a");
-    je(new T.CylinderGeometry(0.008, 0.008, 2.6, 6), 0.4, 1.4, -0.4, "#2a2a2a", 0.9, 0, 0.3);
-    je(boxGeo(0.3, 0.45, 0.3), 0, 0.5, -2.05, "#1a1a1a");
-    const jm=new T.Mesh(mergeEntries(JM), new T.MeshStandardMaterial({vertexColors:true, roughness:0.7})); jb.add(jm);
-    jb.position.set(1356, WY, -1420); jb.rotation.y=-0.6; scene.add(jb); LAKESIDE.boats.push({m:jb, y0:WY, ph:4.1, ry:-0.6}); }
+    // (the jon boat: one of the fishing skiffs, anchored; the man in it is 14q's crowd, put in from 14mg)
+    const jb=SKIFF.hull("#4a5a3e", "#6a5a44"); jb.add(SKIFF.motor(false)); jb.position.set(1356, WY, -1420); jb.rotation.y=-0.6; scene.add(jb);
+    LAKESIDE.boats.push({m:jb, y0:WY, ph:4.1, ry:-0.6}); LAKESIDE.jon={x:1356, z:-1420, ry:-0.6}; }
   // the geese: on the lawn by the water, and a few out swimming
   { const gm=new T.MeshStandardMaterial({vertexColors:true, roughness:0.7});
     const goose=(x, z, ry, swim)=>{ const GM=[], ge=(geo,lx,ly,lz,c,rx,ry2,rz)=>GM.push({geo:geo, matrix:new T.Matrix4().compose(V3(lx,ly,lz), new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry2||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});

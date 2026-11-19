@@ -25,7 +25,8 @@
    x 925..931; the lot x 905..928, z -1893.5..-1874.5; the truck at
    (930.6, -1882.5), its length along z, its window facing east.
    ---------------------------------------------------------------------- */
-const DIVE={routes:{}, lamps:[], radios:[], glow:null};
+const DIVE={routes:{}, lamps:[], radios:[], glow:null, fire:null};
+const DOCKZ=[-1906.2, -1903.8];                                   // (the Dive's dock, out from the bank: its walk's sides, 14mf)
 (function lakesideDive(){
   if(typeof EAST==="undefined" || !EAST.dive) return;
   const Y=EDIN.y, S0=EAST.dive.site, ME=[], CH=[], r=_trng(1986);
@@ -77,12 +78,12 @@ const DIVE={routes:{}, lamps:[], radios:[], glow:null};
   run("wood", "z", IN.x1-0.02, IN.x1, IN.z0+0.03, IN.z1-0.03, FL, EH-0.072, OP.e, PANEL, false, -1);
   run("wood", "z", IN.x0, IN.x0+0.02, IN.z0+0.03, IN.z1-0.03, FL, EH-0.072, OP.w, PANEL, false, 1);
   // the gables, east and west: a triangle of siding over each end wall (a slab extruded out of the wall's line)
-  for(const [x1, col] of [[BX0+WT, SIDING],[BX1, SIDING]]){ const sh=new T.Shape(); sh.moveTo(BZ0, EH); sh.lineTo(BZ1, EH); sh.lineTo(ZM, RIDGE-0.1); sh.lineTo(BZ0, EH);
+  for(const [x1, col] of [[BX0+WT, SIDING],[BX1, SIDING]]){ const sh=new T.Shape(); sh.moveTo(BZ0, EH+0.002); sh.lineTo(BZ1, EH+0.002); sh.lineTo(ZM, RIDGE-0.1); sh.lineTo(BZ0, EH+0.002);      // (on the end walls' tops, not overlapping them)
     const g=new T.ExtrudeGeometry(sh, {depth:WT, bevelEnabled:false}); g.applyMatrix4(new T.Matrix4().set(0,0,-1,x1, 0,1,0,0, 1,0,0,0, 0,0,0,1)); push("siding", g, 0, 0, 0, 0, col); }
   // the roof: two slopes of shingle meeting at the ridge, a cap along it, a fascia and a gutter on each eave
   { const th=Math.atan(RISE/((BZ1-BZ0)/2)), OV=0.45, run2=(BZ1-BZ0)/2+OV, L=run2/Math.cos(th);
     for(const s of [1, -1]){ const ez=ZM+s*run2, ey=RIDGE-run2*Math.tan(th), mz=(ZM+ez)/2, my=(RIDGE+ey)/2, nz=s*Math.sin(th), ny=Math.cos(th);
-      push("shingle", boxGeo(BX1-BX0+0.9, 0.12, L), (BX0+BX1)/2, my-ny*0.06, mz-nz*0.06, 0, ROOF, s*th);
+      push("shingle", boxGeo(BX1-BX0+0.9+(s<0 ? 0.014 : 0), 0.12, L), (BX0+BX1)/2, my-ny*0.06, mz-nz*0.06, 0, ROOF, s*th);      // (one a little longer: their ends meet at the ridge)
       B(BX1-BX0+0.94, 0.2, 0.04, (BX0+BX1)/2, ey-0.12, ez+s*0.03, TRIM);
       C(0.06, BX1-BX0+0.9, (BX0+BX1)/2, ey-0.2, ez+s*0.1, "#6a6a62", 10, 0, 0, Math.PI/2);
       C(0.04, ey-0.2-GY, BX1+0.4, (ey-0.2+GY)/2, ez+s*0.1, "#6a6a62", 8); }
@@ -92,7 +93,7 @@ const DIVE={routes:{}, lamps:[], radios:[], glow:null};
       ME.push({geo:boxGeo(0.04, Lr, 0.2), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color(TRIM)}); }
     addZone(BX0, BX1, BZ0, BZ1, FL-0.5, EH, "LAKESIDE DIVE · THE BAR", true); }
   // corner boards and the trim round every opening, proud of the siding
-  for(const [x, z] of [[BX0, BZ0],[BX1, BZ0],[BX0, BZ1],[BX1, BZ1]]) B(0.16, EH-FL+0.15, 0.16, x, (FL-0.15+EH)/2, z, TRIM);
+  for(const [x, z] of [[BX0, BZ0],[BX1, BZ0],[BX0, BZ1],[BX1, BZ1]]) B(0.16, EH-FL+0.15-0.014, 0.16, x, (FL-0.15+EH-0.014)/2, z, TRIM);      // (their tops short of the walls')
   for(const o of OP.s) for(const [p, q] of [[o[0]-0.06, o[0]],[o[1], o[1]+0.06]]) B(q-p, o[3]-o[2]+0.06, 0.03, (p+q)/2, (o[2]+o[3]+0.06)/2, BZ1+0.015, TRIM);
   for(const o of OP.s) B(o[1]-o[0]+0.16, 0.08, 0.04, (o[0]+o[1])/2, o[3]+0.04, BZ1+0.02, TRIM);
   for(const o of OP.e) for(const [p, q] of [[o[0]-0.06, o[0]],[o[1], o[1]+0.06]]) B(0.03, o[3]-o[2]+0.06, q-p, BX1+0.015, (o[2]+o[3]+0.06)/2, (p+q)/2, TRIM);
@@ -105,7 +106,7 @@ const DIVE={routes:{}, lamps:[], radios:[], glow:null};
   makeDoor(XF(916.62, BZ1-WT/2, 0), 0, FL+0.01, 0, "LAKESIDE DIVE", true, 0, "steel", 0x5a3a2a); addFlat(916.6, 917.6, BZ1-WT-0.02, BZ1+0.02, FL);
   makeDoor(XF(BX1-WT/2, -1899.42, Math.PI/2), 0, FL+0.01, 0, "LAKESIDE DIVE", false, 0, "vision", 0x6a4a2a); addFlat(BX1-WT-0.02, BX1+0.02, -1900.4, -1899.4, FL);
   // the stoop at the front: a slab of concrete, flush with the floor, a step down to the gravel
-  push("concrete", boxGeo(2.0, FL-GY+0.3, 1.2), 917.1, (FL+GY-0.3)/2, BZ1+0.6, 0, "#8a867e"); addFlat(916.1, 918.1, BZ1, BZ1+1.2, FL);      // (a step, not a wall: no collider)
+  push("concrete", boxGeo(2.0, FL-GY+0.3-0.012, 1.13), 917.1, (FL-0.012+GY-0.3)/2, BZ1+0.635, 0, "#8a867e"); addFlat(916.1, 918.1, BZ1, BZ1+1.2, FL);      // (a hair under the slab's top, and off its edge; a step, not a wall: no collider)
   { const L={x:917.1, y:FL+2.45, z:BZ1+0.5, color:0xffd8a0, intensity:0, dist:9, decay:1.6, mothy:true}; LAMPS.push(L); DIVE.lamps.push(L);
     B(0.18, 0.12, 0.2, 917.1, FL+2.5, BZ1+0.1, "#2a2a2a"); C(0.07, 0.1, 917.1, FL+2.39, BZ1+0.16, "#e8d8a0", 10); }
   // the name over the door: a painted board, a little weathered, its lamp's gooseneck
@@ -201,14 +202,14 @@ const DIVE={routes:{}, lamps:[], radios:[], glow:null};
     B(0.42, 0.05, 0.42, x, FL+0.46, z, "#3a2014", yaw); for(const [a, b] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const lx=a*0.18, lz=b*0.18; B(0.03, 0.45, 0.03, x+lx*Math.cos(yaw)+lz*Math.sin(yaw), FL+0.225, z-lx*Math.sin(yaw)+lz*Math.cos(yaw), "#2a1a10", yaw); }
     B(0.42, 0.42, 0.04, x-fx*0.2, FL+0.72, z-fz*0.2, "#3a2014", yaw); addSeat(x, z, FL, yaw, "A CHAIR AT THE TABLE"); };
   for(const tx of [920.4, 923.3]){ const tz=-1896.5; C(0.38, 0.04, tx, FL+0.74, tz, "#3a2014", 18); C(0.04, 0.72, tx, FL+0.36, tz, "#2a2a2a", 8); C(0.24, 0.03, tx, FL+0.015, tz, "#2a2a2a", 12);
-    addCol(tx-0.38, tx+0.38, tz-0.38, tz+0.38, FL-0.05, FL+0.76); chair(tx-0.72, tz, -Math.PI/2); chair(tx+0.72, tz, Math.PI/2); chair(tx, tz-0.72, 0); }
+    addCol(tx-0.38, tx+0.38, tz-0.38, tz+0.38, FL-0.05, FL+0.76); chair(tx-0.72, tz, -Math.PI/2); chair(tx+0.72, tz, Math.PI/2); chair(tx, tz-0.72, Math.PI); }      // (each facing the table)
   { const tx=923.6, tz=-1902.6; C(0.32, 0.04, tx, FL+1.05, tz, "#3a2014", 16); C(0.04, 1.03, tx, FL+0.52, tz, "#2a2a2a", 8); C(0.22, 0.03, tx, FL+0.015, tz, "#2a2a2a", 12);
     addCol(tx-0.32, tx+0.32, tz-0.32, tz+0.32, FL-0.05, FL+1.07);
-    for(const [dx, dz, yaw] of [[-0.62, 0, -Math.PI/2],[0, 0.62, Math.PI]]){ const x=tx+dx, z=tz+dz; C(0.17, 0.05, x, FL+0.76, z, "#8a1a1a", 14); C(0.025, 0.74, x, FL+0.38, z, "#b8bcc0", 8, 0, 0, 0, CH); C(0.18, 0.012, x, FL+0.3, z, "#b8bcc0", 12, 0, 0, 0, CH);
+    for(const [dx, dz, yaw] of [[-0.62, 0, -Math.PI/2],[0, 0.62, 0]]){ const x=tx+dx, z=tz+dz; C(0.17, 0.05, x, FL+0.76, z, "#8a1a1a", 14); C(0.025, 0.74, x, FL+0.38, z, "#b8bcc0", 8, 0, 0, 0, CH); C(0.18, 0.012, x, FL+0.3, z, "#b8bcc0", 12, 0, 0, 0, CH);
       addSeat(x, z, FL, yaw, "A STOOL AT THE HIGH TABLE", false, 0.34); } }
   // the paneling's own: a framed photo of the lake frozen, a pennant, a muskie mounted over the door to the deck
-  { sign(0.7, 0.5, (c, W, H)=>{ c.fillStyle="#a8b8c8"; c.fillRect(0, 0, W, H); c.fillStyle="#e0e4e8"; c.fillRect(0, H*0.55, W, H*0.45); c.fillStyle="#3a4a3a"; c.fillRect(0, H*0.42, W, H*0.14); c.fillStyle="#2a2a2a"; for(let i=0;i<5;i++) c.fillRect(W*(0.2+i*0.13), H*0.62, 4, 8); }, 922.6, FL+1.85, IN.z1-0.025, Math.PI, false, 160);
-    B(0.78, 0.58, 0.02, 922.6, FL+1.85, IN.z1-0.012, "#2a1a10");
+  { sign(0.7, 0.5, (c, W, H)=>{ c.fillStyle="#a8b8c8"; c.fillRect(0, 0, W, H); c.fillStyle="#e0e4e8"; c.fillRect(0, H*0.55, W, H*0.45); c.fillStyle="#3a4a3a"; c.fillRect(0, H*0.42, W, H*0.14); c.fillStyle="#2a2a2a"; for(let i=0;i<5;i++) c.fillRect(W*(0.2+i*0.13), H*0.62, 4, 8); }, 922.6, FL+1.85, IN.z1-0.058, Math.PI, false, 160);
+    B(0.78, 0.58, 0.02, 922.6, FL+1.85, IN.z1-0.042, "#2a1a10");          // (clear of the paneling, which the bake thickens)
     { const x=IN.x1-0.08, z=-1899.9; RB(0.06, 0.2, 0.9, x, FL+2.5, z, "#4a5a3a", 0, 0.08); B(0.04, 0.3, 0.4, x+0.02, FL+2.5, z, "#3a2014"); } }
   // the lights: tubes in a fixture over the bar, a lamp over each table
   { for(let x=915.6; x<921.5; x+=2.0) B(1.2, 0.08, 0.3, x, EH-0.12, BZF-0.6, "#d8ccb0");
@@ -283,7 +284,7 @@ const DIVE={routes:{}, lamps:[], radios:[], glow:null};
     for(const lz of [0.95, -2.15]) cyl(0.06, 2.0, 0, 0.46, lz, "#2a2a2a", 8, 0, Math.PI/2);
     cyl(0.25, 0.9, -0.85, 0.72, -0.6, "#8a8e92", 14, Math.PI/2, 0, CH);
     // the box: a floor pan, the street side whole, the curb side round its window, the back with its door, the roof
-    b(2*HW, 0.12, ZF-ZR, 0, Y0+0.06, (ZF+ZR)/2, "#3a3a3a");
+    b(2*HW-0.03, 0.12, ZF-ZR, 0, Y0+0.06, (ZF+ZR)/2, "#3a3a3a");      // (inside the sides, not in their faces)
     rb(0.06, Y1-Y0, ZF-ZR, -HW+0.03, (Y0+Y1)/2, (ZF+ZR)/2, CREAM, 0.02);
     const WZ0=-2.4, WZ1=-0.2, WY0=2.0, WY1=2.95;                   // (the serving window in the curb side)
     rb(0.06, WY0-Y0, ZF-ZR, HW-0.03, (Y0+WY0)/2, (ZF+ZR)/2, CREAM, 0.02);
@@ -366,7 +367,8 @@ const DIVE={routes:{}, lamps:[], radios:[], glow:null};
     const shoreX=(z)=>{ let x=930; while(x<S0.x1+40 && Terrain.lakeSD(x, z)>1.5) x+=0.25; return x; };
     W(S0.x0-0.4, S0.x0+0.4, S0.z0, S0.z1); W(S0.x0, shoreX(S0.z0)+0.4, S0.z0-0.4, S0.z0+0.4);
     const BANK="THE BANK DROPS STRAIGHT INTO THE LAKE HERE";
-    for(let z=S0.z0; z<S0.z1-0.01; z+=2){ const a=shoreX(z), b=shoreX(Math.min(S0.z1, z+2)); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, z, Math.min(S0.z1, z+2)).msg=BANK; }
+    for(let z=S0.z0; z<S0.z1-0.01; z+=2){ const z2=Math.min(S0.z1, z+2); if(z2>DOCKZ[0]+0.05 && z<DOCKZ[1]-0.05) continue; const a=shoreX(z), b=shoreX(z2); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, z, z2).msg=BANK; }   // (open where the dock goes out)
+    { const a=shoreX(DOCKZ[0]-1), b=shoreX(DOCKZ[1]+1); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, DOCKZ[0]-1.0, DOCKZ[0]).msg=BANK; W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, DOCKZ[1], DOCKZ[1]+1.0).msg=BANK; }
     addZone(S0.x0, S0.x1, S0.z0, S0.z1, Y-4, Y+20, "THE LAKESIDE DIVE"); }
   if(typeof FOREST!=="undefined"){ const q=_trng(1979);
     const tree=(sp, x, z, s)=>{ if(Terrain.lakeSD(x, z)<3.5) return; FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, gy=gyAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
@@ -404,4 +406,69 @@ const DIVE={routes:{}, lamps:[], radios:[], glow:null};
     "lakeside dive: from the office park's lawn to the tables":[[950, -1820], [950, -1845], [950, -1862], [950, -1880], [944.5, -1886]]};
 })();
 /* the lamps over the door and the tables come on after dark */
-function updateDive(dt, dark){ for(const L of DIVE.lamps) L.intensity=(L.dist>10 ? 0.9 : 0.8)*smoothstep(0.3, 0.6, dark); }
+/* ---- round 42: the Dive's dock, where a boat ties up to come in for a beer; the fire pit and its chairs; the horseshoe pit ---- */
+(function diveExtras(){
+  if(typeof EAST==="undefined" || !EAST.dive || typeof LAKESIDE==="undefined" || !LAKESIDE.DY) return;
+  const S0=EAST.dive.site, WY=LAKESIDE.WY, DY=LAKESIDE.DY, ME=[], CH=[], r=_trng(1987);
+  const ent=(geo,x,y,z,c,rx,ry,rz,list)=>(list||ME).push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
+    new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
+  const B=(w,h,d,x,y,z,c,ry,list)=>ent(boxGeo(w,h,d),x,y,z,c,0,ry||0,0,list);
+  const C=(r0,h,x,y,z,c,seg,rx,ry,rz,list)=>ent(new T.CylinderGeometry(r0,r0,h,seg||12),x,y,z,c,rx,ry,rz,list);
+  const say=(c, s, cx, cy, w, h, col, weight, family)=>{ c.fillStyle=col; fitText(c, s, w, h, cx, cy, weight||"800", family||"Arial"); };
+  const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*240), Math.round((cw||w*240)*h/w), draw), px,py,pz,ry,lit);
+  const gy=(x, z)=>Terrain.groundAt(x, z), shoreX=(z)=>{ let x=930; while(x<S0.x1+40 && Terrain.lakeSD(x, z)>1.5) x+=0.25; return x; };
+  /* the dock: a walk out from the bank, a T across its end; both LAKESIDE.docks, so a boat taken anywhere on the lake ties up here */
+  const ZM=(DOCKZ[0]+DOCKZ[1])/2, SX=shoreX(ZM), X0=SX-1.2, X1=SX+11.0, TE=[X1, X1+2.4, ZM-7.0, ZM+7.0];
+  const deck=(x0, x1, z0, z1)=>{ LAKESIDE.docks.push({x0:x0, x1:x1, z0:z0, z1:z1, y:DY}); addFlat(x0, x1, z0, z1, DY);
+    const along=(x1-x0)>(z1-z0), n=Math.floor((along ? x1-x0 : z1-z0)/0.16);
+    for(let k=0;k<n;k++){ const t=(k+0.5)/n; along ? B(0.145, 0.05, z1-z0, x0+(x1-x0)*t, DY-0.025, (z0+z1)/2, k%5 ? "#8a7a62" : "#7a6a54") : B(x1-x0, 0.05, 0.145, (x0+x1)/2, DY-0.025, z0+(z1-z0)*t, k%5 ? "#8a7a62" : "#7a6a54"); }
+    for(const sd of [0, 1]) along ? B(x1-x0, 0.2, 0.08, (x0+x1)/2, DY-0.15, sd ? z1+0.04 : z0-0.04, "#5a4a36") : B(0.08, 0.2, z1-z0, sd ? x1+0.04 : x0-0.04, DY-0.15, (z0+z1)/2, "#5a4a36"); };
+  deck(X0, X1, DOCKZ[0], DOCKZ[1]); deck(TE[0], TE[1], TE[2], TE[3]);
+  const piling=(x, z)=>{ const bed=Math.min(gy(x, z), WY-0.5); C(0.12, DY+0.6-bed, x, (DY+0.6+bed)/2, z, "#5a4a36", 12); C(0.13, 0.04, x, DY+0.62, z, "#4a3a2a", 12); addCol(x-0.13, x+0.13, z-0.13, z+0.13, DY-1.2, DY+0.62); };
+  for(let x=X0+2.5; x<X1-0.5; x+=4.0) for(const z of [DOCKZ[0]-0.16, DOCKZ[1]+0.16]) piling(x, z);
+  for(const z of [TE[2], TE[2]+4.6, TE[3]-4.6, TE[3]]) for(const x of [TE[0]-0.16, TE[1]+0.16]) if(Math.abs(z-ZM)>2) piling(x, z);
+  for(let z=TE[2]+1.2; z<TE[3]-1; z+=3.0) for(const x of [TE[1]-0.12, TE[0]+0.12]) if(Math.abs(z-ZM)>1.6){ B(0.3, 0.04, 0.06, x, DY+0.06, z, "#8a8d90", Math.PI/2, CH); }
+  // its edges: walls you cannot step off, low; the bank's own rocks either side of where it leaves the shore
+  { const E=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, DY-1.2, DY+0.9);
+    E(X0+1.4, X1, DOCKZ[0]-0.07, DOCKZ[0]+0.07); E(X0+1.4, X1, DOCKZ[1]-0.07, DOCKZ[1]+0.07);
+    E(TE[0]-0.07, TE[0]+0.07, TE[2], DOCKZ[0]); E(TE[0]-0.07, TE[0]+0.07, DOCKZ[1], TE[3]); E(TE[1]-0.07, TE[1]+0.07, TE[2], TE[3]);
+    E(TE[0], TE[1], TE[2]-0.07, TE[2]+0.07); E(TE[0], TE[1], TE[3]-0.07, TE[3]+0.07);
+    for(const z of [DOCKZ[0]-0.6, DOCKZ[1]+0.6]) for(let k=0;k<3;k++){ const s=0.3+r()*0.2; ent(new T.DodecahedronGeometry(s, 0), SX-1.5+k*0.7, WY+0.1+s*0.3, z+(r()-0.5)*0.3, ["#8a847a","#7a7468","#6a665e"][k%3], r()*3, r()*3); } }
+  // a sign at the end for anyone coming in by water, and a lamp on a post at the T
+  { const x=TE[1]-0.1, z=ZM; B(0.1, 1.6, 0.1, x, DY+0.8, z+0.9, "#5a4a36"); B(0.1, 1.6, 0.1, x, DY+0.8, z-0.9, "#5a4a36"); addCol(x-0.06, x+0.06, z-0.96, z+0.96, DY-0.5, DY+1.6);
+    B(0.06, 0.66, 1.9, x-0.07, DY+1.25, z, "#3a2a20");
+    sign(1.8, 0.56, (c, W, H)=>{ c.fillStyle="#3a2a20"; c.fillRect(0, 0, W, H); say(c, "LAKESIDE DIVE", W/2, H*0.38, W*0.8, H*0.34, "#e8c878", "800", "Georgia, serif"); say(c, "BOATERS WELCOME · TIE UP 2 HRS", W/2, H*0.76, W*0.8, H*0.16, "#d8ccb0", "700"); },
+      x+0.0, DY+1.25, z, Math.PI/2, false, 520);
+    C(0.05, 2.3, TE[0]+0.2, DY+1.15, TE[3]-0.4, "#2a2a2e", 8); ent(new T.SphereGeometry(0.11, 10, 8), TE[0]+0.2, DY+2.35, TE[3]-0.4, "#2a2a2e");
+    push("rn_glow", new T.SphereGeometry(0.08, 10, 8), TE[0]+0.2, DY+2.25, TE[3]-0.4, 0, "#ffffff");
+    const L={x:TE[0]+0.2, y:DY+2.1, z:TE[3]-0.4, color:0xffd8a0, intensity:0, dist:10, decay:1.6, mothy:true}; LAMPS.push(L); DIVE.lamps.push(L);
+    addCol(TE[0]+0.13, TE[0]+0.27, TE[3]-0.47, TE[3]-0.33, DY-0.5, DY+2.4); }
+  addZone(X0, TE[1], TE[2], TE[3], WY-1, WY+6, "THE LAKESIDE DIVE · THE DOCK");
+  /* the fire pit on the grass toward the water: a ring of stones, the logs, the embers that glow after dark; four Adirondack chairs round it */
+  { const fx=SX-13.0, fz=-1914.0, g=gy(fx, fz);
+    for(let k=0;k<12;k++){ const a=k/12*Math.PI*2; ent(new T.DodecahedronGeometry(0.17, 0), fx+Math.cos(a)*0.62, g+0.08, fz+Math.sin(a)*0.62, ["#7a7468","#6a665e","#8a847a"][k%3], r()*3, a, r()); }
+    for(let k=0;k<4;k++){ const a=k*1.4+0.3; ent(new T.CylinderGeometry(0.06, 0.07, 0.7, 8), fx+Math.cos(a)*0.08, g+0.12+(k%2)*0.06, fz+Math.sin(a)*0.08, "#3a2a1a", Math.PI/2, a, 0.25); }
+    push("rn_glow", new T.CircleGeometry(0.34, 16).rotateX(-Math.PI/2), fx, g+0.06, fz, 0, "#ffffff");
+    addCol(fx-0.75, fx+0.75, fz-0.75, fz+0.75, g-0.3, g+0.25);
+    const L={x:fx, y:g+0.7, z:fz, color:0xff8a3a, intensity:0, dist:9, decay:1.4, fire:true}; LAMPS.push(L); DIVE.fire=L;
+    const adk=(a, col)=>{ const x=fx+Math.cos(a)*2.1, z=fz+Math.sin(a)*2.1, s=Math.atan2(Math.cos(a), Math.sin(a)), gg=gy(x, z);     // (s: the seat's yaw, facing the fire)
+      const c=Math.cos(s), sn=Math.sin(s), P=(lx, lz)=>[x+lx*c+lz*sn, z-lx*sn+lz*c];
+      for(let k=0;k<5;k++){ const [px, pz]=P(-0.24+k*0.12, 0.02); ent(boxGeo(0.1, 0.025, 0.56), px, gg+0.36-0.0, pz, col, -0.12, s, 0); }               // the seat's slats, tipped back
+      for(let k=0;k<5;k++){ const [px, pz]=P(-0.24+k*0.12, 0.36); ent(boxGeo(0.1, 0.8+(k===2 ? 0.1 : k%4===0 ? -0.08 : 0), 0.025), px, gg+0.72, pz, col, 0.32, s, 0); }   // the back, raked
+      for(const sd of [-1, 1]){ const [px, pz]=P(sd*0.38, 0.05); ent(boxGeo(0.14, 0.025, 0.74), px, gg+0.58, pz, col, 0, s, 0);
+        const [lx, lz]=P(sd*0.38, -0.22); ent(boxGeo(0.06, 0.56, 0.06), lx, gg+0.28, lz, col, 0, s, 0); const [kx, kz]=P(sd*0.33, 0.32); ent(boxGeo(0.06, 0.42, 0.06), kx, gg+0.21, kz, col, 0, s, 0); }
+      const [cx, cz]=P(0, 0.08); addColOB(cx, cz, s, 0.42, 0.45, gg-0.05, gg+0.6);
+      addSeat(x, z, gg, s, "AN ADIRONDACK CHAIR BY THE FIRE", false, 0.76); return [x, z, s, gg]; };
+    DIVE.adk=[adk(0.4, "#a8423a"), adk(1.9, "#3a6a8a"), adk(3.5, "#d8b84a"), adk(5.0, "#4a7a4a")]; }
+  /* the horseshoe pit: two boxes of sand on the grass forty feet apart, a stake in each, the shoes lying where they fell */
+  { const hx=936.0;
+    for(const z of [-1903.4, -1915.6]){ const g=gy(hx, z); B(1.2, 0.12, 1.8, hx, g+0.04, z, "#5a4a36"); B(1.04, 0.012, 1.64, hx, g+0.10, z, "#c8b48a");
+      C(0.015, 0.36, hx, g+0.27, z, "#5a5a5e", 6); addCol(hx-0.6, hx+0.6, z-0.9, z+0.9, g-0.3, g+0.11);
+      for(let k=0;k<2;k++){ const a=r()*6.28, d=0.15+r()*0.3; ent(new T.TorusGeometry(0.08, 0.012, 4, 10, Math.PI*1.4), hx+Math.cos(a)*d, g+0.12+k*0.012, z+Math.sin(a)*d, "#6a6a70", Math.PI/2, 0, a, CH); } } }
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.8, metalness:0.02}), "lakeside-dive-yard", true);
+  detailMesh(CH, new T.MeshStandardMaterial({vertexColors:true, roughness:0.35, metalness:0.7}), "lakeside-dive-yard-metal", true);
+  DIVE.routes["lakeside dive: down the grass and out the dock to the T"]=[[944.0, -1905.0],[SX-4.0, ZM],[SX-1.0, ZM],[SX+3.0, ZM],[X1-0.6, ZM],[TE[0]+1.2, ZM],[TE[0]+1.2, TE[2]+1.0],[TE[0]+1.2, TE[3]-1.0]];
+  DIVE.routes["lakeside dive: round the fire pit"]=[[SX-16.2, -1917.0],[SX-16.2, -1911.0],[SX-10.0, -1911.0],[SX-10.0, -1917.0]];
+})();
+function updateDive(dt, dark){ for(const L of DIVE.lamps) L.intensity=(L.dist>10 ? 0.9 : 0.8)*smoothstep(0.3, 0.6, dark);
+  if(DIVE.fire){ const k=smoothstep(0.25, 0.55, dark), t=performance.now()*0.001; DIVE.fire.intensity=k*(0.9+0.2*Math.sin(t*9.1)+0.12*Math.sin(t*23.7)); } }

@@ -405,6 +405,7 @@ const AUDIO=(function(){
     if(typeof RADIO_ST!=="undefined") for(const q of RADIO_ST.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
     if(typeof WESTPARK!=="undefined" && WESTPARK.radios) for(const q of WESTPARK.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
     if(typeof VELVET!=="undefined") for(const q of VELVET.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
+    if(typeof BOOKS!=="undefined") for(const q of BOOKS.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
     if(typeof DIVE!=="undefined") for(const q of DIVE.radios){ const d=Math.hypot(q.x-cam.x, q.z-cam.z, (q.y-cam.y)*2); if(d<bd){ bd=d; R=q; } }
     return R; }
   function garageSound(dt, cam, rx, rz, zn){

@@ -67,8 +67,10 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
   { const road=SD_rect(RX-RW, RX+RW, END, -1660), mouth=SD_rect(RX+RW-0.6, 752, M.z0, M.z1), lot=SD_rect(750, 806, -1848, -1702),
       svc=[SD_rect(796, 806, -1860.6, -1846), SD_rect(796, 924, -1860.6, -1856.4), SD_rect(914, 924, -1875.5, -1856.4)],   // (the service drive along the north side to the Lakeside Dive, 14mf)
       front=SD_rect(804, 822.05, -1800, -1750), nwalk=SD_rect(820, 856, -1804, -1798.5), swalk=SD_rect(820, 856, -1751.5, -1746),
-      plaza=SD_rect(852, 936, -1812, -1738), lawnwalk=SD_rect(934, 968, -1777.5, -1772.5);
-    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza, lawnwalk].concat(svc), 3), RX-RW-1, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
+      plaza=SD_rect(852, 936, -1812, -1738), lawnwalk=SD_rect(934, 968, -1777.5, -1772.5),
+      BM=EAST.books.mouth, books=[SD_rect(714, RX-RW+0.6, BM.z0, BM.z1), SD_rect(700, 716, -1844, -1810), SD_rect(699.3, 701, -1828.4, -1825.6)];   // (the bookshop's drive, lot and the strip to its steps, west of the road: 14mh)
+    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza, lawnwalk].concat(svc, books), 3), 698, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
+    for(const b of [[714, RX-RW, BM.z0, BM.z1],[700, 716, -1844, -1810],[699.3, 701, -1828.4, -1825.6]]) addPaveRect(b[0], b[1], b[2], b[3], Y);
     for(const b of [[RX+RW-0.6, 752, M.z0, M.z1],[750, 806, -1848, -1702],[804, 822.05, -1800, -1750],[820, 856, -1804, -1798.5],[820, 856, -1751.5, -1746],[852, 936, -1812, -1738],[934, 968, -1777.5, -1772.5]])
       addPaveRect(b[0], b[1], b[2], b[3], Y); }
   // the plaza laid in squares of buff concrete and terra cotta pavers, a joint round each (paint over the paving, 08's ladder), clear of the basin
@@ -929,6 +931,37 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       K.printer(8.0, 13.2, y, "back"); K.whiteboard(-14.0, 13.0, y, "back", 1.8); K.coatTree(-2.5, 8.5, y, 2); },
   ];
 
+  /* ---- round 42: more in the floors that still had room ---- */
+  { // MIDLAND MUTUAL's executive floor: the private dining room off the lounge, walnut, the table laid, the sideboard, a picture
+    const a4=PLANS_A[3]; PLANS_A[3]=(K, y, W, D)=>{ a4(K, y, W, D); const WAL="#4a2e1c", ux=-13.0;
+      K.wall(ux, 8.5, ux, D-8.5, y, 2.75, WAL, [[16.6, 17.8]], 0.14); K.wall(-17.0, D-8.5, ux, D-8.5, y, 2.75, WAL, null, 0.14);
+      K.table(-19.6, 15.2, y, 4.2, 1.4, "#3a2014", 10, "#3a1a14");
+      for(let k=0;k<5;k++){ const u=-21.4+k*0.9; K.box(0.26, 0.012, 0.26, u, y+0.775, 14.85, "#d4ccb8"); K.box(0.26, 0.012, 0.26, u, y+0.775, 15.55, "#d4ccb8"); }        // (the places laid)
+      K.credenza(-W/2+0.32, 15.2, y, "+u", 3.0, "#3a2014"); K.art(-W/2+0.05, 20.6, y+1.7, "+u", 2.0, 1.3, 3); K.art(ux-0.08, 12.0, y+1.6, "-u", 1.0, 0.7, 2);
+      K.plant(-W/2+0.7, 10.0, y, true); K.plant(ux-0.7, D-9.2, y, false);
+      { const [x, z]=K.P(-19.6, 15.2); C(0.006, 0.6, x, y+2.45, z, "#2a2a2c", 6); for(let k=0;k<6;k++){ const a=k/6*Math.PI*2; S(0.045, x+Math.cos(a)*0.3, y+2.12, z+Math.sin(a)*0.3, "#e8d8a8"); }
+        C(0.32, 0.02, x, y+2.16, z, BRASS, 20); LAMPS.push({x:x, y:y+2.0, z:z, color:0xffe2b8, intensity:0.6, dist:7, decay:1.6, indoor:true}); } };
+    // FRENCH CREEK FINANCIAL's law firm: the library, cases back to back in three rows, and the reading table with its green lamps
+    const b3=PLANS_B[2]; PLANS_B[2]=(K, y, W, D)=>{ b3(K, y, W, D);
+      for(const v of [13.0, 15.9, 18.8]) for(const uc of [4.6, 8.8]){ K.shelf(uc, v-0.19, y, "back", 3.6, "#4a2e1c"); K.shelf(uc, v+0.19, y, "front", 3.6, "#4a2e1c"); }
+      K.table(14.6, 16.0, y, 2.6, 1.1, "#3a2014", 6, "#2a3a2a");
+      for(const du of [-0.7, 0.7]){ const [x, z]=K.P(14.6+du, 16.0); C(0.012, 0.3, x, y+0.92, z, BRASS, 8); ent(new T.CylinderGeometry(0.06, 0.13, 0.08, 14, 1, true), x, y+1.08, z, "#2a6a3a"); }
+      K.files(17.6, 12.4, y, "-u", 3, "#4a3a2a"); K.plant(17.4, 19.6, y, true); };
+    // LAKESHORE DATA SYSTEMS's ground floor: the customer training room behind glass, and the service bench where the machines come back
+    const c1=PLANS_C[0]; PLANS_C[0]=(K, y, W, D)=>{ c1(K, y, W, D);
+      K.glassWall(-22.0, 21.0, -6.0, 21.0, y, 2.6, [[-8.2, -7.0]]); K.glassWall(-6.0, 21.0, -6.0, 27.6, y, 2.6); K.glassWall(-22.0, 27.6, -6.0, 27.6, y, 2.6);
+      K.whiteboard(-14.0, 21.5, y, "back", 2.4);
+      for(const v of [24.0, 26.3]) for(let k=0;k<4;k++) K.station(-19.6+k*3.6, v, y, "front", 1.4, "#c8b8a8", {chairCol:"#3a6a6a", label:"A SEAT IN THE TRAINING ROOM", who:r()<0.35 ? look({}) : null});
+      { const [x, z]=K.P(-14.0, 22.4); sign(2.2, 0.3, (c, Wd, Hh)=>{ c.fillStyle="#1a2a3a"; c.fillRect(0, 0, Wd, Hh); say(c, "CUSTOMER TRAINING CENTER", Wd/2, Hh/2, Wd*0.84, Hh*0.55, "#8af0f0", "700", "Arial"); }, x, y+2.45, z+0.0, K.F.ry, false, 520); }
+      // the service bench: two long benches with machines opened up on them, a shelf of parts, the techs
+      for(const uc of [1.5, 8.5]){ K.rbox(4.0, 0.05, 0.8, uc, y+0.9, 23.0, "#8a8478", 0.01); for(const s of [-1, 1]) K.box(0.06, 0.88, 0.7, uc+s*1.9, y+0.44, 23.0, "#3a3a3e"); K.col(uc-2.0, uc+2.0, 22.6, 23.4, y-0.05, y+0.95);
+        for(const du of [-1.0, 0.8]){ const o=K.obj(uc+du, 23.0, "back", y+0.925); o.rb(0.42, 0.14, 0.38, 0, 0.07, 0, "#c4b89c", 0.02); o.b(0.38, 0.02, 0.34, 0, 0.16, -0.02, "#2a5a3a");
+          o.rb(0.36, 0.3, 0.32, 0.55, 0.15, 0, "#c4b89c", 0.03); const [sx, sz]=o.at(0.55, 0.165); screen(0.26, 0.18, sx, y+0.925+0.17, sz, o.ry, K.scr[(du>0 ? 3 : 5)%K.scr.length]); } }
+      for(const uc of [1.5, 8.5]) K.shelf(uc, 26.8, y, "back", 3.6, "#6a6458");
+      K.chair(1.5, 22.0, y, "back", "#3a3a3a", "A CHAIR AT THE SERVICE BENCH", look({shirt:"#8a9aa8"}));
+      { const [x, z]=K.P(5.0, 21.4); sign(2.0, 0.3, (c, Wd, Hh)=>{ c.fillStyle="#3a3a3e"; c.fillRect(0, 0, Wd, Hh); say(c, "SERVICE & REPAIR", Wd/2, Hh/2, Wd*0.84, Hh*0.55, "#f0c88a", "700", "Arial"); }, x, y+2.3, z, K.F.ry, false, 480);
+        C(0.006, 0.4, x-0.8, y+2.65, z, "#2a2a2c", 6); C(0.006, 0.4, x+0.8, y+2.65, z, "#2a2a2c", 6); } };
+  }
   const ONE=building({id:"B", name:"FRENCH CREEK FINANCIAL", x0:822, x1:852, z0:-1795, z1:-1755, side:"w", dc:-1775, WT:0.3, signY:FL+3.6, floors:3, FH0:4.2, FHU:3.6,
     bk:"brick", col:"#7a4a36", frame:"#2a2420", cap:"#5a4a3e", band:"#b4a488", glass:"#6a5040", pitch:3.6, win:2.4, bandS:0.9, bandH:2.6, letters:"#d8c8a8", font:"Optima, Palatino, serif", signBg:"#5a3426",
     desk:"#5a3a22", top:"#c8b494", sofa:"#5a2a1a", planter:"#b4a488", wall:"#b8a07a", chairCol:"#3a2a1a", artK:1, receptionist:look({female:true, shirt:"#8a3a5a", pants:"#2a2a3a"}),

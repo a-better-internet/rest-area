@@ -605,6 +605,9 @@ If the scene runs hot on your machine, start there (see below).
       glow at night.
     - Every terminal shows something of its own: claims screens, word
       processors, spreadsheets, ledgers, charts, the network map, a game.
+    - Midland's executive floor has a private dining room off its lounge;
+      the law firm upstairs in French Creek Financial has its library; and
+      Lakeshore Data runs a customer training room and a service bench.
   - **Hollow Run Marina**, down the coast between the pretzel works and
     the beer distributor, its own drive off Hollow Road through the woods:
     a lot with trucks and boat trailers, the boathouse (rentals, live bait,
@@ -613,13 +616,27 @@ If the scene runs hot on your machine, start there (see below).
     a gas pump, a man fishing off the end, and five rental pontoons tied
     along it. Take any of them (E alongside) and you can tie up at Lake
     Street's docks across the lake, and bring a boat from there back here.
+    A finger off the pier holds the 14-foot aluminium fishing boats, with
+    a 25 horse tiller motor, quicker to turn than a pontoon; there are
+    more of them at Lake Street's docks. On the lawn: a picnic pavilion,
+    the service shed with an outboard on its stand and the mechanic at it,
+    a fish-cleaning table, and no-wake buoys out past the pier.
+  - **Hollow Road Books**, on the left going up the road, across from the
+    office park: a green clapboard shop with a porch (a bench, the dollar
+    cart, the hanging sign, a chalkboard by the steps). Inside, books to
+    the ceiling on every wall and two cases down the middle, the owner at
+    the counter with his old till, a wood stove with two armchairs drawn
+    up to it and the cat asleep in one, quiet jazz on the radio.
   - **The Lakeside Dive**, past the office park on the shore, down the
     service drive from the office lot: a one-room bar in stained siding with
     six stools, beer on tap, a pool table, a jukebox playing country, darts,
     neon in the windows; a deck off the lake side with chairs looking out;
     picnic tables on the grass under strings of lights; and Lake Effect Eats,
     a step-van food truck with its awning up, the cook at the window, the
-    menu on its side (perch, pierogies, burgers).
+    menu on its side (perch, pierogies, burgers). Its own dock goes out from
+    the bank with a T at the end, so you can come by boat and tie up; down
+    the grass are a fire pit ringed with Adirondack chairs (lit after dark)
+    and a horseshoe pit.
   - Hollow Road itself has its pole line and wires, a light over each
     place's entrance, its signs (speed limit, deer, trucks entering, the
     office park ahead), reflector posts, a guardrail where it crosses

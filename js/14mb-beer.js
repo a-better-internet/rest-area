@@ -53,7 +53,7 @@ const BEER={routes:{}, served:false, aisle:null};
     addPaveRect(RX-RW, RX+RW, END, Z-HW, Y); addPaveRect(LX0, LX1, LZ0, LZ1, Y); addPaveRect(RX-11, RX+11, Z-HW-6, Z-HW, Y); }
   // its lines: the double yellow up the middle, the white edges (open across the lot's mouth), the stop bar for the way out
   for(const o of [-0.12, 0.12]) stripe(RX+o, Z-HW-1.2, RX+o, END+0.6, 0.1, YELLOW_LINE, LY);
-  stripe(RX-3.15, Z-HW-7.5, RX-3.15, END+0.6, 0.12, WHITE_LINE, LY);
+  { const BM=EAST.books.mouth; stripe(RX-3.15, Z-HW-7.5, RX-3.15, BM.z1+4.2, 0.12, WHITE_LINE, LY); stripe(RX-3.15, BM.z0-4.2, RX-3.15, END+0.6, 0.12, WHITE_LINE, LY); }   // (broken across the bookshop's drive, 14mh)
   stripe(RX+3.15, Z-HW-7.5, RX+3.15, LZ1-1.5, 0.12, WHITE_LINE, LY); // (and on up past the beer distributor, broken only at the pretzel works' mouth, where its rounding starts and ends, 14mc)
   { let zt=LZ0+1.5; for(const PM of [EAST.marina.mouth, EAST.pretz.mouth, EAST.office.mouth]){ stripe(RX+3.15, zt, RX+3.15, PM.z1+4.2, 0.12, WHITE_LINE, LY); zt=PM.z0-4.2; }
     stripe(RX+3.15, zt, RX+3.15, END+0.6, 0.12, WHITE_LINE, LY); }
@@ -66,7 +66,8 @@ const BEER={routes:{}, served:false, aisle:null};
   { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300), L=Bq.lot, R=Bq.road;
     // (the east side open wherever a clearing comes down to the road: the pretzel works, 14mc, and the office park, 14md)
     const GAPS=[EAST.marina.drive, EAST.pretz.site, EAST.office.site].sort((a, b)=>b.z1-a.z1);
-    W(R.x0-0.4, R.x0+0.4, END, R.z1); W(R.x1-0.4, R.x1+0.4, L.z1, R.z1);
+    { const BS=EAST.books.site; W(R.x0-0.4, R.x0+0.4, BS.z1, R.z1); W(R.x0-0.4, R.x0+0.4, END, BS.z0); }     // (the west side open at the bookshop, 14mh)
+    W(R.x1-0.4, R.x1+0.4, L.z1, R.z1);
     { let zt=L.z0; for(const G of GAPS){ W(R.x1-0.4, R.x1+0.4, G.z1, zt); zt=G.z0; } W(R.x1-0.4, R.x1+0.4, END, zt); }
     W(R.x1, L.x1, L.z1-0.4, L.z1+0.4); W(L.x1-0.4, L.x1+0.4, L.z0, L.z1); W(R.x1, L.x1, L.z0-0.4, L.z0+0.4);
     W(R.x0, R.x1, END-0.4, END+0.4).msg="HOLLOW ROAD RUNS ON NORTH THROUGH THE WOODS FROM HERE. THIS IS AS FAR AS THE MAP GOES";
@@ -79,7 +80,7 @@ const BEER={routes:{}, served:false, aisle:null};
         tree(sp || (q()<0.3 ? "hemlock" : q()<0.45 ? "pine" : "hard"), x, z, 0.85+q()*0.4); } };
     const L=Bq.lot, R=Bq.road;
     const GAPS=[EAST.marina.drive, EAST.pretz.site, EAST.office.site].sort((a, b)=>b.z1-a.z1);
-    row(R.x0, END, R.x0, R.z1-1, -1, 0); row(R.x1, L.z1+1, R.x1, R.z1-1, 1, 0);
+    { const BS=EAST.books.site; row(R.x0, END, R.x0, BS.z0-1, -1, 0); row(R.x0, BS.z1+1, R.x0, R.z1-1, -1, 0); } row(R.x1, L.z1+1, R.x1, R.z1-1, 1, 0);
     { let zt=L.z0-1; for(const G of GAPS){ row(R.x1, G.z1+1, R.x1, zt, 1, 0); zt=G.z0-1; } row(R.x1, END, R.x1, zt, 1, 0); }
     row(L.x0+10, L.z1, L.x1, L.z1, 0, 1); row(L.x1, L.z0, L.x1, L.z1, 1, 0); row(L.x0+10, L.z0, L.x1, L.z0, 0, -1);
     // and across the road's end, deep: the road runs on into them, so they must be real well past where you can go

@@ -183,7 +183,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
   push("glass", planeGeo(VW.b-VW.a-0.02, VW.head-VW.sill-0.02, 0), BX0+WT/2, (VW.sill+VW.head)/2, (VW.a+VW.b)/2, Math.PI/2, "#ffffff");
   B(0.36, 0.05, VW.b-VW.a, BX0+WT/2-0.03, VW.sill+0.025, (VW.a+VW.b)/2, "#3b3029");
   for(const [o, x] of [[LD, BX0-0.03]]){ for(const z of [o.a-0.05, o.b+0.05]) B(WT+0.1, o.head-FLS+0.05, 0.08, BX0+WT/2, FLS+(o.head-FLS+0.05)/2, z, "#3b3029");
-    B(WT+0.1, 0.08, o.b-o.a+0.18, BX0+WT/2, o.head-0.03, (o.a+o.b)/2, "#3b3029"); }
+    B(WT+0.116, 0.08, o.b-o.a+0.18, BX0+WT/2, o.head-0.03, (o.a+o.b)/2, "#3b3029"); }      // (the head a little deeper than the jambs, so no face of one lies in one of the other)
   sign(0.9, 0.5, (c, W, H)=>{ c.fillStyle="#f4f2ec"; c.fillRect(0, 0, W, H); c.fillStyle="#1f5aa8"; c.fillRect(0, 0, W, H*0.32);
       say(c, "NOTICE", W/2, H*0.16, W*0.7, H*0.2, "#f4f2ec"); say(c, "HAIRNETS PAST THIS POINT", W/2, H*0.5, W*0.8, H*0.13, "#1a1a1a", "700", "Arial"); say(c, "WASH YOUR HANDS", W/2, H*0.74, W*0.8, H*0.13, "#1a1a1a", "700", "Arial"); },
     BX0-0.02, FLS+1.6, -1574.0, -Math.PI/2, false, 216);
@@ -216,7 +216,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
       beltG.push({geo:g, matrix:new T.Matrix4().compose(V3((B0+B1)/2, BH, L), new T.Quaternion().setFromEuler(new T.Euler(-Math.PI/2, 0, 0)), V3(1,1,1)), color:new T.Color("#ffffff")}); }
     // the lye bath: an open steel trough the belt dips through, the hood over it
     { const x0=795.9, x1=799.1, xm=(x0+x1)/2;
-      B(x1-x0, 0.05, 1.3, xm, BH-0.3, L, "#8a9094");
+      B(x1-x0-0.04, 0.05, 1.3, xm, BH-0.3, L, "#8a9094");      // (the bottom inside the end walls)
       for(const s of [-1, 1]){ B(x1-x0, 0.62, 0.05, xm, BH, L+s*0.65, "#8a9094"); B(0.05, 0.62, 1.25, s<0 ? x0 : x1, BH-0.06+(s<0 ? 0 : 0), L, "#8a9094"); }
       ent(new T.PlaneGeometry(x1-x0-0.1, 1.2), xm, BH+0.16, L, "#4a5248", -Math.PI/2, 0, 0);
       B(x1-x0+0.2, 0.08, 1.5, xm, BH+1.35, L, "#9aa0a4"); C(0.2, CEIL-(BH+1.4), xm, (CEIL+BH+1.4)/2, L, "#9aa0a4", 10);
@@ -319,7 +319,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
     addColOB(x-Math.sin(yaw)*0.2, z-Math.cos(yaw)*0.2, yaw, 0.6, 1.45, FLS-0.3, FLS+2.2); }
   B(0.6, 1.4, 0.4, BX1-WT-0.22, FLS+0.7, -1559.6, "#3a4a5a"); push("lk_tvon", planeGeo(0.2, 0.1, 0), BX1-WT-0.42-0.001, FLS+1.1, -1559.6, -Math.PI/2, "#ffffff");
   // a pallet jack left in the staging
-  { const x=846.0, z=-1559.0; for(const s of [-1, 1]) B(0.16, 0.08, 1.15, x+s*0.27, FLS+0.05, z, "#c8281a"); B(0.7, 0.3, 0.3, x, FLS+0.2, z+0.72, "#c8281a");
+  { const x=846.0, z=-1559.0; for(const s of [-1, 1]) B(0.16, 0.08, 1.15, x+s*0.27, FLS+0.05, z, "#c8281a"); B(0.73, 0.3, 0.3, x, FLS+0.2, z+0.72, "#c8281a");
     tubeE(V3(x, FLS+0.35, z+0.8), V3(x, FLS+1.15, z+1.1), 0.02, "#1a1a1a"); addCol(x-0.36, x+0.36, z-0.6, z+0.9, FLS-0.5, FLS+0.5); }
 
   /* ---- the trailers at the docks: one shut, one backed in with its doors open, half loaded, its floor at the dock's ---- */
@@ -356,7 +356,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
   /* ---- the silos behind: three, on legs, the flour piped from each into the floor's north wall ---- */
   for(const x of [792, 801, 810]){ const z=-1630, gy=Terrain.groundAt(x, z);
     for(const [dx, dz] of [[-1.6,-1.6],[1.6,-1.6],[-1.6,1.6],[1.6,1.6]]){ B(0.22, 4.4, 0.22, x+dx, gy+2.2, z+dz, "#8a8e90"); addCol(x+dx-0.13, x+dx+0.13, z+dz-0.13, z+dz+0.13, gy-0.5, gy+4.4); }
-    for(const [y, w] of [[1.2, 3.42],[3.0, 3.42]]) for(const [dx, dz, ry] of [[0,-1.6,0],[0,1.6,0],[-1.6,0,Math.PI/2],[1.6,0,Math.PI/2]]) B(w, 0.08, 0.06, x+dx, gy+y, z+dz, "#8a8e90", ry);
+    for(const [y, w] of [[1.2, 3.2],[3.0, 3.2]]) for(const [dx, dz, ry] of [[0,-1.6,0],[0,1.6,0],[-1.6,0,Math.PI/2],[1.6,0,Math.PI/2]]) B(w, 0.08, 0.06, x+dx, gy+y, z+dz, "#8a8e90", ry);
     ent(new T.CylinderGeometry(2.6, 0.35, 2.2, 24), x, gy+5.3, z, "#d8dcdc");
     C(2.6, 12.0, x, gy+12.4, z, "#e8ecec", 28); ent(new T.CylinderGeometry(0.4, 2.66, 0.9, 28), x, gy+18.85, z, "#c8ccd0");
     for(const y of [8.4, 12.4, 16.4]) C(2.63, 0.06, x, gy+y, z, "#c8ccd0", 28);

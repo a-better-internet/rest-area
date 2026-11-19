@@ -41,6 +41,7 @@ const HOLLOW={lamps:[], steam:[]};
   const P=EAST.pretz.site, O=EAST.office.site, L=Bq.lot;
   const onPlace=(x, z, m)=>[P, O, L, Bq.lot].some(b=>x>b.x0-(m||0) && x<b.x1+(m||0) && z>b.z0-(m||0) && z<b.z1+(m||0));
   const mouths=[[L.z0, L.z1],[EAST.marina.mouth.z0-6, EAST.marina.mouth.z1+6],[EAST.pretz.mouth.z0-6, EAST.pretz.mouth.z1+6],[EAST.office.mouth.z0-6, EAST.office.mouth.z1+6]];
+  const BM=EAST.books.mouth, inBooks=(z)=>z>BM.z0-6 && z<BM.z1+6;                 // (the bookshop's drive, on the west side: 14mh)
   const inMouth=(z)=>mouths.some(([a, b])=>z>a-2 && z<b+2);
 
   /* ---- the pole line down the west side, its wires; a drop to each place; a light over each mouth ---- */
@@ -49,7 +50,7 @@ const HOLLOW={lamps:[], steam:[]};
       B(2.2, 0.1, 0.12, x, g+h-0.35, z, WOOD); for(const dx of [-0.95, 0, 0.95]) C(0.035, 0.12, x+dx, g+h-0.24, z, "#6a7a5e", 10);
       addCol(x-0.17, x+0.17, z-0.17, z+0.17, g-0.5, g+h); return g+h; };
     const wire=(a, b, sag, rr)=>{ const n=10; let p=a.clone(); for(let k=1;k<=n;k++){ const t=k/n, w=new T.Vector3().lerpVectors(a, b, t); w.y-=sag*4*t*(1-t); tubeE(p, w, rr||0.01, WIRE, 5); p=w; } };
-    const tops=[]; for(let z=Z-HW-14; z>END+8; z-=42){ const t=pole(PX, z, PH); tops.push([z, t]); }
+    const tops=[]; for(let z=Z-HW-14; z>END+8; z-=42){ const zz=inBooks(z) ? (z>(BM.z0+BM.z1)/2 ? BM.z1+7 : BM.z0-7) : z; const t=pole(PX, zz, PH); tops.push([zz, t]); }   // (no pole in the bookshop's drive)
     for(let i=1;i<tops.length;i++){ const [z0, t0]=tops[i-1], [z1, t1]=tops[i];
       for(const dx of [-0.95, 0, 0.95]) wire(V3(PX+dx, t0-0.18, z0), V3(PX+dx, t1-0.18, z1), 0.7);
       wire(V3(PX, t0-2.0, z0), V3(PX, t1-2.0, z1), 0.85, 0.012); }
@@ -57,10 +58,10 @@ const HOLLOW={lamps:[], steam:[]};
     { const [z0, t0]=tops[0]; wire(V3(PX, t0-0.18, z0), V3(Math.min(RX-18, PX-14), t0-0.4, Z-8.2), 0.6); }
     // a drop to each place, from the pole nearest its mouth to a can on the building's corner
     const nearest=(z)=>tops.reduce((m, p)=>Math.abs(p[0]-z)<Math.abs(m[0]-z) ? p : m, tops[0]);
-    for(const [mz, to] of [[(L.z0+L.z1)/2, V3(748.0, Y+4.6, -1276.2)],[ (EAST.pretz.mouth.z0+EAST.pretz.mouth.z1)/2, V3(767.9, Y+5.3, -1568.2)],[(EAST.office.mouth.z0+EAST.office.mouth.z1)/2, V3(821.95, Y+5.0, -1756.0)]]){
+    for(const [mz, to] of [[(L.z0+L.z1)/2, V3(748.0, Y+4.6, -1276.2)],[ (EAST.pretz.mouth.z0+EAST.pretz.mouth.z1)/2, V3(767.9, Y+5.3, -1568.2)],[(EAST.office.mouth.z0+EAST.office.mouth.z1)/2, V3(821.95, Y+5.0, -1756.0)],[(BM.z0+BM.z1)/2, V3(696.08, Y+3.6, -1821.1)]]){
       const [pz, pt]=nearest(mz); C(0.24, 0.7, PX+0.35, pt-2.6, pz, "#7a7d7a", 18); wire(V3(PX+0.35, pt-2.3, pz), to, 1.2, 0.014); S(0.05, to.x, to.y, to.z, "#4a4a4a"); }
     // a cobra-head light out over the road at each mouth, on the nearest pole
-    for(const [a, b] of mouths){ const mz=(a+b)/2, [pz, pt]=nearest(mz);
+    for(const [a, b] of mouths.concat([[BM.z0, BM.z1]])){ const mz=(a+b)/2, [pz, pt]=nearest(mz);
       tubeE(V3(PX, pt-4.2, pz), V3(PX+4.2, pt-3.6, pz), 0.045, "#7a7d80"); RB(0.62, 0.16, 0.32, PX+4.5, pt-3.62, pz, "#6a6d70", 0, 0.05);
       push("lk_porch", boxGeo(0.44, 0.012, 0.22, 0), PX+4.5, pt-3.705, pz, 0, "#ffffff");
       const Lm={x:PX+4.5, y:pt-3.9, z:pz, color:0xffd8a0, intensity:0, dist:24, decay:1.3, mothy:true}; LAMPS.push(Lm); HOLLOW.lamps.push(Lm); }
@@ -94,7 +95,7 @@ const HOLLOW={lamps:[], steam:[]};
   /* ---- reflector posts down both edges; the guardrail over Hollow Run ---- */
   { const RUN=-1430;
     for(let z=Z-HW-30; z>END+6; z-=30) for(const [x, s] of [[RX+RW+1.0, 1],[RX-RW-1.0, -1]]){
-      if(s>0 && (inMouth(z) || onPlace(x+3, z, 2))) continue; if(Math.abs(z-RUN)<22) continue;
+      if(s>0 && (inMouth(z) || onPlace(x+3, z, 2))) continue; if(s<0 && inBooks(z)) continue; if(Math.abs(z-RUN)<22) continue;
       const g=gy(x, z); B(0.08, 1.2, 0.05, x, g+0.6, z, "#3a5a3a"); B(0.07, 0.16, 0.006, x, g+1.02, z+0.028, "#e8a418"); B(0.07, 0.16, 0.006, x, g+1.02, z-0.028, "#c8c0b0");
       addCol(x-0.05, x+0.05, z-0.04, z+0.04, g-0.3, g+1.2); }
     // (the culvert's guardrail both sides: galvanised W-beam on wood posts, a reflector on every other post, ends turned down)
@@ -159,7 +160,7 @@ const HOLLOW={lamps:[], steam:[]};
     if(typeof FOREST!=="undefined") for(let z=-1591; z<-1569; z+=1.6){ if(z>-1584 && z<-1576) continue; FOREST.plant("shrub", 766.8, z, {scale:0.6+q()*0.2, solid:false}); }
     for(const z of [-1588.5, -1571.5]){ const x=764.4; B(1.4, 0.4, 3.0, x-0.2, LY+0.2, z, "#6a4a32"); B(1.3, 0.04, 2.9, x-0.2, LY+0.41, z, "#5a2a1a"); addCol(x-0.9, x+0.5, z-1.5, z+1.5, LY-0.3, LY+0.42);
       if(typeof FOREST!=="undefined") for(let k=0;k<3;k++) FOREST.plant("shrub", x-0.2, z-1+k, {scale:0.55, solid:false}); }
-    { const x=760.5, z=-1566.0; for(const s of [-1, 1]) B(0.42, 0.44, 0.06, x, LY+0.22, z+s*0.8, "#2a2a2e"); B(0.42, 0.05, 1.8, x, LY+0.45, z, "#6a4a32"); B(0.05, 0.36, 1.8, x+0.2, LY+0.72, z, "#6a4a32");
+    { const x=760.5, z=-1566.0; for(const s of [-1, 1]) B(0.42, 0.44, 0.06, x, LY+0.22, z+s*0.8, "#2a2a2e"); B(0.45, 0.05, 1.8, x, LY+0.45, z, "#6a4a32"); B(0.05, 0.36, 1.8, x+0.2, LY+0.72, z, "#6a4a32");
       addCol(x-0.22, x+0.24, z-0.9, z+0.9, LY-0.3, LY+0.9); for(const dz of [-0.45, 0.45]) addSeat(x-0.02, z+dz, LY, Math.PI/2, "A BENCH BY THE PRETZEL WORKS"); }
     { const x=760.5, z=-1595.0; for(let k=0;k<5;k++){ const a=V3(x, LY, z-1+k*0.5); tubeE(a, V3(x, LY+0.8, z-1+k*0.5), 0.02, "#2a2a2e", 6); tubeE(V3(x, LY+0.8, z-1+k*0.5), V3(x+0.6, LY+0.8, z-1+k*0.5), 0.02, "#2a2a2e", 6); tubeE(V3(x+0.6, LY+0.8, z-1+k*0.5), V3(x+0.6, LY, z-1+k*0.5), 0.02, "#2a2a2e", 6); }
       addCol(x-0.05, x+0.65, z-1.05, z+1.05, LY-0.3, LY+0.82); }

@@ -74,7 +74,7 @@ const MARINA={routes:{}, lamps:[], radios:[]};
     { const th=Math.atan((EH2-EH)/(BX1-BX0)), L=(BX1-BX0+1.0)/Math.cos(th); push("metal", boxGeo(L, 0.08, BZ1-BZ0+1.0), (BX0+BX1)/2, (EH+EH2)/2+0.04, (BZ0+BZ1)/2, 0, "#5a1e1a", 0, -th);
       for(let k=0;k<12;k++) ent(boxGeo(L, 0.03, 0.03), (BX0+BX1)/2, (EH+EH2)/2+0.095, BZ0-0.4+k*(BZ1-BZ0+0.8)/11, "#4a1a16", 0, 0, -th); }
     // the trim, the glass, the door
-    for(const o of OPW){ for(const zz of [o[0]-0.05, o[1]+0.05]) B(0.03, o[3]-o[2]+0.06, 0.1, BX0-0.015, (o[2]+o[3])/2, zz, "#d4ccb8"); B(0.04, 0.08, o[1]-o[0]+0.2, BX0-0.02, o[3]+0.04, (o[0]+o[1])/2, "#d4ccb8");
+    for(const o of OPW){ for(const zz of [o[0]-0.05, o[1]+0.05]) B(0.03, o[3]-o[2]+0.06, 0.1, BX0-0.015, (o[2]+o[3])/2, zz, "#d4ccb8"); B(0.04, 0.08, o[1]-o[0]+0.24, BX0-0.02, o[3]+0.04, (o[0]+o[1])/2, "#d4ccb8");
       if(o[2]>FL) push("glass", planeGeo(o[1]-o[0]-0.02, o[3]-o[2]-0.02, 0), BX0+0.06, (o[2]+o[3])/2, (o[0]+o[1])/2, Math.PI/2, "#ffffff"); }
     for(const o of OPE) push("glass", planeGeo(o[1]-o[0]-0.02, o[3]-o[2]-0.02, 0), BX1-0.06, (o[2]+o[3])/2, (o[0]+o[1])/2, Math.PI/2, "#ffffff");
     makeDoor(XF(BX0+WT/2, -1437.62, Math.PI/2), 0, FL+0.01, 0, "HOLLOW RUN MARINA", true, 0, "vision", 0x2a4a6a); addFlat(BX0-0.02, BX0+WT+0.02, -1438.6, -1437.6, FL);
@@ -130,18 +130,25 @@ const MARINA={routes:{}, lamps:[], radios:[]};
     for(let k=0;k<n;k++){ const t=(k+0.5)/n; along ? B(0.145, 0.05, z1-z0, x0+(x1-x0)*t, DY-0.025, (z0+z1)/2, k%4 ? "#8a7a62" : "#7e6e58") : B(x1-x0, 0.05, 0.145, (x0+x1)/2, DY-0.025, z0+(z1-z0)*t, k%4 ? "#8a7a62" : "#7e6e58"); }
     for(const s of [0, 1]) along ? B(x1-x0, 0.2, 0.08, (x0+x1)/2, DY-0.15, s ? z1+0.04 : z0-0.04, "#5a4a36") : B(0.08, 0.2, z1-z0, s ? x1+0.04 : x0-0.04, DY-0.15, (z0+z1)/2, "#5a4a36"); };
   deck(...PIER); deck(...TEE);
+  // the finger off the pier's north side where the fishing boats tie up, one each side at its end, bows out
+  const FING=[984.0, 985.6, PZ1, PZ1+10.2]; deck(...FING);
   const piling=(x, z)=>{ const bed=Math.min(gy(x, z), WY-0.5); C(0.12, DY+0.6-bed, x, (DY+0.6+bed)/2, z, "#5a4a36", 12); C(0.13, 0.04, x, DY+0.62, z, "#4a3a2a", 12); addCol(x-0.13, x+0.13, z-0.13, z+0.13, DY-1.2, DY+0.62); };
-  for(let x=PIER[0]+1.5; x<PIER[1]; x+=4.0) for(const z of [PZ0-0.16, PZ1+0.16]) piling(x, z);
+  for(let x=PIER[0]+1.5; x<PIER[1]; x+=4.0) for(const z of [PZ0-0.16, PZ1+0.16]) if(z<PZ1 || Math.abs(x-984.8)>2.6) piling(x, z);
+  for(const z of [PZ1+3.4, PZ1+6.8, FING[3]-0.1]) for(const x of [FING[0]-0.16, FING[1]+0.16]) piling(x, z);
   for(let z=TEE[2]; z<=TEE[3]+0.01; z+=4.25) for(const x of [TEE[0]-0.16, TEE[1]+0.16]) if(Math.abs(z-(PZ0+PZ1)/2)>2) piling(x, z);
   const cleat=(x, z, ry)=>{ B(0.3, 0.04, 0.06, x, DY+0.06, z, "#8a8d90", ry, CH); for(const sd of [-1, 1]) B(0.05, 0.05, 0.05, x+Math.cos(ry)*sd*0.08, DY+0.025, z-Math.sin(ry)*sd*0.08, "#8a8d90", ry, CH); };
   for(let x=PIER[0]+4; x<PIER[1]-1; x+=3.6) for(const z of [PZ0+0.12, PZ1-0.12]) cleat(x, z, 0);
   for(let z=TEE[2]+1.5; z<TEE[3]-1; z+=3.6) cleat(TEE[1]-0.12, z, Math.PI/2);
+  for(const z of [PZ1+2.2, PZ1+5.0, PZ1+7.4, PZ1+9.6]) for(const x of [FING[0]+0.12, FING[1]-0.12]) cleat(x, z, Math.PI/2);
   // the rail along every edge: low posts and a rope between, colliders the length of it (a boat comes alongside and you board it with E)
   { const rail=(x0, z0, x1, z1)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.round(L/2.0)), along=Math.abs(x1-x0)>Math.abs(z1-z0);
       for(let k=0;k<=n;k++){ const x=x0+(x1-x0)*k/n, z=z0+(z1-z0)*k/n; B(0.08, 0.9, 0.08, x, DY+0.45, z, "#6a5a44"); }
       along ? B(L, 0.04, 0.04, (x0+x1)/2, DY+0.85, z0, "#c8b898") : B(0.04, 0.04, L, x0, DY+0.85, (z0+z1)/2, "#c8b898");
       along ? addCol(Math.min(x0, x1), Math.max(x0, x1), z0-0.07, z0+0.07, DY-1.2, DY+0.9) : addCol(x0-0.07, x0+0.07, Math.min(z0, z1), Math.max(z0, z1), DY-1.2, DY+0.9); };
-    rail(PIER[0]+1.4, PZ0+0.04, TEE[0]+0.04, PZ0+0.04); rail(PIER[0]+1.4, PZ1-0.04, TEE[0]+0.04, PZ1-0.04);
+    rail(PIER[0]+1.4, PZ0+0.04, TEE[0]+0.04, PZ0+0.04); rail(PIER[0]+1.4, PZ1-0.04, FING[0]-0.02, PZ1-0.04); rail(FING[1]+0.02, PZ1-0.04, TEE[0]+0.04, PZ1-0.04);
+    // (the finger: low cleats down it rather than a rail, but its edges are still walls you cannot step off)
+    for(const x of [FING[0]+0.04, FING[1]-0.04]) addCol(x-0.07, x+0.07, PZ1-0.1, FING[3], DY-1.2, DY+0.9);
+    addCol(FING[0], FING[1], FING[3]-0.07, FING[3]+0.07, DY-1.2, DY+0.9);
     rail(TEE[0]+0.04, TEE[2]+0.04, TEE[1]-0.04, TEE[2]+0.04); rail(TEE[0]+0.04, TEE[3]-0.04, TEE[1]-0.04, TEE[3]-0.04);
     rail(TEE[1]-0.04, TEE[2]+0.04, TEE[1]-0.04, TEE[3]-0.04);
     rail(TEE[0]+0.04, TEE[2]+0.04, TEE[0]+0.04, PZ0-0.02); rail(TEE[0]+0.04, PZ1+0.02, TEE[0]+0.04, TEE[3]-0.04); }
@@ -160,8 +167,12 @@ const MARINA={routes:{}, lamps:[], radios:[]};
   /* ---- the rental pontoons, tied along the pier and the T (14n's, moored by 14p: TAKE THIS BOAT) ---- */
   { const SEATS=["#2a4a6a","#7a2a2a","#2a6a5a","#6a5a2a"], put=(x, z, ry, k)=>{ const n=LAKESIDE.boats.length; LAKESIDE.pontoon(x, z, ry, SEATS[k%4]); const Sb=LAKESIDE.boats[n];
       if(Sb && typeof BOAT!=="undefined" && BOAT.moor) BOAT.moor(Sb); };
-    put(968.5, PZ0-1.52, Math.PI/2, 0); put(980.5, PZ0-1.52, Math.PI/2, 1); put(974.0, PZ1+1.52, Math.PI/2, 2);
-    put(TEE[1]+1.52, -1431.0, 0, 3); put(TEE[1]+1.52, -1409.0, Math.PI, 0); }
+    put(968.5, PZ0-1.52, Math.PI/2, 0); put(979.0, PZ0-1.52, Math.PI/2, 1); put(974.0, PZ1+1.52, Math.PI/2, 2);
+    put(TEE[1]+1.52, -1431.0, 0, 3); put(TEE[1]+1.52, -1409.0, Math.PI, 0);
+    // and the fishing skiffs along the finger: aluminium V-hulls with a 25 on the back, painted as they came from the dealer
+    if(LAKESIDE.skiff) for(const [x, z, ry, paint, seat] of [[FING[0]-1.3, PZ1+7.4, 0, "#3e5a3e", "#6a5a44"],[FING[1]+1.3, PZ1+7.4, 0, "#2e4a6a", "#6a5a44"],
+        [TEE[0]-1.3, -1434.6, Math.PI, "#7a2e24", "#5a4a36"]]){
+      const Sb=LAKESIDE.skiff(x, z, ry, paint, seat); if(typeof BOAT!=="undefined" && BOAT.moor) BOAT.moor(Sb); } }
 
   /* ---- the shore: a launch ramp of concrete down into the water, kayaks on a rack, a bench looking out ---- */
   { const z0=-1440.0, z1=-1436.0, xa=shoreX(-1438)-6, xb=shoreX(-1438)+3, ya=gy(xa, -1438)+0.02, yb=WY-0.4, L=Math.hypot(xb-xa, ya-yb), th=Math.atan2(ya-yb, xb-xa);
@@ -199,7 +210,11 @@ const MARINA={routes:{}, lamps:[], radios:[]};
     const L=(o)=>Object.assign({h:1.0, skin:SKINS[(r()*5)|0], hair:HAIRS[(r()*6)|0], shirt:"#5a5a5a", pants:"#2a2e3a", shoes:"#2a2a2a"}, o);
     crowdAdd(G, {look:L({shirt:"#1e3a5a", cap:"#1e3a5a"}), x:900.4, z:-1438.4, y:FL, yaw:-Math.PI/2, mode:"stand", sway:0.4, dayOnly:true});
     crowdAdd(G, {look:L({shirt:"#7a8a5a", pants:"#5c5a52", cap:"#7a6a3a", beard:"#6b4a2b"}), x:TEE[1]-0.5, z:-1418.0, y:DY, yaw:Math.PI/2, mode:"stand", job:"fish", held:"rod", sway:0.2});
-    { const g=gy(950.0, -1405.45); crowdAdd(G, {look:L({female:true, shirt:"#c88a5a"}), x:950.0, z:-1405.45, y:g, yaw:Math.PI/2, mode:"sit", sitY:0.515, sway:0.3, held:"cup", drink:true}); } }
+    { const g=gy(950.0, -1405.45); crowdAdd(G, {look:L({female:true, shirt:"#c88a5a"}), x:950.0, z:-1405.45, y:g, yaw:Math.PI/2, mode:"sit", sitY:0.515, sway:0.3, held:"cup", drink:true}); }
+    // and the man fishing out of the jon boat off Lake Street (14n's LAKESIDE.jon), sat on its middle thwart facing the bow, a rod out over the side
+    if(LAKESIDE.jon){ const J=LAKESIDE.jon, Gj=crowdGroup("the jon boat", J.x, J.z, 170);
+      crowdAdd(Gj, {look:L({shirt:"#c45a1a", pants:"#4a4a3a", cap:"#2a4a2a", beard:"#7a6a5a", long:true}), x:J.x+Math.sin(J.ry)*0.0, z:J.z+Math.cos(J.ry)*0.0, y:LAKESIDE.WY,
+        yaw:J.ry, mode:"sit", sitY:LAKESIDE.SKIFF.ST+0.055, job:"fish", held:"rod", sway:0.1}); } }
 
   /* ---- what is built ---- */
   detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.05}), "hollow-run-marina", true);
@@ -210,8 +225,84 @@ const MARINA={routes:{}, lamps:[], radios:[]};
     "hollow run marina: in off Hollow Road, down the drive to the lot":[[733.5, -1400.0],[733.5, -1383.0],[745.0, -1383.0],[800.0, -1383.0],[862.0, -1383.0],[878.0, -1390.0],[878.0, -1420.0]],
     "hollow run marina: into the boathouse, to the counter":[[878.0, -1438.1],[890.0, -1438.1],[893.0, -1438.1],[894.6, -1438.1],[896.5, -1438.1],[898.6, -1438.6]],
     "hollow run marina: down the path to the end of the pier":[[890.0, -1420.0],[910.0, -1420.0],[935.0, -1420.0],[955.0, -1420.0],[958.5, -1420.0],[970.0, -1420.0],[989.0, -1420.0],[991.2, -1420.0],[991.2, -1428.0]],
+    "hollow run marina: out the finger to the fishing boats":[[975.0, -1420.0],[984.8, -1420.0],[984.8, -1414.0],[984.8, -1409.6]],
     "hollow run marina: along the T":[[991.2, -1404.2],[991.2, -1420.0],[991.2, -1432.6]]};
   MARINA.FL=FL; MARINA.DY=DY;
+})();
+/* ---- round 42: the picnic pavilion on the lawn, the service shed with an outboard on its stand, the fish-cleaning table,
+   the no-wake buoys out past the pier ---- */
+(function marinaExtras(){
+  if(typeof EAST==="undefined" || !EAST.marina || typeof LAKESIDE==="undefined" || !LAKESIDE.WY) return;
+  const WY=LAKESIDE.WY, Y=EDIN.y, ME=[], CH=[], r=_trng(1991);
+  const ent=(geo,x,y,z,c,rx,ry,rz,list)=>(list||ME).push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
+    new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
+  const B=(w,h,d,x,y,z,c,ry,list)=>ent(boxGeo(w,h,d),x,y,z,c,0,ry||0,0,list);
+  const RB=(w,h,d,x,y,z,c,ry,rad,list)=>ent(rboxGeo(w,h,d,Math.min(rad||0.03,Math.min(w,h,d)*0.32),2),x,y,z,c,0,ry||0,0,list);
+  const C=(r0,h,x,y,z,c,seg,rx,ry,rz,list)=>ent(new T.CylinderGeometry(r0,r0,h,seg||12),x,y,z,c,rx,ry,rz,list);
+  const say=(c, s, cx, cy, w, h, col, weight, family)=>{ c.fillStyle=col; fitText(c, s, w, h, cx, cy, weight||"800", family||"Arial"); };
+  const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*240), Math.round((cw||w*240)*h/w), draw), px,py,pz,ry,lit);
+  const gy=(x, z)=>Terrain.groundAt(x, z);
+  /* the pavilion: a slab, six posts, a hip of green metal over it, three picnic tables under it, a grill by its corner */
+  { const x0=924, x1=932, z0=-1443, z1=-1437, g=Math.max(gy(x0, z0), gy(x1, z1), gy(x0, z1), gy(x1, z0)), FL=g+0.12, H=2.7;
+    push("concrete", boxGeo(x1-x0+0.4, FL-g+0.3, z1-z0+0.4), (x0+x1)/2, (FL+g-0.3)/2, (z0+z1)/2, 0, "#8a867e"); addFlat(x0-0.2, x1+0.2, z0-0.2, z1+0.2, FL);
+    for(const x of [x0, (x0+x1)/2, x1]) for(const z of [z0, z1]){ B(0.16, H, 0.16, x, FL+H/2, z, "#5a3e26"); addCol(x-0.08, x+0.08, z-0.08, z+0.08, FL-0.05, FL+H); }
+    for(const z of [z0, z1]) B(x1-x0+0.3, 0.2, 0.12, (x0+x1)/2, FL+H-0.06, z, "#5a3e26");
+    { const th=0.38, OV=0.6, run=(z1-z0)/2+OV, L=run/Math.cos(th), ZM=(z0+z1)/2;
+      for(const s of [1, -1]){ const mz=ZM+s*run/2, my=FL+H+0.04+Math.tan(th)*run/2; push("metal", boxGeo(x1-x0+1.2+(s<0 ? 0.014 : 0), 0.06, L), (x0+x1)/2, my, mz, 0, "#2e5a3e", s*th); }
+      B(x1-x0+1.24, 0.08, 0.2, (x0+x1)/2, FL+H+0.06+Math.tan(th)*run, ZM, "#24442e");
+      addRoof(x0-0.6, x1+0.6, z0-0.6, z1+0.6, FL+H); }
+    for(const x of [925.6, 928.0, 930.4]){ const yaw=Math.PI/2;
+      for(let k=0;k<4;k++) B(0.16, 0.04, 1.8, x-0.27+k*0.18, FL+0.76, (z0+z1)/2, "#7a6448");
+      for(const sd of [-1, 1]){ B(0.26, 0.04, 1.8, x+sd*0.66, FL+0.45, (z0+z1)/2, "#7a6448"); for(const dz of [-0.65, 0.65]) B(0.06, 0.44, 0.08, x+sd*0.66, FL+0.22, (z0+z1)/2+dz, "#5e4c36");
+        for(const dz of [-0.45, 0.45]) addSeat(x+sd*0.66, (z0+z1)/2+dz, FL, sd<0 ? Math.PI/2 : -Math.PI/2, "A PICNIC TABLE UNDER THE PAVILION"); }
+      for(const dz of [-0.65, 0.65]) B(0.5, 0.72, 0.08, x, FL+0.37, (z0+z1)/2+dz, "#5e4c36");
+      addCol(x-0.8, x+0.8, (z0+z1)/2-0.92, (z0+z1)/2+0.92, FL-0.05, FL+0.47); }
+    { const x=x1+0.9, z=z0-0.4; C(0.03, 0.85, x, g+0.43, z, "#2a2a2e", 8, 0, 0, 0, CH); B(0.6, 0.2, 0.4, x, g+0.95, z, "#2a2a2e", 0, CH); B(0.56, 0.02, 0.36, x, g+1.06, z, "#5a5a5e", 0, CH); addCol(x-0.3, x+0.3, z-0.2, z+0.2, g-0.3, g+1.06); }
+    addZone(x0-0.6, x1+0.6, z0-0.6, z1+0.6, g-1, FL+H+0.5, "HOLLOW RUN MARINA · THE PAVILION");
+    MARINA.routes["hollow run marina: through the pavilion"]=[[922.0, -1442.3],[924.4, -1442.3],[926.8, -1442.3],[929.2, -1442.3],[931.4, -1442.3],[934.0, -1442.3]]; }
+  /* the service shed: open on its west side, a bench along the back, an outboard on its stand, a parts shelf, the mechanic */
+  { const x0=909.0, x1=914.0, z0=-1441.0, z1=-1435.0, g=Math.max(gy(x0, z0), gy(x1, z1), gy(x0, z1), gy(x1, z0)), FL=g+0.12, H=2.6, WT=0.15;
+    push("concrete", boxGeo(x1-x0+0.2, FL-g+0.3, z1-z0+0.2), (x0+x1)/2, (FL+g-0.3)/2, (z0+z1)/2, 0, "#8a867e"); addFlat(x0-0.1, x1+0.1, z0-0.1, z1+0.1, FL);
+    wallBox("siding", x1-WT, x1, z0, z1, FL, FL+H, "#7a6a4a", 0.6, FL); addCol(x1-WT, x1, z0, z1, FL, FL+H);
+    for(const z of [z0, z1-WT]){ wallBox("siding", x0+0.002, x1-WT-0.002, z, z+WT, FL, FL+H, "#7a6a4a", 0.6, FL); addCol(x0, x1-WT, z, z+WT, FL, FL+H); }
+    B(0.14, H, 0.14, x0+0.07, FL+H/2, (z0+z1)/2, "#5a3e26"); addCol(x0, x0+0.14, (z0+z1)/2-0.07, (z0+z1)/2+0.07, FL, FL+H);
+    push("metal", boxGeo(x1-x0+0.8, 0.06, z1-z0+0.8), (x0+x1)/2, FL+H+0.028, (z0+z1)/2, 0, "#5a5e62");          // (flat, on the walls' tops)
+    B(x1-x0+0.04, 0.24, 0.1, (x0+x1)/2, FL+H-0.12, z0-0.05, "#5a3e26"); B(x1-x0+0.04, 0.24, 0.1, (x0+x1)/2, FL+H-0.12, z1+0.05, "#5a3e26");
+    addRoof(x0-0.4, x1+0.4, z0-0.4, z1+0.4, FL+H+0.06);
+    // the bench against the back wall, the vise, the tool board over it, a lamp
+    { const bx=x1-WT-0.4; B(0.7, 0.05, 3.2, bx, FL+0.9, (z0+z1)/2, "#6a5a44"); for(const dz of [-1.5, 1.5]) B(0.06, 0.88, 0.6, bx, FL+0.44, (z0+z1)/2+dz, "#3a3a3a");
+      addCol(bx-0.36, bx+0.36, (z0+z1)/2-1.62, (z0+z1)/2+1.62, FL-0.05, FL+0.95);
+      B(0.14, 0.1, 0.24, bx, FL+0.98, (z0+z1)/2-1.1, "#2a4a8a", 0, CH);
+      B(0.02, 1.0, 2.4, x1-WT-0.012, FL+1.6, (z0+z1)/2, "#8a7a5a"); for(let k=0;k<9;k++) B(0.02, 0.18+r()*0.1, 0.05, x1-WT-0.03, FL+1.5+(k%3)*0.25, (z0+z1)/2-1.0+k*0.25, ["#c8281a","#2a2a2a","#8a8e92"][k%3], 0, CH); }
+    // the outboard on its stand, its cowling off and on the floor beside it
+    { const x=x0+1.6, z=-1437.6; for(const s of [-1, 1]) B(0.05, 1.0, 0.6, x+s*0.25, FL+0.5, z, "#c8281a", 0, CH); B(0.6, 0.05, 0.3, x, FL+1.0, z, "#c8281a", 0, CH);
+      B(0.16, 0.66, 0.2, x, FL+0.72, z-0.2, "#2a2e32"); RB(0.34, 0.3, 0.4, x, FL+1.2, z-0.22, "#3a3e44", 0, 0.04); C(0.05, 0.12, x, FL+0.42, z-0.32, "#3a3e42", 10, Math.PI/2);
+      RB(0.32, 0.3, 0.44, x-0.6, FL+0.15, z-0.5, "#33383c", 0.4, 0.08); addCol(x-0.35, x+0.35, z-0.45, z+0.32, FL-0.05, FL+1.4); }
+    // a shelf of parts and oil, a drum, the sign
+    { const x=x0+0.3, z=z0+WT+0.3; for(let k=0;k<4;k++) B(1.36, 0.03, 0.38, x+0.7, FL+0.3+k*0.5, z, "#6a6458"); for(const dx of [0, 1.4]) B(0.04, 1.9, 0.4, x+dx, FL+0.95, z, "#5a5a5e");
+      for(let k=0;k<12;k++) B(0.1, 0.18, 0.1, x+0.15+(k%6)*0.22, FL+0.41+((k/6)|0)*0.5, z, ["#2a5a8a","#c8a82a","#3a3a3a"][k%3]); addCol(x-0.02, x+1.42, z-0.2, z+0.2, FL-0.05, FL+1.9);
+      C(0.29, 0.88, x1-WT-0.45, FL+0.44, z1-WT-0.4, "#2a5a3a", 16); addCol(x1-WT-0.75, x1-WT-0.15, z1-WT-0.7, z1-WT-0.1, FL-0.05, FL+0.9); }
+    sign(2.4, 0.4, (c, W, H)=>{ c.fillStyle="#1e3a5a"; c.fillRect(0, 0, W, H); say(c, "OUTBOARD SERVICE · ALL MAKES", W/2, H/2, W*0.84, H*0.55, "#e8d8a8", "700", "Arial"); }, x0-0.08, FL+H-0.16, (z0+z1)/2, -Math.PI/2, false, 520);
+    B(0.04, 0.44, 2.44, x0-0.04, FL+H-0.16, (z0+z1)/2, "#1e3a5a");
+    addZone(x0, x1, z0, z1, g-1, FL+H, "HOLLOW RUN MARINA · THE SERVICE SHED", true);
+    if(typeof crowdGroup==="function"){ const G=crowdGroup("marina service shed", 911, -1438, 70);
+      crowdAdd(G, {look:{h:1.02, skin:SKINS[1], hair:HAIRS[1], beard:"#4a3020", beardStyle:"short", shirt:"#3a4a5a", pants:"#2a3446", shoes:"#3a2a1a", long:true, cap:"#c8281a", boots:true},
+        x:x0+1.6, z:-1436.85, y:FL, yaw:Math.PI, mode:"stand", job:"wash", sway:0.2, dayOnly:true}); }
+    MARINA.routes["hollow run marina: into the service shed"]=[[907.5, -1430.0],[907.5, -1436.0],[907.5, -1439.6],[910.5, -1439.6]]; }
+  /* the fish-cleaning table by the foot of the pier: a steel top, a sink, the hose on its reel, a bucket */
+  { const x=951.5, z=-1424.6, g=gy(x, z);
+    B(1.4, 0.04, 0.6, x, g+0.9, z, "#a8acae", 0, CH); for(const dx of [-0.62, 0.62]) for(const dz of [-0.24, 0.24]) B(0.04, 0.88, 0.04, x+dx, g+0.44, z+dz, "#8a8e92", 0, CH);
+    B(0.4, 0.14, 0.4, x+0.35, g+0.85, z, "#7a7e82", 0, CH); B(1.4, 0.4, 0.03, x, g+1.12, z-0.3, "#8a8e92", 0, CH);
+    C(0.14, 0.06, x-0.9, g+0.7, z-0.2, "#2a6a3a", 14, 0, 0, Math.PI/2); C(0.13, 0.26, x-0.9, g+0.13, z+0.15, "#e8762a", 12);
+    addCol(x-0.75, x+0.75, z-0.32, z+0.32, g-0.3, g+1.3); }
+  /* the no-wake buoys: white and orange, out past the pier where the boats come in */
+  for(const [x, z] of [[1004, -1446],[1006, -1420],[1004, -1394],[982, -1458]]){ if(Terrain.lakeSD(x, z)>-2) continue;
+    C(0.22, 1.0, x, WY+0.3, z, "#d8d0c0", 16); C(0.225, 0.18, x, WY+0.55, z, "#e8762a", 16); C(0.06, 0.2, x, WY+0.9, z, "#d8d0c0", 8);
+    sign(0.2, 0.12, (c, W, H)=>{ c.fillStyle="#d8d0c0"; c.fillRect(0, 0, W, H); say(c, "NO WAKE", W/2, H/2, W*0.8, H*0.6, "#1a1a1a", "800"); }, x, WY+0.32, z+0.226, 0, false, 120);
+    sign(0.2, 0.12, (c, W, H)=>{ c.fillStyle="#d8d0c0"; c.fillRect(0, 0, W, H); say(c, "NO WAKE", W/2, H/2, W*0.8, H*0.6, "#1a1a1a", "800"); }, x, WY+0.32, z-0.226, Math.PI, false, 120);
+    addColOB(x, z, 0, 0.25, 0.25, WY-1, WY+1.2, COL); }
+  detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.75, metalness:0.05}), "hollow-run-marina-yard", true);
+  detailMesh(CH, new T.MeshStandardMaterial({vertexColors:true, roughness:0.3, metalness:0.75}), "hollow-run-marina-yard-metal", true);
 })();
 /* the lamps on the pier come on after dark */
 function updateMarina(dt, dark){ for(const L of MARINA.lamps) L.intensity=0.8*smoothstep(0.3, 0.6, dark); }

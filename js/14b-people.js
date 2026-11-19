@@ -26,12 +26,13 @@ function rigidSkin(parts){
   let o=0;
   const v=new T.Vector3(), nm=new T.Matrix3();
   for(const p of parts){
-    const g=p.geo.index ? p.geo : p.geo, pos=g.attributes.position, nor=g.attributes.normal, c=new T.Color(p.color);
+    const g=p.geo, pos=g.attributes.position, nor=g.attributes.normal, vc=g.attributes.color, c=new T.Color(p.color);
     nm.getNormalMatrix(p.matrix);
     for(let i=0;i<pos.count;i++){
       v.fromBufferAttribute(pos,i).applyMatrix4(p.matrix); P[(o+i)*3]=v.x; P[(o+i)*3+1]=v.y; P[(o+i)*3+2]=v.z;
       v.fromBufferAttribute(nor,i).applyMatrix3(nm).normalize(); N[(o+i)*3]=v.x; N[(o+i)*3+1]=v.y; N[(o+i)*3+2]=v.z;
-      C[(o+i)*3]=c.r; C[(o+i)*3+1]=c.g; C[(o+i)*3+2]=c.b;
+      if(vc){ C[(o+i)*3]=vc.getX(i)*c.r; C[(o+i)*3+1]=vc.getY(i)*c.g; C[(o+i)*3+2]=vc.getZ(i)*c.b; }
+      else { C[(o+i)*3]=c.r; C[(o+i)*3+1]=c.g; C[(o+i)*3+2]=c.b; }
       SI[(o+i)*4]=p.bone; SW[(o+i)*4]=1;
     }
     if(g.index) for(let k=0;k<g.index.count;k++) idx.push(o+g.index.getX(k));
@@ -59,6 +60,76 @@ function skinned(parts, bones, mat){
 const SKINS=["#f1c9a5","#e2b48c","#c68e62","#9a6440","#6b4428"], HAIRS=["#2b1e14","#4a3020","#6b4a2b","#b89b6a","#8d8a86","#1a1716"];
 const SHIRTS=["#2f5f8f","#b33a3a","#e8e4d8","#3d6e44","#1d1f22","#c99a2a","#7a4f8a","#5d6a73","#d77a3a","#2b3d63"];
 const PANTS=["#3b4a66","#2c3446","#b9a27a","#1d1f22","#5c5a52","#6f7b86"];
+/* ---- the head --------------------------------------------------------------
+   One surface, shaped and coloured vertex by vertex: a sphere drawn out to a head (the skull fuller behind, the jaw
+   narrowing under the cheekbones, the chin forward, the brow ridge over the sockets), its skin shaded where light
+   would not reach (the sockets, under the jaw) and warmer at the cheeks and lips. The hair is the same surface
+   thickened and coloured above its hairline, by style; a beard is the same surface thickened down the jaw and over
+   the upper lip, clear of the mouth, its edge feathered into the skin, so it follows the face as a real one does.
+   Nothing is laid over the face, so nothing can fight it, and the whole head is fewer vertices than the old
+   skull, cap and blobs. */
+const _HC=new T.Color(), _HB=new T.Color();
+function _shade(c, r, g, b){ const k=new T.Color(c); k.r=Math.min(1, k.r*r); k.g=Math.min(1, k.g*g); k.b=Math.min(1, k.b*b); return k; }
+const _pmR=(x,y,z,sx,sy,sz,rx,ry,rz)=>new T.Matrix4().compose(V3(x,y,z), new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0)), V3(sx||1,sy||1,sz||1));
+// a number that stays the same for the same look (so a person's style does not change between builds)
+function _lookHash(o, salt){ const k=(o.hair||"")+(o.skin||"")+(o.shirt||"")+(o.pants||"")+(o.beard||"")+(salt||0); let x=2166136261;
+  for(let i=0;i<k.length;i++){ x^=k.charCodeAt(i); x=Math.imul(x, 16777619); } return x>>>0; }
+// the hair's style, if the look does not say: women long, in a bun or a ponytail; men short, cropped, or (grey) going bald
+function _hairStyle(o){ if(o.hairStyle) return o.hairStyle; const k=_lookHash(o, 3)%10;
+  if(o.female) return k<5 ? "long" : k<8 ? "pony" : "bun";
+  const grey=/^#(8d8a86|9a958e|8f8a84|b8b4ac|a8a49c)/i.test(o.hair||"");
+  return grey && k<4 ? "bald" : grey && k<7 ? "recede" : k<6 ? "short" : "crop"; }
+function _beardStyle(o){ if(o.beardStyle) return o.beardStyle; const k=_lookHash(o, 5)%10; return k<5 ? "full" : k<8 ? "short" : "goatee"; }
+const _sst=(a,b,x)=>{ const t=clamp((x-a)/(b-a), 0, 1); return t*t*(3-2*t); }, _gs=(x,m,w)=>Math.exp(-(x-m)*(x-m)/(2*w*w));
+function _headGeo(o, h){
+  const g=new T.SphereGeometry(1, 26, 20), P=g.attributes.position, n=P.count, C=new Float32Array(n*3);
+  const rx=0.0966*h, ry=0.1134*h, rz=0.105*h, skin=new T.Color(o.skin), hair=new T.Color(o.hair||"#2b1e14");
+  const lip=_shade(o.skin, 0.84, 0.62, 0.62), warm=_shade(o.skin, 1.04, 0.90, 0.88);
+  const capped=!!(o.cap||o.beanie||o.hoodUp), st=_hairStyle(o), bs=o.beard ? _beardStyle(o) : null, bc=o.beard ? new T.Color(o.beard) : null, stub=o.stubble ? new T.Color(o.stubble) : null;
+  // where the hair starts: up the forehead (front), above the ears (sides), down to the nape (back); by style
+  const HL={short:[0.44, 0.22, -0.48], crop:[0.50, 0.30, -0.42], recede:[0.62, 0.22, -0.46], bald:[2, 0.18, -0.44],
+            long:[0.40, -0.10, -0.95], pony:[0.40, 0.10, -0.70], bun:[0.40, 0.12, -0.70]}[st]||[0.44, 0.22, -0.48];
+  const TH={short:0.011, crop:0.006, recede:0.009, bald:0.006, long:0.014, pony:0.012, bun:0.012}[st]||0.011;
+  for(let i=0;i<n;i++){
+    const dx=P.getX(i), dy=P.getY(i), dz=P.getZ(i), ax=Math.abs(dx), front=_sst(0.25, 0.65, dz), nz=((i*9301+49297)%233280)/233280;
+    let x=dx*rx, y=dy*ry, z=dz*rz;
+    // the shape: fuller behind, the jaw in under the cheekbones, the chin forward and down, the brow ridge, the sockets, the cheekbones
+    const low=_sst(-0.05, -0.85, dy);
+    x*=1-0.16*low*(0.5+0.5*_sst(-0.6, 0.2, dz));
+    if(dz<-0.1 && dy>-0.4) z*=1+0.05*_sst(-0.1, -0.6, dz)*_sst(-0.4, 0.2, dy);
+    z+=0.011*h*front*_gs(dy, -0.80, 0.13)*_gs(dx, 0, 0.32); y-=0.004*h*front*_gs(dy, -0.85, 0.12)*_gs(dx, 0, 0.35);
+    z+=0.0045*h*front*_gs(dy, 0.28, 0.07)*_gs(ax, 0.32, 0.22);
+    z-=0.0055*h*front*_gs(dy, 0.13, 0.075)*_gs(ax, 0.36, 0.11);
+    { const k=0.0035*h*_gs(dy, -0.04, 0.12)*_gs(ax, 0.62, 0.12)*_sst(0.2, 0.6, dz); x+=Math.sign(dx)*k*0.8; z+=k*0.6; }
+    z-=0.004*h*front*_gs(dy, -0.20, 0.10)*_gs(ax, 0.42, 0.12);                          // (the hollow under the cheekbone)
+    z+=0.003*h*front*_gs(dy, -0.42, 0.06)*_gs(dx, 0, 0.18);                             // (the lips)
+    // the skin's colour: shaded in the sockets and under the jaw, warmer at the cheeks, the lips
+    _HC.copy(skin);
+    _HC.multiplyScalar(1-0.10*front*_gs(dy, 0.13, 0.08)*_gs(ax, 0.36, 0.13)-0.16*_sst(-0.72, -0.98, dy)*_sst(-0.6, 0.2, dz));
+    _HC.lerp(warm, 0.55*front*_gs(dy, -0.12, 0.13)*_gs(ax, 0.55, 0.16)); _HC.lerp(lip, 0.85*front*_gs(dy, -0.42, 0.05)*_gs(dx, 0, 0.15));
+    // the hair: above its line (front, side, back, worked round by where the vertex is facing)
+    const hl=dz>=0 ? HL[1]+(HL[0]-HL[1])*_sst(0.15, 0.8, dz)+0.10*ax*front : HL[1]+(HL[2]-HL[1])*_sst(-0.15, -0.8, dz);
+    let wh=_sst(hl-0.06, hl+0.05, dy);
+    if(st==="bald") wh*=_sst(0.62, 0.48, dy);
+    if(st==="recede") wh*=1-0.85*front*_gs(ax, 0.42, 0.14)*_sst(0.45, 0.62, dy)*_sst(0.85, 0.7, dy);
+    // the beard: down the jaw from the sideburns, over the upper lip and the chin, under the chin; clear of the mouth
+    let wb=0;
+    if(bc){ const top=0.20+(-0.30-0.20)*_sst(0.2, 0.85, dz);                                // (from the sideburns, down to the upper lip; under the chin to the neck)
+      wb=_sst(top+0.05, top-0.05, dy)*_sst(-0.42, -0.22, dz);
+      if(bs==="goatee") wb*=_gs(dx, 0, 0.26)*_sst(0.35, 0.7, dz);
+      wb*=1-_gs(dy, -0.43, 0.05)*_gs(dx, 0, 0.16)*(bs==="goatee" ? 1 : 0.92);               // (the mouth, open in it)
+      wb=Math.min(1, wb); }
+    // thickness: the hair fuller on top, the beard fuller at the chin; out along the surface's own direction
+    const thH=wh*(TH+0.006*Math.max(0, dy))*(capped ? 1-0.75*_sst(0.2, 0.4, dy) : 1)*h, thB=bc ? wb*(bs==="full" ? 0.007+0.016*_sst(-0.45, -0.85, dy) : bs==="short" ? 0.005+0.006*_sst(-0.45, -0.85, dy) : 0.005+0.011*_sst(-0.5, -0.85, dy)+0.004*_gs(dy, -0.36, 0.05))*h : 0;
+    const t=Math.max(thH, thB); x+=dx*t; y+=dy*t; z+=dz*t;
+    if(bc && bs==="full") y-=0.008*h*wb*_sst(-0.6, -0.95, dy)*front;
+    // and their colour, a little uneven, feathered into the skin at the edge
+    if(stub && !bc) _HC.lerp(stub, 0.32*_sst(0.0, -0.30, dy)*_sst(-0.3, 0.1, dz)*(1-_gs(dy, -0.43, 0.05)*_gs(dx, 0, 0.16)));
+    if(bc){ _HB.copy(bc).multiplyScalar(0.86+0.24*nz); _HC.lerp(_HB, Math.min(1, wb*1.15)); }
+    _HB.copy(hair).multiplyScalar(0.88+0.22*nz*(1-dy*0.3)); _HC.lerp(_HB, Math.min(1, wh*1.2));
+    P.setXYZ(i, x, y, z); C[i*3]=_HC.r; C[i*3+1]=_HC.g; C[i*3+2]=_HC.b; }
+  g.setAttribute("color", new T.BufferAttribute(C, 3)); g.computeVertexNormals(); g.deleteAttribute("uv");
+  return g; }
 function buildPerson(o){
   const h=o.h||1, HIP=0.93*h, B=[], parts=[];
   const bone=(par,x,y,z)=>{ const b=new T.Bone(); b.position.set(x,y,z); if(par>=0) B[par].add(b); B.push(b); return B.length-1; };
@@ -72,26 +143,43 @@ function buildPerson(o){
   const Y=y=>HIP+y*h;
   // pelvis and torso
   add(new T.BoxGeometry(0.30*h,0.20*h,0.19*h), _pm(0,Y(-0.01),0), o.pants, root);
-  add(cyl(0.165*h*(o.female?0.92:1), 0.145*h, 0.50*h, 12), _pm(0,Y(0.30),0, 1,1,0.62), o.shirt, spine);
+  add(cyl(0.160*h*(o.female?0.92:1), 0.145*h, 0.48*h, 14), _pm(0,Y(0.29),0, 1,1,0.64), o.shirt, spine);
   // a gut over the belt, and a vest open down the front over it: the hi-vis a driver wears
   // round a lot, two silver bands round it (each piece a size out from the one under it)
   if(o.belly) add(sph(0.5,12,9), _pm(0,Y(0.17),0.045*h, 0.31*h,0.30*h,0.23*h), o.shirt, spine);
   if(o.vest){ const vz=o.belly?1.0:0.66, vo=o.belly?0.02*h:0;           // cut fuller round a gut
     const vt=(r,y,len,c)=>add(new T.CylinderGeometry(r*1.0,r*0.94,len,14,1,true, 0.55, Math.PI*2-1.1), _pm(0,Y(y),vo, 1,1,vz), c, spine);
     vt(0.178*h, 0.31, 0.44*h, o.vest); vt(0.183*h, 0.20, 0.035*h, "#d9dcd8"); vt(0.180*h, 0.40, 0.035*h, "#d9dcd8"); }
-  add(sph(0.5,12,8), _pm(0,Y(0.52),0, (sw*2+0.04)*1.0, 0.13*h, 0.21*h), o.shirt, spine);
-  if(o.female) add(sph(0.5,10,8), _pm(0,Y(0.40),0.05*h, 0.26*h,0.12*h,0.12*h), o.shirt, spine);
+  add(sph(0.5,14,9), _pm(0,Y(0.515),0, (sw*2+0.05)*1.0, 0.15*h, 0.215*h), o.shirt, spine);
+  if(o.female) add(sph(0.5,12,8), _pm(0,Y(0.395),0.042*h, 0.25*h,0.11*h,0.10*h, 0.35), o.shirt, spine);
   add(cyl(0.048*h,0.052*h,0.10*h,8), _pm(0,Y(0.61),0.005), o.skin, spine);
-  // the head: skull, nose, ears, eyes, hair
-  add(sph(0.105*h,14,10), _pm(0,Y(0.73),0.01, 0.92,1.08,1.0), o.skin, head);
-  add(new T.BoxGeometry(0.03*h,0.045*h,0.04*h), _pm(0,Y(0.72),0.105*h), o.skin, head);
-  for(const s of [-1,1]){ add(sph(0.013*h,6,5), _pm(s*0.035*h,Y(0.745),0.093*h), o.eyes||"#1a1614", head);
-                          add(sph(0.024*h,6,5), _pm(s*0.097*h,Y(0.73),0.0, 0.5,1,0.8), o.skin, head); }
-  add(new T.SphereGeometry(0.114*h,14,8,0,Math.PI*2,0,Math.PI*0.52), _pm(0,Y(0.745),-0.008*h, 0.95,0.95,1.04), o.hair, head);
-  if(o.female) add(new T.BoxGeometry(0.20*h,0.26*h,0.06*h), _pm(0,Y(0.64),-0.075*h), o.hair, head);
-  // a beard and a moustache, under the cap; shades across the eyes
-  if(o.beard){ add(sph(0.5,12,8), _pm(0,Y(0.668),0.042*h, 0.19*h,0.14*h,0.15*h), o.beard, head);
-               add(new T.BoxGeometry(0.075*h,0.016*h,0.02*h), _pm(0,Y(0.697),0.112*h), o.beard, head); }
+  // the head: one shaped surface (the skull, the jaw and chin, the brow and the sockets) that carries its own colour, the
+  // hair and any beard as part of it (_headGeo); the nose, the ears, the eyes under their lids, the brows; long hair
+  add(_headGeo(o, h), _pm(0,Y(0.73),0.01), "#ffffff", head);
+  // the nose: a narrow ridge down from between the eyes to its tip, the wings either side, a little shadow under it
+  { const nz=0.103*h, NP=[[0,0.006,-0.002],[-0.0065,-0.006,0.001],[0.0065,-0.006,0.001],[0,-0.022,0.013],[-0.0135,-0.026,0.0],[0.0135,-0.026,0.0],[0,-0.030,0.004]];
+    const NI=[0,1,3, 0,3,2, 1,4,3, 2,3,5, 4,6,3, 3,6,5], P=[]; for(const k of NI) P.push(NP[k][0]*h, NP[k][1]*h, nz+NP[k][2]*h);
+    const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(P, 3)); g.computeVertexNormals();
+    add(g, _pm(0,Y(0.73),0.01), _shade(o.skin, 1.03, 0.97, 0.95), head); }
+  // the line of the mouth, between the lips
+  add(new T.BoxGeometry(0.030*h, 0.0026*h, 0.004*h), _pm(0, Y(0.73)-0.0480*h, 0.01+0.0985*h), _shade(o.skin, 0.52, 0.36, 0.36), head);
+  const ear=new T.SphereGeometry(0.024*h, 8, 6);
+  for(const s of [-1,1]) add(ear, _pmR(s*0.099*h,Y(0.725),-0.004*h, 0.42,1,0.78, 0, s*0.25), _shade(o.skin, 0.97, 0.9, 0.88), head);
+  { const iris=o.eyes||["#3a2a1e","#4a3424","#3a4e66","#4a5a3a","#2a2420"][_lookHash(o, 7)%5], pale=o.eyes && new T.Color(o.eyes).getHSL({}).l>0.55;
+    const scl=new T.SphereGeometry(0.0125*h, 8, 6), irs=new T.SphereGeometry(0.0074*h, 8, 5), lid=new T.SphereGeometry(0.0136*h, 8, 4, 0, Math.PI*2, 0, Math.PI*0.30);
+    for(const s of [-1,1]){ const ex=s*0.035*h, ey=Y(0.745), ez=0.01+0.0875*h;
+      add(scl, _pm(ex,ey,ez, 1,0.82,0.75), pale ? o.eyes : "#c4b8a8", head);
+      add(irs, _pm(ex,ey-0.0008*h,ez+0.0062*h, 1,1,0.55), iris, head);
+      add(lid, _pmR(ex,ey+0.0010*h,ez+0.0004*h, 1.05,0.9,0.9, 0.30, 0), _shade(o.skin, 0.9, 0.86, 0.85), head);
+      // the brow: a short arched bar of the hair's colour along the brow ridge
+      add(new T.BoxGeometry(0.036*h, 0.0068*h, 0.007*h), _pmR(ex+s*0.002*h, ey+0.0195*h, 0.01+0.0985*h, 1,1,1, 0, -s*0.30, -s*0.07), _shade(o.beard||o.hair, 0.85, 0.85, 0.85), head); } }
+  // long hair: the mass of it down the back, and a lock either side down past the ears; or a bun, or a ponytail
+  { const st=_hairStyle(o), hc=_shade(o.hair, 0.94, 0.94, 0.94);
+    if(st==="long"){ add(new T.SphereGeometry(0.5, 12, 8), _pm(0,Y(0.655),-0.058*h, 0.205*h,0.30*h,0.10*h), hc, head);
+      for(const s of [-1,1]) add(new T.SphereGeometry(0.5, 8, 6), _pm(s*0.092*h,Y(0.67),-0.018*h, 0.04*h,0.17*h,0.085*h), hc, head); }
+    else if(st==="bun") add(new T.SphereGeometry(0.042*h, 10, 7), _pm(0,Y(0.80),-0.098*h), hc, head);
+    else if(st==="pony"){ add(new T.SphereGeometry(0.5, 10, 7), _pm(0,Y(0.69),-0.118*h, 0.06*h,0.20*h,0.06*h, 0.25), hc, head);
+      add(new T.TorusGeometry(0.018*h, 0.005*h, 4, 10), _pm(0,Y(0.775),-0.108*h, 1,1,1, 1.2), _shade(o.hair, 0.6, 0.6, 0.6), head); } }
   if(o.shades) add(new T.BoxGeometry(0.155*h,0.032*h,0.012*h), _pm(0,Y(0.748),0.106*h), "#121416", head);
   // a trucker's cap is two panels, the foam front a colour of its own and the mesh round the back
   // (the two meet at an edge, they do not lie one over the other)

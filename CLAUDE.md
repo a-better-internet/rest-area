@@ -1248,3 +1248,55 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   floor, check they stand clear of every collider at head height: a man
   half inside an oven hood looks stuck against it.
 
+## Round 42 notes
+
+- **Boats (14p).** `HULLS` holds each kind you can take (`pont`, `skiff`):
+  its length, half beam, how far off a dock's edge it lies at a berth
+  (`berth`, clear of the pilings, which stand outside the deck), its lines,
+  how it goes, and its collider moored. `_hullPts(H)` is its outline (down
+  both sides every 0.7 m, so a piling cannot slip between points).
+  `_boatHits(x, z, yaw, H, skip)` counts the points touching; `_boatPush`
+  is the way out of what they touch. The boat moves in stretches of 6 cm at
+  most (`_boatStep`): a pose that touches more, or goes further into what
+  it touches, is refused, the way into the contact is taken off its way and
+  the rest kept (it slides along a dock), and `_boatEase` works a hull off
+  anything it rests against. `_dockBerth(x, z, yaw, maxD, H, chk)` tries
+  points along each edge, either side of it, and `chk` turns down any pose
+  that touches. `BOAT.moor` brings every boat to the clear berth nearest
+  where it was put. Every boat must be able to get away: check with
+  `tools/boats.js` (it fails a boat that cannot get 8 m clear, or whose
+  berth touches), and leave each moored boat a way out.
+- The fishing skiff is 14n's `LAKESIDE.SKIFF`: a hull lofted from stations
+  (`SKIFF.station(t)`), `SKIFF.hull`, `SKIFF.motor(run)` (the 25 with its
+  tiller), `SKIFF.put` / `LAKESIDE.skiff`. Taking one swaps hulls with the
+  rig, and `BOAT.setKind` makes the rig up for it (motor, fittings, lights,
+  where you sit). A still outboard of the other kind waits in `BOAT.spare`.
+- **People's heads (14b).** The head is one surface, `_headGeo(o, h)`: a
+  sphere shaped to a skull, jaw, chin, brow and sockets, coloured vertex by
+  vertex (shade in the sockets and under the jaw, warmth at the cheeks, the
+  lips), its hair and any beard part of the same surface, thickened and
+  coloured by region with feathered edges. Styles: `hairStyle` (`short`,
+  `crop`, `recede`, `bald`, `long`, `pony`, `bun`) and `beardStyle` (`full`,
+  `short`, `goatee`), else picked from the look's own hash (`_lookHash`);
+  `stubble` shades the jaw. The eyes are a sclera, an iris and an upper lid;
+  the brows are bars along the brow ridge. `rigidSkin` multiplies a part's
+  colour by its geometry's own colour attribute when it has one. Never put
+  `rboxGeo` on a person: it is not indexed and three small pieces doubled a
+  person's vertices. A person is under 3,400 vertices; keep it so.
+- **Hollow Road Books** is 14mh (`BOOKS`), on `EAST.books` (04: graded,
+  `siteDist`, 07's `canopyY`), west of the road. Its drive, lot and a strip
+  to the porch steps are in 14md's road paving union; 14mb opens the west
+  wall, the tree row and the west edge line at it; 14me keeps the pole line
+  out of its mouth, lights the mouth and runs a drop to the shop. A shelf
+  of books is one block whose front is a band of `BOOKS.tex` (`books()`),
+  so a wall of them is cheap. `BOOKS.radios` joins 20's `nearRadio`.
+- The Dive has a dock (`DOCKZ`, 14mf: the bank's wall open across it) in
+  `LAKESIDE.docks`, a fire pit (`DIVE.fire`, a `fire` lamp flickered by
+  `updateDive`) with Adirondack chairs, and a horseshoe pit. The marina has
+  the fishing boats' finger, the pavilion (`addRoof`), the service shed, the
+  fish-cleaning table and the no-wake buoys (`marinaExtras`).
+- An office floor that wants more is wrapped, not rewritten: keep its plan
+  (`PLANS_A[3]` and so on) and add after it (14md's round 42 block).
+- Never put a `// (comment)` partway along a line with more code after it:
+  everything after `//` is gone. It has cost three fixes now.
+

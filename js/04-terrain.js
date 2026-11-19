@@ -130,6 +130,8 @@ const EAST=(function(){
     // and down the coast, between the pretzel works and the beer distributor, Hollow Run Marina (14mg): the marina on the shore, and its drive in
     // through the woods off Hollow Road (where the road's east wall and edge line open)
     marina:{site:{x0:858, x1:975, z0:-1474, z1:-1350}, drive:{x0:743, x1:860, z0:-1390, z1:-1376}, mouth:{z0:-1390, z1:-1376}},      // (south of the guardrail where the road crosses Hollow Run)
+    // and on the west side of the road across from the office park, Hollow Road Books (14mh): its clearing, graded, and the drive's mouth
+    books:{site:{x0:668, x1:721, z0:-1852, z1:-1806}, mouth:{z0:-1832, z1:-1820}},
     pcan:{x0:640, x1:1024, z0:-1952, z1:-1504} };
 })();
 /* ---- west along US 6N -----------------------------------------------------
@@ -318,7 +320,7 @@ const Terrain=(function(){
     if(pd<60) h=toward(h, EDIN.y, pd, 0, 60);
     // east along US 6N: the country lies lower and flatter toward the lake, and every clearing is level with the road
     { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z), boxDist(EAST.beer.road,x,z), boxDist(EAST.beer.lot,x,z), boxDist(EAST.pretz.site,x,z),
-        boxDist(EAST.pretz.lake,x,z), boxDist(EAST.office.site,x,z), boxDist(EAST.dive.site,x,z), boxDist(EAST.marina.site,x,z), boxDist(EAST.marina.drive,x,z));
+        boxDist(EAST.pretz.lake,x,z), boxDist(EAST.office.site,x,z), boxDist(EAST.dive.site,x,z), boxDist(EAST.marina.site,x,z), boxDist(EAST.marina.drive,x,z), boxDist(EAST.books.site,x,z));
       if(ed<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, ed));
       if(ed<50) h=toward(h, EDIN.y, ed, 0, 46);
       // the lake: its bed shelving off the shore to six metres; the banks brought down to the water, and never under it.
@@ -459,7 +461,7 @@ const Terrain=(function(){
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
     d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3, boxSD(EAST.beer.road,x,z), boxSD(EAST.beer.lot,x,z), boxSD(EAST.pretz.site,x,z),
-      boxSD(EAST.pretz.lake,x,z), boxSD(EAST.office.site,x,z), boxSD(EAST.dive.site,x,z), boxSD(EAST.marina.site,x,z), boxSD(EAST.marina.drive,x,z));
+      boxSD(EAST.pretz.lake,x,z), boxSD(EAST.office.site,x,z), boxSD(EAST.dive.site,x,z), boxSD(EAST.marina.site,x,z), boxSD(EAST.marina.drive,x,z), boxSD(EAST.books.site,x,z));
     { const W=EAST.pretz.woods; if(x>W.x0-12 && x<W.x1+12 && z>W.z0-12 && z<W.z1+12) d=Math.min(d, distToPath(EAST.pretz.trail,x,z).d-1.6); }   // (the trail: a clearing a path wide)
     d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z), boxSD(WEST.ranch,x,z));
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])

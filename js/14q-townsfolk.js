@@ -39,6 +39,7 @@ function crowdHold(P, kind, right){
   if(kind==="pint"){ add(new T.CylinderGeometry(0.036, 0.030, 0.15, 12), "#c88a2a", 0, 0.03, 0.02); add(new T.CylinderGeometry(0.037, 0.037, 0.025, 12), "#f4efe0", 0, 0.115, 0.02); }
   else if(kind==="can") add(new T.CylinderGeometry(0.033, 0.033, 0.12, 10), "#3a6aa8", 0, 0.03, 0.02);
   else if(kind==="cup") add(new T.CylinderGeometry(0.04, 0.032, 0.10, 10), "#f2efe6", 0, 0.03, 0.02);
+  else if(kind==="book"){ add(new T.BoxGeometry(0.15, 0.022, 0.21), "#6a2a22", 0, 0.0, 0.07, 0.3); add(new T.BoxGeometry(0.14, 0.024, 0.20), "#d8ccae", 0.004, 0.0, 0.07, 0.3); }   // (a book open in the hand, read)
   else if(kind==="rocks"){ add(new T.CylinderGeometry(0.038, 0.034, 0.085, 14), "#e8eef0", 0, 0.02, 0.02); add(new T.CylinderGeometry(0.0378, 0.0362, 0.04, 14), "#b8742a", 0, 0.008, 0.02); }   // (a short glass of scotch: the whisky a band 1.5 mm proud of the glass, low in it)
   else if(kind==="coupe"){ add(new T.CylinderGeometry(0.03, 0.03, 0.004, 12), "#e8eef0", 0, -0.02, 0.02); add(new T.CylinderGeometry(0.0035, 0.0035, 0.08, 6), "#e8eef0", 0, 0.02, 0.02);
     add(new T.CylinderGeometry(0.052, 0.014, 0.032, 16, 1, true), "#e8eef0", 0, 0.076, 0.02); add(new T.CylinderGeometry(0.048, 0.03, 0.018, 16), "#e8d48a", 0, 0.07, 0.02); }   // (a coupe of champagne)
