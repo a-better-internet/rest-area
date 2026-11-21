@@ -68,9 +68,10 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       svc=[SD_rect(796, 806, -1860.6, -1846), SD_rect(796, 924, -1860.6, -1856.4), SD_rect(914, 924, -1875.5, -1856.4)],   // (the service drive along the north side to the Lakeside Dive, 14mf)
       front=SD_rect(804, 822.05, -1800, -1750), nwalk=SD_rect(820, 856, -1804, -1798.5), swalk=SD_rect(820, 856, -1751.5, -1746),
       plaza=SD_rect(852, 936, -1812, -1738),
-      BM=EAST.books.mouth, books=[SD_rect(714, RX-RW+0.6, BM.z0, BM.z1), SD_rect(700, 716, -1844, -1810), SD_rect(699.3, 701, -1828.4, -1825.6)];   // (the bookshop's drive, lot and the strip to its steps, west of the road: 14mh)
-    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza].concat(svc, books), 3), 698, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
-    for(const b of [[714, RX-RW, BM.z0, BM.z1],[700, 716, -1844, -1810],[699.3, 701, -1828.4, -1825.6]]) addPaveRect(b[0], b[1], b[2], b[3], Y);
+      BM=EAST.books.mouth, books=[SD_rect(714, RX-RW+0.6, BM.z0, BM.z1), SD_rect(700, 716, -1844, -1810), SD_rect(699.3, 701, -1828.4, -1825.6)],   // (the bookshop's drive, lot and the strip to its steps, west of the road: 14mh)
+      AM=EAST.apts.mouth, apts=[SD_rect(714, RX-RW+0.6, AM.z0, AM.z1), SD_rect(703, 717, -1879, -1853)];   // (the apartments' drive and lot past it: 14mi)
+    push("lotpave", sdPaveGeo(sdUnion([road, mouth, lot, front, nwalk, swalk, plaza].concat(svc, books, apts), 3), 698, 969, END, -1660, 0.5, 3), 0, LY, 0, 0, "#9a9a96");
+    for(const b of [[714, RX-RW, BM.z0, BM.z1],[700, 716, -1844, -1810],[699.3, 701, -1828.4, -1825.6],[714, RX-RW, AM.z0, AM.z1],[703, 717, -1879, -1853]]) addPaveRect(b[0], b[1], b[2], b[3], Y);
     for(const b of [[RX+RW-0.6, 752, M.z0, M.z1],[750, 806, -1848, -1702],[804, 822.05, -1800, -1750],[820, 856, -1804, -1798.5],[820, 856, -1751.5, -1746],[852, 936, -1812, -1738]])
       addPaveRect(b[0], b[1], b[2], b[3], Y); }
   // the plaza laid in squares of buff concrete and terra cotta pavers, a joint round each (paint over the paving, 08's ladder), clear of the basin

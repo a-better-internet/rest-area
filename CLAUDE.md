@@ -1337,3 +1337,28 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   moved about every frame sets `userData.noCull`, or 18c's `cullLoose`
   hides it for good.
 
+
+## Round 44 notes
+
+- Birch Hollow Apartments is 14mi (`APTS`), on `EAST.apts` (04: graded,
+  `siteDist`, 07's `canopyY`), west of Hollow Road past the bookstore, its
+  site running from the bookstore's north wall (z −1852) to −1879.5. Its
+  drive and lot are in 14md's road paving union; 14mb opens the west wall
+  and breaks the west edge line at its mouth; 14me keeps the pole line out
+  of the mouth and lights it. The bookstore's north tree row stops behind
+  the apartments (x 682).
+- The building is one plan, mirrored: `s` −1 the north units, +1 the south,
+  `p` out from `ZC`, `d` back from the front wall. Each storey's walls are a
+  band of their own openings (`run`), every unit lined in its own paint, its
+  floors laid by kind as one mesh a kind (`floorAt` / `buildFloors`, world
+  uvs, kitchens and baths a step up the ladder). `UNIT(s, k, look)` builds
+  the partitions, doors, zones, kitchen, bath, bedroom and lights; each
+  tenant's things follow it. Seats go through `seatAt` / `chairAt`, which
+  take a facing (`front`, `back`, `out`, `in`) and set the seat's yaw from it.
+- The sliders are `DOORS` entries with `slide` along z: a leaf's `ax` names
+  the axis 17's `updateDoors` moves it on (x when left out). They are
+  manual (`E`) and solid while shut, so a route onto a balcony or patio
+  wants `gate:true`.
+- The tenants (14q's crowd, added in 14mi) come and go by the hour through
+  `home(x, z, from, to)`, decided only while you are 16 m or more away.
+  `APTS.radios` join 20's `nearRadio`.

@@ -272,7 +272,7 @@ const BOOKS={routes:{}, lamps:[], radios:[], FL:0};
     const row=(x0, z0, x1, z1, nx, nz)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.round(L/6.2));
       for(let k=0;k<=n;k++) for(const dep of [1.8, 6.5, 11.5, 16.5]){ if(q()<0.12) continue; const t=(k+q()*0.6)/n, x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);
         tree(dep<2 ? "edge" : q()<0.35 ? "hemlock" : q()<0.5 ? "pine" : "hard", x, z, 0.85+q()*0.4); } };
-    row(S0.x0, S0.z0, S0.x1, S0.z0, 0, -1); row(S0.x0, S0.z1, S0.x1, S0.z1, 0, 1); row(S0.x0, S0.z0, S0.x0, S0.z1, -1, 0);
+    row(S0.x0, S0.z0, 682, S0.z0, 0, -1);      // (north only behind the apartments past it, 14mi) row(S0.x0, S0.z1, S0.x1, S0.z1, 0, 1); row(S0.x0, S0.z0, S0.x0, S0.z1, -1, 0);
     // and a few in the yard: a maple over the north side, a pair of lilacs by the porch
     tree("lawn", 680.5, -1814.5, 1.0); tree("lawn", 677.0, -1841.0, 0.9);
     for(const [x, z] of [[697.6, -1834.4],[697.6, -1819.6],[684.6, -1835.0]]) FOREST.plant("shrub", x, z, {scale:0.9, solid:false}); }

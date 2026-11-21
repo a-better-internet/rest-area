@@ -634,6 +634,20 @@ If the scene runs hot on your machine, start there (see below).
     keeps the front window and Doris the counter. Pet any of them (E) and
     it sits up and purrs; take the feather wand from its jar on the counter
     and the cats stalk the feather wherever you look, crouch and pounce.
+  - **Birch Hollow Apartments**, on the left just past the bookstore: four
+    units in a two-storey building of grey lap siding and cream trim, all
+    four doors off one breezeway in the middle (an open stair up to the
+    landing for 201 and 202), a sliding glass door from every living room
+    onto a patio below or a railed balcony above (E slides it open), a
+    seven-stall lot and the dumpster in its corral. The tenants work at the
+    office park, and each place is their own: Dale's in 101 (a plaid sofa,
+    the console TV, his recliner, a buck on the wall, a grill on the patio),
+    Gina's in 102 (a futon, a home computer on a door over two file
+    cabinets, posters, a guitar, her bike), the Hallorans' in 201 (a glass
+    table set for two, a leather loveseat, prints, flower boxes on the
+    balcony) and Ray's in 202 (an aquarium, a stereo and crates of records,
+    an exercise bike, a lava lamp, an Adirondack chair and a bird feeder).
+    They are home at their own hours.
   - **The Lakeside Dive**, past the office park on the shore, down the
     service drive from the office lot: a one-room bar in stained siding with
     six stools, beer on tap, a pool table, a jukebox playing country, darts,

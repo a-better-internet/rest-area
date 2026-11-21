@@ -305,7 +305,7 @@ function updateDoors(dt){
     // a door at rest where it was last drawn is not drawn again (there are hundreds, and an overhead door redraws its sections)
     if(d.open!==d._drawn){ d._drawn=d.open;
       // a sliding pair runs its leaves apart; anything else swings on its hinge
-      if(d.slide) for(const s of d.slide) s.g.position.x=s.x0+s.dx*d.open;
+      if(d.slide) for(const s of d.slide) s.g.position[s.ax||"x"]=s.x0+s.dx*d.open;     // (along x, or along z where a leaf says so: 14mi's sliders)
       else if(d.lift) d.lift(d.open);                                 // (an overhead door, 01's makeLiftDoor)
       else d.g.rotation.y = d.base + d.swing*d.open; }
     // and while it is shut it is solid, which a leaf on its own never is
