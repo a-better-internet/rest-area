@@ -634,6 +634,10 @@ If the scene runs hot on your machine, start there (see below).
     keeps the front window and Doris the counter. Pet any of them (E) and
     it sits up and purrs; take the feather wand from its jar on the counter
     and the cats stalk the feather wherever you look, crouch and pounce.
+    It is at its coziest after dark: lights strung along the beams, a window
+    seat piled with cushions, a coffee cart (pay what you like), footstools
+    and throws by the stove, the cat's basket on the hearth, plants, and the
+    staff picks lit in the front windows.
   - **Birch Hollow Apartments**, on the left just past the bookstore: four
     units in a two-storey building of grey lap siding and cream trim, all
     four doors off one breezeway in the middle (an open stair up to the
@@ -647,7 +651,8 @@ If the scene runs hot on your machine, start there (see below).
     table set for two, a leather loveseat, prints, flower boxes on the
     balcony) and Ray's in 202 (an aquarium, a stereo and crates of records,
     an exercise bike, a lava lamp, an Adirondack chair and a bird feeder).
-    They are home at their own hours.
+    Every window has its curtains, every door its coats; out back are the
+    condensers, a picnic table and a grill. They are home at their own hours.
   - **The Lakeside Dive**, past the office park on the shore, down the
     service drive from the office lot: a one-room bar in stained siding with
     six stools, beer on tap, a pool table, a jukebox playing country, darts,

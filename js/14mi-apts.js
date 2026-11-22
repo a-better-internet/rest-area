@@ -52,6 +52,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
   APTS.FL0=FL0; APTS.FL1=FL1;
   const X=(d)=>XFR-d, Z=(s, p)=>ZC+s*p;
   const zr=(s, p0, p1)=>[Math.min(Z(s, p0), Z(s, p1)), Math.max(Z(s, p0), Z(s, p1))];
+  const DG={};                                                     // (each unit's front door's group, for what hangs on it)
   const NUM={"-1,0":"101", "1,0":"102", "-1,1":"201", "1,1":"202"};
   // the zone over the whole place first, so the rooms and the breezeway, added after it, name where you are
   addZone(S0.x0, S0.x1, S0.z0, S0.z1, Y-4, Y+14, "BIRCH HOLLOW APARTMENTS");
@@ -186,7 +187,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
       addCol(x-0.06, x+0.06, c, d, FL1-0.15, FL1+1.0); B(0.06, 0.3, 2*CW-0.02, SX0+0.03, FL1-0.15, ZC, TRIM); } }
   // the four doors: a dark leaf with six raised panels, opening in; casings, a sill, its number, a lamp beside it
   for(const [k, F] of [[0, FL0],[1, FL1]]) for(const s of [-1, 1]){ const [o0, o1]=zr(s, 0.25, 1.21), xw=X(CD)-WT/2, id=NUM[s+","+k];
-    const g=makeDoor(XF(xw, o1-0.02, Math.PI/2), 0, F+0.012, 0, "APT "+id, false, 0, null, DOORC);
+    const g=makeDoor(XF(xw, o1-0.02, Math.PI/2), 0, F+0.012, 0, "APT "+id, false, 0, null, DOORC); DG[id]=g;
     { const E=[], pc=new T.Color(DOORC).multiplyScalar(1.12);
       for(const sd of [-1, 1]) for(const [u, w] of [[0.27, 0.3],[0.65, 0.3]]) for(const [y, h] of [[0.42, 0.62],[1.24, 0.78],[1.82, 0.26]])
         E.push({geo:boxGeo(w, h, 0.012, 0), matrix:new T.Matrix4().makeTranslation(u, y, sd*0.038), color:pc});
@@ -260,7 +261,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
   const seatAt=(s, F, p, d, dir, w, col, label, sofa, dep)=>{ const u=U(s), yaw=u.yaw(dir), fx=-Math.sin(yaw), fz=-Math.cos(yaw), x=X(d), z=Z(s, p);
     const alongX=Math.abs(fz)>0.5, D=dep||(sofa ? 0.85 : 0.6), sx=alongX ? w : D, sz=alongX ? D : w;
     RB(sx, 0.4, sz, x, F+0.2, z, col, 0, 0.05);
-    RB(alongX ? w : 0.18, 0.52, alongX ? 0.18 : w, x-fx*(D/2-0.09), F+0.64, z-fz*(D/2-0.09), col, 0, 0.05);
+    RB(alongX ? w-0.012 : 0.18, 0.52, alongX ? 0.18 : w-0.012, x-fx*(D/2-0.09), F+0.64, z-fz*(D/2-0.09), col, 0, 0.05);
     for(const sd of [-1, 1]) RB(alongX ? 0.16 : D, 0.24, alongX ? D : 0.16, x+(alongX ? sd*(w/2-0.08) : 0), F+0.52, z+(alongX ? 0 : sd*(w/2-0.08)), col, 0, 0.05);
     addCol(x-sx/2, x+sx/2, z-sz/2, z+sz/2, F-0.05, F+0.48);
     const n=sofa ? Math.max(1, Math.round((w-0.3)/0.62)) : 1;
@@ -344,9 +345,10 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     u.c(0.008, 0.35, 2.2, 2.75, F+1.27, "#8a8e90", 6); u.c(0.008, 0.35, 2.2, 3.25, F+1.27, "#8a8e90", 6); u.col(1.9, 2.5, 2.33, 3.67, F-0.05, F+1.12);
     lamp(X(3.0), F+0.9, Z(s, 2.9), 0.12);
     seatAt(s, F, 6.9, 5.05, "in", 0.9, "#5a3a24", "DALE'S RECLINER", false, 0.9);
+    u.rb(0.42, 0.1, 0.5, 6.22, 5.05, F+0.37, "#5a3a24", 0.03); u.b(0.05, 0.3, 0.06, 6.42, 5.05, F+0.24, "#2a2a2c");      // (its footrest, up)
     pic(s, F, 7.4, 5.95, 1.85, "front", 0.7, 0.5, "#5a3a24", (c, W, H)=>{ c.fillStyle="#4a3a2a"; c.fillRect(0, 0, W, H); c.fillStyle="#8a6a44"; c.beginPath(); c.ellipse(W/2, H*0.6, W*0.18, H*0.3, 0, 0, 7); c.fill(); c.fillStyle="#3a2a1a"; c.beginPath(); c.arc(W*0.44, H*0.55, W*0.02, 0, 7); c.arc(W*0.56, H*0.55, W*0.02, 0, 7); c.fill(); });
     { const x=X(5.92), z=Z(s, 7.4); S(0.11, x+0.09, F+1.82, z, "#7a5a3a"); for(const o of [-1, 1]) for(let t=0;t<4;t++) C(0.012, 0.18, x+0.08, F+2.0+t*0.05, z+o*(0.06+t*0.05), "#c8bc98", 6, 0, 0, o*0.6); }
-    pic(s, F, HL-WT-0.02, 2.9, 1.55, "in", 0.8, 0.55, "#5a3a24", (c, W, H)=>{ c.fillStyle="#6a88a0"; c.fillRect(0, 0, W, H); c.fillStyle="#3a5a3a"; c.fillRect(0, H*0.55, W, H*0.45); c.fillStyle="#2a3a2a"; for(let i=0;i<6;i++){ c.beginPath(); c.moveTo(W*(0.1+i*0.16), H*0.6); c.lineTo(W*(0.16+i*0.16), H*0.25); c.lineTo(W*(0.22+i*0.16), H*0.6); c.fill(); } });
+    pic(s, F, HL-WT-0.02, 4.6, 1.55, "in", 0.8, 0.55, "#5a3a24", (c, W, H)=>{ c.fillStyle="#6a88a0"; c.fillRect(0, 0, W, H); c.fillStyle="#3a5a3a"; c.fillRect(0, H*0.55, W, H*0.45); c.fillStyle="#2a3a2a"; for(let i=0;i<6;i++){ c.beginPath(); c.moveTo(W*(0.1+i*0.16), H*0.6); c.lineTo(W*(0.16+i*0.16), H*0.25); c.lineTo(W*(0.22+i*0.16), H*0.6); c.fill(); } });
     // his rods and waders by the door, the boots, a cap on the hook
     for(const [pp, dd] of [[1.55, 5.75],[1.62, 5.82]]) ent(new T.CylinderGeometry(0.006, 0.012, 2.1, 6), X(dd), F+1.02, Z(s, pp), "#2a2a2a", 0, 0, 0.08);
     u.rb(0.14, 0.32, 0.3, 1.45, 5.45, F+0.16, "#3a2a1a", 0.04); u.rb(0.14, 0.32, 0.3, 1.25, 5.45, F+0.16, "#3a2a1a", 0.04);
@@ -360,7 +362,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     { const zg=Z(s, 3.0), zc=Z(s, 6.4), y=FL0-0.1;
       S(0.27, XFR+0.85, y+0.75, zg, "#1a1a1a"); for(let i=0;i<3;i++){ const a=i*2.09; ent(new T.CylinderGeometry(0.012, 0.012, 0.7, 6), XFR+0.85+Math.sin(a)*0.15, y+0.33, zg+Math.cos(a)*0.15, "#2a2a2a", Math.cos(a)*0.2, 0, -Math.sin(a)*0.2); }
       addCol(XFR+0.55, XFR+1.15, zg-0.3, zg+0.3, y-0.1, y+1.0);
-      B(0.5, 0.04, 0.5, XFR+0.85, y+0.4, zc, "#2a6a3a"); B(0.05, 0.55, 0.5, XFR+0.62, y+0.66, zc, "#2a6a3a"); for(const o of [-0.23, 0.23]) B(0.5, 0.4, 0.025, XFR+0.85, y+0.2, zc+o, "#a8acae");
+      B(0.5, 0.04, 0.5, XFR+0.85, y+0.4, zc, "#2a6a3a"); B(0.05, 0.55, 0.47, XFR+0.62, y+0.66, zc, "#2a6a3a"); for(const o of [-0.23, 0.23]) B(0.47, 0.37, 0.025, XFR+0.85, y+0.185, zc+o, "#a8acae");
       addSeat(XFR+0.88, zc, y, U(s).yaw("front"), "A LAWN CHAIR ON DALE'S PATIO", false, 0.66); addCol(XFR+0.6, XFR+1.1, zc-0.26, zc+0.26, y-0.1, y+0.42);
       u.rb(0.35, 0.4, 0.55, 8.2, -1.2, y+0.2, "#c8281a", 0.04); u.col(8.02, 8.38, -1.48, -0.92, y-0.1, y+0.4); }
     APTS.radios.push({x:X(7.3), y:F+1.0, z:Z(s, 0.4), station:1, house:R.name, zone:R.name+" · THE KITCHEN", vol:0.3, reach:7}); u.b(0.14, 0.16, 0.3, 0.4, 7.6, F+0.98, "#3a3a3a"); }
@@ -379,9 +381,9 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
         ["] 10 REM LEDGER RECONCILE","] 20 OPEN \"ACCTS\",1","] 30 INPUT#1,A$,B","] 40 IF B<0 THEN 200","] 50 T=T+B","] 60 GOTO 30","] RUN","?SYNTAX ERROR IN 40","] _"].forEach((t, i)=>c.fillText(t, 7, 14+i*12)); });
       const m=new T.Mesh(new T.PlaneGeometry(0.27, 0.2), new T.MeshBasicMaterial({map:scr, toneMapped:false})); m.position.set(X(3.7), F+1.03, Z(s, 2.305)); m.rotation.y=0; scene.add(m); }
     chairAt(s, F, 2.95, 3.7, "in", "#3a3a3a", "GINA'S DESK CHAIR");
-    pic(s, F, HL-WT-0.02, 1.8, 1.55, "in", 0.6, 0.85, "#1a1a1a", (c, W, H)=>{ c.fillStyle="#141430"; c.fillRect(0, 0, W, H); const q=_trng(3); for(let i=0;i<50;i++){ c.fillStyle="#d8d0b8"; c.fillRect(q()*W, q()*H*0.7, 2, 2); }
+    pic(s, F, HL-WT-0.02, 4.0, 1.55, "in", 0.6, 0.85, "#1a1a1a", (c, W, H)=>{ c.fillStyle="#141430"; c.fillRect(0, 0, W, H); const q=_trng(3); for(let i=0;i<50;i++){ c.fillStyle="#d8d0b8"; c.fillRect(q()*W, q()*H*0.7, 2, 2); }
       c.fillStyle="#d8a83a"; c.beginPath(); c.arc(W*0.62, H*0.3, W*0.07, 0, 7); c.fill(); c.strokeStyle="#d8a83a"; c.lineWidth=3; c.beginPath(); c.moveTo(W*0.6, H*0.32); c.lineTo(W*0.2, H*0.5); c.stroke(); say(c, "COMET 86", W/2, H*0.84, W*0.76, H*0.1, "#d8d0b8", "800"); });
-    pic(s, F, HL-WT-0.02, 4.3, 1.55, "in", 0.6, 0.85, "#1a1a1a", (c, W, H)=>{ c.fillStyle="#2a5a8a"; c.fillRect(0, 0, W, H); c.fillStyle="#1a2a3a"; c.beginPath(); c.ellipse(W/2, H*0.45, W*0.32, H*0.12, -0.2, 0, 7); c.fill();
+    pic(s, F, HL-WT-0.02, 5.2, 1.55, "in", 0.6, 0.85, "#1a1a1a", (c, W, H)=>{ c.fillStyle="#2a5a8a"; c.fillRect(0, 0, W, H); c.fillStyle="#1a2a3a"; c.beginPath(); c.ellipse(W/2, H*0.45, W*0.32, H*0.12, -0.2, 0, 7); c.fill();
       say(c, "SAVE THE", W/2, H*0.72, W*0.72, H*0.09, "#d0c8b4", "900"); say(c, "WHALES", W/2, H*0.84, W*0.72, H*0.1, "#d0c8b4", "900"); });
     pic(s, F, CW+0.22, 1.2, 1.6, "out", 0.5, 0.7, "#8a2a22", (c, W, H)=>{ c.fillStyle="#1a1a1a"; c.fillRect(0, 0, W, H); for(let i=0;i<5;i++){ c.fillStyle=["#c8281a","#d8a83a","#2a8a5a","#2a5ab8","#8a2a8a"][i]; c.fillRect(0, H*(0.15+i*0.1), W, H*0.06); } say(c, "NEW WAVE NITE", W/2, H*0.82, W*0.76, H*0.08, "#d0c8b4", "800"); });
     // the bookcase of boards on cinder blocks along the front wall, a little TV on it, a boom box
@@ -400,7 +402,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     u.b(0.2, 0.32, 0.22, 0.3, 6.25, F+1.06, "#2a2a2a"); u.b(0.28, 0.12, 0.24, 0.4, 7.0, F+0.96, "#c4b89c");
     // the patio: her bike against the screen, a hammock chair hung from the balcony, plants
     { const zb=Z(s, 7.9), y=FL0-0.1; for(const o of [-0.52, 0.52]) ent(new T.TorusGeometry(0.33, 0.022, 6, 22), XFR+0.75+o, y+0.35, zb, "#1a1a1a", 0, 0, 0);
-      ent(boxGeo(1.0, 0.04, 0.04), XFR+0.75, y+0.62, zb, "#2a5ab8", 0, 0, 0.08); ent(boxGeo(0.6, 0.04, 0.04), XFR+0.55, y+0.5, zb, "#2a5ab8", 0, 0, -0.9); B(0.22, 0.05, 0.1, XFR+0.42, y+0.85, zb, "#1a1a1a");
+      ent(boxGeo(1.0, 0.04, 0.04), XFR+0.75, y+0.62, zb, "#2a5ab8", 0, 0, 0.08); ent(boxGeo(0.6, 0.04, 0.04), XFR+0.55, y+0.5, zb, "#2a5ab8", 0, 0, -0.9); B(0.22, 0.05, 0.09, XFR+0.42, y+0.85, zb, "#1a1a1a");
       addCol(XFR+0.15, XFR+1.35, zb-0.12, zb+0.12, y-0.1, y+0.95);
       for(const pp of [3.0, 3.6]){ C(0.15, 0.3, XFR+1.3, y+0.15, Z(s, pp), "#a8542a", 12); S(0.22, XFR+1.3, y+0.45, Z(s, pp), "#3a6a3a"); } u.col(2.8, 3.8, -1.48, -1.12, y-0.1, y+0.6); }
     APTS.radios.push({x:X(0.42), y:F+0.53, z:Z(s, 8.15), station:2, house:R.name, zone:R.name, vol:0.38, reach:8}); }
@@ -422,8 +424,8 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     u.b(1.0, 1.9, 0.03, 7.55, 5.925, F+0.95, "#4a2e1e"); for(const pp of [7.065, 8.035]) u.b(0.03, 1.9, 0.34, pp, 5.77, F+0.95, "#4a2e1e"); u.b(1.0, 0.03, 0.34, 7.55, 5.77, F+1.915, "#4a2e1e");
     u.col(7.03, 8.07, 5.57, 5.94, F-0.05, F+1.9);
     for(let i=0;i<5;i++){ u.b(0.96, 0.02, 0.3, 7.55, 5.76, F+0.06+i*0.38, "#5a3a26"); for(let j=0;j<8;j++) if((i*8+j)%7) u.b(0.08+((i+j)%3)*0.015, 0.26, 0.22, 7.15+j*0.11, 5.72, F+0.21+i*0.38, ["#6a2a22","#2a3a5a","#3a5a3a","#8a6a3a","#4a2a3a"][(i+j*2)%5]); }
-    pic(s, F, HL-WT-0.02, 2.4, 1.6, "in", 0.62, 0.8, "#b8944a", (c, W, H)=>{ c.fillStyle="#d0c4a8"; c.fillRect(0, 0, W, H); c.fillStyle="#6a88a0"; c.fillRect(W*0.12, H*0.12, W*0.76, H*0.48); c.fillStyle="#4a6a4a"; c.fillRect(W*0.12, H*0.6, W*0.76, H*0.24); c.fillStyle="#2a2a2a"; c.fillRect(W*0.62, H*0.38, W*0.04, H*0.26); });
-    pic(s, F, HL-WT-0.02, 3.6, 1.6, "in", 0.62, 0.8, "#b8944a", (c, W, H)=>{ c.fillStyle="#c8b898"; c.fillRect(0, 0, W, H); c.fillStyle="#8a3a2a"; c.beginPath(); c.arc(W/2, H*0.42, W*0.24, 0, 7); c.fill(); c.fillStyle="#3a5a3a"; c.fillRect(W*0.48, H*0.6, W*0.04, H*0.3); });
+    pic(s, F, HL-WT-0.02, 4.0, 1.6, "in", 0.62, 0.8, "#b8944a", (c, W, H)=>{ c.fillStyle="#d0c4a8"; c.fillRect(0, 0, W, H); c.fillStyle="#6a88a0"; c.fillRect(W*0.12, H*0.12, W*0.76, H*0.48); c.fillStyle="#4a6a4a"; c.fillRect(W*0.12, H*0.6, W*0.76, H*0.24); c.fillStyle="#2a2a2a"; c.fillRect(W*0.62, H*0.38, W*0.04, H*0.26); });
+    pic(s, F, HL-WT-0.02, 4.9, 1.6, "in", 0.62, 0.8, "#b8944a", (c, W, H)=>{ c.fillStyle="#c8b898"; c.fillRect(0, 0, W, H); c.fillStyle="#8a3a2a"; c.beginPath(); c.arc(W/2, H*0.42, W*0.24, 0, 7); c.fill(); c.fillStyle="#3a5a3a"; c.fillRect(W*0.48, H*0.6, W*0.04, H*0.3); });
     pic(s, F, CW+0.22, 4.6, 1.55, "out", 0.5, 0.4, "#2a2a2a", (c, W, H)=>{ c.fillStyle="#d0c8b4"; c.fillRect(0, 0, W, H); c.fillStyle="#3a3a3a"; c.beginPath(); c.arc(W*0.38, H*0.5, H*0.26, 0, 7); c.arc(W*0.64, H*0.52, H*0.24, 0, 7); c.fill(); });
     // the glass table and its two chairs in the kitchen's end, two places laid and a candle; a wine rack
     u.b(0.9, 0.02, 1.2, 2.6, 7.2, F+0.74, "#9ab0b4"); for(const [pp, dd] of [[2.2, 6.65],[3.0, 6.65],[2.2, 7.75],[3.0, 7.75]]) u.b(0.03, 0.73, 0.03, pp, dd, F+0.365, "#b8944a"); u.col(2.13, 3.07, 6.58, 7.82, F-0.05, F+0.76);
@@ -460,9 +462,9 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     u.col(6.78, 7.7, 0.82, 1.2, F-0.05, F+0.34);
     // the exercise bike by the bedroom door, a jacket over it; the Otters on the wall
     { const x=X(7.3), z=Z(s, 7.1); B(0.9, 0.08, 0.3, x, F+0.04, z, "#3a3a3e"); ent(boxGeo(0.08, 0.95, 0.08), x-0.15, F+0.5, z, "#3a3a3e", 0, 0, 0.25); B(0.2, 0.06, 0.26, x-0.27, F+0.98, z, "#1a1a1a");
-      C(0.22, 0.06, x+0.22, F+0.35, z, "#2a2a2a", 18, Math.PI/2, 0, 0); ent(boxGeo(0.06, 0.6, 0.06), x+0.25, F+0.7, z, "#3a3a3e", 0, 0, -0.3); B(0.06, 0.04, 0.5, x+0.33, F+1.02, z, "#3a3a3e"); addCol(x-0.48, x+0.48, z-0.25, z+0.25, F-0.05, F+1.05); }
+      C(0.22, 0.06, x+0.22, F+0.35, z, "#2a2a2a", 18, Math.PI/2, 0, 0); ent(boxGeo(0.06, 0.6, 0.05), x+0.25, F+0.7, z, "#3a3a3e", 0, 0, -0.3); B(0.06, 0.04, 0.5, x+0.33, F+1.02, z, "#3a3a3e"); addCol(x-0.48, x+0.48, z-0.25, z+0.25, F-0.05, F+1.05); }
     pic(s, F, 6.6, 5.95, 1.7, "front", 0.9, 0.6, "#2a2a2a", (c, W, H)=>{ c.fillStyle="#1e1e1e"; c.fillRect(0, 0, W, H); say(c, "ERIE OTTERS", W/2, H*0.4, W*0.76, H*0.22, "#d0a83a", "900"); say(c, "SEASON TICKET HOLDER", W/2, H*0.72, W*0.72, H*0.1, "#cfc6b4", "700"); });
-    pic(s, F, HL-WT-0.02, 2.0, 1.6, "in", 0.7, 0.5, "#6a4a30", (c, W, H)=>{ c.fillStyle="#5a8aa8"; c.fillRect(0, 0, W, H); c.fillStyle="#3a6a8a"; c.fillRect(0, H*0.55, W, H*0.45); c.fillStyle="#cfc6b4"; c.beginPath(); c.moveTo(W*0.3, H*0.55); c.lineTo(W*0.5, H*0.2); c.lineTo(W*0.5, H*0.55); c.fill(); });
+    pic(s, F, HL-WT-0.02, 4.6, 1.75, "in", 0.7, 0.5, "#6a4a30", (c, W, H)=>{ c.fillStyle="#5a8aa8"; c.fillRect(0, 0, W, H); c.fillStyle="#3a6a8a"; c.fillRect(0, H*0.55, W, H*0.45); c.fillStyle="#cfc6b4"; c.beginPath(); c.moveTo(W*0.3, H*0.55); c.lineTo(W*0.5, H*0.2); c.lineTo(W*0.5, H*0.55); c.fill(); });
     // the kitchen: the table and two chairs, the bowling trophy on the fridge
     u.b(0.9, 0.04, 0.9, 2.6, 7.2, F+0.74, "#7a7458"); for(const [pp, dd] of [[2.2, 6.8],[3.0, 6.8],[2.2, 7.6],[3.0, 7.6]]) u.b(0.04, 0.72, 0.04, pp, dd, F+0.36, "#5a5444"); u.col(2.13, 3.07, 6.73, 7.67, F-0.05, F+0.76);
     chairAt(s, F, 2.6, 6.33, "back", "#5a5444", "A CHAIR AT RAY'S TABLE"); chairAt(s, F, 2.6, 8.07, "front", "#5a5444", "A CHAIR AT RAY'S TABLE");
@@ -529,13 +531,70 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
       if(p.here===undefined || Math.hypot(c.x-x, c.z-z)>16){ const h=DayNight.state.hour; p.here=a<b ? (h>=a && h<b) : (h>=a || h<b); } return p.here; };
     const L=(o)=>Object.assign({h:1.0, skin:SKINS[1], hair:HAIRS[1], shirt:"#5a5a5a", pants:"#2a2e3a", shoes:"#2a2a2a"}, o);
     { const s=1, x=X(3.7), z=Z(s, 2.95); crowdAdd(G, {look:L({female:true, h:0.96, skin:SKINS[2], hair:"#1a1716", hairStyle:"pony", shirt:"#5a3a6a", long:true}),
-        x:x, z:z, y:FL0, yaw:U(s).yaw("in")+Math.PI, mode:"sit", sitY:0.515, sway:0.12, when:home(x, z, 18.5, 1.5)}); }
+        x:x, z:z, y:FL0, yaw:U(s).yaw("in")+Math.PI, mode:"sit", sitY:0.53, sway:0.12, when:home(x, z, 18.5, 1.5)}); }
     { const s=-1, x=X(5.05), z=Z(s, 6.9); crowdAdd(G, {look:L({skin:SKINS[1], hair:"#4a3020", beard:"#4a3020", beardStyle:"full", shirt:"#7a2a22", pants:"#3b4a66", belly:true}),
-        x:x, z:z, y:FL0, yaw:U(s).yaw("in")+Math.PI, mode:"sit", job:"recline", sitY:0.585, held:"can", drink:true, sway:0.1, when:home(x, z, 18, 23.5)}); }
+        x:x, z:z, y:FL0, yaw:U(s).yaw("in")+Math.PI, mode:"sit", job:"recline", sitY:0.47, held:"can", drink:true, sway:0.1, when:home(x, z, 18, 23.5)}); }
     { const s=1, x=XFR+0.88, z=Z(s, 6.0); crowdAdd(G, {look:L({skin:SKINS[0], hair:"#8d8a86", hairStyle:"recede", beard:"#9a958e", beardStyle:"short", shirt:"#6a7a5a", pants:"#5c5a52"}),
         x:x, z:z, y:FL1, yaw:U(s).yaw("front")+Math.PI, mode:"sit", sitY:0.4, sway:0.2, held:"can", drink:true, when:home(x, z, 13, 19.5)}); }
     { const s=-1, x=X(5.1), z=Z(s, 5.6); crowdAdd(G, {look:L({female:true, h:0.95, skin:SKINS[0], hair:"#6b4a2b", hairStyle:"bun", shirt:"#4a6a8a", long:true}),
-        x:x, z:z, y:FL1, yaw:U(s).yaw("out")+Math.PI, mode:"sit", sitY:0.515, sway:0.15, held:"book", when:home(x, z, 19, 22.5)}); } }
+        x:x, z:z, y:FL1, yaw:U(s).yaw("out")+Math.PI, mode:"sit", sitY:0.455, sway:0.15, held:"book", when:home(x, z, 19, 22.5)}); } }
+
+  /* ---- round 45: curtains, rugs, coats by the door, the kitchens' small things, a lamp by every slider, the wreath;
+     outside the gutters, the condensers out back, the meters, a picnic table and a grill on the back lawn ---- */
+  const DRAPE={"-1,0":["#7a4a2a","#6a3e22"], "1,0":["#3a4a6a","#2e3e5a"], "-1,1":["#c4b08a","#b4a07a"], "1,1":["#8a7a3a","#7a6a2e"]};
+  const RUG=(s, F, p, d, wp, wd, draw)=>{ const t=signTex(256, Math.round(256*wd/wp), draw), m=new T.Mesh(new T.PlaneGeometry(wd, wp),
+      new T.MeshStandardMaterial({map:t, roughness:0.95, transparent:true, alphaTest:0.5, polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-6}));
+    m.rotation.x=-Math.PI/2; m.rotation.z=Math.PI/2; m.position.set(X(d), F+0.026, Z(s, p)); m.matrixAutoUpdate=false; m.updateMatrix(); m.receiveShadow=true; scene.add(m); };
+  for(const k of [0, 1]) for(const s of [-1, 1]){ const F=k ? FL1 : FL0, u=U(s), [c0, c1]=DRAPE[s+","+k], key=s+","+k;
+    // a pair of curtains at each window, gathered in three folds, on a rod: the bedroom's back window, and both end windows
+    const panelP=(p, d)=>{ for(let i=0;i<3;i++) u.b(0.12, 1.32, 0.04, p-0.12+i*0.12, d+(i%2 ? 0.015 : 0), F+1.58, i%2 ? c1 : c0); };
+    const panelD=(p, d)=>{ for(let i=0;i<3;i++) u.b(0.04, 1.32, 0.12, p-(i%2 ? 0.015 : 0), d-0.12+i*0.12, F+1.58, i%2 ? c1 : c0); };
+    panelP(5.78, 11.71); panelP(7.82, 11.71); u.c(0.012, 2.6, 6.8, 11.68, F+2.27, "#6a5a44", 6, Math.PI/2, 0, 0);
+    for(const [d0, d1] of ENDW){ panelD(HL-WT-0.06, d0-0.22); panelD(HL-WT-0.06, d1+0.22); u.c(0.012, d1-d0+0.9, HL-WT-0.09, (d0+d1)/2, F+2.27, "#6a5a44", 6, 0, 0, Math.PI/2); }
+    // coats on hooks inside the door, a hat over one
+    { const x=X(CD)-WT-0.035, pz=1.52; u.b(0.42, 0.07, 0.025, pz, CD+WT+0.035, F+1.68, "#5a3e26");
+      for(const [o, col] of [[-0.11, ["#3a3a2e","#2a3a5a","#6a5a44","#3a4a3a"][(s+1)/2+2*k]],[0.1, ["#7a2a22","#8a6a3a","#2a2a2c","#5a3a2a"][(s+1)/2+2*k]]]) u.b(0.16, 0.72, 0.1, pz+o, CD+WT+0.09, F+1.28, col);
+      if(key==="-1,0") u.c(0.11, 0.08, pz+0.1, CD+WT+0.12, F+1.74, "#c8501e", 14); }
+    // the kitchen: a toaster and a towel on the range's handle, a clock over the fridge
+    if(key!=="1,0") u.b(0.16, 0.18, 0.26, 0.33, 6.95, F+0.99, "#8a8e90");
+    u.b(0.012, 0.3, 0.14, 0.726, 7.3, F+0.72, ["#b8442e","#3a6a8a","#c8a868","#3a6a3a"][(s+1)/2+2*k]);
+    { const p=0.07, d=8.13, y=F+2.17, zc=Z(s, p+0.02); C(0.13, 0.03, X(d), y, zc, "#2a2a2c", 22, Math.PI/2, 0, 0);
+      sign(0.17, 0.17, (c, W, H)=>{ c.fillStyle="#cfc6b4"; c.fillRect(0, 0, W, H); c.strokeStyle="#1a1a1a"; c.lineWidth=2;
+        for(let i=0;i<12;i++){ const a=i*Math.PI/6; c.beginPath(); c.moveTo(W/2+Math.sin(a)*W*0.38, H/2-Math.cos(a)*H*0.38); c.lineTo(W/2+Math.sin(a)*W*0.46, H/2-Math.cos(a)*H*0.46); c.stroke(); }
+        c.lineWidth=3; c.beginPath(); c.moveTo(W/2, H/2); c.lineTo(W/2+W*0.2*Math.sin(1+k+s), H/2-H*0.2*Math.cos(1+k+s)); c.moveTo(W/2, H/2); c.lineTo(W/2+W*0.34*Math.sin(4+s), H/2-H*0.34*Math.cos(4+s)); c.stroke(); },
+        X(d), y, Z(s, p+0.047), s>0 ? 0 : Math.PI, false, 90); }
+    // a lamp by the slider outside, on after dark
+    { const lz=Z(s, SL[0]-0.32), y=F+2.05; RB(0.1, 0.2, 0.1, XFR+0.06, y, lz, "#2a2a2c", 0, 0.02); push("rn_glow", new T.CylinderGeometry(0.035, 0.035, 0.11, 10), XFR+0.13, y-0.02, lz, 0, "#ffffff");
+      const L={x:XFR+0.5, y:y-0.1, z:lz, color:0xffd8a0, intensity:0, dist:5, decay:1.6, mothy:true}; LAMPS.push(L); APTS.lamps.push(L); } }
+  // the rugs: Dale's braided oval under his coffee table, Gina's striped one by the futon, a round one by Ray's recliner
+  RUG(-1, FL0, 5.95, 3.0, 1.3, 1.9, (c, W, H)=>{ for(let k=0;k<9;k++){ c.fillStyle=["#7a3a22","#5a4a2e","#8a6a3a","#3a4a3a"][k%4]; c.beginPath(); c.ellipse(W/2, H/2, W/2*(1-k/9.5), H/2*(1-k/9.5), 0, 0, 7); c.fill(); } });
+  RUG(1, FL0, 6.1, 3.0, 1.4, 2.0, (c, W, H)=>{ for(let k=0;k<12;k++){ c.fillStyle=["#c8a03a","#3a5a8a","#b8442e","#cfc6b4"][k%4]; c.fillRect(0, k*H/12, W, H/12+1); } });
+  RUG(1, FL1, 6.4, 3.0, 1.5, 1.5, (c, W, H)=>{ for(let k=0;k<6;k++){ c.fillStyle=["#6a5a2a","#8a6a2a","#5a4a22"][k%3]; c.beginPath(); c.arc(W/2, H/2, W/2*(1-k/6.5), 0, 7); c.fill(); } });
+  // a wreath on the Hallorans' door, a pair of boots outside Ray's
+  if(DG["201"]){ const g=DG["201"], m=new T.Mesh(new T.TorusGeometry(0.17, 0.045, 8, 20), new T.MeshStandardMaterial({color:0x2e4a26, roughness:0.9}));
+    m.position.set(0.46, 1.5, 0.085); g.add(m); const bw=new T.Mesh(new T.BoxGeometry(0.1, 0.06, 0.03), new T.MeshStandardMaterial({color:0x8a2a22, roughness:0.7})); bw.position.set(0.46, 1.33, 0.12); g.add(bw); }
+  for(const o of [0.44, 0.58]) RB(0.12, 0.24, 0.28, X(CD)+o, FL1+0.14, Z(1, 1.4), "#4a3420", 0, 0.03);
+  // gutters along both eaves, a downspout at each corner
+  { const XE0=XB-0.5, XE1=XFR+1.9, ZL=ZN-ZS+0.6;
+    for(const [x, sg] of [[XE1+0.07, 1],[XE0-0.07, -1]]){ const y=yTop(x-sg*0.07)-0.17; B(0.12, 0.11, ZL, x, y, ZC, "#b8b2a6");
+      for(const z of [ZS-0.2, ZN+0.2]){ const g=gy(x, z); B(0.08, y-g, 0.08, x, (y+g)/2, z, "#b8b2a6"); B(0.3, 0.04, 0.16, x+sg*0.1, g+0.02, z, "#8a867e"); addCol(x-0.05, x+0.05, z-0.05, z+0.05, g-0.3, y); } } }
+  // the condensers out back on their pads, the line sets into the wall
+  for(const s of [-1, 1]) for(const p of [3.2, 4.3]){ const x=XB-0.75, z=Z(s, p), g=gy(x, z);
+    B(0.86, 0.06, 0.86, x, g+0.03, z, "#8a867e"); RB(0.72, 0.72, 0.72, x, g+0.42, z, "#9a9a92", 0, 0.03); C(0.26, 0.02, x, g+0.79, z, "#2a2a2c", 18);
+    B(0.02, 0.6, 0.66, x-0.37, g+0.4, z, "#6a6a64"); C(0.012, 0.5, XB-0.2, g+0.6, z+0.2, "#2a2a2c", 6, 0, 0, Math.PI/2);
+    addCol(x-0.38, x+0.38, z-0.38, z+0.38, g-0.3, g+0.8); }
+  // the meters on the north end, one to a unit
+  { const z=ZS-0.02, g=gy(694, ZS-0.5); B(1.5, 0.62, 0.04, 693.9, g+1.55, z, "#6a6c68");
+    for(let i=0;i<4;i++){ const x=693.35+i*0.37; B(0.26, 0.36, 0.08, x, g+1.55, z-0.06, "#8a8e90"); C(0.08, 0.06, x, g+1.6, z-0.12, "#c8c4b8", 14, Math.PI/2, 0, 0); }
+    C(0.016, g+1.25-LY, 692.95, (g+1.25+LY)/2, z-0.04, "#5a5e60", 8); }
+  // the back lawn: a picnic table and a kettle grill
+  { const x=683.5, z=-1866.0, g=gy(x, z), L=1.8;
+    B(0.78, 0.05, L, x, g+0.74, z, "#7a5a3a"); for(const dz of [-0.7, 0.7]){ ent(boxGeo(0.06, 0.8, 0.07), x, g+0.38, z+dz, "#6a4a30", 0, 0, 0.5); ent(boxGeo(0.06, 0.8, 0.058), x, g+0.38, z+dz, "#6a4a30", 0, 0, -0.5); B(1.5, 0.06, 0.08, x, g+0.4, z+dz, "#6a4a30"); }
+    for(const sd of [-1, 1]){ B(0.26, 0.05, L, x+sd*0.6, g+0.45, z, "#7a5a3a"); addCol(x+sd*0.6-0.14, x+sd*0.6+0.14, z-L/2, z+L/2, g-0.3, g+0.46);
+      for(const o of [-0.45, 0.45]) addSeat(x+sd*0.6, z+o, g, sd<0 ? -Math.PI/2 : Math.PI/2, "THE PICNIC TABLE OUT BACK", false, 0.66); }
+    addCol(x-0.4, x+0.4, z-L/2, z+L/2, g+0.5, g+0.78);
+    const kx=685.4, kz=-1864.6, kg=gy(kx, kz); S(0.27, kx, kg+0.75, kz, "#1a1a1a"); for(let i=0;i<3;i++){ const a=i*2.09; ent(new T.CylinderGeometry(0.012, 0.012, 0.7, 6), kx+Math.sin(a)*0.15, kg+0.33, kz+Math.cos(a)*0.15, "#2a2a2a", Math.cos(a)*0.2, 0, -Math.sin(a)*0.2); }
+    addCol(kx-0.3, kx+0.3, kz-0.3, kz+0.3, kg-0.3, kg+1.0); }
 
   /* ---- what is built ---- */
   detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.8, metalness:0.03}), "birch-hollow", true);
@@ -546,6 +605,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
   const IN=(sd)=>[[695.6, Z(sd, 0.73)],[X(5.75), Z(sd, 0.73)]];             // (through a unit's door, and clear of the counter before turning)
   APTS.routes={
     "birch hollow: in off Hollow Road, across the lot, up the walk to the breezeway":[[731.0, MZ],[722.0, MZ],[712.5, MZ],[712.5, ZC],[705.0, ZC],[701.0, FR],[696.4, FR]],
+    "birch hollow: round the north end to the picnic table out back":[[709.6, -1873.0],[709.6, -1878.5],[702.0, -1878.5],[686.0, -1877.2],[685.2, -1872.0],[685.2, -1867.4]],
     "birch hollow: round the lot to the dumpster":[[712.5, ZC],[710.0, -1870.0],[710.0, -1874.6],[713.4, -1874.6]],
     "birch hollow: into 102, the kitchen, the bath":[[697.5, FR],[695.6, FR]].concat(IN(1), [[X(5.75), Z(1, 1.2)],[X(5.65), Z(1, 1.3)],[X(5.65), Z(1, 4.05)],[X(7.9), Z(1, 4.05)],[X(8.1), Z(1, 3.81)],[X(9.6), Z(1, 3.81)],[X(9.8), Z(1, 3.2)]]),
     "birch hollow: into 102, the living room, the bedroom":[[695.6, FR]].concat(IN(1), [[X(5.6), Z(1, 2.4)],[X(5.3), Z(1, 5.45)],[X(6.6), Z(1, 5.45)],[X(6.6), Z(1, 6.15)],[X(7.7), Z(1, 6.15)]]),

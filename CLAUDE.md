@@ -1362,3 +1362,22 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - The tenants (14q's crowd, added in 14mi) come and go by the hour through
   `home(x, z, from, to)`, decided only while you are 16 m or more away.
   `APTS.radios` join 20's `nearRadio`.
+
+## Round 45 notes
+
+- Hollow Road Books' cozy pass (14mh, the round 45 block before "what is
+  built"): the window seat on the low shelves under the south windows, the
+  coffee cart south of the door, footstools and throws at the armchairs, the
+  cat's basket by the hearth, lights strung along every beam (`rn_glow`
+  bulbs on a swagged cord), plants, prints either side of the stove's pipe,
+  the clock over the counter, a staff-picks card and a green lamp in each
+  front window, a floor lamp by the window seat, mums by the steps, and an
+  OPEN card on the door's group. Keep the aisles the routes walk clear.
+- Birch Hollow's round 45 block (14mi): curtains at every bedroom and end
+  window (`panelP` / `panelD`, three folds on a rod), rugs (`RUG`, a plane
+  at F+0.026 two steps up the ladder), coats on hooks inside each door, a
+  clock over each fridge, a lamp by every slider, the wreath on 201's door
+  (`DG`, each front door's group), gutters and downspouts, condensers out
+  back, the meter bank on the north end, and a picnic table and grill on
+  the back lawn. Pictures on an end wall keep off its windows (d 1.6..3.2
+  and 8.0..9.6).

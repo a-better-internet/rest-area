@@ -133,7 +133,11 @@ const BOOKS={routes:{}, lamps:[], radios:[], FL:0};
   for(const [o, z] of [[OP.n[0], BZ1-0.1],[OP.s[0], BZ0+0.1],[OP.s[1], BZ0+0.1]]){ push("glass", planeGeo(o[1]-o[0]-0.02, o[3]-o[2]-0.02, 0), (o[0]+o[1])/2, (o[2]+o[3])/2, z, 0, "#ffffff");
     for(const dz of [-0.06, 0.06]) B(0.025, o[3]-o[2]-0.02, 0.025, (o[0]+o[1])/2, (o[2]+o[3])/2, z+dz, TRIM); }
   // the door: a red one with a pane in it, a bell over it inside
-  makeDoor(XF(BX1-WT/2, -1826.52, Math.PI/2), 0, FL+0.01, 0, "HOLLOW ROAD BOOKS", false, 0, "vision", 0x7a2a22); addFlat(BX1-WT-0.02, BX1+0.02, -1827.5, -1826.5, FL);
+  { const DG=makeDoor(XF(BX1-WT/2, -1826.52, Math.PI/2), 0, FL+0.01, 0, "HOLLOW ROAD BOOKS", false, 0, "vision", 0x7a2a22);
+    // (an OPEN card hung on the door's street face on a cord: it swings with the leaf)
+    const t=signTex(200, 100, (c, W, H)=>{ c.fillStyle="#d8ccae"; c.fillRect(0, 0, W, H); c.strokeStyle="#7a2a22"; c.lineWidth=4; c.strokeRect(6, 6, W-12, H-12); c.fillStyle="#7a2a22"; fitText(c, "OPEN", W*0.8, H*0.6, W/2, H/2, "800", "Georgia, serif"); });
+    const cd=new T.Mesh(new T.BoxGeometry(0.26, 0.13, 0.006), [0,0,0,0,1,0].map(i=>i ? new T.MeshStandardMaterial({map:t, roughness:0.8}) : new T.MeshStandardMaterial({color:0x8a7a5a, roughness:0.8})));
+    cd.position.set(0.47, 1.2, 0.06); DG.add(cd); } addFlat(BX1-WT-0.02, BX1+0.02, -1827.5, -1826.5, FL);
   S(0.035, BX1-WT-0.12, FL+2.25, -1827.3, "#b8944a");
   // the floor, the ceiling
   { const ft=signTex(256, 256, (c, W, H)=>{ c.fillStyle="#5e4430"; c.fillRect(0, 0, W, H); for(let k=0;k<16;k++){ c.fillStyle=k%3 ? "rgba(0,0,0,0.10)" : "rgba(255,240,220,0.05)"; c.fillRect(0, k*16, W, 15); c.fillStyle="rgba(0,0,0,0.3)"; c.fillRect(0, k*16+15, W, 1); c.fillRect(((k*97)%W), k*16, 1, 16); } });
@@ -201,7 +205,7 @@ const BOOKS={routes:{}, lamps:[], radios:[], FL:0};
   { const x=IN.x0+0.42; for(const dz of [-0.2, 0.2]) B(0.04, 2.5, 0.04, x+0.18, FL+1.2, -1831.2+dz, "#7a5a3a", 0); for(let k=0;k<7;k++) B(0.03, 0.03, 0.42, x+0.18-k*0.0, FL+0.3+k*0.32, -1831.2, "#7a5a3a"); }
   for(const [x, z] of [[690.8, -1830.0],[690.8, -1824.6],[694.3, -1827.0]]){ C(0.006, 0.5, x, EH-0.4, z, "#2a2a2c", 6); ent(new T.CylinderGeometry(0.06, 0.2, 0.18, 16, 1, true), x, EH-0.7, z, "#2a4a3a");
     push("rn_glow", new T.SphereGeometry(0.05, 8, 6), x, EH-0.74, z, 0, "#ffffff");
-    LAMPS.push({x:x, y:EH-0.85, z:z, color:0xffdcaa, intensity:0.55, dist:6, decay:1.6, indoor:true}); }
+    LAMPS.push({x:x, y:EH-0.85, z:z, color:0xffcf98, intensity:0.55, dist:6, decay:1.6, indoor:true}); }
   for(const [z, words] of [[-1830.0, "FICTION · POETRY"],[-1824.6, "HISTORY · PENNSYLVANIA"]]) sign(0.9, 0.18, (c, W, H)=>{ c.fillStyle="#2a3a2a"; c.fillRect(0, 0, W, H); say(c, words, W/2, H/2, W*0.84, H*0.62, "#d8ccae", "700"); },
     689.4-0.035, FL+2.10, z, -Math.PI/2, false, 300);
   { for(const z of [-1830.0, -1824.6]){ C(0.006, EH-0.11-(FL+2.21), 689.39, (EH-0.11+FL+2.21)/2, z, "#2a2a2c", 6); B(0.02, 0.22, 0.94, 689.39, FL+2.10, z, "#5a3e26"); } }
@@ -272,7 +276,8 @@ const BOOKS={routes:{}, lamps:[], radios:[], FL:0};
     const row=(x0, z0, x1, z1, nx, nz)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.round(L/6.2));
       for(let k=0;k<=n;k++) for(const dep of [1.8, 6.5, 11.5, 16.5]){ if(q()<0.12) continue; const t=(k+q()*0.6)/n, x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);
         tree(dep<2 ? "edge" : q()<0.35 ? "hemlock" : q()<0.5 ? "pine" : "hard", x, z, 0.85+q()*0.4); } };
-    row(S0.x0, S0.z0, 682, S0.z0, 0, -1);      // (north only behind the apartments past it, 14mi) row(S0.x0, S0.z1, S0.x1, S0.z1, 0, 1); row(S0.x0, S0.z0, S0.x0, S0.z1, -1, 0);
+    // (north only behind the apartments past it, 14mi)
+    row(S0.x0, S0.z0, 682, S0.z0, 0, -1); row(S0.x0, S0.z1, S0.x1, S0.z1, 0, 1); row(S0.x0, S0.z0, S0.x0, S0.z1, -1, 0);
     // and a few in the yard: a maple over the north side, a pair of lilacs by the porch
     tree("lawn", 680.5, -1814.5, 1.0); tree("lawn", 677.0, -1841.0, 0.9);
     for(const [x, z] of [[697.6, -1834.4],[697.6, -1819.6],[684.6, -1835.0]]) FOREST.plant("shrub", x, z, {scale:0.9, solid:false}); }
@@ -283,6 +288,80 @@ const BOOKS={routes:{}, lamps:[], radios:[], FL:0};
     crowdAdd(G, {look:L({skin:SKINS[0], hair:"#8d8a86", beard:"#9a958e", beardStyle:"full", shirt:"#6a5a3a", pants:"#4a4a3a", long:true}), x:693.9, z:-1822.15, y:FL, yaw:Math.PI, mode:"read", sway:0.3, dayOnly:true, held:"book"});
     crowdAdd(G, {look:L({female:true, h:0.96, hair:"#4a3020", hairStyle:"long", shirt:"#7a4a5a", long:true}), x:691.6, z:-1829.15, y:FL, yaw:Math.PI, mode:"read", sway:0.2, dayOnly:true, held:"book"});
     crowdAdd(G, {look:L({hair:"#2b1e14", beard:"#2b1e14", beardStyle:"short", shirt:"#3a4a5a", pants:"#3b4a66", long:true}), x:688.35, z:-1828.55, y:FL, yaw:SA+Math.PI, mode:"sit", sitY:0.535, sway:0.2, held:"book"}); }
+
+  /* ---- round 45: the cozy things. A window seat, the coffee cart, footstools and throws by the stove, the cat's basket,
+     lights strung along the beams, plants, prints by the stove, the clock, the staff picks lit in the windows ---- */
+  const chairP=(x, z, s)=>{ const c=Math.cos(s), sn=Math.sin(s); return (lx, lz)=>[x+lx*c+lz*sn, z-lx*sn+lz*c]; };
+  // the window seat along the low shelves under the south windows: a long cushion, pillows against the glass, a folded quilt
+  { const z=IN.z0+0.2;
+    for(const [a, b] of [[OP.s[0][0]-0.05, OP.s[0][1]+0.05],[OP.s[1][0]-0.05, OP.s[1][1]+0.05]]){ RB(b-a, 0.09, 0.34, (a+b)/2, FL+0.75, z, "#7a3a2e", 0, 0.035);
+      for(let k=0;k<Math.round((b-a)/0.3);k++) B(0.012, 0.004, 0.3, a+0.15+k*0.3, FL+0.797, z, "#5a2a22"); }
+    for(const [x, c, ry] of [[OP.s[0][0]+0.22, "#c8a868", 0.2],[OP.s[0][1]-0.2, "#3a5a4a", -0.25],[OP.s[1][0]+0.22, "#8a5a6a", 0.15]]) RB(0.34, 0.3, 0.12, x, FL+0.94, IN.z0+0.1, c, ry, 0.05);
+    RB(0.42, 0.08, 0.3, (OP.s[0][0]+OP.s[0][1])/2+0.1, FL+0.835, z+0.01, "#4a5a7a", 0, 0.03); for(let k=0;k<3;k++) B(0.43, 0.005, 0.02, (OP.s[0][0]+OP.s[0][1])/2+0.1, FL+0.877, z-0.1+k*0.1, "#c8b898");
+    books(0.2, 0.12, 0.15, (OP.s[1][0]+OP.s[1][1])/2, FL+0.857, z+0.02, 0, 1); }
+  // the coffee cart against the front wall south of the door: the percolator, mugs, the honor jar, its card
+  { const x=IN.x1-0.25, z=-1828.3, top=FL+0.86;
+    RB(0.44, 0.04, 1.1, x, top-0.02, z, "#6a4a2e", 0, 0.012); B(0.4, 0.03, 1.04, x, FL+0.3, z, "#5a3e26");
+    for(const dz of [-0.5, 0.5]) for(const dx of [-0.18, 0.18]) B(0.035, top-0.04-FL, 0.035, x+dx, (top-0.04+FL)/2, z+dz, "#4a321e");
+    C(0.075, 0.3, x, top+0.15, z-0.3, "#a8acae", 16); C(0.05, 0.04, x, top+0.32, z-0.3, "#8a8e90", 14); S(0.02, x, top+0.35, z-0.3, "#2a2a2c"); B(0.03, 0.12, 0.02, x-0.09, top+0.16, z-0.3, "#2a2a2c");
+    for(let k=0;k<5;k++){ const mx=x+((k%2) ? 0.08 : -0.06), mz=z-0.02+k*0.1; C(0.04, 0.09, mx, top+0.045, mz, ["#c8b898","#7a2a22","#2a4a6a","#c8a868","#3a5a3a"][k], 12); }
+    ent(new T.CylinderGeometry(0.06, 0.06, 0.14, 14, 1, true), x+0.05, top+0.07, z+0.42, "#9ab0b4"); C(0.062, 0.015, x+0.05, top+0.145, z+0.42, "#b8944a", 14);
+    for(let k=0;k<4;k++) C(0.012, 0.004, x+0.05+(k-1.5)*0.012, top+0.01+k*0.006, z+0.42, "#b8944a", 8);
+    C(0.04, 0.07, x-0.1, top+0.035, z+0.3, "#d4ccb8", 10);
+    B(0.012, 0.16, 0.3, x+0.12, top+0.08, z+0.12, "#c8b898");
+    sign(0.28, 0.14, (c, W, H)=>{ c.fillStyle="#d8ccae"; c.fillRect(0, 0, W, H); say(c, "COFFEE", W/2, H*0.34, W*0.8, H*0.3, "#4a2a1e", "800"); say(c, "pay what you like", W/2, H*0.7, W*0.78, H*0.2, "#6a4a2e", "600", "Georgia, serif"); },
+      x+0.11, top+0.08, z+0.12, -Math.PI/2, false, 160);
+    addCol(x-0.23, x+0.23, z-0.56, z+0.56, FL-0.05, top); }
+  // a mat inside the door
+  B(0.6, 0.02, 0.95, IN.x1-0.42, FL+0.02, -1827.0, "#4a3a2a");
+  // footstools before the armchairs, a plaid throw over one and a crocheted one over the other
+  for(const [x, z, s, col] of [[688.35, -1828.55, SA, "#5a2a22"],[688.35, -1825.45, SB, "#3a3a2a"]]){ const P=chairP(x, z, s), [fx, fz]=P(0, -0.62);
+    RB(0.44, 0.24, 0.4, fx, FL+0.25, fz, col, s, 0.06); for(const [a, b] of [[-0.17, -0.15],[0.17, -0.15],[-0.17, 0.15],[0.17, 0.15]]){ const [lx, lz]=chairP(fx, fz, s)(a, b); C(0.02, 0.14, lx, FL+0.07, lz, "#2a1a10", 8); }
+    addColOB(fx, fz, s, 0.22, 0.2, FL-0.05, FL+0.37); }
+  { const P=chairP(688.35, -1828.55, SA), [px, pz]=P(0.0, 0.43); for(let k=0;k<5;k++) B(0.4, 0.02, 0.035, px, FL+0.46+k*0.09, pz, k%2 ? "#c8a868" : "#2a4a3a", SA); }
+  { const P=chairP(688.35, -1825.45, SB), [px, pz]=P(0.36, 0.06); ent(boxGeo(0.24, 0.07, 0.62), px, FL+0.675, pz, "#c8b088", 0, SB, 0);
+    const [bx, bz]=P(0.68, 0.0); ent(new T.CylinderGeometry(0.16, 0.13, 0.2, 14, 1, true), bx, FL+0.1, bz, "#7a5a2e"); C(0.15, 0.02, bx, FL+0.02, bz, "#6a4a2a", 14);
+    for(let k=0;k<4;k++) S(0.055, bx+(k%2 ? 0.05 : -0.05), FL+0.17+(k>1 ? 0.06 : 0), bz+(k<2 ? 0.04 : -0.05), ["#b8442e","#d0a03a","#4a6a8a","#8a5a6a"][k]); addCol(bx-0.16, bx+0.16, bz-0.16, bz+0.16, FL-0.05, FL+0.25); }
+  // the cat's basket by the hearth, a cushion in it, a toy mouse
+  { const x=687.05, z=-1828.4; ent(new T.CylinderGeometry(0.25, 0.22, 0.14, 18, 1, true), x, FL+0.07, z, "#8a6a3a"); C(0.23, 0.04, x, FL+0.04, z, "#8a4a4a", 18); ent(new T.TorusGeometry(0.235, 0.025, 6, 18), x, FL+0.14, z, "#7a5a2e", Math.PI/2, 0, 0);
+    S(0.03, x+0.35, FL+0.03, z+0.12, "#8a8a86"); addCol(x-0.25, x+0.25, z-0.25, z+0.25, FL-0.05, FL+0.16); }
+  // lights strung along every beam, swagged between ties
+  for(let x=IN.x0+1.2; x<IN.x1-0.5; x+=1.8){ const z0=IN.z0+0.3, z1=IN.z1-0.3, n=Math.round((z1-z0)/0.45), yb=EH-0.27;
+    let pz=z0, py=yb;
+    for(let k=0;k<=n;k++){ const z=z0+(z1-z0)*k/n, t=(k%3)/3, y=yb-0.09*Math.sin(Math.PI*t);
+      if(k>0){ const a=V3(x, py, pz), b=V3(x, y, z), d=b.clone().sub(a), Ld=d.length(); ME.push({geo:new T.CylinderGeometry(0.004, 0.004, Ld, 4), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color("#2a2a2c")}); }
+      push("rn_glow", new T.SphereGeometry(0.02, 6, 4), x, y-0.03, z, 0, "#ffffff"); pz=z; py=y; } }
+  // plants: a pothos trailing off the long case, a fern on the window seat's shelf, a spider plant hung in each front window
+  { const x=691.6, z=-1830.0; C(0.1, 0.15, x, FL+1.83, z, "#9a4a2a", 14); S(0.16, x, FL+1.98, z, "#3a5a2e");
+    for(const sd of [-1, 1]) for(let k=0;k<7;k++) S(0.045, x+0.25*Math.sin(k*1.3)*0.6, FL+1.72-k*0.09, z+sd*0.335, k%2 ? "#3a6a2e" : "#2e5a26"); }
+  { const x=(OP.s[0][1]+OP.s[1][0])/2, z=IN.z0+0.2; C(0.12, 0.18, x, FL+0.79, z, "#8a5a3a", 14); for(let k=0;k<8;k++){ const a=k*0.785; ent(boxGeo(0.06, 0.02, 0.38), x+Math.sin(a)*0.12, FL+0.98, z+Math.cos(a)*0.12, "#3a6a2e", -0.6*Math.cos(a), a, 0); } }
+  for(const z of [-1830.7, -1823.3]){ const x=IN.x1-0.32; C(0.004, 0.5, x, EH-0.4, z, "#2a2a2c", 4); C(0.11, 0.14, x, EH-0.72, z, "#8a5a3a", 12); for(let k=0;k<10;k++){ const a=k*0.63; ent(boxGeo(0.02, 0.015, 0.34), x+Math.sin(a)*0.16, EH-0.78-(k%3)*0.03, z+Math.cos(a)*0.16, "#5a8a3a", 0.7*Math.cos(a), a, 0); } }
+  // two prints either side of the stove's pipe: an old map of the county, the lake in winter
+  for(const [z, draw] of [[-1828.25, (c, W, H)=>{ c.fillStyle="#c8b48a"; c.fillRect(0, 0, W, H); c.strokeStyle="#6a4a2a"; c.lineWidth=2; for(let k=0;k<6;k++){ c.beginPath(); c.moveTo(W*0.1, H*(0.2+k*0.12)); c.bezierCurveTo(W*0.4, H*(0.1+k*0.13), W*0.6, H*(0.3+k*0.1), W*0.9, H*(0.2+k*0.12)); c.stroke(); }
+      c.fillStyle="#6a8aa0"; c.beginPath(); c.ellipse(W*0.62, H*0.45, W*0.14, H*0.09, 0.3, 0, 7); c.fill(); }],
+    [-1825.75, (c, W, H)=>{ c.fillStyle="#9ab0c0"; c.fillRect(0, 0, W, H); c.fillStyle="#c8ccc4"; c.fillRect(0, H*0.58, W, H*0.42); c.fillStyle="#3a4a3a"; for(let k=0;k<7;k++){ c.beginPath(); c.moveTo(W*(0.05+k*0.14), H*0.6); c.lineTo(W*(0.12+k*0.14), H*0.3); c.lineTo(W*(0.19+k*0.14), H*0.6); c.fill(); } }]]){
+    B(0.03, 0.66, 0.5, IN.x0+0.04, FL+1.6, z, "#3a2a1a"); sign(0.42, 0.58, draw, IN.x0+0.065, FL+1.6, z, Math.PI/2, false, 120); }
+  // the clock over the counter, ticking along
+  { const x=693.0, z=IN.z1-0.02; C(0.17, 0.04, x, FL+2.05, z-0.02, "#4a321e", 24, Math.PI/2, 0, 0);
+    sign(0.22, 0.22, (c, W, H)=>{ c.fillStyle="#d8ccae"; c.fillRect(0, 0, W, H); c.strokeStyle="#2a2a2a"; c.lineWidth=2;
+      for(let k=0;k<12;k++){ const a=k*Math.PI/6; c.beginPath(); c.moveTo(W/2+Math.sin(a)*W*0.4, H/2-Math.cos(a)*H*0.4); c.lineTo(W/2+Math.sin(a)*W*0.46, H/2-Math.cos(a)*H*0.46); c.stroke(); }
+      c.lineWidth=3; c.beginPath(); c.moveTo(W/2, H/2); c.lineTo(W/2+W*0.18, H/2-H*0.12); c.moveTo(W/2, H/2); c.lineTo(W/2-W*0.05, H/2-H*0.34); c.stroke(); }, x, FL+2.05, z-0.045, Math.PI, false, 110); }
+  // the staff picks in each front window, a card for the street and a green-shaded lamp
+  for(const o of [OP.e[0], OP.e[2]]){ const zl=o[0]+0.32, zc=(o[0]+o[1])/2+0.25, x=IN.x1-0.3;
+    B(0.012, 0.16, 0.3, x+0.08, FL+0.44, zc, "#c8b898");
+    sign(0.28, 0.14, (c, W, H)=>{ c.fillStyle="#d8ccae"; c.fillRect(0, 0, W, H); say(c, "STAFF PICKS", W/2, H*0.4, W*0.8, H*0.34, "#2a3a2a", "800"); say(c, "ask us why", W/2, H*0.75, W*0.6, H*0.18, "#6a4a2e", "600", "Georgia, serif"); },
+      x+0.095, FL+0.44, zc, Math.PI/2, false, 160);
+    C(0.06, 0.02, x, FL+0.37, zl, "#b8944a", 12); C(0.01, 0.22, x, FL+0.47, zl, "#b8944a", 6); ent(new T.CylinderGeometry(0.035, 0.09, 0.08, 14, 1, true), x, FL+0.6, zl, "#2a5a3a", 0, 0, 0);
+    push("rn_glow", new T.SphereGeometry(0.025, 6, 4), x, FL+0.58, zl, 0, "#ffffff");
+    LAMPS.push({x:x, y:FL+0.55, z:zl, color:0xffc890, intensity:0.28, dist:3, decay:1.6, indoor:true}); }
+  // a floor lamp by the window seat, its shade a warm parchment
+  { const x=692.0, z=IN.z0+0.72; C(0.15, 0.03, x, FL+0.015, z, "#2a2a2c", 16); C(0.014, 1.45, x, FL+0.74, z, "#b8944a", 8);
+    ent(new T.CylinderGeometry(0.14, 0.22, 0.28, 18, 1, true), x, FL+1.58, z, "#d0b888"); push("rn_glow", new T.SphereGeometry(0.04, 6, 4), x, FL+1.5, z, 0, "#ffffff");
+    addCol(x-0.15, x+0.15, z-0.15, z+0.15, FL-0.05, FL+1.6); LAMPS.push({x:x, y:FL+1.45, z:z, color:0xffc890, intensity:0.35, dist:4.5, decay:1.6, indoor:true}); }
+  // stacks of books on the floor at the long case's end, waiting to be shelved
+  for(const [x, z, n] of [[693.66, -1830.42, 7],[693.7, -1829.62, 5]]) for(let k=0;k<n;k++) B(0.2+((k*7)%3)*0.02, 0.045, 0.27, x+((k*5)%3-1)*0.01, FL+0.025+k*0.046, z, ["#6a2a22","#2a3a5a","#3a5a3a","#8a6a3a","#4a2a3a","#2a4a4a"][(k+n)%6], ((k*3)%5-2)*0.08);
+  // a pair of potted mums either side of the steps out front
+  for(const z of [-1828.72, -1825.28]){ C(0.17, 0.26, 698.22, FL+0.13, z, "#8a5a3a", 14); S(0.2, 698.22, FL+0.36, z, z<-1827 ? "#b8602a" : "#c8a03a"); addCol(698.05, 698.39, z-0.17, z+0.17, FL-0.05, FL+0.5); }
 
   /* ---- what is built ---- */
   detailMesh(ME, new T.MeshStandardMaterial({vertexColors:true, roughness:0.78, metalness:0.03}), "hollow-road-books", true);
