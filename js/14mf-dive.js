@@ -384,7 +384,7 @@ const DOCKZ=[-1906.2, -1903.8];                                   // (the Dive's
     crowdAdd(G, {look:L({shirt:"#2a2a2a", hair:HAIRS[3]}), x:918.6, z:BZF-1.0, y:FL, yaw:0, mode:"stand", sway:0.4});
     crowdAdd(G, {look:L({shirt:"#7a2a2a", cap:"#2a3a5a"}), x:916.55, z:BZF+0.62, y:FL, yaw:Math.PI, mode:"sit", sitY:0.815, held:"pint", drink:true, sway:0.3});
     crowdAdd(G, {look:L({female:true, shirt:"#3a5a7a", long:true}), x:919.55, z:BZF+0.62, y:FL, yaw:Math.PI, mode:"sit", sitY:0.815, held:"can", drink:true, sway:0.3});
-    crowdAdd(G, {look:L({shirt:"#d8d0c0", cap:"#c84a3a"}), x:TX+0.2, z:TZ-1.3, y:TG+1.12, yaw:Math.PI/2, mode:"stand", sway:0.3, yAt:()=>TG+1.12});
+    crowdAdd(G, {look:L({shirt:"#d8d0c0", cap:"#c84a3a"}), x:TX+0.2, z:TZ-1.3, y:TG+1.12, yaw:Math.PI/2, mode:"stand", sway:0.3, yAt:()=>TG+1.12, inside:true});      // (inside: the cook in the truck, whose collider is all of it)
     { const [x, z]=[PICNIC[0][0]-0.45, PICNIC[0][1]+0.68], g=gyAt(x, z); crowdAdd(G, {look:L({shirt:"#4a6a3a"}), x:x, z:z, y:g, yaw:Math.PI, mode:"sit", sitY:0.515, held:"can", drink:true, sway:0.3}); }
     { const [x, z]=[PICNIC[0][0]+0.45, PICNIC[0][1]-0.68], g=gyAt(x, z); crowdAdd(G, {look:L({female:true, shirt:"#c88a5a"}), x:x, z:z, y:g, yaw:0, mode:"sit", sitY:0.515, held:"cup", drink:true, sway:0.3}); }
     { const [x, z]=[PICNIC[1][0]+0.45, PICNIC[1][1]+0.68], g=gyAt(x, z); crowdAdd(G, {look:L({shirt:"#2a4a6a", cap:"#2a2a2a"}), x:x, z:z, y:g, yaw:Math.PI, mode:"sit", sitY:0.515, sway:0.3}); }

@@ -620,7 +620,15 @@ const YARD_HOOPS=[];
     { const st=S[0], sh=new T.Shape(); sh.moveTo(-st.gw, st.gy); sh.lineTo(-st.cw, st.cy); sh.lineTo(0, st.ky); sh.lineTo(st.cw, st.cy); sh.lineTo(st.gw, st.gy); sh.lineTo(-st.gw, st.gy);
       e(new T.ExtrudeGeometry(sh, {depth:0.045, bevelEnabled:false}).translate(0, 0, st.z), "#8e9496");
       e(boxGeo(0.62, 0.08, 0.05), "#5a4a36", new T.Matrix4().makeTranslation(0, st.gy-0.07, st.z+0.07)); }               // (the hardwood pad under the clamps)
-    for(let k=0;k<7;k++) e(boxGeo(0.13, 0.025, 2.9), k%2 ? "#7a6448" : "#86704f", new T.Matrix4().makeTranslation(-0.42+k*0.14, -0.065, -0.45));
+    // the sole: a floor across the inside at the waterline, its edge on the inner skin at every station, so the lake never
+    //  shows in the bottom of the boat (the hull floats with its waterline at y 0); the floorboards on it
+    { const Y=0.06, P=[], I=[], hw=(st)=>{ const c=Math.max(0, Y>=st.cy ? st.cw+(st.gw-st.cw)*(Y-st.cy)/(st.gy-st.cy) : (Y>st.ky ? st.cw*(Y-st.ky)/(st.cy-st.ky) : 0))-0.03; return Math.max(0, c); };
+      for(const st of S){ const w=hw(st); P.push(-w, Y, st.z, w, Y, st.z); }
+      for(let i=0;i<NS;i++){ const k=i*2; I.push(k, k+2, k+1, k+1, k+2, k+3); }
+      const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(P, 3)); g.setIndex(I); g.computeVertexNormals();
+      if(g.attributes.normal.getY(0)<0){ for(let i=0;i<I.length;i+=3){ const t=I[i]; I[i]=I[i+1]; I[i+1]=t; } g.setIndex(I); g.computeVertexNormals(); }
+      e(g, "#7e8486"); }
+    for(let k=0;k<7;k++) e(boxGeo(0.13, 0.025, 2.9), k%2 ? "#7a6448" : "#86704f", new T.Matrix4().makeTranslation(-0.42+k*0.14, 0.08, -0.45));
     const thw=(z, d, c)=>{ const st=SKIFF.station((z+SKIFF.L/2)/SKIFF.L), w=2*(st.cw+(st.gw-st.cw)*((SKIFF.ST-st.cy)/(st.gy-st.cy)))-0.06;
       e(boxGeo(w, 0.04, d), c, new T.Matrix4().makeTranslation(0, SKIFF.ST-0.02, z)); return w; };
     const ws=thw(-SKIFF.L/2+0.42, 0.62, seat); e(boxGeo(ws-0.04, SKIFF.ST+0.02, 0.03), "#8e9496", new T.Matrix4().makeTranslation(0, SKIFF.ST/2-0.03, -SKIFF.L/2+0.74));   // (the stern seat's locker front)
@@ -628,8 +636,8 @@ const YARD_HOOPS=[];
     // the bow deck, a small casting platform under the gunwale; rod holders on the gunwales; an anchor and its line; a tackle box, a cooler
     { const st=SKIFF.station(0.86); e(boxGeo(st.gw*2-0.08, 0.03, 0.55), "#8e9496", new T.Matrix4().makeTranslation(0, st.gy-0.06, st.z+0.18)); }
     for(const s of [-1, 1]){ const st=SKIFF.station(0.30); e(new T.CylinderGeometry(0.022, 0.018, 0.18, 8), "#2a2a2c", new T.Matrix4().compose(V3(s*(st.gw-0.06), st.gy-0.02, st.z), new T.Quaternion().setFromEuler(new T.Euler(-0.5, 0, 0)), V3(1,1,1))); }
-    e(new T.CylinderGeometry(0.07, 0.07, 0.24, 10), "#3a3e40", new T.Matrix4().makeTranslation(0.22, -0.03, 1.1)); e(new T.TorusGeometry(0.12, 0.016, 6, 14), "#c8b898", new T.Matrix4().compose(V3(0.22, -0.04, 1.1), new T.Quaternion().setFromEuler(new T.Euler(Math.PI/2, 0, 0)), V3(1,1,1)));
-    e(rboxGeo(0.36, 0.16, 0.20, 0.03, 2), "#2a5a3a", new T.Matrix4().makeTranslation(-0.30, 0.03, -0.75)); e(rboxGeo(0.46, 0.30, 0.30, 0.04, 2), "#c8b48a", new T.Matrix4().makeTranslation(0.25, 0.10, 0.6));
+    e(new T.CylinderGeometry(0.07, 0.07, 0.24, 10), "#3a3e40", new T.Matrix4().makeTranslation(0.22, 0.165, 1.1)); e(new T.TorusGeometry(0.12, 0.016, 6, 14), "#c8b898", new T.Matrix4().compose(V3(0.22, 0.08, 1.1), new T.Quaternion().setFromEuler(new T.Euler(Math.PI/2, 0, 0)), V3(1,1,1)));
+    e(rboxGeo(0.36, 0.16, 0.20, 0.03, 2), "#2a5a3a", new T.Matrix4().makeTranslation(-0.30, 0.145, -0.75)); e(rboxGeo(0.46, 0.30, 0.30, 0.04, 2), "#c8b48a", new T.Matrix4().makeTranslation(0.25, 0.215, 0.6));
     const m=new T.Mesh(mergeEntries(E), new T.MeshStandardMaterial({vertexColors:true, roughness:0.45, metalness:0.45})); m.castShadow=true; m.receiveShadow=true; return m; };
   // its outboard: on the transom's top, its cowling out behind; `run` gives the prop as its own group to spin, and the tiller
   SKIFF.motor=(run)=>{ const E=[], e=(geo, x, y, z, c, rx)=>E.push({geo:geo, matrix:new T.Matrix4().compose(V3(x, y, z), new T.Quaternion().setFromEuler(new T.Euler(rx||0, 0, 0)), V3(1,1,1)), color:new T.Color(c)});

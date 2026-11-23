@@ -20,7 +20,7 @@ const path=require("path"), { chromium } = require("playwright"); const ROOT=pat
     const rc=new T.Raycaster(); rc.far=0.8; const back=[], table=[];
     const hit=(o, d)=>{ rc.set(o, d); const h=rc.intersectObjects(ms, false); return h.length ? h[0].distance : 9; };
     for(const s of SEATS){ if(s.lie) continue; const f=new T.Vector3(-Math.sin(s.yaw), 0, -Math.cos(s.yaw)), bk=f.clone().negate();
-      { const o=new T.Vector3(s.x, s.y+0.9, s.z), F=hit(o, f), Bk=hit(o, bk); if(F<0.42 && Bk>0.6) back.push([s.label, +s.x.toFixed(2), +s.z.toFixed(2), +s.y.toFixed(2), +s.yaw.toFixed(2)]); }
+      { const o=new T.Vector3(s.x, s.y+0.9, s.z), F=hit(o, f), Bk=hit(o, bk); if(F<0.42 && Bk>0.6 && !/STOOL/.test(s.label||"")) back.push([s.label, +s.x.toFixed(2), +s.z.toFixed(2), +s.y.toFixed(2), +s.yaw.toFixed(2)]); }
       if(/TABLE|DESK|COUNTER|ISLAND|BAR|BOOTH|PICNIC/.test(s.label||"")){ const o=new T.Vector3(s.x, s.y+0.72, s.z), F=hit(o, f), Bk=hit(o.clone().addScaledVector(bk, 0.32), bk);
         if(Bk<0.6 && F>0.7) table.push([s.label, +s.x.toFixed(2), +s.z.toFixed(2), +s.y.toFixed(2), +s.yaw.toFixed(2)]); } }
     return {n:SEATS.length, back:back, table:table}; });

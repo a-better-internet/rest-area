@@ -1381,3 +1381,37 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   back, the meter bank on the north end, and a picnic table and grill on
   the back lawn. Pictures on an end wall keep off its windows (d 1.6..3.2
   and 8.0..9.6).
+
+## Round 46 notes
+
+- The far canopy shell is on the 16 m ground's own lattice across `RING_FAR`
+  (07: `shell(RING_FAR, 16, …)`, then 32 m outside it). On 32 m one shell
+  triangle bridged a notch between two 16 m crests and showed against the
+  sky as a green sliver. A shell over a ring of ground is never coarser
+  than that ground.
+- Ridge Lane and Hollow Ridge Trail are 14mj (`RIDGE`), on `EAST.lane` (04:
+  `mouth`, `ew` and `ns` (the lane's two graded strips), `lot`, `head`,
+  `woods`, `look`). 04 cuts the hillside behind the lane back to about a
+  third (a soft cap on `baseHeight` by distance from the lane) and lays
+  the trail out on that grading (`EAST.lane.trail`: legs across the
+  hillside at about 11 in 100, switchbacks where its woods end, then to
+  the overlook, whose shelf is graded to `look.y`). Its hillside is a 4 m
+  patch (`RING_TRAIL`, holed out of `RING_FAR`) under its own 8 m shell
+  (`EAST.tcan`), which `canopyY` holds down across the woods: 14mj fills
+  them with real trees from wall to wall, clear of the trail, the shelf
+  and the view east. The lane's paving is in 14md's union; 14mb opens the
+  road's west wall and breaks its edge line at the mouth; 14me lights it.
+- `fitText` / `fitHwy` on a sign's own canvas (`signTex` marks it `_sign`)
+  keep every line 7% clear of the board's nearest edge, whatever the caller
+  asks: a line set too near an edge is shrunk, never run up to it.
+- `tools/standers.js` fails anyone standing still in a seat or inside a
+  collider (a person meant to be inside a booth or a truck whose collider
+  is all of it carries `inside:true`). `tools/sitters.js` also fails anyone
+  seated with a table behind them and nothing in front. Run all three
+  (`sitters`, `standers`, `seats`) after putting down any person or seat.
+- A skiff floats with its waterline at its own y 0, so it has a sole (an
+  inner floor at 3 cm, shaped to the hull at every station) and everything
+  in it stands on that, or the lake shows in its bottom.
+- The apartments are open plan inside: no interior door leaves, wide
+  openings, the closet a set of bifold doors on the partition, the kitchen
+  counter set back from the front door; the sliders open as you come up.

@@ -425,13 +425,18 @@ TEX.haze=(function(){                         // a soft vertical fade, for light
    sign long before anything that could be called "the signage" loads.
    Every painted word keeps its padding: never within 8% of the board's
    edge, never taller than about three fifths of it.                     */
-function _fitBox(x, maxW, size){
-  const c=x.canvas;
-  return [Math.min(maxW, c.width*0.84), Math.min(size, c.height*0.62)];
+function _fitBox(x, maxW, size, cx, cy){
+  const c=x.canvas; maxW=Math.min(maxW, c.width*0.84); size=Math.min(size, c.height*0.62);
+  // (on a sign's own canvas, signTex's, every line also keeps 7% of the board clear of the edge nearest it, whatever the
+  //  caller asked: a line set near a board's edge is shrunk to fit inside that margin, not run up to the edge)
+  if(x._sign && cx!==undefined && x.getTransform().isIdentity){ const W=c.width, H=c.height;
+    maxW=Math.min(maxW, Math.max(W*0.12, 2*(Math.min(cx, W-cx)-W*0.07)));
+    size=Math.min(size, Math.max(6, (Math.min(cy, H-cy)-H*0.07)/0.42)); }
+  return [maxW, size];
 }
 function fitText(x, str, maxW, size, cx, cy, weight, family){
   x.textAlign="center"; x.textBaseline="middle";
-  [maxW, size]=_fitBox(x, maxW, size);
+  [maxW, size]=_fitBox(x, maxW, size, cx, cy);
   let s=size;
   do{ x.font=(weight||"500")+" "+s+"px "+(family||"Oswald, 'Arial Narrow', sans-serif"); s-=1; }
   while(x.measureText(str).width>maxW && s>6);
@@ -442,7 +447,7 @@ function fitText(x, str, maxW, size, cx, cy, weight, family){
 // (set a little open, as a guide sign is: letters tracked out by a twentieth of their height, never crowded into the board)
 function fitHwy(x, str, maxW, size, cx, cy){
   const had=x.letterSpacing; let s=Math.round(size);
-  [maxW, s]=_fitBox(x, maxW, s);
+  [maxW, s]=_fitBox(x, maxW, s, cx, cy);
   const F="'Arial', 'Helvetica Neue', Helvetica, sans-serif";
   x.textAlign="center"; x.textBaseline="middle";
   do{ x.font="600 "+s+"px "+F; if(had!==undefined) x.letterSpacing=(s*0.05).toFixed(1)+"px"; s-=1; } while(x.measureText(str).width>maxW && s>6);
@@ -472,7 +477,7 @@ function hwyLegend(c, W, H, lines, opt){
 }
 function signTex(w,h,draw){
   const c=cvs(w,h), x=c.getContext("2d");
-  draw(x,w,h);
+  x._sign=true; draw(x,w,h);
   return setSRGB(new T.CanvasTexture(c));
 }
 // A face is a plane a centimetre proud of its board, with polygonOffset so it

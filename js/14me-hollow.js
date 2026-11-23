@@ -41,8 +41,8 @@ const HOLLOW={lamps:[], steam:[]};
   const P=EAST.pretz.site, O=EAST.office.site, L=Bq.lot;
   const onPlace=(x, z, m)=>[P, O, L, Bq.lot].some(b=>x>b.x0-(m||0) && x<b.x1+(m||0) && z>b.z0-(m||0) && z<b.z1+(m||0));
   const mouths=[[L.z0, L.z1],[EAST.marina.mouth.z0-6, EAST.marina.mouth.z1+6],[EAST.pretz.mouth.z0-6, EAST.pretz.mouth.z1+6],[EAST.office.mouth.z0-6, EAST.office.mouth.z1+6]];
-  const BM=EAST.books.mouth, AM=EAST.apts.mouth, inBooks=(z)=>(z>BM.z0-6 && z<BM.z1+6) || (z>AM.z0-6 && z<AM.z1+6);   // (the bookshop's drive and the apartments', on the west side: 14mh, 14mi)
-  const westOf=(z)=>z>BM.z0-6 && z<BM.z1+6 ? BM : AM;
+  const BM=EAST.books.mouth, AM=EAST.apts.mouth, LM=EAST.lane.mouth, inBooks=(z)=>(z>BM.z0-6 && z<BM.z1+6) || (z>AM.z0-6 && z<AM.z1+6) || (z>LM.z0-6 && z<LM.z1+6);   // (the bookshop's drive and the apartments', on the west side: 14mh, 14mi)
+  const westOf=(z)=>z>BM.z0-6 && z<BM.z1+6 ? BM : (z>LM.z0-6 && z<LM.z1+6 ? LM : AM);
   const inMouth=(z)=>mouths.some(([a, b])=>z>a-2 && z<b+2);
 
   /* ---- the pole line down the west side, its wires; a drop to each place; a light over each mouth ---- */
@@ -62,7 +62,7 @@ const HOLLOW={lamps:[], steam:[]};
     for(const [mz, to] of [[(L.z0+L.z1)/2, V3(748.0, Y+4.6, -1276.2)],[ (EAST.pretz.mouth.z0+EAST.pretz.mouth.z1)/2, V3(767.9, Y+5.3, -1568.2)],[(EAST.office.mouth.z0+EAST.office.mouth.z1)/2, V3(821.95, Y+5.0, -1756.0)],[(BM.z0+BM.z1)/2, V3(696.08, Y+3.6, -1821.1)]]){
       const [pz, pt]=nearest(mz); C(0.24, 0.7, PX+0.35, pt-2.6, pz, "#7a7d7a", 18); wire(V3(PX+0.35, pt-2.3, pz), to, 1.2, 0.014); S(0.05, to.x, to.y, to.z, "#4a4a4a"); }
     // a cobra-head light out over the road at each mouth, on the nearest pole
-    for(const [a, b] of mouths.concat([[BM.z0, BM.z1],[AM.z0, AM.z1]])){ const mz=(a+b)/2, [pz, pt]=nearest(mz);
+    for(const [a, b] of mouths.concat([[BM.z0, BM.z1],[AM.z0, AM.z1],[LM.z0, LM.z1]])){ const mz=(a+b)/2, [pz, pt]=nearest(mz);
       tubeE(V3(PX, pt-4.2, pz), V3(PX+4.2, pt-3.6, pz), 0.045, "#7a7d80"); RB(0.62, 0.16, 0.32, PX+4.5, pt-3.62, pz, "#6a6d70", 0, 0.05);
       push("lk_porch", boxGeo(0.44, 0.012, 0.22, 0), PX+4.5, pt-3.705, pz, 0, "#ffffff");
       const Lm={x:PX+4.5, y:pt-3.9, z:pz, color:0xffd8a0, intensity:0, dist:24, decay:1.3, mothy:true}; LAMPS.push(Lm); HOLLOW.lamps.push(Lm); }

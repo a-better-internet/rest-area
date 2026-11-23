@@ -147,7 +147,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
       const z0=(m0+m1)/2; g.position.set(XFR-0.15, F+0.03, z0); g.userData.noCull=true; scene.add(g);
       const bc={x0:XFR-WT, x1:XFR, z0:m0, z1:m1, y0:F-0.5, y1:F+2.15}; COL_DYN.push(bc);
       DOORS.push({g:g, slide:[{g:g, x0:z0, dx:s*(SM-SL[0]-0.05), ax:"z"}], rate:2.4, open:0, target:0, x:XFR-0.1, z:z0, y:F, base:0, manual:0, ajar:0, swing:0,
-        label:"THE SLIDING DOOR", reach:1.8, manualOnly:true, sticky:true, blockCol:bc, blockTop:F+2.15}); }
+        label:"THE SLIDING DOOR", reach:1.5, blockCol:bc, blockTop:F+2.15}); }
     // vertical blinds, drawn part way across from the fixed end, the rest stacked; a valance over them
     { const n=Math.round((o1-o0)/0.09), m=Math.round(n*BLIND[s+","+k]), col=["#cfc6b0","#c4bca4","#c0c4bc","#ccc0ae"][(s+1)/2+2*k];
       for(let i=0;i<m;i++){ const p=SL[1]-0.06-i*0.088; B(0.006, 2.02, 0.085, XFR-WT-0.12, F+1.1, Z(s, p), col, 1.15); }
@@ -282,11 +282,11 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
 
   const UNIT=(s, k, look)=>{ const F=k ? FL1 : FL0, u=U(s), P=PAINT[s+","+k], id=NUM[s+","+k], name="BIRCH HOLLOW · APT "+id;
     // the partitions: living room | bedroom (its door), the bedroom | kitchen and bath, the kitchen | bath (its door)
-    { const x=X(6.0), [a, b]=zr(s, 4.55, HL-WT), [o0, o1]=zr(s, 5.0, 5.9); run("plaster", "z", x-0.05, x+0.05, a, b, F, F+2.6, [[o0, o1, F, F+2.05]], P);
-      door(x, o1-0.01, F, "THE BEDROOM DOOR"); }
+    { const x=X(6.0), [a, b]=zr(s, 4.55, HL-WT), [o0, o1]=zr(s, 4.9, 6.1); run("plaster", "z", x-0.05, x+0.05, a, b, F, F+2.6, [[o0, o1, F, F+2.05]], P);
+      }
     { const z=Z(s, 4.6); run("plaster", "x", z-0.035, z+0.035, XB+WT, X(6.05), F, F+2.6, [], P); }
-    { const x=X(8.5), [a, b]=zr(s, 0.07, 4.565), [o0, o1]=zr(s, 3.35, 4.27); run("plaster", "z", x-0.05, x+0.05, a, b, F, F+2.6, [[o0, o1, F, F+2.05]], P);
-      door(x, o1-0.01, F, "THE BATHROOM DOOR"); }
+    { const x=X(8.5), [a, b]=zr(s, 0.07, 4.565), [o0, o1]=zr(s, 3.25, 4.33); run("plaster", "z", x-0.05, x+0.05, a, b, F, F+2.6, [[o0, o1, F, F+2.05]], P);
+      }
     // the zones: the whole unit, then its rooms
     { const [a, b]=zr(s, 0.05, HL-WT); addZone(XB+WT, XFR-WT, a, b, F-0.4, F+2.62, name, true); }
     { const [a, b]=zr(s, 4.6, HL-WT); addZone(XB+WT, X(6.0), a, b, F-0.4, F+2.62, name+" · THE BEDROOM", true); }
@@ -300,13 +300,13 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     { const [a, b]=zr(s, 0.07, 4.565); floorAt("tile", XB+WT+0.02, X(8.55), a, b, F); }
     // the kitchen: base cupboards and the counter along the party wall, the sink, the range and its hood, the wall cupboards, the fridge
     { const KC=look.kitchen;
-      u.b(0.6, 0.86, 1.6, 0.39, 6.95, F+0.43, KC[0]); u.b(0.66, 0.04, 1.64, 0.4, 6.95, F+0.88, KC[1]); u.col(0.07, 0.73, 6.13, 7.77, F-0.05, F+0.9);
-      for(const d of [6.35, 6.75, 7.15, 7.55]){ u.b(0.012, 0.7, 0.37, 0.695, d, F+0.42, KC[2]); u.b(0.02, 0.03, 0.1, 0.71, d, F+0.7, "#8a8a88"); }
-      u.b(0.4, 0.035, 0.5, 0.38, 6.5, F+0.888, "#8a8e90"); u.c(0.012, 0.28, 0.12, 6.5, F+1.04, "#8a8e90"); u.b(0.02, 0.012, 0.16, 0.2, 6.5, F+1.17, "#8a8e90");
+      u.b(0.6, 0.86, 1.3, 0.39, 7.1, F+0.43, KC[0]); u.b(0.66, 0.04, 1.34, 0.4, 7.1, F+0.88, KC[1]); u.col(0.07, 0.73, 6.43, 7.77, F-0.05, F+0.9);
+      for(const d of [6.67, 7.1, 7.53]){ u.b(0.012, 0.7, 0.37, 0.695, d, F+0.42, KC[2]); u.b(0.02, 0.03, 0.1, 0.71, d, F+0.7, "#8a8a88"); }
+      u.b(0.4, 0.035, 0.42, 0.38, 6.75, F+0.888, "#8a8e90"); u.c(0.012, 0.28, 0.12, 6.75, F+1.04, "#8a8e90"); u.b(0.02, 0.012, 0.16, 0.2, 6.75, F+1.17, "#8a8e90");
       u.b(0.6, 0.018, 0.56, 0.4, 7.4, F+0.91, "#2a2a2a"); for(const dd of [7.25, 7.55]) for(const pp of [0.27, 0.53]) u.c(0.075, 0.012, pp, dd, F+0.925, "#3a3a3a", 14);
       u.b(0.012, 0.1, 0.5, 0.715, 7.4, F+0.86, "#2a2a2a");
-      u.b(0.36, 0.7, 1.6, 0.25, 6.95, F+1.95, KC[0]); u.col(0.07, 0.43, 6.15, 7.75, F+1.6, F+2.3);
-      for(const d of [6.35, 6.75, 7.15, 7.55]) u.b(0.012, 0.64, 0.37, 0.435, d, F+1.95, KC[2]);
+      u.b(0.36, 0.7, 1.3, 0.25, 7.1, F+1.95, KC[0]); u.col(0.07, 0.43, 6.45, 7.75, F+1.6, F+2.3);
+      for(const d of [6.67, 7.1, 7.53]) u.b(0.012, 0.64, 0.4, 0.435, d, F+1.95, KC[2]);
       u.rb(0.7, 1.72, 0.66, 0.46, 8.13, F+0.86, look.fridge, 0.03); u.b(0.02, 0.5, 0.03, 0.82, 7.85, F+1.2, "#8a8a88"); u.col(0.1, 0.82, 7.79, 8.45, F-0.05, F+1.72);
       // the bath: the tub along the back wall and its curtain, the toilet, the vanity and its mirror, a towel
       u.b(1.5, 0.5, 0.74, 0.86, 11.4, F+0.25, "#cfc6b2"); u.b(1.36, 0.02, 0.6, 0.86, 11.4, F+0.49, "#b8b4a8"); u.col(0.08, 1.62, 11.02, 11.78, F-0.05, F+0.5);
@@ -328,8 +328,8 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
       lamp(X(11.4), F+0.95, Z(s, ns), 0.18);
       u.b(0.5, 0.85, 1.2, 8.52, 7.0, F+0.425, look.wood); for(let i=0;i<3;i++){ u.b(0.012, 0.24, 1.12, 8.265, 7.0, F+0.17+i*0.27, look.wood); u.b(0.02, 0.025, 0.12, 8.25, 7.0, F+0.17+i*0.27, "#b8a068"); }
       u.col(8.26, 8.78, 6.4, 7.6, F-0.05, F+0.86);
-      u.b(0.6, 2.2, 1.8, 4.94, 8.0, F+1.1, "#c4bca8"); for(const d of [7.55, 8.45]) u.b(0.012, 2.1, 0.88, 5.245, d, F+1.08, "#d0c8b4"); u.b(0.014, 0.02, 0.02, 5.255, 8.0, F+1.08, "#8a8a88");
-      u.col(4.64, 5.25, 7.1, 8.9, F-0.05, F+2.2); }
+      for(const d of [7.32, 7.77, 8.23, 8.68]) u.b(0.03, 2.05, 0.44, 4.66, d, F+1.04, "#c8c0ac"); u.b(0.04, 0.06, 1.88, 4.665, 8.0, F+2.1, "#b8b09c");
+      for(const d of [7.55, 8.45]) u.c(0.012, 0.1, 4.69, d, F+1.05, "#8a8a88", 8); }      // (the closet's bifold doors, on the partition's face)
     return {F:F, u:u, s:s, k:k, name:name}; };
 
   /* 101: Dale's. Plaid and oak; the console TV against the breezeway's wall, the sofa facing it, his recliner, a buck on the wall */
@@ -365,7 +365,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
       B(0.5, 0.04, 0.5, XFR+0.85, y+0.4, zc, "#2a6a3a"); B(0.05, 0.55, 0.47, XFR+0.62, y+0.66, zc, "#2a6a3a"); for(const o of [-0.23, 0.23]) B(0.47, 0.37, 0.025, XFR+0.85, y+0.185, zc+o, "#a8acae");
       addSeat(XFR+0.88, zc, y, U(s).yaw("front"), "A LAWN CHAIR ON DALE'S PATIO", false, 0.66); addCol(XFR+0.6, XFR+1.1, zc-0.26, zc+0.26, y-0.1, y+0.42);
       u.rb(0.35, 0.4, 0.55, 8.2, -1.2, y+0.2, "#c8281a", 0.04); u.col(8.02, 8.38, -1.48, -0.92, y-0.1, y+0.4); }
-    APTS.radios.push({x:X(7.3), y:F+1.0, z:Z(s, 0.4), station:1, house:R.name, zone:R.name+" · THE KITCHEN", vol:0.3, reach:7}); u.b(0.14, 0.16, 0.3, 0.4, 7.6, F+0.98, "#3a3a3a"); }
+    APTS.radios.push({x:X(8.13), y:F+1.8, z:Z(s, 0.46), station:1, house:R.name, zone:R.name+" · THE KITCHEN", vol:0.3, reach:7}); u.b(0.14, 0.16, 0.3, 0.46, 8.13, F+1.8, "#3a3a3a"); }
 
   /* 102: Gina's. A futon and a bean bag, her computer on a door over two file cabinets, a board and block bookcase, posters, a guitar */
   { const s=1, R=UNIT(s, 0, {floor:"carpet2", kfloor:"vinylB", kitchen:["#c4b48c","#a8a498","#b8a880"], fridge:"#8a8e90", curtain:"#3a5a8a", towel:"#5a3a6a",
@@ -399,7 +399,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     // the kitchen: a breakfast bar's two stools at the counter's end, a coffee maker, a stack of dishes
     u.b(1.0, 0.04, 0.5, 1.95, 7.75, F+0.9, "#b8a880"); u.b(0.06, 0.86, 0.42, 2.4, 7.75, F+0.44, "#c4b48c"); u.col(1.45, 2.45, 7.5, 8.0, F-0.05, F+0.92);
     for(const pp of [1.65, 2.2]){ u.c(0.17, 0.04, pp, 8.2, F+0.79, "#b8442e", 14); u.c(0.02, 0.77, pp, 8.2, F+0.39, "#8a8e90", 6); addSeat(X(8.2), Z(s, pp), F, U(s).yaw("front"), "A STOOL AT GINA'S COUNTER", false, 0.34); }
-    u.b(0.2, 0.32, 0.22, 0.3, 6.25, F+1.06, "#2a2a2a"); u.b(0.28, 0.12, 0.24, 0.4, 7.0, F+0.96, "#c4b89c");
+    u.b(0.22, 0.32, 0.2, 2.1, 7.72, F+1.08, "#2a2a2a"); u.b(0.28, 0.12, 0.24, 1.7, 7.72, F+0.98, "#c4b89c");
     // the patio: her bike against the screen, a hammock chair hung from the balcony, plants
     { const zb=Z(s, 7.9), y=FL0-0.1; for(const o of [-0.52, 0.52]) ent(new T.TorusGeometry(0.33, 0.022, 6, 22), XFR+0.75+o, y+0.35, zb, "#1a1a1a", 0, 0, 0);
       ent(boxGeo(1.0, 0.04, 0.04), XFR+0.75, y+0.62, zb, "#2a5ab8", 0, 0, 0.08); ent(boxGeo(0.6, 0.04, 0.04), XFR+0.55, y+0.5, zb, "#2a5ab8", 0, 0, -0.9); B(0.22, 0.05, 0.09, XFR+0.42, y+0.85, zb, "#1a1a1a");
@@ -411,7 +411,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
   { const s=-1, R=UNIT(s, 1, {floor:"wood", kfloor:"vinylC", kitchen:["#5a3e28","#c0b8a8","#4a3220"], fridge:"#b0aa96", curtain:"#c8b8a0", towel:"#3a5a7a",
       bed:1.6, wood:"#4a2e1e", quilt:"#b8a888", bedfloor:"carpet3"}), {F, u}=R;
     seatAt(s, F, 8.32, 3.0, "in", 1.6, "#4a2a1e", "THE HALLORANS' LOVESEAT", true);
-    seatAt(s, F, 5.6, 5.1, "out", 0.85, "#6a5a3a", "THE WING CHAIR", false, 0.8);
+    seatAt(s, F, 6.75, 4.95, "front", 0.85, "#6a5a3a", "THE WING CHAIR", false, 0.8);
     { const rg=signTex(256, 180, (c, W, H)=>{ c.fillStyle="#2a3650"; c.fillRect(0, 0, W, H); c.strokeStyle="#b8a070"; c.lineWidth=6; c.strokeRect(10, 10, W-20, H-20); c.strokeStyle="#7a3426"; c.lineWidth=4; c.strokeRect(26, 26, W-52, H-52);
         c.fillStyle="#7a3426"; c.beginPath(); c.ellipse(W/2, H/2, W*0.16, H*0.16, 0, 0, 7); c.fill(); });
       const [a, b]=zr(s, 4.4, 7.4); const m=new T.Mesh(new T.PlaneGeometry(2.2, b-a), new T.MeshStandardMaterial({map:rg, roughness:0.95, polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-6}));
@@ -461,9 +461,9 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     for(let i=0;i<2;i++){ const pp=7.0+i*0.48; u.b(0.42, 0.32, 0.36, pp, 1.0, F+0.16, "#9a7a4a"); for(let j=0;j<6;j++) u.b(0.32, 0.31, 0.008, pp, 0.86+j*0.05, F+0.2, ["#b8442e","#2a4a8a","#d0a83a","#1a1a1a"][(i+j)%4]); }
     u.col(6.78, 7.7, 0.82, 1.2, F-0.05, F+0.34);
     // the exercise bike by the bedroom door, a jacket over it; the Otters on the wall
-    { const x=X(7.3), z=Z(s, 7.1); B(0.9, 0.08, 0.3, x, F+0.04, z, "#3a3a3e"); ent(boxGeo(0.08, 0.95, 0.08), x-0.15, F+0.5, z, "#3a3a3e", 0, 0, 0.25); B(0.2, 0.06, 0.26, x-0.27, F+0.98, z, "#1a1a1a");
+    { const x=X(9.0), z=Z(s, 8.3); B(0.9, 0.08, 0.3, x, F+0.04, z, "#3a3a3e"); ent(boxGeo(0.08, 0.95, 0.08), x-0.15, F+0.5, z, "#3a3a3e", 0, 0, 0.25); B(0.2, 0.06, 0.26, x-0.27, F+0.98, z, "#1a1a1a");
       C(0.22, 0.06, x+0.22, F+0.35, z, "#2a2a2a", 18, Math.PI/2, 0, 0); ent(boxGeo(0.06, 0.6, 0.05), x+0.25, F+0.7, z, "#3a3a3e", 0, 0, -0.3); B(0.06, 0.04, 0.5, x+0.33, F+1.02, z, "#3a3a3e"); addCol(x-0.48, x+0.48, z-0.25, z+0.25, F-0.05, F+1.05); }
-    pic(s, F, 6.6, 5.95, 1.7, "front", 0.9, 0.6, "#2a2a2a", (c, W, H)=>{ c.fillStyle="#1e1e1e"; c.fillRect(0, 0, W, H); say(c, "ERIE OTTERS", W/2, H*0.4, W*0.76, H*0.22, "#d0a83a", "900"); say(c, "SEASON TICKET HOLDER", W/2, H*0.72, W*0.72, H*0.1, "#cfc6b4", "700"); });
+    pic(s, F, 7.3, 5.95, 1.7, "front", 0.9, 0.6, "#2a2a2a", (c, W, H)=>{ c.fillStyle="#1e1e1e"; c.fillRect(0, 0, W, H); say(c, "ERIE OTTERS", W/2, H*0.4, W*0.76, H*0.22, "#d0a83a", "900"); say(c, "SEASON TICKET HOLDER", W/2, H*0.72, W*0.72, H*0.1, "#cfc6b4", "700"); });
     pic(s, F, HL-WT-0.02, 4.6, 1.75, "in", 0.7, 0.5, "#6a4a30", (c, W, H)=>{ c.fillStyle="#5a8aa8"; c.fillRect(0, 0, W, H); c.fillStyle="#3a6a8a"; c.fillRect(0, H*0.55, W, H*0.45); c.fillStyle="#cfc6b4"; c.beginPath(); c.moveTo(W*0.3, H*0.55); c.lineTo(W*0.5, H*0.2); c.lineTo(W*0.5, H*0.55); c.fill(); });
     // the kitchen: the table and two chairs, the bowling trophy on the fridge
     u.b(0.9, 0.04, 0.9, 2.6, 7.2, F+0.74, "#7a7458"); for(const [pp, dd] of [[2.2, 6.8],[3.0, 6.8],[2.2, 7.6],[3.0, 7.6]]) u.b(0.04, 0.72, 0.04, pp, dd, F+0.36, "#5a5444"); u.col(2.13, 3.07, 6.73, 7.67, F-0.05, F+0.76);
@@ -521,7 +521,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     const row=(x0, z0, x1, z1, nx, nz)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.round(L/6.2));
       for(let k=0;k<=n;k++) for(const dep of [1.8, 6.5, 11.5, 16.5]){ if(q()<0.12) continue; const t=(k+q()*0.6)/n, x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);
         tree(dep<2 ? "edge" : q()<0.35 ? "hemlock" : q()<0.5 ? "pine" : "hard", x, z, 0.85+q()*0.4); } };
-    row(S0.x0, S0.z0, S0.x0, S0.z1, -1, 0); row(S0.x0, S0.z0, 700, S0.z0, 0, -1);
+    row(S0.x0+2, S0.z0, 700, S0.z0, 0, -1);      // (none to the west: Ridge Lane, 14mj)
     tree("lawn", 677.0, -1872.5, 0.95); tree("lawn", 680.5, -1859.0, 0.9); tree("edge", 674.0, -1866.0, 1.0); }
 
   /* ---- the people: Gina at her computer after work, Dale back in his recliner, Ray out on the balcony of an afternoon,
@@ -536,8 +536,8 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
         x:x, z:z, y:FL0, yaw:U(s).yaw("in")+Math.PI, mode:"sit", job:"recline", sitY:0.47, held:"can", drink:true, sway:0.1, when:home(x, z, 18, 23.5)}); }
     { const s=1, x=XFR+0.88, z=Z(s, 6.0); crowdAdd(G, {look:L({skin:SKINS[0], hair:"#8d8a86", hairStyle:"recede", beard:"#9a958e", beardStyle:"short", shirt:"#6a7a5a", pants:"#5c5a52"}),
         x:x, z:z, y:FL1, yaw:U(s).yaw("front")+Math.PI, mode:"sit", sitY:0.4, sway:0.2, held:"can", drink:true, when:home(x, z, 13, 19.5)}); }
-    { const s=-1, x=X(5.1), z=Z(s, 5.6); crowdAdd(G, {look:L({female:true, h:0.95, skin:SKINS[0], hair:"#6b4a2b", hairStyle:"bun", shirt:"#4a6a8a", long:true}),
-        x:x, z:z, y:FL1, yaw:U(s).yaw("out")+Math.PI, mode:"sit", sitY:0.455, sway:0.15, held:"book", when:home(x, z, 19, 22.5)}); } }
+    { const s=-1, x=X(4.95), z=Z(s, 6.75); crowdAdd(G, {look:L({female:true, h:0.95, skin:SKINS[0], hair:"#6b4a2b", hairStyle:"bun", shirt:"#4a6a8a", long:true}),
+        x:x, z:z, y:FL1, yaw:U(s).yaw("front")+Math.PI, mode:"sit", sitY:0.455, sway:0.15, held:"book", when:home(x, z, 19, 22.5)}); } }
 
   /* ---- round 45: curtains, rugs, coats by the door, the kitchens' small things, a lamp by every slider, the wreath;
      outside the gutters, the condensers out back, the meters, a picnic table and a grill on the back lawn ---- */
@@ -549,14 +549,13 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     // a pair of curtains at each window, gathered in three folds, on a rod: the bedroom's back window, and both end windows
     const panelP=(p, d)=>{ for(let i=0;i<3;i++) u.b(0.12, 1.32, 0.04, p-0.12+i*0.12, d+(i%2 ? 0.015 : 0), F+1.58, i%2 ? c1 : c0); };
     const panelD=(p, d)=>{ for(let i=0;i<3;i++) u.b(0.04, 1.32, 0.12, p-(i%2 ? 0.015 : 0), d-0.12+i*0.12, F+1.58, i%2 ? c1 : c0); };
-    panelP(5.78, 11.71); panelP(7.82, 11.71); u.c(0.012, 2.6, 6.8, 11.68, F+2.27, "#6a5a44", 6, Math.PI/2, 0, 0);
-    for(const [d0, d1] of ENDW){ panelD(HL-WT-0.06, d0-0.22); panelD(HL-WT-0.06, d1+0.22); u.c(0.012, d1-d0+0.9, HL-WT-0.09, (d0+d1)/2, F+2.27, "#6a5a44", 6, 0, 0, Math.PI/2); }
+    panelP(5.78, 11.71); panelP(7.82, 11.71); C(0.012, 2.6, X(11.68), F+2.27, Z(s, 6.8), "#6a5a44", 6, Math.PI/2, 0, 0);
+    for(const [d0, d1] of ENDW){ panelD(HL-WT-0.06, d0-0.22); panelD(HL-WT-0.06, d1+0.22); C(0.012, d1-d0+0.9, X((d0+d1)/2), F+2.27, Z(s, HL-WT-0.09), "#6a5a44", 6, 0, 0, Math.PI/2); }
     // coats on hooks inside the door, a hat over one
     { const x=X(CD)-WT-0.035, pz=1.52; u.b(0.42, 0.07, 0.025, pz, CD+WT+0.035, F+1.68, "#5a3e26");
       for(const [o, col] of [[-0.11, ["#3a3a2e","#2a3a5a","#6a5a44","#3a4a3a"][(s+1)/2+2*k]],[0.1, ["#7a2a22","#8a6a3a","#2a2a2c","#5a3a2a"][(s+1)/2+2*k]]]) u.b(0.16, 0.72, 0.1, pz+o, CD+WT+0.09, F+1.28, col);
       if(key==="-1,0") u.c(0.11, 0.08, pz+0.1, CD+WT+0.12, F+1.74, "#c8501e", 14); }
     // the kitchen: a toaster and a towel on the range's handle, a clock over the fridge
-    if(key!=="1,0") u.b(0.16, 0.18, 0.26, 0.33, 6.95, F+0.99, "#8a8e90");
     u.b(0.012, 0.3, 0.14, 0.726, 7.3, F+0.72, ["#b8442e","#3a6a8a","#c8a868","#3a6a3a"][(s+1)/2+2*k]);
     { const p=0.07, d=8.13, y=F+2.17, zc=Z(s, p+0.02); C(0.13, 0.03, X(d), y, zc, "#2a2a2c", 22, Math.PI/2, 0, 0);
       sign(0.17, 0.17, (c, W, H)=>{ c.fillStyle="#cfc6b4"; c.fillRect(0, 0, W, H); c.strokeStyle="#1a1a1a"; c.lineWidth=2;

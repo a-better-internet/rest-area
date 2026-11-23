@@ -653,6 +653,13 @@ If the scene runs hot on your machine, start there (see below).
     an exercise bike, a lava lamp, an Adirondack chair and a bird feeder).
     Every window has its curtains, every door its coats; out back are the
     condensers, a picnic table and a grill. They are home at their own hours.
+  - **Ridge Lane and Hollow Ridge Trail**: a lane off Hollow Road just
+    south of the bookstore runs round behind the bookstore and the
+    apartments to a small trailhead lot with a kiosk and its map. From there
+    the trail climbs the hillside in long switchbacks through the woods,
+    blue blazes and log steps along it, to Hollow Ridge Overlook: a gravel
+    shelf with benches, a viewer and a split-rail fence, looking east over
+    the valley to the lake.
   - **The Lakeside Dive**, past the office park on the shore, down the
     service drive from the office lot: a one-room bar in stained siding with
     six stools, beer on tap, a pool table, a jukebox playing country, darts,

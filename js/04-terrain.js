@@ -134,7 +134,14 @@ const EAST=(function(){
     // and on the west side of the road across from the office park, Hollow Road Books (14mh): its clearing, graded, and the drive's mouth
     books:{site:{x0:668, x1:721, z0:-1852, z1:-1806}, mouth:{z0:-1832, z1:-1820}},
     apts:{site:{x0:668, x1:721, z0:-1879.5, z1:-1852}, mouth:{z0:-1869, z1:-1861}},
-    pcan:{x0:640, x1:1024, z0:-1952, z1:-1504} };
+    pcan:{x0:640, x1:1024, z0:-1952, z1:-1504},
+    // Ridge Lane (14mj): in off Hollow Road south of the bookstore, west along its south side (ew), then north behind the
+    // bookstore and the apartments (ns) to the trailhead lot; Hollow Ridge Trail from the lot's west edge (head) up through
+    // its woods (woods, walled round) to the overlook (look). The trail itself is laid out below, once the ground's grading is
+    // known (EAST.lane.trail), and the ground and the canopy round it are their own finer patches (RING_TRAIL, tcan)
+    lane:{mouth:{z0:-1803, z1:-1793}, ew:{x0:648, x1:722, z0:-1804, z1:-1792}, ns:{x0:644, x1:668, z0:-1881, z1:-1792},
+          lot:{x0:646, x1:666, z0:-1879, z1:-1864}, head:{x:645.5, z:-1871.5}, woods:{x0:404, x1:646, z0:-1934, z1:-1792}, look:{x:515, z:-1915}},
+    tcan:{x0:384, x1:640, z0:-1952, z1:-1760} };
 })();
 /* ---- west along US 6N -----------------------------------------------------
    Past the west fields the road goes on into the woods and comes to French Creek Pines, a campground and trailer
@@ -322,7 +329,8 @@ const Terrain=(function(){
     if(pd<60) h=toward(h, EDIN.y, pd, 0, 60);
     // east along US 6N: the country lies lower and flatter toward the lake, and every clearing is level with the road
     { const ed=Math.min(boxDist(EAST.corr,x,z), boxDist(EAST.store,x,z), boxDist(EAST.town,x,z), boxDist(EAST.beer.road,x,z), boxDist(EAST.beer.lot,x,z), boxDist(EAST.pretz.site,x,z),
-        boxDist(EAST.pretz.lake,x,z), boxDist(EAST.office.site,x,z), boxDist(EAST.dive.site,x,z), boxDist(EAST.marina.site,x,z), boxDist(EAST.marina.drive,x,z), boxDist(EAST.books.site,x,z), boxDist(EAST.apts.site,x,z));
+        boxDist(EAST.pretz.lake,x,z), boxDist(EAST.office.site,x,z), boxDist(EAST.dive.site,x,z), boxDist(EAST.marina.site,x,z), boxDist(EAST.marina.drive,x,z), boxDist(EAST.books.site,x,z), boxDist(EAST.apts.site,x,z),
+        boxDist(EAST.lane.ew,x,z), boxDist(EAST.lane.ns,x,z));
       if(ed<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, ed));
       if(ed<50) h=toward(h, EDIN.y, ed, 0, 46);
       // the lake: its bed shelving off the shore to six metres; the banks brought down to the water, and never under it.
@@ -333,7 +341,13 @@ const Terrain=(function(){
         if(h>lo && ls<90) h=lo+(h-lo)*smoothstep(0, run, ls);
         h=Math.max(h, lo+Math.min(ls, 40)*0.02); }                     // (so nowhere off the lake is under its water)
       // the office park's paved heart stays level with the road; the lawn falls away to the water only beyond it
-      { const od=boxDist(EAST.office.level,x,z); if(od<14) h=toward(h, EDIN.y, od, 0, 14); } }
+      { const od=boxDist(EAST.office.level,x,z); if(od<14) h=toward(h, EDIN.y, od, 0, 14); }
+      // the hillside behind Ridge Lane cut back to a slope you can climb: no steeper than about a third, rising from the lane
+      // (eased onto the cut over its last few metres, so it runs into the hill's own slope without a crease)
+      { const L=EAST.lane, ld=Math.min(boxDist(L.ew,x,z), boxDist(L.ns,x,z)); if(ld>0 && ld<260){ const c=EDIN.y+0.34*ld, k=3;
+          if(h>c) h=c+k*(1-Math.exp(-(h-c)/k)); } }
+      // the overlook at the top of Hollow Ridge Trail: a level shelf cut into the hillside (once the trail has found it)
+      { const L=EAST.lane.look; if(L.y!==undefined){ const d=Math.hypot(x-L.x, z-L.z); if(d<16) h=toward(h, L.y, d, 6.5, 9); } } }
     // west along US 6N: the same, the road's clearing and the park's level with the road
     { const wd=Math.min(boxDist(WEST.corr,x,z), boxDist(WEST.park,x,z), boxDist(WEST.ranch,x,z));
       if(wd<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, wd));
@@ -424,6 +438,23 @@ const Terrain=(function(){
       lo=Math.min(lo, g-0.35); p.y=lo; });
     for(let pass=0;pass<4;pass++){ const y=CREEK.map(p=>p.y); for(let i=1;i<CREEK.length-1;i++) CREEK[i].y=y[i-1]*0.25+y[i]*0.5+y[i+1]*0.25; }
     CREEK.ready=true; }
+  /* Hollow Ridge Trail (14mj), laid on the ground's own grading: from the trailhead it climbs in long legs across the
+     hillside, about 11 in 100, each leg running north or south and drifting west as much as that grade allows, and turns
+     back on itself (a switchback) where its woods end; once it is as high as the overlook it heads straight there. */
+  { const L=EAST.lane, W=L.woods, T=L.look, G=0.11, st=2.0, tH=baseHeight(T.x, T.z);
+    let x=L.head.x, z=L.head.z, h=baseHeight(x, z), sz=1, legs=0; const P=[{x:x, z:z}];
+    const okAt=(nx, nz)=>nx>W.x0+10 && nx<W.x1-3 && nz>W.z0+18 && nz<W.z1-12;
+    for(let i=0;i<1400;i++){ const dT=Math.hypot(T.x-x, T.z-z); if(dT<3) break;
+      let best=null, bs=1e9;
+      if(h>tH-1.5 || (dT<26 && Math.abs(tH-h)<dT*0.14)){ const ux=(T.x-x)/dT, uz=(T.z-z)/dT; best=[x+ux*st, z+uz*st]; }
+      else for(let k=-6;k<=18;k++){ const a=k/18*Math.PI/2, nx=x-Math.sin(a)*st, nz=z+sz*Math.cos(a)*st; if(!okAt(nx, nz)) continue;
+        const g=(baseHeight(nx, nz)-h)/st, sc=Math.abs(g-G)*10+Math.max(0, -g)*6; if(sc<bs){ bs=sc; best=[nx, nz]; } }
+      if(!best || (h<=tH-1.5 && !okAt(x, z+sz*st*3))){ sz=-sz; legs++; if(legs>40) break;
+        // (a switchback: a few steps due west, so the leg back up is not on top of the one coming in)
+        for(let k=0;k<2;k++){ x-=st*0.6; P.push({x:x, z:z}); } h=baseHeight(x, z); continue; }
+      x=best[0]; z=best[1]; h=baseHeight(x, z); P.push({x:x, z:z}); }
+    P.push({x:T.x, z:T.z});
+    L.trail=smoothPath(P.filter((p, i)=>i%3===0 || i===P.length-1), 2.0); L.look.y=tH; }
 
   /* ---- where the woods are -------------------------------------------
      A signed distance to the nearest clearing: negative inside one,
@@ -439,6 +470,7 @@ const Terrain=(function(){
   function pathDist(x,z){
     let d=1e9;
     if(x>TRAIL_B.x0 && x<TRAIL_B.x1 && z>TRAIL_B.z0 && z<TRAIL_B.z1) d=distToPath(TRAIL,x,z).d-1.3;
+    { const L=EAST.lane, W=L.woods; if(L.trail && x>W.x0-12 && x<W.x1+12 && z>W.z0-12 && z<W.z1+12) d=Math.min(d, distToPath(L.trail,x,z).d-1.5); }   // (Hollow Ridge Trail, 14mj)
     const dc=Math.hypot(x-CAMP.x, z-CAMP.z);
     if(dc<CAMP.r+40) d=Math.min(d, dc-CAMP.r+(fbm(x*0.09+2, z*0.09+8, 2)-0.5)*3);
     const dh=Math.hypot(x-HOMESTEAD.x, (z-HOMESTEAD.z)*0.85);
@@ -465,8 +497,10 @@ const Terrain=(function(){
     d=Math.min(d, boxSD(SUBPAD,x,z)+1);
     d=Math.min(d, boxSD(EDIN.plain,x,z));
     d=Math.min(d, boxSD(EAST.corr,x,z), boxSD(EAST.store,x,z), boxSD(EAST.town,x,z), lakeSD(x,z)+3, boxSD(EAST.beer.road,x,z), boxSD(EAST.beer.lot,x,z), boxSD(EAST.pretz.site,x,z),
-      boxSD(EAST.pretz.lake,x,z), boxSD(EAST.office.site,x,z), boxSD(EAST.dive.site,x,z), boxSD(EAST.marina.site,x,z), boxSD(EAST.marina.drive,x,z), boxSD(EAST.books.site,x,z), boxSD(EAST.apts.site,x,z));
+      boxSD(EAST.pretz.lake,x,z), boxSD(EAST.office.site,x,z), boxSD(EAST.dive.site,x,z), boxSD(EAST.marina.site,x,z), boxSD(EAST.marina.drive,x,z), boxSD(EAST.books.site,x,z), boxSD(EAST.apts.site,x,z), boxSD(EAST.lane.ew,x,z), boxSD(EAST.lane.ns,x,z));
     { const W=EAST.pretz.woods; if(x>W.x0-12 && x<W.x1+12 && z>W.z0-12 && z<W.z1+12) d=Math.min(d, distToPath(EAST.pretz.trail,x,z).d-1.6); }   // (the trail: a clearing a path wide)
+    { const L=EAST.lane, W=L.woods; if(L.trail && x>W.x0-12 && x<W.x1+12 && z>W.z0-12 && z<W.z1+12){
+        d=Math.min(d, Math.hypot(x-L.look.x, z-L.look.z)-9.5); } }   // (Hollow Ridge Overlook's shelf: the trail itself is in pathDist, woods floor either side of it)
     d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z), boxSD(WEST.ranch,x,z));
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
@@ -522,6 +556,8 @@ const RING_HWYN={x0:-272, x1:-48, z0:-1752, z1:-336}, RING_HWYS={x0:-272, x1:-48
 const RING_EAST={x0:640, x1:1472, z0:-1344, z1:-1056};
 // and one at 4 m north of it up Hollow Road, round the pretzel works (EAST.pretz, 14mc)
 const RING_PRETZ={x0:640, x1:1024, z0:-1936, z1:-1344};      // (and the office park up the road, out to the shore)
+// and one at 4 m west of that, over the hillside behind the bookstore and the apartments: Hollow Ridge Trail's woods (14mj)
+const RING_TRAIL={x0:384, x1:640, z0:-1936, z1:-1760};
 // and one at 4 m west along US 6N past the west fields: the road through the woods and French Creek Pines (WEST), holed
 // under the community hall, whose basement lounge is under it (the hall's floor and its skirting cover the hole's edges)
 const RING_WEST={x0:-1616, x1:-512, z0:-1344, z1:-1040};
@@ -737,7 +773,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   }
   TERRAIN_TINT=tint;
   grid(GROUND_EDGE, 32, [RING_FAR, RING_MIDN], "ground-outer", 60);
-  grid(RING_FAR, 16, [RING_MID, RING_EAST, RING_MIDN, RING_WEST, RING_PRETZ], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
+  grid(RING_FAR, 16, [RING_MID, RING_EAST, RING_MIDN, RING_WEST, RING_PRETZ, RING_TRAIL], "ground-far", 40);      // (16 m: the hills' skylines round, not faceted)
   grid(RING_MIDN, 8, [RING_WEIGH], "ground-midn", 24);
   grid(RING_WEIGH, 2, WEIGH_HOLES, "ground-weigh", 6);
   grid(RING_MID, 8, [RING_NEAR, RING_HWYN, RING_HWYS, KIRK_RING, TUNE_RING], "ground-mid", 24);
@@ -746,6 +782,7 @@ let TERRAIN_MAT=null, TERRAIN_TINT=null;      // (the ground's colour at a point
   grid(RING_HWYS, 2, [], "ground-hwys", 6);
   grid(RING_EAST, 4, [LOON_RING], "ground-east", 6);
   grid(RING_PRETZ, 4, [], "ground-pretz", 6);
+  grid(RING_TRAIL, 4, [], "ground-trail", 6);
   grid(RING_WEST, 4, WEST_HOLES, "ground-west", 6);
   grid(LOON_RING, 0.5, LOON_HOLES, "ground-loon", 0);       // (no apron: it meets the 4 m ground on the street's flat)
   grid(KIRK_RING, 2, KIRK_HOLES, "ground-kirk", 0, 8);              // (no apron: its border is stitched to the 8 m ground, and one would hang through the hall)

@@ -834,12 +834,16 @@ const FOREST=(function(){
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
     // and round the pretzel works' clearing, which 14mc lines with real trees the same way
     // (and the trail's woods behind it, the clearing on the shore, and the office park up the road, 14md)
-    if(fine && typeof EAST!=="undefined" && EAST.pretz) for(const P of [EAST.pretz.site, EAST.pretz.woods, EAST.pretz.lake, EAST.office.site, EAST.dive.site, EAST.marina.site, EAST.marina.drive, EAST.books.site, EAST.apts.site]){
+    if(fine && typeof EAST!=="undefined" && EAST.pretz) for(const P of [EAST.pretz.site, EAST.pretz.woods, EAST.pretz.lake, EAST.office.site, EAST.dive.site, EAST.marina.site, EAST.marina.drive, EAST.books.site, EAST.apts.site, EAST.lane.ew, EAST.lane.ns]){
       const ex=Math.max(0, x-(P.x1+30), (P.x0-30)-x), ez=Math.max(0, z-(P.z1+30), (P.z0-30)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
     // and round the radio station and its tower, which 14s2 rings with real trees the same way
     if(fine && typeof RADIO!=="undefined"){ const ex=Math.max(0, x-185, -70-x), ez=Math.max(0, z-(-1455), (-1625)-z);
       const w=1-smoothstep(0, 16, Math.hypot(ex, ez)); if(w>0) m=m+(smoothstep(3, 44, cd)-m)*w; }
+    // in Hollow Ridge Trail's woods, which 14mj fills with real trees from wall to wall, the shell is down out of the way,
+    // and it comes up only past their walls, behind several rows more
+    if(typeof EAST!=="undefined" && EAST.lane){ const W=EAST.lane.woods, ex=Math.max(0, x-W.x1, W.x0-x), ez=Math.max(0, z-W.z1, W.z0-z);
+      m=Math.min(m, smoothstep(14, 34, Math.hypot(ex, ez))); }
     const g=Terrain.heightAt(x,z);
     if(m<=0) return g-3;
     const base=15.5+Terrain.fbm(x*0.006+9, z*0.006+4, 3)*6;
@@ -968,9 +972,13 @@ vec4 canCrown(vec2 p, out float id){
     shell(RING_MID, 8, [Z], true);
     shell(EAST.can, 8, [], true);                                   // (east along US 6N: the woods the road goes through, close to)
     shell(EAST.pcan, 8, [], true);                                  // (and up Hollow Road round the pretzel works)
+    shell(EAST.tcan, 8, [], true);                                  // (and the hillside behind the bookstore, Hollow Ridge Trail's, 14mj)
     shell(WEST.can, 8, [], true);                                   // (and west of the fields, round French Creek Pines)
     shell(RING_MIDN, 8, [], true);                                  // (north of Edinboro, up past the weigh station to the road's end)
-    shell(GROUND_EDGE, 32, [RING_MID, EAST.can, RING_MIDN, WEST.can, EAST.pcan], false);
+    // (the far woods on the 16 m ground's own lattice, so the shell follows every crest and notch of it: on 32 m one
+    //  triangle bridged a notch between two crests and stood against the sky as a green sliver; past that, 32 m)
+    shell(RING_FAR, 16, [RING_MID, EAST.can, RING_MIDN, WEST.can, EAST.pcan, EAST.tcan], false);
+    shell(GROUND_EDGE, 32, [RING_FAR, RING_MIDN], false);
     /* The curtain. From inside the zone, through a hundred metres of trunks,
        the edge of the canopy would be a lid with daylight under it. So the
        zone's boundary hangs a dark wall from the canopy down to the ground:

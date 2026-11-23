@@ -292,7 +292,7 @@ function crowdRound(pts, R, closed){
   // watering the beds in front of the bungalow across the way; and weeding in front of No. 3's
   // (a house's yard is on the side of its front face, h.f, toward the street; facing it is facing back the other way)
   const yard=(h, along, out)=>({x:h.x+along, z:h.zf+h.f*out, yaw:h.f>0 ? Math.PI : 0});
-  crowdAdd(W, Object.assign({look:look({female:true, h:0.96, skin:SKINS[2], hair:HAIRS[0], shirt:"#c86a8a", pants:"#2c3446"}), mode:"stand", job:"water", held:"can_w", dayOnly:true}, yard(H[6], -2.6, 1.3)));
+  crowdAdd(W, Object.assign({look:look({female:true, h:0.96, skin:SKINS[2], hair:HAIRS[0], shirt:"#c86a8a", pants:"#2c3446"}), mode:"stand", job:"water", held:"can_w", dayOnly:true}, yard(H[6], -1.5, 1.3)));      // (clear of the rocking chair on the porch)
   crowdAdd(W, Object.assign({look:look({female:true, h:0.97, skin:SKINS[0], hair:HAIRS[3], shirt:"#8aa86a", pants:"#5c5a52", cap:"#c8b890"}), mode:"stand", job:"kneel", dayOnly:true}, yard(H[2], 3.2, 0.9)));
   // two neighbours over the line between the first two houses' front yards
   { const x=(H[0].x1+H[1].x0)/2, z=Z-HW-7.0;

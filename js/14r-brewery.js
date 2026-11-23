@@ -620,7 +620,7 @@ const BREWERY={bulbs:null, fans:[], screens:null, scrT:0, fire:null};
   // the bartenders: two in the taproom, one in the hut
   crowdAdd(G, {look:staff({female:true, h:0.96}), x:1457.0, z:-1238.2, y:FF, yaw:-Math.PI/2, mode:"stand", job:"pour"});
   crowdAdd(G, {look:staff({beard:"#4a3020"}), x:1457.1, z:-1233.6, y:FF, yaw:-Math.PI/2, mode:"stand", job:"pour"});
-  { const h=BREWERY.hut; crowdAdd(G, {look:staff({female:true, h:0.95, hair:HAIRS[3]}), x:h.bar.x, z:h.bar.z, y:h.y, yaw:-Math.PI/2, mode:"stand", job:"pour"}); }
+  { const h=BREWERY.hut; crowdAdd(G, {look:staff({female:true, h:0.95, hair:HAIRS[3]}), x:h.bar.x, z:h.bar.z, y:h.y, yaw:-Math.PI/2, mode:"stand", job:"pour", inside:true}); }
   // at the bar, on the stools
   // (each sits on top of the seat: the hips five or six centimetres over it, the stools' tops at 0.79, the chairs' 0.46,
   // the sofas' cushions 0.52)
