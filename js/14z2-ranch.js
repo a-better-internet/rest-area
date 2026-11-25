@@ -120,8 +120,8 @@ const RANCH={routes:{}, flow:new T.Vector4(), pool:null, lamps:[]};
     // the muntins: a cross in each sash
     { const [px, pz]=P(m, c+out*0.022); B(ax==="x" ? w-0.04 : 0.02, 0.025, ax==="x" ? 0.02 : w-0.04, px, ym, pz, "#f2efe8"); B(ax==="x" ? 0.025 : 0.02, h-0.04, ax==="x" ? 0.02 : 0.025, px, ym, pz, "#f2efe8"); }
     { const [px, pz]=P(m, fi-out*0.035); RB(ax==="x" ? w+0.08 : 0.12, 0.035, ax==="x" ? 0.12 : w+0.08, px, o.sill-0.018, pz, "#efe9de", 0, 0.01); }
-    if(cur) for(const sd of [-1,1]){ const [px, pz]=P(m+sd*(w/2-0.02), fi-out*0.07); RB(ax==="x" ? 0.30 : 0.05, h+0.3, ax==="x" ? 0.05 : 0.30, px, ym+0.08, pz, cur, 0, 0.02); }
-    if(cur){ const [px, pz]=P(m, fi-out*0.09); C(0.012, w+0.7, px, o.head+0.2, pz, "#5a4a3a", 8, ax==="x" ? 0 : Math.PI/2, 0, ax==="x" ? Math.PI/2 : 0); } }
+    if(cur) for(const sd of [-1,1]){ const [px, pz]=P(m+sd*(w/2-0.02), fi-out*0.13); RB(ax==="x" ? 0.30 : 0.05, h+0.3, ax==="x" ? 0.05 : 0.30, px, ym+0.08, pz, cur, 0, 0.02); }
+    if(cur){ const [px, pz]=P(m, fi-out*0.15); C(0.012, w+0.7, px, o.head+0.2, pz, "#5a4a3a", 8, ax==="x" ? 0 : Math.PI/2, 0, ax==="x" ? Math.PI/2 : 0); } }
   // furniture in a frame of its own: x across, z out from its back, ry the way it faces (14z's F)
   const Fr=(x, z, ry, fy)=>{ const xf=XF(x, z, ry); return { b:(w,h,d,lx,ly,lz,c)=>B(w,h,d, xf.x(lx,lz), fy+ly, xf.z(lx,lz), c, ry),
     f:(w,h,d,lx,ly,lz,c,rad)=>RB(w,h,d, xf.x(lx,lz), fy+ly, xf.z(lx,lz), c, ry, rad||0.04),

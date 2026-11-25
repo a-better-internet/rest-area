@@ -438,7 +438,8 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
       const cb={}; const R=K.rect(UC-0.5, UC+0.5, VF, VF+0.2); Object.assign(cb, {x0:R[0], x1:R[1], z0:R[2], z1:R[3], y0:y-0.3, y1:y+DH}); COL_DYN.push(cb); E.doorCols.push(cb);
       // the landing doors: two leaves in the opening, sliding apart into the wall either side
       const g=new T.Group(); const [gx, gz]=F.P(UC, VF+0.1); g.position.set(gx, y+DH/2, gz); g.rotation.y=F.ry; scene.add(g);
-      const L=[new T.Mesh(leafG, bm), new T.Mesh(leafG, bm)]; L[0].position.x=-0.25; L[1].position.x=0.25; for(const m of L){ m.castShadow=true; g.add(m); }
+      const L=[new T.Mesh(leafG, bm), new T.Mesh(leafG, bm)]; L[0].position.x=-0.25; L[1].position.x=0.25; L[1].position.z=0.012; for(const m of L){   // (the second leaf a little forward: where they lap when shut their faces are not in one plane)
+      m.castShadow=true; g.add(m); }
       E.land.push(L);
       const [ux, uz]=F.P(UC+0.95+0.3, VF-0.45); addUse(ux, uz, y, "E  ·  CALL THE ELEVATOR", ()=>{ press(E, f, true); }, 1.3);
       const [ix, iz]=F.P(UC, 11.2); addUse(ix, iz, y, "E  ·  THE NEXT FLOOR UP   ·   1–"+N+"  ·  ANY FLOOR", ()=>{ press(E, (E.f+1)%N); }, 0.9, ()=>E.state!=="moving" && E.f===f);
@@ -480,7 +481,7 @@ const OFFICE={routes:{}, lamps:[], water:null, t:0, flow:new T.Vector4(), elevs:
         say(c, "COMMONWEALTH OF PENNSYLVANIA", W/2, H*0.14, W*0.72, H*0.05, "#2a2a2a", "700", "Georgia, serif"); say(c, "CERTIFICATE OF OPERATION", W/2, H*0.24, W*0.72, H*0.06, "#2a2a2a", "800", "Georgia, serif");
         say(c, "PASSENGER ELEVATOR", W/2, H*0.38, W*0.7, H*0.05, "#2a2a2a", "600", "Georgia, serif"); say(c, "CAPACITY 2500 LBS · 16 PERSONS", W/2, H*0.5, W*0.72, H*0.045, "#2a2a2a", "600", "Georgia, serif");
         say(c, "DEPT. OF LABOR & INDUSTRY", W/2, H*0.66, W*0.72, H*0.045, "#2a2a2a", "600", "Georgia, serif"); say(c, "INSPECTED 4 · 86", W/2, H*0.8, W*0.6, H*0.05, "#7a1a1a", "700", "Georgia, serif"); }), roughness:0.8}), -0.765, 1.6, 0, Math.PI/2);
-    const cl=[new T.Mesh(leafG, bm), new T.Mesh(leafG, bm)]; for(const m of cl){ m.position.set(0, DH/2, D/2+0.03); car.add(m); }
+    const cl=[new T.Mesh(leafG, bm), new T.Mesh(leafG, bm)]; for(const m of cl){ m.position.set(0, DH/2, D/2+0.03); car.add(m); } cl[1].position.z+=0.012;
     E.car=car; E.carL=cl;
     // the car's floor, a surface that rides up and down with it; across its door a collider that rides with it, solid while the doors are shut
     { const R=K.rect(UC-0.83, UC+0.83, CAR_V0, CAR_V1); addFlat(R[0], R[1], R[2], R[3], levels[0]); E.surf=SURF[SURF.length-1]; E.rect=R;

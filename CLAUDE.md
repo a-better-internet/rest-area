@@ -1415,3 +1415,32 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - The apartments are open plan inside: no interior door leaves, wide
   openings, the closet a set of bifold doors on the partition, the kitchen
   counter set back from the front door; the sliders open as you come up.
+
+## Round 47 notes
+
+- `tools/zfight.js` lists only overlaps that can be seen. From the middle
+  of each shared patch it casts along the face's normal against every mesh
+  (both sides, every layer, shown or not: the draw distance hides far
+  tiles). A patch is buried if the ray meets something within 2.3 cm or
+  the inside of a solid, if it is an underside on the ground, or if it is
+  in a sealed cavity that no ray of a fan gets half a metre out of. Two
+  faces of one plain-coloured detail mesh in the same colour are skipped,
+  since they draw the same. `ALL=1` lists everything. A list of boxes
+  (each with a `name`) sweeps several places in one load, and `amin` (m²)
+  sets the smallest shared patch it reports. `WHY=1` prints what each ray
+  met.
+- Trim never shares a plane with the opening it frames. A casing, a
+  door's track or a sill stands at least 4 mm clear of the opening's
+  sides, head and sill (14n's `win` / `door`), because the wall's thin
+  boxes grow at bake. A floor slab between storeys stops inside the
+  outer walls, so the walls' own tops are the floor across their
+  thickness. A run's pieces over and under an opening in a partition
+  with no room side stand 6 mm proud both ways (14mi's `run`).
+- Never plain white is enforced at bake. 01's `detailMesh` brings any
+  pale, nearly grey colour (brightest channel over 0.85, spread under 0.16)
+  on a lit, untextured, non-glowing material down to 0.85 (`capWhite`).
+  Pick tinted colours anyway: the cap only stops the worst.
+- A double leaf that laps when shut (the elevators' landing and car doors,
+  14md) has its second leaf 12 mm forward of the first.
+- Curtains hang in front of a window's stool, never through it (14z2's
+  `win`).
