@@ -4,7 +4,10 @@
    keeps every baked box's final matrix (after 01's growth), takes every
    triangle in a box of the world, and reports the pairs within `near`
    metres of one plane that share more than `amin` square metres, grouped
-   by bucket. Faces turned into a wall still count; read the normals.
+   by bucket. A pair is listed only if its shared patch can be seen: from
+   its middle, a ray out along the face's normal meets nothing solid within
+   2.5 cm (a face buried in a wall or lying on a floor is counted, not
+   listed). ALL=1 lists the buried ones too.
      node tools/zfight.js '{"x0":-10,"x1":17,"z0":-21,"z1":21,"y0":-0.6,"y1":10,"near":0.0011}' [examples]
    or a list of such boxes, each with a "name", to sweep several places in one load.  */
 const path=require("path"); const { chromium } = require("playwright");
@@ -22,6 +25,7 @@ const boxes=Array.isArray(arg) ? arg : [arg];
   await p.waitForFunction(()=>window.REST,null,{timeout:180000});
   for(const box of boxes){
   if(box.name) console.log("\n== "+box.name);
+  if(process.env.ALL) box.all=true;
   const res=await p.evaluate((box)=>{
     const T=THREE, srcs=[];
     for(const e of (window.ZDBG||[])) srcs.push({name:"bk:"+e.bucket, geo:e.geo, m:e.matrix});
@@ -60,7 +64,32 @@ const boxes=Array.isArray(arg) ? arg : [arg];
       return out; };
     const ccw=P=>{ const s=(P[1][0]-P[0][0])*(P[2][1]-P[0][1])-(P[1][1]-P[0][1])*(P[2][0]-P[0][0]); return s>=0?P:[P[0],P[2],P[1]]; };
     const area=P=>{ let s=0; for(let i=0;i<P.length;i++){ const a=P[i], b=P[(i+1)%P.length]; s+=a[0]*b[1]-a[1]*b[0]; } return Math.abs(s)/2; };
-    const overlap=(A,B)=>{ let poly=ccw(A); const C=ccw(B); for(let i=0;i<3 && poly.length;i++) poly=clip(poly, C[i], C[(i+1)%3]); return poly.length>2?area(poly):0; };
+    const overlapPoly=(A,B)=>{ let poly=ccw(A); const C=ccw(B); for(let i=0;i<3 && poly.length;i++) poly=clip(poly, C[i], C[(i+1)%3]); return poly; };
+    const overlap=(A,B)=>{ const poly=overlapPoly(A,B); return poly.length>2?area(poly):0; };
+    // can the shared patch be seen? From its middle, a hair off the face, look out along the face's normal: anything solid
+    // within a couple of centimetres (a wall it is buried in, the floor it lies on) hides it. ALL=1 lists the buried ones too
+    const vm=[]; REST.scene.traverse(o=>{ if(!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh) return;   // (shown or not: the draw distance hides far tiles)
+      if(!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const sp=o.geometry.boundingSphere.clone().applyMatrix4(o.matrixWorld);
+      if(sp.center.x+sp.radius<box.x0-1 || sp.center.x-sp.radius>box.x1+1 || sp.center.z+sp.radius<box.z0-1 || sp.center.z-sp.radius>box.z1+1) return; vm.push(o); });
+    const rc=new T.Raycaster(); rc.far=3; rc.layers.enableAll(); const nm=new T.Matrix3(), wn=new T.Vector3();
+    const seen=(A,B)=>{ const poly=overlapPoly(proj(A), proj(B)); if(poly.length<3) return false; let u=0, v=0; for(const q of poly){ u+=q[0]; v+=q[1]; } u/=poly.length; v/=poly.length;
+      const ax=Math.abs(A.n[0]), ay=Math.abs(A.n[1]), az=Math.abs(A.n[2]), [iu, iv, iw]=ax>=ay&&ax>=az ? [1,2,0] : ay>=az ? [0,2,1] : [0,1,2];
+      const P=[0,0,0]; P[iu]=u; P[iv]=v; P[iw]=(A.d-A.n[iu]*u-A.n[iv]*v)/A.n[iw];
+      const o=new T.Vector3(P[0]+A.n[0]*0.002, P[1]+A.n[1]*0.002, P[2]+A.n[2]*0.002), d=new T.Vector3(A.n[0], A.n[1], A.n[2]);
+      rc.set(o, d); const h=rc.intersectObjects(vm, false); seen.why=h.length ? [h[0].object.name, +h[0].distance.toFixed(3)] : [P.map(v=>+v.toFixed(3))]; if(!h.length) return true; if(h[0].distance<0.023) return false;
+      // further off: if the first face met is one seen from behind, the patch is inside a solid (a liner's foot in a slab)
+      if(h[0].face){ nm.getNormalMatrix(h[0].object.matrixWorld); wn.copy(h[0].face.normal).applyMatrix3(nm).normalize(); if(wn.dot(d)>0.05) return false; }
+      // an underside on the ground: the ray starts under the terrain and meets nothing
+      if(d.y<-0.7 && window.Terrain && Terrain.heightAt && Terrain.heightAt(o.x, o.z)>o.y-0.03) return false;
+      // a sealed cavity (between a ceiling and the floor over it, under a wall's foot): it shows only if some ray from it
+      // gets half a metre into the open
+      const t1=new T.Vector3(), t2=new T.Vector3(); t1.set(Math.abs(d.y)<0.9?0:1, Math.abs(d.y)<0.9?1:0, 0).cross(d).normalize(); t2.copy(d).cross(t1);
+      for(let k=-1;k<8;k++){ const dir=k<0 ? d.clone() : d.clone().multiplyScalar(0.7).addScaledVector(t1, Math.cos(k*0.785)*0.7).addScaledVector(t2, Math.sin(k*0.785)*0.7).normalize();
+        rc.set(o, dir); const g=rc.intersectObjects(vm, false); if(!g.length || g[0].distance>0.5){ seen.why=[k, g.length?g[0].object.name:"open"]; return true; } }
+      return false; };
+    const ALLP=box.all;
+    // a face buried in a solid looks out through that solid's back face, so the ray must see both sides while it tests
+    const sides=new Map(); for(const o of vm) for(const m of [].concat(o.material)) if(m && !sides.has(m)){ sides.set(m, m.side); m.side=T.DoubleSide; }
     const pairs=new Map();
     for(const [k,L] of G){
       // also the neighbouring plane bin: offsets under 4 mm
@@ -78,16 +107,17 @@ const boxes=Array.isArray(arg) ? arg : [arg];
         let r=pairs.get(pk); if(!r){ const bbx=s=>{ const g=srcs[s].geo; if(!g.boundingBox) g.computeBoundingBox(); const q=g.boundingBox.clone().applyMatrix4(srcs[s].m); return [q.min.x,q.min.y,q.min.z,q.max.x,q.max.y,q.max.z].map(v=>+v.toFixed(2)); };
           r={a:srcs[Math.min(A.s,B.s)].name, b:srcs[Math.max(A.s,B.s)].name, at:A.c.map(v=>+v.toFixed(2)), n:A.n.map(v=>+v.toFixed(2)), dd:+(A.d-B.d).toFixed(5), cnt:0,
              ba:bbx(Math.min(A.s,B.s)), bb:bbx(Math.max(A.s,B.s))}; pairs.set(pk,r); }
-        r.cnt++;
+        r.cnt++; if(!r.vis && (r.tested||0)<8){ r.tested=(r.tested||0)+1; if(ALLP || seen(A, B)){ r.vis=true; r.why=seen.why; } }
       }
     }
-    return {srcs:srcs.length, tris:tris.length, pairs:[...pairs.values()]};
+    for(const [m, sd] of sides) m.side=sd;
+    const all=[...pairs.values()]; return {srcs:srcs.length, tris:tris.length, buried:all.filter(r=>!r.vis).length, pairs:all.filter(r=>r.vis)};
   }, box);
-  console.log("sources", res.srcs, "triangles", res.tris, "overlapping pairs", res.pairs.length);
+  console.log("sources", res.srcs, "triangles", res.tris, "overlapping pairs that show", res.pairs.length, "· buried, out of sight", res.buried);
   const byName={}; for(const r of res.pairs){ const k=r.a+" ~ "+r.b; (byName[k]=byName[k]||[]).push(r); }
   for(const k of Object.keys(byName).sort((x,y)=>byName[y].length-byName[x].length)){
     const L=byName[k]; console.log(String(L.length).padStart(4), k);
-    for(const r of L.slice(0, +process.argv[3]||4)) console.log("        at", JSON.stringify(r.at), "n", JSON.stringify(r.n), "dd", r.dd, " A", JSON.stringify(r.ba), " B", JSON.stringify(r.bb));
+    for(const r of L.slice(0, +process.argv[3]||4)) console.log("        at", JSON.stringify(r.at), "n", JSON.stringify(r.n), "dd", r.dd, process.env.WHY ? " why "+JSON.stringify(r.why) : "", " A", JSON.stringify(r.ba), " B", JSON.stringify(r.bb));
   }
   }
   await b.close();

@@ -60,7 +60,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
   // one wall run: pieces of `bk` round the openings along a (x or z), across c0..c1, y0..y1, colliders with them;
   // in a liner, `inn` is which way the room is, and the pieces over and under an opening stand a centimetre further in
   const run=(bk, ax, c0, c1, a, b, y0, y1, ops, col, inn)=>{ let u=a;
-    const piece=(p, q, h0, h1, deep)=>{ if(q-p<0.005 || h1-h0<0.005) return; let d0=c0, d1=c1; if(deep && inn){ if(inn>0) d1+=0.01; else d0-=0.01; }
+    const piece=(p, q, h0, h1, deep)=>{ if(q-p<0.005 || h1-h0<0.005) return; let d0=c0, d1=c1; if(deep && inn){ if(inn>0) d1+=0.01; else d0-=0.01; } else if(deep){ d0-=0.006; d1+=0.006; }
       if(ax==="x") wallBox(bk, p, q, d0, d1, h0, h1, col, 0.6, FL0); else wallBox(bk, d0, d1, p, q, h0, h1, col, 0.6, FL0); };
     for(const o of ops.slice().sort((m, n)=>m[0]-n[0])){ piece(u, o[0], y0, y1); if(o[2]>y0+0.21) piece(o[0], o[1], y0, o[2], true); piece(o[0], o[1], o[3], y1-0.002, true); u=o[1]; }
     piece(u, b, y0, y1); };
@@ -103,8 +103,9 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
     const [c, d]=zr(s, 0.05, HL); B(0.09, 0.26, d-c, XB-0.035, FL1-0.12, (c+d)/2, TRIM);
     B(XFR-XB-0.3, 0.26, 0.08, XR, FL1-0.12, s<0 ? ZS-0.04 : ZN+0.04, TRIM); }
   // the floor between the storeys, the landing's slab over the breezeway's back, and each unit's ceiling
-  for(const s of [-1, 1]){ const [a, b]=zr(s, CW+0.01, HL-0.01); B(XFR-XB-0.02, 0.28, b-a, XR, FL1-0.14, (a+b)/2, "#8a8478"); }
-  B(X(3.6)-XB-0.02, 0.28, 2*CW, (XB+X(3.6))/2, FL1-0.14, ZC, "#8a8478");
+  // (inside the outer walls' faces: the walls' own tops are the floor across their thickness, so none shares their plane)
+  for(const s of [-1, 1]){ const [a, b]=zr(s, CW+0.01, HL-WT-0.008); B(XFR-XB-2*WT-0.016, 0.28, b-a, XR, FL1-0.14, (a+b)/2, "#8a8478"); }
+  B(X(3.6)-XB-WT-0.018, 0.28, 2*CW, (XB+WT+0.008+X(3.6)-0.01)/2, FL1-0.14, ZC, "#8a8478");
   for(const F of [FL0, FL1]) for(const s of [-1, 1]){
     // (one L-shaped slab a unit: its living room's ceiling runs on round the breezeway without a seam)
     { const xa=XB+WT+0.02, xb=X(CD)-WT, xc=XFR-WT-0.02, pa=0.07, pb=CW+0.22, pc=HL-WT-0.02, sh=new T.Shape();
@@ -576,7 +577,7 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
   // gutters along both eaves, a downspout at each corner
   { const XE0=XB-0.5, XE1=XFR+1.9, ZL=ZN-ZS+0.6;
     for(const [x, sg] of [[XE1+0.07, 1],[XE0-0.07, -1]]){ const y=yTop(x-sg*0.07)-0.17; B(0.12, 0.11, ZL, x, y, ZC, "#b8b2a6");
-      for(const z of [ZS-0.2, ZN+0.2]){ const g=gy(x, z); B(0.08, y-g, 0.08, x, (y+g)/2, z, "#b8b2a6"); B(0.3, 0.04, 0.16, x+sg*0.1, g+0.02, z, "#8a867e"); addCol(x-0.05, x+0.05, z-0.05, z+0.05, g-0.3, y); } } }
+      for(const z of [ZS-0.2, ZN+0.2]){ const g=gy(x, z); B(0.08, y-g+0.03, 0.08, x, (y+g-0.03)/2, z, "#b8b2a6"); B(0.3, 0.06, 0.16, x+sg*0.1, g+0.005, z, "#8a867e"); addCol(x-0.05, x+0.05, z-0.05, z+0.05, g-0.3, y); } } }
   // the condensers out back on their pads, the line sets into the wall
   for(const s of [-1, 1]) for(const p of [3.2, 4.3]){ const x=XB-0.75, z=Z(s, p), g=gy(x, z);
     B(0.86, 0.06, 0.86, x, g+0.03, z, "#8a867e"); RB(0.72, 0.72, 0.72, x, g+0.42, z, "#9a9a92", 0, 0.03); C(0.26, 0.02, x, g+0.79, z, "#2a2a2c", 18);
