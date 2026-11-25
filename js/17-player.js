@@ -499,7 +499,7 @@ const drone=(function(){
   for(const m of g.children) m.castShadow=true;
   g.userData.rotors=ROTORS; g.visible=false; scene.add(g); return g;
 })();
-function setDrone(on){
+function setDrone(on, key){
   droneMode=on; drone.visible=on;
   if(on){
     if(seated) standUp();
@@ -513,7 +513,7 @@ function setDrone(on){
     camera.position.set(dronePos.x-Math.sin(droneYaw)*3.5, dronePos.y+2.2,
                         dronePos.z-Math.cos(droneYaw)*3.5);
     document.getElementById("prompt").classList.remove("show");
-    toast("DRONE  ·  WASD FLY  ·  SPACE UP  ·  SHIFT DOWN  ·  F TO LAND","#6fe3ff");
+    toast("DRONE  ·  WASD FLY  ·  SPACE UP  ·  SHIFT DOWN  ·  "+(key||"F")+" TO LAND"+(key ? "  ·  CLICK TO FIRE" : ""),"#6fe3ff");
   }else{
     player.yaw=droneYaw+Math.PI;
     toast("BACK ON YOUR FEET","#ffb324");
@@ -540,8 +540,12 @@ function droneUpdate(dt){
   droneVel.x+=ax*accel*dt; droneVel.z+=az*accel*dt; droneVel.y+=ay*ACCEL_Y*dt;
   droneVel.multiplyScalar(Math.max(0, 1-2.3*dt));                     // air drag
   dronePos.x+=droneVel.x*dt; dronePos.y+=droneVel.y*dt; dronePos.z+=droneVel.z*dt;
-  dronePos.x=clamp(dronePos.x, -1500, 1500);
-  dronePos.z=clamp(dronePos.z, -1500, 1500);
+  // (anywhere inside the world's edge: Hollow Road and the stone house are well past 1.5 km)
+  dronePos.x=clamp(dronePos.x, GROUND_EDGE.x0+60, GROUND_EDGE.x1-60);
+  dronePos.z=clamp(dronePos.z, GROUND_EDGE.z0+60, GROUND_EDGE.z1-60);
+  // in zombie mode it is on a tether: the dead are only kept within 150 m of you, so it flies no further than 140 from where you stand
+  if(typeof ZOMBIE!=="undefined" && ZOMBIE.on){ const tx=dronePos.x-player.pos.x, tz=dronePos.z-player.pos.z, td=Math.hypot(tx, tz);
+    if(td>140){ dronePos.x=player.pos.x+tx/td*140; dronePos.z=player.pos.z+tz/td*140; const vr=(droneVel.x*tx+droneVel.z*tz)/td; if(vr>0){ droneVel.x-=tx/td*vr; droneVel.z-=tz/td*vr; } } }
   // past the walkable woods the canopy is a surface, and the drone treats it as one
   const deck=Math.max(surfaceY(dronePos.x, dronePos.z, dronePos.y), FOREST.canopyAt(dronePos.x, dronePos.z))+0.30;
   if(dronePos.y<deck){ dronePos.y=deck; if(droneVel.y<0) droneVel.y=0; }

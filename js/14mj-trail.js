@@ -39,8 +39,9 @@ const RIDGE={routes:{}, lamps:[], look:null};
     const n=lines.length; lines.forEach((t, i)=>{ const big=i===0; say(c, t, W/2, H*(n===1 ? 0.5 : 0.26+0.48*i/(n-1)), W*0.78, H*(big ? 0.2 : 0.12)*(n>3 ? 0.8 : 1), CREAM, big ? "800" : "600", big ? "Georgia, serif" : "Arial"); }); };
 
   /* ---- the trail on the ground: a ribbon of bark mulch a metre and a half wide, each edge on the ground under it ---- */
-  const PTS=[]; { for(let i=0;i<TR.length-1;i++){ const a=TR[i], b=TR[i+1], n=Math.max(1, Math.ceil(Math.hypot(b.x-a.x, b.z-a.z)/0.8));
-      for(let k=0;k<n;k++) PTS.push({x:a.x+(b.x-a.x)*k/n, z:a.z+(b.z-a.z)*k/n}); } PTS.push({x:TR[TR.length-1].x, z:TR[TR.length-1].z}); }
+  // (it starts a metre on, over the lot's edge, so the bark runs onto the paving with no strip of grass between)
+  const PTS=[]; { const TRL=[{x:TR[0].x+1.1, z:TR[0].z}].concat(TR); for(let i=0;i<TRL.length-1;i++){ const a=TRL[i], b=TRL[i+1], n=Math.max(1, Math.ceil(Math.hypot(b.x-a.x, b.z-a.z)/0.8));
+      for(let k=0;k<n;k++) PTS.push({x:a.x+(b.x-a.x)*k/n, z:a.z+(b.z-a.z)*k/n}); } PTS.push({x:TRL[TRL.length-1].x, z:TRL[TRL.length-1].z}); }
   let LEN=0; PTS.forEach((p, i)=>{ if(i) LEN+=Math.hypot(p.x-PTS[i-1].x, p.z-PTS[i-1].z); p.s=LEN; p.y=gy(p.x, p.z); });
   { const P=[], U=[], I=[], HW=0.75;
     PTS.forEach((p, i)=>{ const a=PTS[Math.max(0, i-1)], b=PTS[Math.min(PTS.length-1, i+1)], tx=b.x-a.x, tz=b.z-a.z, tl=Math.hypot(tx, tz)||1, nx=-tz/tl, nz=tx/tl;
@@ -48,7 +49,7 @@ const RIDGE={routes:{}, lamps:[], look:null};
     for(let i=0;i<PTS.length-1;i++) for(let j=0;j<2;j++){ const a=i*3+j, b=a+1, c=a+3, d=a+4; I.push(a, c, b, b, c, d); }
     const g=new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(P, 3)); g.setAttribute("uv", new T.Float32BufferAttribute(U, 2)); g.setIndex(I); g.computeVertexNormals();
     if(g.attributes.normal.getY(0)<0){ for(let i=0;i<I.length;i+=3){ const t=I[i]; I[i]=I[i+1]; I[i+1]=t; } g.setIndex(I); g.computeVertexNormals(); }
-    push("mulchbed", g, 0, 0, 0, 0, "#7e705e"); }
+    push("trailbed", g, 0, 0, 0, 0, "#7e705e"); }
   // log steps across it wherever it runs steeper than about one in six, a stake either end
   { let last=-9; PTS.forEach((p, i)=>{ if(i===0 || i===PTS.length-1 || p.s-last<0.7) return; const a=PTS[i-1], b=PTS[i+1], gr=Math.abs(b.y-a.y)/Math.max(0.1, b.s-a.s);
       if(gr<0.17) return; last=p.s; const ry=Math.atan2(b.x-a.x, b.z-a.z);

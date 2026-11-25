@@ -68,17 +68,18 @@ FOREST.finish();
    edge and out over the grass, grit and worn ground in a ragged band that fades into the lawn. A road's verge is widest, a lot's and
    a drive's less, gravel's least (it spills anyway). One bucket, tiled with the rest, transparent, over the ground's own offset. */
 const VERGES={};
-(function verges(){
+(function verges(){ const _t0=performance.now();
   const SRC={road:[1.1, "#ffffff"], asphalt:[0.95, "#ffffff"], lotpave:[0.8, "#ffffff"], wp_road:[0.8, "#ffffff"], rn_drive:[0.7, "#ffffff"],
-             gravelbed:[0.6, "#f2eee6"], wp_gravel:[0.6, "#f2eee6"]};
+             gravelbed:[0.6, "#f2eee6"], wp_gravel:[0.6, "#f2eee6"], walkflat:[0.45, "#ffffff"], padflat:[0.7, "#ffffff"], trailbed:[0.55, "#ffffff"]};
   const tris=[], edges=[], CELL=4, H=new Map(), P=new T.Vector3(), Q=new T.Vector3(), R=new T.Vector3();
   const key=(x, z)=>Math.floor(x/CELL)+":"+Math.floor(z/CELL);
   for(const name in SRC){ const b=BUCKETS.get(name); if(!b) continue;
     for(const e of b.entries){ const g=e.geo, pos=g.attributes.position, ix=g.index ? g.index.array : null, n=ix ? ix.length : pos.count;
-      if(n>60000) continue;
       const vk=new Map(), ek=new Map(), wv=[];
-      const vid=(i)=>{ P.fromBufferAttribute(pos, i).applyMatrix4(e.matrix); const k=Math.round(P.x*100)+","+Math.round(P.z*100); let id=vk.get(k);
-        if(id===undefined){ id=wv.length; vk.set(k, id); wv.push(P.clone()); } return id; };
+      // (a number for a key, and each index looked up once: Hollow Road's paving is one piece of half a million indices)
+      const seen=new Int32Array(pos.count).fill(-1);
+      const vid=(i)=>{ const q=seen[i]; if(q>=0) return q; P.fromBufferAttribute(pos, i).applyMatrix4(e.matrix); const k=(Math.round(P.x*100)+400000)*1000000+(Math.round(P.z*100)+400000); let id=vk.get(k);
+        if(id===undefined){ id=wv.length; vk.set(k, id); wv.push(P.clone()); } seen[i]=id; return id; };
       for(let t=0;t<n;t+=3){ const i0=ix ? ix[t] : t, i1=ix ? ix[t+1] : t+1, i2=ix ? ix[t+2] : t+2, a=vid(i0), b2=vid(i1), c=vid(i2);
         if(a===b2 || b2===c || a===c) continue;
         const A=wv[a], B=wv[b2], C2=wv[c]; Q.subVectors(B, A); R.subVectors(C2, A); const ny=Q.z*R.x-Q.x*R.z, nl=Q.clone().cross(R).length();
@@ -86,7 +87,7 @@ const VERGES={};
         const tri=[A, B, C2]; tris.push(tri);
         const x0=Math.min(A.x, B.x, C2.x), x1=Math.max(A.x, B.x, C2.x), z0=Math.min(A.z, B.z, C2.z), z1=Math.max(A.z, B.z, C2.z);
         for(let gx=Math.floor(x0/CELL); gx<=Math.floor(x1/CELL); gx++) for(let gz=Math.floor(z0/CELL); gz<=Math.floor(z1/CELL); gz++){ const k=gx+":"+gz; let L=H.get(k); if(!L) H.set(k, L=[]); L.push(tri); }
-        for(const [u, v, w] of [[a, b2, c],[b2, c, a],[c, a, b2]]){ const k=u<v ? u+"_"+v : v+"_"+u, o=ek.get(k); if(o) o.n++; else ek.set(k, {u:u, v:v, w:w, n:1}); } }
+        for(const [u, v, w] of [[a, b2, c],[b2, c, a],[c, a, b2]]){ const k=u<v ? u*4194304+v : v*4194304+u, o=ek.get(k); if(o) o.n++; else ek.set(k, {u:u, v:v, w:w, n:1}); } }
       for(const E of ek.values()) if(E.n===1) edges.push({A:wv[E.u], B:wv[E.v], W:wv[E.w], src:name}); } }
   const inTri=(x, z, t)=>{ const [a, b, c]=t, d1=(x-b.x)*(a.z-b.z)-(a.x-b.x)*(z-b.z), d2=(x-c.x)*(b.z-c.z)-(b.x-c.x)*(z-c.z), d3=(x-a.x)*(c.z-a.z)-(c.x-a.x)*(z-a.z);
     return !((d1<0 || d2<0 || d3<0) && (d1>0 || d2>0 || d3>0)); };
@@ -116,6 +117,8 @@ const VERGES={};
     const my=(A.y+B.y)/2, Wd=SRC[E.src][0];
     // (not where more paving, a room, or the water is just past it; not off a deck or a bridge high over the ground)
     if(paved(mx+ox*0.3, mz+oz*0.3, my) || paved(mx+ox*0.75, mz+oz*0.75, my) || indoor(mx+ox*0.4, mz+oz*0.4, my) || water(mx+ox*0.6, mz+oz*0.6)) continue;
+    // (a strip of grass between two pavings under two metres wide is a join that missed: noted, for the checks)
+    for(const d of [1.1, 1.5, 1.9]) if(paved(mx+ox*d, mz+oz*d, my)){ (VERGES.gaps=VERGES.gaps||[]).push([+mx.toFixed(1), +mz.toFixed(1), d, E.src, +L.toFixed(2)]); break; }
     const gA=Terrain.groundAt(A.x, A.z), gB=Terrain.groundAt(B.x, B.z); if(A.y-gA>0.5 && B.y-gB>0.5) continue; if(A.y-gA<-0.05 && B.y-gB<-0.05) continue;
     // four rows across it: just inside the edge, the edge, part way out, all the way out; the outer ones on the ground
     // (where the ground stands over the paving's own edge, the edge you see is where the grass cuts it: start the strip from there)
@@ -134,7 +137,7 @@ const VERGES={};
     if(up<0){ const ix=g.index.array; for(let i=0;i<ix.length;i+=3){ const t=ix[i+1]; ix[i+1]=ix[i+2]; ix[i+2]=t; } g.computeVertexNormals(); }
     g.computeBoundingBox(); const c=new T.Vector3(); g.boundingBox.getCenter(c); g.translate(-c.x, -c.y, -c.z);
     push("verge", g, c.x, c.y, c.z, 0, null); }
-  VERGES.kept=kept; VERGES.edges=edges.length;
+  VERGES.kept=kept; VERGES.edges=edges.length; VERGES.ms=performance.now()-_t0;
 })();
 /* WHAT IS UNDER A WHEEL. Every paved surface, looked at as it was laid (its up-facing triangles, as above), marked
    into a 1.5 m grid: 1 where there is paving, 2 where there is gravel and no paving, nothing where there is neither,

@@ -113,7 +113,11 @@ function frame(){
     if(droneLook.lengthSq()===0) droneLook.copy(droneShown);
     droneLook.lerp(droneShown, 1-Math.exp(-16*delta));
     camera.up.set(0,1,0);
-    camera.lookAt(droneLook.x, droneLook.y+0.25, droneLook.z);
+    if(typeof ZOMBIE!=="undefined" && ZOMBIE.on){
+      // (armed, it sits low in the view: the camera looks on past it and a little over it, so the crosshair in the middle is clear of it)
+      _dtmp.set(droneLook.x-camera.position.x, droneLook.y+0.25-camera.position.y, droneLook.z-camera.position.z).normalize();
+      camera.lookAt(droneLook.x+_dtmp.x*8, droneLook.y+0.25+_dtmp.y*8+2.6, droneLook.z+_dtmp.z*8);
+    }else camera.lookAt(droneLook.x, droneLook.y+0.25, droneLook.z);
   }else if(typeof BOAT!=="undefined" && BOAT.on){
     boatCamera(delta);
   }else if(driving){

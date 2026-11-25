@@ -1444,3 +1444,31 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   14md) has its second leaf 12 mm forward of the first.
 - Curtains hang in front of a window's stool, never through it (14z2's
   `win`).
+
+## Round 48 notes
+
+- 15's `verges` takes paving of any size. It used to skip a piece over
+  60,000 indices, which left Hollow Road (14mb, 14mc and 14md's unions) and
+  the stone house's drive with hard edges. Its vertex and edge keys are
+  numbers, so the pass stays about a second at load. Walks (`walkflat`),
+  pads (`padflat`) and trails (`trailbed`) blend too. `VERGES.gaps` lists
+  each edge with other paving under 2 m beyond it across the grass: a
+  join that missed. Look at those after adding paving.
+- A trail through the woods is `trailbed` (08): the same bark as
+  `mulchbed`, but its own bucket, so its edges wear into the ground. A
+  flower bed stays `mulchbed`, with a hard edge. A trail starts on the
+  paving it leads from, never a strip of grass short of it (14mj starts a
+  metre over the lot; 14mc's runs from the truck court).
+- The drone (17) flies anywhere inside `GROUND_EDGE` (60 m in), not
+  ±1500 m.
+- Zombie mode's drone is `I` (21's `droneKey`; F is the pipe bomb there).
+  You stay standing where you sent it up, and the dead still come for
+  you. It is tethered 140 m from you (17's `droneUpdate`), since the dead
+  are only kept within 150 m. Its gun (`DG`, a pod on 17's `drone` group)
+  fires on the mouse at the point under the crosshair, tested as the roof
+  gun's shots are, and runs hot on a long burst. While armed, 19 frames
+  the drone low in the view, so the crosshair is clear of it. The hand gun,
+  its slots, aiming, the wheel, bombs, melee and reload are off while you
+  fly. `ZOMBIE.spawnAt` and `ZOMBIE.dgState` are for tests.
+- 21 has no local named `drone` (its ambient sound is `amb`): it would hide
+  17's.

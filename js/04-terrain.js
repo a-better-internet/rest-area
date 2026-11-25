@@ -121,7 +121,7 @@ const EAST=(function(){
     // level, and the 8 m canopy over the woods round it (on the 32 m lattice)
     pretz:{site:{x0:743, x1:892, z0:-1652, z1:-1496}, mouth:{z0:-1552, z1:-1536},
            // the trail from the works' back fence east through the woods to a clearing on the shore, and that clearing
-           trail:smoothPath([{x:892,z:-1600},{x:899,z:-1596},{x:906,z:-1599},{x:913,z:-1605},{x:919,z:-1604},{x:925,z:-1600}], 1.5),
+           trail:smoothPath([{x:884,z:-1544.4},{x:886,z:-1560},{x:888.5,z:-1575},{x:890.5,z:-1588},{x:892,z:-1600},{x:899,z:-1596},{x:906,z:-1599},{x:913,z:-1605},{x:919,z:-1604},{x:925,z:-1600}], 1.5),
            woods:{x0:892, x1:924, z0:-1622, z1:-1580}, lake:{x0:922, x1:972, z0:-1628, z1:-1576}},
     // and up the road past the works, the office park (14md): its clearing, graded, out to the shore so the lake opens behind it
     office:{site:{x0:743, x1:990, z0:-1862, z1:-1690}, mouth:{z0:-1782, z1:-1766},

@@ -564,7 +564,7 @@ const ZOMBIE=(function(){
   const BOMBS=[];
   let _bombGeo=null, _bombMat=null, _bombLight=null;
   function throwBomb(){
-    if(Z.dead || S.throwT>0 || driving || player.ladder) return;                  // (not from behind the wheel, or off a ladder)
+    if(Z.dead || S.throwT>0 || driving || droneMode || player.ladder) return;                  // (not from behind the wheel, or off a ladder)
     if(S.bombs<=0 && !Z.infAmmo){ feed("NO PIPE BOMBS", "#8a8a7a"); return; }
     if(!Z.infAmmo) S.bombs--; S.throwT=0.45;
     if(!_bombGeo){ _bombGeo={pipe:new T.CylinderGeometry(0.035, 0.035, 0.22, 10), cap:new T.CylinderGeometry(0.042, 0.042, 0.03, 10),
@@ -820,6 +820,7 @@ const ZOMBIE=(function(){
   }
 
   function hurtPlayer(n, fx, fz){
+    if(droneMode && Z.t-DG.warned>4){ DG.warned=Z.t; feed("THEY'RE AT YOU · I BRINGS THE DRONE DOWN", "#e0402a"); }
     if(Z.dead) return;
     if(Z.god){ S.dmgFlash=Math.min(0.3, S.dmgFlash+n/90); S.shake=Math.min(0.35, S.shake+n/70); return; }     // (NINELIVES: you feel it, it takes nothing)
     Z.hp=Math.max(0, Z.hp-n); S.dmgFlash=Math.min(0.75, S.dmgFlash+n/40); S.shake=Math.min(1, S.shake+n/25);
@@ -835,7 +836,7 @@ const ZOMBIE=(function(){
   function die(){
     Z.dead=true; S.deadT=0; S.fireHeld=false; S.aimHeld=false; S.aimOn=false; S.horde=null;
     const best=loadBest(); Z.newBest=!S.cheated && (!best || Z.score>best.score); if(Z.newBest) saveBest({score:Z.score, t:Z.t, kills:Z.kills}); Z.best=Z.newBest ? null : best;
-    if(driving) exitCar(); if(seated) standUp();
+    if(driving) exitCar(); if(seated) standUp(); if(droneMode) setDrone(false);
     hud.dead(true); snd.die(player.pos.x, player.pos.z, true);
   }
 
@@ -1134,7 +1135,7 @@ const ZOMBIE=(function(){
     S.cool=Math.max(0, S.cool-dt); S.cycle=Math.max(0, S.cycle-dt); S.flashT=Math.max(0, S.flashT-dt);
     S.bloom=Math.max(0, S.bloom-dt*(g.auto ? 0.05 : 0.08));
     if(S.aimOn && (g.flame || atGame() || (keys.KeyQ && player.moving))) S.aimOn=false;        // (a sprint lowers the sights, and they stay down)
-    S.ads=approach(S.ads, ((S.aimHeld || S.aimOn) && !Z.dead && !atGame() && S.switchT<=0 && !S.reloading && S.sprint<0.5) ? 1 : 0, dt*(g.zoom ? 5 : 8));
+    S.ads=approach(S.ads, ((S.aimHeld || S.aimOn) && !Z.dead && !atGame() && !droneMode && S.switchT<=0 && !S.reloading && S.sprint<0.5) ? 1 : 0, dt*(g.zoom ? 5 : 8));
     const sprinting=keys.KeyQ && player.moving && !S.aimHeld;
     S.sprint=approach(S.sprint, sprinting ? 1 : 0, dt*6);
     if(S.switchT>0){ const was=S.switchT; S.switchT-=dt;
@@ -1602,7 +1603,7 @@ const ZOMBIE=(function(){
   /* ======================================================================
      SOUND: made on 20's context
      ====================================================================== */
-  const snd={}; let NB=null, drone=null;
+  const snd={}; let NB=null, amb=null;
   const AC=()=>(typeof AUDIO!=="undefined" && AUDIO.ctx && AUDIO.on()) ? AUDIO.ctx() : null;
   function nb(){ if(!NB){ NB={white:AUDIO.noise(2,"white"), pink:AUDIO.noise(2,"pink"), brown:AUDIO.noise(3,"brown")}; } return NB; }
   function pv(x, z, k){ const c=camera.position, dx=x-c.x, dz=z-c.z, d=Math.hypot(dx,dz); camera.getWorldDirection(_v1);
@@ -1692,10 +1693,10 @@ const ZOMBIE=(function(){
   snd.heart=()=>{ const c=AC(); if(!c) return; const t=c.currentTime; osc(c, t, "sine", 58, 40, 0.14, 0.32); osc(c, t+0.24, "sine", 52, 38, 0.16, 0.24); };
   // under it all: a wind that never lets up, a low drone, and far off, now and then, one of them
   snd.ambience=(on)=>{ const c=AC();
-    if(on && c && !drone){ const s=c.createBufferSource(); s.buffer=nb().brown; s.loop=true; const b=c.createBiquadFilter(); b.type="bandpass"; b.frequency.value=170; b.Q.value=0.5;
+    if(on && c && !amb){ const s=c.createBufferSource(); s.buffer=nb().brown; s.loop=true; const b=c.createBiquadFilter(); b.type="bandpass"; b.frequency.value=170; b.Q.value=0.5;
       const g=c.createGain(); g.gain.value=0; g.gain.setTargetAtTime(0.09, c.currentTime, 2); const o=c.createOscillator(); o.type="sine"; o.frequency.value=41; const og=c.createGain(); og.gain.value=0.025;
-      s.connect(b); b.connect(g); g.connect(AUDIO.master()); o.connect(og); og.connect(g); s.start(); o.start(); drone={s:s, o:o, g:g, b:b}; }
-    if(!on && drone){ try{ drone.s.stop(); drone.o.stop(); }catch(e){} drone=null; } };
+      s.connect(b); b.connect(g); g.connect(AUDIO.master()); o.connect(og); og.connect(g); s.start(); o.start(); amb={s:s, o:o, g:g, b:b}; }
+    if(!on && amb){ try{ amb.s.stop(); amb.o.stop(); }catch(e){} amb=null; } };
 
   /* ======================================================================
      THE SCREEN: health, ammunition, threat, the red at the edges
@@ -1794,14 +1795,16 @@ const ZOMBIE=(function(){
     const g=G(), L=hud.last;
     const hp=Math.ceil(Z.hp); if(L.hp!==hp){ L.hp=hp; hud.hp.textContent=hp; hud.bar.style.width=hp+"%"; hud.hp.style.color=hp<30 ? "#e0402a" : "#e8e2d0"; }
     const ammo=S.mag[g.id]+"|"+S.ammo[g.ammo]+"|"+g.id+"|"+(S.reloading?1:0)+"|"+(Z.infAmmo?1:0);
-    if((L.ammo!==ammo || L.g!==g.id) && !(driving && S.roofKit)){ L.ammo=ammo; L.g=g.id; hud.gunEl.textContent=g.name;
+    if((L.ammo!==ammo || L.g!==g.id) && !(driving && S.roofKit) && !droneMode){ L.ammo=ammo; L.g=g.id; hud.gunEl.textContent=g.name;
       hud.ammo.innerHTML=(S.reloading ? "<small>RELOADING</small>" : S.mag[g.id]+" <small>/ "+(Z.infAmmo ? "∞" : S.ammo[g.ammo])+"</small>");
       hud.atype.textContent=g.ammo;
       hud.slots.innerHTML=GUNS.map(q=>"<span class='"+(q.id===S.cur ? "cur" : S.have[q.id] ? "have" : "")+"'>"+q.slot+" "+q.name.split(" ").pop()+"</span>").join(""); }
     const lv=Z.level; if(L.lv!==lv){ L.lv=lv; hud.threat.textContent="■".repeat(Math.min(lv,12))+"□".repeat(Math.max(0,12-lv)); }
     const st=clock(Z.t)+"  ·  "+Z.kills+" KILLED"; if(L.st!==st){ L.st=st; hud.stats.textContent=st; }
     // behind the wheel with the roof gun: its belt and its barrel in the gun's place
-    if(driving && S.roofKit){ const rt=S.belt+"|"+(S.rgHot ? 1 : 0)+"|"+(Z.infAmmo ? 1 : 0); if(L.rg!==rt){ L.rg=rt;
+    if(droneMode){ const dt2=(S.dgHot ? 1 : 0)+"|"+Math.round((S.dgHeat||0)*10); if(L.rg!=="d"+dt2){ L.rg="d"+dt2;
+        hud.gunEl.textContent="DRONE GUN"; hud.ammo.innerHTML=S.dgHot ? "<small>TOO HOT</small>" : "∞ <small>"+(S.dgHeat>0.55 ? "HOT" : "I LANDS")+"</small>"; hud.atype.textContent="5.56"; } }
+    else     if(driving && S.roofKit){ const rt=S.belt+"|"+(S.rgHot ? 1 : 0)+"|"+(Z.infAmmo ? 1 : 0); if(L.rg!==rt){ L.rg=rt;
         hud.gunEl.textContent="ROOF GUN"; hud.ammo.innerHTML=(S.rgHot ? "<small>TOO HOT</small>" : (Z.infAmmo ? "∞" : S.belt)+" <small>BELT</small>"); hud.atype.textContent="7.62"; } }
     else if(L.rg){ L.rg=null; L.ammo=null; }
     if(L.sc!==Z.score){ L.sc=Z.score; hud.score.innerHTML="<small>SCORE</small>"+Z.score; }
@@ -1809,7 +1812,8 @@ const ZOMBIE=(function(){
     const bt=Z.infAmmo ? "F · PIPE BOMB ×∞" : S.bombs>0 ? "F · PIPE BOMB ×"+S.bombs : ""; if(L.bt!==bt){ L.bt=bt; hud.bombsEl.textContent=bt; }
     const ct=[Z.god ? "∞ HEALTH" : "", Z.infAmmo ? "∞ AMMO" : ""].filter(Boolean).join("  ·  "); if(L.ct!==ct){ L.ct=ct; hud.cheatEl.textContent=ct; }
     // the crosshair opens with the spread, and goes when you aim down the sights
-    const gap=5+spreadNow()*520, op=atGame() ? 0 : (1-S.ads)*(S.sprint>0.5 ? 0.2 : 1);
+    { const sd=droneMode ? "none" : ""; if(L.sd!==sd){ L.sd=sd; hud.slots.style.display=sd; } }   // (the guns' slots: not yours to change in the air)
+    const gap=droneMode ? 6 : 5+spreadNow()*520, op=droneMode ? 0.9 : atGame() ? 0 : (1-S.ads)*(S.sprint>0.5 ? 0.2 : 1);
     const ch=hud.cross.ch; ch[0].style.top=(-gap-9)+"px"; ch[1].style.top=gap+"px"; ch[2].style.left=(-gap-9)+"px"; ch[3].style.left=gap+"px"; hud.cross.style.opacity=op;
     S.hitT=Math.max(0, S.hitT-dt); hud.hit.style.opacity=S.hitT>0 ? 1 : 0; hud.hit.className=S.hitKill && S.hitT>0 ? "kill" : ""; if(S.hitT<=0) S.hitKill=false;
     S.dmgFlash=Math.max(0, S.dmgFlash-dt*1.2);
@@ -1969,17 +1973,75 @@ const ZOMBIE=(function(){
     snd.gun("carbine");
     for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-_o.x, zb.z-_o.z)<100) zb.alert=true;
   }
+  /* ---- THE DRONE (I): in this mode the drone carries a gun in a pod under its belly. You stay standing where you sent it up, and the
+     dead still come for you there; it flies no further than 140 m from you (17's droneUpdate), since they are only kept within 150 m.
+     It fires on the mouse at the point under the crosshair, the middle of the chase view, and its shots are tested as the roof gun's
+     are. No ammunition, but a barrel that runs hot. ---- */
+  const DG={g:null, muzzle:null, flash:null, barMat:null, n:0, warned:0};
+  function dgBuild(){
+    const g=new T.Group(); g.visible=false; drone.add(g); DG.g=g;
+    DG.barMat=new T.MeshStandardMaterial({color:0x2a2a2c, roughness:0.45, metalness:0.6, emissive:0x000000});
+    const olive=new T.MeshStandardMaterial({color:0x3e4232, roughness:0.7, metalness:0.25});
+    const M=(geo, mat, x, y, z, rx)=>{ const m=new T.Mesh(geo, mat); m.position.set(x, y, z); if(rx) m.rotation.x=rx; m.castShadow=true; g.add(m); return m; };
+    M(new T.BoxGeometry(0.1, 0.07, 0.24), olive, 0, -0.1, 0.03);                                           // (the pod, under the body)
+    M(new T.CylinderGeometry(0.016, 0.016, 0.26, 10), DG.barMat, 0, -0.11, 0.26, Math.PI/2);
+    M(new T.BoxGeometry(0.06, 0.05, 0.08), olive, 0.075, -0.1, -0.02);                                     // (the drum)
+    const mz=new T.Object3D(); mz.position.set(0, -0.11, 0.4); g.add(mz); DG.muzzle=mz;
+    const fl=new T.Mesh(new T.ConeGeometry(0.05, 0.18, 8, 1, true), new T.MeshBasicMaterial({color:0xffc070, transparent:true, opacity:0.9, blending:T.AdditiveBlending, depthWrite:false, toneMapped:false}));
+    fl.rotation.x=Math.PI/2; fl.position.set(0, 0, 0.09); fl.visible=false; mz.add(fl); DG.flash=fl;
+  }
+  const _dgO=new T.Vector3(), _dgD=new T.Vector3(), _dgA=new T.Vector3();
+  function updateDroneGun(dt){
+    S.dgFlash=Math.max(0, (S.dgFlash||0)-dt); if(DG.flash) DG.flash.visible=S.dgFlash>0;
+    S.dgCool=Math.max(0, (S.dgCool||0)-dt); S.dgHeat=Math.max(0, (S.dgHeat||0)-dt*(S.dgHot ? 0.4 : S.fireHeld ? 0.07 : 0.3));   // (a long burst, about seven seconds, cooks it) if(S.dgHot && S.dgHeat<0.3){ S.dgHot=false; feed("THE DRONE'S GUN HAS COOLED", "#c8d8a8"); }
+    if(!DG.g) return; DG.barMat.emissive.setRGB(S.dgHeat*0.85, S.dgHeat*0.28, 0);
+    const on=!!(droneMode && Z.on && !Z.dead); DG.g.visible=on; if(!on) return;
+    if(S.fireHeld && S.dgCool<=0 && !S.dgHot) dgFire();
+  }
+  function dgFire(){
+    S.dgCool=0.085; DG.n++;
+    S.dgHeat+=0.018; if(S.dgHeat>=1){ S.dgHeat=1; S.dgHot=true; feed("THE DRONE'S GUN IS TOO HOT · LET IT COOL", "#e8a060"); }
+    drone.updateMatrixWorld(true); DG.muzzle.getWorldPosition(_dgO);
+    // at the point under the middle of the view, the way the crosshair says
+    camera.getWorldDirection(_v1); const W0=rayWorld(camera.position, _v1, 220); _dgA.copy(camera.position).addScaledVector(_v1, Math.max(4, W0.t));
+    _dgD.copy(_dgA).sub(_dgO).normalize();
+    _v2.set(0, 1, 0).cross(_dgD).normalize(); _v3.copy(_dgD).cross(_v2).normalize();
+    const sp=0.009*Math.sqrt(Math.random()), ph=Math.random()*Math.PI*2; _dgD.addScaledVector(_v2, sp*Math.cos(ph)).addScaledVector(_v3, sp*Math.sin(ph)).normalize();
+    let W=rayWorld(_dgO, _dgD, 220);
+    const GH=glassRay(_dgO, _dgD, Math.min(220, W.t+0.45)); if(GH && !GH.P.broke){ hitGlass(GH.P, _dgO, _dgD, GH.t, 1); W={t:GH.t, what:"glass"}; }
+    let best=null; for(const zb of ZS){ if(!zb.live || zb.state==="dead") continue; if(Math.abs(zb.x-_dgO.x)>222 || Math.abs(zb.z-_dgO.z)>222) continue;
+      const h=rayZombie(_dgO, _dgD, zb, W.t); if(h && (!best || h.t<best.t)) best={zb:zb, t:h.t, head:h.head}; }
+    let endT=W.t;
+    if(best){ _v1.copy(_dgO).addScaledVector(_dgD, best.t); hurtZombie(best.zb, 26*(best.head ? 2.4 : 1), best.head, _v1.clone(), _dgD.clone()); endT=best.t; S.hitT=0.14; }
+    else if(W.what && W.what!=="glass"){ _v1.copy(_dgO).addScaledVector(_dgD, W.t-0.04); dust.puff(_v1, W.what==="ground"); }
+    if(DG.n%2===0){ const T2=RG.tr[RG.ti++%RG.tr.length], a=T2.ln.geometry.attributes.position; _v1.copy(_dgO).addScaledVector(_dgD, Math.min(endT, 220));
+      a.setXYZ(0, _dgO.x, _dgO.y, _dgO.z); a.setXYZ(1, _v1.x, _v1.y, _v1.z); a.needsUpdate=true; T2.ln.visible=true; T2.t=0.07; }
+    S.dgFlash=0.04; DG.flash.rotation.y=Math.random()*6;
+    snd.gun("carbine");
+    // (the shots carry: the dead near where they land look up, and the ones near you were coming anyway)
+    for(const zb of ZS) if(zb.live && zb.state!=="dead" && Math.hypot(zb.x-_dgA.x, zb.z-_dgA.z)<60) zb.alert=true;
+  }
+  // I: up and down. Not from behind the wheel, at the helm, on a ladder or once you are down
+  function droneKey(){
+    if(Z.dead || driving || player.ladder || (typeof BOAT!=="undefined" && BOAT.on)) return;
+    if(!droneMode){ S.fireHeld=false; S.aimHeld=false; S.aimOn=false; setDrone(true, "I");
+      feed("THE DRONE'S UP · YOU'RE STILL STANDING WHERE YOU WERE · I BRINGS IT DOWN", "#6fe3ff"); }
+    else setDrone(false);
+  }
   function build(){
     if(built) return; built=true;
-    buildVM(); buildFX(); rocketBuild(); rgBuild(); buildHUD(); buildCaches();
+    buildVM(); buildFX(); rocketBuild(); rgBuild(); dgBuild(); buildHUD(); buildCaches();
     // a crowd of them made now, while you are looking at the start, not in the middle of a fight (each is a mesh of its own)
     for(const [kind, n] of [["walker", 14], ["runner", 4], ["brute", 2]]) for(let k=0;k<n;k++) ZS.push(buildZombie(kind));
     const dom=renderer.domElement;
     dom.addEventListener("mousedown", e=>{ if(!Z.on || Z.dead) return; if(e.button===0) S.fireHeld=true; else if(e.button===2) S.aimHeld=true; });
     addEventListener("mouseup", e=>{ if(e.button===0){ S.fireHeld=false; } else if(e.button===2) S.aimHeld=false; });
     dom.addEventListener("contextmenu", e=>{ if(Z.on){ e.preventDefault(); e.stopPropagation(); } });
-    addEventListener("wheel", e=>{ if(!Z.on || Z.dead || !e.deltaY) return; const d=wheelStep(e); if(!d) return; if(aiming()) zoomStep(-d); else cycleGun(d); }, {passive:true});
+    addEventListener("wheel", e=>{ if(!Z.on || Z.dead || droneMode || !e.deltaY) return; const d=wheelStep(e); if(!d) return; if(aiming()) zoomStep(-d); else cycleGun(d); }, {passive:true});
   }
+  // (for tests: one of the dead at a point, standing still facing yaw)
+  Z.dgState=()=>({n:DG.n, heat:+(S.dgHeat||0).toFixed(2), held:!!S.fireHeld, cool:S.dgCool, vis:!!(DG.g && DG.g.visible)});
+  Z.spawnAt=(x, z, kind, yaw)=>spawnZombie(x, z, surfaceY(x, z, 50), kind||"walker", yaw);
   Z.start=function(){
     if(Z.on) return;
     if(!started) begin();
@@ -1999,11 +2061,12 @@ const ZOMBIE=(function(){
     S.lastYaw=player.yaw; S.lastPitch=player.pitch;
     snd.ambience(true);
     const best=loadBest();
-    banner("THEY'RE COMING", "CLICK TO SHOOT  ·  R RELOAD  ·  X AIMS  ·  + AND − ZOOM  ·  F PIPE BOMB  ·  L LIGHT"+
+    banner("THEY'RE COMING", "CLICK TO SHOOT  ·  R RELOAD  ·  X AIMS  ·  + AND − ZOOM  ·  F PIPE BOMB  ·  I DRONE  ·  L LIGHT"+
            (best ? "\nYOUR BEST  "+best.score+"  ·  "+clock(best.t) : ""));
   };
   Z.stop=function(){
     if(!Z.on) return;
+    if(droneMode) setDrone(false); if(DG.g) DG.g.visible=false;
     Z.on=false; Z.dead=false; stopCops(); mendGlass(); stopFlame(); stopRockets(); if(RG.g){ RG.g.visible=false; for(const T2 of RG.tr){ T2.ln.visible=false; T2.t=0; } }
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ PK[i].g.visible=false; if(PK[i].dyn){ dropMesh(PK[i].g); PK.splice(i,1); } }
@@ -2030,7 +2093,9 @@ const ZOMBIE=(function(){
     if(k==="Equal" || k==="NumpadAdd"){ zoomStep(1); return true; }
     if(k==="Minus" || k==="NumpadSubtract"){ zoomStep(-1); return true; }
     if(k==="KeyV"){ melee(); return true; }
-    if(k==="KeyF"){ throwBomb(); return true; }                                  // (a pipe bomb; no drone in this)
+    if(k==="KeyI"){ if(!e.repeat) droneKey(); return true; }                     // (the drone, with its gun: F is the pipe bomb here)
+    if(droneMode && (k==="KeyF" || k==="KeyV" || k==="KeyR" || /^Digit/.test(k))) return true;   // (your hands are on the controls)
+    if(k==="KeyF"){ throwBomb(); return true; }                                  // (a pipe bomb)
     if(k==="KeyX"){ if(!e.repeat) aimToggle(); return true; }                 // (the sights up, the sights down; no wrecks in this)
     if(k==="KeyP" || k==="KeyT"){ return true; }                             // (no power cuts or storms on top of it)
     return false;
@@ -2090,7 +2155,7 @@ const ZOMBIE=(function(){
     // the pipe bombs, and a horde when one is coming
     updateBombs(dt); updateRockets(dt, light); updateHorde(dt); updateCops(dt, now, dark); updateGlass(dt); updateFlame(dt, now);
     S.streakT=Math.max(0, S.streakT-dt); if(S.streakT<=0) S.streak=0;
-    updateGun(dt); updateRoofGun(dt);
+    updateGun(dt); updateRoofGun(dt); updateDroneGun(dt);
     updateVM(dt);
     updatePickups(dt);
     updateFX(dt, light);
@@ -2099,6 +2164,7 @@ const ZOMBIE=(function(){
     camera.getWorldDirection(_v1);
     FLASH.x=camera.position.x+_v1.x*0.7; FLASH.y=camera.position.y+_v1.y*0.7; FLASH.z=camera.position.z+_v1.z*0.7;
     FLASH.under=buriedAt(camera.position.x, camera.position.z, camera.position.y); FLASH.mod.v=S.flashT>0 ? 1 : 0;
+    if(S.dgFlash>0 && DG.muzzle){ DG.muzzle.getWorldPosition(_v2); FLASH.x=_v2.x; FLASH.y=_v2.y; FLASH.z=_v2.z; FLASH.mod.v=0.7; }     // (the drone's, under it)
     if(S.rgFlash>0){ RG.muzzle.getWorldPosition(_v2); FLASH.x=_v2.x; FLASH.y=_v2.y; FLASH.z=_v2.z; FLASH.mod.v=1; }     // (the roof gun's, at its muzzle)
     // the ADS view: tighter, a lot tighter through the rifle's scope
     if(!atGame()){ const g=G(), want=fov*(1-S.ads*(1-aimFov(g))); if(Math.abs(camera.fov-want)>0.01){ camera.fov=want; camera.updateProjectionMatrix(); } }   // (at a cabinet the view is the cabinet's, 18g)

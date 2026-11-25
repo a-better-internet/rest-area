@@ -507,7 +507,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
   /* ---- the trail out the back to the lake: shredded bark through the woods, a sign at the fence, the clearing on the shore ---- */
   { const TR=EAST.pretz.trail, LK=EAST.pretz.lake;
     for(const p of TR) p.y=Terrain.groundAt(p.x, p.z);
-    layRibbon("mulchbed", TR, -0.65, 0.65, 0.045, 0.6, "#c4b4a2");
+    layRibbon("trailbed", TR, -0.65, 0.65, 0.045, 0.6, "#c4b4a2");
     // (the sign faces back into the yard; its post behind it)
     { const sx=889.6, sz=-1602.2, g=Terrain.groundAt(sx, sz); B(0.1, 1.5, 0.1, sx+0.12, g+0.75, sz, "#5a4430"); addCol(sx+0.06, sx+0.18, sz-0.06, sz+0.06, g-0.5, g+1.5);
       B(0.04, 0.32, 0.7, sx+0.05, g+1.25, sz, "#6a5238");
@@ -594,7 +594,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
       [832.5, -1576.0],[836.5, -1576.0],[838.6, -1576.0]]},
     "pretzel works: across the warehouse's staging, into the trailer at the dock":{y0:FLS+0.1, pts:[[838.6, -1560.5],[850.0, -1560.0],[858.0, -1559.0],[858.0, -1548.0],[858.0, -1544.0],[858.0, -1538.0]]},
     "pretzel works: down the warehouse's aisles":{y0:FLS+0.1, pts:[[838.6, -1576.0],[838.6, -1611.0],[856.15, -1611.0],[856.15, -1590.0],[856.15, -1562.0]]},
-    "pretzel works: out the back and down the trail to the lake":[[886.0, -1600.0],[892.0, -1600.0],[899.0, -1596.0],[906.0, -1599.0],[913.0, -1605.0],[919.0, -1604.0],
+    "pretzel works: out the back and down the trail to the lake":[[884.0, -1540.0],[886.0, -1560.0],[888.5, -1575.0],[890.5, -1588.0],[892.0, -1600.0],[899.0, -1596.0],[906.0, -1599.0],[913.0, -1605.0],[919.0, -1604.0],
       [925.0, -1600.0],[935.0, -1600.0],[948.0, -1600.0]],
     "pretzel works: round the outside, the court and the silos":[[766.0, -1540.0],[790.0, -1525.0],[884.0, -1525.0],[886.0, -1600.0],[886.0, -1622.0],[820.0, -1640.0],[784.0, -1640.0],[775.0, -1625.0],[760.0, -1600.0]]};
 })();

@@ -20,6 +20,8 @@ bucketOf("paint",    ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.ename
 bucketOf("walkflat", ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.concrete,roughness:0.95}, _po(-2))));
 bucketOf("bed",      ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.riverRock,roughness:1.0}, _po(-3))));
 bucketOf("mulchbed", ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.mulch,   roughness:1.0}, _po(-3))));
+// a trail through the woods: the same bark as a bed, but its own bucket, so 15 wears its edges into the ground (a bed keeps its hard edge)
+bucketOf("trailbed", ()=>new T.MeshStandardMaterial(Object.assign({map:TEX.mulch,   roughness:1.0}, _po(-3))));
 bucketOf("gravelbed",()=>new T.MeshStandardMaterial(Object.assign({map:TEX.crushed, roughness:1.0}, _po(-2))));
 bucketOf("concrete", ()=>new T.MeshStandardMaterial({map:TEX.concrete, roughness:0.94}));
 bucketOf("metal",    ()=>new T.MeshStandardMaterial({map:TEX.galv,     roughness:0.42, metalness:0.55}));
