@@ -559,7 +559,7 @@ function bakeBuckets(scene){
     }
     // ?zdebug keeps the entries, named, for tools that hunt coplanar faces
     if(typeof location!=="undefined" && /zdebug/.test(location.search))
-      (window.ZDBG=window.ZDBG||[]).push(...b.entries.map(e=>({bucket:name, geo:e.geo, matrix:e.matrix})));
+      (window.ZDBG=window.ZDBG||[]).push(...b.entries.map(e=>({bucket:name, geo:e.geo, matrix:e.matrix, color:e.color})));
     b.entries.length=0;
   }
   return out;
@@ -627,10 +627,17 @@ function _grainOBC(sh){
 function surfaceGrain(mat){ if(!mat || mat.map || mat.userData.grain || !mat.isMeshStandardMaterial) return mat;
   mat.userData.grain=true; mat.onBeforeCompile=_grainOBC; mat.customProgramCacheKey=()=>"grain";
   mat.extensions=Object.assign(mat.extensions||{}, {derivatives:true}); return mat; }
+// never plain white (CLAUDE.md, round 38): a pale, nearly grey colour on a lit, untextured, unlit-by-itself detail
+// mesh is brought down to about #d8 in its brightest channel, its cast kept. Glowing and textured materials are left alone
+const WHITE_CAP=0.85;
+function capWhite(c){ if(!c) return c; const C=c.isColor ? c : new T.Color(c), mx=Math.max(C.r, C.g, C.b), mn=Math.min(C.r, C.g, C.b);
+  if(mx<=WHITE_CAP || mx-mn>0.16) return c; return C.clone().multiplyScalar(WHITE_CAP/mx); }
 function detailMesh(ents, mat, name, cast){
   const tiles=new Map(), _c=new T.Vector3(), out=[];
+  if(!mat.map && mat.toneMapped!==false && !(mat.emissive && mat.emissive.getHex()) && !mat.transparent)
+    for(const e of ents) if(e.color) e.color=capWhite(e.color);
   if(typeof location!=="undefined" && /zdebug/.test(location.search))                 // (the checks see a place's own pieces too)
-    (window.ZDBG=window.ZDBG||[]).push(...ents.map(e=>({bucket:"detail:"+(name||"detail"), geo:e.geo, matrix:e.matrix})));
+    (window.ZDBG=window.ZDBG||[]).push(...ents.map(e=>({bucket:"detail:"+(name||"detail"), geo:e.geo, matrix:e.matrix, color:e.color})));
   for(const e of ents){ _c.setFromMatrixPosition(e.matrix); const k=Math.floor(_c.x/64)+":"+Math.floor(_c.z/64);
     let L=tiles.get(k); if(!L){ L=[]; tiles.set(k, L); } L.push(e); }
   surfaceGrain(mat);

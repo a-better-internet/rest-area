@@ -81,7 +81,7 @@ const TUNE={};
     88.6, FL+1.5, Z1+0.04, 0, false, 300);
   // the window in the west wall: a steel sash, two panes
   push("glass", boxGeo(0.02, 0.96, 0.46), X0+TW/2, (WIN.sill+WIN.head)/2, WIN.a+0.25, 0, "#ffffff"); push("glass", boxGeo(0.02, 0.96, 0.46), X0+TW/2, (WIN.sill+WIN.head)/2, WIN.b-0.25, 0, "#ffffff");
-  B(0.06, 1.0, 0.04, X0+TW/2, (WIN.sill+WIN.head)/2, (WIN.a+WIN.b)/2, STEEL); B(0.32, 0.05, 1.06, X0+TW/2-0.03, WIN.sill-0.025, (WIN.a+WIN.b)/2, "#a8a49a");
+  B(0.06, 1.0, 0.04, X0+TW/2, (WIN.sill+WIN.head)/2, (WIN.a+WIN.b)/2, STEEL); B(0.32, 0.05, 1.06, X0+TW/2-0.03, WIN.sill-0.019, (WIN.a+WIN.b)/2, "#a8a49a");
 
   /* ---- the ground floor: a floor slab round the stair's well, the stair down the north wall, the tuning unit, the meters, the desk ---- */
   const UA=87.0, UB=90.9, U0=IZ0, U1=IZ0+1.0, URUN=(UB-UA)/15, RS=0.2;

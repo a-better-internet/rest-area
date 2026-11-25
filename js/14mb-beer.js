@@ -119,7 +119,7 @@ const BEER={routes:{}, served:false, aisle:null};
   for(const xc of [BX0+WT/2, BX1-WT/2]) B(WT+0.06, 0.06, BZ1-BZ0-2*WT-0.08, xc, TOPW+0.03, (BZ0+BZ1)/2, "#8a8a86");
   // the drive-thru's openings: steel jambs, the roll-up doors wound up in their hoods, IN and OUT over them, ENTER and EXIT down their sides
   for(const [xw, xo, word, side, nx] of [[BX0, BX0-0.02, "IN", "ENTER", -1],[BX1, BX1+0.02, "OUT", "EXIT", 1]]){
-    for(const z of [LANE.a-0.04, LANE.b+0.04]) B(WT+0.06, 3.8, 0.08, xw+(nx<0 ? WT/2 : -WT/2), FLS+1.9, z, "#5a5e60");
+    for(const z of [LANE.a-0.044, LANE.b+0.044]) B(WT+0.06, 3.8, 0.08, xw+(nx<0 ? WT/2 : -WT/2), FLS+1.9, z, "#5a5e60");
     B(0.4, 0.42, LANE.b-LANE.a+0.5, xw-nx*(WT+0.2)+(nx<0 ? 0 : 0), FLS+4.04, (LANE.a+LANE.b)/2, "#6a6e70");          // (the door wound up in its hood, inside)
     const fx=xo+nx*0.01, ry=nx<0 ? -Math.PI/2 : Math.PI/2;
     B(0.03, 0.62, 1.4, xw+nx*0.015, FLS+4.15, (LANE.a+LANE.b)/2, "#f4f2ec");

@@ -72,7 +72,7 @@ const MARINA={routes:{}, lamps:[], radios:[]};
       const g=new T.ExtrudeGeometry(sh, {depth:WT, bevelEnabled:false}); g.translate(0, 0, z0); push("siding", g, 0, 0, 0, 0, SIDE); }
     // the roof: one slope of standing-seam metal down to the water side, overhanging every edge
     { const th=Math.atan((EH2-EH)/(BX1-BX0)), L=(BX1-BX0+1.0)/Math.cos(th); push("metal", boxGeo(L, 0.08, BZ1-BZ0+1.0), (BX0+BX1)/2, (EH+EH2)/2+0.04, (BZ0+BZ1)/2, 0, "#5a1e1a", 0, -th);
-      for(let k=0;k<12;k++) ent(boxGeo(L, 0.03, 0.03), (BX0+BX1)/2, (EH+EH2)/2+0.095, BZ0-0.4+k*(BZ1-BZ0+0.8)/11, "#4a1a16", 0, 0, -th); }
+      for(let k=0;k<12;k++) ent(boxGeo(L-0.04, 0.03, 0.03), (BX0+BX1)/2, (EH+EH2)/2+0.095, BZ0-0.4+k*(BZ1-BZ0+0.8)/11, "#4a1a16", 0, 0, -th); }
     // the trim, the glass, the door
     for(const o of OPW){ for(const zz of [o[0]-0.05, o[1]+0.05]) B(0.03, o[3]-o[2]+0.06, 0.1, BX0-0.015, (o[2]+o[3])/2, zz, "#d4ccb8"); B(0.04, 0.08, o[1]-o[0]+0.24, BX0-0.02, o[3]+0.04, (o[0]+o[1])/2, "#d4ccb8");
       if(o[2]>FL) push("glass", planeGeo(o[1]-o[0]-0.02, o[3]-o[2]-0.02, 0), BX0+0.06, (o[2]+o[3])/2, (o[0]+o[1])/2, Math.PI/2, "#ffffff"); }

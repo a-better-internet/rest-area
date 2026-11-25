@@ -28,7 +28,7 @@ const boxes=Array.isArray(arg) ? arg : [arg];
   if(process.env.ALL) box.all=true;
   const res=await p.evaluate((box)=>{
     const T=THREE, srcs=[];
-    for(const e of (window.ZDBG||[])) srcs.push({name:"bk:"+e.bucket, geo:e.geo, m:e.matrix});
+    for(const e of (window.ZDBG||[])) srcs.push({name:"bk:"+e.bucket, geo:e.geo, m:e.matrix, col:e.color===undefined||e.color===null ? null : new T.Color(e.color).getHexString()});
     REST.scene.traverse(o=>{
       if(!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.visible) return;
       if(o.name && o.name.startsWith("bucket:")) return;
@@ -90,7 +90,7 @@ const boxes=Array.isArray(arg) ? arg : [arg];
     const ALLP=box.all;
     // a face buried in a solid looks out through that solid's back face, so the ray must see both sides while it tests
     const sides=new Map(); for(const o of vm) for(const m of [].concat(o.material)) if(m && !sides.has(m)){ sides.set(m, m.side); m.side=T.DoubleSide; }
-    const pairs=new Map();
+    const pairs=new Map(); let sameCol=0;
     for(const [k,L] of G){
       // also the neighbouring plane bin: offsets under 4 mm
       const parts=k.split(","), kn=parts.slice(0,3).join(",")+","+(+parts[3]+1);
@@ -103,6 +103,8 @@ const boxes=Array.isArray(arg) ? arg : [arg];
         const ov=overlap(proj(A), proj(B)); if(ov<(box.amin||3e-5)) continue;
         if(A.n[1]<-0.9 && A.c[1]<(box.floor===undefined?0.17:box.floor)) continue;   // undersides resting on the floor or ground
         if(A.c[1]<(box.buried===undefined?-0.05:box.buried)) continue;               // buried (underground rooms: pass buried and floor)
+        // two faces of one plain-coloured detail mesh in the same colour draw the same: their fight cannot be seen
+        if(!ALLP && srcs[A.s].col && srcs[A.s].col===srcs[B.s].col && srcs[A.s].name===srcs[B.s].name && srcs[A.s].name.startsWith("bk:detail:")){ sameCol++; continue; }
         const pk=Math.min(A.s,B.s)+"|"+Math.max(A.s,B.s);
         let r=pairs.get(pk); if(!r){ const bbx=s=>{ const g=srcs[s].geo; if(!g.boundingBox) g.computeBoundingBox(); const q=g.boundingBox.clone().applyMatrix4(srcs[s].m); return [q.min.x,q.min.y,q.min.z,q.max.x,q.max.y,q.max.z].map(v=>+v.toFixed(2)); };
           r={a:srcs[Math.min(A.s,B.s)].name, b:srcs[Math.max(A.s,B.s)].name, at:A.c.map(v=>+v.toFixed(2)), n:A.n.map(v=>+v.toFixed(2)), dd:+(A.d-B.d).toFixed(5), cnt:0,
@@ -111,9 +113,9 @@ const boxes=Array.isArray(arg) ? arg : [arg];
       }
     }
     for(const [m, sd] of sides) m.side=sd;
-    const all=[...pairs.values()]; return {srcs:srcs.length, tris:tris.length, buried:all.filter(r=>!r.vis).length, pairs:all.filter(r=>r.vis)};
+    const all=[...pairs.values()]; return {srcs:srcs.length, tris:tris.length, buried:all.filter(r=>!r.vis).length, sameCol, pairs:all.filter(r=>r.vis)};
   }, box);
-  console.log("sources", res.srcs, "triangles", res.tris, "overlapping pairs that show", res.pairs.length, "· buried, out of sight", res.buried);
+  console.log("sources", res.srcs, "triangles", res.tris, "overlapping pairs that show", res.pairs.length, "· buried, out of sight", res.buried, "· same colour", res.sameCol);
   const byName={}; for(const r of res.pairs){ const k=r.a+" ~ "+r.b; (byName[k]=byName[k]||[]).push(r); }
   for(const k of Object.keys(byName).sort((x,y)=>byName[y].length-byName[x].length)){
     const L=byName[k]; console.log(String(L.length).padStart(4), k);

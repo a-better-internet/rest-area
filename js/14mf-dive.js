@@ -87,7 +87,7 @@ const DOCKZ=[-1906.2, -1903.8];                                   // (the Dive's
       B(BX1-BX0+0.94, 0.2, 0.04, (BX0+BX1)/2, ey-0.12, ez+s*0.03, TRIM);
       C(0.06, BX1-BX0+0.9, (BX0+BX1)/2, ey-0.2, ez+s*0.1, "#6a6a62", 10, 0, 0, Math.PI/2);
       C(0.04, ey-0.2-GY, BX1+0.4, (ey-0.2+GY)/2, ez+s*0.1, "#6a6a62", 8); }
-    B(BX1-BX0+0.92, 0.1, 0.36, (BX0+BX1)/2, RIDGE+0.03, ZM, "#2a2826");
+    B(BX1-BX0+0.97, 0.1, 0.36, (BX0+BX1)/2, RIDGE+0.03, ZM, "#2a2826");          // (past the shingles' ends, which grow at bake)
     // the rakes: a board up each gable's edge, standing proud of the siding
     for(const x0 of [BX0-0.03, BX1+0.03]) for(const s of [1, -1]){ const x=x0+(s<0 ? Math.sign(x0-919.5)*0.012 : 0), a=V3(x, EH-OV*Math.tan(th)-0.02, ZM+s*run2), b=V3(x, RIDGE+0.02, ZM), d=b.clone().sub(a), Lr=d.length();
       ME.push({geo:boxGeo(0.04, Lr, 0.2), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color(TRIM)}); }
