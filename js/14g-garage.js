@@ -193,7 +193,7 @@ function blowerParts(){
       push("roofmetal", new FaceGeo().slab([V3(xe,eY,Z0-o2), V3(XM,RIDGE,Z0-o2), V3(XM,RIDGE,Z1+o2), V3(xe,eY,Z1+o2)], RT, 0.5).geo(), 0,0,0, 0, ROOF);
       // the ribs down it
       for(let z=Z0-OH+0.3; z<Z1+OH-0.1; z+=0.6){
-        const a=V3(xe, eY+0.025, z), b=V3(XM-sd*0.05, RIDGE+0.022, z);
+        const a=V3(xe, eY+0.025, z), b=V3(XM+sd*0.08, RIDGE+0.022-0.08*(RIDGE-EV)/((X1-X0)/2), z);   // (short of the ridge, under its cap: the two sides' ribs never meet)
         tube("roofmetal", a, b, 0.018, 3, ROOF); }
       // the fascia and a gutter, a downspout at each end
       bx("paintm", 0.04, 0.18, Z1-Z0+2*OH, xe, eY-0.10, (Z0+Z1)/2, 0, 0, TRIM);
