@@ -207,8 +207,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   // (the last two are 18s's and 18t's. A cabinet's place in this list is its marquee's cell; its number among the games,
   //  ARCADE.cabs and 18g's _CBG, is the same unless cab() is given another: 8 to 12 are the Pine Knot's machines, 14z)
   const NAMES=["ASTRO RAIDERS","MAZE MUNCHER","BRICKYARD BREAKOUT","BLOCK DROP","GROUNDHOG GULCH","TURNPIKE TURTLE","SUDS PATROL","ROUTE 6 RALLY",
-               "HORNWORM HAVOC","EXIT 166 RUMBLE","SLIPPERY ROCK","SILO SCRAMBLE","ABDUCTION ACRES","CROPDUSTER ACE","DEEP WELL"];
-  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8","#c8641a","#4a8a2a","#a83a2a","#5a6a7a","#a8782a","#2a4a3a","#c8a020","#1a2a6a"];
+               "HORNWORM HAVOC","EXIT 166 RUMBLE","SLIPPERY ROCK","SILO SCRAMBLE","ABDUCTION ACRES","CROPDUSTER ACE","DEEP WELL","RIDGE RAMBLER"];
+  const SIDE=["#1f3fa0","#c42a1a","#8a2a1a","#2f7a3c","#7a4a1e","#1e6a5a","#2a7ab8","#c8641a","#4a8a2a","#a83a2a","#5a6a7a","#a8782a","#2a4a3a","#c8a020","#1a2a6a","#3a6a2a"];
   ARCADE.cabs=[];
   /* The marquees: each game lettered in its own face and colours, the way every maker had its own, on a cell shaped like
      the lit panel it shows on (0.56 by 0.16, three and a half to one), so no letter is stretched. One line where the
@@ -229,7 +229,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
     ["Copperplate, 'Copperplate Gothic Light', 'Times New Roman', serif", "700", "#fff2e0", "#e0402a", "#3a0a08", "#0c0202", "#e8c060", 0.10], // SILO SCRAMBLE
     ["'Futura', 'Century Gothic', Verdana, sans-serif", "800", "#c8ffd0", "#4aff7a", "#04140c", "#000", "#4aff7a", 0.06],                // ABDUCTION ACRES
     ["'Cooper Black', 'Bookman Old Style', Georgia, serif", "italic 700", "#ffe89a", "#ff8a1a", "#2a1a04", "#0a0602", "#f2c41c", 0.02],   // CROPDUSTER ACE
-    ["'Eurostile', 'Microgramma', 'Arial Narrow', Arial, sans-serif", "700", "#c8e0ff", "#3a8aff", "#02040e", "#000", "#3a8aff", 0.22]]; // DEEP WELL
+    ["'Eurostile', 'Microgramma', 'Arial Narrow', Arial, sans-serif", "700", "#c8e0ff", "#3a8aff", "#02040e", "#000", "#3a8aff", 0.22],    // DEEP WELL
+    ["'Trebuchet MS', 'Gill Sans', Verdana, sans-serif", "italic 800", "#d8f0b0", "#e8a020", "#1e3a12", "#060e04", "#9ad87a", 0.05]]; // RIDGE RAMBLER
   const MC=3, MR=Math.ceil(NAMES.length/MC), CW=448, CH=128;
   const marC=cvs(CW*MC, CH*MR), mx=marC.getContext("2d");
   NAMES.forEach((n,i)=>{ const st=MQ[i%MQ.length], ox=(i%MC)*CW, oy=((i/MC)|0)*CH, g=mx.createLinearGradient(0,oy,0,oy+CH);
@@ -306,6 +307,8 @@ const ARCADE={puck:null, t:0, games:[], room:null, cabs:[]};
   cab(10, 79.75, A.z0+0.45, 0, 15);     cab(11, 81.35, A.z0+0.45, 0, 16);
   // and three more in the end the room grew by: Abduction Acres (18z1), Cropduster Ace (18z2) and Deep Well (18z3)
   cab(12, 82.95, A.z0+0.45, 0, 17);     cab(13, 84.55, A.z0+0.45, 0, 18);     cab(14, 86.15, A.z0+0.45, 0, 19);
+  // and on the front wall past Alley Roll, facing the room: Ridge Rambler (18z4)
+  cab(15, 83.6, A.z1-0.45, Math.PI, 20);
   // the marquees: one mesh, one texture, every cabinet a cell of it
   scene.add(new T.Mesh(mergeEntries(marG), marM));
 

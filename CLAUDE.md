@@ -1472,3 +1472,27 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   fly. `ZOMBIE.spawnAt` and `ZOMBIE.dgState` are for tests.
 - 21 has no local named `drone` (its ambient sound is `amb`): it would hide
   17's.
+
+## Round 49 notes
+
+- Ridge Rambler is 18z4's `_RRM` on cabinet 20 (12c's sixteenth, `NAMES`
+  place 15), on the front wall past Alley Roll at x 83.6. It is a
+  side-scrolling run-and-jump game of its own: Ranger Rosie, five worlds
+  (`WORLDS`: meadow, deep woods, lakeshore, the old mine, snowy ridge) of
+  four stages, each world's fourth ending at Old Grizzly. A stage is put
+  together by `build(L)` from the hand-made pieces in `CH`, each twelve
+  rows (the screen's rows 4 to 15), starting and ending on ground, with a
+  tier for when it may appear, seeded by the stage's own number, so a
+  stage is the same every time. A gap is never wider than six tiles and
+  nothing to land on more than four above where you jump from. Check a
+  new piece by building all twenty stages and walking their tiles (the
+  scratch `rrtest` did: standable cells, up to four up and five across,
+  down and seven across, rafts and springs counted).
+- For speed, a stage's tiles are drawn once onto a canvas of the whole
+  stage (`paintStage`; `retile` redraws a crate that changed), the
+  backdrops once per world (`BD`), and every figure is a sprite drawn
+  once at load (`ROSE` from pixel rows, `SPR` from shapes). A frame is a
+  handful of `drawImage` calls. Keep new cabinet games the same way.
+- Its sounds go through a map onto 20's blips (`SND`). Its game-over
+  carries on from the world reached (`_RRM._world`); reaching the summit
+  sets it back to the first world. Its best scores are `_cbTop("rambler")`.
