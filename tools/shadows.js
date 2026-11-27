@@ -16,7 +16,9 @@ const ROOT=path.resolve(__dirname, "..");
 const order=[...fs.readFileSync(path.join(ROOT, "index.html"), "utf8").matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]);
 // ("file:name" pairs that are meant: zombie mode's own HUD and its helpers, each used only inside its closure)
 const OK=new Set(["js/21-zombies.js:pick","js/21-zombies.js:look","js/21-zombies.js:blocked","js/21-zombies.js:view","js/21-zombies.js:key",
-                  "js/21-zombies.js:hud","js/21-zombies.js:updateHUD","js/21-zombies.js:dom"]);
+                  "js/21-zombies.js:hud","js/21-zombies.js:updateHUD","js/21-zombies.js:dom",
+                  // (and places' own helpers of the same name, used only in their own file: a material, a floor's height, the board's cream, a rail)
+                  "js/14mh-books.js:mat","js/14mi-apts.js:floorAt","js/14mi-apts.js:key","js/14mj-trail.js:CREAM","js/14mj-trail.js:tube"]);
 const globals=new Map();                                  // name -> file that made it global
 const declRe=/\b(?:const|let|var|function)\s+([A-Za-z_$][\w$]*)/g;
 const topRe=/^(?:const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/;

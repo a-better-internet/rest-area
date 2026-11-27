@@ -473,14 +473,14 @@ const Terrain=(function(){
       const [si, sj]=cell(T.x, T.z), [ei, ej]=cell(S.x, S.z), start=sj*nx+si, goal=ej*nx+ei;
       const D=[]; for(const [a, b] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1],[2,1],[1,2],[-1,2],[-2,1],[-2,-1],[-1,-2],[1,-2],[2,-1]]) D.push([a, b, Math.hypot(a, b)*C]);
       const g=new Float32Array(N).fill(1e30), from=new Int32Array(N).fill(-1), heap=[];
-      const push=(k, f)=>{ heap.push([f, k]); let c=heap.length-1; while(c>0){ const p2=(c-1)>>1; if(heap[p2][0]<=heap[c][0]) break; [heap[p2], heap[c]]=[heap[c], heap[p2]]; c=p2; } };
+      const hpush=(k, f)=>{ heap.push([f, k]); let c=heap.length-1; while(c>0){ const p2=(c-1)>>1; if(heap[p2][0]<=heap[c][0]) break; [heap[p2], heap[c]]=[heap[c], heap[p2]]; c=p2; } };
       const pop=()=>{ const top=heap[0], last=heap.pop(); if(heap.length){ heap[0]=last; let c=0; for(;;){ const l=2*c+1, r=l+1; let m=c; if(l<heap.length && heap[l][0]<heap[m][0]) m=l; if(r<heap.length && heap[r][0]<heap[m][0]) m=r; if(m===c) break; [heap[m], heap[c]]=[heap[c], heap[m]]; c=m; } } return top; };
-      g[start]=0; push(start, 0);
+      g[start]=0; hpush(start, 0);
       while(heap.length){ const [f, k]=pop(); if(k===goal) break; const i=k%nx, j=(k/nx)|0;
         if(f>g[k]+Math.hypot((ei-i)*C, (ej-j)*C)+1e-3) continue;
         for(const [a, b, len] of D){ const i2=i+a, j2=j+b; if(i2<0 || j2<0 || i2>=nx || j2>=nz) continue; const k2=j2*nx+i2; if(bad[k2] && k2!==goal) continue;
           const gr=Math.abs(hgt[k2]-hgt[k])/len; if(gr>0.32) continue;
-          const c=len*(1+70*Math.max(0, gr-0.13)), ng=g[k]+c; if(ng<g[k2]){ g[k2]=ng; from[k2]=k; push(k2, ng+Math.hypot((ei-i2)*C, (ej-j2)*C)); } } }
+          const c=len*(1+70*Math.max(0, gr-0.13)), ng=g[k]+c; if(ng<g[k2]){ g[k2]=ng; from[k2]=k; hpush(k2, ng+Math.hypot((ei-i2)*C, (ej-j2)*C)); } } }
       if(from[goal]>=0){ const path=[]; for(let k=goal; k!==start; k=from[k]) path.push(k); path.reverse();
         for(const k of path) P.push({x:B.x0+(k%nx)*C, z:B.z0+((k/nx)|0)*C}); }
       // (it ends on the grid's cell nearest the top; a last step back to the top's exact middle would fold the ribbon over)
