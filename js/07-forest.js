@@ -621,8 +621,30 @@ const FOREST=(function(){
   /* ---- planting --------------------------------------------------------- */
   const INST=[];                     // {v, x,y,z, s, ry, rx, rz, cs, ca}
   let autumn=false;
+  /* TRAILS (round 51): a walking trail registered here (FOREST.trail(points, half-width)) keeps every plant set down
+     after it off the path. How far depends on the plant: a hemlock or a maple whose crown comes down near the ground must
+     stand its crown's reach clear, an oak or a pine with a tall bare trunk only its trunk's width and a step, a fern
+     its fronds'. plant() turns such a one down and says so (false), and whoever planted it adds no trunk collider. */
+  const TRAILS=[];
+  function trail(P, hw){ const C=8, G=new Map();
+    for(let i=1;i<P.length;i++){ const a=P[i-1], b=P[i];
+      for(let gx=Math.floor(Math.min(a.x, b.x)/C); gx<=Math.floor(Math.max(a.x, b.x)/C); gx++) for(let gz=Math.floor(Math.min(a.z, b.z)/C); gz<=Math.floor(Math.max(a.z, b.z)/C); gz++){
+        const k=gx+":"+gz; let L=G.get(k); if(!L) G.set(k, L=[]); L.push(i); } }
+    TRAILS.push({P:P, hw:hw, G:G, C:C}); }
+  // how far from a trail's edge a plant's trunk must stand
+  function trailGap(sp, s){ switch(sp){
+    case "hemlock": return 3.8*s*0.85+0.6;  case "edge": return 5.4*s*0.8+0.5;  case "lawn": return 6.4*s*0.8+0.5;
+    case "sapling": return 2.2*s*0.8+0.4;   case "shrub": return 1.5*s+0.3;     case "fern": return 0.9;
+    default: return 1.7; } }                                                   // (hard, beech, pine: crowns well over your head)
+  function trailDist(x, z, r){ let best=1e9;
+    for(const T of TRAILS){ const C=T.C, seen=new Set();
+      for(let gx=Math.floor((x-r)/C); gx<=Math.floor((x+r)/C); gx++) for(let gz=Math.floor((z-r)/C); gz<=Math.floor((z+r)/C); gz++){ const L=T.G.get(gx+":"+gz); if(!L) continue;
+        for(const i of L){ if(seen.has(i)) continue; seen.add(i); const a=T.P[i-1], b=T.P[i], ex=b.x-a.x, ez=b.z-a.z, L2=ex*ex+ez*ez;
+          const t=L2>0 ? clamp(((x-a.x)*ex+(z-a.z)*ez)/L2, 0, 1) : 0; best=Math.min(best, Math.hypot(x-a.x-ex*t, z-a.z-ez*t)-T.hw); } } }
+    return best; }
   function plant(sp, x, z, o){
     o=o||{};
+    if(TRAILS.length){ const need=trailGap(sp, o.scale||1); if(trailDist(x, z, need+2)<need) return false; }
     const list=SPV[sp], h=hash2(x*1.37,z*0.91);
     const v=list[Math.floor(h*list.length)%list.length];
     const S=SPECIES[sp];
@@ -633,9 +655,10 @@ const FOREST=(function(){
     const k=0.90+hash2(x*5.1,z*3.3)*0.18;
     cs.multiplyScalar(k); ca.multiplyScalar(k);
     const y=o.y===undefined ? Terrain.groundAt(x,z) : o.y;
-    INST.push({v:v, x:x, y:y, z:z, s:o.scale||1, ry:o.ry===undefined?h*6.283:o.ry,
+    INST.push({v:v, sp:sp, x:x, y:y, z:z, s:o.scale||1, ry:o.ry===undefined?h*6.283:o.ry,
                rx:o.lean===false?0:(hash2(x,z*2)-0.5)*0.06, rz:o.lean===false?0:(hash2(x*2,z)-0.5)*0.06,
                cs:cs, ca:ca, solid:o.solid!==false, zone:inZone(x,z)});
+    return true;
   }
   function inZone(x,z){ const Z=SITE.zone; return x>Z.x0 && x<Z.x1 && z>Z.z0 && z<Z.z1; }
 
@@ -1128,6 +1151,12 @@ vec4 canCrown(vec2 p, out float id){
   const CHUNKS=[], TIERS=[[], [], [], []];          // TIERS[t]: groups of 1, 2, 4 and 8 chunks a side (TIERS[0] is CHUNKS)
   const CH=48, SIDE=[1, 2, 4, 8];
   function finish(){
+    // (a plant set down before the trail it stands on was registered, 14n's by 14v's: left out now, and the trunk's collider
+    //  its planter added sunk far under the ground; a collider's rect never moves, so the grid that finds it stays right)
+    if(TRAILS.length) for(let i=INST.length-1;i>=0;i--){ const p=INST[i]; if(!p.sp) continue; const need=trailGap(p.sp, p.s); if(trailDist(p.x, p.z, need+2)>=need) continue;
+      INST.splice(i, 1); const rr=0.24*p.s;
+      if(typeof COL!=="undefined") for(const c of COL) if(Math.abs((c.x0+c.x1)/2-p.x)<0.02 && Math.abs((c.z0+c.z1)/2-p.z)<0.02 && Math.abs(c.x1-c.x0-2*rr)<0.02){ c.y0=-9e5; c.y1=-9e5+0.1; } }
+
     const maps=SIDE.map(()=>new Map());
     const group=(t, k, cx, cz)=>{ const n=SIDE[t], gx=Math.floor(cx/n), gz=Math.floor(cz/n), gk=k+gx+":"+gz; let G=maps[t].get(gk);
       if(!G){ G={key:gk, t:t, x0:gx*CH*n, x1:(gx+1)*CH*n, z0:gz*CH*n, z1:(gz+1)*CH*n, lists:new Map(), meshes:[], kids:0, up:null, ymin:1e9, ymax:-1e9, level:-1, far:false, cov:false}; maps[t].set(gk, G); }
@@ -1230,7 +1259,7 @@ vec4 canCrown(vec2 p, out float id){
     }
   }
   function canopyAt(x,z){ return inZone(x,z) ? -1e9 : canopyY(x,z,true); }
-  return {plant:plant, finish:finish, update:update, setSeason:setSeason, isAutumn:()=>autumn,
+  return {plant:plant, trail:trail, trailDist:trailDist, trailGap:trailGap, finish:finish, update:update, setSeason:setSeason, isAutumn:()=>autumn,
           inst:INST, chunks:CHUNKS, tiers:TIERS, variants:VARIANTS, atlas:ATLAS, canopyAt:canopyAt, canopy:CAN, barkCyl:barkCyl,
           nearMat:NEAR_MAT, lod:LOD_U};
 })();

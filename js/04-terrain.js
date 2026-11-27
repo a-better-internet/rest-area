@@ -351,7 +351,9 @@ const Terrain=(function(){
       // the overlook at the top of Hollow Ridge Trail: a level shelf cut into the hillside (once the trail has found it)
       { const L=EAST.lane.look; if(L.y!==undefined){ const d=Math.hypot(x-L.x, z-L.z); if(d<16) h=toward(h, L.y, d, 6.5, 9); } }
       // and the summit: a little level top where the trail ends, cut a metre or two into the crown
-      { const S=EAST.lane.summit; if(S.y!==undefined){ const d=Math.hypot(x-S.x, z-S.z); if(d<20) h=toward(h, S.y, d, 7, 11); } } }
+      { const S=EAST.lane.summit; if(S.y!==undefined){ const d=Math.hypot(x-S.x, z-S.z); if(d<20) h=toward(h, S.y, d, 7, 11); } }
+      // and the trail's bench (round 51): level for two metres either side of the path (the 4 m ground must carry it), eased into the slope over four more
+      { const TR=EAST.lane.trail; if(TR && TR.ready){ const B=TR.box; if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1){ const q=distToPath(TR, x, z); if(q.d<7.5) h=toward(h, q.y, q.d, 2.3, 4.5); } } } }
     // west along US 6N: the same, the road's clearing and the park's level with the road
     { const wd=Math.min(boxDist(WEST.corr,x,z), boxDist(WEST.park,x,z), boxDist(WEST.ranch,x,z));
       if(wd<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, wd));
@@ -442,50 +444,89 @@ const Terrain=(function(){
       lo=Math.min(lo, g-0.35); p.y=lo; });
     for(let pass=0;pass<4;pass++){ const y=CREEK.map(p=>p.y); for(let i=1;i<CREEK.length-1;i++) CREEK[i].y=y[i-1]*0.25+y[i]*0.5+y[i+1]*0.25; }
     CREEK.ready=true; }
-  /* Hollow Ridge Trail (14mj), laid on the ground's own grading: from the trailhead it climbs in long legs across the
-     hillside, about 11 in 100, each leg running north or south and drifting west as much as that grade allows, and turns
-     back on itself (a switchback) where its woods end; once it is as high as the overlook it heads straight there. */
-  { const L=EAST.lane, W=L.woods, T=L.look, G=0.11, st=2.0, tH=baseHeight(T.x, T.z);
-    let x=L.head.x, z=L.head.z, h=baseHeight(x, z), sz=1, legs=0; const P=[{x:x, z:z}];
-    // (the climb to the overlook keeps to the woods as they were before the summit was opened, so its legs stay where they were)
-    const W1={x0:404, x1:646, z0:-1934, z1:-1792}, okAt=(nx, nz)=>nx>W1.x0+10 && nx<W1.x1-3 && nz>W1.z0+18 && nz<W1.z1-12;
-    for(let i=0;i<1400;i++){ const dT=Math.hypot(T.x-x, T.z-z); if(dT<3) break;
-      let best=null, bs=1e9;
-      if(h>tH-1.5 || (dT<26 && Math.abs(tH-h)<dT*0.14)){ const ux=(T.x-x)/dT, uz=(T.z-z)/dT; best=[x+ux*st, z+uz*st]; }
-      else for(let k=-6;k<=18;k++){ const a=k/18*Math.PI/2, nx=x-Math.sin(a)*st, nz=z+sz*Math.cos(a)*st; if(!okAt(nx, nz)) continue;
-        const g=(baseHeight(nx, nz)-h)/st, sc=Math.abs(g-G)*10+Math.max(0, -g)*6; if(sc<bs){ bs=sc; best=[nx, nz]; } }
-      if(!best || (h<=tH-1.5 && !okAt(x, z+sz*st*3))){ sz=-sz; legs++; if(legs>40) break;
-        // (a switchback: a few steps due west, so the leg back up is not on top of the one coming in)
-        for(let k=0;k<2;k++){ x-=st*0.6; P.push({x:x, z:z}); } h=baseHeight(x, z); continue; }
-      x=best[0]; z=best[1]; h=baseHeight(x, z); P.push({x:x, z:z}); }
-    P.push({x:T.x, z:T.z});
-    /* and on from the overlook to the summit (round 50). The upper mountain is too steep for legs laid one step at a
-       time, so this stretch is found as the cheapest way over a 4 m grid of the flank: each step costs its length, more
-       for every per cent of grade over 13 (none over 32 at all), and none within 8 m of the trail below; sixteen ways
-       out of every cell, so it finds its own switchbacks. */
-    const S=L.summit, sH=baseHeight(S.x, S.z), iL=P.length-1;
-    { const C=4, B={x0:W.x0+10, x1:W.x1-14, z0:W.z0+10, z1:T.z+10}, nx=Math.floor((B.x1-B.x0)/C)+1, nz=Math.floor((B.z1-B.z0)/C)+1, N=nx*nz;
+  /* Hollow Ridge Trail (14mj), laid on the ground's own grading (round 51: the whole of it, a few long legs). Each of its
+     two halves (the lane's lot to the overlook, the overlook to the summit) is the cheapest way across a 4 m grid of the
+     flank, where the search carries the way it is heading as well as where it is: every step costs its length, more for
+     each per cent of grade over 12 and far more over 17 (none over 32 at all), and every turn costs by how far it turns, so it holds a line
+     across the slope for as long as the grade allows and turns back in a hairpin only when it must, never in a sawtooth.
+     The second half keeps 9 m off the first. Each half is then cut to its corners and its corners rounded; the first half
+     (the lot to the overlook) is still laid leg by leg, which suits the lane's cut slope better. */
+  { const _t0=performance.now(), L=EAST.lane, W=L.woods, T=L.look, S=L.summit, C=4, tH=baseHeight(T.x, T.z), sH=baseHeight(S.x, S.z);
+    const DIRS=[]; for(const [a, b] of [[1,0],[2,1],[1,1],[1,2],[0,1],[-1,2],[-1,1],[-2,1],[-1,0],[-2,-1],[-1,-1],[-1,-2],[0,-1],[1,-2],[1,-1],[2,-1]]) DIRS.push([a, b, Math.hypot(a, b)*C, Math.atan2(b, a)]);
+    const route=(from, to, B, avoid, gap)=>{
+      const nx=Math.floor((B.x1-B.x0)/C)+1, nz=Math.floor((B.z1-B.z0)/C)+1, N=nx*nz, ND=DIRS.length;
       const hgt=new Float32Array(N), bad=new Uint8Array(N);
-      const lower=P.slice(0, Math.max(0, P.length-12));          // (the trail below, less its last few metres into the overlook)
-      for(let j=0;j<nz;j++) for(let i=0;i<nx;i++){ const x=B.x0+i*C, z=B.z0+j*C, k=j*nx+i; hgt[k]=baseHeight(x, z);
-        for(let q=0;q<lower.length;q+=2){ const pp=lower[q]; if(Math.abs(pp.x-x)<8 && Math.abs(pp.z-z)<8 && Math.hypot(pp.x-x, pp.z-z)<8){ bad[k]=1; break; } } }
-      const cell=(x, z)=>[Math.round((x-B.x0)/C), Math.round((z-B.z0)/C)];
-      const [si, sj]=cell(T.x, T.z), [ei, ej]=cell(S.x, S.z), start=sj*nx+si, goal=ej*nx+ei;
-      const D=[]; for(const [a, b] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1],[2,1],[1,2],[-1,2],[-2,1],[-2,-1],[-1,-2],[1,-2],[2,-1]]) D.push([a, b, Math.hypot(a, b)*C]);
-      const g=new Float32Array(N).fill(1e30), from=new Int32Array(N).fill(-1), heap=[];
-      const hpush=(k, f)=>{ heap.push([f, k]); let c=heap.length-1; while(c>0){ const p2=(c-1)>>1; if(heap[p2][0]<=heap[c][0]) break; [heap[p2], heap[c]]=[heap[c], heap[p2]]; c=p2; } };
-      const pop=()=>{ const top=heap[0], last=heap.pop(); if(heap.length){ heap[0]=last; let c=0; for(;;){ const l=2*c+1, r=l+1; let m=c; if(l<heap.length && heap[l][0]<heap[m][0]) m=l; if(r<heap.length && heap[r][0]<heap[m][0]) m=r; if(m===c) break; [heap[m], heap[c]]=[heap[c], heap[m]]; c=m; } } return top; };
-      g[start]=0; hpush(start, 0);
-      while(heap.length){ const [f, k]=pop(); if(k===goal) break; const i=k%nx, j=(k/nx)|0;
-        if(f>g[k]+Math.hypot((ei-i)*C, (ej-j)*C)+1e-3) continue;
-        for(const [a, b, len] of D){ const i2=i+a, j2=j+b; if(i2<0 || j2<0 || i2>=nx || j2>=nz) continue; const k2=j2*nx+i2; if(bad[k2] && k2!==goal) continue;
+      for(let jj=0;jj<nz;jj++) for(let ii=0;ii<nx;ii++){ const x=B.x0+ii*C, z=B.z0+jj*C, k=jj*nx+ii; hgt[k]=baseHeight(x, z);
+        for(let q=0;q<avoid.length;q++){ const pp=avoid[q]; if(Math.abs(pp.x-x)<gap && Math.abs(pp.z-z)<gap && Math.hypot(pp.x-x, pp.z-z)<gap){ bad[k]=1; break; } } }
+      // (the grade is judged on the ground smoothed over a dozen metres: the trail's own bench takes out the bumps and the
+      //  lane's cut corner, so the way only has to be long enough for the climb, not dodge every hummock)
+      for(let pass=0;pass<3;pass++){ const h0=hgt.slice(); for(let jj=0;jj<nz;jj++) for(let ii=0;ii<nx;ii++){ let sm=0, n=0;
+        for(let dj=-1;dj<=1;dj++) for(let di=-1;di<=1;di++){ const i2=ii+di, j2=jj+dj; if(i2<0 || j2<0 || i2>=nx || j2>=nz) continue; sm+=h0[j2*nx+i2]; n++; } hgt[jj*nx+ii]=sm/n; } }
+      const cellOf=(x, z)=>[clamp(Math.round((x-B.x0)/C), 0, nx-1), clamp(Math.round((z-B.z0)/C), 0, nz-1)];
+      const [si, sj]=cellOf(from.x, from.z), [ei, ej]=cellOf(to.x, to.z), sk=sj*nx+si, ek=ej*nx+ei;
+      const g=new Float32Array(N*ND).fill(1e30), back=new Int32Array(N*ND).fill(-1), heap=[];
+      const hpush=(st, f)=>{ heap.push([f, st]); let c=heap.length-1; while(c>0){ const p2=(c-1)>>1; if(heap[p2][0]<=heap[c][0]) break; [heap[p2], heap[c]]=[heap[c], heap[p2]]; c=p2; } };
+      const hpop=()=>{ const top=heap[0], last=heap.pop(); if(heap.length){ heap[0]=last; let c=0; for(;;){ const l=2*c+1, r=l+1; let m=c; if(l<heap.length && heap[l][0]<heap[m][0]) m=l; if(r<heap.length && heap[r][0]<heap[m][0]) m=r; if(m===c) break; [heap[m], heap[c]]=[heap[c], heap[m]]; c=m; } } return top; };
+      for(let d=0;d<ND;d++){ g[sk*ND+d]=0; hpush(sk*ND+d, 0); }
+      let endSt=-1;
+      while(heap.length){ const [f, st]=hpop(), k=(st/ND)|0, d=st%ND; if(f>g[st]+Math.hypot((ei-k%nx)*C, (ej-((k/nx)|0))*C)+1e-3) continue;
+        if(k===ek){ endSt=st; break; }
+        const i=k%nx, jj=(k/nx)|0;
+        for(let nd=0;nd<ND;nd++){ const [a, b, len, ang]=DIRS[nd], i2=i+a, j2=jj+b; if(i2<1 || j2<1 || i2>=nx-1 || j2>=nz-1) continue; const k2=j2*nx+i2; if(bad[k2] && k2!==ek) continue;
           const gr=Math.abs(hgt[k2]-hgt[k])/len; if(gr>0.32) continue;
-          const c=len*(1+70*Math.max(0, gr-0.13)), ng=g[k]+c; if(ng<g[k2]){ g[k2]=ng; from[k2]=k; hpush(k2, ng+Math.hypot((ei-i2)*C, (ej-j2)*C)); } } }
-      if(from[goal]>=0){ const path=[]; for(let k=goal; k!==start; k=from[k]) path.push(k); path.reverse();
-        for(const k of path) P.push({x:B.x0+(k%nx)*C, z:B.z0+((k/nx)|0)*C}); }
-      // (it ends on the grid's cell nearest the top; a last step back to the top's exact middle would fold the ribbon over)
-      const e=P[P.length-1]; if(Math.hypot(e.x-S.x, e.z-S.z)>4) P.push({x:S.x, z:S.z}); }
-    L.trail=smoothPath(P.filter((p, i)=>i<=iL ? (i%3===0 || i===iL) : true), 2.0); L.look.y=tH; S.y=sH; }
+          let dt=Math.abs(ang-DIRS[d][3]); if(dt>Math.PI) dt=2*Math.PI-dt;
+          const st2=k2*ND+nd, ng=g[st]+len*(1+25*Math.max(0, gr-0.12)+300*Math.max(0, gr-0.17))+12*dt+(dt>2.2 ? 60 : 0);
+          if(ng<g[st2]){ g[st2]=ng; back[st2]=st; hpush(st2, ng+Math.hypot((ei-i2)*C, (ej-j2)*C)); } } }
+      const out=[]; if(endSt<0){ console.warn("Hollow Ridge Trail: no way found", from, to); return [{x:from.x, z:from.z}, {x:to.x, z:to.z}]; }
+      for(let st=endSt; st>=0; st=back[st]){ const k=(st/ND)|0; out.push({x:B.x0+(k%nx)*C, z:B.z0+((k/nx)|0)*C}); if(back[st]<0) break; }
+      out.reverse(); out[0]={x:from.x, z:from.z}; out[out.length-1]={x:to.x, z:to.z}; return out; };
+    // cut to its corners (Douglas-Peucker), then round them (three passes of corner cutting); its ends stay where they are
+    const corners=(P, tol)=>{ if(P.length<3) return P.slice(); const keep=new Uint8Array(P.length); keep[0]=keep[P.length-1]=1;
+      const st=[[0, P.length-1]]; while(st.length){ const [a, b]=st.pop(); let bi=-1, bd=tol; const A=P[a], Bq=P[b], ex=Bq.x-A.x, ez=Bq.z-A.z, el=Math.hypot(ex, ez)||1;
+        for(let k=a+1;k<b;k++){ const d=Math.abs((P[k].x-A.x)*ez-(P[k].z-A.z)*ex)/el; if(d>bd){ bd=d; bi=k; } }
+        if(bi>=0){ keep[bi]=1; st.push([a, bi], [bi, b]); } }
+      return P.filter((p, k)=>keep[k]); };
+    const round=(P)=>{ let Q=P; for(let it=0;it<3;it++){ const R2=[Q[0]]; for(let k=0;k<Q.length-1;k++){ const a=Q[k], b=Q[k+1];
+        if(k>0) R2.push({x:a.x*0.75+b.x*0.25, z:a.z*0.75+b.z*0.25}); if(k<Q.length-2) R2.push({x:a.x*0.25+b.x*0.75, z:a.z*0.25+b.z*0.75}); } R2.push(Q[Q.length-1]); Q=R2; } return Q; };
+    // the lower half, the lot to the overlook: legs laid a step at a time, as in round 46 (it starts north along the lane,
+    // where the lane's cut lets it climb gently; a search from the lot's corner, where the cut rises every way, tacks)
+    const leg1=[]; { const G=0.11, st=2.0; let x=L.head.x, z=L.head.z, h=baseHeight(x, z), sz=1, legs=0; leg1.push({x:x, z:z});
+      const W1={x0:404, x1:646, z0:-1934, z1:-1792}, okAt=(nx, nz)=>nx>W1.x0+10 && nx<W1.x1-3 && nz>W1.z0+18 && nz<W1.z1-12;
+      for(let i=0;i<1400;i++){ const dT=Math.hypot(T.x-x, T.z-z); if(dT<3) break;
+        let best=null, bs=1e9;
+        if(h>tH-1.5 || (dT<26 && Math.abs(tH-h)<dT*0.14)){ const ux=(T.x-x)/dT, uz=(T.z-z)/dT; best=[x+ux*st, z+uz*st]; }
+        else for(let k=-6;k<=18;k++){ const a=k/18*Math.PI/2, nx=x-Math.sin(a)*st, nz=z+sz*Math.cos(a)*st; if(!okAt(nx, nz)) continue;
+          const g=(baseHeight(nx, nz)-h)/st, sc=Math.abs(g-G)*10+Math.max(0, -g)*6; if(sc<bs){ bs=sc; best=[nx, nz]; } }
+        if(!best || (h<=tH-1.5 && !okAt(x, z+sz*st*3))){ sz=-sz; legs++; if(legs>40) break;
+          for(let k=0;k<2;k++){ x-=st*0.6; leg1.push({x:x, z:z}); } h=baseHeight(x, z); continue; }
+        x=best[0]; z=best[1]; h=baseHeight(x, z); leg1.push({x:x, z:z}); }
+      leg1.push({x:T.x, z:T.z}); }
+    const leg2=route(T, S, {x0:W.x0+10, x1:W.x1-12, z0:W.z0+10, z1:T.z+12}, leg1.slice(0, Math.max(0, leg1.length-4)), 9);
+    const half1=round(corners(leg1, 1.6)), half2=round(corners(leg2, 1.6));
+    // (smoothed, then laid out again a steady two metres apart along its length: a curve's points bunch in its tight turns)
+    { const sm=smoothPath(half1.concat(half2.slice(1)), 2.0, true), R2=[{x:sm[0].x, z:sm[0].z}]; let carry=0;
+      for(let k=1;k<sm.length;k++){ const a=sm[k-1], b=sm[k], d=Math.hypot(b.x-a.x, b.z-a.z); let u=2.0-carry;
+        while(u<=d){ R2.push({x:a.x+(b.x-a.x)*u/d, z:a.z+(b.z-a.z)*u/d}); u+=2.0; } carry=d-(u-2.0); }
+      const e=sm[sm.length-1]; if(Math.hypot(e.x-R2[R2.length-1].x, e.z-R2[R2.length-1].z)>0.6) R2.push({x:e.x, z:e.z}); else R2[R2.length-1]={x:e.x, z:e.z};
+      let acc=0; R2.forEach((p, i)=>{ if(i) acc+=Math.hypot(p.x-R2[i-1].x, p.z-R2[i-1].z); p.s=acc; });
+      L.trail=R2; }
+    L.look.y=tH; S.y=sH;
+    // its own level, the way a trail is benched into a hillside: the ground's height along it, smoothed out over
+    // fifteen metres or so (the lot, the overlook and the top held where they are); baseHeight then eases the ground
+    // to it within a few metres either side, so it climbs evenly however rough the slope it crosses
+    // (as near the ground as it can keep, but never climbing more than 16 in 100 from one point to the next: pulled to the
+    //  ground, then held to that grade forward and back, again and again with less pull each time; then eased a little)
+    { const TR=L.trail, n=TR.length, GM=0.16; let iLk=0, bd=1e9; const gnd=TR.map((p, i)=>{ const d=Math.hypot(p.x-T.x, p.z-T.z); if(d<bd){ bd=d; iLk=i; } return baseHeight(p.x, p.z); });
+      const fix=new Map([[0, gnd[0]], [iLk, tH], [n-1, sH]]), y=gnd.slice(), ds=(i)=>Math.hypot(TR[i].x-TR[i-1].x, TR[i].z-TR[i-1].z);
+      for(let it=0;it<70;it++){ const pull=Math.max(0, 0.5*(1-it/50));
+        for(let i=0;i<n;i++) y[i]=fix.has(i) ? fix.get(i) : y[i]+(gnd[i]-y[i])*pull;
+        for(let i=1;i<n;i++) if(!fix.has(i)){ const m=GM*ds(i); y[i]=clamp(y[i], y[i-1]-m, y[i-1]+m); }
+        for(let i=n-2;i>=0;i--) if(!fix.has(i)){ const m=GM*ds(i+1); y[i]=clamp(y[i], y[i+1]-m, y[i+1]+m); } }
+      for(let pass=0;pass<6;pass++){ const y2=y.slice(); for(let i=1;i<n-1;i++) if(!fix.has(i)) y[i]=y2[i-1]*0.25+y2[i]*0.5+y2[i+1]*0.25; }
+      TR.forEach((p, i)=>{ p.y=y[i]; });
+      let x0=1e9, x1=-1e9, z0=1e9, z1=-1e9; for(const p of TR){ x0=Math.min(x0, p.x); x1=Math.max(x1, p.x); z0=Math.min(z0, p.z); z1=Math.max(z1, p.z); }
+      TR.box={x0:x0-6, x1:x1+6, z0:z0-6, z1:z1+6}; TR.ready=true; }
+    L._legs=[leg1.length, leg2.length, Math.round(performance.now()-_t0)]; L._leg1=leg1; }
 
   /* ---- where the woods are -------------------------------------------
      A signed distance to the nearest clearing: negative inside one,

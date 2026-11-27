@@ -1531,3 +1531,37 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
   its level top, a bald clearing (`siteDist`), boulders, a cairn and the
   survey disc, its sign, two benches facing east, its zone, warp and walk
   routes. A blaze post never stands on another leg of the trail.
+
+## Round 51 notes
+
+- **Hollow Ridge Trail is a few long legs, not a sawtooth.** 04 lays it in
+  two halves. The lot to the overlook is the round-46 climber, legs laid a
+  step at a time (it starts north along the lane, where the lane's cut lets
+  it climb gently). The overlook to the summit is a search over a 4 m grid
+  that carries the way it is heading as part of its state: each step costs
+  its length plus a charge for grade over 12% and far more over 17% (none
+  over 32%), and each turn costs by how far it turns (more for a hairpin),
+  so it holds a long line across the slope and turns back only when it
+  must. It judges grade on the ground smoothed over about 12 m. Each half
+  is cut to its corners (Douglas-Peucker), its corners rounded (corner
+  cutting), and the whole laid out again 2 m apart. Never smooth a path
+  whose points bunch up: a 0.1 m step next to a 2 m one turns averaging
+  into a cliff.
+- **A trail is benched into the hill.** Its profile is held to 16% per step
+  (pulled to the ground, then clamped forward and back with the lot, the
+  overlook and the summit pinned), and `baseHeight` eases the ground to it
+  within 2.3 m of the path and over 4.5 m more, wide enough for the 4 m
+  ground lattice to carry it.
+- **No tree covers a trail.** `FOREST.trail(points, halfWidth)` (07)
+  registers one, and `FOREST.plant` then refuses any plant whose crown would
+  reach the path (`trailGap`: a hemlock or a maple, crowned near the ground,
+  must stand its crown's reach clear; an oak or a pine with a tall trunk
+  1.7 m; a fern 0.9 m) and returns false, so its planter adds no trunk
+  collider. `FOREST.finish` drops any plant set down before its trail was
+  registered and sinks that trunk's collider far underground (its rect
+  never moves). Register a new trail before planting its woods. Plants
+  record their species (`sp`).
+- Zombie mode's codes: `ARSENAL` (21's `giveAll`) gives every gun, each
+  magazine full and its reserve topped up, the roof gun's kit with a full
+  belt and five pipe bombs, and does so at the start of every run while it
+  is on. Like the others it marks the run `cheated`.

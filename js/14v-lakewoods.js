@@ -32,7 +32,7 @@ const LAKEWOODS={};
     ME.push({geo:new T.CylinderGeometry(rad,rad,L,seg||8), matrix:new T.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5),
       new T.Quaternion().setFromUnitVectors(V3(0,1,0), d.normalize()), V3(1,1,1)), color:new T.Color(c)}); };
   const say=(x,s,cx,cy,w,h,col,weight,family)=>{ x.fillStyle=col; fitText(x,s,w,h,cx,cy,weight||"700",family); };
-  const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, g=gy(x,z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
+  const tree=(sp, x, z, s)=>{ if(FOREST.plant(sp, x, z, {scale:s})===false) return; const rr=0.24*s, g=gy(x,z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
   // (a point in a local frame turned ry: lx across, lz along)
   const at=(x, z, ry, lx, lz)=>[x+lx*Math.cos(ry)+lz*Math.sin(ry), z-lx*Math.sin(ry)+lz*Math.cos(ry)];
 
@@ -42,6 +42,7 @@ const LAKEWOODS={};
                        [1306,-1122],[1282,-1124],[1262,-1126],[1250,-1131],[1246,-1137]].map(p=>({x:p[0], z:p[1]})), 1.5, true);
   for(const p of TR) p.y=gy(p.x, p.z);
   layRibbon("trailbed", TR, -0.62, 0.62, 0.045, 0.6, "#c4b4a2");      // (shredded bark, 08's bed under the shrubs)
+  if(typeof FOREST!=="undefined") FOREST.trail(TR, 0.62);                 // (no tree set down after this covers it, 07)
   const trailD=(x, z)=>{ let d=1e9; for(let i=1;i<TR.length;i++){ const a=TR[i-1], b=TR[i], ex=b.x-a.x, ez=b.z-a.z, L2=ex*ex+ez*ez;
     const t=L2>0 ? clamp(((x-a.x)*ex+(z-a.z)*ez)/L2, 0, 1) : 0; d=Math.min(d, Math.hypot(x-a.x-ex*t, z-a.z-ez*t)); } return d; };
   LAKEWOODS.trail=TR;

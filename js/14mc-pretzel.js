@@ -508,6 +508,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
   { const TR=EAST.pretz.trail, LK=EAST.pretz.lake;
     for(const p of TR) p.y=Terrain.groundAt(p.x, p.z);
     layRibbon("trailbed", TR, -0.65, 0.65, 0.045, 0.6, "#c4b4a2");
+    if(typeof FOREST!=="undefined") FOREST.trail(TR, 0.65);                 // (no tree set down after this covers it, 07)
     // (the sign faces back into the yard; its post behind it)
     { const sx=889.6, sz=-1602.2, g=Terrain.groundAt(sx, sz); B(0.1, 1.5, 0.1, sx+0.12, g+0.75, sz, "#5a4430"); addCol(sx+0.06, sx+0.18, sz-0.06, sz+0.06, g-0.5, g+1.5);
       B(0.04, 0.32, 0.7, sx+0.05, g+1.25, sz, "#6a5238");
@@ -551,7 +552,7 @@ const PRETZ={routes:{}, lamps:[], bulbs:null, belt:null, lines:null};
     const shoreX=(z)=>{ let x=LK.x0; while(x<LK.x1+30 && Terrain.lakeSD(x, z)>1.5) x+=0.25; return x; };
     for(let z=LK.z0; z<LK.z1-0.01; z+=2){ const a=shoreX(z), b=shoreX(Math.min(LK.z1, z+2)); W(Math.min(a, b)-0.4, Math.max(a, b)+0.4, z, Math.min(LK.z1, z+2)).msg=BANK; } }
   if(typeof FOREST!=="undefined"){ const q=_trng(1931);
-    const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, gy=Terrain.groundAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
+    const tree=(sp, x, z, s)=>{ if(FOREST.plant(sp, x, z, {scale:s})===false) return; const rr=0.24*s, gy=Terrain.groundAt(x, z); addCol(x-rr, x+rr, z-rr, z+rr, gy-0.5, gy+6); };
     const row=(x0, z0, x1, z1, nx, nz)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.round(L/6.4);
       for(let k=0;k<=n;k++) for(const [dep, sp] of [[1.8, "edge"],[6.5, null],[11.5, null],[16.5, null],[22.0, null]]){ if(q()<0.15) continue;
         const t=(k+q()*0.6)/Math.max(1, n), x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);

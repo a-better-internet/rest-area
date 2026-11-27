@@ -52,7 +52,7 @@ const YARD_HOOPS=[];
     return s; };
   const sign=(w,h,draw,px,py,pz,ry,lit,cw)=>signPanel(w,h, signTex(cw||Math.round(w*400), Math.round((cw||w*400)*h/w), draw), px,py,pz,ry,lit);
   const gy=(x,z)=>Terrain.groundAt(x,z);
-  const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, g=gy(x,z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
+  const tree=(sp, x, z, s)=>{ if(FOREST.plant(sp, x, z, {scale:s})===false) return; const rr=0.24*s, g=gy(x,z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
   const shrub=(x, z, s)=>FOREST.plant("shrub", x, z, {scale:s, solid:false});
   const flat=(bk, x0,x1,z0,z1, y, color, uv)=>{ const w=x1-x0, d=z1-z0, g=new T.PlaneGeometry(w,d), U=g.attributes.uv, s=uv||0.5, ou=r()*50, ov=r()*50;
     for(let i=0;i<U.count;i++) U.setXY(i, ou+U.getX(i)*w*s, ov+U.getY(i)*d*s);

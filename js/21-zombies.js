@@ -37,7 +37,7 @@
    too: the edges of the screen go red, from the side it came; at nothing you
    are down. ENTER to go again, Z to leave.
    THE LAUNCHER and THE CODES: a rocket launcher to find (ROCKETS, blast);
-   / for a code box, NINELIVES endless health, BOTTOMLESS endless ammo.
+   / for a code box, NINELIVES endless health, BOTTOMLESS endless ammo, ARSENAL every weapon.
    Keys in the mode: click to fire (hold it for the carbine); X brings the
    sights up and X again lowers them (or hold the right button); + and -
    zoom in and out, and + brings the sights up if they are down (the wheel
@@ -1883,10 +1883,11 @@ const ZOMBIE=(function(){
   function resetRun(){
     Z.hp=100; Z.t=0; Z.kills=0; Z.level=1; Z.dead=false; Z.score=0; Z.ts=1;
     S.roofKit=false; S.belt=0; S.rgHeat=0; S.rgHot=false; S.rgCool=0; S.rgDry=false;
-    S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null; mendGlass(); S.cheated=!!(Z.god || Z.infAmmo);
+    S.bombs=1; S.throwT=0; S.streak=0; S.streakT=0; S.splat=0; S.tsT=0; S.horde=null; mendGlass(); S.cheated=!!(Z.god || Z.infAmmo || Z.arsenal);
     for(const b of BOMBS) scene.remove(b.g); BOMBS.length=0; BOOM.mod.v=0; stopRockets();
     S.have={pistol:true}; S.mag={pistol:15, shotgun:0, carbine:0, rifle:0, flamer:0, rocket:0}; S.ammo={"9MM":45, "12 GAUGE":0, "5.56":0, ".30-06":0, "FUEL":0, "ROCKETS":0}; stopFlame();
     S.cur="pistol"; S.next=null; S.reloading=false; S.switchT=0; S.cool=0; S.ads=0; S.aimOn=false; S.aimHeld=false; S.fired=false; S.melee=0; S.dmgFlash=0; S.spawnT=8; S.supplyT=20; S.levelShown=1;
+    if(Z.arsenal) giveAll();                                                     // (ARSENAL: every run starts with all of it)
     for(const zb of ZS) recycle(zb);
     for(let i=PK.length-1;i>=0;i--){ const p=PK[i]; if(p.dyn){ dropMesh(p.g); PK.splice(i,1); }
       else if(p.cache){ if(p.kind!==p.kind0){ dropMesh(p.g); p.kind=p.kind0; p.g=pickupMesh(p.kind); p.g.position.set(p.x, p.y, p.z); p.g.userData.glow.position.y=0.03; scene.add(p.g); }
@@ -2182,12 +2183,16 @@ const ZOMBIE=(function(){
     if(Z.hp<30 && !Z.dead){ S.heartT-=dt; if(S.heartT<=0){ S.heartT=0.85; snd.heart(); } }
     S.groanT-=dt; if(S.groanT<=0){ S.groanT=4+Math.random()*7; const a=Math.random()*6.28; voice(px+Math.sin(a)*70, pz+Math.cos(a)*70, 80+Math.random()*40, 1.6, 0.5, 0.5, 900); }
   };
-  /* ---- CODES. / opens a box at the foot of the screen; type a code and ENTER (ESC to shut it). NINELIVES and BOTTOMLESS
-     each turn one on, and off again: endless health (the hits are felt but take nothing) and endless ammunition (every
-     magazine always full, no reloading, pipe bombs without end). They hold till you turn them off or reload the page,
+  /* ---- CODES. / opens a box at the foot of the screen; type a code and ENTER (ESC to shut it). NINELIVES, BOTTOMLESS and
+     ARSENAL each turn one on, and off again: endless health (the hits are felt but take nothing), endless ammunition (every
+     magazine always full, no reloading, pipe bombs without end) and every weapon (all of them, loaded and topped up). They hold till you turn them off or reload the page,
      in zombie mode or out of it, and a run played with either on is not kept as your best. ---- */
-  const CODES={NINELIVES:["god", "INFINITE HEALTH"], BOTTOMLESS:["infAmmo", "INFINITE AMMO"]};
-  Z.god=false; Z.infAmmo=false;
+  // (ARSENAL: every gun, each magazine full and its reserve to the top, the roof gun's kit and a full belt, five pipe bombs;
+  //  and so at the start of every run while it is on)
+  const CODES={NINELIVES:["god", "INFINITE HEALTH"], BOTTOMLESS:["infAmmo", "INFINITE AMMO"], ARSENAL:["arsenal", "EVERY WEAPON"]};
+  Z.god=false; Z.infAmmo=false; Z.arsenal=false;
+  function giveAll(){ for(const g of GUNS){ S.have[g.id]=true; S.mag[g.id]=g.mag; S.ammo[g.ammo]=AMMO_MAX[g.ammo]; }
+    S.roofKit=true; S.belt=BELT_MAX; S.bombs=Math.max(S.bombs, 5); S.reloading=false; if(hud.last) hud.last.ammo=null; }
   const CB={open:false, txt:"", el:null};
   function codeBox(on){
     if(!CB.el){ CB.el=document.createElement("div"); CB.el.id="zcode";
@@ -2205,6 +2210,7 @@ const ZOMBIE=(function(){
     Z[c[0]]=!Z[c[0]]; if(Z[c[0]] && Z.on) S.cheated=true;
     if(c[0]==="god" && Z.god){ Z.hp=100; }
     if(c[0]==="infAmmo" && Z.infAmmo){ for(const g of GUNS) if(S.have[g.id]) S.mag[g.id]=g.mag; S.reloading=false; }
+    if(c[0]==="arsenal" && Z.arsenal) giveAll();
     codeSay(c[1]+(Z[c[0]] ? " · ON" : " · OFF"), Z[c[0]] ? "#7fd0e8" : "#a8a294"); if(AC()) snd.pick(Z[c[0]] ? 2 : 0);
     if(hud.last) hud.last.ammo=null;
   }

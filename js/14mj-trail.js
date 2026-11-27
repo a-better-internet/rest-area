@@ -46,6 +46,7 @@ const RIDGE={routes:{}, lamps:[], look:null};
   // (the trail runs on past the overlook to the summit since round 50: where along it the overlook is)
   let iLK=0; { let bd=1e9; PTS.forEach((p, i)=>{ const d=Math.hypot(p.x-LK.x, p.z-LK.z); if(d<bd){ bd=d; iLK=i; } }); }
   const LEN_LK=PTS[iLK].s;
+  if(typeof FOREST!=="undefined") FOREST.trail(PTS, 0.75);               // (no tree set down after this covers it, 07)
   { const P=[], U=[], I=[], HW=0.75;
     PTS.forEach((p, i)=>{ const a=PTS[Math.max(0, i-1)], b=PTS[Math.min(PTS.length-1, i+1)], tx=b.x-a.x, tz=b.z-a.z, tl=Math.hypot(tx, tz)||1, nx=-tz/tl, nz=tx/tl;
       for(const o of [-HW, 0, HW]){ const x=p.x+nx*o, z=p.z+nz*o; P.push(x, gy(x, z)+0.04, z); U.push(o*0.8, p.s*0.8); } });
@@ -196,7 +197,7 @@ const RIDGE={routes:{}, lamps:[], look:null};
 
   /* ---- the woods: real trees from wall to wall, clear of the trail, the overlook's shelf and its view east; more past the walls ---- */
   if(typeof FOREST!=="undefined"){ const q=_trng(4611);
-    const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, g=gy(x, z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
+    const tree=(sp, x, z, s)=>{ if(FOREST.plant(sp, x, z, {scale:s})===false) return; const rr=0.24*s, g=gy(x, z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
     const nearTrail=(x, z, m)=>{ for(let i=0;i<PTS.length;i+=2){ const p=PTS[i]; if(Math.abs(p.x-x)<m+1 && Math.abs(p.z-z)<m+1 && Math.hypot(p.x-x, p.z-z)<m) return true; } return false; };
     const inView=(x, z)=>{ const dx=x-LK.x, dz=z-LK.z, ex=x-SM.x, ez=z-SM.z; return Math.hypot(dx, dz)<11 || (dx>0 && dx<80 && Math.abs(dz)<dx*0.55+4)
       || Math.hypot(ex, ez)<17 || (ex>0 && ex<110 && Math.abs(ez)<ex*0.5+6); };
