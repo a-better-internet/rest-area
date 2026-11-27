@@ -515,8 +515,9 @@ const APTS={routes:{}, lamps:[], radios:[], FL0:0, FL1:0, ZC:-1865};
   if(typeof FOREST!=="undefined"){ for(const z of [-1873.2, -1867.8, -1862.2, -1856.8]) FOREST.plant("shrub", XFR+2.35, z, {scale:0.75, solid:false});
     for(const x of [690, 693, 696]) FOREST.plant("shrub", x, ZS-1.3, {scale:0.7, solid:false}); }
 
-  /* ---- the walls of the world round it (the bookstore's along its south edge), the woods close behind ---- */
-  { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300); W(S0.x0-0.4, S0.x0+0.4, S0.z0, S0.z1); W(S0.x0, S0.x1, S0.z0-0.4, S0.z0+0.4); }
+  /* ---- the wall of the world along its south side, the woods close behind ---- */
+  // (only its south side: west is Ridge Lane and north the bookstore, open to both; round 50)
+  { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300); W(S0.x0, S0.x1, S0.z0-0.4, S0.z0+0.4); }
   if(typeof FOREST!=="undefined"){ const q=_trng(1980);
     const tree=(sp, x, z, sc)=>{ FOREST.plant(sp, x, z, {scale:sc}); const rr=0.24*sc, g=gy(x, z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
     const row=(x0, z0, x1, z1, nx, nz)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.round(L/6.2));

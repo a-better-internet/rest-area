@@ -85,6 +85,7 @@ const WARP=(function(){
     ["BIRCH HOLLOW, APT 202", 697.0, -1860.0, -Math.PI/2, x=>surfaceY(x[1], x[2], APTS.FL1+0.1)],
     ["HOLLOW RIDGE TRAILHEAD", 656.0, -1871.5, Math.PI/2, x=>g(x[1], x[2])],
     ["HOLLOW RIDGE OVERLOOK", EAST.lane.look.x-2.0, EAST.lane.look.z, -Math.PI/2, x=>g(x[1], x[2])],
+    ["HOLLOW RIDGE SUMMIT", EAST.lane.summit.x+1.0, EAST.lane.summit.z, -Math.PI/2, x=>g(x[1], x[2])],
     ["THE LAKESIDE DIVE, AT THE BAR", 918.4, -1900.4, 0, x=>surfaceY(x[1], x[2], DIVE.FL+0.1)],
     ["MIDLAND MUTUAL, THE EXECUTIVE FLOOR", 887.7, -1822.25, 0, x=>surfaceY(x[1], x[2], OFFICE.bldg[1].levels[3]+0.1)],
     ["MIDLAND MUTUAL, THE COMPUTER ROOM", 887.7, -1822.25, 0, x=>surfaceY(x[1], x[2], OFFICE.bldg[1].levels[4]+0.1)],

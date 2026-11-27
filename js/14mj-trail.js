@@ -23,7 +23,7 @@
 const RIDGE={routes:{}, lamps:[], look:null};
 (function hollowRidge(){
   if(typeof EAST==="undefined" || !EAST.lane || !EAST.lane.trail) return;
-  const Y=EDIN.y, LY=Y+PAVE_T+0.015, L=EAST.lane, TR=L.trail, LK=L.look, WD=L.woods, ME=[], r=_trng(4610);
+  const Y=EDIN.y, LY=Y+PAVE_T+0.015, L=EAST.lane, TR=L.trail, LK=L.look, SM=L.summit, WD=L.woods, ME=[], r=_trng(4610);
   const ent=(geo,x,y,z,c,rx,ry,rz,list)=>(list||ME).push({geo:geo, matrix:new T.Matrix4().compose(V3(x,y,z),
     new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,rz||0,"YXZ")), V3(1,1,1)), color:new T.Color(c)});
   const B=(w,h,d,x,y,z,c,ry,list)=>ent(boxGeo(w,h,d),x,y,z,c,0,ry||0,0,list);
@@ -43,6 +43,9 @@ const RIDGE={routes:{}, lamps:[], look:null};
   const PTS=[]; { const TRL=[{x:TR[0].x+1.1, z:TR[0].z}].concat(TR); for(let i=0;i<TRL.length-1;i++){ const a=TRL[i], b=TRL[i+1], n=Math.max(1, Math.ceil(Math.hypot(b.x-a.x, b.z-a.z)/0.8));
       for(let k=0;k<n;k++) PTS.push({x:a.x+(b.x-a.x)*k/n, z:a.z+(b.z-a.z)*k/n}); } PTS.push({x:TRL[TRL.length-1].x, z:TRL[TRL.length-1].z}); }
   let LEN=0; PTS.forEach((p, i)=>{ if(i) LEN+=Math.hypot(p.x-PTS[i-1].x, p.z-PTS[i-1].z); p.s=LEN; p.y=gy(p.x, p.z); });
+  // (the trail runs on past the overlook to the summit since round 50: where along it the overlook is)
+  let iLK=0; { let bd=1e9; PTS.forEach((p, i)=>{ const d=Math.hypot(p.x-LK.x, p.z-LK.z); if(d<bd){ bd=d; iLK=i; } }); }
+  const LEN_LK=PTS[iLK].s;
   { const P=[], U=[], I=[], HW=0.75;
     PTS.forEach((p, i)=>{ const a=PTS[Math.max(0, i-1)], b=PTS[Math.min(PTS.length-1, i+1)], tx=b.x-a.x, tz=b.z-a.z, tl=Math.hypot(tx, tz)||1, nx=-tz/tl, nz=tx/tl;
       for(const o of [-HW, 0, HW]){ const x=p.x+nx*o, z=p.z+nz*o; P.push(x, gy(x, z)+0.04, z); U.push(o*0.8, p.s*0.8); } });
@@ -87,16 +90,18 @@ const RIDGE={routes:{}, lamps:[], look:null};
         for(let k=0;k<7;k++){ c.strokeStyle="rgba(90,110,70,0.5)"; c.lineWidth=1; c.beginPath(); c.moveTo(bx-6, by+bh*(1-k/7)); c.lineTo(bx+bw+6, by+bh*(1-k/7)+bh*0.05); c.stroke(); }
         c.strokeStyle="#8a3a22"; c.lineWidth=4; c.setLineDash([9, 5]); c.beginPath(); TR.forEach((p, i)=>{ const [u, v]=mp(p); i ? c.lineTo(u, v) : c.moveTo(u, v); }); c.stroke(); c.setLineDash([]);
         { const [u, v]=mp(TR[0]); c.fillStyle="#2a5a8a"; c.fillRect(u-7, v-7, 14, 14); } { const [u, v]=mp(TR[TR.length-1]); c.fillStyle="#3a2a1a"; c.beginPath(); c.moveTo(u, v-11); c.lineTo(u+10, v+8); c.lineTo(u-10, v+8); c.fill(); }
+        { const [u, v]=mp(LK); c.fillStyle="#8a3a22"; c.beginPath(); c.arc(u, v, 8, 0, 7); c.fill(); }
         const tx=W*0.86;
-        say(c, "OVERLOOK", tx, H*0.30, W*0.2, H*0.06, "#3a2a1a", "800"); say(c, (LEN/1609).toFixed(2)+" MI", tx, H*0.38, W*0.2, H*0.06, "#3a2a1a", "600");
-        say(c, "CLIMB "+Math.round((LK.y-Y)*3.28)+" FT", tx, H*0.46, W*0.2, H*0.055, "#3a2a1a", "600");
-        say(c, "■ YOU ARE HERE", tx, H*0.58, W*0.2, H*0.05, "#2a5a8a", "700"); say(c, "▲ OVERLOOK", tx, H*0.66, W*0.2, H*0.05, "#3a2a1a", "700");
+        say(c, "OVERLOOK", tx, H*0.25, W*0.2, H*0.055, "#3a2a1a", "800"); say(c, (LEN_LK/1609).toFixed(2)+" MI", tx, H*0.32, W*0.2, H*0.05, "#3a2a1a", "600");
+        say(c, "SUMMIT", tx, H*0.41, W*0.2, H*0.055, "#3a2a1a", "800"); say(c, (LEN/1609).toFixed(2)+" MI", tx, H*0.48, W*0.2, H*0.05, "#3a2a1a", "600");
+        say(c, "CLIMB "+Math.round((SM.y-Y)*3.28)+" FT", tx, H*0.55, W*0.2, H*0.05, "#3a2a1a", "600");
+        say(c, "■ YOU ARE HERE", tx, H*0.64, W*0.2, H*0.045, "#2a5a8a", "700"); say(c, "● OVERLOOK", tx, H*0.71, W*0.2, H*0.045, "#8a3a22", "700"); say(c, "▲ SUMMIT", tx, H*0.78, W*0.2, H*0.045, "#3a2a1a", "700");
         say(c, "STAY ON THE TRAIL  ·  CARRY IN, CARRY OUT  ·  NO FIRES", W/2, H*0.92, W*0.8, H*0.06, "#3a2a1a", "700"); },
       x+0.012, yc, z, Math.PI/2, false, MW); }
   // the trail's own sign at its foot, on a post behind it, read coming across the lot
   { const p=PTS[3], x=p.x+0.4, z=p.z-1.6, g=gy(x, z); B(0.12, 1.9, 0.12, x-0.1, g+0.95, z, POST); addCol(x-0.16, x-0.04, z-0.06, z+0.06, g-0.5, g+1.9);
     B(0.05, 0.62, 0.86, x-0.025, g+1.5, z, BROWN);
-    sign(0.8, 0.56, parkBoard(["HOLLOW RIDGE TRAIL", "OVERLOOK  "+(LEN/1609).toFixed(2)+" MI", "FOLLOW THE BLUE BLAZES"]), x+0.012, g+1.5, z, Math.PI/2, false, 320); }
+    sign(0.8, 0.56, parkBoard(["HOLLOW RIDGE TRAIL", "OVERLOOK  "+(LEN_LK/1609).toFixed(2)+" MI", "SUMMIT  "+(LEN/1609).toFixed(2)+" MI", "FOLLOW THE BLUE BLAZES"]), x+0.012, g+1.5, z, Math.PI/2, false, 320); }
   // a bench by the kiosk, looking along the lot; a can
   { const x=LT.x0+1.0, z=LT.z0+4.0, g=gy(x, z); B(0.42, 0.05, 1.5, x, g+0.45, z, "#6a5038"); B(0.05, 0.42, 1.5, x-0.19, g+0.7, z, "#6a5038");
     for(const dz of [-0.65, 0.65]) B(0.4, 0.43, 0.06, x, g+0.215, z+dz, "#3a2a1a"); addCol(x-0.23, x+0.23, z-0.78, z+0.78, g-0.5, g+0.5);
@@ -108,9 +113,11 @@ const RIDGE={routes:{}, lamps:[], look:null};
       const turn=Math.abs(Math.atan2(b.x-p.x, b.z-p.z)-Math.atan2(p.x-a.x, p.z-a.z));
       if(p.s<next && !(turn>0.6 && p.s>next-30)) return; next=p.s+40; side=-side;
       const tl=Math.hypot(b.x-a.x, b.z-a.z)||1, x=p.x-(b.z-a.z)/tl*side*1.45, z=p.z+(b.x-a.x)/tl*side*1.45, g=gy(x, z);
+      // (not on another leg of the trail: on a tight switchback the post beside one leg can stand on the next)
+      if(PTS.some(t=>Math.abs(t.x-x)<1.4 && Math.abs(t.z-z)<1.4 && Math.hypot(t.x-x, t.z-z)<1.4)){ next=p.s+6; side=-side; return; }
       B(0.1, 1.1, 0.1, x, g+0.55, z, POST); B(0.104, 0.14, 0.104, x, g+0.9, z, "#2a5a9a"); B(0.12, 0.03, 0.12, x, g+1.115, z, "#3a2a1a");
       addCol(x-0.06, x+0.06, z-0.06, z+0.06, g-0.4, g+1.1); }); }
-  { const p=PTS.find(q=>q.s>LEN/2) || PTS[1], i=PTS.indexOf(p), a=PTS[i-1], b=PTS[i+1], tl=Math.hypot(b.x-a.x, b.z-a.z)||1, x=p.x+(b.z-a.z)/tl*1.2, z=p.z-(b.x-a.x)/tl*1.2, g=gy(x, z);
+  { const p=PTS.find(q=>q.s>LEN/2 && !PTS.some(t=>Math.abs(t.s-q.s)>4 && Math.hypot(t.x-q.x, t.z-q.z)<4)) || PTS[1], i=PTS.indexOf(p), a=PTS[i-1], b=PTS[i+1], tl=Math.hypot(b.x-a.x, b.z-a.z)||1, x=p.x+(b.z-a.z)/tl*1.2, z=p.z-(b.x-a.x)/tl*1.2, g=gy(x, z);
     const ry=Math.atan2(a.x-p.x, a.z-p.z); B(0.14, 1.3, 0.14, x, g+0.65, z, POST); addCol(x-0.08, x+0.08, z-0.08, z+0.08, g-0.4, g+1.3);
     const fx=Math.sin(ry), fz=Math.cos(ry); B(0.36, 0.26, 0.04, x+fx*0.09, g+1.05, z+fz*0.09, BROWN, ry);
     sign(0.32, 0.22, parkBoard(["HALF WAY", (LEN/2/1609).toFixed(2)+" MI TO GO"]), x+fx*0.122, g+1.05, z+fz*0.122, ry, false, 200); }
@@ -143,6 +150,37 @@ const RIDGE={routes:{}, lamps:[], look:null};
       sign(w, h, parkBoard(["HOLLOW RIDGE OVERLOOK", "ELEV. "+Math.round(1180+(LK.y-Y)*3.28)+" FT", "EDINBORO LAKE AND HOLLOW ROAD BELOW"]), sx+0.012, yc, sz, Math.PI/2, false, 480); }
     RIDGE.look={x:x, y:g, z:z}; }
 
+  /* ---- Hollow Ridge Summit (round 50): the trail's end on the bald top of the ridge; boulders, a cairn with the survey's
+     disc on the biggest stone, the sign on two posts beyond its ends, two benches looking east down the whole valley to
+     the lake; the view cut open east ---- */
+  { const x=SM.x, z=SM.z, g=SM.y, STONE=["#6e6a62","#625e58","#76726a","#5a5650"];      // (sandstone gone grey; darker than it looks, in full sun)
+    const onTrail=(px, pz, m)=>PTS.some(t=>Math.hypot(t.x-px, t.z-pz)<m);
+    const rock=(px, pz, rr, hh, col)=>{ const gg=gy(px, pz), geo=new T.SphereGeometry(rr, 10, 7); geo.scale(1, hh/rr, 0.85); ent(geo, px, gg+hh*0.35, pz, col, 0, (px*7+pz*3)%3, 0);
+      addCol(px-rr*0.8, px+rr*0.8, pz-rr*0.7, pz+rr*0.7, gg-0.5, gg+hh*1.2); };
+    // the outcrop the top is: a few big stones on its west side, clear of the trail's way in and the benches
+    for(const [dx, dz, rr, hh] of [[-6.5, -2.5, 1.5, 0.9],[-7.2, 1.8, 1.1, 0.7],[-4.8, 4.6, 0.9, 0.55],[-3.6, -5.8, 1.2, 0.6],[5.5, -6.5, 0.8, 0.45],[6.8, 5.2, 0.7, 0.4]])
+      if(!onTrail(x+dx, z+dz, rr+1.4)) rock(x+dx, z+dz, rr, hh, STONE[((dx*3+dz)|0)&3]);
+    // the cairn: flat stones, smaller as it goes up
+    { const cx=x-1.5, cz=z-3.0, gg=gy(cx, cz); let yy=gg;
+      for(let k=0;k<6;k++){ const rr=0.55-k*0.075, hh=0.16-k*0.012, geo=new T.SphereGeometry(rr, 9, 6); geo.scale(1, hh/rr, 0.9); ent(geo, cx+((k%2)-0.5)*0.05, yy+hh*0.6, cz, STONE[k&3], 0, k*0.9, 0); yy+=hh*1.1; }
+      addCol(cx-0.45, cx+0.45, cz-0.45, cz+0.45, gg-0.5, yy+0.1); }
+    // the disc on the big stone
+    { const bx=x-6.5, bz=z-2.5, gg=gy(bx, bz); C(0.05, 0.02, bx, gg+0.9*0.35+0.9*0.62, bz, "#a8803a", 14); }
+    // two benches facing east, backs to the outcrop
+    // (east of the trail's way onto the top, which comes up along its east side)
+    const BX=4.5, BENCH=[-2.2, 2.2, 4.0, -4.0, 0].filter(dz=>![-0.75, 0, 0.75].some(o=>onTrail(x+BX, z+dz+o, 1.4))).slice(0, 2);
+    for(const dz of BENCH){ const bx=x+BX, bz=z+dz, gg=gy(bx, bz); B(0.42, 0.05, 1.5, bx, gg+0.45, bz, "#6a5038"); B(0.05, 0.42, 1.5, bx-0.19, gg+0.72, bz, "#6a5038");
+      for(const o of [-0.65, 0.65]) B(0.4, 0.43, 0.06, bx, gg+0.215, bz+o, "#3a2a1a"); addCol(bx-0.23, bx+0.23, bz-0.78, bz+0.78, gg-0.5, gg+0.5);
+      for(const o of [-0.4, 0.4]) addSeat(bx, bz+o, gg, -Math.PI/2, "A BENCH ON THE SUMMIT"); }
+    // the sign: on the outcrop's side, read from the top, its posts beyond its ends
+    { const sx=x-3.4, sz=z+0.6, g2=gy(sx, sz), w=1.5, h=0.8, yc=g2+1.35;
+      if(!onTrail(sx, sz, 1.6)){
+        for(const dz of [-w/2-0.1, w/2+0.1]){ B(0.12, 1.85, 0.12, sx, g2+0.92, sz+dz, POST); addCol(sx-0.07, sx+0.07, sz+dz-0.07, sz+dz+0.07, g2-0.5, g2+1.85); }
+        B(0.06, h+0.06, w+0.06, sx-0.03, yc, sz, BROWN);
+        sign(w, h, parkBoard(["HOLLOW RIDGE SUMMIT", "ELEV. "+Math.round(1180+(g-Y)*3.28)+" FT", (LEN/1609).toFixed(2)+" MI FROM THE TRAILHEAD"]), sx+0.012, yc, sz, Math.PI/2, false, 480); } }
+    addZone(x-15, x+15, z-15, z+15, g-6, g+20, "HOLLOW RIDGE SUMMIT");
+    RIDGE.summit={x:x, y:g, z:z}; }
+
   /* ---- at Hollow Road: the lane's street blade on its pole at the corner, the trail's sign for traffic both ways ---- */
   { const M=L.mouth, x=RX_()-4.6, z=M.z1+1.2, g=gy(x, z), top=2.6;
     C(0.035, top, x, g+top/2, z, "#8d9294", 10); addCol(x-0.05, x+0.05, z-0.05, z+0.05, g-0.5, g+top);
@@ -152,7 +190,7 @@ const RIDGE={routes:{}, lamps:[], look:null};
   { const x=RX_()-5.8, z=L.mouth.z1+5.5, g=gy(x, z), w=1.8, h=0.9, top=g+2.2;
     for(const dx of [-w/2-0.1, w/2+0.1]){ B(0.12, top+0.1-g, 0.12, x+dx, (top+0.1+g)/2, z, POST); addCol(x+dx-0.07, x+dx+0.07, z-0.07, z+0.07, g-0.5, top); }
     B(w+0.06, h+0.06, 0.08, x, top-h/2, z, BROWN);
-    const draw=(arrowRight)=>(c, W, H)=>{ parkBoard(["HOLLOW RIDGE TRAIL", "TRAILHEAD PARKING", "OVERLOOK "+(LEN/1609).toFixed(2)+" MI"])(c, W, H);
+    const draw=(arrowRight)=>(c, W, H)=>{ parkBoard(["HOLLOW RIDGE TRAIL", "TRAILHEAD PARKING", "SUMMIT "+(LEN/1609).toFixed(2)+" MI"])(c, W, H);
       c.fillStyle=CREAM; const ax=arrowRight ? W*0.88 : W*0.12, ay=H*0.5, s=H*0.12; c.beginPath(); c.moveTo(ax+(arrowRight ? s : -s), ay); c.lineTo(ax, ay-s); c.lineTo(ax, ay+s); c.fill(); };
     sign(w, h, draw(false), x, top-h/2, z+0.052, 0, false, 480); sign(w, h, draw(true), x, top-h/2, z-0.052, Math.PI, false, 480); }
 
@@ -160,8 +198,12 @@ const RIDGE={routes:{}, lamps:[], look:null};
   if(typeof FOREST!=="undefined"){ const q=_trng(4611);
     const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, g=gy(x, z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
     const nearTrail=(x, z, m)=>{ for(let i=0;i<PTS.length;i+=2){ const p=PTS[i]; if(Math.abs(p.x-x)<m+1 && Math.abs(p.z-z)<m+1 && Math.hypot(p.x-x, p.z-z)<m) return true; } return false; };
-    const inView=(x, z)=>{ const dx=x-LK.x, dz=z-LK.z; return Math.hypot(dx, dz)<11 || (dx>0 && dx<80 && Math.abs(dz)<dx*0.55+4); };
-    for(let x=WD.x0+2.4; x<WD.x1-1.5; x+=5.0) for(let z=WD.z0+2.4; z<WD.z1-1.5; z+=5.0){ const jx=x+(q()-0.5)*3.0, jz=z+(q()-0.5)*3.0;
+    const inView=(x, z)=>{ const dx=x-LK.x, dz=z-LK.z, ex=x-SM.x, ez=z-SM.z; return Math.hypot(dx, dz)<11 || (dx>0 && dx<80 && Math.abs(dz)<dx*0.55+4)
+      || Math.hypot(ex, ez)<17 || (ex>0 && ex<110 && Math.abs(ez)<ex*0.5+6); };
+    // (the woods as they were, every five metres; the mountain above them, opened in round 50, a little sparser)
+    const lat=[]; for(let x=WD.x0+2.4; x<WD.x1-1.5; x+=5.0) for(let z=-1934+2.4; z<WD.z1-1.5; z+=5.0) if(x>=402) lat.push([x, z]);
+    for(let x=WD.x0+2.4; x<WD.x1-1.5; x+=5.8) for(let z=WD.z0+2.4; z<WD.z1-1.5; z+=5.8) if(x<402 || z<-1934) lat.push([x, z]);
+    for(const [x, z] of lat){ const jx=x+(q()-0.5)*3.0, jz=z+(q()-0.5)*3.0;
       if(Terrain.siteDist(jx, jz)<2.5 || nearTrail(jx, jz, 2.6) || inView(jx, jz)) continue;
       tree(q()<0.32 ? "hemlock" : q()<0.45 ? "pine" : "hard", jx, jz, 0.8+q()*0.45);
       if(q()<0.35){ const fx=jx+(q()-0.5)*2.2, fz=jz+(q()-0.5)*2.2; if(!nearTrail(fx, fz, 1.3) && !inView(fx, fz)) FOREST.plant(q()<0.55 ? "fern" : "shrub", fx, fz, {scale:0.7+q()*0.5, solid:false}); } }
@@ -170,6 +212,7 @@ const RIDGE={routes:{}, lamps:[], look:null};
       for(let k=0;k<=n;k++) for(const dep of [2.0, 7.0, 12.5]){ if(q()<0.12) continue; const t=(k+q()*0.6)/n, x=x0+(x1-x0)*t+nx*(dep+q()*2.2), z=z0+(z1-z0)*t+nz*(dep+q()*2.2);
         tree(q()<0.35 ? "hemlock" : q()<0.5 ? "pine" : "hard", x, z, 0.85+q()*0.4); } };
     row(WD.x0, WD.z0, WD.x0, WD.z1, -1, 0); row(WD.x0, WD.z0, L.ns.x1, WD.z0, 0, -1); row(WD.x0, WD.z1, L.ew.x1-2, WD.z1, 0, 1);
+    row(L.ns.x1, WD.z0, L.ns.x1, L.ns.z0, 1, 0);                    // (and east, past the strip below, along the mountain's foot south of the lane)
     for(let x=WD.x1+1.5; x<L.ns.x1-1; x+=4.6) for(let z=WD.z0+2; z<L.ns.z0-1.5; z+=4.6){ const jx=x+(q()-0.5)*2, jz=z+(q()-0.5)*2; if(Terrain.siteDist(jx, jz)>2.5) tree(q()<0.4 ? "hemlock" : "hard", jx, jz, 0.85+q()*0.35); }
     // between the lane and the back yards, a loose row of maples and a lilac or two
     for(let z=L.ns.z0+6; z<L.ns.z1-6; z+=9.5){ const x=663.2+(q()-0.5)*1.2; if(z>L.lot.z0-2 && z<L.lot.z1+2) continue; tree("edge", x, z+(q()-0.5)*2, 0.8+q()*0.3); } }
@@ -188,7 +231,11 @@ const RIDGE={routes:{}, lamps:[], look:null};
   const MZ=(L.mouth.z0+L.mouth.z1)/2, up=[]; for(let i=0;i<PTS.length;i+=3) up.push([PTS[i].x, PTS[i].z]); up.push([PTS[PTS.length-1].x, PTS[PTS.length-1].z]);
   RIDGE.routes={
     "hollow ridge: in off Hollow Road along Ridge Lane to the trailhead":[[731.0, MZ],[722.0, MZ],[700.0, -1798.0],[660.0, -1798.0],[653.5, -1806.0],[653.5, -1850.0],[653.5, -1866.0],[649.0, -1871.5]],
-    "hollow ridge: up the trail to the overlook":[[652.0, -1871.5]].concat(up),
+    "hollow ridge: up the trail to the overlook":[[652.0, -1871.5]].concat(up.filter(p=>PTS.findIndex(t=>t.x===p[0] && t.z===p[1])<=iLK), [[PTS[iLK].x, PTS[iLK].z]]),
+    "hollow ridge: on up from the overlook to the summit":[[PTS[iLK].x, PTS[iLK].z]].concat(up.filter(p=>PTS.findIndex(t=>t.x===p[0] && t.z===p[1])>iLK)),
+    // (round 50: the bookstore, the apartments and the lane are one place, with no walls between them)
+    "hollow ridge: from the bookstore round the back of the apartments onto the lane":[[690.0, -1809.0],[676.0, -1809.0],[676.0, -1840.0],[676.0, -1858.0],[656.0, -1858.0],[656.0, -1820.0],[660.0, -1798.0]],
+    "hollow ridge: round the summit":[[SM.x+1.0, SM.z+0.0],[SM.x+2.8, SM.z-1.0],[SM.x+2.8, SM.z+1.2],[SM.x+0.5, SM.z+3.5],[SM.x-1.5, SM.z+1.0]],
     "hollow ridge: out onto the overlook to the fence":[[LK.x-2.5, LK.z],[LK.x+3.0, LK.z+0.4],[LK.x+4.2, LK.z+2.6]]};
   function RX_(){ return EAST.beer.rx-3.4; }
 })();

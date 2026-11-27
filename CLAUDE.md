@@ -1496,3 +1496,38 @@ Run them with `NODE_PATH` pointing at a global Playwright, for example
 - Its sounds go through a map onto 20's blips (`SND`). Its game-over
   carries on from the world reached (`_RRM._world`); reaching the summit
   sets it back to the first world. Its best scores are `_cbTop("rambler")`.
+
+## Round 50 notes
+
+- **A local name never hides a global.** Round 48 named zombie mode's
+  ambient sound `amb`, which hid 03's ambient light inside 21's closure.
+  The gloom (`ZOMBIE.atmos`) dims that light every frame, so with the sound
+  not running its first frame threw, and zombie mode froze under its
+  banner. Run `tools/shadows.js` before committing: it lists any local
+  declaration in the files you changed that hides a global (`ALL=1` for
+  every file; the meant ones are in its `OK` list).
+- Test zombie mode with the sound off as well as on (the headless runs had
+  audio, which is how the freeze got through). A frame that throws in 19's
+  `frame()` keeps the loop alive but never reaches the draw, so the picture
+  freezes under whatever DOM is up.
+- **The world's walls go round the outside of what is built, never between
+  two places that lie side by side.** Hollow Road Books, Birch Hollow and
+  Ridge Lane are one place you walk about in now: the walls between them
+  are gone, and the outer ones (the apartments' south side, the lane's and
+  the mountain woods') stay. The sweep that found them (both sides of every
+  edge wall within 6 m of a named place or paving) is the check to run
+  after adding a place; only the interstate's end walls and the lake bank
+  by Lakeside Park's dock, which carry their own message, should remain.
+- **The mountain is walkable to its summit.** `EAST.lane.woods` runs x 320
+  to 646, z −2192 to −1792, with the summit (`EAST.lane.summit`, 168 m) at
+  (400, −2112). `RING_TRAIL` (4 m ground) and `EAST.tcan` (8 m shell) cover
+  it, and 14mj fills it with real trees (5 m apart below the overlook,
+  5.8 m above). 04's cut of the hillside behind the lane now eases off
+  between 170 and 330 m out instead of stopping, or there would be a step.
+  The trail runs on past the overlook. The climb to the overlook keeps its
+  old box; the rest is a least-cost path over a 4 m grid (each step costs
+  its length plus a penalty for grade over 13%, none over 32%, none within
+  8 m of the trail below), so it finds its own switchbacks. The summit has
+  its level top, a bald clearing (`siteDist`), boulders, a cairn and the
+  survey disc, its sign, two benches facing east, its zone, warp and walk
+  routes. A blaze post never stands on another leg of the trail.

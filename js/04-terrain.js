@@ -140,8 +140,8 @@ const EAST=(function(){
     // its woods (woods, walled round) to the overlook (look). The trail itself is laid out below, once the ground's grading is
     // known (EAST.lane.trail), and the ground and the canopy round it are their own finer patches (RING_TRAIL, tcan)
     lane:{mouth:{z0:-1803, z1:-1793}, ew:{x0:648, x1:722, z0:-1804, z1:-1792}, ns:{x0:644, x1:668, z0:-1881, z1:-1792},
-          lot:{x0:646, x1:666, z0:-1879, z1:-1864}, head:{x:645.5, z:-1871.5}, woods:{x0:404, x1:646, z0:-1934, z1:-1792}, look:{x:515, z:-1915}},
-    tcan:{x0:384, x1:640, z0:-1952, z1:-1760} };
+          lot:{x0:646, x1:666, z0:-1879, z1:-1864}, head:{x:645.5, z:-1871.5}, woods:{x0:320, x1:646, z0:-2192, z1:-1792}, look:{x:515, z:-1915}, summit:{x:400, z:-2112}},
+    tcan:{x0:288, x1:640, z0:-2224, z1:-1760} };
 })();
 /* ---- west along US 6N -----------------------------------------------------
    Past the west fields the road goes on into the woods and comes to French Creek Pines, a campground and trailer
@@ -344,10 +344,14 @@ const Terrain=(function(){
       { const od=boxDist(EAST.office.level,x,z); if(od<14) h=toward(h, EDIN.y, od, 0, 14); }
       // the hillside behind Ridge Lane cut back to a slope you can climb: no steeper than about a third, rising from the lane
       // (eased onto the cut over its last few metres, so it runs into the hill's own slope without a crease)
-      { const L=EAST.lane, ld=Math.min(boxDist(L.ew,x,z), boxDist(L.ns,x,z)); if(ld>0 && ld<260){ const c=EDIN.y+0.34*ld, k=3;
-          if(h>c) h=c+k*(1-Math.exp(-(h-c)/k)); } }
+      // (and the cut eases off between 170 and 330 m out, so the mountain beyond rises from it without a step: its woods
+      //  are walkable to the summit now)
+      { const L=EAST.lane, ld=Math.min(boxDist(L.ew,x,z), boxDist(L.ns,x,z)); if(ld>0 && ld<330){ const c=EDIN.y+0.34*ld, k=3;
+          if(h>c){ const hc=c+k*(1-Math.exp(-(h-c)/k)), w=1-smoothstep(170, 330, ld); h=h+(hc-h)*w; } } }
       // the overlook at the top of Hollow Ridge Trail: a level shelf cut into the hillside (once the trail has found it)
-      { const L=EAST.lane.look; if(L.y!==undefined){ const d=Math.hypot(x-L.x, z-L.z); if(d<16) h=toward(h, L.y, d, 6.5, 9); } } }
+      { const L=EAST.lane.look; if(L.y!==undefined){ const d=Math.hypot(x-L.x, z-L.z); if(d<16) h=toward(h, L.y, d, 6.5, 9); } }
+      // and the summit: a little level top where the trail ends, cut a metre or two into the crown
+      { const S=EAST.lane.summit; if(S.y!==undefined){ const d=Math.hypot(x-S.x, z-S.z); if(d<20) h=toward(h, S.y, d, 7, 11); } } }
     // west along US 6N: the same, the road's clearing and the park's level with the road
     { const wd=Math.min(boxDist(WEST.corr,x,z), boxDist(WEST.park,x,z), boxDist(WEST.ranch,x,z));
       if(wd<420) h=EDIN.y+(h-EDIN.y)*(0.3+0.7*smoothstep(30, 420, wd));
@@ -443,7 +447,8 @@ const Terrain=(function(){
      back on itself (a switchback) where its woods end; once it is as high as the overlook it heads straight there. */
   { const L=EAST.lane, W=L.woods, T=L.look, G=0.11, st=2.0, tH=baseHeight(T.x, T.z);
     let x=L.head.x, z=L.head.z, h=baseHeight(x, z), sz=1, legs=0; const P=[{x:x, z:z}];
-    const okAt=(nx, nz)=>nx>W.x0+10 && nx<W.x1-3 && nz>W.z0+18 && nz<W.z1-12;
+    // (the climb to the overlook keeps to the woods as they were before the summit was opened, so its legs stay where they were)
+    const W1={x0:404, x1:646, z0:-1934, z1:-1792}, okAt=(nx, nz)=>nx>W1.x0+10 && nx<W1.x1-3 && nz>W1.z0+18 && nz<W1.z1-12;
     for(let i=0;i<1400;i++){ const dT=Math.hypot(T.x-x, T.z-z); if(dT<3) break;
       let best=null, bs=1e9;
       if(h>tH-1.5 || (dT<26 && Math.abs(tH-h)<dT*0.14)){ const ux=(T.x-x)/dT, uz=(T.z-z)/dT; best=[x+ux*st, z+uz*st]; }
@@ -454,7 +459,33 @@ const Terrain=(function(){
         for(let k=0;k<2;k++){ x-=st*0.6; P.push({x:x, z:z}); } h=baseHeight(x, z); continue; }
       x=best[0]; z=best[1]; h=baseHeight(x, z); P.push({x:x, z:z}); }
     P.push({x:T.x, z:T.z});
-    L.trail=smoothPath(P.filter((p, i)=>i%3===0 || i===P.length-1), 2.0); L.look.y=tH; }
+    /* and on from the overlook to the summit (round 50). The upper mountain is too steep for legs laid one step at a
+       time, so this stretch is found as the cheapest way over a 4 m grid of the flank: each step costs its length, more
+       for every per cent of grade over 13 (none over 32 at all), and none within 8 m of the trail below; sixteen ways
+       out of every cell, so it finds its own switchbacks. */
+    const S=L.summit, sH=baseHeight(S.x, S.z), iL=P.length-1;
+    { const C=4, B={x0:W.x0+10, x1:W.x1-14, z0:W.z0+10, z1:T.z+10}, nx=Math.floor((B.x1-B.x0)/C)+1, nz=Math.floor((B.z1-B.z0)/C)+1, N=nx*nz;
+      const hgt=new Float32Array(N), bad=new Uint8Array(N);
+      const lower=P.slice(0, Math.max(0, P.length-12));          // (the trail below, less its last few metres into the overlook)
+      for(let j=0;j<nz;j++) for(let i=0;i<nx;i++){ const x=B.x0+i*C, z=B.z0+j*C, k=j*nx+i; hgt[k]=baseHeight(x, z);
+        for(let q=0;q<lower.length;q+=2){ const pp=lower[q]; if(Math.abs(pp.x-x)<8 && Math.abs(pp.z-z)<8 && Math.hypot(pp.x-x, pp.z-z)<8){ bad[k]=1; break; } } }
+      const cell=(x, z)=>[Math.round((x-B.x0)/C), Math.round((z-B.z0)/C)];
+      const [si, sj]=cell(T.x, T.z), [ei, ej]=cell(S.x, S.z), start=sj*nx+si, goal=ej*nx+ei;
+      const D=[]; for(const [a, b] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1],[2,1],[1,2],[-1,2],[-2,1],[-2,-1],[-1,-2],[1,-2],[2,-1]]) D.push([a, b, Math.hypot(a, b)*C]);
+      const g=new Float32Array(N).fill(1e30), from=new Int32Array(N).fill(-1), heap=[];
+      const push=(k, f)=>{ heap.push([f, k]); let c=heap.length-1; while(c>0){ const p2=(c-1)>>1; if(heap[p2][0]<=heap[c][0]) break; [heap[p2], heap[c]]=[heap[c], heap[p2]]; c=p2; } };
+      const pop=()=>{ const top=heap[0], last=heap.pop(); if(heap.length){ heap[0]=last; let c=0; for(;;){ const l=2*c+1, r=l+1; let m=c; if(l<heap.length && heap[l][0]<heap[m][0]) m=l; if(r<heap.length && heap[r][0]<heap[m][0]) m=r; if(m===c) break; [heap[m], heap[c]]=[heap[c], heap[m]]; c=m; } } return top; };
+      g[start]=0; push(start, 0);
+      while(heap.length){ const [f, k]=pop(); if(k===goal) break; const i=k%nx, j=(k/nx)|0;
+        if(f>g[k]+Math.hypot((ei-i)*C, (ej-j)*C)+1e-3) continue;
+        for(const [a, b, len] of D){ const i2=i+a, j2=j+b; if(i2<0 || j2<0 || i2>=nx || j2>=nz) continue; const k2=j2*nx+i2; if(bad[k2] && k2!==goal) continue;
+          const gr=Math.abs(hgt[k2]-hgt[k])/len; if(gr>0.32) continue;
+          const c=len*(1+70*Math.max(0, gr-0.13)), ng=g[k]+c; if(ng<g[k2]){ g[k2]=ng; from[k2]=k; push(k2, ng+Math.hypot((ei-i2)*C, (ej-j2)*C)); } } }
+      if(from[goal]>=0){ const path=[]; for(let k=goal; k!==start; k=from[k]) path.push(k); path.reverse();
+        for(const k of path) P.push({x:B.x0+(k%nx)*C, z:B.z0+((k/nx)|0)*C}); }
+      // (it ends on the grid's cell nearest the top; a last step back to the top's exact middle would fold the ribbon over)
+      const e=P[P.length-1]; if(Math.hypot(e.x-S.x, e.z-S.z)>4) P.push({x:S.x, z:S.z}); }
+    L.trail=smoothPath(P.filter((p, i)=>i<=iL ? (i%3===0 || i===iL) : true), 2.0); L.look.y=tH; S.y=sH; }
 
   /* ---- where the woods are -------------------------------------------
      A signed distance to the nearest clearing: negative inside one,
@@ -500,7 +531,7 @@ const Terrain=(function(){
       boxSD(EAST.pretz.lake,x,z), boxSD(EAST.office.site,x,z), boxSD(EAST.dive.site,x,z), boxSD(EAST.marina.site,x,z), boxSD(EAST.marina.drive,x,z), boxSD(EAST.books.site,x,z), boxSD(EAST.apts.site,x,z), boxSD(EAST.lane.ew,x,z), boxSD(EAST.lane.ns,x,z));
     { const W=EAST.pretz.woods; if(x>W.x0-12 && x<W.x1+12 && z>W.z0-12 && z<W.z1+12) d=Math.min(d, distToPath(EAST.pretz.trail,x,z).d-1.6); }   // (the trail: a clearing a path wide)
     { const L=EAST.lane, W=L.woods; if(L.trail && x>W.x0-12 && x<W.x1+12 && z>W.z0-12 && z<W.z1+12){
-        d=Math.min(d, Math.hypot(x-L.look.x, z-L.look.z)-9.5); } }   // (Hollow Ridge Overlook's shelf: the trail itself is in pathDist, woods floor either side of it)
+        d=Math.min(d, Math.hypot(x-L.look.x, z-L.look.z)-9.5, Math.hypot(x-L.summit.x, z-L.summit.z)-15); } }   // (Hollow Ridge Overlook's shelf and the summit's bald top: the trail itself is in pathDist, woods floor either side of it)
     d=Math.min(d, boxSD(WEST.corr,x,z), boxSD(WEST.park,x,z), boxSD(WEST.ranch,x,z));
     for(const [P,B] of [[EDIN.off,EOFF_B],[EDIN.on,EON_B],[EDIN.onN,EONN_B],[EDIN.offS,EOFFS_B],[WEIGH.off,WOFF_B],[WEIGH.on,WON_B]])
       if(x>B.x0 && x<B.x1 && z>B.z0 && z<B.z1) d=Math.min(d, distToPath(P,x,z).d-9);
@@ -557,7 +588,7 @@ const RING_EAST={x0:640, x1:1472, z0:-1344, z1:-1056};
 // and one at 4 m north of it up Hollow Road, round the pretzel works (EAST.pretz, 14mc)
 const RING_PRETZ={x0:640, x1:1024, z0:-1936, z1:-1344};      // (and the office park up the road, out to the shore)
 // and one at 4 m west of that, over the hillside behind the bookstore and the apartments: Hollow Ridge Trail's woods (14mj)
-const RING_TRAIL={x0:384, x1:640, z0:-1936, z1:-1760};
+const RING_TRAIL={x0:288, x1:640, z0:-2208, z1:-1760};      // (the whole of the mountain's walkable woods, to the summit, round 50)
 // and one at 4 m west along US 6N past the west fields: the road through the woods and French Creek Pines (WEST), holed
 // under the community hall, whose basement lounge is under it (the hall's floor and its skirting cover the hole's edges)
 const RING_WEST={x0:-1616, x1:-512, z0:-1344, z1:-1040};

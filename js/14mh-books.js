@@ -267,10 +267,10 @@ const BOOKS={routes:{}, lamps:[], radios:[], FL:0};
       say(c, "HOLLOW ROAD BOOKS", W/2, H*0.36, W*0.78, H*0.22, "#d8ccae", "700"); say(c, "USED & RARE  ·  COFFEE  ·  OPEN 10 – 6", W/2, H*0.68, W*0.74, H*0.12, "#c8a868", "600"); };
     for(const s of [-1, 1]) sign(W2, H2, draw, x+s*0.065, top-H2/2, z, s<0 ? -Math.PI/2 : Math.PI/2, false, 560); }
 
-  /* ---- the walls of the world round it, the woods close round three sides ---- */
-  { const W=(x0, x1, z0, z1)=>addCol(x0, x1, z0, z1, -40, 300);
-    W(S0.x0-0.4, S0.x0+0.4, S0.z0, S0.z1); W(S0.x0, S0.x1, S0.z0-0.4, S0.z0+0.4); W(S0.x0, S0.x1, S0.z1-0.4, S0.z1+0.4);
-    addZone(S0.x0, S0.x1, S0.z0, S0.z1, Y-4, Y+14, "HOLLOW ROAD BOOKS"); }
+  /* ---- its zone (no walls: see below), the woods close round three sides ---- */
+  // (none round it now: Ridge Lane runs round its back and north side and the apartments are on its south, all one
+  //  place you walk about in; the world's walls are theirs, round the outside of the lot, the lane and the mountain's woods)
+  addZone(S0.x0, S0.x1, S0.z0, S0.z1, Y-4, Y+14, "HOLLOW ROAD BOOKS");
   if(typeof FOREST!=="undefined"){ const q=_trng(1952);
     const tree=(sp, x, z, s)=>{ FOREST.plant(sp, x, z, {scale:s}); const rr=0.24*s, g=gy(x, z); addCol(x-rr, x+rr, z-rr, z+rr, g-0.5, g+6); };
     const row=(x0, z0, x1, z1, nx, nz)=>{ const L=Math.hypot(x1-x0, z1-z0), n=Math.max(1, Math.round(L/6.2));
