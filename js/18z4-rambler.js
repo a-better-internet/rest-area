@@ -35,11 +35,11 @@
    ---------------------------------------------------------------------- */
 const _RRM=(function(){
   const W=_CB.W, H=_CB.H, TS=16, NR=16, Y0=24;                          // 16 rows of 16 px under a 24 px score line
-  const GRAV=0.26, GRAV_UP=0.2, FALLMAX=6.2, WALK=1.45, RUN=2.45, ACC=0.09, DEC=0.11, JUMP=5.15, JUMPRUN=5.75;
+  const GRAV=0.26, GRAV_UP=0.2, FALLMAX=6.2, PWALK=1.45, PRUN=2.45, ACC=0.09, DEC=0.11, JUMP=5.15, JUMPRUN=5.75;
   const rng=(s)=>()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; };
   // (its sounds, as 20's blips)
   const SND={blip:"pellet", extra:"jingle", power:"pop", jump:"hop", stomp:"thump", bump:"knock", break:"brick", hurt:"invhit", die:"die", throw:"swish", tick:"tick", hurry:"ding", win:"jingle"};
-  const _cbSnd=(i, k)=>{ if(i>=0) window._cbSnd(i, SND[k]||k); };
+  const snd=(i, k)=>{ if(i>=0) window._cbSnd(i, SND[k]||k); };
   const mk=(w, h)=>{ const c=cvs(w, h); return [c, c.getContext("2d")]; };
 
   /* ======================================================================
@@ -303,23 +303,23 @@ const _RRM=(function(){
   }
   const pop=(G, x, y, txt, col)=>G.fx.push({k:"txt", x:x, y:y, txt:txt, col:col||"#f2e23a", t:0});
   function score(G, n, x, y){ G.score+=n; if(x!==undefined) pop(G, x, y, String(n)); }
-  function getCone(G, i){ G.coins++; G.score+=200; if(G.coins>=100){ G.coins-=100; G.lives++; pop(G, G.p.x, G.p.y-10, "1 UP", "#8aff8a"); _cbSnd(i, "extra"); } else _cbSnd(i, "blip"); }
+  function getCone(G, i){ G.coins++; G.score+=200; if(G.coins>=100){ G.coins-=100; G.lives++; pop(G, G.p.x, G.p.y-10, "1 UP", "#8aff8a"); snd(i, "extra"); } else snd(i, "blip"); }
   function bump(G, c, r, i){
     const S=G.S, k=S.g[r*S.cols+c], p=G.p;
     for(const f of G.foes) if(!f.dead && f.ground && Math.abs(f.y+f.h-r*TS)<2 && f.x+f.w>c*TS && f.x<(c+1)*TS){ f.dead=1; f.vy=-3; score(G, 100, f.x, f.y); }
     if(k===4){ const what=S.it.get(r*S.cols+c); S.g[r*S.cols+c]=5; retile(S, c, r); G.fx.push({k:"bump", c:c, r:r, t:0});
       if(what==="cone"){ getCone(G, i); G.fx.push({k:"cone", x:c*TS+4, y:r*TS-10, t:0}); }
       else { let kind=what==="life" ? "can" : p.pw==="small" ? "mix" : "sling"; if(what==="power" && G.L>=4 && ((c*31+r*7+G.L)%7)===0) kind="honey";
-        G.items.push({k:kind, x:c*TS+2, y:r*TS, w:12, h:12, vx:0, vy:0, rise:16, dir:1}); _cbSnd(i, "power"); } }
+        G.items.push({k:kind, x:c*TS+2, y:r*TS, w:12, h:12, vx:0, vy:0, rise:16, dir:1}); snd(i, "power"); } }
     else if(k===3){ if(p.pw!=="small"){ S.g[r*S.cols+c]=0; retile(S, c, r); score(G, 50);
-        for(let q=0;q<4;q++) G.fx.push({k:"chip", x:c*TS+8, y:r*TS+8, vx:(q%2 ? 1 : -1)*(1+q*0.3), vy:-3-(q>>1)*1.5, t:0}); _cbSnd(i, "break"); }
-      else { G.fx.push({k:"bump", c:c, r:r, t:0}); _cbSnd(i, "bump"); } }
-    else _cbSnd(i, "bump");
+        for(let q=0;q<4;q++) G.fx.push({k:"chip", x:c*TS+8, y:r*TS+8, vx:(q%2 ? 1 : -1)*(1+q*0.3), vy:-3-(q>>1)*1.5, t:0}); snd(i, "break"); }
+      else { G.fx.push({k:"bump", c:c, r:r, t:0}); snd(i, "bump"); } }
+    else snd(i, "bump");
   }
   function hurt(G, i){ const p=G.p; if(p.inv>0 || p.honey>0 || p.dead) return;
-    if(p.pw!=="small"){ const was=p.pw; p.pw=was==="sling" ? "big" : "small"; if(p.pw==="small"){ p.y+=p.h-14; p.h=14; } p.inv=110; _cbSnd(i, "hurt"); }
+    if(p.pw!=="small"){ const was=p.pw; p.pw=was==="sling" ? "big" : "small"; if(p.pw==="small"){ p.y+=p.h-14; p.h=14; } p.inv=110; snd(i, "hurt"); }
     else die(G, i); }
-  function die(G, i){ const p=G.p; if(p.dead) return; p.dead=1; p.vy=-5; p.vx=0; _cbSnd(i, "die"); }
+  function die(G, i){ const p=G.p; if(p.dead) return; p.dead=1; p.vy=-5; p.vx=0; snd(i, "die"); }
   function grow(G, pw){ const p=G.p; if(p.pw==="small"){ p.y-=24-p.h; p.h=24; } p.pw=pw; }
 
   function frame(G, K, i){
@@ -327,22 +327,22 @@ const _RRM=(function(){
     G.t++;
     if(G.msgT>0) G.msgT--;
     // the stage done: count the clock into the score, then the next
-    if(G.clearT>0){ G.clearT++; if(G.time>0 && G.clearT>40){ const n=Math.min(G.time, 4); G.time-=n; G.score+=n*50; if(G.t%4===0) _cbSnd(i, "tick"); }
-      else if(G.clearT>40 && G.time<=0 && G.clearT>140){ if(G.L>=19){ G.won=true; G.over=true; _RRM._world=0; _cbSnd(i, "win"); return; } G.reached=Math.max(G.reached, ((G.L+1)/4)|0); _RRM._world=((G.L+1)/4)|0; enter(G, G.L+1, 0); }
+    if(G.clearT>0){ G.clearT++; if(G.time>0 && G.clearT>40){ const n=Math.min(G.time, 4); G.time-=n; G.score+=n*50; if(G.t%4===0) snd(i, "tick"); }
+      else if(G.clearT>40 && G.time<=0 && G.clearT>140){ if(G.L>=19){ G.won=true; G.over=true; _RRM._world=0; snd(i, "win"); return; } G.reached=Math.max(G.reached, ((G.L+1)/4)|0); _RRM._world=((G.L+1)/4)|0; enter(G, G.L+1, 0); }
       return; }
     // dying: up, then down off the screen, then again from the last marker
     if(p.dead){ p.dead++; if(p.dead>30){ p.vy+=0.3; p.y+=p.vy; }
       if(p.dead>150){ G.lives--; if(G.lives<=0){ G.over=true; _RRM._world=(G.L/4)|0; return; } p.pw="small"; p.h=14; enter(G, G.L, G.markAt); }
       return; }
     // the clock
-    G.tAcc++; if(G.tAcc>=24){ G.tAcc=0; G.time--; if(G.time===100) _cbSnd(i, "hurry"); if(G.time<=0){ G.time=0; die(G, i); return; } }
+    G.tAcc++; if(G.tAcc>=24){ G.tAcc=0; G.time--; if(G.time===100) snd(i, "hurry"); if(G.time<=0){ G.time=0; die(G, i); return; } }
     // walking, running, jumping
     const L=(K.ArrowLeft||K.KeyA ? 1 : 0), Rr=(K.ArrowRight||K.KeyD ? 1 : 0), run=K.ShiftLeft||K.ShiftRight||K.KeyJ, hold=K.Space||K.ArrowUp||K.KeyW||K.KeyK;
-    const fr=p.ground ? S.Wd.fric : 0.6, top=run ? RUN : WALK, dir=Rr-L;
+    const fr=p.ground ? S.Wd.fric : 0.6, top=run ? PRUN : PWALK, dir=Rr-L;
     if(dir){ p.vx+=dir*ACC*(p.ground ? Math.max(0.35, fr) : 0.7); if(Math.abs(p.vx)>top) p.vx-=Math.sign(p.vx)*Math.min(Math.abs(p.vx)-top, 0.06); p.dir=dir; }
     else if(p.ground){ const d=DEC*fr; p.vx=Math.abs(p.vx)<=d ? 0 : p.vx-Math.sign(p.vx)*d; }
-    if(G.jump){ G.jump=false; if(p.ground || p.coyote>0){ p.vy=-(Math.abs(p.vx)>1.9 ? JUMPRUN : JUMP); p.ground=false; p.coyote=0; _cbSnd(i, "jump"); } else p.buffer=8; }
-    if(p.buffer>0){ p.buffer--; if(p.ground){ p.vy=-(Math.abs(p.vx)>1.9 ? JUMPRUN : JUMP); p.ground=false; p.buffer=0; _cbSnd(i, "jump"); } }
+    if(G.jump){ G.jump=false; if(p.ground || p.coyote>0){ p.vy=-(Math.abs(p.vx)>1.9 ? JUMPRUN : JUMP); p.ground=false; p.coyote=0; snd(i, "jump"); } else p.buffer=8; }
+    if(p.buffer>0){ p.buffer--; if(p.ground){ p.vy=-(Math.abs(p.vx)>1.9 ? JUMPRUN : JUMP); p.ground=false; p.buffer=0; snd(i, "jump"); } }
     p.vy+=(hold && p.vy<0) ? GRAV_UP : GRAV; if(p.vy>FALLMAX) p.vy=FALLMAX;
     const wasG=p.ground;
     move(G, p, p.vx, 0); if(p.hitX){ p.vx=0; p.hitX=0; }
@@ -362,14 +362,14 @@ const _RRM=(function(){
     { const c0=Math.floor((p.x+2)/TS), c1=Math.floor((p.x+p.w-3)/TS), r=Math.floor((p.y+p.h)/TS);
       for(let c=c0;c<=c1;c++){ const k=tAt(S, c, r), k2=tAt(S, c, r-1); if(k===7 || k2===7) hurt(G, i); if(k2===8 || tAt(S, c, Math.floor((p.y+p.h-4)/TS))===8){ die(G, i); return; } } }
     // throwing
-    if(G.fire){ G.fire=false; if(p.pw==="sling" && G.shots.length<2 && p.cool<=0){ G.shots.push({x:p.x+(p.dir>0 ? p.w : -6), y:p.y+6, vx:p.dir*4.2, vy:1, t:0}); p.cool=12; _cbSnd(i, "throw"); } }
+    if(G.fire){ G.fire=false; if(p.pw==="sling" && G.shots.length<2 && p.cool<=0){ G.shots.push({x:p.x+(p.dir>0 ? p.w : -6), y:p.y+6, vx:p.dir*4.2, vy:1, t:0}); p.cool=12; snd(i, "throw"); } }
     // the camera: never back
     G.camX=Math.max(G.camX, Math.min(p.x-W*0.42, S.cols*TS-W));
     if(G.arena && !G.arena.shut && p.x>G.arena.x+3*TS){ G.arena.shut=true; G.camX=Math.max(G.camX, Math.min(G.arena.x, S.cols*TS-W)); G.msgT=0; G.boss=true; }
     // markers
-    for(const m of G.marks) if(!m.on && p.x>m.x){ m.on=true; G.markAt=m.x; _cbSnd(i, "blip"); }
+    for(const m of G.marks) if(!m.on && p.x>m.x){ m.on=true; G.markAt=m.x; snd(i, "blip"); }
     // springs
-    for(const s of G.springs){ if(s.sq>0) s.sq--; if(p.vy>0 && p.x+p.w>s.x+2 && p.x<s.x+14 && p.y+p.h>=s.y+6 && p.y+p.h<=s.y+16){ p.y=s.y+6-p.h; p.vy=hold ? -8.6 : -6.4; s.sq=10; _cbSnd(i, "jump"); } }
+    for(const s of G.springs){ if(s.sq>0) s.sq--; if(p.vy>0 && p.x+p.w>s.x+2 && p.x<s.x+14 && p.y+p.h>=s.y+6 && p.y+p.h<=s.y+16){ p.y=s.y+6-p.h; p.vy=hold ? -8.6 : -6.4; s.sq=10; snd(i, "jump"); } }
     // rafts
     for(const r of G.rafts){ r.ph+=0.012; const o=(Math.sin(r.ph)*0.5+0.5)*r.span, nx=r.ax==="x" ? r.x0+o : r.x0, ny=r.ax==="y" ? r.y0-o : r.y0; r.dx=nx-r.x; r.dy=ny-r.y; r.x=nx; r.y=ny; }
     // pinecones lying about
@@ -379,7 +379,7 @@ const _RRM=(function(){
       if(o.rise>0){ o.rise--; o.y-=1; if(o.rise===0 && o.k!=="sling") o.vx=o.k==="honey" ? 1.4 : 1.0; }
       else if(o.k!=="sling"){ o.vy=Math.min(5, o.vy+GRAV); move(G, o, o.vx, 0); if(o.hitX){ o.vx=-o.vx; o.hitX=0; } move(G, o, 0, o.vy); if(o.k==="honey" && o.ground) o.vy=-3.6; }
       if(o.y>NR*TS){ G.items.splice(k, 1); continue; }
-      if(p.x+p.w>o.x && p.x<o.x+o.w && p.y+p.h>o.y && p.y<o.y+o.h){ G.items.splice(k, 1); _cbSnd(i, "power");
+      if(p.x+p.w>o.x && p.x<o.x+o.w && p.y+p.h>o.y && p.y<o.y+o.h){ G.items.splice(k, 1); snd(i, "power");
         if(o.k==="mix"){ grow(G, p.pw==="small" ? "big" : p.pw); score(G, 1000, o.x, o.y); }
         else if(o.k==="sling"){ grow(G, "sling"); score(G, 1000, o.x, o.y); }
         else if(o.k==="honey"){ p.honey=600; score(G, 1000, o.x, o.y); }
@@ -389,8 +389,8 @@ const _RRM=(function(){
       move(G, b, s.vx, 0); if(b.hitX || s.t>140){ G.shots.splice(k, 1); continue; } move(G, b, 0, s.vy); s.x=b.x; s.y=b.y; if(b.ground) s.vy=-3.2; else s.vy=b.vy;
       if(s.x<G.camX-10 || s.x>G.camX+W+10){ G.shots.splice(k, 1); continue; }
       for(const f of G.foes) if(!f.dead && f.active && s.x+6>f.x && s.x<f.x+f.w && s.y+6>f.y && s.y<f.y+f.h){ G.shots.splice(k, 1);
-        if(f.boss){ f.hp-=0.5; f.hit=40; if(f.hp<=0) bossDown(G, f, i); else _cbSnd(i, "bump"); }
-        else { f.dead=1; f.vy=-3; score(G, 200, f.x, f.y); _cbSnd(i, "stomp"); } break; } }
+        if(f.boss){ f.hp-=0.5; f.hit=40; if(f.hp<=0) bossDown(G, f, i); else snd(i, "bump"); }
+        else { f.dead=1; f.vy=-3; score(G, 200, f.x, f.y); snd(i, "stomp"); } break; } }
     // the critters
     let chain=0;
     for(const f of G.foes){
@@ -415,12 +415,12 @@ const _RRM=(function(){
       // against you
       if(p.x+p.w>f.x+1 && p.x<f.x+f.w-1 && p.y+p.h>f.y+1 && p.y<f.y+f.h){
         const stomp=p.vy>0.5 && p.y+p.h-p.vy<=f.y+6 && f.kind!=="porc" && !(f.kind==="fish" && false);
-        if(p.honey>0 && !f.boss){ f.dead=1; f.vy=-3; score(G, 200, f.x, f.y); _cbSnd(i, "stomp"); }
+        if(p.honey>0 && !f.boss){ f.dead=1; f.vy=-3; score(G, 200, f.x, f.y); snd(i, "stomp"); }
         else if(stomp){ p.vy=hold ? -5.6 : -3.8; chain++; const pts=[100, 200, 400, 800, 1000, 2000][Math.min(5, chain-1)];
-          if(f.boss){ if(!f.hit){ f.hp--; f.hit=60; _cbSnd(i, "stomp"); if(f.hp<=0) bossDown(G, f, i); else { f.vx=-f.vx*1.5; f.vy=-4; } } }
-          else if(f.kind==="beetle" && !f.flip){ f.flip=true; f.flipT=240; f.hp--; score(G, pts, f.x, f.y); _cbSnd(i, "stomp"); }
-          else { f.dead=1; f.flat=f.kind==="tick" || f.kind==="beetle"; if(!f.flat) f.vy=-2; score(G, pts, f.x, f.y); _cbSnd(i, "stomp"); } }
-        else if(f.flip){ f.dead=1; f.vy=-3; score(G, 200, f.x, f.y); _cbSnd(i, "stomp"); }
+          if(f.boss){ if(!f.hit){ f.hp--; f.hit=60; snd(i, "stomp"); if(f.hp<=0) bossDown(G, f, i); else { f.vx=-f.vx*1.5; f.vy=-4; } } }
+          else if(f.kind==="beetle" && !f.flip){ f.flip=true; f.flipT=240; f.hp--; score(G, pts, f.x, f.y); snd(i, "stomp"); }
+          else { f.dead=1; f.flat=f.kind==="tick" || f.kind==="beetle"; if(!f.flat) f.vy=-2; score(G, pts, f.x, f.y); snd(i, "stomp"); } }
+        else if(f.flip){ f.dead=1; f.vy=-3; score(G, 200, f.x, f.y); snd(i, "stomp"); }
         else hurt(G, i); } }
     if(p.ground) chain=0;
     for(const o of G.fx) if(o.k==="spray" && o.t<50 && p.x+p.w>o.x && p.x<o.x+24 && p.y+p.h>o.y && p.y<o.y+18) hurt(G, i);
@@ -429,15 +429,15 @@ const _RRM=(function(){
     for(let k=G.fx.length-1;k>=0;k--){ const o=G.fx[k]; o.t++; if(o.k==="chip"){ o.vy+=0.3; o.x+=o.vx; o.y+=o.vy; }
       if(o.t>(o.k==="txt" ? 60 : o.k==="cone" ? 24 : o.k==="bump" ? 8 : o.k==="spray" ? 60 : 50)) G.fx.splice(k, 1); }
     // the cabin's door
-    if(G.goal && p.x+p.w>G.goal.x+26 && p.x<G.goal.x+38 && p.ground){ G.clearT=1; p.vx=0; _cbSnd(i, "win"); score(G, 2000+(G.L%4)*500); }
+    if(G.goal && p.x+p.w>G.goal.x+26 && p.x<G.goal.x+38 && p.ground){ G.clearT=1; p.vx=0; snd(i, "win"); score(G, 2000+(G.L%4)*500); }
   }
-  function bossDown(G, f, i){ f.dead=1; f.vy=-4; score(G, 5000, f.x, f.y); G.bossDead=true; _cbSnd(i, "extra");
+  function bossDown(G, f, i){ f.dead=1; f.vy=-4; score(G, 5000, f.x, f.y); G.bossDead=true; snd(i, "extra");
     const S=G.S; G.goal={x:(S.cols-6)*TS, y:12*TS+TS-64}; }
 
   /* ======================================================================
      DRAWING
      ====================================================================== */
-  function scene(x, G, t){
+  function paint(x, G, t){
     const S=G.S, cam=Math.round(G.camX), p=G.p;
     const [a, b]=BD[S.wi], fa=Math.round(cam*0.15)%W, fb=Math.round(cam*0.45)%W;
     x.drawImage(a, -fa, Y0); x.drawImage(a, W-fa, Y0); x.drawImage(b, -fb, Y0); x.drawImage(b, W-fb, Y0);
@@ -488,7 +488,7 @@ const _RRM=(function(){
   const AK={};
   return {
     name:"RIDGE RAMBLER", col:"#9ad87a", _world:0,
-    help:"RIDGE RAMBLER · A/D OR ARROWS WALK · SHIFT RUNS · SPACE OR W JUMPS · J THROWS · N NEW GAME · ESC STEPS AWAY",
+    help:"RIDGE RAMBLER · A/D OR ARROWS PWALK · SHIFT RUNS · SPACE OR W JUMPS · J THROWS · N NEW GAME · ESC STEPS AWAY",
     newGame:newGame,
     key(G, e){ if(e.repeat) return;
       if(e.code==="Space" || e.code==="ArrowUp" || e.code==="KeyW" || e.code==="KeyK") G.jump=true;
@@ -496,7 +496,7 @@ const _RRM=(function(){
     lean(G, K){ return [(K.ArrowRight||K.KeyD?1:0)-(K.ArrowLeft||K.KeyA?1:0), (K.Space||K.ArrowUp||K.KeyW||K.KeyK) ? 1 : 0]; },
     step(G, dt, K, i){ if(G.over) return; G.acc+=Math.min(dt, 0.1); while(G.acc>=1/60){ G.acc-=1/60; frame(G, K, i); if(G.over) break; } },
     done(G){ if(!G.saved){ G.saved=true; _cbAddTop("rambler", G.score, "WORLD "+(((G.L/4)|0)+1)+"-"+(G.L%4+1)); } },
-    draw(x, G, t){ scene(x, G, t);
+    draw(x, G, t){ paint(x, G, t);
       if(G.won) _cbMid(x, "THE SUMMIT!", "EVERY TRAIL WALKED · SPACE TO PLAY AGAIN");
       else if(G.over) _cbMid(x, "GAME OVER", "SPACE CARRIES ON FROM WORLD "+(((G.L/4)|0)+1));
       else if(G.clearT>0) _cbMid(x, G.L%4===3 ? "WORLD CLEAR" : "STAGE CLEAR", "TIME BONUS");
@@ -510,7 +510,7 @@ const _RRM=(function(){
       AK.Space=true;
       let n=0; G.acc=(G.acc||0)+1/12; while(G.acc>=1/60 && n++<8){ G.acc-=1/60; frame(G, AK, -1); }
       if(G.over || G.p.dead>100 || G.clearT>60 || G.t>60*90) D=null;
-      scene(x, G, t);
+      paint(x, G, t);
       if(((t/7)|0)%2===0){ x.fillStyle="rgba(0,0,0,0.62)"; x.fillRect(40, 92, W-80, 76);
         x.textAlign="center"; x.textBaseline="middle"; _cbFont(x, 28); x.fillStyle="#9ad87a"; x.fillText("RIDGE", W/2, 114); x.fillStyle="#f2c84a"; x.fillText("RAMBLER", W/2, 146); }
       else { x.fillStyle="rgba(0,0,0,0.75)"; x.fillRect(40, 70, W-80, 110); _cbTopDraw(x, "rambler", 86, "#9ad87a"); }

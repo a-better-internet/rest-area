@@ -1603,7 +1603,7 @@ const ZOMBIE=(function(){
   /* ======================================================================
      SOUND: made on 20's context
      ====================================================================== */
-  const snd={}; let NB=null, amb=null;
+  const snd={}; let NB=null, ambSnd=null;
   const AC=()=>(typeof AUDIO!=="undefined" && AUDIO.ctx && AUDIO.on()) ? AUDIO.ctx() : null;
   function nb(){ if(!NB){ NB={white:AUDIO.noise(2,"white"), pink:AUDIO.noise(2,"pink"), brown:AUDIO.noise(3,"brown")}; } return NB; }
   function pv(x, z, k){ const c=camera.position, dx=x-c.x, dz=z-c.z, d=Math.hypot(dx,dz); camera.getWorldDirection(_v1);
@@ -1693,10 +1693,10 @@ const ZOMBIE=(function(){
   snd.heart=()=>{ const c=AC(); if(!c) return; const t=c.currentTime; osc(c, t, "sine", 58, 40, 0.14, 0.32); osc(c, t+0.24, "sine", 52, 38, 0.16, 0.24); };
   // under it all: a wind that never lets up, a low drone, and far off, now and then, one of them
   snd.ambience=(on)=>{ const c=AC();
-    if(on && c && !amb){ const s=c.createBufferSource(); s.buffer=nb().brown; s.loop=true; const b=c.createBiquadFilter(); b.type="bandpass"; b.frequency.value=170; b.Q.value=0.5;
+    if(on && c && !ambSnd){ const s=c.createBufferSource(); s.buffer=nb().brown; s.loop=true; const b=c.createBiquadFilter(); b.type="bandpass"; b.frequency.value=170; b.Q.value=0.5;
       const g=c.createGain(); g.gain.value=0; g.gain.setTargetAtTime(0.09, c.currentTime, 2); const o=c.createOscillator(); o.type="sine"; o.frequency.value=41; const og=c.createGain(); og.gain.value=0.025;
-      s.connect(b); b.connect(g); g.connect(AUDIO.master()); o.connect(og); og.connect(g); s.start(); o.start(); amb={s:s, o:o, g:g, b:b}; }
-    if(!on && amb){ try{ amb.s.stop(); amb.o.stop(); }catch(e){} amb=null; } };
+      s.connect(b); b.connect(g); g.connect(AUDIO.master()); o.connect(og); og.connect(g); s.start(); o.start(); ambSnd={s:s, o:o, g:g, b:b}; }
+    if(!on && ambSnd){ try{ ambSnd.s.stop(); ambSnd.o.stop(); }catch(e){} ambSnd=null; } };
 
   /* ======================================================================
      THE SCREEN: health, ammunition, threat, the red at the edges
@@ -1993,7 +1993,8 @@ const ZOMBIE=(function(){
   const _dgO=new T.Vector3(), _dgD=new T.Vector3(), _dgA=new T.Vector3();
   function updateDroneGun(dt){
     S.dgFlash=Math.max(0, (S.dgFlash||0)-dt); if(DG.flash) DG.flash.visible=S.dgFlash>0;
-    S.dgCool=Math.max(0, (S.dgCool||0)-dt); S.dgHeat=Math.max(0, (S.dgHeat||0)-dt*(S.dgHot ? 0.4 : S.fireHeld ? 0.07 : 0.3));   // (a long burst, about seven seconds, cooks it) if(S.dgHot && S.dgHeat<0.3){ S.dgHot=false; feed("THE DRONE'S GUN HAS COOLED", "#c8d8a8"); }
+    // (it cools slowly while you hold the trigger: a long burst, about seven seconds, cooks it)
+    S.dgCool=Math.max(0, (S.dgCool||0)-dt); S.dgHeat=Math.max(0, (S.dgHeat||0)-dt*(S.dgHot ? 0.4 : S.fireHeld ? 0.07 : 0.3)); if(S.dgHot && S.dgHeat<0.3){ S.dgHot=false; feed("THE DRONE'S GUN HAS COOLED", "#c8d8a8"); }
     if(!DG.g) return; DG.barMat.emissive.setRGB(S.dgHeat*0.85, S.dgHeat*0.28, 0);
     const on=!!(droneMode && Z.on && !Z.dead); DG.g.visible=on; if(!on) return;
     if(S.fireHeld && S.dgCool<=0 && !S.dgHot) dgFire();
@@ -2040,6 +2041,7 @@ const ZOMBIE=(function(){
     addEventListener("wheel", e=>{ if(!Z.on || Z.dead || droneMode || !e.deltaY) return; const d=wheelStep(e); if(!d) return; if(aiming()) zoomStep(-d); else cycleGun(d); }, {passive:true});
   }
   // (for tests: one of the dead at a point, standing still facing yaw)
+  Z.aliveN=()=>alive().length;
   Z.dgState=()=>({n:DG.n, heat:+(S.dgHeat||0).toFixed(2), held:!!S.fireHeld, cool:S.dgCool, vis:!!(DG.g && DG.g.visible)});
   Z.spawnAt=(x, z, kind, yaw)=>spawnZombie(x, z, surfaceY(x, z, 50), kind||"walker", yaw);
   Z.start=function(){
